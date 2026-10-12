@@ -43,7 +43,6 @@ Carrier-agnostic operator-graph framework for pipelines.
 | `Identity` | class | Explicit no-op. |
 | `Input` | class | A named entry point into a `Graph`. |
 | `Lambda` | class | Wrap an arbitrary callable as an `Operator`. |
-| `Memoize` | class | Memoise an inner operator by hashing its input and config. |
 | `Node` | class | A vertex in a `Graph`. |
 | `Operator` | class | Base class for pipekit operators. |
 | `Predictor` | class | Anything with a sklearn-style ``predict`` method. |
@@ -314,14 +313,12 @@ Composable remote-sensing operators on GeoTensor.
 | `BlobDoH` | class | Blob detection via Determinant of Hessian. |
 | `BlobLoG` | class | Blob detection via Laplacian of Gaussian. |
 | `BowtieCorrection` | class | Remove whiskbroom bowtie overlap by resampling each scan along track. |
-| `Branch` | class | Re-exported from `pipekit`. |
 | `BrightnessJitter` | class | Scale reflectance values by a sampled scalar or per-band factor. |
 | `BufferMask` | class | Radially expand True pixels in a mask by a Euclidean buffer. |
 | `CHWtoHWC` | class | Reorder a ``(..., C, H, W)`` cube to channels-last ``(..., H, W, C)``. |
 | `CIRI` | class | Cirrus Reflectance Index — Sentinel-2 B10 passthrough. |
 | `CLAHE` | class | Contrast-Limited Adaptive Histogram Equalization. |
 | `Canny` | class | Canny edge detection returning a boolean edge map. |
-| `Carrier` | class | Re-exported from `typing`. |
 | `ChanVese` | class | Active-contour segmentation via :func:`skimage.segmentation.chan_vese`. |
 | `ClayMinerals` | class | Clay Minerals ratio — Sabins 1999 / Crowley et al. 1989. |
 | `CleanMask` | class | Remove small objects, fill small holes, then close the mask. |
@@ -333,7 +330,6 @@ Composable remote-sensing operators on GeoTensor.
 | `CombineMasks` | class | Combine boolean masks on one pixel grid with ``or``, ``and`` or ``xor``. |
 | `Composite` | class | Build a multi-band composite by arbitrary band reference. |
 | `ComputeSZA` | class | Compute the solar zenith angle (degrees) for a location and UTC datetime. |
-| `Const` | class | Re-exported from `pipekit`. |
 | `ContinuumRemoval` | class | Hull-quotient continuum removal along the band axis. |
 | `ContrastJitter` | class | Scale deviations from the per-band spatial mean. |
 | `CornerHarris` | class | Harris corner response plus peak selection as point features. |
@@ -365,7 +361,6 @@ Composable remote-sensing operators on GeoTensor.
 | `EstimateMean` | class | Estimate a spectral background mean vector from a cube. |
 | `ExpandLabels` | class | Grow label regions by a fixed pixel distance without overlap. |
 | `FalseColor` | class | Build a NIR-red-green false-colour composite. |
-| `Fanout` | class | Re-exported from `pipekit`. |
 | `Felzenszwalb` | class | Graph-based segmentation via :func:`skimage.segmentation.felzenszwalb`. |
 | `FindContours` | class | Extract iso-value contours as LineString geometries. |
 | `GCI` | class | Green Chlorophyll Index — Gitelson et al. 2003. |
@@ -381,7 +376,6 @@ Composable remote-sensing operators on GeoTensor.
 | `GeoTensorEstimator` | class | Marshall a scikit-learn estimator to and from GeoTensor-shaped data. |
 | `Georeference` | class | Georeference swath data using a `georeader` GLT `GeoTensor`. |
 | `GeostationaryParallaxCorrect` | class | Shift pixels from apparent geostationary view position to nadir. |
-| `Graph` | class | Re-exported from `pipekit`. |
 | `HOG` | class | Histogram of Oriented Gradients descriptor. |
 | `HWCtoCHW` | class | Reorder a channels-last ``(..., H, W, C)`` array to ``(..., C, H, W)``. |
 | `Hillshade` | class | Compute a single-band ``uint8`` hillshade from a DEM. |
@@ -390,13 +384,10 @@ Composable remote-sensing operators on GeoTensor.
 | `HoughCircles` | class | Detect circles with the circular Hough transform. |
 | `HoughLines` | class | Detect prominent straight lines with the Hough transform. |
 | `IMEEstimate` | class | Integrated Mass Enhancement (IME) flux estimator. |
-| `Identity` | class | Re-exported from `pipekit`. |
-| `Input` | class | Re-exported from `pipekit`. |
 | `IntegratedIrradiance` | class | Compute band-integrated TOA solar irradiance from an SRF table. |
 | `InvertMask` | class | Invert a boolean mask element-wise. |
 | `IronOxide` | class | Iron Oxide ratio — Segal 1982 / Sabins 1999. |
 | `LabelConnectedComponents` | class | Convert a binary mask into an int32 connected-component label map. |
-| `Lambda` | class | Re-exported from `pipekit`. |
 | `LandMask` | class | Rasterize Natural Earth land polygons into a boolean mask. |
 | `LandsatQA_PIXEL` | class | Landsat Collection-2 QA_PIXEL mask preset. |
 | `LinearTargetFromObs` | class | Finite-difference tangent-linear target from an observation model. |
@@ -438,14 +429,12 @@ Composable remote-sensing operators on GeoTensor.
 | `NDVI` | class | Normalized Difference Vegetation Index — Rouse et al. 1974. |
 | `NDWI` | class | Normalized Difference Water Index — McFeeters 1996. |
 | `NLMeans` | class | Lightweight non-local-means-style denoiser. |
-| `Node` | class | Re-exported from `pipekit`. |
 | `NonlinearTargetFromObs` | class | Finite-amplitude target from a callable observation model. |
 | `Normalize` | class | Fixed-stats per-band z-score normaliser. |
 | `NormalizedDifference` | class | Generic normalized-difference index ``(a - b) / (a + b + eps)``. |
 | `OceanMask` | class | Rasterize Natural Earth ocean polygons into a boolean mask. |
 | `OmniCloudMask` | class | Placeholder for the optional ML-based OmniCloudMask detector. |
 | `OpenMask` | class | Open (erode then dilate) a boolean mask. |
-| `Operator` | class | Re-exported from `pipekit`. |
 | `OpticalFlowILK` | class | Dense per-pixel displacement via iterative Lucas-Kanade optical flow. |
 | `OpticalFlowTVL1` | class | Dense per-pixel displacement via TV-L1 optical flow. |
 | `OutlierMask` | class | Flag global outliers with a MAD or z-score threshold. |
@@ -530,18 +519,14 @@ Composable remote-sensing operators on GeoTensor.
 | `SWIRComposite` | class | Build a SWIR2-NIR-red composite. |
 | `SegmentStitch` | class | Assemble indexed sensor segments into one contiguous ``GeoTensor``. |
 | `SelectBands` | class | Select bands by integer index or band name along the band axis. |
-| `Sequential` | class | Re-exported from `pipekit`. |
 | `ShadedRelief` | class | Apply an elevation colormap and modulate RGB with hillshade. |
 | `ShannonEntropy` | class | Compute Shannon entropy of the input image. |
-| `ShapeTrace` | class | Re-exported from `pipekit`. |
 | `SimpleAtmosphericCorrection` | class | Dispatch simple BOA approximations; currently supports ``method='dos1'``. |
 | `SimulatedClouds` | class | Overlay a smooth synthetic cloud field onto reflectance imagery. |
-| `Sink` | class | Re-exported from `pipekit`. |
 | `SkeletonLength` | class | Longest path through the skeleton of a binary mask. |
 | `SklearnOp` | class | Universal adapter for scikit-learn-compatible estimators on GeoTensors. |
 | `SlidingWindow` | class | Split a `GeoTensor` into overlapping sliding-window tiles. |
 | `SlopeMask` | class | Build a boolean mask from DEM slope bounds in degrees. |
-| `Snapshot` | class | Re-exported from `pipekit`. |
 | `SpatialPool` | class | Downsample the spatial grid by integer factors, updating the transform. |
 | `SpeckleNoise` | class | Apply multiplicative Gaussian speckle noise, useful for SAR. |
 | `SpectralBinning` | class | Aggregate source bands into wavelength-centered bins. |
@@ -555,8 +540,6 @@ Composable remote-sensing operators on GeoTensor.
 | `StretchToUint8` | class | Percentile-stretch display data to ``uint8``. |
 | `StructureTensor` | class | Local structure-tensor eigenvalue stack. |
 | `SunAngleJitter` | class | Rescale TOA reflectance for a simulated solar-zenith change. |
-| `Switch` | class | Re-exported from `pipekit`. |
-| `Tap` | class | Re-exported from `pipekit`. |
 | `Threshold` | class | Binary mask of the pixels strictly above a global threshold. |
 | `Tile` | class | Split a `GeoTensor` into spatial tiles. |
 | `ToFloat32` | class | Cast the carrier's values to ``float32``. |
@@ -591,11 +574,6 @@ Spatiotemporal catalog over geospatial files.
 ## Upstream: `geotoolz-cloud`
 
 Cloud object storage and batched async COG reads.
-
-### `geocloud`
-
-| Name | Kind | What it does |
-|---|---|---|
 
 ## Upstream: `geotoolz-patcher`
 
@@ -638,24 +616,12 @@ Composable operators for Earth System Data Cubes.
 |---|---|---|
 | `ApplyToEach` | class | Re-instantiate a prototype operator per value and merge results. |
 | `Augment` | class | Run an inner ``Operator`` and merge its output back into the input. |
-| `Graph` | class | Re-exported from `pipekit`. |
-| `Input` | class | Re-exported from `pipekit`. |
-| `Node` | class | Re-exported from `pipekit`. |
 | `Operator` | class | Re-exported from `xrcore`. |
-| `Sequential` | class | Re-exported from `pipekit`. |
 | `Signature` | class | Re-exported from `xrcore`. |
-| `Tap` | class | Re-exported from `pipekit`. |
 
 ## Upstream: `xrtoolz-core`
 
 xarray-aware Operator base and Signature descriptor.
-
-### `xrcore`
-
-| Name | Kind | What it does |
-|---|---|---|
-| `Operator` | class | ``pipekit.Operator`` plus xarray ``DataTree`` dispatch. |
-| `Signature` | class | Shape-and-dtype descriptor propagated without executing data paths. |
 
 ## Upstream: `xrtoolz-einx`
 

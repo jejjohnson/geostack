@@ -277,7 +277,9 @@ def _package_part() -> tuple[list[str], int]:
 
 
 def _upstream_part() -> list[str]:
+    """Each upstream object once, at the first module (in ``UPSTREAM`` order)."""
     out: list[str] = []
+    seen: set[int] = set()
     for package, upstream_modules in UPSTREAM.items():
         out += [f"## Upstream: `{package}`", "", UPSTREAM_BLURB[package], ""]
         for module_name in upstream_modules:
@@ -286,11 +288,15 @@ def _upstream_part() -> list[str]:
             except ImportError:
                 continue
             home = module_name.split(".")[0]
-            rows = [
-                _row(name, _get(module, name), home=home)
-                for name in sorted(_public(module))
-            ]
-            out += [f"### `{module_name}`", "", *_table(rows)]
+            rows = []
+            for name in sorted(_public(module)):
+                obj = _get(module, name)
+                if id(obj) in seen and not isinstance(obj, int | float | str):
+                    continue
+                seen.add(id(obj))
+                rows.append(_row(name, obj, home=home))
+            if rows:
+                out += [f"### `{module_name}`", "", *_table(rows)]
     return out
 
 
@@ -332,16 +338,13 @@ def render() -> str:
 
 
 def stale(current: str, text: str) -> bool:
-    """Whether ``current`` differs from ``text`` where it is comparable.
+    """Whether ``current`` differs from ``text``.
 
-    The upstream sections are compared only when the recorded versions match
-    the installed ones; the package part always is.
+    The upstream libraries are pinned by the submodules in ``references/``
+    and ``pixi.lock``, so the whole page, versions included, must match:
+    moving a submodule without ``make capabilities`` fails the check.
     """
-    if current == text:
-        return False
-    if not UPSTREAM or f"Listed at {_versions()}." in current:
-        return True
-    return current.partition(UPSTREAM_MARKER)[0] != text.partition(UPSTREAM_MARKER)[0]
+    return current != text
 
 
 def main() -> int:
