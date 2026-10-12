@@ -77,7 +77,7 @@ Three axes structure the whole framework. They’re orthogonal: every operation 
    L1 — Structured Obs         Calibrated, georeferenced swaths
         │
         ▼   retrieval (geotoolz, plumax, RTMX)
-   L2 — Gap-Filled Obs         Per-pixel geophysical retrievals
+   L2 — Retrieved Obs          Per-pixel geophysical retrievals
         │                       (gaps where retrieval fails)
         ▼   analysis (xr_toolz.interpolate, pyrox-gp, filterX, vardaX)
    L3 — Analysis               Regular grid; gap-filled
@@ -255,8 +255,8 @@ Two granularities. First the high-level (six tiers), then the package map (~20 p
    │   Framework:    pipekit │ pipekit-array │ pipekit-jax          │
    │   ML loops:     pipekit-cycle │ pipekit-train │ pipekit-eval   │
    │                 pipekit-experiment                             │
-   │   Infra:        georeader (substrate) │ geocatalog │           │
-   │                 geopatcher │ xrpatcher │ statecatalog          │
+   │   Infra:        geocatalog │ geopatcher │ xrpatcher │          │
+   │                 statecatalog                                   │
    └────────────────────────────────────────────────────────────────┘
                                 ▲
    ┌────────────────────────────────────────────────────────────────┐
@@ -279,6 +279,7 @@ Two granularities. First the high-level (six tiers), then the package map (~20 p
    │ Tier 0 — Ecosystem (external)                                  │
    │   JAX │ equinox │ lineax │ optax │ diffrax │ numpyro │         │
    │   xarray │ pandas │ rasterio │ scipy │ ...                     │
+   │   georeader (GeoTensor substrate, spaceml-org)                 │
    └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -327,38 +328,30 @@ The framework + infrastructure tier is where most current work happens. Detailed
 
 ### 4.3 The dependency graph
 
-How they import each other:
+How they import each other, from the packages' metadata (`A ──► B`: A
+depends on B; `A ┄► B`: through an optional extra):
 
 ```
-            geotoolz                xr-toolz
-                ▲                       ▲
-                │                       │
-                └──────┬─────────┬──────┘
-                       │         │
-                       ▼         ▼
-              pipekit-cycle    pipekit-train ◄── pipekit-experiment
-                       │              │                  │
-                       └──────┬───────┘                  │
-                              ▼                          │
-                          pipekit-evaluate ◄─────────────┘
-                              │
-                              ▼
-                       ┌──────┴──────┐
-                       │             │
-                  pipekit-array  pipekit-jax
-                       │             │
-                       └──────┬──────┘
-                              ▼
-                           pipekit
-                              ▲
-                              │
-                       ┌──────┴──────┐
-                       │             │
-                  geocatalog    geopatcher
-                       │             │
-                       └──────┬──────┘
-                              ▼
-                          georeader  +  xarray ecosystem
+  pipekit family (each ──► pipekit)
+    pipekit-array, pipekit-cycle, pipekit-experiment
+    pipekit-jax        ──► pipekit-cycle
+    pipekit-evaluate   ┄►  pipekit-cycle
+    pipekit-train      ┄►  pipekit-cycle, pipekit-experiment
+
+  xrtoolz family
+    xrtoolz-core       ──► pipekit
+    xrtoolz-einx       ──► xrtoolz-core
+    xrtoolz-sklearn    ──► xrtoolz-core
+    xrtoolz            ──► pipekit, xrtoolz-core, -einx, -grad, -reader, -sklearn
+
+  geotoolz family
+    geotoolz           ──► pipekit, georeader
+    geocatalog, geocloud, geopatcher, geoproducts ──► georeader
+    geopatcher         ┄►  pipekit
+    geoproducts        ┄►  geotoolz
+
+  pipekit and georeader depend on none of these; nothing depends on
+  pipekit-evaluate.
 ```
 
 **No circular dependencies.** Each layer only depends on layers below it. Domain libraries (geotoolz, xr-toolz) re-export common framework symbols so user code typically only imports one package.
@@ -400,7 +393,6 @@ Code:
 
 ```python
 import pipekit as pk
-import pipekit_array as pa
 import pipekit_cycle as pc
 import pipekit_train as pt
 import pipekit_evaluate as pe
@@ -430,7 +422,7 @@ registry = px.S3ModelRegistry(bucket="imeo-models")
 neural_retrieval = registry.load("ch4_retrieval_v3")
 retrieval_ml = pk.Sequential([
     gz.cloud.MaskClouds(qa_band=-1, bits=[10, 11]),
-    pa.ModelOp(neural_retrieval),
+    gz.ModelOp(neural_retrieval),
 ])
 
 # ───── Step 4: Gap-filling with UQ ─────
@@ -612,7 +604,7 @@ Each has a thin `adapters/pipekit.py` exposing the operator surface (`ForwardMod
    State primitives: StatefulOperator, CarryState
 ```
 
-**pipekit-array** — Array API operators. Multi-backend (numpy/JAX/CuPy/PyTorch). `ModelOp`, `Histogram`, `AssertValueRange`, etc. (Report 3)
+**pipekit-array** — Array API operators. Multi-backend (numpy/JAX/CuPy/PyTorch). `StackAlong`, `ConcatenateAlong`, `MeanScalar`; `ModelOp` lives in geotoolz. (Report 3)
 
 **pipekit-jax** — Equinox-backed, JAX-traceable operators. Deferred to v0.3+. (Report 5)
 
@@ -647,6 +639,11 @@ Both consume the same Layer 4 peers. The substrate differs (georeader vs xarray 
 The essentials, with full working-looking snippets.
 
 ### 7.1 — Define an operator
+
+A simplified sketch of how `geotoolz.radiometry.PercentileClip` is written
+upstream. In geostack, use that operator; define a new one only when the
+[capability index](api/capabilities.md) has nothing that fits, and add it to the
+library that owns the concept.
 
 ```python
 from pipekit import Operator
@@ -694,7 +691,7 @@ dem = pk.Input("dem")
 opt_clean = gz.cloud.MaskClouds(qa_band=-1, bits=[10, 11])(opt)
 sar_db    = gz.sar.LinearToDB()(gz.sar.LeeSpeckle(window=7)(sar))
 fused     = gz.fusion.AlignAndStack(target_grid="optical")(opt_clean, sar_db, dem)
-classify  = pa.ModelOp(crop_classifier)(fused)
+classify  = gz.ModelOp(crop_classifier)(fused)
 
 g = pk.Graph(
     inputs={"optical": opt, "sar": sar, "dem": dem},
@@ -760,7 +757,7 @@ inference = pk.Sequential([
     GridSampler(patcher),
     ApplyToChips(pk.Sequential([
         preprocess,
-        pa.ModelOp(model, batch_size=8),
+        gz.ModelOp(model, batch_size=8),
     ])),
     Stitch(gp.SpatialOverlapAdd()),
 ])
@@ -815,7 +812,7 @@ The key win of the architecture. Same DA cycle, different forward model. **This 
 ```python
 # Train an emulator offline
 emulator_loop = pt.TrainingLoop(
-    model_op=pa.ModelOp(ChemistryEmulatorNet()),
+    model_op=gz.ModelOp(ChemistryEmulatorNet()),
     dataset=pt.SimulationDataset(
         forward_model=PlumeForward(species="CH4", dt=3600.0),
         prior=AtmosphericPrior(distribution="climatology"),
@@ -845,7 +842,7 @@ da_emulated = pc.EnsembleDACycle(
     n_steps=24,
     n_members=40,
 )
-# 100× faster forecasts; same composability
+# Target: ~100× faster forecasts (not yet benchmarked); same composability
 ```
 
 ### 7.7 — Evaluation pipeline
@@ -946,7 +943,7 @@ artifact = pk.repro.freeze(
         "scene_catalog_uri": "s3://imeo/emit/2024_Q3_frozen/",
         "scene_catalog_sha256": "ab12cd34...",
     },
-    deps_lock="uv.lock",
+    deps_lock="pixi.lock",
     metadata={"author": "ej", "doi": "10.xxxx/mars-2024Q3"},
 )
 artifact.save("/regulatory/mars_methane_2024Q3.gtar")
@@ -1119,7 +1116,11 @@ Three honest pushbacks on my own sequencing:
 
 ## 10. Where to read next
 
-Depending on what you’re trying to understand:
+Depending on what you’re trying to understand. These documents are not in
+this repository yet (they live with the migration notes and will move into
+`docs/` as they are written up); until then, the
+[capability index](api/capabilities.md) and the reference repositories under
+`references/` are the source of truth.
 
 |If you want to understand…      |Read                                                                        |
 |--------------------------------|----------------------------------------------------------------------------|
