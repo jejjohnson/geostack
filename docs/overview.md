@@ -559,19 +559,29 @@ as its oracle.
 (sec-stage-matchup)=
 ### Stage 2 · Match with in-situ (step 3: geocatalog matchup)
 
-**TL;DR.** Pair each TCCON measurement with the satellite retrieval nearest
-to it in space and time.
+**TL;DR.** Pair each TCCON measurement with the one satellite retrieval
+nearest to it in space and time; measurements with nothing nearby are
+dropped.
 
 **Problem.** In-situ observation j sits at location $s_j$ and time $t_j$;
-satellite retrieval k at $s_k$, $t_k$; d is great-circle distance. A pair
-(j, k) is a matchup when both tolerances hold:
+satellite retrieval k at $s_k$, $t_k$; d is great-circle distance. The
+candidates for j are the retrievals inside both tolerances:
+
+```{math}
+:label: eq-matchup-window
+W_j = \left\{ k : |t_j - t_k| \le 3~\mathrm{h} ~~\text{and}~~ d(s_j, s_k) \le 25~\mathrm{km} \right\}
+```
+
+If $W_j$ is empty, j has no matchup. Otherwise j keeps the single candidate
+with the smallest scaled distance, so no TCCON record is counted twice:
 
 ```{math}
 :label: eq-matchup
-|t_j - t_k| \le 3~\mathrm{h} ~~\text{and}~~ d(s_j, s_k) \le 25~\mathrm{km}
+k^\star(j) = \arg\min_{k \in W_j} \left(\frac{d(s_j, s_k)}{25~\mathrm{km}}\right)^2 + \left(\frac{|t_j - t_k|}{3~\mathrm{h}}\right)^2
 ```
 
-The pairs validate stage 1 and are the (label, feature) training data for a
+Ties go to the earlier retrieval, then the smaller catalog index, so the
+selection is deterministic. The pairs validate stage 1 and are the (label, feature) training data for a
 learned retrieval. How much of their disagreement is representativeness
 error is an [open question](#sec-open-questions).
 
@@ -609,23 +619,31 @@ observations.
 **Problem.** $x_t \in \mathbb{R}^N$ is the methane state at hour t, 𝓜 one
 plumax transport step of 3,600 s, H the column observation operator, R the
 observation-error covariance, and $P^b$ the background covariance estimated
-from the $N_e$ members. Each cycle forecasts, then updates every member:
+from the $N_e$ members. Each cycle forecasts every member $i = 1, \dots, N_e$:
 
 ```{math}
 :label: eq-forecast
-x_t^b = \mathcal{M}\left(x_{t-1}^a\right)
+x_t^{b,(i)} = \mathcal{M}\left(x_{t-1}^{a,(i)}\right)
 ```
+
+then updates each member against its own perturbed copy of the
+observations, $\varepsilon^{(i)} \sim \mathcal{N}(0, R)$ drawn
+independently per member (the stochastic EnKF):
 
 ```{math}
 :label: eq-enkf
-K = P^b H^\top \left(H P^b H^\top + R\right)^{-1}, ~~~ x_t^a = x_t^b + K \left(y_t - H x_t^b\right)
+K = P^b H^\top \left(H P^b H^\top + R\right)^{-1}, ~~~ x_t^{a,(i)} = x_t^{b,(i)} + K \left(y_t + \varepsilon^{(i)} - H x_t^{b,(i)}\right)
 ```
 
-$P^b$ is inflated by 1.05 and localised with a Gaspari–Cohn taper. The
-estimate is approximate and random: localisation trades exactness for
-removing spurious long-range correlations. With a linear 𝓜 and H, no
-inflation, no localisation and many members, {eq}`eq-enkf` reduces to the
-Kalman filter, which is gate D2.
+The perturbations matter: updating every member with the same unperturbed
+$y_t$ shrinks the anomalies by $(I - KH)$ and leaves the analysis ensemble
+too narrow, which would bias the CRPS in stage 5. $P^b$ is inflated by 1.05
+and localised with a Gaspari–Cohn taper; localisation trades exactness for
+removing spurious long-range correlations, and the perturbations make the
+estimate random. A square-root (ETKF) variant replaces the perturbations
+with a deterministic anomaly transform; with a linear 𝓜 and H, no
+inflation, no localisation and $N_e > N$, its analysis mean equals the
+Kalman filter mean exactly, which is gate D2.
 
 (sec-stage-evaluate)=
 ### Stage 5 · Index, evaluate, register (steps 6–8: statecatalog → pipekit-evaluate → pipekit-experiment)
@@ -814,10 +832,11 @@ decision.
   Recommended: build the sketched helpers on the shipped classes, so
   `Oracle` stays the single home of "step 2 as oracle". Alternative: keep
   both and document the boundary.
-- **Two reproducibility APIs.** The examples sketch `pk.repro.freeze`;
-  pipekit-experiment already ships `InferenceArtifact` and
-  `TrainingArtifact`. Recommended: extend those rather than add a second
-  freeze path.
+- **What `InferenceArtifact` still needs for a cold rerun.** The examples
+  build on the shipped `InferenceArtifact`; `save`, `load` and `rerun` are
+  proposed extensions. Open: whether a rerun resolves its inputs from the
+  pinned catalog URIs and SHA-256 digests alone, without cloud credentials,
+  and whether `TrainingArtifact` needs the same three methods.
 - **Where `xrreader` stops and `georeader` starts.** The split by level
   (L0–L2 below, L3–L5 above) is clean on paper, but gridded L2 products and
   L3 composites can share formats. Recommended: split by carrier (GeoTensor

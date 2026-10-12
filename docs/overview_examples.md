@@ -127,18 +127,27 @@ gap_fill = KrigingOperator(                         # (M,) → (N,), (N,)
 :::{tab-item} 4 · Assimilate
 The EnKF analysis needs an ensemble, so the cycle is an `EnsembleDACycle`
 with 40 members. The observation operator matches the instrument the
-observations come from: EMIT.
+observations come from: EMIT. `retrieval` maps one scene to one map, so the
+cycle's observation source wraps it: each hour it queries the catalog for
+that hour's scenes, loads them and retrieves each one.
 
 ```{code-block} python
 :caption: An hourly ensemble DA cycle over the plume model (stage 4).
 :linenos:
 
 # Shapes: N state, M observations, N_e = 40 members, T = 24 steps
-# xᵇₜ = 𝓜(xᵃₜ₋₁)   [unverified]
+# yₜ = {α(s) : s an EMIT scene with t ≤ tₛ < t + 1 h}
+retrieve_one = pk.Lambda(lambda gt: retrieval(scene=gt)["alpha"])  # today
+hourly_obs = pk.Sequential([                      # today
+    gc.CatalogTimeQuery(emit_cat, window="1h"),   # t → GeoSlices  proposed (B)
+    pk.ThreadMap(gc.LoadRaster() | retrieve_one), # → S × (H, W)  today*
+])
+
+# xᵇₜ⁽ⁱ⁾ = 𝓜(xᵃₜ₋₁⁽ⁱ⁾)   [unverified]
 forward = PlumeForward(species="CH4", dt=3600.0)  # (N_e, N) → (N_e, N)
 # y_pred = H x for EMIT columns, as in obs_source   [unverified]
 obs_op = ColumnObs(instrument="EMIT")             # (N_e, N) → (N_e, M)
-# xᵃ = xᵇ + K (y − H xᵇ), K = Pᵇ Hᵀ (H Pᵇ Hᵀ + R)⁻¹  [unverified]
+# xᵃ⁽ⁱ⁾ = xᵇ⁽ⁱ⁾ + K (y + ε⁽ⁱ⁾ − H xᵇ⁽ⁱ⁾), ε⁽ⁱ⁾ ~ 𝒩(0, R)  [unverified]
 analysis = EnKFAnalysis(                          # (N_e, N) → (N_e, N)
     inflation=1.05, localization="gaspari-cohn"
 )
@@ -147,10 +156,11 @@ da = pc.EnsembleDACycle(  # T × (forecast, analysis)  today*
     forward_model=forward,
     obs_op=obs_op,
     analysis_step=analysis,
-    obs_source=retrieval,                         # EMIT scenes, each hour
+    obs_source=hourly_obs,                        # EMIT scenes, each hour
     n_steps=24,
     n_members=40,
 )
+da_hash = pk.config_hash(da)  # content hash of the config  proposed (A)
 ```
 :::
 
@@ -378,12 +388,14 @@ cat = gc.open_catalog("s3://imeo/sentinel2_index_2024.parquet")  # today
 # rows with footprint ∩ aoi ≠ ∅ and t₀ ≤ t ≤ t₁
 rows = gc.query(cat, bbox=aoi, time=(t0, t1))                    # today*
 
-# {(j, k) : |tⱼ − tₖ| ≤ 3 h, d(sⱼ, sₖ) ≤ 25 km}
-matched = gc.queries.matchup(  # → M MatchupPairs  proposed (B)
+# Wⱼ = {k : |tⱼ − tₖ| ≤ 3 h, d(sⱼ, sₖ) ≤ 25 km}
+# k⋆(j) = argmin over Wⱼ of (d / 25 km)² + (|Δt| / 3 h)²
+matched = gc.queries.matchup(  # → M ≤ |tccon| pairs  proposed (B)
     primary=tccon_cat,  # the sparse, accurate stream
     secondary=cat,  # the dense satellite stream
     time_tolerance=pd.Timedelta(hours=3),
     space_tolerance_km=25.0,
+    select="nearest",  # one k per j; ties: earlier time, then index
 )
 ```
 
@@ -398,6 +410,11 @@ matchup adds the time and distance tolerances on top of it.
 :linenos:
 
 # Shapes: C channels, H × W scene; 256² patches, stride 224
+from geopatcher.integrations.pipekit import (     # proposed (C)
+    ApplyToChips,
+    GridSampler,
+)
+
 patcher = gp.SpatialPatcher(                       # today*
     geometry=gp.SpatialRectangular((256, 256)),
     sampler=gp.SpatialRegularStride((224, 224)),
@@ -410,13 +427,13 @@ field = gp.RasterField(scene_reader)               # GeoTensor field  today
 inference = pk.Sequential([                        # today
     GridSampler(patcher),  # (C, H, W) → P × (C, 256, 256)  proposed (C)
     ApplyToChips(preprocess | gz.ModelOp(model)),  # per patch  proposed (C)
-    Stitch(gp.SpatialOverlapAdd()),  # → (K, H, W)  proposed (C)
+    gz.Stitch(aggregation=gp.SpatialOverlapAdd()),  # → (K, H, W)  today*
 ])
 result = inference(field)
 ```
 
-geotoolz already ships a `Stitch` for georeferenced tiles; the patcher's
-stitch should reuse it rather than add a second one.
+The stitch step is geotoolz's existing `Stitch`, which already joins
+georeferenced tiles; only the sampler and the per-patch wrapper are new.
 
 (ex-da-cycle)=
 ### Data assimilation cycle
