@@ -40,6 +40,7 @@ problem each stage solves, with its equations, is in the
 :caption: Imports shared by every stage.
 :linenos:
 
+import jax
 import pipekit as pk                                         # today
 import pipekit_cycle as pc                                   # today
 import pipekit_train as pt                                   # today
@@ -103,7 +104,12 @@ net = registry.load("ch4_retrieval_v3")              # content-addressed  today
 
 # α = g_φ(x), trained with the matched filter as its oracle
 alpha_ml = gz.ModelOp(net)(clear)       # (B, H, W) → (H, W)  today
+
+retrieval_ml = pk.Graph(inputs={"scene": scene}, outputs={"alpha": alpha_ml})
 ```
+
+`retrieval_ml` has the same input and output as `retrieval`, so either one
+can fill the observation source below.
 :::
 
 :::{tab-item} 3 · Gap-fill
@@ -129,7 +135,9 @@ The EnKF analysis needs an ensemble, so the cycle is an `EnsembleDACycle`
 with 40 members. The observation operator matches the instrument the
 observations come from: EMIT. `retrieval` maps one scene to one map, so the
 cycle's observation source wraps it: each hour it queries the catalog for
-that hour's scenes, loads them and retrieves each one.
+that hour's scenes, reads them with geotoolz's `ReadBounds` and retrieves
+each one. The stochastic analysis draws its perturbations from one key seeded
+from the run's config (`cfg.seed`), so a rerun reproduces them.
 
 ```{code-block} python
 :caption: An hourly ensemble DA cycle over the plume model (stage 4).
@@ -137,11 +145,12 @@ that hour's scenes, loads them and retrieves each one.
 
 # Shapes: N state, M observations, N_e = 40 members, T = 24 steps
 # yₜ = {α(s) : s an EMIT scene with t ≤ tₛ < t + 1 h}
-retrieve_one = pk.Lambda(lambda gt: retrieval(scene=gt)["alpha"])  # today
+retrieve_one = retrieval | pk.Pick("alpha")  # named, YAML-safe  proposed (A)
 hourly_obs = pk.Sequential([                      # today
     gc.CatalogTimeQuery(emit_cat, window="1h"),   # t → GeoSlices  proposed (B)
-    pk.ThreadMap(gc.LoadRaster() | retrieve_one), # → S × (H, W)  today*
+    pk.ThreadMap(gz.ReadBounds() | retrieve_one), # → S × (H, W)  today*
 ])
+key = jax.random.PRNGKey(cfg.seed)  # one seed per run, from the config
 
 # xᵇₜ⁽ⁱ⁾ = 𝓜(xᵃₜ₋₁⁽ⁱ⁾)   [unverified]
 forward = PlumeForward(species="CH4", dt=3600.0)  # (N_e, N) → (N_e, N)
@@ -159,6 +168,7 @@ da = pc.EnsembleDACycle(  # T × (forecast, analysis)  today*
     obs_source=hourly_obs,                        # EMIT scenes, each hour
     n_steps=24,
     n_members=40,
+    key=key,                                      # draws every ε⁽ⁱ⁾
 )
 da_hash = pk.config_hash(da)  # content hash of the config  proposed (A)
 ```
@@ -448,6 +458,13 @@ observation source both name TROPOMI.
 :linenos:
 
 # Shapes: N state, M observations, N_e = 40 members, T = 24 steps
+tropomi_cat = gc.open_catalog("s3://imeo/tropomi.parquet")  # today
+tropomi_source = pk.Sequential([                  # today
+    gc.CatalogTimeQuery(tropomi_cat, window="1h"),  # proposed (B)
+    pk.ThreadMap(gz.ReadNetCDF(variable="ch4")),  # → S × (M,)  today*
+])
+key = jax.random.PRNGKey(cfg.seed)  # one seed per run, from the config
+
 forward = PlumeForward(species="CH4", dt=3600.0)  # ForwardModel  unverified
 obs_op = ColumnObs(instrument="TROPOMI")  # ObservationOperator  unverified
 analysis = EnKFAnalysis(inflation=1.05)           # AnalysisStep  unverified
@@ -460,6 +477,7 @@ da = pc.EnsembleDACycle(                          # today*
     n_steps=24,
     n_members=40,
     save_history=True,
+    key=key,
 )
 
 carry0 = pc.DAState(                              # today*
@@ -525,6 +543,7 @@ da_emulated = pc.EnsembleDACycle(
     obs_source=tropomi_source,      # same
     n_steps=24,
     n_members=40,
+    key=key,                        # same
 )
 # Target: ~100× faster forecasts. Not yet benchmarked.
 ```
@@ -547,8 +566,8 @@ sketched in the methane pipeline should be built on these.
 task = pe.Task(                                          # today*
     prior=prior, simulator=forward, obs_op=obs_op, data=tccon_cat
 )
-oracle = pe.Oracle(estimator=classical_da)  # rung 2: ground truth  today*
-candidate = pe.Estimator(fn=emulated_da)    # rung 4  today*
+oracle = pe.Oracle(estimator=da)            # rung 2: ground truth  today*
+candidate = pe.Estimator(fn=da_emulated)    # rung 4  today*
 
 # CRPS(F, y) = 𝔼|X − y| − ½ 𝔼|X − X′|   [today*]
 bench = pe.Benchmark(                                                          #
@@ -611,8 +630,9 @@ proposed as an extension of it, not as a second mechanism.
 artifact = px.InferenceArtifact(                       # today*
     pipeline=da_emulated,
     inputs={
-        "scene_catalog_uri": "s3://imeo/emit/2024_Q3_frozen/",
-        "scene_catalog_sha256": "ab12cd34...",
+        "obs_catalog_uri": "s3://imeo/tropomi/2024_Q3_frozen/",
+        "obs_catalog_sha256": "ab12cd34...",
+        "seed": cfg.seed,
     },
     deps_lock="pixi.lock",
     metadata={"author": "ej", "doi": "10.xxxx/mars-2024Q3"},

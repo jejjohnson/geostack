@@ -335,12 +335,19 @@ story:
 y = H\left(f(\theta)\right) + \varepsilon, ~~~ \varepsilon \sim \mathcal{N}(0, R)
 ```
 
-Step 2 inverts it exactly but slowly, by Bayes' rule with a prior p(θ):
+Step 2 inverts it with classical, model-based inference. Bayes' rule with a
+prior p(θ) defines the target:
 
 ```{math}
 :label: eq-posterior
 p(\theta \mid y) \propto p(y \mid \theta) ~ p(\theta)
 ```
+
+Computing it is exact only in tractable cases, such as a linear-Gaussian
+model solved with the Kalman filter or a GP. The usual step-2 methods (a
+finite-ensemble EnKF, 3D- or 4D-Var) approximate it, slowly. Step 2 is the
+oracle because it is the most trusted reference available, not because it
+is exact.
 
 Step 3 trains an emulator $\hat f_\phi$ with weights φ on step-1
 simulations, and step 4 reruns step 2 with $\hat f_\phi$ in place of f:
@@ -365,7 +372,7 @@ Two structural commitments fall out of the cycle:
 
 :::{card} Step 2 is the oracle
 Classical methods (`filterax`, `vardax`, `pyrox`) are not legacy code
-waiting to be replaced by neural emulators. They become *ground-truth
+waiting to be replaced by neural emulators. They become *reference
 generators* that validate steps 3–5. The classical path stays alive,
 promoted to oracle.
 :::
@@ -640,10 +647,12 @@ $y_t$ shrinks the anomalies by $(I - KH)$ and leaves the analysis ensemble
 too narrow, which would bias the CRPS in stage 5. $P^b$ is inflated by 1.05
 and localised with a Gaspari–Cohn taper; localisation trades exactness for
 removing spurious long-range correlations, and the perturbations make the
-estimate random. A square-root (ETKF) variant replaces the perturbations
-with a deterministic anomaly transform; with a linear 𝓜 and H, no
-inflation, no localisation and $N_e > N$, its analysis mean equals the
-Kalman filter mean exactly, which is gate D2.
+estimate random. They are drawn from one key seeded from the run's config,
+so a rerun reproduces them (gate G1). A square-root (ETKF) variant replaces
+the perturbations with a deterministic anomaly transform. With a linear 𝓜
+and H, no inflation and no localisation, its analysis mean equals the Kalman
+update applied to the ensemble's own sample mean and covariance, which is
+gate D2.
 
 (sec-stage-evaluate)=
 ### Stage 5 · Index, evaluate, register (steps 6–8: statecatalog → pipekit-evaluate → pipekit-experiment)
@@ -1033,7 +1042,7 @@ month 3. Phases 6 and 7 wait for projects to pull them.
 | B1 Backend parity | B | The InMemory and DuckDB geocatalog backends return the identical slice set for the same bbox and time query |
 | C1 Patch identity | C | An identity model through patch → stitch with Hann-window overlap-add reproduces the input to 1e-6 in float64, away from scene edges |
 | D1 Kriging oracle | D | `KrigingOperator`'s mean and variance match {eq}`eq-kriging-mean` and {eq}`eq-kriging-var` to 1e-6 in float64 |
-| D2 Kalman oracle | D | With linear 𝓜 and H, a square-root ensemble analysis with $N_e > N$, no inflation and no localisation matches the Kalman filter mean to 1e-6 in float64 |
+| D2 Kalman oracle | D | With linear 𝓜 and H, no inflation and no localisation, the square-root ensemble analysis mean matches the Kalman update computed from the same ensemble's sample mean and covariance, to 1e-6 in float64 |
 | E1 Registry round-trip | E | Loading a stored operator returns one with the same content hash and bitwise-equal outputs |
 | F1 Metric identities | F | CRPS {eq}`eq-crps` with one member equals absolute error exactly; RMSE of a field against itself is 0 |
 | G1 End to end | all | Stages 1–5 of the walkthrough run from one YAML file, and a cold rerun of the frozen artifact reproduces the evaluation report's hash |
@@ -1113,7 +1122,7 @@ What makes it specific:
   reports, benchmark contracts, reproducibility artifacts and cycle lineage.
 - **ML pluggable at every transition,** through one training, registry and
   inference machinery.
-- **Classical methods as oracles,** kept as ground-truth generators rather
+- **Classical methods as oracles,** kept as reference generators rather
   than replaced.
 - **Benchmarks as operationalised hypotheses,** pre-registerable and
   content-addressed, not leaderboards.
@@ -1155,6 +1164,6 @@ matchup
   time; the operation where the satellite and in-situ streams converge.
 
 oracle
-: The classical method (step 2) used as ground truth to validate emulators
+: The classical method (step 2) used as the trusted reference to validate emulators
   and amortized predictors.
 :::

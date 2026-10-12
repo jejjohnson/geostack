@@ -652,7 +652,11 @@ def three_layers() -> Svg:
 
 SIX = [
     ("1", "Simple model", ["a generative story;", "physics you can simulate"]),
-    ("2", "Model-based inference", ["slow but exact;", "classical DA / inversion"]),
+    (
+        "2",
+        "Model-based inference",
+        ["slow, trusted reference;", "classical DA / inversion"],
+    ),
     ("3", "Emulator", ["neural surrogate trained", "on step 1; skip if cheap"]),
     ("4", "Emulator-based inference", ["step 2 in seconds,", "not hours"]),
     ("5", "Amortized inference", ["a direct map:", "observations → posterior"]),
@@ -700,7 +704,7 @@ def six_steps() -> Svg:
     f.text(
         sx + 12,
         bus - 12,
-        "oracle: step 2 is the ground truth that validates steps 3\u20135",
+        "oracle: step 2 is the trusted reference that validates steps 3\u20135",
         size=12,
         color=ORACLE[0],
         anchor="start",
