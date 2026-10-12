@@ -1,540 +1,820 @@
 ---
 title: GeoStack overview
+subtitle: A JAX-native research stack for geophysical modeling, inference and data assimilation
+short_title: Overview
+description: The entry point to GeoStack. Three organising axes, the six-tier stack, an end-to-end methane walkthrough, the open questions and a plan.
+keywords:
+  - geophysics
+  - data assimilation
+  - JAX
+  - operator graphs
+  - remote sensing
+numbering:
+  heading_2: true
+  heading_3: true
+  figure: true
+  table: true
+abbreviations:
+  DA: data assimilation
+  GP: Gaussian process
+  ML: machine learning
+  RT: radiative transfer
+  SST: sea surface temperature
+  SSH: sea surface height
+  LST: land surface temperature
+  COG: Cloud-Optimized GeoTIFF
+  CTD: conductivity, temperature and depth
+  EnKF: ensemble Kalman filter
+  TCCON: Total Carbon Column Observing Network
+  CAMS: Copernicus Atmosphere Monitoring Service
+  UQ: uncertainty quantification
 ---
 
++++ {"part": "abstract"}
 
-## What this document is
+There is no Keras for geophysics. GeoStack is the connective tissue that is
+missing: one operator-graph abstraction that runs from structured linear
+algebra up to end-to-end pipelines, with content-addressed data and models
+throughout and machine learning pluggable at every step. This page is the
+map. It ties together the vision document and the sixteen scoping reports,
+and it ends with the open questions and a plan.
 
-A synthesis. The vision document (`vision_v2.md`) is the manifesto; the numbered reports (1–16) are scoping deep-dives for each piece; this document weaves them together into a single readable starting point. Lots of diagrams, lots of code snippets, lots of cross-references. Open questions and a plan at the end.
++++
 
-If you only have time for one document, this is the one. Otherwise, this is the map.
+:::{tip} How to read this page
+:class: dropdown
+- **Five minutes:** read the [elevator pitch](#sec-pitch), look at
+  {numref}`fig-lifecycle` and {numref}`fig-tier-stack`, and skim the
+  [plan](#sec-plan).
+- **Building something:** start with the [walkthrough](#sec-walkthrough)
+  and the [overview examples](overview_examples.md), then search the
+  [capability index](api/capabilities.md) before writing new code.
+- **Reviewing the design:** go straight to the
+  [open questions](#sec-open-questions).
+:::
 
------
+(sec-pitch)=
+## The elevator pitch
 
-## 1. The elevator pitch
+> A vertically integrated, JAX-native research software stack for geophysical
+> modeling, inference and data assimilation: from structured linear algebra
+> primitives, through composable operator graphs, to indexed multi-tier data
+> products, with ML pluggable at every level.
 
-> A vertically integrated, JAX-native research software stack for geophysical modeling, inference, and data assimilation — from structured linear algebra primitives through composable operator graphs to indexed multi-tier data products, with ML pluggable at every level.
+In one sentence: **the operator-graph abstraction, extended from numerical
+primitives all the way up to end-to-end pipelines, with content-addressed
+data and models throughout.**
 
-In one sentence: **the operator-graph abstraction extended from numerical primitives all the way up to end-to-end pipelines, with content-addressed data and models throughout**.
+You can build great JAX numerics (gaussX, lineax, equinox) and great xarray
+pipelines today. What you cannot do is connect them. GeoStack fills that gap
+with five building blocks:
 
-In one paragraph: this stack solves a specific problem — there’s no Keras-equivalent for geophysical work. You can build great JAX numerics (gaussX, lineax, equinox), and you can build great xarray pipelines, but there’s no connective tissue between them. The GeoStack fills that gap with a:
-- carrier-agnostic framework (`pipekit`)
-- peer infrastructure for indexing observations and model states (`geocatalog`, `statecatalog`, `geopatcher`)
-- training and evaluation machinery (`pipekit-train`, `pipekit-evaluate`, `pipekit-experiment`)
-- domain libraries for the carriers people actually use (`geotoolz` for GeoTensor, `xr-toolz` for xarray)
-- clean adapter pattern so existing algorithm libraries (filterX, vardaX, plumax, pyrox-gp, gaussFlowX) plug in without coupling.
+::::{grid} 1 1 2 3
 
------
+:::{card} Framework
+`pipekit`: a carrier-agnostic operator graph. One algebra for NumPy, JAX,
+xarray and GeoTensor.
+:::
 
-## 2. The shape of the problem
+:::{card} Infrastructure
+`geocatalog`, `statecatalog`, `geopatcher`: index observations and model
+states, and cut fields into patches.
+:::
 
-Five gaps motivate everything below. The first four are old; the fifth has only become visible recently.
+:::{card} Training and evaluation
+`pipekit-train`, `pipekit-evaluate`, `pipekit-experiment`: train emulators,
+evaluate along many axes, register every artifact.
+:::
 
-1. **Scattered numerics.** Same linear algebra, kernel methods, filtering routines reimplemented in every project. No shared primitives.
-2. **ML tooling doesn’t serve classical numerics.** Keras/PyTorch layers assume supervised learning on tensors. They don’t naturally express linear operators, PDE solvers, state estimation, uncertainty propagation.
-3. **Monolithic domain software.** Ocean models, retrieval algorithms, DA systems are dense, tightly coupled, hard to recombine.
-4. **No connective tissue.** Even with good numerics and good ML, there’s no Keras-like pipeline to compose them for real geophysical work.
-5. **No indexed model-state tier.** Observations are catalogable (STAC, GeoParquet). Model outputs (forecasts, analyses, reanalysis) aren’t — they’re scattered files with bespoke conventions. The L3–L4 half of the lifecycle has no equivalent of the catalogs that organise L0–L2.
+:::{card} Domain libraries
+`geotoolz` for GeoTensor and `xrtoolz` for xarray: the carriers people
+actually use.
+:::
+
+:::{card} Adapters
+filterX, vardaX, plumax, pyrox-gp and gaussFlowX plug in through thin
+adapter modules, without coupling.
+:::
+::::
+
+(sec-problem)=
+## The shape of the problem
+
+Five gaps motivate everything below. The first four are old; the fifth has
+only become visible recently.
+
+::::{grid} 1 1 2 2
+
+:::{card} 1 · Scattered numerics
+The same linear algebra, kernel methods and filtering routines are
+reimplemented in every project. There are no shared primitives.
+:::
+
+:::{card} 2 · ML tooling ignores classical numerics
+Keras and PyTorch layers assume supervised learning on tensors. They do not
+express linear operators, PDE solvers, state estimation or uncertainty
+propagation.
+:::
+
+:::{card} 3 · Monolithic domain software
+Ocean models, retrieval algorithms and DA systems are dense, tightly
+coupled and hard to recombine.
+:::
+
+:::{card} 4 · No connective tissue
+Even with good numerics and good ML, there is no Keras-like pipeline to
+compose them for real geophysical work.
+:::
+
+:::{card} 5 · No indexed model-state tier
+Observations are catalogable (STAC, GeoParquet). Forecasts, analyses and
+reanalyses are scattered files with bespoke conventions: the L3–L5 half of
+the lifecycle has nothing like the catalogs that organise L0–L2.
+:::
+::::
 
 The stack addresses all five.
 
------
+(sec-axes)=
+## Three organising axes
 
-## 3. Three organising axes
+Three axes structure the framework. They are orthogonal: every operation sits
+somewhere on all three.
 
-Three axes structure the whole framework. They’re orthogonal: every operation happens *somewhere* on all three. Axis 1 is the research loop. Axis 2 is the data lifecycle. Axis 3 is the research-to-production journey.
+:::{table} The three axes and what each one orders.
+:label: tbl-axes
 
-### 3.1 The modeling cycle (axis 1)
+| Axis | Orders | Figure |
+|---|---|---|
+| 1 · Modeling cycle | the research loop: model, observe, compare, refine | {numref}`fig-modeling-cycle` |
+| 2 · Data lifecycle | data maturity, from raw telemetry (L0) to derived products (L5) | {numref}`fig-lifecycle` |
+| 3 · Six-step cycle | the journey from a simple model to amortized inference | {numref}`fig-six-steps` |
+:::
+
+(sec-modeling-cycle)=
+### The modeling cycle (axis 1)
 
 ```{figure} images/overview/modeling_cycle.svg
-:name: fig-modeling-cycle
-:alt: The modeling cycle runs on two parallel tracks. The modeling track abstracts the real-world system into equations and code that make predictions; the observing track measures the same system with sensors and turns measurements into observations. The tracks meet where predictions are compared with observations, and the model is refined.
+:label: fig-modeling-cycle
+:alt: The real-world system feeds two tracks. Modeling runs abstract, equations and code, predictions. Observing runs sensor, measurements, observations. Both meet at compare; refine loops back to abstract.
 :width: 100%
 
-The modeling cycle runs on two parallel tracks. The modeling track abstracts the real-world system into equations and code that make predictions; the observing track measures the same system with sensors and turns measurements into observations. The tracks meet where predictions are compared with observations, and the model is refined.
+**The modeling cycle runs on two parallel tracks.**
+
+The modeling track abstracts the real-world system into equations and code
+that make predictions. The observing track measures the same system with
+sensors and turns measurements into observations. The tracks meet where
+predictions are compared with observations, and the model is refined.
 ```
 
-The cycle has two parallel tracks: modeling turns the system into predictions, observing turns it into observations through sensors and measurements, and the two meet at validation.
+:::{important} Start simple
+Add complexity only when validation demands it. This is the research loop,
+and every package in the stack exists to make one or more of its steps
+composable.
+:::
 
-**Start simple. Add complexity only when validation demands it.** This is the research loop. Every package in the stack exists to make one or more steps of this cycle composable.
-
-### 3.2 The L0–L5 data tier (axis 2)
+(sec-lifecycle)=
+### The L0–L5 data lifecycle (axis 2)
 
 ```{figure} images/overview/lifecycle.svg
-:name: fig-lifecycle
-:alt: The L0–L5 lifecycle on two perpendicular axes. The science axis fans one stream of radiances out into ocean, atmosphere, land and ice at retrieval, and ends in derived products such as extremes (L5, dashed: examples still to be defined). The engineering axis maps every level to the GeoStack tool that transforms, patches, carries, reads, indexes and stores it, switching carrier from GeoTensor to xarray between L2 and L3.
+:label: fig-lifecycle
+:alt: Six maturity levels, L0 to L5, across the top. Below, the science axis fans radiances out into ocean, atmosphere, land and ice lanes; further below, the engineering axis shows which GeoStack tool transforms, patches, carries, reads, indexes and stores each level.
 :width: 100%
 
-The L0–L5 lifecycle on two perpendicular axes. The science axis fans one stream of radiances out into ocean, atmosphere, land and ice at retrieval, and ends in derived products such as extremes (L5, dashed: examples still to be defined). The engineering axis maps every level to the GeoStack tool that transforms, patches, carries, reads, indexes and stores it, switching carrier from GeoTensor to xarray between L2 and L3.
+**The data lifecycle on two perpendicular axes.**
+
+The science axis fans one stream of radiances out into ocean, atmosphere,
+land and ice at retrieval, and ends in derived products such as extremes
+(L5, dashed: examples still to be defined). The engineering axis maps every
+level to the tool that handles it, switching carrier from GeoTensor to
+xarray between L2 and L3.
 ```
 
-**Two perpendicular axes.** The science axis runs left to right, from raw
-telemetry to reanalysis and forecast. Until retrieval it is one stream: the
-same L1 radiances feed every geoscience. Retrieval is where it fans out, into
-ocean, atmosphere, land and ice variables at L2, and each domain then carries
-its own L3 analysis and L4 reanalysis or forecast. L5 holds the products
+:::{table} The six levels of the data lifecycle.
+:label: tbl-levels
+
+| Level | Name | What it holds | Carrier |
+|---|---|---|---|
+| L0 | Unstructured observations | raw instrument output: telemetry, counts, packets | GeoTensor |
+| L1 | Structured observations | calibrated, georeferenced radiances | GeoTensor |
+| L2 | Retrieved observations | per-pixel geophysical variables, with gaps where retrieval fails | GeoTensor |
+| L3 | Analysis | a regular, gap-filled grid: the "world right now" | xarray |
+| L4 | Reanalysis and forecast | dynamical model output: data-constrained, fused or projected | xarray |
+| L5 | Derived products | extremes, indicators and impacts computed from L4 | xarray |
+:::
+
+**The science axis** runs left to right. Until retrieval it is one stream:
+the same L1 radiances feed every geoscience. Retrieval is where it fans out
+into ocean, atmosphere, land and ice variables, and each domain then
+carries its own analysis and reanalysis or forecast. L5 holds the products
 derived from those states, such as extremes (marine heatwaves, droughts,
-storms) or impact indicators; which products belong here is still open.
+storms) or impact indicators. Which products belong in L5 is still open.
 
-The engineering axis runs top to bottom, from transforming data down to
+**The engineering axis** runs top to bottom, from transforming data down to
 storing it, and maps every level to the GeoStack tool that handles it. It
-splits at the L2/L3 boundary, where the carrier changes from GeoTensor to
-xarray:
+splits where the {term}`carrier` changes:
 
-- **Observations (L0–L2):** `georeader` reads them into a GeoTensor,
-  `geocatalog` indexes them as GeoSlices, `geotoolz` transforms them and
-  `geocloud` stores them (object storage, Cloud-Optimized GeoTIFF).
-- **Model states and derived products (L3–L5):** `xrreader` (today the
-  `xrtoolz-reader` package) reads them into xarray, `statecatalog` indexes them as StateSlices,
-  `xrtoolz` transforms them, and they live as Zarr or NetCDF on object
-  storage.
+- **Observations (L0–L2):** `georeader` reads them into a {term}`GeoTensor`,
+  `geocatalog` indexes them as {term}`GeoSlice`s, `geotoolz` transforms
+  them and `geocloud` stores them as COG on object storage.
+- **Model states and derived products (L3–L5):** `xrreader` reads them into
+  xarray, `statecatalog` indexes them as {term}`StateSlice`s, `xrtoolz`
+  transforms them, and they live as Zarr or NetCDF on object storage.
 - **Derived products (L5):** `xtremax` computes extremes from L4 states.
 - **Both carriers:** `geopatcher` patches fields whatever the carrier.
 
+:::{aside}
+`xrreader` exists today as the `xrtoolz-reader` package (it imports as
+`xrreader`).
+:::
+
 ML enters at every transition.
 
-### 3.3 The two-stream convergence
+(sec-two-streams)=
+### Two streams converge
 
-L0–L4 isn’t one chain. It’s two chains converging at L2/L3 via matchup:
+The lifecycle is not one chain. A top-down satellite stream and a bottom-up
+in-situ stream converge between L2 and L3.
 
 ```{figure} images/overview/two_streams.svg
-:name: fig-two-streams
-:alt: Two streams converge. The satellite chain runs L0→L4; in-situ networks in every domain (ocean, atmosphere, land, ice) join it through spatiotemporal matchup between L2 and L3, and enter L4 through assimilation.
+:label: fig-two-streams
+:alt: Satellite levels L0 to L4 on the left; in-situ networks for ocean, atmosphere, land and ice on the right. L2 and in-situ meet at a matchup node that feeds L3; in-situ also enters L4 through assimilation.
 :width: 100%
 
-Two streams converge. The satellite chain runs L0→L4; in-situ networks in every domain (ocean, atmosphere, land, ice) join it through spatiotemporal matchup between L2 and L3, and enter L4 through assimilation.
+**Satellite and in-situ observations converge through matchup.**
+
+In-situ networks in every domain join the satellite chain through
+spatiotemporal {term}`matchup` between L2 and L3, and enter L4 through
+assimilation. They have no L0 or L1 equivalent.
 ```
 
-The matchup pattern is canonical and deserves a real operator family. Covered in `data_ml_lifecycle.md`.
+The matchup pattern is canonical and deserves its own operator family; the
+data-lifecycle report (`data_ml_lifecycle.md`) covers it in depth.
 
-### 3.4 The three-layer model (transformations along the lifecycle)
+(sec-three-layers)=
+### Three layers of transformation
 
-The cycle and the L0–L4 axis are joined by a third lens — what we *do* to the data:
+The cycle and the lifecycle are joined by a third lens: what we *do* to the
+data on its way into a model.
 
 ```{figure} images/overview/three_layers.svg
-:name: fig-three-layers
-:alt: Three layers of transformation along the lifecycle, and the packages that own each.
+:label: fig-three-layers
+:alt: Scientific data becomes ML-ready data through harmonisation and tensorisation, which becomes embeddings through compression and latent mapping. Each layer lists the packages that own it.
 :width: 100%
 
-Three layers of transformation along the lifecycle, and the packages that own each.
+**Scientific data, ML-ready data, embeddings, and who owns each.**
 ```
 
-### 3.5 The six-step data-driven cycle (axis 3)
+(sec-six-steps)=
+### The six-step cycle (axis 3)
 
-The research-to-production journey. **Every domain library implicitly follows this cycle**; the framework makes it composable.
+The research-to-production journey. Every domain library follows this cycle
+implicitly; the framework makes it explicit and composable.
 
 ```{figure} images/overview/six_steps.svg
-:name: fig-six-steps
-:alt: The six-step cycle. Steps 1–5 run from simple model to amortized inference, with step 2, the classical method, as the oracle that validates steps 3–5. Step 6, improve, is shared: any of steps 2–5 can be improved, using the previous step as ground truth.
+:label: fig-six-steps
+:alt: Five steps in a row, from simple model to amortized inference. Step 2 validates steps 3 to 5. A shared improve step sits under steps 2 to 5 with two-way links.
 :width: 100%
 
-The six-step cycle. Steps 1–5 run from simple model to amortized inference, with step 2, the classical method, as the oracle that validates steps 3–5. Step 6, improve, is shared: any of steps 2–5 can be improved, using the previous step as ground truth.
+**From a simple model to amortized inference, with one shared improve step.**
+
+Step 2, the classical method, is the {term}`oracle` that validates steps
+3–5. Step 6 is shared: any of steps 2–5 can be improved, using the previous
+step as ground truth.
 ```
 
-**Two structural commitments fall out:**
+Two structural commitments fall out of the cycle:
 
-1. **Step 2 as oracle.** Classical methods (`filterX`, `vardaX`, `pyrox-gp`) are not legacy code to be replaced by neural emulators. They become *ground-truth generators* against which Steps 3–5 are validated. The classical path stays alive forever, promoted to oracle status.
-2. **Benchmarks as formalised understanding.** The act of writing a benchmark contract (carriers, references, metrics, splits, baselines, expected failure modes) is the act of formalising what you understand about the problem. Each cycle-step transition is itself a benchmarkable contract. Covered in Report 16 and `benchmarks_gallery.md`.
+::::{grid} 1 1 2 2
 
-The cycle maps directly onto stack pieces:
-- Step 1 → Tier 3 domain libraries (`somax`, `plumax`)
-- Step 2 → `pipekit-cycle.DACycle` with classical analysis steps
-- Step 3 → `pipekit-train.SimulationDataset` + emulator in `pipekit-experiment.ModelRegistry`
-- Step 4 → `pipekit-cycle.DACycle` with `NeuralForward`
-- Step 5 → `pipekit-train` with `gaussFlowX` / `pyrox-nn`
-- Step 6 → `pipekit-evaluate.EvaluationReport` diffs.
+:::{card} Step 2 is the oracle
+Classical methods (`filterX`, `vardaX`, `pyrox-gp`) are not legacy code
+waiting to be replaced by neural emulators. They become *ground-truth
+generators* that validate steps 3–5. The classical path stays alive,
+promoted to oracle.
+:::
 
-### 3.6 How the three axes relate
+:::{card} Benchmarks formalise understanding
+Writing a benchmark contract (carriers, references, metrics, splits,
+baselines, expected failure modes) *is* formalising what you understand
+about the problem. Every transition between steps is a benchmarkable
+contract.
+:::
+::::
 
-The three axes form a cube of operations: at any point in the framework you’re somewhere on the modeling cycle (research stage), somewhere on the L0–L4 axis (data maturity), and somewhere on the six-step cycle (production maturity).
+:::{table} Where each step lives in the stack.
+:label: tbl-steps
+
+| Step | Lives in |
+|---|---|
+| 1 · Simple model | Tier 3 domain libraries (`somax`, `plumax`) |
+| 2 · Model-based inference | `pipekit-cycle.DACycle` with classical analysis steps |
+| 3 · Emulator | `pipekit-train.SimulationDataset`, registered in `pipekit-experiment.ModelRegistry` |
+| 4 · Emulator-based inference | `pipekit-cycle.DACycle` with `NeuralForward` |
+| 5 · Amortized inference | `pipekit-train` with `gaussFlowX` or `pyrox-nn` |
+| 6 · Improve | `pipekit-evaluate.EvaluationReport` diffs |
+:::
+
+(sec-axes-relate)=
+### How the axes relate
+
+The axes form a cube of operations. At any point you are somewhere on the
+modeling cycle (research stage), somewhere on the lifecycle (data maturity)
+and somewhere on the six-step cycle (production maturity).
 
 ```{figure} images/overview/axes_matrix.svg
-:name: fig-axes-matrix
-:alt: The axes as a matrix: every L0–L4 transition crossed with the six-step cycle is a concrete, benchmarkable method, validated against the step-2 oracle column.
+:label: fig-axes-matrix
+:alt: A grid with lifecycle transitions as rows, from calibration to forecast, and steps 1 to 5 as columns. Each cell names a method; the step-2 column is highlighted as the oracle.
 :width: 100%
 
-The axes as a matrix: every L0–L4 transition crossed with the six-step cycle is a concrete, benchmarkable method, validated against the step-2 oracle column.
+**Every transition crossed with every step is a concrete method.**
 ```
 
-**Every cell is a concrete benchmarkable artifact.** Every cell uses the previous column as oracle. The whole L0–L4 chain is a nested set of six-step cycles, each gated by benchmarks. This is what makes the framework operationally improvable: improving any cell triggers re-running its downstream column; lineage is content-addressed; nothing is opaque.
+**Every cell is a benchmarkable artifact,** and every cell uses the column
+before it as its oracle. The whole lifecycle is a nested set of six-step
+cycles, each gated by benchmarks. That is what makes the framework
+improvable in practice: improving a cell re-runs its downstream column,
+lineage is content-addressed, and nothing is opaque.
 
------
+(sec-stack)=
+## The big picture stack
 
-## 4. The big picture stack
+Two zoom levels: the tiers first, then the packages inside Tier 4.
 
-Two granularities. First the high-level (six tiers), then the package map (~20 packages).
-
-### 4.1 High-level — six tiers
+(sec-tiers)=
+### Seven tiers
 
 ```{figure} images/overview/tier_stack.svg
-:name: fig-tier-stack
-:alt: The stack in seven tiers. Solid tiers are owned; dashed tiers are external (georeader sits in Tier 0 as the GeoTensor substrate).
+:label: fig-tier-stack
+:alt: Seven stacked tiers, from the external ecosystem at the bottom through owned numerical, algorithm, domain and pipeline tiers to external orchestration and serving at the top.
 :width: 100%
 
-The stack in seven tiers. Solid tiers are owned; dashed tiers are external (georeader sits in Tier 0 as the GeoTensor substrate).
+**The stack in seven tiers.**
+
+Solid tiers are owned; dashed tiers are external. `georeader` sits in Tier 0
+as the GeoTensor substrate.
 ```
 
-### 4.2 The package map — Tier 4 zoomed in
+(sec-tier4)=
+### Tier 4, zoomed in
 
-The framework + infrastructure tier is where most current work happens. Detailed view:
+Most current work happens in the framework and infrastructure tier.
 
 ```{figure} images/overview/tier4_map.svg
-:name: fig-tier4-map
-:alt: Tier 4 zoomed in: the pipekit framework, the ML-loop packages built on it, and the infrastructure peers.
+:label: fig-tier4-map
+:alt: Three groups: the pipekit framework packages, the ML-loop packages, and the infrastructure peers geocatalog, geopatcher and statecatalog, with georeader as an external substrate.
 :width: 100%
 
-Tier 4 zoomed in: the pipekit framework, the ML-loop packages built on it, and the infrastructure peers.
+**The pipekit framework, the ML loops built on it, and the infrastructure peers.**
 ```
 
-### 4.3 The dependency graph
-
-How they import each other, from the packages' metadata (`A ──► B`: A
-depends on B; `A ┄► B`: through an optional extra):
+(sec-dependencies)=
+### The dependency graph
 
 ```{figure} images/overview/dependency_graph.svg
-:name: fig-dependency-graph
-:alt: How the reference packages import each other, from their metadata. Solid edges are dependencies, dashed edges optional extras.
+:label: fig-dependency-graph
+:alt: Three family panels. Every pipekit package depends on pipekit; xrtoolz builds on xrtoolz-core, which depends on pipekit; geotoolz depends on pipekit, and every geotoolz-family package depends on georeader. Dashed edges are optional extras.
 :width: 100%
 
-How the reference packages import each other, from their metadata. Solid edges are dependencies, dashed edges optional extras.
+**How the reference packages import each other.**
+
+Drawn from the packages' own metadata. Solid edges are dependencies, dashed
+edges optional extras.
 ```
 
-**No circular dependencies.** Each layer only depends on layers below it. Domain libraries (geotoolz, xr-toolz) re-export common framework symbols so user code typically only imports one package.
+:::{note} No circular dependencies
+Each layer depends only on the layers below it. The domain libraries
+(geotoolz, xrtoolz) re-export the common framework symbols, so user code
+usually imports a single package.
+:::
 
------
+(sec-walkthrough)=
+## Walkthrough: methane attribution
 
-## 5. End-to-end walkthrough: methane attribution
-
-The canonical example. Builds a complete L0→L4 pipeline from satellite scenes to source emission estimates, with ML at multiple stages.
+The canonical example: a complete pipeline from satellite scenes to source
+emission estimates, with ML at several stages.
 
 ```{figure} images/overview/methane_walkthrough.svg
-:name: fig-methane-walkthrough
-:alt: The methane attribution walkthrough: eight steps from cataloguing scenes to serving estimates, and the package that handles each.
+:label: fig-methane-walkthrough
+:alt: Eight steps: catalog, read and retrieve, match with in-situ, grid and gap-fill, assimilate, index, evaluate, register and serve; each linked to the package that handles it.
 :width: 100%
 
-The methane attribution walkthrough: eight steps from cataloguing scenes to serving estimates, and the package that handles each.
+**Eight steps from cataloguing scenes to serving estimates.**
 ```
 
-The full pipeline, step by step, is in the [overview examples](#ex-methane).
+:::{seealso}
+The [full pipeline code](#ex-methane), step by step, on the overview
+examples page.
+:::
 
-The same pipeline, written as a YAML, becomes the regulatory artifact (per Report 9 use case 9). The same operators run in a notebook (Case 1), an ETL job (Case 2), a FastAPI endpoint (Case 5), or a Fused UDF (Reports 15 + the Fused integration design).
+The same pipeline, written as YAML, becomes the regulatory artifact (Report 9,
+use case 9). The same operators run in a notebook (case 1), an ETL job
+(case 2), a FastAPI endpoint (case 5) or a Fused UDF (Report 15 and the Fused
+integration design).
 
------
-
-## 6. Per-tier briefs
+(sec-tier-briefs)=
+## Per-tier briefs
 
 A compact summary per package. The deep dives are in the numbered reports.
 
-### 6.1 — Tier 0: Substrate
+::::{tab-set}
 
-**georeader** (external, but central). Owns `GeoTensor` (the raster carrier) and the reader infrastructure (`RasterioReader`, `AsyncGeoTIFFReader`). The bottom of the stack everything raster-shaped builds on.
+:::{tab-item} Tier 0 · Substrate
+**georeader** (external, but central) owns `GeoTensor`, the raster carrier,
+and the reader infrastructure (`RasterioReader`, `AsyncGeoTIFFReader`).
+Everything raster-shaped builds on it.
 
-**xarray ecosystem** (external). `DataArray` / `Dataset` / `DataTree` carriers plus rioxarray / xvec / cf-xarray / regionmask / xskillscore / dask / intake. Broad, community-standard.
+**The xarray ecosystem** (external): `DataArray`, `Dataset` and `DataTree`,
+plus rioxarray, xvec, cf-xarray, regionmask, xskillscore, dask and intake.
+:::
 
-### 6.2 — Tier 1: Numerical Foundation
-
+:::{tab-item} Tier 1 · Numerics
 | Package | What it does |
 |---|---|
-| `gaussX` | Structured linear algebra; Gaussian primitives; exponential family. Wraps lineax, matfree. |
-| `spectralDiffX` | Pseudospectral differentiation, filters, PDE solvers. |
-| `finiteVolX` | Arakawa C-grid finite-volume operators. |
-| `optax-bayes` | Bayesian learning rule as optax GradientTransformations. |
-| `eqx-trainer` | Minimal JAX/equinox training loop. |
+| `gaussX` | Structured linear algebra, Gaussian primitives, exponential family; wraps lineax and matfree |
+| `spectralDiffX` | Pseudospectral differentiation, filters, PDE solvers |
+| `finiteVolX` | Arakawa C-grid finite-volume operators |
+| `optax-bayes` | The Bayesian learning rule as optax gradient transformations |
+| `eqx-trainer` | A minimal JAX / equinox training loop |
 
-Each is pure math. No domain knowledge. All `eqx.Module`-based; all jittable; all JAX-traceable.
+Pure math with no domain knowledge: all `eqx.Module`-based, jittable and
+JAX-traceable. See the [gaussX example](#ex-gaussx).
+:::
 
-The [overview examples](#ex-gaussx) show a gaussX kernel matrix.
-
-### 6.3 — Tier 2: Algorithms
-
-Inference / learning / model families. Domain-agnostic but problem-structure-aware.
-
+:::{tab-item} Tier 2 · Algorithms
 | Package | What it does |
 |---|---|
-| `pyrox-gp` | GP building blocks for NumPyro hierarchical models. |
-| `pyrox-nn` | Bayesian deep learning with equinox + NumPyro. |
-| `filterX` | Differentiable ensemble Kalman methods. |
-| `vardaX` | Learnable variational data assimilation (3D/4D-Var). |
-| `gaussFlowX` | Rotation-based Gaussianization, normalizing flows. |
-| `fairkl` | Fairness-constrained kernel learning (Keras 3). |
-| `keras-nerf` | Neural fields for state estimation (Keras 3). |
-| `keras-flows` | Normalizing flows (Keras 3). |
+| `pyrox-gp` | GP building blocks for NumPyro hierarchical models |
+| `pyrox-nn` | Bayesian deep learning with equinox and NumPyro |
+| `filterX` | Differentiable ensemble Kalman methods |
+| `vardaX` | Learnable variational DA (3D- and 4D-Var) |
+| `gaussFlowX` | Rotation-based Gaussianization and normalizing flows |
+| `fairkl` | Fairness-constrained kernel learning (Keras 3) |
+| `keras-nerf` | Neural fields for state estimation (Keras 3) |
+| `keras-flows` | Normalizing flows (Keras 3) |
 
-Keras 3 and Equinox are **equal-status backends**. Each algorithm’s adapter (`*.adapters.pipekit`) makes it composable into pipekit pipelines.
+Keras 3 and Equinox are equal-status backends. Each algorithm's adapter
+(`*.adapters.pipekit`) makes it composable into pipekit pipelines. See the
+[filterX example](#ex-filterx).
+:::
 
-The [overview examples](#ex-filterx) show a filterX adapter used as a DA analysis step.
-
-### 6.4 — Tier 3: Domain Models
-
-Geophysical forward models and parameterizations.
-
+:::{tab-item} Tier 3 · Domain
 | Package | What it does |
 |---|---|
-| `somax` | Ocean/atmosphere model zoo. |
-| `xtremax` | Extreme value modeling. |
-| `methanex` | End-to-end methane remote sensing. |
-| `plumax` | Atmospheric plume transport simulation. |
-| `RTMX` | Radiative transfer operators. |
+| `somax` | Ocean and atmosphere model zoo |
+| `xtremax` | Extreme value modeling |
+| `methanex` | End-to-end methane remote sensing |
+| `plumax` | Atmospheric plume transport |
+| `RTMX` | Radiative transfer operators |
+| `geotoolz` | GeoTensor operators for remote sensing: readers, retrieval, cloud, radiometry, indices, spectral, plume, viz |
+| `xrtoolz` | xarray operators for ocean, atmosphere and reanalysis: validation, CRS, subsetting, masks, interpolation, metrics, kinematics |
 
-Each has a thin `adapters/pipekit.py` exposing the operator surface (`ForwardModel`, `ObservationOperator`, etc.) without polluting the algorithmic core.
+The forward models each ship a thin `adapters/pipekit.py` that exposes the
+operator surface (`ForwardModel`, `ObservationOperator`, …) without touching
+the algorithmic core. geotoolz and xrtoolz share the same Tier 4 peers: the
+substrate differs, the operator algebra is identical.
+:::
 
-### 6.5 — Tier 4: Pipeline Infrastructure (the headline of this work)
-
-**pipekit** — the framework. ~2,150 LOC. Twelve semantic groups (Reports 1, 2):
+:::{tab-item} Tier 4 · Pipelines
+**pipekit**, the framework (~2,150 lines), in twelve semantic groups
+(Reports 1 and 2):
 
 | Group | Operators |
 |---|---|
-| Foundations | Operator, Sequential, Graph, Input, Node, ConfigMixin |
-| Convenience | pipe, compose, juxt, complement |
-| Building blocks | Identity, Const, Lambda, Sink |
-| Control flow | Branch, Switch, Try, Coalesce, Retry |
-| Observers | Tap, Snapshot, ShapeTrace, Profile, Histogram |
-| Combination | Fanout |
-| Caching | Cache, Memoize |
-| QC | Quarantine, AssertShape, AssertDType, AssertCallable |
-| Shape inference | Signature, compute_output_signature |
-| Parallelism | ThreadMap, ProcessMap, AsyncMap, BatchedMap |
-| Serialisation | dumps, loads, sandboxed loader |
-| State primitives | StatefulOperator, CarryState |
+| Foundations | `Operator`, `Sequential`, `Graph`, `Input`, `Node`, `ConfigMixin` |
+| Convenience | `pipe`, `compose`, `juxt`, `complement` |
+| Building blocks | `Identity`, `Const`, `Lambda`, `Sink` |
+| Control flow | `Branch`, `Switch`, `Try`, `Coalesce`, `Retry` |
+| Observers | `Tap`, `Snapshot`, `ShapeTrace`, `Profile`, `Histogram` |
+| Combination | `Fanout` |
+| Caching | `Cache`, `Memoize` |
+| QC | `Quarantine`, `AssertShape`, `AssertDType`, `AssertCallable` |
+| Shape inference | `Signature`, `compute_output_signature` |
+| Parallelism | `ThreadMap`, `ProcessMap`, `AsyncMap`, `BatchedMap` |
+| Serialisation | `dumps`, `loads`, sandboxed loader |
+| State | `StatefulOperator`, `CarryState` |
 
-**pipekit-array** — Array API operators. Multi-backend (numpy/JAX/CuPy/PyTorch). `StackAlong`, `ConcatenateAlong`, `MeanScalar`; `ModelOp` lives in geotoolz. (Report 3)
+| Package | Role | Report |
+|---|---|---|
+| `pipekit-array` | Array API operators across NumPy, JAX, CuPy and PyTorch (`StackAlong`, `ConcatenateAlong`, `MeanScalar`) | 3 |
+| `pipekit-jax` | Equinox-backed, JAX-traceable operators; deferred to v0.3+ | 5 |
+| `pipekit-cycle` | Time-stepping and DA: `Cycle`, `EnsembleCycle`, `DACycle` and three Protocols | 10 |
+| `pipekit-train` | Training for emulators and amortized inference over Lightning, Equinox + Optax or Keras 3 | 11 |
+| `pipekit-experiment` | Tracker adapters (MLflow, W&B, DVC, Hydra) and a content-addressed `ModelRegistry` | 12 |
+| `pipekit-evaluate` | Evaluation on a Unit × Lens × Stage matrix; benchmark contracts as artifacts | 14, 15 |
+| `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`) | 6 |
+| `geopatcher` | Four-axis patcher: geometry × sampler × window × aggregation (~60 classes) | 7 |
+| `statecatalog` | Spatiotemporal index for L3–L5 (`StateSlice` with valid time, run time, ensemble, lineage) | 13 |
+:::
+::::
 
-**pipekit-jax** — Equinox-backed, JAX-traceable operators. Deferred to v0.3+. (Report 5)
+(sec-code-patterns)=
+## Key code patterns
 
-**pipekit-cycle** — Time-stepping and DA. `Cycle`, `EnsembleCycle`, `DACycle`, three Protocols (`ForwardModel`, `ObservationOperator`, `AnalysisStep`). (Report 10)
+Each pattern has runnable-looking code on the
+[overview examples](overview_examples.md) page.
 
-**pipekit-train** — Training pipelines for emulators and amortized inference. Thin adapter over Lightning / Equinox+Optax / Keras 3. (Report 11)
+::::{grid} 1 2 3 3
 
-**pipekit-experiment** — Tracker adapters (MLflow, W&B, DVC, Hydra) + content-addressed `ModelRegistry`. (Report 12)
+:::{card} Define an operator
+:link: overview_examples.md#ex-operator
+How an operator like `PercentileClip` is written.
+:::
 
-**pipekit-evaluate** — Multidimensional evaluation framework. Three-axis matrix (Unit × Lens × Stage). Benchmark contracts as content-addressed artifacts. (Reports 14, 15)
+:::{card} Compose pipelines
+:link: overview_examples.md#ex-compose
+`Sequential`, the pipe syntax, and DAGs with `Graph`.
+:::
 
-**georeader** — substrate; covered above.
+:::{card} Catalogs
+:link: overview_examples.md#ex-catalogs
+Build, query and match a `geocatalog`.
+:::
 
-**geocatalog** — Spatiotemporal index for L0–L2 observations. Two backends (InMemory + DuckDB). `GeoSlice` as wire format. (Report 6)
+:::{card} Patcher
+:link: overview_examples.md#ex-patcher
+Geometry × sampler × window × aggregation.
+:::
 
-**geopatcher** — Four-axis patcher framework. `Field` / `Domain` Protocols. ~60 classes for Geometry × Sampler × Window × Aggregation. (Report 7)
+:::{card} Data assimilation cycle
+:link: overview_examples.md#ex-da-cycle
+Protocol-satisfying parts composed into a `DACycle`.
+:::
 
-**statecatalog** — Spatiotemporal index for L3–L4 model states. `StateSlice` with valid_time/run_time/ensemble/lineage. (Report 13)
+:::{card} Swap in an emulator
+:link: overview_examples.md#ex-emulator
+Replace a classical forward model with a neural one.
+:::
 
-### 6.6 — Tier 3 (siblings): Domain Pipeline Libraries
+:::{card} Evaluation pipeline
+:link: overview_examples.md#ex-evaluation
+Multi-track evaluation as a content-addressed artifact.
+:::
 
-**geotoolz** — GeoTensor-flavoured operators. Remote-sensing focus: sensor readers, retrieval, cloud, radiometry, indices, spectral, viz, plume, presets. (Reports 3, 8)
+:::{card} Benchmark contract
+:link: overview_examples.md#ex-benchmark
+A pre-registerable, content-addressed benchmark.
+:::
 
-**xr-toolz** — xarray-flavoured operators. Ocean/atmosphere/reanalysis focus: validation, CRS, subset, masks, detrend, interpolate, metrics, kinematics, viz, calc, data sources, atm/ocn/ice. (Report 8)
+:::{card} Reproducibility artifact
+:link: overview_examples.md#ex-repro
+Freeze a pipeline for a regulatory cold rerun.
+:::
+::::
 
-Both consume the same Layer 4 peers. The substrate differs (georeader vs xarray ecosystem); the operator algebra is identical.
+(sec-open-questions)=
+## Open questions
 
------
+None of these block work; all deserve thought before committing to a
+decision.
 
-## 7. Key code patterns
+:::{dropdown} Sequencing
+:open:
+- **Does pipekit-jax have to wait until v0.3+?** Report 5 says yes. But the
+  [six-step cycle](#sec-six-steps) surfaces a concrete driver:
+  differentiable step-3 emulators are what makes step 4 (gradient-based
+  inverse problems) tractable at scale. A project that needs amortized
+  inference with end-to-end differentiability would trigger pipekit-jax
+  earlier. Open until such a project appears.
+- **Which in-situ catalog backend comes first?** Report 6 leans to Argo (via
+  argopy), but ICOADS, SOCAT and the World Ocean Database matter for other
+  domains. Realistically one per quarter, driven by projects.
+:::
 
-The code for each pattern is on the [overview examples](overview_examples.md) page:
+:::{dropdown} Design
+- **The Slice Protocol refactor.** `GeoSlice` is the only slice type today.
+  Adding `ProfileSlice` and `TrajectorySlice` is the right structural move,
+  but it is two weeks of work rippling across geocatalog, geotoolz, xrtoolz
+  and pipekit-train. Better done before more code commits to `GeoSlice`.
+- **Where matchup lives.** `geocatalog.queries.matchup()` is the framework
+  function, with carrier-specific helpers in xrtoolz and geotoolz. Does
+  matchup need its own catalog type? Probably; not yet scoped.
+- **Backend choice in pipekit-train.** Lightning, Equinox + Optax and Keras 3
+  are all supported. In practice: Lightning for PyTorch models, Equinox +
+  Optax for JAX-traceable pipelines, Keras 3 for multi-backend. Worth stating
+  per use case.
+:::
 
-- [Define an operator](#ex-operator)
-- [Compose pipelines](#ex-compose)
-- [Catalogs](#ex-catalogs)
-- [Patcher (geopatcher)](#ex-patcher)
-- [Data assimilation cycle](#ex-da-cycle)
-- [Swap classical forward model for a neural emulator](#ex-emulator)
-- [Evaluation pipeline](#ex-evaluation)
-- [Benchmark contract](#ex-benchmark)
-- [Reproducibility artifact (regulatory)](#ex-repro)
+:::{dropdown} Operational
+- **Monorepo or polyrepo?** Monorepo for the framework and infrastructure
+  (uv workspaces); the JAX-native algorithm and domain libraries stay in
+  their own repositories and ship adapter modules.
+- **One documentation site or many?** One site for the monorepo packages,
+  separate sites for the algorithm libraries, and one research journal that
+  cuts across everything.
+- **CI per package or per monorepo?** Per-package CI inside the monorepo,
+  plus one weekly integration matrix pinning every package to HEAD.
+  Releases by git tag (`geocatalog-v0.2.0`).
+:::
 
------
+:::{dropdown} Scientific
+- **Matchup UQ.** `MatchupPair.representativeness_uncertainty` is easy to
+  declare and hard to compute; v0.1 ships a placeholder.
+- **Cascading uncertainty.** A five-stage emission chain accumulates
+  uncertainty across stages. Predicting that honestly is open research.
+- **Probabilistic event detection.** "A plume happened" is binary; "a 73 %
+  chance a plume happened" is much harder, and current event metrics assume
+  the binary case.
+:::
 
-## 8. Open questions
+:::{dropdown} Sustainability
+- **Solo maintenance.** About twenty packages is a lot even with monorepo
+  discipline. Scope discipline is the operating constraint: each phase
+  delivers standalone value, and no layer needs the full stack to exist.
+- **Community adoption.** If oceanbench adopts pipekit-evaluate's benchmark
+  contracts, the framework is validated; if not, it stays personal
+  infrastructure. When to start reaching out is open.
+:::
 
-Honest list. None are blockers; all deserve thought before committing to specific decisions.
+(sec-plan)=
+## A plan
 
-### 8.1 — Sequencing
+Each phase produces packages that are useful on their own.
 
-- **Does pipekit-jax really need to wait until v0.3+?** Report 5 says yes. But the six-step cycle (§3.5) surfaces a concrete driver: differentiable Step 3 emulators are exactly what makes Step 4 (gradient-based inverse problems) tractable at scale. If a project demands amortized inference (Step 5) with end-to-end differentiability, that becomes the trigger for pipekit-jax — earlier than the v0.3+ default. Open until there’s a concrete project driver.
-- **In-situ catalog backends — which one first?** Report 6 leans Argo (via argopy) but ICOADS, SOCAT, World Ocean Database all matter for different domains. One per quarter realistically. Choice is driven by project needs.
+:::{table} Phases at a glance.
+:label: tbl-phases
 
-### 8.2 — Design
+| Phase | Scope | Status | Time |
+|---|---|---|---|
+| 1 | Numerical foundation: gaussX (v0.0.6), spectralDiffX, finiteVolX, optax-bayes, eqx-trainer | gaussX done; the rest drafts | ongoing |
+| 2 | Algorithms: pyrox-gp, pyrox-nn, filterX, vardaX, gaussFlowX | in progress | each at its own pace |
+| 3 | Domain models: somax, plumax, xtremax, methanex, RTMX | some done | project-driven |
+| 4 | Pipeline framework | **current focus** | ~3–4 months |
+| 5 | Evaluation, benchmarks and cycle discipline | next | ~2 months |
+| 6 | Deferred items, each with a trigger | when projects demand | — |
+| 7 | Polish and community | open-ended | — |
+:::
 
-- **The Slice Protocol refactor.** Currently `GeoSlice` is the only slice type. Adding `ProfileSlice` and `TrajectorySlice` (per `data_ml_lifecycle.md`) is the right structural move but the refactor is 2 weeks of work that ripples across geocatalog + geotoolz + xr-toolz + pipekit-train. Worth doing before too much code commits to the current GeoSlice.
-- **Where matchup lives.** `geocatalog.queries.matchup()` is the framework function; carrier-specific helpers in `xr_toolz.matchup` / `geotoolz.matchup`. But does matchup need its own catalog type (a “matchup catalog”)? Probably yes; not yet scoped.
-- **Backend choice in pipekit-train.** Lightning / Equinox+Optax / Keras 3 are all supported. Are they truly equal-status or does one become the “blessed” choice for most use cases? Honest answer: Lightning is most likely to be the default for PyTorch models; Equinox+Optax for JAX-traceable / differentiable pipelines; Keras 3 for multi-backend. Worth being explicit per use case.
+### Phases 4 and 5, month by month
 
-### 8.3 — Operational
+::::{tab-set}
 
-- **Monorepo vs polyrepo.** Decision is monorepo (`pipekit-ecosystem` with uv/hatch workspaces); but the JAX-native algorithm libraries (gaussX, filterX, vardaX, plumax) are *outside* the monorepo. Where’s the line? Lean: framework + infrastructure in monorepo; algorithm + domain libraries are separate repos that ship adapter modules.
-- **Documentation: one site or per-package sites?** Lean: one Sphinx (or mkdocs) site for the monorepo packages; separate sites for the JAX-native algorithm libraries (they have their own audiences). Plus a single JupyterBook research journal cross-cutting everything.
-- **CI: per-package or per-monorepo?** Lean: per-package CI inside the monorepo + a single integration matrix that pins all packages to HEAD weekly. Releases via git tags (`geocatalog-v0.2.0`).
+:::{tab-item} Month 1
+- pipekit v0.1: framework core, twelve groups and state primitives
+- pipekit-array v0.1: Array API operators
+- the pipekit-ecosystem monorepo with uv workspaces
+:::
 
-### 8.4 — Open scientific questions
+:::{tab-item} Month 2
+- geocatalog v0.1: InMemory and DuckDB backends, basic queries
+- geopatcher v0.1: the four-axis framework and five Field adapters
+- geotoolz and xrtoolz refactored onto the new framework
+:::
 
-- **Matchup uncertainty quantification.** `MatchupPair.representativeness_uncertainty` is easy to declare and hard to compute. Real estimation is its own research problem; v0.1 ships with a placeholder.
-- **Cascade-uncertainty in multi-stage benchmarks.** The 5-stage emission estimation chain accumulates uncertainty across stages. Predicting this honestly is open research.
-- **Probabilistic event detection.** Detecting “a plume happened” is binary; saying “there’s a 73% chance a plume happened” is much harder. Current event-detection metrics assume binary; probabilistic variants matter operationally but aren’t standard.
-
-### 8.5 — Sustainability
-
-- **Solo-maintainer feasibility.** ~20 packages, even with monorepo discipline, is a lot. The “scope discipline” principle in vision_v2 §7 is the operating constraint: each phase produces standalone value; the full stack doesn’t need to exist for individual layers to deliver.
-- **Community adoption.** If `oceanbench` adopts pipekit-evaluate’s benchmark contracts, the framework is validated. If not, it stays personal infrastructure. Open question: at what point do you start actively reaching out to existing benchmark efforts?
-
------
-
-## 9. A plan
-
-Concrete sequencing. Each phase produces usable, valuable packages on its own.
-
-### Phase 1 — Numerical Foundation (done in part)
-
-- gaussX (v0.0.6, done)
-- spectralDiffX (draft)
-- finiteVolX (draft)
-- optax-bayes (draft)
-- eqx-trainer (draft)
-
-Time: ongoing.
-
-### Phase 2 — Algorithms (in progress)
-
-- pyrox-gp
-- pyrox-nn
-- filterX
-- vardaX
-- gaussFlowX
-
-Time: ongoing, each at its own pace.
-
-### Phase 3 — Domain Models (some done, some in progress)
-
-- somax (PDE solver zoo)
-- plumax (atmospheric plume transport)
-- xtremax (extreme value)
-- methanex (end-to-end methane)
-- RTMX (radiative transfer)
-
-Time: project-driven; each tied to a specific science question.
-
-### Phase 4 — Pipeline Framework (load-bearing, current focus) — ~3-4 months
-
-**Month 1**
-
-- pipekit v0.1 (framework core, 12 groups + state primitives)
-- pipekit-array v0.1 (Array API operators)
-- Setup pipekit-ecosystem monorepo with uv/hatch workspaces
-
-**Month 2**
-
-- geocatalog v0.1 (InMemory + DuckDB backends; basic queries)
-- geopatcher v0.1 (four-axis framework; 5 Field adapters)
-- Refactor geotoolz and xr_toolz to depend on the new framework
-
-**Month 3**
-
+:::{tab-item} Month 3
 - statecatalog v0.1
-- pipekit-cycle v0.1 (Cycle, DACycle, three Protocols)
-- Adapter modules in filterX, vardaX, plumax
+- pipekit-cycle v0.1: `Cycle`, `DACycle` and three Protocols
+- adapter modules in filterX, vardaX and plumax
+:::
 
-**Month 4**
+:::{tab-item} Month 4
+- pipekit-train v0.1: Lightning and Equinox backends
+- pipekit-experiment v0.1: MLflow and S3 registry adapters
+- integration testing across all packages
 
-- pipekit-train v0.1 (Lightning + Equinox backends)
-- pipekit-experiment v0.1 (MLflow + S3 registry adapters)
-- Initial integration testing across all packages
+**After Phase 4:** the L0–L4 inference loop is structurally complete. ML
+training and serving still need work, but the pipelines exist.
+:::
 
-After Phase 4: the L0–L4 inference loop is structurally complete. ML training and serving still need work but the pipelines exist.
+:::{tab-item} Month 5
+- pipekit-evaluate v0.1: framework, cheap metrics, `EvaluationReport`
+- leakage-aware splitters in pipekit-train
+- standard baselines: persistence, climatology, OI
+- `ModelRole` and `ArtifactLineage` in pipekit-experiment, the six-step
+  cycle's content-addressed lineage
+:::
 
-### Phase 5 — Evaluation + Benchmarks + Cycle Discipline — ~2 months
+:::{tab-item} Month 6
+- particle tracking (`xrtoolz.lagrangian`) and event detection
+  (`xrtoolz.events`)
+- `BenchmarkContract` and `CycleStageBenchmark` artifacts
+- multi-track evaluation as a built-in pattern
+- the first worked cycle (likely methane L1→L2 retrieval, steps 1–5)
+- the first worked benchmark (SSH, from the benchmarks gallery)
 
-**Month 5**
+**After Phase 5:** evaluation is first-class, benchmarks are
+content-addressed contracts, and the six-step cycle is tractable end to end.
+:::
+::::
 
-- pipekit-evaluate v0.1 (framework + cheap metrics + EvaluationReport)
-- Leakage-aware splitters in pipekit-train
-- Standard baselines (Persistence, Climatology, OI)
-- ModelRole enum + ArtifactLineage in pipekit-experiment (the six-step cycle's content-addressed lineage tracking)
+### Deferred until a project needs it
 
-**Month 6**
+:::{table} Phase 6: what is deferred, and what triggers it.
+:label: tbl-deferred
 
-- xr_toolz.lagrangian (particle tracking)
-- xr_toolz.events (event detection)
-- BenchmarkContract + CycleStageBenchmark artifacts
-- MultiTrackEvaluation built-in pattern
-- First worked cycle (probably methane L1→L2 retrieval, end-to-end Steps 1-5)
-- First worked benchmark instantiation (SSH from benchmarks_gallery)
-
-After Phase 5: evaluation is first-class, benchmarks are content-addressable contracts, the full L0–L4 cycle has multidimensional eval discipline, **and the six-step research-to-production cycle is operationally tractable end-to-end**.
-
-### Phase 6 — Deferred (when projects demand)
-
-| Deferred item | Trigger |
+| Item | Trigger |
 |---|---|
-| pipekit-jax (Equinox-backed, JAX-traceable operators) | first project needing differentiable retrievals at scale or JIT-compiled inference paths |
-| Deployment adapters (pipekit.deploy.fused, .litserve, .modal) | first deployment use case beyond hand-shimming |
-| Slice Protocol refactor (GeoSlice → Protocol + ProfileSlice + TrajectorySlice) | first project needing first-class in-situ catalog support (probably BGC benchmark from gallery) |
-| Additional in-situ catalog backends (Argo, ICOADS, SOCAT, ...) | one per quarter, project-driven |
+| pipekit-jax: Equinox-backed, JAX-traceable operators | the first project needing differentiable retrievals at scale or JIT-compiled inference |
+| Deployment adapters (`pipekit.deploy.fused`, `.litserve`, `.modal`) | the first deployment beyond hand-shimming |
+| Slice Protocol refactor (`ProfileSlice`, `TrajectorySlice`) | the first project needing first-class in-situ catalogs (likely the BGC benchmark) |
+| More in-situ backends (Argo, ICOADS, SOCAT, …) | one per quarter, project-driven |
+:::
 
-### Phase 7 — Polish + community
+Phase 7 covers the documentation site, a research journal, the first
+external benchmark adoption (OceanBench, WeatherBench-Ocean?) and capstone
+tutorials per domain.
 
-- Comprehensive documentation site (Sphinx-based)
-- Research journal as JupyterBook (cross-cutting narrative)
-- First external benchmark adoption (OceanBench? WeatherBench-Ocean?)
-- Capstone tutorials per domain
+:::{warning} Reality check
+1. **Six months for Phases 4–5 is optimistic for one person;** eight to
+   twelve is realistic. Each month still produces usable artifacts.
+2. **Phase 6 may come early.** If a project needs pipekit-jax or in-situ
+   catalogs first, jump phases: the sequence is a default, not a contract.
+3. **Phase 7 is open-ended.** Adoption takes years. The substrate has to be
+   useful without it; adoption is upside.
+:::
 
-### Reality check on the plan
+(sec-reading)=
+## Where to read next
 
-Three honest pushbacks on my own sequencing:
-
-1. **6 months for Phase 4-5 is optimistic for solo work.** Realistically 8-12 months. Mitigation: each month produces usable artifacts; nothing requires the full plan to finish to be valuable.
-2. **Phase 6 might come earlier than planned.** If a project demands pipekit-jax or in-situ catalogs first, jump phases. The sequence is a default, not a contract.
-3. **Phase 7 is open-ended.** Community adoption is years not months. Plan for the substrate to be useful even without external adoption; treat adoption as upside.
-
------
-
-## 10. Where to read next
-
-Depending on what you’re trying to understand. These documents are not in
-this repository yet (they live with the migration notes and will move into
-`docs/` as they are written up); until then, the
+:::{note}
+These documents are not in this repository yet. They live with the migration
+notes and will move into `docs/` as they are written up. Until then, the
 [capability index](api/capabilities.md) and the reference repositories under
 `references/` are the source of truth.
+:::
 
-|If you want to understand…      |Read                                                                        |
-|--------------------------------|----------------------------------------------------------------------------|
-|**The big picture vision**      |`vision_v2.md`                                                              |
-|**Why pipekit exists**          |Report 1 (toolz lineage, background)                                        |
-|**What pipekit actually ships** |Report 2 (12 semantic groups, ~2150 LOC)                                    |
-|**The sister-library structure**|Report 3 (pipekit-array, geotoolz, xr-toolz refactor)                       |
-|**Concrete use cases**          |Report 9 (13 cases mapped to the full stack)                                |
-|**The JAX-native future**       |Report 5 (pipekit-jax, Equinox backend)                                     |
-|**Spatiotemporal catalogs**     |Report 6 (geocatalog)                                                       |
-|**The patcher framework**       |Report 7 (geopatcher, four-axis, 60+ classes)                               |
-|**xr-toolz’s role**             |Report 8 (substrate asymmetry vs geotoolz)                                  |
-|**Time-stepping + DA**          |Report 10 (pipekit-cycle)                                                   |
-|**Training pipelines**          |Report 11 (pipekit-train)                                                   |
-|**Model registry + tracking**   |Report 12 (pipekit-experiment)                                              |
-|**L3-L4 indexing**              |Report 13 (statecatalog)                                                    |
-|**Multidimensional evaluation** |Report 14 (pipekit-evaluate, three-axis matrix)                             |
-|**Benchmark infrastructure**    |Report 15 (benchmark contracts, leakage, baselines)                         |
-|**The six-step modeling cycle** |Report 16 (cycle + Step 2 as oracle + benchmarks as understanding)          |
-|**The data lifecycle in detail**|`data_ml_lifecycle.md` (three-layer model, two streams, depth axis, matchup)|
-|**Concrete benchmarks**         |`benchmarks_gallery.md` (23 benchmarks across 6 domains)                    |
+| To understand… | Read |
+|---|---|
+| the big picture | `vision_v2.md` |
+| why pipekit exists | Report 1: the toolz lineage |
+| what pipekit ships | Report 2: twelve semantic groups |
+| the sister libraries | Report 3: pipekit-array, geotoolz, xrtoolz |
+| the JAX-native future | Report 5: pipekit-jax and the Equinox backend |
+| spatiotemporal catalogs | Report 6: geocatalog |
+| the patcher | Report 7: geopatcher |
+| xrtoolz's role | Report 8: substrate asymmetry with geotoolz |
+| concrete use cases | Report 9: thirteen cases mapped to the stack |
+| time-stepping and DA | Report 10: pipekit-cycle |
+| training pipelines | Report 11: pipekit-train |
+| registry and tracking | Report 12: pipekit-experiment |
+| L3–L5 indexing | Report 13: statecatalog |
+| evaluation | Report 14: pipekit-evaluate |
+| benchmark infrastructure | Report 15: contracts, leakage, baselines |
+| the six-step cycle | Report 16: step 2 as oracle, benchmarks as understanding |
+| the data lifecycle in detail | `data_ml_lifecycle.md` |
+| concrete benchmarks | `benchmarks_gallery.md`: 23 benchmarks in 6 domains |
 
------
+(sec-summary)=
+## In summary
 
-## 11. Closing summary
-
-The GeoStack is **a vertically integrated, JAX-native research software stack with operator-graph composition extending from structured linear algebra through pipeline infrastructure to indexed multi-tier data products** — structured by three orthogonal axes (the modeling cycle, the L0–L4 data lifecycle, and the six-step research-to-production cycle).
+GeoStack is a vertically integrated, JAX-native research stack whose
+operator-graph composition runs from structured linear algebra, through
+pipeline infrastructure, to indexed multi-tier data products. It is
+organised by three orthogonal axes: the modeling cycle, the L0–L5 data
+lifecycle and the six-step cycle.
 
 What makes it specific:
 
-- **Three organising axes** — the research loop (modeling cycle), the data lifecycle (L0–L4 with two-stream convergence), and the production journey (six-step cycle from Simple Model to Amortized Predictor)
-- **Operator algebra at every level**, with appropriate Protocols per layer (no universal base class)
-- **Carrier-agnostic framework** (pipekit) bridging JAX-native numerics and xarray/GeoTensor data
-- **Content-addressed everything** — data slices, model artifacts, evaluation reports, benchmark contracts, reproducibility artifacts, cycle-step lineage
-- **ML pluggable at every L0–L4 transition** via the same training + registry + inference machinery
-- **Step 2 as oracle** — classical methods (filterX, vardaX, pyrox-gp) stay alive forever as ground-truth generators, not as legacy code to be replaced
-- **Benchmarks as formalised understanding** — contracts are operationalised hypotheses, not just leaderboards
-- **Two-stream data lifecycle** (satellite + in-situ converging via matchup) with depth-axis support
-- **Multidimensional evaluation** as first-class infrastructure, not an afterthought
-- **Pre-registerable benchmarks** as content-addressable contracts
-- **JAX-only differentiability** (gradients live in the JAX-level packages; xarray/pipekit/geotoolz are gradient-free orchestration)
-- **Math-first documentation, code IS the paper** — every operator documented in unicode with theory
+- **Operator algebra at every level,** with the right Protocol per layer and
+  no universal base class.
+- **A carrier-agnostic framework** bridging JAX numerics and xarray /
+  GeoTensor data.
+- **Content-addressed everything:** data slices, model artifacts, evaluation
+  reports, benchmark contracts, reproducibility artifacts and cycle lineage.
+- **ML pluggable at every transition,** through one training, registry and
+  inference machinery.
+- **Classical methods as oracles,** kept as ground-truth generators rather
+  than replaced.
+- **Benchmarks as operationalised hypotheses,** pre-registerable and
+  content-addressed, not leaderboards.
+- **A two-stream lifecycle,** satellite and in-situ converging through
+  matchup, with depth-axis support.
+- **Evaluation as infrastructure,** multidimensional from the start.
+- **Gradients only where they belong:** differentiability lives in the JAX
+  packages; xarray, pipekit and geotoolz orchestrate without gradients.
+- **Math-first documentation:** the code is the paper.
 
-The vision document is the manifesto. The 16 reports are the scoping deep-dives. This document is the entry point. The plan above is a default sequence; project demands will modify it. The bones are right; what remains is execution at scope-disciplined pace.
+The vision document is the manifesto, the sixteen reports are the deep
+dives, and this page is the entry point. The plan is a default sequence that
+projects will reshape. If a use case pulls you toward the stack, pick its
+report from [Where to read next](#sec-reading) and come back with questions:
+the stack is modular, and no part requires the rest.
 
-If a specific use case is pulling you toward this stack: pick the relevant deep-dive from §10, read it, and come back with questions. The structure is intentionally modular — you don’t need to internalise everything to use any part.
+## Glossary
+
+:::{glossary}
+carrier
+: The data structure an operator acts on: NumPy or JAX arrays, a
+  {term}`GeoTensor`, or an xarray object. pipekit operators are
+  carrier-agnostic.
+
+GeoTensor
+: georeader's raster carrier: an array with its geotransform and CRS. The
+  carrier for L0–L2.
+
+GeoSlice
+: geocatalog's wire format for one spatiotemporal slice of an observation
+  catalog.
+
+StateSlice
+: statecatalog's wire format for one model state, with valid time, run
+  time, ensemble member and lineage.
+
+matchup
+: Pairing observations from different sources that coincide in space and
+  time; the operation where the satellite and in-situ streams converge.
+
+oracle
+: The classical method (step 2) used as ground truth to validate emulators
+  and amortized predictors.
+:::
