@@ -41,9 +41,28 @@ geostack/
 ├── marimo_notebooks/     # Marimo reactive notebooks
 ├── notebooks/            # Jupyter notebooks
 ├── results/              # Experiment results (DVC-managed)
-├── scripts/              # Entry point scripts (no local package: see upstream libraries)
+├── references/           # Git submodules: pipekit, geotoolz, xrtoolz, georeader
+├── scripts/              # Entry point scripts (no local package: see references/)
 └── tests/                # Test suite
 ```
+
+## Reference libraries
+
+geostack has no package of its own. It builds on four libraries, pinned as
+git submodules under `references/` and installed into the pixi environment
+from there:
+
+| Submodule | Repository | Provides |
+|---|---|---|
+| `references/pipekit` | [jejjohnson/pipekit](https://github.com/jejjohnson/pipekit) | Carrier-agnostic operator-graph framework, plus `-array`, `-cycle`, `-evaluate`, `-experiment`, `-jax`, `-train` |
+| `references/geotoolz` | [jejjohnson/geotoolz](https://github.com/jejjohnson/geotoolz) | Remote-sensing operators on GeoTensor, plus `-catalog`, `-cloud`, `-patcher`, `-products` |
+| `references/xrtoolz` | [jejjohnson/xrtoolz](https://github.com/jejjohnson/xrtoolz) | Operators for xarray data cubes, plus `-core`, `-einx`, `-grad`, `-reader`, `-sklearn` |
+| `references/georeader` | [spaceml-org/georeader](https://github.com/spaceml-org/georeader) | Raster reading and the GeoTensor carrier |
+
+[`docs/api/capabilities.md`](docs/api/capabilities.md) lists their public API.
+To move a reference forward: `git submodule update --remote references/<name>`,
+then `pixi lock`, `make capabilities`, and commit the submodule, `pixi.lock`
+and the index together.
 
 ## Quick Start
 
@@ -58,8 +77,9 @@ curl -fsSL https://pixi.sh/install.sh | bash
 ### Installation
 
 ```bash
-git clone https://github.com/jejjohnson/geostack
+git clone --recurse-submodules https://github.com/jejjohnson/geostack
 cd geostack
+# already cloned? git submodule update --init
 pixi install
 ```
 

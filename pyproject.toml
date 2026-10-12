@@ -35,7 +35,7 @@ docs = [
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-exclude = ["notebooks/", "marimo_notebooks/"]
+exclude = ["notebooks/", "marimo_notebooks/", "references/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

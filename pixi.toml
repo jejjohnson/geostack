@@ -15,10 +15,57 @@ netcdf4 = "*"
 matplotlib = "*"
 dvc = ">=3"
 hydra-core = ">=1.3"
+# Full pyarrow (with Parquet): geotoolz-catalog needs it; conda-forge pyarrow-core lacks it.
+pyarrow = "*"
 
 [pypi-dependencies]
 hydra-zen = ">=0.13"
 omegaconf = ">=2.3"
+# The reference libraries geostack builds on, installed editable from the
+# git submodules in references/ (git submodule update --init).
+georeader-spaceml = { path = "references/georeader", editable = true }
+pipekit = { path = "references/pipekit/packages/pipekit", editable = true }
+pipekit-array = { path = "references/pipekit/packages/pipekit-array", editable = true }
+pipekit-cycle = { path = "references/pipekit/packages/pipekit-cycle", editable = true }
+pipekit-evaluate = { path = "references/pipekit/packages/pipekit-evaluate", editable = true }
+pipekit-experiment = { path = "references/pipekit/packages/pipekit-experiment", editable = true }
+pipekit-jax = { path = "references/pipekit/packages/pipekit-jax", editable = true }
+pipekit-train = { path = "references/pipekit/packages/pipekit-train", editable = true }
+geotoolz = { path = "references/geotoolz/packages/geotoolz", editable = true }
+geotoolz-catalog = { path = "references/geotoolz/packages/geotoolz-catalog", editable = true }
+geotoolz-cloud = { path = "references/geotoolz/packages/geotoolz-cloud", editable = true }
+geotoolz-patcher = { path = "references/geotoolz/packages/geotoolz-patcher", editable = true }
+geotoolz-products = { path = "references/geotoolz/packages/geotoolz-products", editable = true }
+xrtoolz = { path = "references/xrtoolz/packages/xrtoolz", editable = true }
+xrtoolz-core = { path = "references/xrtoolz/packages/xrtoolz-core", editable = true }
+xrtoolz-einx = { path = "references/xrtoolz/packages/xrtoolz-einx", editable = true }
+xrtoolz-grad = { path = "references/xrtoolz/packages/xrtoolz-grad", editable = true }
+xrtoolz-reader = { path = "references/xrtoolz/packages/xrtoolz-reader", editable = true }
+xrtoolz-sklearn = { path = "references/xrtoolz/packages/xrtoolz-sklearn", editable = true }
+
+[pypi-options.dependency-overrides]
+# The reference repos are uv workspaces whose own [tool.uv.sources] point
+# sibling packages at workspace or git sources; pin every one of them to
+# the submodule checkout so the solve has a single source per package.
+georeader-spaceml = { path = "references/georeader", editable = true }
+pipekit = { path = "references/pipekit/packages/pipekit", editable = true }
+pipekit-array = { path = "references/pipekit/packages/pipekit-array", editable = true }
+pipekit-cycle = { path = "references/pipekit/packages/pipekit-cycle", editable = true }
+pipekit-evaluate = { path = "references/pipekit/packages/pipekit-evaluate", editable = true }
+pipekit-experiment = { path = "references/pipekit/packages/pipekit-experiment", editable = true }
+pipekit-jax = { path = "references/pipekit/packages/pipekit-jax", editable = true }
+pipekit-train = { path = "references/pipekit/packages/pipekit-train", editable = true }
+geotoolz = { path = "references/geotoolz/packages/geotoolz", editable = true }
+geotoolz-catalog = { path = "references/geotoolz/packages/geotoolz-catalog", editable = true }
+geotoolz-cloud = { path = "references/geotoolz/packages/geotoolz-cloud", editable = true }
+geotoolz-patcher = { path = "references/geotoolz/packages/geotoolz-patcher", editable = true }
+geotoolz-products = { path = "references/geotoolz/packages/geotoolz-products", editable = true }
+xrtoolz = { path = "references/xrtoolz/packages/xrtoolz", editable = true }
+xrtoolz-core = { path = "references/xrtoolz/packages/xrtoolz-core", editable = true }
+xrtoolz-einx = { path = "references/xrtoolz/packages/xrtoolz-einx", editable = true }
+xrtoolz-grad = { path = "references/xrtoolz/packages/xrtoolz-grad", editable = true }
+xrtoolz-reader = { path = "references/xrtoolz/packages/xrtoolz-reader", editable = true }
+xrtoolz-sklearn = { path = "references/xrtoolz/packages/xrtoolz-sklearn", editable = true }
 
 [feature.dev.dependencies]
 pytest = ">=8"

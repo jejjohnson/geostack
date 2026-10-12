@@ -43,14 +43,81 @@ INDEX = ROOT / "docs" / "api" / "capabilities.md"
 # geostack has no package of its own, it builds on the UPSTREAM libraries.
 PACKAGE: str | None = None
 
-# Libraries you build on whose public API should be listed after yours, as
-# {distribution: [public modules]}, with a one-paragraph blurb each, e.g.
-# {"gaussx": ["gaussx"]}. Leave it empty when there are none.
-UPSTREAM: dict[str, list[str]] = {}
-UPSTREAM_BLURB: dict[str, str] = {}
+# The reference libraries geostack builds on (git submodules in references/,
+# installed from there by pixi), as {distribution: [public modules]}, with a
+# one-line blurb each.
+UPSTREAM: dict[str, list[str]] = {
+    "pipekit": ["pipekit"],
+    "pipekit-array": ["pipekit_array"],
+    "pipekit-cycle": ["pipekit_cycle"],
+    "pipekit-evaluate": ["pipekit_evaluate"],
+    "pipekit-experiment": ["pipekit_experiment"],
+    "pipekit-jax": ["pipekit_jax"],
+    "pipekit-train": ["pipekit_train"],
+    "georeader-spaceml": [
+        "georeader.geotensor",
+        "georeader.read",
+        "georeader.save",
+        "georeader.rasterio_reader",
+        "georeader.mosaic",
+    ],
+    "geotoolz": ["geotoolz"],
+    "geotoolz-catalog": ["geocatalog"],
+    "geotoolz-cloud": ["geocloud"],
+    "geotoolz-patcher": ["geopatcher"],
+    "geotoolz-products": ["geoproducts"],
+    "xrtoolz": ["xrtoolz"],
+    "xrtoolz-core": ["xrcore"],
+    "xrtoolz-einx": ["xreinx"],
+    "xrtoolz-grad": ["xrgrad"],
+    "xrtoolz-reader": ["xrreader"],
+    "xrtoolz-sklearn": ["xrsklearn"],
+}
+UPSTREAM_BLURB: dict[str, str] = {
+    "pipekit": "Carrier-agnostic operator-graph framework for pipelines.",
+    "pipekit-array": "Array API operators (NumPy, JAX, CuPy, PyTorch).",
+    "pipekit-cycle": "Time-stepping, data assimilation and observation operators.",
+    "pipekit-evaluate": "Multidimensional evaluation (Unit x Lens x Stage).",
+    "pipekit-experiment": "Experiment tracking adapters and a model registry.",
+    "pipekit-jax": "JAX / Equinox carrier integration for pipekit.",
+    "pipekit-train": "Training pipelines for emulators and amortized inference.",
+    "georeader-spaceml": "Raster reading and the GeoTensor carrier.",
+    "geotoolz": "Composable remote-sensing operators on GeoTensor.",
+    "geotoolz-catalog": "Spatiotemporal catalog over geospatial files.",
+    "geotoolz-cloud": "Cloud object storage and batched async COG reads.",
+    "geotoolz-patcher": "Four-axis patcher: split, run per patch, stitch.",
+    "geotoolz-products": "Readers for Earth-observation data products.",
+    "xrtoolz": "Composable operators for Earth System Data Cubes.",
+    "xrtoolz-core": "xarray-aware Operator base and Signature descriptor.",
+    "xrtoolz-einx": "Labeled named-tensor algebra bridging xarray and einx.",
+    "xrtoolz-grad": "Finite-difference calculus on labeled xarray grids.",
+    "xrtoolz-reader": "Authenticated archive readers (CMEMS, CDS, AEMET).",
+    "xrtoolz-sklearn": "scikit-learn to xarray bridge (XarrayEstimator, SklearnOp).",
+}
 
 # Names two homes may share on purpose, and why: {name: reason}.
-ALLOWED_SHARED_NAMES: dict[str, str] = {}
+ALLOWED_SHARED_NAMES: dict[str, str] = {
+    "Operator": (
+        "pipekit.Operator is the base (geotoolz re-exports it); xrcore.Operator"
+        " (re-exported by xrtoolz) subclasses it with xarray DataTree dispatch."
+    ),
+    "Signature": (
+        "pipekit.Signature records array shape + dtype; xrcore.Signature is the"
+        " xarray-aware descriptor used by xrtoolz operators."
+    ),
+    "Composite": (
+        "geotoolz.Composite builds a band composite; pipekit_train.Composite is"
+        " a weighted sum of losses."
+    ),
+    "SklearnOp": (
+        "One scikit-learn adapter per carrier: geotoolz.SklearnOp for"
+        " GeoTensor, xrsklearn.SklearnOp for xarray."
+    ),
+    "register": (
+        "pipekit.register marks a class as loadable by loads_sandboxed;"
+        " xrreader.register adds a Variable to the CF variable registry."
+    ),
+}
 
 _AUTOREF = re.compile(r"\[([^\]]+)\]\[[^\]]*\]")
 # A full stop that ends a sentence (not "e.g." / "i.e." / "etc.").
@@ -98,6 +165,28 @@ def _summary(obj: object, *, home: str) -> str:
     return _first_line(inspect.getdoc(obj) or "")
 
 
+class _NeedsExtra:
+    """Stands in for a lazily exported name whose optional dependency is absent."""
+
+    def __init__(self, err: ImportError) -> None:
+        self.missing = err.name
+
+
+def _get(module: types.ModuleType, name: str) -> object:
+    """``getattr``, tolerating a lazy export whose optional dependency is absent."""
+    try:
+        return getattr(module, name)
+    except ImportError as err:
+        return _NeedsExtra(err)
+
+
+def _row(name: str, obj: object, *, home: str) -> tuple[str, str, str]:
+    if isinstance(obj, _NeedsExtra):
+        dep = f"`{obj.missing}`" if obj.missing else "an optional dependency"
+        return (name, "lazy", f"Needs {dep}.")
+    return (name, _kind(obj), _summary(obj, home=home))
+
+
 def _public(module: types.ModuleType) -> list[str]:
     """``__all__``, else the classes and functions the module defines."""
     names = getattr(module, "__all__", None)
@@ -112,8 +201,7 @@ def _public(module: types.ModuleType) -> list[str]:
     return [
         n
         for n in names
-        if not n.startswith("__")
-        and not isinstance(getattr(module, n, None), types.ModuleType)
+        if not n.startswith("__") and not isinstance(_get(module, n), types.ModuleType)
     ]
 
 
@@ -158,7 +246,7 @@ def collect() -> tuple[dict[str, list[tuple]], list[str]]:
             except ImportError:
                 continue
             for name in _public(upstream):
-                owners[name][f"{module_name}.{name}"] = getattr(upstream, name)
+                owners[name][f"{module_name}.{name}"] = _get(upstream, name)
     clashes = []
     for name, homes in sorted(owners.items()):
         if name in ALLOWED_SHARED_NAMES:
@@ -197,10 +285,11 @@ def _upstream_part() -> list[str]:
                 module = importlib.import_module(module_name)
             except ImportError:
                 continue
-            rows = []
-            for name in sorted(_public(module)):
-                obj = getattr(module, name)
-                rows.append((name, _kind(obj), _summary(obj, home=package)))
+            home = module_name.split(".")[0]
+            rows = [
+                _row(name, _get(module, name), home=home)
+                for name in sorted(_public(module))
+            ]
             out += [f"### `{module_name}`", "", *_table(rows)]
     return out
 

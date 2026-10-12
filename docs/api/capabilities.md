@@ -10,3 +10,767 @@ notebook: if what you need is here, use it; if it is almost here,
 extend it where it lives. Regenerate with `make capabilities` after
 changing a public API (`tests/test_capabilities.py` checks it is
 current).
+
+<!-- upstream -->
+
+Listed at pipekit 0.0.2, pipekit-array 0.0.2, pipekit-cycle 0.0.2, pipekit-evaluate 0.0.2, pipekit-experiment 0.0.2, pipekit-jax 0.0.2, pipekit-train 0.0.2, georeader-spaceml 2.4.1, geotoolz 0.10.2, geotoolz-catalog 0.5.1, geotoolz-cloud 0.4.1, geotoolz-patcher 0.10.2, geotoolz-products 0.4.2, xrtoolz 0.0.5, xrtoolz-core 0.0.2, xrtoolz-einx 0.0.1, xrtoolz-grad 0.0.3, xrtoolz-reader 0.0.4, xrtoolz-sklearn 0.0.2.
+
+## Upstream: `pipekit`
+
+Carrier-agnostic operator-graph framework for pipelines.
+
+### `pipekit`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AssertCallable` | class | Pass-through; raise `QCError` if ``predicate(x)`` is falsy. |
+| `AssertDType` | class | Pass-through; raise `QCError` if ``getattr(x, 'dtype')`` mismatches. |
+| `AssertHasAttribute` | class | Pass-through; raise `QCError` if attribute missing (or value mismatches). |
+| `AssertShape` | class | Pass-through; raise `QCError` if ``getattr(x, 'shape')`` mismatches. |
+| `AsyncMap` | class | Apply ``op`` to each item of an iterable inside an async event loop. |
+| `BatchedMap` | class | Split an iterable into batches and call ``op`` on each batch as a list. |
+| `Branch` | class | Binary conditional: run ``if_true`` or ``if_false`` based on a predicate. |
+| `Cache` | class | Memoise an inner operator by hashing its input and config. |
+| `Carrier` | class | Re-exported from `typing`. |
+| `CarryState` | class | Base class for state threaded through a stateful pipeline. |
+| `Coalesce` | class | Try each source in order; return the first output that satisfies ``is_ok``. |
+| `ConfigMixin` | class | Auto-derive `get_config()` from `__init__` parameter names. |
+| `Const` | class | Return a fixed value, ignoring any input. |
+| `Fanout` | class | Apply each named operator to the same input; return a dict of outputs. |
+| `FittableTransformer` | class | Anything with sklearn-style ``fit`` + ``transform`` methods. |
+| `Graph` | class | A symbolic operator graph with multiple inputs and outputs. |
+| `Histogram` | class | Controller that captures simple histograms by key. |
+| `Identity` | class | Explicit no-op. |
+| `Input` | class | A named entry point into a `Graph`. |
+| `Lambda` | class | Wrap an arbitrary callable as an `Operator`. |
+| `Memoize` | class | Memoise an inner operator by hashing its input and config. |
+| `Node` | class | A vertex in a `Graph`. |
+| `Operator` | class | Base class for pipekit operators. |
+| `Predictor` | class | Anything with a sklearn-style ``predict`` method. |
+| `ProcessMap` | class | Apply ``op`` to each item of an iterable using a process pool. |
+| `Profile` | class | Controller that records per-step wall-clock timings. |
+| `QCError` | class | Raised when a QC assertion fails. |
+| `Quarantine` | class | Non-raising QC: on failure log and return ``sentinel``; on success pass through. |
+| `Retry` | class | Retry an operator on transient failures with exponential backoff. |
+| `Sequential` | class | Apply a list of operators in order, threading the output of each into the next. |
+| `ShapeTrace` | class | Log ``shape`` / ``dtype`` of each carrier passing through. |
+| `Signature` | class | Immutable shape + dtype record. |
+| `Sink` | class | Apply a side-effecting write and pass the input through unchanged. |
+| `Snapshot` | class | Controller that captures intermediate carriers by name. |
+| `StatefulOperator` | class | Marker base for operators whose ``_apply`` threads carry-state. |
+| `Switch` | class | Multi-way dispatch on ``key(carrier)``. |
+| `Tap` | class | Fire a callback on the carrier; return the carrier unchanged. |
+| `ThreadMap` | class | Apply ``op`` to each item of an iterable using a thread pool. |
+| `Try` | class | Run ``primary``; on caught exceptions run ``fallback``. |
+| `allowed` | function | Return the registered class names (``"module.Class"`` keys). |
+| `check_pickleable` | function | Return the list of `forbid_in_yaml`-flagged operators inside ``op``. |
+| `complement` | function | Return a predicate that negates ``predicate``. |
+| `compose` | function | Right-to-left composition (mathematical order). |
+| `compose_left` | function | Left-to-right composition (pipeline order). |
+| `compute_output_signature` | function | Free-function dispatch to ``op.compute_output_signature``. |
+| `dumps` | function | JSON-encode an operator's state record. |
+| `juxt` | function | Return a callable that applies each operator to its input and tuples the results. |
+| `loads` | function | Decode an operator from its JSON state record. |
+| `loads_sandboxed` | function | Like `loads`, but reject any class not in the allowlist. |
+| `pipe` | function | Apply ``operators`` left-to-right to ``value``. |
+| `register` | function | Register ``cls`` as loadable via `loads_sandboxed`. |
+| `unregister` | function | Remove ``cls`` from the sandboxed loader's allowlist. |
+
+## Upstream: `pipekit-array`
+
+Array API operators (NumPy, JAX, CuPy, PyTorch).
+
+### `pipekit_array`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ConcatenateAlong` | class | Concatenate a list-of-arrays along an existing axis via `xp.concat`. |
+| `MeanScalar` | class | Reduce an array to a scalar (or per-axis means) via `xp.mean`. |
+| `StackAlong` | class | Stack a list-of-arrays along a new axis via `xp.stack`. |
+| `array_namespace` | function | Return the Array API namespace shared by all input arrays. |
+
+## Upstream: `pipekit-cycle`
+
+Time-stepping, data assimilation and observation operators.
+
+### `pipekit_cycle`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AdjointSpec` | constant | `pipekit_cycle.adjoints.DirectAdjoint \| pipekit_cycle.adjo...` |
+| `AnalysisStep` | class | Combine forecast state with observations to produce analysis state. |
+| `BFNCycle` | class | Back-and-Forth Nudging over an assimilation window. |
+| `BacksolveAdjoint` | class | Continuous adjoint: solve the adjoint ODE backwards (O(1) memory). |
+| `CallableForward` | class | Wrap a plain callable as a forward model. |
+| `CallableObs` | class | Arbitrary callable observation operator. |
+| `CompositeForward` | class | Compose multiple forward models — ``F_k ∘ … ∘ F_1``. |
+| `CompositeObs` | class | Compose multiple observation operators: ``H_k ∘ … ∘ H_1``. |
+| `CovarianceLocalizer` | class | Taper spurious long-range covariances in ensemble methods. |
+| `Cycle` | class | Apply ``step_op`` for ``n_steps``, threading state through each step. |
+| `DACycle` | class | Classic forecast-analysis cycle. |
+| `DAState` | class | State threaded through a DA cycle. |
+| `DirectAdjoint` | class | Exact gradients by storing every step of the rollout. |
+| `EnsembleCycle` | class | Run `Cycle` over a list of ensemble-member carriers. |
+| `EnsembleDACycle` | class | Ensemble-based DA — EnKF, ETKF, LETKF, particle filters, … |
+| `EnsembleInflator` | class | Inflate an analysis ensemble to counter variance underestimation. |
+| `ErrorSubspace` | class | A propagating low-rank error-covariance factor ``L`` (``B ≈ L Lᵀ``). |
+| `ForwardModel` | class | Advance a model state forward in time by ``dt``. |
+| `IdentityObs` | class | Direct measurement: ``H(x) = x``. |
+| `ImplicitAdjoint` | class | Differentiate a converged fixed point via the implicit function theorem. |
+| `IterationState` | class | State threaded through a `Recurrence`. |
+| `IterativeProcess` | class | An iterative ensemble inversion / sampling process (EKI, EKS, UKI). |
+| `LatentMap` | class | An encode/decode pair between full state space and a latent space. |
+| `LinearObs` | class | Linear observation map: ``H(x) = H @ x``. |
+| `NeuralForward` | class | Wrap a neural-emulator operator (e.g. `ModelOp`) as a `ForwardModel`. |
+| `ObservationNoise` | class | An observation-error model that exposes covariance *and* sampling. |
+| `ObservationOperator` | class | Map model state → predicted observations. |
+| `Recurrence` | class | Apply ``step_op`` repeatedly until ``condition_op`` returns truthy. |
+| `RecursiveCheckpointAdjoint` | class | Exact gradients with treeverse checkpointing (the recommended default). |
+| `ReducedBasis` | class | Map a reduced control vector to a state increment (with a prior). |
+| `ReducedOrderModel` | class | A Galerkin / POD reduced-order model: encode/decode + latent dynamics. |
+| `SmootherCycle` | class | 4D-Var-shaped windowed smoother. |
+| `StepScheduler` | class | Step-size policy for an `IterativeProcess`. |
+| `SupportsAdjoint` | class | A differentiable component that exposes its adjoint strategy. |
+| `TangentLinearModel` | class | Tangent-linear and adjoint of a `ForwardModel`'s dynamics. |
+| `TruncatedAdjoint` | class | Biased gradients: flow stops more than ``k`` steps back. |
+| `WindowState` | class | State threaded through a windowed / smoother cycle. |
+| `WindowedCycle` | class | Sliding-window time-stepping over a stream of initial carriers. |
+
+## Upstream: `pipekit-evaluate`
+
+Multidimensional evaluation (Unit x Lens x Stage).
+
+### `pipekit_evaluate`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Axis` | class | Which benchmark axis a reference is resolved along. |
+| `Benchmark` | class | Run the ``level x rung x complexity`` cube and score each cell. |
+| `BenchmarkReport` | class | The collected results of a benchmark run. |
+| `Cell` | class | One cell of the benchmark cube. |
+| `CellResult` | class | The scored outcome for one cube cell. |
+| `Estimate` | class | A point and/or a posterior produced by an estimator. |
+| `Estimator` | class | Any rung that maps observations → an :class:`Estimate`. |
+| `Oracle` | class | The designated reference :class:`Estimator` for a task (usually rung 2). |
+| `Prior` | class | A minimal prior over task parameters ``θ``. |
+| `ReferenceRule` | class | Resolve the reference source for a rung along a given axis. |
+| `ReferenceSource` | class | Where a rung/step's ground truth comes from. |
+| `Scorer` | class | Score one prediction against one reference. |
+| `Task` | class | One benchmark scenario: prior + simulator + obs operator + data. |
+
+## Upstream: `pipekit-experiment`
+
+Experiment tracking adapters and a model registry.
+
+### `pipekit_experiment`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ExperimentTracker` | class | Log metrics, parameters, and artifacts from a training run. |
+| `InferenceArtifact` | class | Reproducibility snapshot for an inference pipeline. |
+| `LocalModelRegistry` | class | Local-filesystem model registry. |
+| `ModelRegistry` | class | Store and retrieve trained models by content hash. |
+| `Run` | class | A single execution of a pipeline (training or inference). |
+| `RunArtifacts` | class | Named artifacts (files, models, plots) attached to a `Run`. |
+| `RunMetrics` | class | Per-step metric series. |
+| `S3ModelRegistry` | class | fsspec-backed model registry. |
+| `TrainingArtifact` | class | Reproducibility snapshot for a training run. |
+
+## Upstream: `pipekit-jax`
+
+JAX / Equinox carrier integration for pipekit.
+
+### `pipekit_jax`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `DiffraxForwardModel` | lazy | Needs `diffrax`. |
+| `JaxModelOp` | class | Wrap an `eqx.Module` as a `pipekit.Operator` with weight round-trip. |
+| `to_diffrax_adjoint` | function | Map a pipekit adjoint spec onto a ``diffrax.AbstractAdjoint``. |
+| `truncated_scan` | function | ``jax.lax.scan`` with gradients truncated to the trailing ``k`` steps. |
+
+## Upstream: `pipekit-train`
+
+Training pipelines for emulators and amortized inference.
+
+### `pipekit_train`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `CachedDataset` | class | Disk- or cloud-backed cache around any `TrainingDataset`. |
+| `Callback` | class | Per-step / per-epoch / per-eval hooks. |
+| `Checkpoint` | class | Save (model_op, optimizer_state) every N steps; final to a registry. |
+| `Composite` | class | Weighted sum of `Loss` components. |
+| `EarlyStopping` | class | Signal stop when a monitored metric hasn't improved for N evals. |
+| `HyperSweep` | class | Orchestrate N independent `TrainingLoop` runs. |
+| `IterableDataset` | class | Generic escape hatch — wrap any iterable as a `TrainingDataset`. |
+| `JSONLWriter` | class | Append-only JSON Lines metric writer. |
+| `KL` | class | Kullback-Leibler divergence between two distributions. |
+| `LogToExperiment` | class | Forward metrics / params / artifacts to a pipekit-experiment tracker. |
+| `Loss` | class | Loss function — per-batch scalar called by the adapter. |
+| `MSE` | class | Mean squared error loss. |
+| `MetricWriter` | class | Where per-step metrics go when no tracker is attached. |
+| `NLL` | class | Negative log-likelihood for distribution-shaped predictions. |
+| `ParameterGrid` | class | Cartesian product over named parameter axes. |
+| `SimulationDataset` | class | Yields ``(parameters, simulator_output)`` pairs. |
+| `SweepCarryState` | class | Carry-state for `HyperSweep`. |
+| `SweepResult` | class | One trial's result inside a sweep. |
+| `TrainerCarryState` | class | Carry-state for `TrainingLoop`. |
+| `TrainingDataset` | class | Abstract base — yields ``(input, target)`` pairs. |
+| `TrainingLoop` | class | Train a ``model_op`` on a ``dataset``, producing a trained model_op. |
+| `ValidationStep` | class | Compute validation metrics on a held-out dataset. |
+| `XarrayWindowDataset` | lazy | Needs an optional dependency. |
+
+## Upstream: `georeader-spaceml`
+
+Raster reading and the GeoTensor carrier.
+
+### `georeader.geotensor`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `GeoTensor` | class | A numpy ndarray subclass with geospatial metadata. |
+| `get_rio_options_path` | function |  |
+
+### `georeader.read`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `apply_anti_aliasing` | function | Apply anti-aliasing to `data_in` assuming it will be downsampled to `resolution_dst`. |
+| `calculate_transform_window` | function | Calculate the default transform to reproject data to dst_crs with resolution_dst_crs |
+| `read_from_bounds` | function | Extract raster data within a geographic bounding box, with optional CRS transformation. |
+| `read_from_center_coords` | function | Extract a rectangular chip from raster data centered on geographic coordinates. |
+| `read_from_polygon` | function | Extract raster data within a polygon boundary, supporting complex shapes and masking. |
+| `read_from_tile` | function | Read raster data corresponding to a Web Mercator (XYZ) tile for web mapping applications. |
+| `read_from_window` | function | Read raster data from a specified window, with optional padding for out-of-bounds areas. |
+| `read_reproject` | function | Reproject raster data to a different CRS, resolution, and/or extent. |
+| `read_reproject_like` | function | Reads from `data_in` and reprojects to have the same extent and resolution than `data_like`. |
+| `read_rpcs` | function | This function georreferences an array using the RPCs. |
+| `read_to_crs` | function | Change the crs of data_in to dst_crs. |
+| `resize` | function | Resample raster data to a different spatial resolution with optional anti-aliasing. |
+| `window_from_bounds` | function | Calculate the raster window corresponding to geographic bounds. |
+| `window_from_center_coords` | function | Calculate a raster window of specified size centered on geographic coordinates. |
+| `window_from_polygon` | function | Calculate the raster window that contains a polygon in pixel coordinates. |
+| `window_from_tile` | function | Calculate the raster window corresponding to a Web Mercator (XYZ) tile. |
+
+### `georeader.save`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `save_cog` | function | Save a GeoData object as a Cloud Optimized GeoTIFF (COG). |
+| `save_tiled_geotiff` | function | Save a GeoData object as a tiled GeoTIFF file. |
+
+### `georeader.rasterio_reader`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `RasterioReader` | class | Lazy file-backed raster reader with geospatial metadata. |
+| `get_out_shape` | function | Calculate aspect-preserving output shape. |
+| `mask_sas_token` | function | Mask the signature of an Azure SAS token embedded in a file path. |
+| `needs_boundless` | function | Check if a read window requires boundless mode. |
+| `read_out_shape` | function | Read raster with resampling to target shape. |
+
+### `georeader.mosaic`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `spatial_mosaic` | function | Create a spatial mosaic by filling gaps with data from overlapping rasters. |
+
+## Upstream: `geotoolz`
+
+Composable remote-sensing operators on GeoTensor.
+
+### `geotoolz`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ARVI` | class | Atmospherically Resistant Vegetation Index — Kaufman & Tanre 1992. |
+| `AdaptiveWindowBackground` | class | Per-pixel local mean and diagonal variance over a square window. |
+| `AltitudeMask` | class | Build a boolean mask from DEM elevation bounds. |
+| `AnnotatePoints` | class | Draw circular point markers into a display GeoTensor. |
+| `AnnotatePolygons` | class | Rasterize polygon outlines into a display GeoTensor. |
+| `AntimeridianSplit` | class | Split a geographic swath at a longitude wrap. |
+| `AppendIndex` | class | Run an index operator and concatenate its output back as a new band. |
+| `ApplyAdaptiveMF` | class | Apply a matched filter against per-pixel local window statistics. |
+| `ApplyClusterMF` | class | Apply a matched filter dispatched by per-pixel cluster label. |
+| `ApplyColormap` | class | Map a single-band raster to a four-band RGBA GeoTensor. |
+| `ApplyDiscreteColormap` | class | Map integer categories to a four-band RGBA GeoTensor. |
+| `ApplyMask` | class | Apply a boolean mask to the carrier, filling True pixels. |
+| `ApplySRF` | class | Convolve hyperspectral bands to target Gaussian-SRF multispectral bands. |
+| `AsinhScale` | class | Inverse-hyperbolic-sine scaling. |
+| `AtmosphericHaze` | class | Add a sampled haze term following an inverse fourth-power spectrum. |
+| `BAIS2` | class | Burned Area Index for Sentinel-2 — Filipponi 2018. |
+| `BAPComposite` | class | Best Available Pixel compositing from quality-score metadata. |
+| `BBoxMask` | class | Rasterize an axis-aligned bounding box into a boolean mask. |
+| `BSI` | class | Bare Soil Index — Rikimaru et al. 2002. |
+| `BTFromRadiance` | class | Convert thermal at-sensor radiance to brightness temperature (Kelvin). |
+| `BandDropout` | class | Fill each band independently with probability ``p``. |
+| `BandJitter` | class | Permute bands within explicitly configured groups. |
+| `BandMath` | class | Evaluate a restricted arithmetic expression over named bands. |
+| `BandRatio` | class | Simple two-band ratio ``numerator / (denominator + eps)``. |
+| `BilateralDenoise` | class | Edge-aware denoise using a range-weighted Gaussian. |
+| `BlendMatched` | class | Weighted mean across N aligned tensors. |
+| `BlobDOG` | class | Blob detection via Difference of Gaussian. |
+| `BlobDoH` | class | Blob detection via Determinant of Hessian. |
+| `BlobLoG` | class | Blob detection via Laplacian of Gaussian. |
+| `BowtieCorrection` | class | Remove whiskbroom bowtie overlap by resampling each scan along track. |
+| `Branch` | class | Re-exported from `pipekit`. |
+| `BrightnessJitter` | class | Scale reflectance values by a sampled scalar or per-band factor. |
+| `BufferMask` | class | Radially expand True pixels in a mask by a Euclidean buffer. |
+| `CHWtoHWC` | class | Reorder a ``(..., C, H, W)`` cube to channels-last ``(..., H, W, C)``. |
+| `CIRI` | class | Cirrus Reflectance Index — Sentinel-2 B10 passthrough. |
+| `CLAHE` | class | Contrast-Limited Adaptive Histogram Equalization. |
+| `Canny` | class | Canny edge detection returning a boolean edge map. |
+| `Carrier` | class | Re-exported from `typing`. |
+| `ChanVese` | class | Active-contour segmentation via :func:`skimage.segmentation.chan_vese`. |
+| `ClayMinerals` | class | Clay Minerals ratio — Sabins 1999 / Crowley et al. 1989. |
+| `CleanMask` | class | Remove small objects, fill small holes, then close the mask. |
+| `CloseMask` | class | Close (dilate then erode) a boolean mask. |
+| `CloudFreeComposite` | class | Per-pixel mean over frames where the cloud mask is false. |
+| `CloudSEN12` | class | Placeholder for the optional ML-based CloudSEN12 detector. |
+| `ColumnEnhancement` | class | Convenience trace-gas column-enhancement matched-filter composite. |
+| `ColumnToMass` | class | Convert column enhancement units (ppm m / mol m^-2 / kg m^-2). |
+| `CombineMasks` | class | Combine boolean masks on one pixel grid with ``or``, ``and`` or ``xor``. |
+| `Composite` | class | Build a multi-band composite by arbitrary band reference. |
+| `ComputeSZA` | class | Compute the solar zenith angle (degrees) for a location and UTC datetime. |
+| `Const` | class | Re-exported from `pipekit`. |
+| `ContinuumRemoval` | class | Hull-quotient continuum removal along the band axis. |
+| `ContrastJitter` | class | Scale deviations from the per-band spatial mean. |
+| `CornerHarris` | class | Harris corner response plus peak selection as point features. |
+| `CountryMask` | class | Rasterize Natural Earth country polygons selected by ISO A3 code. |
+| `CropTo` | class | Crop a `GeoTensor` to a target spatial shape. |
+| `CropToBounds` | class | Crop a `GeoTensor` to a geographic bounding box. |
+| `CrossSectionalFlux` | class | Estimate cross-sectional flux at downwind transects. |
+| `CutMix` | class | Paste a random rectangle from a pool donor on the input's pixel grid. |
+| `DNToRadiance` | class | Convert DN to at-sensor radiance. |
+| `DNToReflectance` | class | Convert DN to TOA / surface reflectance via a linear affine decode. |
+| `DOS1` | class | Apply a Chavez (1988) Dark-Object Subtraction (DOS1) approximation. |
+| `DecodeBitmask` | class | Unpack a QA bitmask into named boolean mask layers. |
+| `DenoisePCA` | class | Reconstruct a multi-band raster from its top PCA components. |
+| `DespeckleFrost` | class | Frost (1982) adaptive exponential-kernel speckle filter. |
+| `DespeckleLee` | class | Lee (1980) local-statistics speckle filter. |
+| `DespeckleRefinedLee` | class | Refined-Lee speckle filter approximation. |
+| `DestripeColumn` | class | Subtract per-column (or per-row) offsets from striped imagery. |
+| `DetectionThreshold` | class | Gaussian false-alarm score threshold. |
+| `DilateMask` | class | Dilate a boolean mask over its trailing spatial axes. |
+| `DistanceMask` | class | Mask pixels by their distance from a geometry (True = drop). |
+| `EVI` | class | Enhanced Vegetation Index — Huete et al. 2002. |
+| `EVI2` | class | Two-band Enhanced Vegetation Index — Jiang et al. 2008. |
+| `EarthSunDistanceCorrection` | class | Compute the Earth–Sun distance ``d`` (in AU) for an acquisition date. |
+| `Einx` | class | Apply any einx operation to the carrier, geo-aware. |
+| `ErodeMask` | class | Erode a boolean mask over its trailing spatial axes. |
+| `EstimateCovEmpirical` | class | Estimate an empirical covariance operator. |
+| `EstimateCovLowRank` | class | Estimate a low-rank-plus-Tikhonov covariance operator. |
+| `EstimateCovShrunk` | class | Estimate a diagonal-target shrinkage covariance operator. |
+| `EstimateMean` | class | Estimate a spectral background mean vector from a cube. |
+| `ExpandLabels` | class | Grow label regions by a fixed pixel distance without overlap. |
+| `FalseColor` | class | Build a NIR-red-green false-colour composite. |
+| `Fanout` | class | Re-exported from `pipekit`. |
+| `Felzenszwalb` | class | Graph-based segmentation via :func:`skimage.segmentation.felzenszwalb`. |
+| `FindContours` | class | Extract iso-value contours as LineString geometries. |
+| `GCI` | class | Green Chlorophyll Index — Gitelson et al. 2003. |
+| `GMMClusterBackground` | class | Estimate clustered background statistics with a NumPy GMM backend. |
+| `Gamma` | class | Power-law gamma correction. |
+| `GammaCorrect` | class | Apply display gamma correction. |
+| `GapFillIDW` | class | Fill NaNs with inverse-distance weighted finite neighbours. |
+| `GapFillInpaintBiharmonic` | class | Smoothly inpaint NaN gaps with a biharmonic-style fill. |
+| `GapFillLaplacian` | class | Fill NaNs by solving a discrete Laplace equation. |
+| `GapFillNearest` | class | Fill NaNs from the nearest finite neighbour. |
+| `GaussianDenoise` | class | Gaussian smoother over the trailing two spatial axes. |
+| `GaussianNoise` | class | Add zero-mean Gaussian sensor noise. |
+| `GeoTensorEstimator` | class | Marshall a scikit-learn estimator to and from GeoTensor-shaped data. |
+| `Georeference` | class | Georeference swath data using a `georeader` GLT `GeoTensor`. |
+| `GeostationaryParallaxCorrect` | class | Shift pixels from apparent geostationary view position to nadir. |
+| `Graph` | class | Re-exported from `pipekit`. |
+| `HOG` | class | Histogram of Oriented Gradients descriptor. |
+| `HWCtoCHW` | class | Reorder a channels-last ``(..., H, W, C)`` array to ``(..., C, H, W)``. |
+| `Hillshade` | class | Compute a single-band ``uint8`` hillshade from a DEM. |
+| `HistogramMatch` | class | Match a GeoTensor histogram to a reference GeoTensor. |
+| `HistogramStretch` | class | Per-band percentile stretch into ``out_range`` for visualisation. |
+| `HoughCircles` | class | Detect circles with the circular Hough transform. |
+| `HoughLines` | class | Detect prominent straight lines with the Hough transform. |
+| `IMEEstimate` | class | Integrated Mass Enhancement (IME) flux estimator. |
+| `Identity` | class | Re-exported from `pipekit`. |
+| `Input` | class | Re-exported from `pipekit`. |
+| `IntegratedIrradiance` | class | Compute band-integrated TOA solar irradiance from an SRF table. |
+| `InvertMask` | class | Invert a boolean mask element-wise. |
+| `IronOxide` | class | Iron Oxide ratio — Segal 1982 / Sabins 1999. |
+| `LabelConnectedComponents` | class | Convert a binary mask into an int32 connected-component label map. |
+| `Lambda` | class | Re-exported from `pipekit`. |
+| `LandMask` | class | Rasterize Natural Earth land polygons into a boolean mask. |
+| `LandsatQA_PIXEL` | class | Landsat Collection-2 QA_PIXEL mask preset. |
+| `LinearTargetFromObs` | class | Finite-difference tangent-linear target from an observation model. |
+| `LoadFromEE` | class | Load an Earth Engine image into a :class:`GeoTensor`. |
+| `LoadFromSTAC` | class | Load a raster asset from a STAC item by asset key. |
+| `LogScale` | class | Logarithmic scaling with an epsilon offset for zeros. |
+| `MNDWI` | class | Modified Normalized Difference Water Index — Xu 2006. |
+| `MNF` | class | Minimum Noise Fraction transform (Green et al. 1988), with its inverse. |
+| `MODISStateQA` | class | MODIS ``state_1km`` (or ``state_500m``) QA mask preset. |
+| `MarkBoundaries` | class | Overlay segmentation boundaries on an image for visual inspection. |
+| `MaskCirrus` | class | Return True where a QA band marks cirrus pixels. |
+| `MaskCloudShadow` | class | Return True where a QA band marks cloud-shadow pixels. |
+| `MaskClouds` | class | Return True where a QA band marks cloud-contaminated pixels. |
+| `MaskInvalid` | class | Mark invalid (nodata) pixels: True = invalid, drop it. |
+| `MaskNMS` | class | Mask-IoU non-maximum suppression over a stack of instance masks. |
+| `MaskNoData` | class | Return True where pixels are no-data by QA value or carrier fill value. |
+| `MaskSaturated` | class | Return True where pixels are at or above a saturation value. |
+| `MaskSnow` | class | Return True where a QA band marks snow or ice pixels. |
+| `MaskWater` | class | Return True where a QA band marks water pixels. |
+| `MatchedFilter` | class | Per-pixel matched-filter score map. |
+| `MatchedFilterPixel` | class | Single-pixel matched-filter score. |
+| `MatchedFilterSNR` | class | Theoretical detection SNR ``amplitude * sqrt(t^T Sigma^-1 t)``. |
+| `MaxNDVIComposite` | class | Pick the frame with maximum NDVI per pixel and return its band values. |
+| `MedianComposite` | class | Per-pixel median across a stack of co-registered GeoTensors. |
+| `MedianDenoise` | class | Median filter over the trailing two spatial axes. |
+| `MergeNearbyInstances` | class | Merge instance labels whose bboxes are close and partially overlap. |
+| `MinCloudComposite` | class | Pick each pixel from the scene with the lowest *global* cloud coverage. |
+| `MinMaxScaler` | class | Per-band min-max scaling into an arbitrary output range. |
+| `MinMaxStretch` | class | Linear contrast stretch into ``[0, 1]``. |
+| `ModelOp` | class | Wrap any callable as an Operator. |
+| `MomentMatching` | class | Destripe by matching every column's mean and std to a reference. |
+| `Mosaic` | class | Mosaic multiple `GeoTensor`s onto a single grid. |
+| `MultiscaleBasicFeatures` | class | General-purpose multiscale feature stack. |
+| `NBR` | class | Normalized Burn Ratio — Key & Benson 2006. |
+| `NBR2` | class | Normalized Burn Ratio 2 — USGS Landsat product. |
+| `NDBI` | class | Normalized Difference Built-up Index — Zha et al. 2003. |
+| `NDMI` | class | Normalized Difference Moisture Index — Gao 1996. |
+| `NDSI` | class | Normalized Difference Snow Index — Hall et al. 1995. |
+| `NDVI` | class | Normalized Difference Vegetation Index — Rouse et al. 1974. |
+| `NDWI` | class | Normalized Difference Water Index — McFeeters 1996. |
+| `NLMeans` | class | Lightweight non-local-means-style denoiser. |
+| `Node` | class | Re-exported from `pipekit`. |
+| `NonlinearTargetFromObs` | class | Finite-amplitude target from a callable observation model. |
+| `Normalize` | class | Fixed-stats per-band z-score normaliser. |
+| `NormalizedDifference` | class | Generic normalized-difference index ``(a - b) / (a + b + eps)``. |
+| `OceanMask` | class | Rasterize Natural Earth ocean polygons into a boolean mask. |
+| `OmniCloudMask` | class | Placeholder for the optional ML-based OmniCloudMask detector. |
+| `OpenMask` | class | Open (erode then dilate) a boolean mask. |
+| `Operator` | class | Re-exported from `pipekit`. |
+| `OpticalFlowILK` | class | Dense per-pixel displacement via iterative Lucas-Kanade optical flow. |
+| `OpticalFlowTVL1` | class | Dense per-pixel displacement via TV-L1 optical flow. |
+| `OutlierMask` | class | Flag global outliers with a MAD or z-score threshold. |
+| `Overlay` | class | Blend background and foreground GeoTensors on the same grid. |
+| `PadTo` | class | Pad a `GeoTensor` up to a target spatial shape. |
+| `PeakLocalMax` | class | Find local maxima and return point features with pixel scores. |
+| `PerBandReduce` | class | Reduce each band over its spatial extent to one scalar, ignoring nodata. |
+| `PerBandStats` | class | Compute NaN-aware per-band statistics and cache them. |
+| `PercentileClip` | class | Per-band robust contrast stretch using percentile thresholds. |
+| `PhaseAlign` | class | Sub-pixel image registration via phase cross-correlation. |
+| `PixelwiseGMM` | class | Gaussian mixture convenience operator. |
+| `PixelwiseIPCA` | class | Streaming IncrementalPCA convenience operator. |
+| `PixelwiseIsolationForest` | class | Pixel-wise IsolationForest anomaly-score convenience operator. |
+| `PixelwiseIterativeImputer` | class | Pixel-wise IterativeImputer convenience operator. |
+| `PixelwiseKMeans` | class | Pixel-wise KMeans label convenience operator. |
+| `PixelwiseKNNImputer` | class | Pixel-wise KNNImputer convenience operator. |
+| `PixelwiseLocalOutlierFactor` | class | Pixel-wise LocalOutlierFactor convenience operator. |
+| `PixelwiseMiniBatchKMeans` | class | Streaming MiniBatchKMeans convenience operator. |
+| `PixelwiseNMF` | class | Pixel-wise NMF convenience operator. |
+| `PixelwiseOneClassSVM` | class | Pixel-wise OneClassSVM anomaly-score convenience operator. |
+| `PixelwisePCA` | class | Pixel-wise PCA convenience operator. |
+| `PlumeColumnStats` | class | Per-instance in-mask vs background statistics of a column field. |
+| `PlumeContours` | class | Connected-component labelling of a plume mask. |
+| `PlumeFootprint` | class | Vectorize a plume mask into polygons with per-plume metadata. |
+| `PlumeMask` | class | Binary plume mask from a single-band score or enhancement map. |
+| `PlumeQNDFeatures` | class | Per-instance Quantile-Normality-Deviation features for plume QA. |
+| `PlumeShapeFilter` | class | Drop instance labels that fail a fiber-shape morphology gate. |
+| `PointCloudToRaster` | class | Rasterize a point cloud onto a target grid. |
+| `PointsToRaster` | class | Bin a vector cube of point measurements onto a target raster grid. |
+| `PolygonMask` | class | Rasterize a shapely geometry or GeoDataFrame into a boolean mask. |
+| `PowerScale` | class | Non-negative power scaling. |
+| `ProfileLine` | class | Sample values along a line between two pixel coordinates. |
+| `Quickshift` | class | Mode-seeking superpixels via :func:`skimage.segmentation.quickshift`. |
+| `RANSAC` | class | Robust model fitting via :func:`skimage.measure.ransac`. |
+| `RGBRecipe` | class | Build a display RGB from three band expressions with fixed stretches. |
+| `RadianceToDN` | class | Convert at-sensor radiance back to raw DN — inverse of `DNToRadiance`. |
+| `RadianceToReflectance` | class | Convert at-sensor radiance to TOA reflectance with solar geometry. |
+| `RandomCrop` | class | Randomly crop a spatial window and update the transform. |
+| `RandomFlip` | class | Randomly flip a GeoTensor horizontally and/or vertically. |
+| `RandomRotate90` | class | Randomly rotate by 90, 180, or 270 degrees. |
+| `RandomShift` | class | Randomly shift a fixed-size spatial window in pixel units. |
+| `RandomWalker` | class | Seeded segmentation via :func:`skimage.segmentation.random_walker`. |
+| `RasterToPointCloud` | class | Sample raster values onto each node of a point cloud. |
+| `RasterToPoints` | class | Extract raster values at a vector cube of points. |
+| `RasterToRasterLike` | class | Align one raster onto another's CRS + grid in a single op. |
+| `Rasterize` | class | Rasterize geometries onto the input `GeoTensor`'s grid. |
+| `RasterizeLike` | class | Rasterize geometries onto a stored reference grid. |
+| `ReadBounds` | class | Read all pixels intersecting a geographic bounding box. |
+| `ReadCenterCoords` | class | Read a fixed-shape window centred on map coordinates. |
+| `ReadHDF` | class | Read a dataset from an HDF4/HDF-EOS or HDF5 file, local or remote. |
+| `ReadNetCDF` | class | Read a variable from a NetCDF-3 / NetCDF-4 file, local or remote. |
+| `ReadPolygon` | class | Read all pixels intersecting a polygon. |
+| `ReadReprojectLike` | class | Read a source and reproject it onto another raster's grid. |
+| `ReadTile` | class | Read a single web-map tile and reproject it to a target CRS. |
+| `ReadToCRS` | class | Read a source and reproject it to a target CRS. |
+| `ReadWindow` | class | Read a pixel-space rectangular window from a raster source. |
+| `ReflectanceToRadiance` | class | Convert TOA reflectance back to at-sensor radiance — inverse of `RadianceToReflectance`. |
+| `RegionProps` | class | Extract a GeoDataFrame of per-region statistics from a label map. |
+| `RemoveSmallHoles` | class | Fill enclosed False components up to ``max_hole_area_px`` pixels. |
+| `RemoveSmallObjects` | class | Remove connected True components smaller than ``min_area_px`` pixels. |
+| `ReorderBands` | class | Reorder bands by integer index or band name. |
+| `ReplaceOutliers` | class | Replace outliers with median, NaN, or nearest-neighbour interpolation. |
+| `Reproject` | class | Reproject a `GeoTensor` to a destination CRS (and optional resolution). |
+| `ReprojectLike` | class | Reproject a `GeoTensor` onto another `GeoTensor`'s CRS + grid. |
+| `Resample` | class | Resample a `GeoTensor` to a target spatial resolution. |
+| `ResampleLike` | class | Resample a `GeoTensor` onto another `GeoTensor`'s spatial grid. |
+| `Resize` | class | Resize a `GeoTensor` to a target spatial shape. |
+| `RobustScaler` | class | Per-band median / IQR scaling (robust to outliers). |
+| `S2Cloudless` | class | Placeholder for the optional ML-based s2cloudless mask. |
+| `S2QA60` | class | Sentinel-2 L1C QA60 cloud + cirrus mask preset. |
+| `S2SCL` | class | Sentinel-2 L2A SCL preset that masks the requested ``targets`` classes. |
+| `SAVI` | class | Soil-Adjusted Vegetation Index — Huete 1988. |
+| `SBMP` | class | Single-band multi-pass Sentinel-2 SWIR ratio retrieval. |
+| `SCL` | class | Sentinel-2 L2A Scene Classification Layer class IDs. |
+| `SCL_CLOUDS` | constant | `frozenset({<SCL.CLOUD_MEDIUM_PROBABILITY: 8>, <SCL.CLOUD_...` |
+| `SCL_CLOUDS_AND_INVALID` | constant | `frozenset({<SCL.NO_DATA: 0>, <SCL.SATURATED_OR_DEFECTIVE:...` |
+| `SCL_INVALID` | constant | `frozenset({<SCL.NO_DATA: 0>, <SCL.SATURATED_OR_DEFECTIVE:...` |
+| `SCL_LAND` | constant | `frozenset({<SCL.VEGETATION: 4>, <SCL.NOT_VEGETATED: 5>})` |
+| `SCL_WATER` | constant | `frozenset({<SCL.WATER: 6>})` |
+| `SENSOR_QA_REGISTRY` | constant | `{'s2_qa60': {'cloud': {'bits': (10,)}, 'cirrus': {'bits':...` |
+| `SLIC` | class | SLIC superpixels via :func:`skimage.segmentation.slic`. |
+| `SWIRComposite` | class | Build a SWIR2-NIR-red composite. |
+| `SegmentStitch` | class | Assemble indexed sensor segments into one contiguous ``GeoTensor``. |
+| `SelectBands` | class | Select bands by integer index or band name along the band axis. |
+| `Sequential` | class | Re-exported from `pipekit`. |
+| `ShadedRelief` | class | Apply an elevation colormap and modulate RGB with hillshade. |
+| `ShannonEntropy` | class | Compute Shannon entropy of the input image. |
+| `ShapeTrace` | class | Re-exported from `pipekit`. |
+| `SimpleAtmosphericCorrection` | class | Dispatch simple BOA approximations; currently supports ``method='dos1'``. |
+| `SimulatedClouds` | class | Overlay a smooth synthetic cloud field onto reflectance imagery. |
+| `Sink` | class | Re-exported from `pipekit`. |
+| `SkeletonLength` | class | Longest path through the skeleton of a binary mask. |
+| `SklearnOp` | class | Universal adapter for scikit-learn-compatible estimators on GeoTensors. |
+| `SlidingWindow` | class | Split a `GeoTensor` into overlapping sliding-window tiles. |
+| `SlopeMask` | class | Build a boolean mask from DEM slope bounds in degrees. |
+| `Snapshot` | class | Re-exported from `pipekit`. |
+| `SpatialPool` | class | Downsample the spatial grid by integer factors, updating the transform. |
+| `SpeckleNoise` | class | Apply multiplicative Gaussian speckle noise, useful for SAR. |
+| `SpectralBinning` | class | Aggregate source bands into wavelength-centered bins. |
+| `SpectralSmoothing` | class | Smooth spectra along the band axis. |
+| `SplitBands` | class | Split a multiband GeoTensor into one single-band GeoTensor per band. |
+| `StackBands` | class | Concatenate carriers along the band axis. |
+| `StackMatched` | class | Concatenate aligned tensors along the band axis. |
+| `StandardScaler` | class | Per-band z-score normalisation. |
+| `Stitch` | class | Stitch georeferenced tiles back into one `GeoTensor`. |
+| `StreamingBackground` | class | Aggregate mean/covariance across an iterable of cubes. |
+| `StretchToUint8` | class | Percentile-stretch display data to ``uint8``. |
+| `StructureTensor` | class | Local structure-tensor eigenvalue stack. |
+| `SunAngleJitter` | class | Rescale TOA reflectance for a simulated solar-zenith change. |
+| `Switch` | class | Re-exported from `pipekit`. |
+| `Tap` | class | Re-exported from `pipekit`. |
+| `Threshold` | class | Binary mask of the pixels strictly above a global threshold. |
+| `Tile` | class | Split a `GeoTensor` into spatial tiles. |
+| `ToFloat32` | class | Cast the carrier's values to ``float32``. |
+| `TrueColor` | class | Build an RGB composite from explicit red, green, and blue band refs. |
+| `ValidateMFInputs` | class | Fail-fast pass-through validator for matched-filter inputs. |
+| `VectorToRasterAgg` | class | Rasterize a vector layer with an aggregation policy for overlaps. |
+| `Vectorize` | class | Vectorize non-zero regions of a mask `GeoTensor` into polygons. |
+| `Watershed` | class | Watershed segmentation via :func:`skimage.segmentation.watershed`. |
+| `WindAdvectionCone` | class | Mask likely downwind plume extent from a source and wind vector. |
+| `WriteCOG` | class | Write a :class:`GeoTensor` as a validated Cloud-Optimized GeoTIFF. |
+| `WriteGeoTIFF` | class | Write a :class:`GeoTensor` as a tiled GeoTIFF (no overviews). |
+| `WriteZarr` | class | Write a :class:`GeoTensor` to a Zarr store with spatial metadata. |
+| `ZeroOne` | class | Scale the current scene extent into ``[0, 1]``. |
+| `dNBR` | class | Differenced Normalized Burn Ratio — Key & Benson 2006. |
+| `kNDVI` | class | Kernel NDVI — Camps-Valls et al. 2021. |
+
+## Upstream: `geotoolz-catalog`
+
+Spatiotemporal catalog over geospatial files.
+
+### `geocatalog`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `GeoCatalog` | class | A queryable spatiotemporal index over geospatial files. |
+| `GeoSlice` | class | A bounded request for data — produced by samplers, consumed by loaders. |
+| `intersect` | function | Cross-catalog AND — rows from ``left`` paired with overlapping rows in ``right``. |
+| `open_catalog` | function | Open a GeoParquet artifact as a `GeoCatalog`. |
+| `query` | function | Filter ``catalog`` by space + time and return the matching rows. |
+| `union` | function | Cross-catalog OR — concatenate ``left`` and ``right`` into one catalog. |
+
+## Upstream: `geotoolz-cloud`
+
+Cloud object storage and batched async COG reads.
+
+### `geocloud`
+
+| Name | Kind | What it does |
+|---|---|---|
+
+## Upstream: `geotoolz-patcher`
+
+Four-axis patcher: split, run per patch, stitch.
+
+### `geopatcher`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AsyncField` | class | Async mirror of `Field` — concurrent `select` over remote tiles. |
+| `AsyncSpatialPatcher` | class | Async mirror of `SpatialPatcher` over an `AsyncField`. |
+| `Domain` | class | Metadata view of a field — bounds, CRS, no I/O. |
+| `Field` | class | A substrate the Patcher reads patches out of. |
+| `Patch` | class | A single patch produced by a `SpatialPatcher`. |
+| `RasterField` | class | Wrap a sync `GeoData` (a `RasterioReader`, a `GeoTensor`, …) as a `Field`. |
+| `SpatialPatcher` | class | The four-axis spatial Patcher. |
+| `SpatioTemporalPatch` | class | A patch carrying both a spatial and a temporal anchor. |
+| `SpatioTemporalPatcher` | class | Composition of a spatial and a temporal Patcher. |
+| `TemporalPatch` | class | A single patch produced by a `TemporalPatcher`. |
+| `TemporalPatcher` | class | Four-axis temporal Patcher. |
+
+## Upstream: `geotoolz-products`
+
+Readers for Earth-observation data products.
+
+### `geoproducts`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ProductReader` | class | ABC for georeader-compatible product readers. |
+| `stack` | function | Stack readers' bands on the grid of ``readers[like]``. |
+
+## Upstream: `xrtoolz`
+
+Composable operators for Earth System Data Cubes.
+
+### `xrtoolz`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ApplyToEach` | class | Re-instantiate a prototype operator per value and merge results. |
+| `Augment` | class | Run an inner ``Operator`` and merge its output back into the input. |
+| `Graph` | class | Re-exported from `pipekit`. |
+| `Input` | class | Re-exported from `pipekit`. |
+| `Node` | class | Re-exported from `pipekit`. |
+| `Operator` | class | Re-exported from `xrcore`. |
+| `Sequential` | class | Re-exported from `pipekit`. |
+| `Signature` | class | Re-exported from `xrcore`. |
+| `Tap` | class | Re-exported from `pipekit`. |
+
+## Upstream: `xrtoolz-core`
+
+xarray-aware Operator base and Signature descriptor.
+
+### `xrcore`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Operator` | class | ``pipekit.Operator`` plus xarray ``DataTree`` dispatch. |
+| `Signature` | class | Shape-and-dtype descriptor propagated without executing data paths. |
+
+## Upstream: `xrtoolz-einx`
+
+Labeled named-tensor algebra bridging xarray and einx.
+
+### `xreinx`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BatchMatmul` | class | Batched matrix multiply: contract ``dim`` within shared batch dims. |
+| `CoordMismatch` | class | Shared dims have unequal coords and ``align=False``. |
+| `Einsum` | class | Named-tensor Einstein summation over one or more DataArrays. |
+| `EinxBridgeError` | class | Base for all :mod:`xreinx` errors. |
+| `Matmul` | class | Contract two DataArrays over a shared dimension (matrix multiply). |
+| `Outer` | class | Outer product of two DataArrays over their disjoint dims. |
+| `PatternError` | class | Pattern is malformed or references dims not on the inputs. |
+| `Rearrange` | class | Reshape / transpose a DataArray by a named-tensor pattern. |
+| `Reduce` | class | Reduce a DataArray over named axes with a chosen reduction. |
+| `Repeat` | class | Broadcast / tile a DataArray along new named axes. |
+| `batch_matmul` | function | ``matmul`` along ``dim`` broadcast over shared ``batch_dims``. |
+| `einsum` | function | Labeled einx einsum (contraction) over named dims. |
+| `matmul` | function | Contract ``a`` and ``b`` along the shared ``dim``. |
+| `outer` | function | Outer product. |
+| `pack_dataset` | function | Stack named variables of a Dataset along a new dim. |
+| `rearrange` | function | Labeled einx rearrange (reshape / transpose / merge / split). |
+| `reduce` | function | Reduce over named axes (axes on the input slot, absent from output). |
+| `repeat` | function | Broadcast / tile along new named axes. |
+| `unpack_dataset` | function | Split a 'variable'-style dim back into a Dataset. |
+
+## Upstream: `xrtoolz-grad`
+
+Finite-difference calculus on labeled xarray grids.
+
+### `xrgrad`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `EARTH_RADIUS` | constant | `6371000.0` |
+| `GRAVITY` | constant | `9.80665` |
+| `OMEGA` | constant | `7.2921159e-05` |
+| `curl` | function | 2-D scalar curl ``∂v/∂x − ∂u/∂y`` (vertical component of ``∇×F``). |
+| `divergence` | function | Divergence ``∇·F`` of a vector field stored as Dataset variables. |
+| `gradient` | function | Gradient ``∇da`` under the given geometry. |
+| `grid_metrics_from_coords` | function | Derive ``(volume_metrics, face_metrics)`` from a Dataset's coords. |
+| `laplacian` | function | Laplacian ``Δf = ∇·∇f``. |
+| `partial` | function | Partial derivative ``∂ᵒʳᵈᵉʳda/∂<dim>ᵒʳᵈᵉʳ`` under the given geometry. |
+
+## Upstream: `xrtoolz-reader`
+
+Authenticated archive readers (CMEMS, CDS, AEMET).
+
+### `xrreader`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AEMETCredentials` | class | API key for AEMET OpenData. |
+| `AemetArchive` | class | Append-only local mirror of AEMET station observations. |
+| `AemetAuthError` | class | Missing or rejected API key. |
+| `AemetError` | class | Any AEMET-level failure (auth, rate limit, bad envelope, 5xx). |
+| `AemetRateLimitError` | class | Quota exhausted even after backoff. |
+| `AemetSource` | class | Adapter for AEMET OpenData observation endpoints. |
+| `ArchiveCoverage` | class | Per-station span of what the archive already holds for a preset. |
+| `BBox` | class | Axis-aligned lon/lat bounding box. |
+| `CATALOG` | constant | `{'glorys12.daily': CatalogEntry(source='cmems', dataset_i...` |
+| `CDSCredentials` | class | URL / key pair for the Climate Data Store. |
+| `CDSFormProfile` | class | Shape of a CDS ``retrieve()`` form for a dataset family. |
+| `CDSInsituArchive` | class | Append-only local mirror of a CDS in-situ preset. |
+| `CDSSource` | class | Adapter around the ``cdsapi`` Python client. |
+| `CMEMSCredentials` | class | Username / password pair for Copernicus Marine. |
+| `CMEMSSource` | class | Adapter around the ``copernicusmarine`` Python client. |
+| `CatalogEntry` | class | Short-name-to-source mapping with optional request defaults. |
+| `DataSource` | class | Abstract interface implemented by every adapter. |
+| `DatasetInfo` | class | Static description of a remote dataset. |
+| `DatasetKind` | class | Discriminator for how a dataset is laid out once materialized. |
+| `DepthRange` | class | Continuous depth window (positive-down, metres). |
+| `INSITU` | constant | `CDSFormProfile(family='insitu-land', format_key='data_for...` |
+| `Issue` | class | Single validation finding. |
+| `LocalL2Source` | class | Open satellite L2 product files from the local filesystem. |
+| `PressureLevels` | class | Discrete pressure levels in hPa (CDS-style). |
+| `REANALYSIS` | constant | `CDSFormProfile(family='reanalysis', format_key='format', ...` |
+| `REGISTRY` | constant | `{'sst': Variable(name='sst', standard_name='sea_surface_t...` |
+| `Request` | class | Canonical request payload consumed by data adapters. |
+| `Severity` | class | Two-level severity for validation issues. |
+| `Station` | class | One fixed observation station. |
+| `StationCollection` | class | Immutable collection of :class:`Station` with set-like filters. |
+| `TimeRange` | class | Inclusive time window, optionally with a target sampling frequency. |
+| `ValidationReport` | class | Aggregate validation result with convenience accessors. |
+| `Variable` | class | CF-aware variable descriptor used across adapters and validators. |
+| `all_entries` | function | Return a shallow copy of the unified catalog. |
+| `apply_cf_attrs` | function | Stamp CF attributes from ``variable`` onto ``da``. |
+| `describe` | function | Look up a :class:`DatasetInfo` by short name. |
+| `load_aemet` | function | Load AEMET credentials, or ``None`` if none could be found. |
+| `load_cds` | function | Load CDS credentials, or ``None`` if none could be found. |
+| `load_cmems` | function | Load CMEMS credentials, or ``None`` if none could be found. |
+| `open_emit_ch4_l2b` | function | Open an EMIT L2B CH4 enhancement scene as a flat CF Dataset. |
+| `open_ghgsat_ch4_l2` | function | Open a GHGSat per-plume NetCDF as a flat CF Dataset. |
+| `open_tropomi_ch4_l2` | function | Flatten a TROPOMI CH4 L2 granule into one CF Dataset. |
+| `register` | function | Add ``variable`` to :data:`REGISTRY` (keyed on :attr:`Variable.name`). |
+| `resolve` | function | Return a :class:`Variable` given an instance or its canonical name. |
+| `subset_bbox` | function | Keep points whose ``(lon, lat)`` fall inside a bounding box. |
+| `subset_time` | function | Restrict a dataset to the time range ``[time_min, time_max]``. |
+| `subset_where` | function | Keep points where ``variable`` is in ``[min_val, max_val]``. |
+| `validate_dataset` | function | Validate multiple variables in a dataset. |
+| `validate_variable` | function | Validate a single :class:`xarray.DataArray` against a :class:`Variable`. |
+
+## Upstream: `xrtoolz-sklearn`
+
+scikit-learn to xarray bridge (XarrayEstimator, SklearnOp).
+
+### `xrsklearn`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `MissingKind` | function | Re-exported from `typing`. |
+| `NanPolicy` | function | Re-exported from `typing`. |
+| `SklearnOp` | class | Layer-1 operator that delegates sklearn marshalling to ``XarrayEstimator``. |
+| `TreeMode` | function | Re-exported from `typing`. |
+| `XarrayEstimator` | class | Wrap an sklearn estimator so it operates on xarray inputs. |

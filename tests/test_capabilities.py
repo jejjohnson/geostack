@@ -10,6 +10,7 @@ environment lacks a third-party dependency one of them imports.
 
 from __future__ import annotations
 
+import importlib.metadata
 import importlib.util
 from pathlib import Path
 
@@ -25,6 +26,18 @@ _spec = importlib.util.spec_from_file_location("capabilities", SCRIPT)
 assert _spec is not None and _spec.loader is not None
 capabilities = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(capabilities)
+
+_absent = []
+for _dist in capabilities.UPSTREAM:
+    try:
+        importlib.metadata.version(_dist)
+    except importlib.metadata.PackageNotFoundError:
+        _absent.append(_dist)
+if _absent:
+    pytest.skip(
+        f"upstream libraries not installed ({', '.join(_absent)}); run in pixi",
+        allow_module_level=True,
+    )
 
 try:
     capabilities.collect()

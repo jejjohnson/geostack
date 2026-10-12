@@ -13,8 +13,9 @@ curl -fsSL https://pixi.sh/install.sh | bash
 Clone the repository and install the environment:
 
 ```bash
-git clone https://github.com/jejjohnson/geostack
+git clone --recurse-submodules https://github.com/jejjohnson/geostack
 cd geostack
+# already cloned? git submodule update --init
 pixi install
 ```
 
