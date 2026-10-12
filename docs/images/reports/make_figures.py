@@ -23,6 +23,7 @@ _spec.loader.exec_module(_ov)
 
 Svg = _ov.Svg
 INK, MUTED, LINE, BORDER, PANEL = _ov.INK, _ov.MUTED, _ov.LINE, _ov.BORDER, _ov.PANEL
+CARD = _ov.CARD
 ML, STATE, ENG, EXT, OBS = _ov.ML, _ov.STATE, _ov.ENG, _ov.EXT, _ov.OBS
 
 STAGES = ["1 · Functions / Any", "2 · Protocols", "3 · Concrete types"]
@@ -286,10 +287,176 @@ def r3_layers() -> Svg:
     return f
 
 
+# geocatalog's own palette (docs/assets/make_diagrams.py in the geocatalog repo)
+GC_SOURCE = ("#4C72B0", "#e8f0fb")
+GC_BUNDLE = ("#55A868", "#e9f5ec")
+GC_CATALOG = ("#C44E52", "#fbe8e9")
+GC_SLICE = ("#8172B2", "#efeaf6")
+GC_LOADER = ("#CCB974", "#fbf6e3")
+
+
+def r6_dataflow() -> Svg:
+    """Report 6: geocatalog's data flow, after the repo's concepts diagram."""
+    f = Svg(
+        840,
+        760,
+        "geocatalog data flow, top to bottom. Discovery sources (STAC, NASA"
+        " EarthAccess and CMR, Earth Engine, local files) feed a CatalogBundle"
+        " or a builder. Both produce a GeoCatalog, backed by InMemoryGeoCatalog"
+        " or DuckDBGeoCatalog. A catalog yields GeoSlices; loaders turn a slice"
+        " plus a catalog into a GeoTensor or an xarray Dataset. Catalogs"
+        " persist as GeoParquet 1.1, which open_catalog reads back lazily.",
+    )
+    # 1 discovery
+    f.rect(24, 20, 792, 110, stroke=BORDER, fill=PANEL)
+    f.text(44, 46, "1 · Discover", size=14, weight=700, anchor="start")
+    x = 44.0
+    for name in ["STACSource", "EarthAccessSource", "CMRSource", "GEESource"]:
+        x += f.chip(x, 62, name, hue=GC_SOURCE, size=13) + 10
+    f.chip(600, 62, "local files", hue=(BORDER, CARD), size=13)
+    f.text(
+        44,
+        116,
+        "yield SourceRows with the query that produced them",
+        size=12,
+        color=MUTED,
+        anchor="start",
+        italic=True,
+    )
+    # bundle + builders
+    f.box(
+        60,
+        170,
+        330,
+        76,
+        "CatalogBundle",
+        ["items + queries + matchups", "storage.CatalogBundle"],
+        hue=GC_BUNDLE,
+        title_size=15,
+        sub_size=12.5,
+    )
+    f.box(
+        450,
+        170,
+        330,
+        76,
+        "Builders",
+        ["build_raster / _vector / _xarray_catalog", "build.append_files"],
+        hue=(BORDER, CARD),
+        title_size=15,
+        sub_size=12.5,
+    )
+    f.arrow([(225, 130), (225, 168)], color=INK)
+    f.arrow([(650, 130), (650, 168)], color=INK)
+    # 2 index
+    f.rect(24, 286, 600, 150, stroke=GC_CATALOG[0], fill=GC_CATALOG[1])
+    f.text(
+        44, 312, "2 · Index: GeoCatalog Protocol", size=14, weight=700, anchor="start"
+    )
+    f.box(
+        44,
+        330,
+        270,
+        86,
+        "InMemoryGeoCatalog",
+        ["GeoDataFrame + R-tree", "+ IntervalIndex · eager"],
+        hue=(GC_CATALOG[0], CARD),
+        title_size=14,
+        sub_size=12.5,
+    )
+    f.box(
+        334,
+        330,
+        270,
+        86,
+        "DuckDBGeoCatalog",
+        ["lazy SQL over GeoParquet 1.1", "bbox predicate pushdown"],
+        hue=(GC_CATALOG[0], CARD),
+        title_size=14,
+        sub_size=12.5,
+    )
+    f.arrow([(225, 246), (225, 284)], color=INK)
+    f.arrow([(560, 246), (560, 284)], color=INK)
+    f.text(
+        44,
+        454,
+        "query · intersect · union return new catalogs",
+        size=12,
+        color=MUTED,
+        anchor="start",
+        italic=True,
+    )
+    # GeoParquet store
+    f.box(
+        660,
+        330,
+        156,
+        86,
+        "GeoParquet 1.1",
+        ["local · s3:// · hf://", "Hive-partitioned"],
+        hue=(LINE, CARD),
+        dashed=True,
+        title_size=14,
+        sub_size=12,
+    )
+    f.arrow(
+        [(626, 300), (740, 300), (740, 328)],
+        color=LINE,
+        dashed=True,
+        label="to_geoparquet",
+        at=(683, 292),
+        label_size=12,
+    )
+    f.arrow([(660, 400), (606, 400)], color=LINE, dashed=True)
+    f.text(738, 434, "open_catalog → DuckDB", size=12, color=MUTED)
+    # 3 slice
+    f.box(
+        170,
+        490,
+        500,
+        80,
+        "GeoSlice",
+        ["bounds + interval + resolution + CRS", "frozen · hashable · iter_slices()"],
+        hue=GC_SLICE,
+        title_size=15,
+        sub_size=12.5,
+    )
+    f.arrow([(324, 436), (324, 488)], color=INK)
+    f.text(332, 474, "query(slice) → rows", size=12, color=MUTED, anchor="start")
+    # 4 materialise
+    loaders = [
+        ("load_raster", "GeoTensor"),
+        ("load_xarray", "xr.Dataset"),
+        ("load_vector", "GeoTensor"),
+    ]
+    for i, (fn, out) in enumerate(loaders):
+        bx = 90 + i * 230
+        f.box(
+            bx,
+            612,
+            200,
+            56,
+            fn,
+            ["catalog + slice"],
+            hue=GC_LOADER,
+            title_size=14,
+            sub_size=12,
+        )
+        f.chip(bx + 100 - 52, 700, out, hue=(BORDER, PANEL), size=13)
+        f.arrow([(bx + 100, 668), (bx + 100, 698)], color=INK)
+    f.arrow([(420, 570), (190, 610)], color=INK)
+    f.arrow([(420, 570), (420, 610)], color=INK)
+    f.arrow([(420, 570), (650, 610)], color=INK)
+    f.text(24, 640, "3 · Load", size=14, weight=700, anchor="start")
+    f.h = 742
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
     "r3_layers": r3_layers,
+    "r6_dataflow": r6_dataflow,
 }
 
 
