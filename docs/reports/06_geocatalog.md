@@ -185,9 +185,10 @@ derived from it, and `to_crs()` reprojects it.
 and resolution $(\Delta x, \Delta y)$, the pixel shape is
 
 $$
-n_x = \operatorname{round}\!\left(\frac{x_1 - x_0}{\Delta x}\right),
-\qquad
-n_y = \operatorname{round}\!\left(\frac{y_1 - y_0}{\Delta y}\right),
+\begin{aligned}
+n_x &= \operatorname{round}\left(\frac{x_1 - x_0}{\Delta x}\right) , \\
+n_y &= \operatorname{round}\left(\frac{y_1 - y_0}{\Delta y}\right) ,
+\end{aligned}
 $$ (r6-eq-shape)
 
 which silently accepts an extent that is not a whole number of pixels
