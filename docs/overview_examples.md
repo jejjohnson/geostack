@@ -44,6 +44,7 @@ import jax
 import pipekit as pk                                         # today
 import pipekit_cycle as pc                                   # today
 import pipekit_train as pt                                   # today
+import pipekit_jax as pj                                     # today
 import pipekit_evaluate as pe                                # today
 import pipekit_experiment as px                              # today
 
@@ -64,12 +65,20 @@ from plumax.adapters.pipekit import PlumeForward, ColumnObs  # unverified
 :linenos:
 
 # Shapes: one GeoSlice per scene or station record
-emit_cat = gc.open_catalog("s3://imeo/emit.parquet")    # → GeoCatalog  today
-tccon_cat = gc.open_catalog("s3://imeo/tccon.parquet")  # → GeoCatalog  today
+emit_cat = gc.open_catalog("s3://imeo/emit.parquet")      # today
+tccon_cat = gc.open_catalog("s3://imeo/tccon.parquet")    # today
+cams_cat = gc.open_catalog("s3://cams/ch4_reanalysis.parquet")  # today
+aircraft_cat = gc.open_catalog("s3://methaneair/2024.parquet")  # today
 
-# scenes = {s : footprint(s) ∩ aoi ≠ ∅, t₀ ≤ tₛ ≤ t₁}
-scenes = gc.query(emit_cat, bbox=aoi, time=(t0, t1))  # → rows  today*
+# Split TCCON once, by station, before anything is fitted: no site is in
+# both halves, so held-out scores never see a training label.
+split = pt.splitters.GroupSplit(group="site", test_fraction=0.3,
+                                seed=cfg.seed)            # proposed (E)
+tccon_train, tccon_test = split(tccon_cat)                # disjoint sites
 ```
+
+`tccon_train` supplies the matchup pairs a learned retrieval trains on.
+`tccon_test` is the only TCCON data used to validate or evaluate.
 :::
 
 :::{tab-item} 2 · Retrieve
@@ -100,10 +109,13 @@ retrieval = pk.Graph(inputs={"scene": scene}, outputs={"alpha": alpha})  # today
 
 # Shapes: B bands, H × W pixels
 registry = px.S3ModelRegistry(bucket="imeo-models")  # today*
-net = registry.load("ch4_retrieval_v3")              # content-addressed  today
+# config from operator.json, weights from weights.bin
+net = pj.JaxModelOp(RetrievalNet()).from_registry(  # today
+    registry, "ch4_retrieval_v3"
+)
 
-# α = g_φ(x), trained with the matched filter as its oracle
-alpha_ml = gz.ModelOp(net)(clear)       # (B, H, W) → (H, W)  today
+# α = g_φ(x), trained on tccon_train matchups only
+alpha_ml = net(clear)                   # (B, H, W) → (H, W)  today
 
 retrieval_ml = pk.Graph(inputs={"scene": scene}, outputs={"alpha": alpha_ml})
 ```
@@ -135,9 +147,13 @@ The EnKF analysis needs an ensemble, so the cycle is an `EnsembleDACycle`
 with 40 members. The observation operator matches the instrument the
 observations come from: EMIT. `retrieval` maps one scene to one map, so the
 cycle's observation source wraps it: each hour it queries the catalog for
-that hour's scenes, reads them with geotoolz's `ReadBounds`, retrieves each
-one, and grids them with the stage-3 kriging. The analysis then assimilates
-the kriged mean with the kriged variance as its observation error. The
+that hour's scenes inside the area of interest, reads them with geotoolz's
+`ReadBounds`, retrieves each one, and grids them with the stage-3 kriging.
+The analysis assimilates the kriged mean with the kriged variance as its
+observation error. The pinned `EnsembleDACycle` takes the observations from
+its source but reads R from `DAState.obs_err_cov`, so passing a per-hour R
+needs a new `obs_err_source` hook (proposed, workstream D); `pk.Cache` keeps
+the kriging to one run per hour for both outputs. The
 stochastic analysis draws its perturbations from one key seeded from the
 run's config (`cfg.seed`), so a rerun reproduces them.
 
@@ -147,13 +163,15 @@ run's config (`cfg.seed`), so a rerun reproduces them.
 
 # Shapes: N state = N grid cells, N_e = 40 members, T = 24 steps
 # yₜ = m, Rₜ = diag(v): stage 3 kriging of this hour's EMIT retrievals
-retrieve_one = retrieval | pk.Pick("alpha")  # named, YAML-safe  proposed (A)
-hourly_obs = pk.Sequential([                      # today
-    gc.CatalogTimeQuery(emit_cat, window="1h"),   # t → GeoSlices  proposed (B)
+retrieve_one = retrieval | pk.Pick("alpha")       # proposed (A)
+hourly_krige = pk.Cache(pk.Sequential([           # one kriging per hour
+    gc.CatalogTimeQuery(emit_cat, window="1h",
+                        bbox=aoi),                # AOI ∩ hour  proposed (B)
     pk.ThreadMap(gz.ReadBounds() | retrieve_one), # → S × (H, W)  today*
-    gap_fill,                                     # → m, v on N cells
-    pc.GaussianObs(),               # (m, v) → (y, R = diag v)  proposed (D)
-])
+    gap_fill,                                     # → {m, v} on N cells
+]))                                               # today
+hourly_y = hourly_krige | pk.Pick("mean")         # yₜ = m
+hourly_R = hourly_krige | pk.Pick("var") | pc.DiagCov()  # Rₜ  proposed (D)
 key = jax.random.PRNGKey(cfg.seed)  # one seed per run, from the config
 
 # xᵇₜ⁽ⁱ⁾ = 𝓜(xᵃₜ₋₁⁽ⁱ⁾)   [unverified]
@@ -169,7 +187,8 @@ da = pc.EnsembleDACycle(  # T × (forecast, analysis)  today*
     forward_model=forward,
     obs_op=obs_op,
     analysis_step=analysis,
-    obs_source=hourly_obs,                        # (y, R) each hour
+    obs_source=hourly_y,                          # yₜ each hour
+    obs_err_source=hourly_R,      # Rₜ → DAState.obs_err_cov  proposed (D)
     n_steps=24,
     n_members=40,
     key=key,                                      # draws every ε⁽ⁱ⁾
@@ -219,7 +238,8 @@ evaluation = pe.Pipeline([                   # proposed (F)
 
 report = pe.MultiTrackEvaluation(            # proposed (F)
     evaluation_pipeline=evaluation,
-    references={"cams": cams_cat, "aircraft": aircraft_cat, "tccon": tccon_cat},
+    references={"cams": cams_cat, "aircraft": aircraft_cat,
+                "tccon": tccon_test},            # held-out sites only
 ).run(predictions=history)                   # → EvaluationReport
 ```
 :::
@@ -405,7 +425,7 @@ rows = gc.query(cat, bbox=aoi, time=(t0, t1))                    # today*
 # Wⱼ = {k : |tⱼ − tₖ| ≤ 3 h, d(sⱼ, sₖ) ≤ 25 km}
 # k⋆(j) = argmin over Wⱼ of (d / 25 km)² + (|Δt| / 3 h)²
 matched = gc.queries.matchup(  # → M ≤ |tccon| pairs  proposed (B)
-    primary=tccon_cat,  # the sparse, accurate stream
+    primary=tccon_train,  # training sites only
     secondary=cat,  # the dense satellite stream
     time_tolerance=pd.Timedelta(hours=3),
     space_tolerance_km=25.0,
@@ -424,9 +444,10 @@ matchup adds the time and distance tolerances on top of it.
 :linenos:
 
 # Shapes: C channels, H × W scene; 256² patches, stride 224
-from geopatcher.integrations.pipekit import (     # proposed (C)
+from geopatcher.integrations.pipekit import (     # today
     ApplyToChips,
     GridSampler,
+    MergePatches,
 )
 
 patcher = gp.SpatialPatcher(                       # today*
@@ -439,15 +460,19 @@ field = gp.RasterField(scene_reader)               # GeoTensor field  today
 
 # y(s) = ∑ₚ wₚ(s) f(xₚ)(s) / ∑ₚ wₚ(s), wₚ the Hann window of p
 inference = pk.Sequential([                        # today
-    GridSampler(patcher),  # (C, H, W) → P × (C, 256, 256)  proposed (C)
-    ApplyToChips(preprocess | gz.ModelOp(model)),  # per patch  proposed (C)
-    gz.Stitch(aggregation=gp.SpatialOverlapAdd()),  # → (K, H, W)  today*
+    GridSampler(patcher=patcher),           # → P × (C, 256, 256)  today
+    ApplyToChips(operator=preprocess | gz.ModelOp(model)),  # today
+    MergePatches(aggregation=gp.SpatialOverlapAdd(),
+                 domain=field.domain),      # P patches → (K, H, W)  today
 ])
 result = inference(field)
 ```
 
-The stitch step is geotoolz's existing `Stitch`, which already joins
-georeferenced tiles; only the sampler and the per-patch wrapper are new.
+All three steps ship today in `geopatcher.integrations.pipekit`.
+`MergePatches` consumes the `Patch` objects that `ApplyToChips` returns;
+geotoolz's `Stitch` is different, since it mosaics georeferenced tiles.
+`GridSampler` and `MergePatches` are marked `forbid_in_yaml`, so this
+pipeline runs but does not serialise.
 
 (ex-da-cycle)=
 ### Data assimilation cycle
@@ -512,7 +537,7 @@ Step 2 stays alive as the oracle that validated it.
 # Shapes: S = 10,000 simulations, N state
 # φ⋆ = argmin_φ 𝔼_θ ‖f(θ) − f_φ(θ)‖², f_φ the emulator
 loop = pt.TrainingLoop(                                      # today*
-    model_op=gz.ModelOp(ChemistryEmulatorNet()),
+    model_op=pj.JaxModelOp(ChemistryEmulatorNet()),          # today
     dataset=pt.SimulationDataset(  # S × (θ, f(θ))  today
         forward_model=PlumeForward(species="CH4", dt=3600.0),
         prior=AtmosphericPrior(distribution="climatology"),
@@ -521,11 +546,14 @@ loop = pt.TrainingLoop(                                      # today*
     loss=pt.MSE(),                                           # today
     optimizer_config={"name": "adam", "lr": 1e-3},
     n_epochs=100,
-    backend="lightning",
+    backend="equinox",
     callbacks=[pt.LogToExperiment(tracker=mlflow_tracker)],  # today
 )
 emulator_op = loop.run()
-registry.store(emulator_op, name="methane_emulator_v3")  # today
+emulator_hash = registry.store(                        # → content hash  today
+    emulator_op, name="methane_emulator_v3",
+    weights=emulator_op.serialize_weights(),           # → weights.bin  today
+)
 ```
 :::
 
@@ -537,7 +565,8 @@ registry.store(emulator_op, name="methane_emulator_v3")  # today
 
 # xᵇₜ = f_φ⋆(xᵃₜ₋₁), the trained emulator
 neural_forward = pc.NeuralForward(  # (N_e, N) → (N_e, N)  today
-    model_op=registry.load("methane_emulator_v3"),
+    model_op=pj.JaxModelOp(ChemistryEmulatorNet()).from_registry(
+        registry, emulator_hash),                      # weights too  today
     dt=3600.0,
 )
 da_emulated = pc.EnsembleDACycle(
@@ -579,8 +608,11 @@ class EnsembleEstimate:              # satisfies pe.Estimate
     def point(self):                 # x̄ = (1/N_e) ∑ᵢ x⁽ⁱ⁾
         return self.members.mean(axis=0)               # (N_e, N) → (N,)
 
-    def sample(self, n, *, key=None):
-        return self.members[:n]                        # → (n, N)
+    def sample(self, n, *, key=None):  # n draws from the empirical ensemble
+        if key is None:
+            raise ValueError("sampling needs a key")
+        i = jax.random.choice(key, len(self.members), (n,))  # with replacement
+        return self.members[i]                         # (N_e, N) → (n, N)
 
     def log_prob(self, theta):
         raise NotImplementedError    # optional in the protocol
@@ -589,19 +621,22 @@ class EnsembleEstimate:              # satisfies pe.Estimate
 @dataclass
 class CycleEstimator:                # satisfies pe.Estimator
     cycle: pc.EnsembleDACycle
+    x0: jax.Array                    # (N,) initial state, frozen with it
+    carry0: pc.DAState               # initial ensemble and time
     rung: int                        # 2 = classical, 4 = emulator-based
     complexity: int = 0
 
     def fit(self, task):             # a DA cycle has nothing to train
         return self
 
-    def __call__(self, obs):         # obs arrive through obs_source
-        _, history = self.cycle(x0, carry0)            # (T, N_e, N)
+    def __call__(self, obs):         # the benchmark's obs drive the run
+        cycle = self.cycle.replace(obs_source=pk.Const(obs))  # proposed (D)
+        _, history = cycle(self.x0, self.carry0)       # (T, N_e, N)
         return EnsembleEstimate(history[-1])           # final analysis
 
 
-classical = CycleEstimator(da, rung=2)                 # the oracle
-emulated = CycleEstimator(da_emulated, rung=4)
+classical = CycleEstimator(da, x0, carry0, rung=2)     # the oracle
+emulated = CycleEstimator(da_emulated, x0, carry0, rung=4)
 
 bench = pe.Benchmark(                                  # today
     task=plume_task,             # a pe.Task from plumax  unverified
@@ -659,8 +694,13 @@ pipekit-experiment already ships `InferenceArtifact`: a JSON snapshot of a
 pipeline's YAML, the hashes of the registered models it loads, the lockfile
 and free-form metadata, with `save` and `load`. What it cannot do yet is
 rebuild and rerun the pipeline from its frozen inputs; that `rerun` is
-proposed. Gate G1 freezes the evaluation too, so the report can be
-regenerated, not just the analysis.
+proposed. Two more gaps block a faithful cold rerun today: a `Graph`'s
+config is a debug representation, not a round-trippable topology, so
+`pk.dumps` of a pipeline containing one needs a topology serialiser
+(proposed, workstream A); and `reload_models` restores model configs but
+not the weights a `JaxModelOp` keeps in the registry's `weights.bin`, so the
+sketch reloads them with `from_registry`. Gate G1 freezes the evaluation
+too, so the report can be regenerated, not just the analysis.
 
 ```{code-block} python
 :caption: Freeze the analysis and its evaluation for a cold rerun.
@@ -669,7 +709,7 @@ regenerated, not just the analysis.
 from pathlib import Path
 
 inference = px.InferenceArtifact(                      # today
-    pipeline_yaml=pk.dumps(da_emulated),               # today
+    pipeline_yaml=pk.dumps(da_emulated),     # Graph topology  proposed (A)
     pinned_model_hashes={"forward_model": emulator_hash},
     deps_lock=Path("pixi.lock").read_text(),
     metadata={
@@ -694,6 +734,8 @@ evaluation.save("regulatory/mars_methane_2024Q3_eval.json")  # today
 
 # Years later: a cold rerun, no cloud accounts needed
 art = px.InferenceArtifact.load("regulatory/mars_methane_2024Q3.json")  # today
-models = art.reload_models(registry)       # pinned weights back  today
-history = px.rerun(art, models)            # rebuild + run  proposed (E)
+# reload_models restores configs only; JAX weights come back separately
+emulator = pj.JaxModelOp(ChemistryEmulatorNet()).from_registry(
+    registry, art.pinned_model_hashes["forward_model"])  # today
+history = px.rerun(art, {"forward_model": emulator})     # proposed (E)
 ```

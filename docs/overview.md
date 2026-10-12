@@ -588,9 +588,15 @@ k^\star(j) = \arg\min_{k \in W_j} \left(\frac{d(s_j, s_k)}{25~\mathrm{km}}\right
 ```
 
 Ties go to the earlier retrieval, then the smaller catalog index, so the
-selection is deterministic. The pairs validate stage 1 and are the (label, feature) training data for a
-learned retrieval. How much of their disagreement is representativeness
-error is an [open question](#sec-open-questions).
+selection is deterministic.
+
+The pairs serve two jobs, so TCCON is split once, by station, before
+anything is fitted. Pairs from the training sites are the (label, feature)
+data a learned retrieval trains on; pairs from the held-out sites validate
+stage 1 and are the only TCCON references used in stage 5. No site appears
+in both, so held-out scores never include a label the model saw. How much
+of the pairs' disagreement is representativeness error is an
+[open question](#sec-open-questions).
 
 (sec-stage-gapfill)=
 ### Stage 3 · Grid and gap-fill (step 4: pyrox through pipekit)
@@ -836,6 +842,16 @@ decision.
 
 :::{dropdown} Raised by the design review
 :open:
+- **Serialising a `Graph`.** The pinned `Graph.get_config()` is a debug
+  representation, and several patch operators are `forbid_in_yaml`, so a
+  pipeline containing either cannot be frozen as YAML yet. Recommended: a
+  topology serialiser that stores the graph as (operator, parent-keys)
+  records, as `Graph`'s own docstring suggests. Until then, gate A1 covers
+  only YAML-safe operators.
+- **A per-step observation error.** The pinned `EnsembleDACycle` reads R from
+  `DAState.obs_err_cov` and takes only y from its source, so a cycle cannot
+  yet assimilate a different R each hour (the kriged variance of stage 3).
+  Recommended: an `obs_err_source` that writes into the state each step.
 - **Two evaluation APIs.** The [examples](overview_examples.md#ex-evaluation)
   sketch `pe.Pipeline`, `ByLeadTime`, `MultiTrackEvaluation` and a
   `BenchmarkContract`. pipekit-evaluate already ships a different model:
@@ -1042,7 +1058,7 @@ month 3. Phases 6 and 7 wait for projects to pull them.
 
 | Gate | Workstream | Passes when |
 |---|---|---|
-| A1 Config round-trip | A | For every shipped operator, `loads(dumps(op))` has the same config hash and returns the same output on a fixed input |
+| A1 Config round-trip | A | For every shipped operator not marked `forbid_in_yaml`, `loads(dumps(op))` has the same config hash and returns the same output on a fixed input; once the topology serialiser lands, the same holds for a `Graph` |
 | B1 Backend parity | B | The InMemory and DuckDB geocatalog backends return the identical slice set for the same bbox and time query |
 | C1 Patch identity | C | An identity model through patch → stitch with Hann-window overlap-add reproduces the input to 1e-6 in float64, away from scene edges |
 | D1 Kriging oracle | D | `KrigingOperator`'s mean and variance match {eq}`eq-kriging-mean` and {eq}`eq-kriging-var` to 1e-6 in float64 |
