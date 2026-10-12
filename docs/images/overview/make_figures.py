@@ -146,6 +146,7 @@ class Svg:
         label_color: str = MUTED,
         label_size: float = 11.5,
         curve: bool = False,
+        both: bool = False,
     ) -> None:
         """A polyline (or one quadratic curve through the middle point)."""
         if curve and len(pts) == 3:
@@ -155,6 +156,8 @@ class Svg:
             d = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts)
         dash = ' stroke-dasharray="5 4"' if dashed else ""
         end = f' marker-end="url(#{self._marker(color)})"' if head else ""
+        if both:
+            end += f' marker-start="url(#{self._marker(color)})"'
         self.parts.append(
             f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{width}"'
             f' stroke-linejoin="round"{dash}{end}/>'
@@ -216,41 +219,50 @@ def _width(s: str, size: float) -> float:
 
 def modeling_cycle() -> Svg:
     f = Svg(
-        1130,
-        300,
-        "The modeling cycle: abstract a real system into equations"
-        " and code, predict, validate against observations, refine, repeat.",
+        1120,
+        380,
+        "The modeling cycle: the real-world system is both modelled"
+        " (abstract, then equations and code, then predictions) and observed"
+        " (sensor, measurements, observations); the two tracks meet where"
+        " predictions are compared with observations, and the model is refined.",
     )
-    y, h = 104, 56
-    mid = y + h / 2
-    f.box(24, y, 176, h, "Real-world system")
-    f.box(244, y, 120, h, "Abstract")
-    f.box(420, 36, 150, h, "Equations", ["analysis"], hue=ML)
-    f.box(420, 172, 150, h, "Code", ["simulation"], hue=ML)
-    f.box(630, y, 130, h, "Predictions")
-    f.box(830, y, 160, h, "Validate", ["against observations"], hue=OBS)
-    f.box(1020, y, 86, h, "Refine", ["model"])
-    f.arrow([(200, mid), (242, mid)])
-    f.arrow([(364, mid - 10), (392, mid - 10), (392, 64), (418, 64)])
-    f.arrow([(364, mid + 10), (392, mid + 10), (392, 200), (418, 200)])
+    f.box(24, 185, 150, 80, "Real-world", ["system"])
+    f.text(214, 176, "MODELING", size=11, color=ML[0], anchor="start", weight=700)
+    f.text(214, 366, "OBSERVING", size=11, color=OBS[0], anchor="start", weight=700)
+    f.box(214, 102, 120, 56, "Abstract")
+    f.box(380, 60, 150, 48, "Equations", ["analysis"], hue=ML)
+    f.box(380, 152, 150, 48, "Code", ["simulation"], hue=ML)
+    f.box(580, 102, 140, 56, "Predictions", hue=ML)
+    f.box(214, 292, 120, 56, "Sensor", hue=OBS)
+    f.box(380, 292, 150, 56, "Measurements", hue=OBS)
+    f.box(580, 292, 140, 56, "Observations", hue=OBS)
+    f.box(790, 197, 170, 56, "Compare", ["predictions vs observations"], hue=ENG)
+    f.box(1000, 197, 96, 56, "Refine", ["the model"])
+    f.arrow([(174, 210), (194, 210), (194, 130), (212, 130)])
+    f.arrow([(174, 240), (194, 240), (194, 320), (212, 320)])
+    f.arrow([(334, 120), (357, 120), (357, 84), (378, 84)])
+    f.arrow([(334, 140), (357, 140), (357, 176), (378, 176)])
     f.arrow(
-        [(570, 64), (600, 64), (600, mid - 10), (628, mid - 10)],
+        [(530, 84), (555, 84), (555, 120), (578, 120)],
         label="derive",
-        at=(606, 52),
+        at=(560, 76),
         label_anchor="start",
     )
     f.arrow(
-        [(570, 200), (600, 200), (600, mid + 10), (628, mid + 10)],
+        [(530, 176), (555, 176), (555, 140), (578, 140)],
         label="simulate",
-        at=(606, 222),
+        at=(560, 194),
         label_anchor="start",
     )
-    f.arrow([(760, mid), (828, mid)], label="compare", at=(794, mid - 9))
-    f.arrow([(990, mid), (1018, mid)])
-    f.arrow([(1063, y + h), (1063, 262), (304, 262), (304, y + h + 2)], color=INK)
+    f.arrow([(334, 320), (378, 320)], label="record", at=(356, 312))
+    f.arrow([(530, 320), (578, 320)], label="process", at=(554, 312))
+    f.arrow([(720, 130), (875, 130), (875, 195)], color=ML[0])
+    f.arrow([(720, 320), (875, 320), (875, 255)], color=OBS[0])
+    f.arrow([(960, 225), (998, 225)])
+    f.arrow([(1048, 197), (1048, 34), (274, 34), (274, 100)], color=INK)
     f.text(
-        678,
-        284,
+        661,
+        26,
         "iterate: add complexity only when validation demands it",
         size=12,
         color=INK,
@@ -259,32 +271,42 @@ def modeling_cycle() -> Svg:
     return f
 
 
+DERIVED = ("#be123c", "#fff1f2")  # L5 derived products (extremes, indicators)
 LEVELS = [
     ("L0", "Unstructured obs", ["raw instrument output"]),
-    ("L1", "Structured obs", ["calibrated, georeferenced"]),
+    ("L1", "Structured obs", ["calibrated,", "georeferenced"]),
     ("L2", "Retrieved obs", ["per-pixel geophysical", "variables"]),
-    ("L3", "Analysis", ["regular grid, gap-filled"]),
-    ("L4", "Reanalysis", ["forecast; dynamical model", "output"]),
+    ("L3", "Analysis", ["regular grid,", "gap-filled"]),
+    ("L4", "Reanalysis", ["forecast; dynamical", "model output"]),
+    ("L5", "Derived products", ["extremes, indicators,", "impacts"]),
 ]
-STEPS = ["read + calibrate", "retrieve", "grid + gap-fill", "model + assimilate"]
+STEPS = [
+    "read + calibrate",
+    "retrieve",
+    "grid + gap-fill",
+    "model + assimilate",
+    "derive",
+]
 
 
 def lifecycle() -> Svg:
     f = Svg(
-        1180,
+        1250,
         800,
-        "The L0 to L4 data lifecycle on two perpendicular axes:"
+        "The L0 to L5 data lifecycle on two perpendicular axes:"
         " the science axis fans retrievals out into ocean, atmosphere, land"
-        " and ice; the engineering axis maps each level to the GeoStack tools"
-        " that store, index, read, carry, patch and transform it.",
+        " and ice and ends in derived products such as extremes; the"
+        " engineering axis maps each level to the GeoStack tools that"
+        " transform, patch, carry, read, index and store it.",
     )
-    x0, cw, gap = 186, 170, 26  # first column x, column width, gap
-    cx = [x0 + i * (cw + gap) for i in range(5)]
+    x0, cw, gap = 186, 152, 24  # first column x, column width, gap
+    cx = [x0 + i * (cw + gap) for i in range(6)]
+    hues = [OBS, OBS, OBS, STATE, STATE, DERIVED]
 
-    # Column headers: the five maturity levels and the step between each pair.
+    # Column headers: the six maturity levels and the step between each pair.
     for i, (lvl, name, sub) in enumerate(LEVELS):
-        hue = OBS if i < 3 else STATE
-        f.rect(cx[i], 46, cw, 76, stroke=hue[0], fill=hue[1])
+        hue = hues[i]
+        f.rect(cx[i], 46, cw, 76, stroke=hue[0], fill=hue[1], dashed=i == 5)
         f.text(cx[i] + 12, 64, lvl, size=11, color=hue[0], anchor="start", weight=700)
         f.text(cx[i] + 12, 82, name, size=13.5, color=INK, anchor="start", weight=600)
         f.lines(cx[i] + 12, 99, sub, gap=14, size=11, color=MUTED, anchor="start")
@@ -292,22 +314,12 @@ def lifecycle() -> Svg:
         a, b = cx[i] + cw, cx[i + 1]
         f.arrow([(a + 2, 84), (b - 2, 84)], color=INK)
         f.text((a + b) / 2, 140, step, size=11.5, color=INK, weight=500)
-    f.text(
-        cx[0] + cw * 1.5 + gap / 2,
-        30,
-        "observations  (GeoTensor world)",
-        size=12,
-        color=OBS[0],
-        weight=600,
-    )
-    f.text(
-        cx[3] + cw + gap / 2,
-        30,
-        "model states  (xarray world)",
-        size=12,
-        color=STATE[0],
-        weight=600,
-    )
+    for a, b, label, hue in [
+        (0, 2, "observations  (GeoTensor world)", OBS),
+        (3, 4, "model states  (xarray world)", STATE),
+        (5, 5, "derived products", DERIVED),
+    ]:
+        f.text((cx[a] + cx[b] + cw) / 2, 30, label, size=12, color=hue[0], weight=600)
 
     # Science axis: one stream until retrieval, then one lane per domain.
     top, lane_h, lane_gap = 178, 46, 14
@@ -331,14 +343,29 @@ def lifecycle() -> Svg:
         cw,
         bottom - top,
         "Radiances",
-        ["one stream for every", "geoscience"],
+        ["one stream for", "every geoscience"],
     )
     f.arrow([(cx[0] + cw, (top + bottom) / 2), (cx[1] - 2, (top + bottom) / 2)])
     rows = {
-        "Ocean": ["SST · SSH · colour", "gridded SST / SSH", "ocean reanalysis"],
-        "Atmosphere": ["CH₄ · CO₂ · aerosol", "gridded columns", "chemistry forecast"],
-        "Land": ["LST · soil moisture", "gridded land state", "land reanalysis"],
-        "Ice": ["sea ice · snow", "ice concentration", "ice forecast"],
+        "Ocean": [
+            "SST · SSH · colour",
+            "gridded SST / SSH",
+            "ocean reanalysis",
+            "marine heatwaves",
+        ],
+        "Atmosphere": [
+            "CH₄ · CO₂ · aerosol",
+            "gridded columns",
+            "chemistry forecast",
+            "heatwaves · storms",
+        ],
+        "Land": [
+            "LST · soil moisture",
+            "gridded land state",
+            "land reanalysis",
+            "drought · floods",
+        ],
+        "Ice": ["sea ice · snow", "ice concentration", "ice forecast", "melt extremes"],
     }
     fan_x = cx[1] + cw
     for (name, cells), y in zip(rows.items(), lanes, strict=True):
@@ -351,13 +378,21 @@ def lifecycle() -> Svg:
         )
         for i, cell in enumerate(cells):
             x = cx[2 + i]
-            f.rect(x, y, cw, lane_h, stroke=hue[0], fill=hue[1])
+            f.rect(
+                x,
+                y,
+                cw,
+                lane_h,
+                stroke=hue[0],
+                fill=hue[1] if i < 3 else CARD,
+                dashed=i == 3,
+            )
             f.text(
                 x + 12, y + 19, name, size=11, color=hue[0], anchor="start", weight=700
             )
             f.text(x + 12, y + 36, cell, size=12, color=INK, anchor="start")
             if i:
-                f.arrow([(x - gap + 2, ym), (x - 2, ym)], color=hue[0])
+                f.arrow([(x - gap + 2, ym), (x - 2, ym)], color=hue[0], dashed=i == 3)
     f.text(
         fan_x + 4,
         bottom + 22,
@@ -365,6 +400,15 @@ def lifecycle() -> Svg:
         size=11.5,
         color=INK,
         anchor="start",
+        italic=True,
+    )
+    f.text(
+        cx[5] + cw,
+        bottom + 22,
+        "L5: examples, to be defined",
+        size=11.5,
+        color=DERIVED[0],
+        anchor="end",
         italic=True,
     )
 
@@ -395,17 +439,21 @@ def lifecycle() -> Svg:
         weight=600,
     )
     span = {  # role: [(first level, last level, label, hue, dashed)]
-        "transform": [(1, 2, "geotoolz", OBS, False), (3, 4, "xrtoolz", STATE, False)],
+        "transform": [
+            (1, 2, "geotoolz", OBS, False),
+            (3, 4, "xrtoolz", STATE, False),
+            (5, 5, "xtremax", DERIVED, False),
+        ],
         "patch": [(1, 4, "geopatcher  (carrier-neutral fields)", ENG, False)],
-        "carry": [(0, 2, "GeoTensor", OBS, False), (3, 4, "xarray", STATE, False)],
-        "read": [(0, 2, "georeader", OBS, False), (3, 4, "xrreader", STATE, False)],
+        "carry": [(0, 2, "GeoTensor", OBS, False), (3, 5, "xarray", STATE, False)],
+        "read": [(0, 2, "georeader", OBS, False), (3, 5, "xrreader", STATE, False)],
         "index": [
             (0, 2, "geocatalog  (GeoSlice)", OBS, False),
-            (3, 4, "statecatalog  (StateSlice)", STATE, False),
+            (3, 5, "statecatalog  (StateSlice)", STATE, False),
         ],
         "store": [
             (0, 2, "geocloud  (object storage, COG)", ENG, False),
-            (3, 4, "Zarr / NetCDF on object storage", EXT, True),
+            (3, 5, "Zarr / NetCDF on object storage", EXT, True),
         ],
     }
     for r, (role, bars) in enumerate(span.items()):
@@ -422,13 +470,21 @@ def lifecycle() -> Svg:
     return f
 
 
+IN_SITU = {
+    "Ocean": "Argo · CTD · moorings · gliders",
+    "Atmosphere": "radiosondes · TCCON · flux towers",
+    "Land": "soil-moisture probes · river gauges",
+    "Ice": "mass-balance buoys · snow pits",
+}
+
+
 def two_streams() -> Svg:
     f = Svg(
-        1000,
+        1040,
         560,
-        "Two streams converge: the satellite chain runs L0 to L4,"
-        " in-situ observations join it by spatiotemporal matchup between L2"
-        " and L3, and enter L4 through assimilation.",
+        "Two streams converge: the satellite chain runs L0 to L4;"
+        " in-situ networks in every domain join it by spatiotemporal matchup"
+        " between L2 and L3, and enter L4 through assimilation.",
     )
     x, w, h = 60, 250, 58
     ys = [70, 166, 262, 358, 470]
@@ -456,7 +512,7 @@ def two_streams() -> Svg:
             label_anchor="start",
             label_color=INK,
         )
-    ix, iw = 680, 270
+    ix, iw, iy, ih = 650, 360, 214, 176
     f.text(ix + iw / 2, 44, "In-situ  (bottom-up)", size=13, color=STATE[0], weight=700)
     f.text(
         ix + iw / 2,
@@ -466,14 +522,35 @@ def two_streams() -> Svg:
         color=MUTED,
         italic=True,
     )
-    f.box(
-        ix,
-        236,
-        iw,
-        112,
-        "Argo · CTD · moorings",
-        ["gliders · drifters", "calibrated, with a depth axis,", "sparse coverage"],
-        hue=STATE,
+    f.rect(ix, iy, iw, ih, stroke=STATE[0], fill=STATE[1])
+    f.text(
+        ix + 18,
+        iy + 28,
+        "In-situ networks",
+        size=14,
+        color=INK,
+        anchor="start",
+        weight=700,
+    )
+    for k, (name, nets) in enumerate(IN_SITU.items()):
+        y = iy + 56 + k * 24
+        f.text(
+            ix + 18,
+            y,
+            name,
+            size=11.5,
+            color=DOMAINS[name][0],
+            anchor="start",
+            weight=700,
+        )
+        f.text(ix + 108, y, nets, size=12, color=INK, anchor="start")
+    f.text(
+        ix + 18,
+        iy + ih - 16,
+        "calibrated and sparse; often with a depth or height axis",
+        size=11,
+        color=MUTED,
+        anchor="start",
     )
     # The matchup node sits on the L2 -> L3 step.
     mx, my = 470, (ys[2] + h + ys[3]) / 2
@@ -490,7 +567,11 @@ def two_streams() -> Svg:
         label_anchor="start",
     )
     f.arrow(
-        [(ix + iw / 2, 348), (ix + iw / 2, ys[4] + h / 2), (x + w + 2, ys[4] + h / 2)],
+        [
+            (ix + iw / 2, iy + ih),
+            (ix + iw / 2, ys[4] + h / 2),
+            (x + w + 2, ys[4] + h / 2),
+        ],
         color=STATE[0],
         dashed=True,
         label="enters through assimilation",
@@ -570,25 +651,25 @@ def three_layers() -> Svg:
 
 
 SIX = [
-    ("1", "Simple model", ["a generative story;", "physics you can", "simulate"]),
-    ("2", "Model-based", ["inference: slow but", "exact; classical", "DA / inversion"]),
-    ("3", "Emulator", ["neural surrogate", "trained on step 1;", "skip if cheap"]),
-    ("4", "Emulator-based", ["inference: step 2 in", "seconds, not hours"]),
-    ("5", "Amortized", ["inference: direct", "map obs → posterior"]),
-    ("6", "Improve", ["upgrade model, data,", "emulator, predictor"]),
+    ("1", "Simple model", ["a generative story;", "physics you can simulate"]),
+    ("2", "Model-based inference", ["slow but exact;", "classical DA / inversion"]),
+    ("3", "Emulator", ["neural surrogate trained", "on step 1; skip if cheap"]),
+    ("4", "Emulator-based inference", ["step 2 in seconds,", "not hours"]),
+    ("5", "Amortized inference", ["a direct map:", "observations → posterior"]),
 ]
 
 
 def six_steps() -> Svg:
     f = Svg(
-        1140,
-        330,
-        "The six-step cycle from simple model to amortized"
-        " inference; step 2 is the oracle that validates steps 3 to 5, and"
-        " step 6 feeds improvements back to step 1.",
+        1180,
+        372,
+        "The six-step cycle: five steps from simple model to"
+        " amortized inference; step 2 is the oracle that validates steps 3"
+        " to 5, and improvement runs alongside steps 2 to 5 as one shared"
+        " step.",
     )
-    w, h, y, gap = 160, 108, 110, 30
-    xs = [24 + i * (w + gap) for i in range(6)]
+    w, h, y, gap = 204, 100, 110, 28
+    xs = [24 + i * (w + gap) for i in range(5)]
     for i, ((n, name, sub), x) in enumerate(zip(SIX, xs, strict=True)):
         hue = ORACLE if n == "2" else (ML if n in "345" else (BORDER, CARD))
         f.rect(x, y, w, h, stroke=hue[0], fill=hue[1])
@@ -601,9 +682,9 @@ def six_steps() -> Svg:
             anchor="start",
             weight=700,
         )
-        f.text(x + 14, y + 44, name, size=14, color=INK, anchor="start", weight=700)
-        f.lines(x + 14, y + 63, sub, gap=14.5, size=11.5, color=MUTED, anchor="start")
-        if i < 5:
+        f.text(x + 14, y + 44, name, size=12.5, color=INK, anchor="start", weight=700)
+        f.lines(x + 14, y + 64, sub, gap=14.5, size=11.5, color=MUTED, anchor="start")
+        if i < 4:
             f.arrow([(x + w + 2, y + h / 2), (x + w + gap - 2, y + h / 2)], color=INK)
     # Step 2 validates 3, 4 and 5.
     sx, bus = xs[1] + w / 2, 66
@@ -625,24 +706,33 @@ def six_steps() -> Svg:
         anchor="start",
         weight=600,
     )
-    # Step 6 loops back to step 1.
-    f.arrow(
-        [
-            (xs[5] + w / 2, y + h + 2),
-            (xs[5] + w / 2, 286),
-            (xs[0] + w / 2, 286),
-            (xs[0] + w / 2, y + h + 4),
-        ],
-        color=INK,
+    # Step 6: one shared improvement step under all of them, linked to 2-5.
+    iy, ih = 270, 72
+    f.rect(xs[0], iy, xs[4] + w - xs[0], ih, stroke=INK, fill=PANEL)
+    f.text(
+        xs[0] + 16,
+        iy + 26,
+        "STEP 6",
+        size=10.5,
+        color=MUTED,
+        anchor="start",
+        weight=700,
     )
     f.text(
-        (xs[0] + xs[5] + w) / 2,
-        306,
-        "improve with the previous step as ground truth, then go around again",
+        xs[0] + 16, iy + 48, "Improve", size=14, color=INK, anchor="start", weight=700
+    )
+    f.text(
+        xs[0] + w + gap / 2,
+        iy + 42,
+        "upgrade the model, data, emulator or"
+        " predictor, using the previous step as ground truth",
         size=12,
         color=INK,
-        weight=500,
+        anchor="start",
     )
+    for k in (1, 2, 3, 4):
+        cx = xs[k] + w / 2
+        f.arrow([(cx, y + h + 4), (cx, iy - 4)], color=INK, both=True)
     return f
 
 

@@ -8,6 +8,7 @@ project:
   toc:
     - file: docs/index
     - file: docs/overview
+    - file: docs/overview_examples
     - title: Notes
       children:
         - file: docs/notes/background
