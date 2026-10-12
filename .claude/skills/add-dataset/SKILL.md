@@ -1,18 +1,18 @@
 ---
 name: add-dataset
-description: Add a dataset to the research project — raw files tracked with DVC (never git), a loader in the package's data subpackage, a Hydra data config (size, split fractions), the preprocess stage that makes deterministic train / val / test splits, and tests on a tiny fixture. Use when asked to add, ingest, download, load, split or preprocess a dataset, or to add a data loader or data config in src/myproject/data, configs/data or scripts/preprocess.py.
+description: Add a dataset to the research project — raw files tracked with DVC (never git), a loader in the package's data subpackage, a Hydra data config (size, split fractions), the preprocess stage that makes deterministic train / val / test splits, and tests on a tiny fixture. Use when asked to add, ingest, download, load, split or preprocess a dataset, or to add a data loader or data config in src/geostack/data, configs/data or scripts/preprocess.py.
 ---
 
 # Add a dataset
 
-<!-- template-example: example-specific paths (src/myproject/data, configs/data, scripts/preprocess.py); keep the procedure, rewrite the names after adoption. -->
+<!-- template-example: example-specific paths (src/geostack/data, configs/data, scripts/preprocess.py); keep the procedure, rewrite the names after adoption. -->
 
 Read "Boundaries" and contracts 1, 3 and 4 in `AGENTS.md` first; this is
 the step-by-step.
 
 ## 1. Make sure it does not exist yet
 
-- `docs/api/capabilities.md` (`myproject.data.loading`): a loader for the
+- `docs/api/capabilities.md` (`geostack.data.loading`): a loader for the
   format may exist — extend it rather than writing a second one.
 - `configs/data/` (`small.yaml`, `full.yaml`): a new *size* of the same data
   is a new option there, not a new loader.
@@ -37,7 +37,7 @@ pixi run dvc push                          # needs a remote: dvc remote add -d <
 - Keep credentials out of the repo (`.env`, `.dvc/config.local`, both
   gitignored).
 
-## 3. The loader (`src/myproject/data/`)
+## 3. The loader (`src/geostack/data/`)
 
 - A function in `loading.py` (or a new module for a new family of
   formats) that takes the path as `str | Path` and returns arrays /
@@ -75,7 +75,7 @@ test_split: 0.15
 - Grouped or temporal data split by group / time, not by row, so the same
   site or period is never on both sides.
 - The `preprocess` stage in `dvc.yaml` lists the raw files, the script,
-  `src/myproject/data` and the data config as `deps`, and `data/processed`
+  `src/geostack/data` and the data config as `deps`, and `data/processed`
   as its `outs`. No git-tracked file may sit inside an output directory
   (a `.gitkeep` makes DVC refuse the stage): the script creates the
   directory (`mkdir(parents=True, exist_ok=True)`), and `.gitignore`

@@ -1,4 +1,4 @@
-_target_: myproject.models.transformer.TransformerModel
+_target_: geostack.models.transformer.TransformerModel
 name: transformer
 d_model: 256
 nhead: 8

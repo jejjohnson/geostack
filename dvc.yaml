@@ -4,7 +4,7 @@ stages:
     deps:
       - data/raw
       - scripts/preprocess.py
-      - src/myproject/data
+      - src/geostack/data
     outs:
       - data/processed
 
@@ -14,7 +14,7 @@ stages:
       - data/processed
       - scripts/train.py
       - configs/  # includes the model/ and data/ group files
-      - src/myproject
+      - src/geostack
     params:
       - configs/train.yaml:
           - training

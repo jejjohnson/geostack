@@ -5,7 +5,7 @@ description: Add an experiment to the research project — a named Hydra config 
 
 # Add an experiment
 
-<!-- template-example: example-specific paths (configs/train.yaml, scripts/train.py, myproject); keep the procedure, rewrite the names after adoption. -->
+<!-- template-example: example-specific paths (configs/train.yaml, scripts/train.py, geostack); keep the procedure, rewrite the names after adoption. -->
 
 Read contracts 2 to 4 ("Configs", "The pipeline", "Results") in
 `AGENTS.md` first; this is the step-by-step.
@@ -87,7 +87,7 @@ Follow `scripts/train.py`:
     cmd: python scripts/evaluate.py
     deps:
       - scripts/evaluate.py
-      - src/myproject/models          # every package directory it imports
+      - src/geostack/models          # every package directory it imports
       - data/processed
       - results/metrics/train_metrics.json
     params:

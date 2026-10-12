@@ -19,10 +19,10 @@ from typing import Any
 
 from hydra_zen import ZenStore, builds, make_config, zen
 
-from myproject.models.baseline import BaselineModel
-from myproject.models.transformer import TransformerModel
-from myproject.trainers.trainer import Trainer
-from myproject.utils.reproducibility import seed_everything
+from geostack.models.baseline import BaselineModel
+from geostack.models.transformer import TransformerModel
+from geostack.trainers.trainer import Trainer
+from geostack.utils.reproducibility import seed_everything
 
 
 # --- Build structured configs from Python classes ---

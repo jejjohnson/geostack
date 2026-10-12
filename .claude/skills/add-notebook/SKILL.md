@@ -52,7 +52,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from myproject.utils.reproducibility import seed_everything
+from geostack.utils.reproducibility import seed_everything
 
 
 seed_everything(42)

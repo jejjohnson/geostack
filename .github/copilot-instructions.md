@@ -10,7 +10,7 @@ The essentials, in case you only read this file:
 
 - This is a research project template. Passages marked
   `<!-- template-example: … -->` in the agent files describe the bundled example
-  package (`src/myproject/`) and are rewritten after adoption.
+  package (`src/geostack/`) and are rewritten after adoption.
 - Reusable code lives in the package; `scripts/` are thin Hydra entry
   points; notebooks import from the package. Search
   [`docs/api/capabilities.md`](../docs/api/capabilities.md) before writing a

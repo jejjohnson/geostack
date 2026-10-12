@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from myproject.models.baseline import BaselineModel
-from myproject.models.transformer import TransformerModel
+from geostack.models.baseline import BaselineModel
+from geostack.models.transformer import TransformerModel
 
 
 def test_baseline_model_init() -> None:

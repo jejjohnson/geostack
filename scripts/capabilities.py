@@ -39,7 +39,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "docs" / "api" / "capabilities.md"
 
 # template-example: the import name of your package (src/<PACKAGE>/).
-PACKAGE = "myproject"
+PACKAGE = "geostack"
 
 # Libraries you build on whose public API should be listed after yours, as
 # {distribution: [public modules]}, with a one-paragraph blurb each, e.g.

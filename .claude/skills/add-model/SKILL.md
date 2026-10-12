@@ -1,18 +1,18 @@
 ---
 name: add-model
-description: Add a model to the research project — a class in the package's models subpackage whose constructor arguments are its config keys, a Hydra config-group option (configs/model/<name>.yaml), the hydra-zen config, the training script wiring that builds it from the config, tests, and the capability index. Use when asked to add, port or implement a model, baseline, architecture or estimator in src/myproject/models and configs/model.
+description: Add a model to the research project — a class in the package's models subpackage whose constructor arguments are its config keys, a Hydra config-group option (configs/model/<name>.yaml), the hydra-zen config, the training script wiring that builds it from the config, tests, and the capability index. Use when asked to add, port or implement a model, baseline, architecture or estimator in src/geostack/models and configs/model.
 ---
 
 # Add a model
 
-<!-- template-example: example-specific paths (src/myproject/models, configs/model, scripts/train.py, scripts/train_zen.py); keep the procedure, rewrite the names after adoption. -->
+<!-- template-example: example-specific paths (src/geostack/models, configs/model, scripts/train.py, scripts/train_zen.py); keep the procedure, rewrite the names after adoption. -->
 
 Read "Boundaries" and contracts 1 and 2 in `AGENTS.md` first; this is the
 step-by-step.
 
 ## 1. Make sure it does not exist yet
 
-- `docs/api/capabilities.md` (`myproject.models.*`): a model that differs
+- `docs/api/capabilities.md` (`geostack.models.*`): a model that differs
   only in sizes is a new config option for the existing class, not a new
   class.
 - `configs/model/`: the option may exist already (`baseline.yaml` and
@@ -22,7 +22,7 @@ step-by-step.
   only if it must match the project's interface; otherwise configure the
   library class directly.
 
-## 2. The class (`src/myproject/models/<name>.py`)
+## 2. The class (`src/geostack/models/<name>.py`)
 
 Follow `BaselineModel` (`models/baseline.py`):
 
@@ -42,7 +42,7 @@ Follow `BaselineModel` (`models/baseline.py`):
 ## 3. The config (`configs/model/<name>.yaml`)
 
 ```yaml
-_target_: myproject.models.<module>.<Class>
+_target_: geostack.models.<module>.<Class>
 name: <name>
 hidden_size: 64
 num_layers: 2
@@ -78,7 +78,7 @@ in a trainer test with a few epochs on toy data, well under a second.
 
 ## 6. Pipeline, export and docs
 
-- The `train` stage depends on `src/myproject/models` and `configs/`
+- The `train` stage depends on `src/geostack/models` and `configs/`
   already; a model in a new package directory joins its `deps`.
 - `make capabilities`, and commit `docs/api/capabilities.md`.
 - Describe the architecture in `docs/notes/methods.md` (the

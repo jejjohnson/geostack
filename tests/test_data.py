@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from myproject.data.loading import load_processed_data, load_raw_data
+from geostack.data.loading import load_processed_data, load_raw_data
 
 
 def test_load_raw_data_returns_dict(tmp_path: Path) -> None:

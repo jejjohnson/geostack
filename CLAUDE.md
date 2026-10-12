@@ -8,7 +8,7 @@ specific to Claude Code.
 ## Claude Code specifics
 
 - **Template.** Passages marked `<!-- template-example: … -->` in the agent files
-  describe the bundled example (`myproject`); after adopting the template,
+  describe the bundled example (`geostack`); after adopting the template,
   rewrite them from your own code (the `adopt-template` skill).
 - **Reuse first.** Search `docs/api/capabilities.md` (every public name in
   the package) before writing a loader, a model, a training step or a
@@ -21,10 +21,10 @@ specific to Claude Code.
   - adopting the template: `adopt-template`;
   - research workflow: `add-experiment`, `add-dataset`, `add-model`,
     `add-notebook`, `reproduce-results`, `write-up-results`;
-  - shipping: `pre-pr-check`, `myproject-review`, `squash-commit`;
+  - shipping: `pre-pr-check`, `geostack-review`, `squash-commit`;
   - GitHub housekeeping: `create-gh-issue`, `link-gh-issues`.
 - **Subagents** (`.claude/agents/`), both read-only, both used by
-  `myproject-review`; run them on any diff that adds code, configs
+  `geostack-review`; run them on any diff that adds code, configs
   or pipeline stages, before committing:
   - `reuse-reviewer`: does the diff re-implement something in the package
     (`docs/api/capabilities.md`), a script, a config or a tool, or put

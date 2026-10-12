@@ -22,7 +22,7 @@ Before opening a PR, run the full local checks from the repo root:
 uv run pytest -v
 uv run --group lint ruff check .
 uv run --group lint ruff format --check .
-uv run --group typecheck ty check src/myproject
+uv run --group typecheck ty check src/geostack
 ```
 
 Equivalent Make targets:

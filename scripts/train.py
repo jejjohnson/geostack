@@ -11,8 +11,8 @@ import hydra
 from hydra.utils import get_original_cwd, instantiate
 from omegaconf import DictConfig
 
-from myproject.trainers.trainer import Trainer
-from myproject.utils.reproducibility import seed_everything
+from geostack.trainers.trainer import Trainer
+from geostack.utils.reproducibility import seed_everything
 
 
 METRICS_PATH = Path("results") / "metrics" / "train_metrics.json"

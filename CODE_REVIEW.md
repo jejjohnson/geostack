@@ -133,7 +133,7 @@ order, unused imports); review what they cannot see.
 
 ## Research-Specific Checks
 
-<!-- template-example: the examples use the example package (myproject); keep the patterns, rename the imports. -->
+<!-- template-example: the examples use the example package (geostack); keep the patterns, rename the imports. -->
 
 The snippets below run as written from the repo root in the pixi
 environment, with `cfg` composed from `configs/`:
@@ -155,8 +155,8 @@ with initialize_config_dir(
 ```python
 from hydra.utils import instantiate
 
-from myproject.models.baseline import BaselineModel
-from myproject.trainers.trainer import Trainer
+from geostack.models.baseline import BaselineModel
+from geostack.trainers.trainer import Trainer
 
 # ❌ Literals: a run cannot be reproduced or swept from the command line,
 #    and DVC's params tracking never sees them

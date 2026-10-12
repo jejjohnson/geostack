@@ -1,5 +1,5 @@
 {
-  "name": "Research Template Dev Container",
+  "name": "GeoStack Dev Container",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
   "features": {
     "ghcr.io/devcontainers-contrib/features/pixi:1": {}
