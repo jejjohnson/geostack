@@ -165,7 +165,7 @@ capabilities: ## Regenerate docs/api/capabilities.md (every public name, for reu
 	pixi run python scripts/capabilities.py
 
 docs-deploy: ## Deploy documentation to GitHub Pages
-	uv run --group docs myst build --html
+	BASE_URL=/geostack uv run --group docs myst build --html
 	uv run --group docs ghp-import -n -p _build/html
 
 # ===========================================================================
