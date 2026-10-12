@@ -17,6 +17,27 @@ libraries it builds on,
 [georeader](https://github.com/spaceml-org/georeader), pinned as git
 submodules under `references/`. Reusable code goes into those libraries.
 
+::::{grid} 1 1 3 3
+
+:::{card} Overview
+:link: overview.md
+The map of the stack: three organising axes, the tiers, a methane
+walkthrough, open questions and the plan.
+:::
+
+:::{card} Examples
+:link: overview_examples.md
+Code sketches for every pattern in the overview, from operators to
+reproducibility artifacts.
+:::
+
+:::{card} Capability index
+:link: api/capabilities.md
+Every public name in the libraries GeoStack builds on. Search it before
+writing new code.
+:::
+::::
+
 ## Features
 
 - **Pixi** environment management with conda-forge packages
