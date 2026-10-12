@@ -23,7 +23,7 @@ _spec.loader.exec_module(_ov)
 
 Svg = _ov.Svg
 INK, MUTED, LINE, BORDER, PANEL = _ov.INK, _ov.MUTED, _ov.LINE, _ov.BORDER, _ov.PANEL
-ML, STATE, ENG, EXT = _ov.ML, _ov.STATE, _ov.ENG, _ov.EXT
+ML, STATE, ENG, EXT, OBS = _ov.ML, _ov.STATE, _ov.ENG, _ov.EXT, _ov.OBS
 
 STAGES = ["1 · Functions / Any", "2 · Protocols", "3 · Concrete types"]
 
@@ -183,9 +183,113 @@ def r2_groups() -> Svg:
     return f
 
 
+CORE = ("#334155", "#f1f5f9")
+
+
+def r3_layers() -> Svg:
+    """Report 3: how the sister libraries actually depend on pipekit."""
+    f = Svg(
+        840,
+        520,
+        "Shipped dependencies. geotoolz depends on pipekit core directly."
+        " xrtoolz depends on xrcore, which subclasses pipekit's Operator."
+        " pipekit-array and pipekit-jax depend on pipekit core. The planned"
+        " links from geotoolz and xrtoolz down to pipekit-array do not exist.",
+    )
+    f.arrow([(24, 30), (64, 30)], color=INK)
+    f.text(72, 34, "depends on", size=13, color=MUTED, anchor="start")
+    f.arrow([(200, 30), (240, 30)], color=LINE, dashed=True)
+    f.text(
+        248,
+        34,
+        "planned in this report, not wired",
+        size=13,
+        color=MUTED,
+        anchor="start",
+    )
+    f.box(
+        24,
+        60,
+        380,
+        110,
+        "geotoolz family · GeoTensor",
+        ["geotoolz 0.10.2", "catalog · cloud · patcher · products"],
+        hue=OBS,
+        title_size=16,
+        sub_size=13.5,
+    )
+    f.box(
+        436,
+        60,
+        380,
+        110,
+        "xrtoolz family · xarray",
+        ["xrtoolz 0.0.5", "einx · grad · reader · sklearn"],
+        hue=STATE,
+        title_size=16,
+        sub_size=13.5,
+    )
+    f.box(
+        120,
+        250,
+        230,
+        86,
+        "pipekit-array",
+        ["array_namespace, MeanScalar,", "StackAlong, ConcatenateAlong"],
+        hue=ML,
+        title_size=15,
+        sub_size=13,
+    )
+    f.box(
+        375,
+        250,
+        200,
+        86,
+        "pipekit-jax",
+        ["JaxModelOp, diffrax,", "adjoint helpers"],
+        hue=ML,
+        title_size=15,
+        sub_size=13,
+    )
+    f.box(
+        600,
+        250,
+        216,
+        86,
+        "xrcore",
+        ["Operator subclass:", "DataTree dispatch, Signature"],
+        hue=STATE,
+        title_size=15,
+        sub_size=13,
+    )
+    f.box(
+        24,
+        420,
+        792,
+        72,
+        "pipekit core",
+        ["Operator · Sequential · Graph · observe · control · qc · parallel"],
+        hue=CORE,
+        title_size=16,
+        sub_size=13.5,
+    )
+    f.arrow([(70, 170), (70, 418)], color=INK)
+    f.arrow([(235, 170), (235, 248)], color=LINE, dashed=True)
+    f.arrow([(520, 170), (342, 248)], color=LINE, dashed=True)
+    f.arrow([(708, 170), (708, 248)], color=INK)
+    f.arrow([(708, 336), (708, 418)], color=INK)
+    f.arrow([(235, 336), (235, 418)], color=INK)
+    f.arrow([(475, 336), (475, 418)], color=INK)
+    f.text(483, 385, "+ pipekit-cycle", size=12.5, color=MUTED, anchor="start")
+    f.text(80, 214, "direct", size=12.5, color=MUTED, anchor="start")
+    f.h = 506
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
+    "r3_layers": r3_layers,
 }
 
 
