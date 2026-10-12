@@ -31,7 +31,7 @@ not into a local package.
 | `scripts/` | Entry points: `convert_notebooks.py` (jupytext → `.ipynb`), `capabilities.py` (the capability index of the upstream libraries) |
 | `dvc.yaml` | The pipeline (no stages yet; add them with the `add-experiment` skill) |
 | `data/{raw,processed,external}/`, `results/{metrics,figures,tables}/` | DVC-managed data and outputs: gitignored except the `.gitkeep` files, `.dvc` pointers and the `cache: false` metrics JSON |
-| `notebooks/` | Jupytext percent-format `.py` notebooks (`01_eda.py`, `02_results.py`) |
+| `notebooks/` | Jupytext percent-format `.py` notebooks (`01_eda.py`) |
 | `marimo_notebooks/` | marimo notebooks (`01_exploration.py`) |
 | `docs/`, `myst.yml`, `references.bib` | MyST documentation (notes, tutorials, API pages, capability index) and its bibliography |
 | `CITATION.cff` | How to cite the project |

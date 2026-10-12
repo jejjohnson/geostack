@@ -46,7 +46,7 @@ are given. Read contracts 2 to 5 in `AGENTS.md`.
    subject, time window) or temporally ordered; tuning or early stopping on
    the test split; re-splitting in a later stage with a different seed.
 5. **Metrics and outputs.** A metric written to a path or under keys that
-   `dvc.yaml`, `experiment-report.yml`, `notebooks/02_results.py` or the
+   `dvc.yaml`, `experiment-report.yml`, the notebooks or the
    docs do not read (or read with a different shape: scalars vs per-epoch
    lists); Hydra multirun jobs writing the same fixed path; results written
    into Hydra's run directory (`outputs/`, `multirun/`) when the pipeline

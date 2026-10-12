@@ -4,9 +4,10 @@ Welcome to the documentation for GeoStack.
 
 ## Overview
 
-This project template demonstrates best practices for reproducible scientific
-research using Python. It integrates modern tools for experiment tracking,
-configuration management, and documentation.
+A vertically integrated, JAX-native research software stack for geophysical
+modeling, inference and data assimilation. geostack has no package of its
+own: scripts and notebooks here compose the libraries it builds on, and
+reusable code goes into those libraries.
 
 ## Features
 
@@ -16,9 +17,9 @@ configuration management, and documentation.
 - **MyST** for scientific documentation
 - **JupyterLab** and **Marimo** notebook environments
 - **Agent-ready**: `AGENTS.md` and `CODE_REVIEW.md` for coding agents, and a
-  [capability index](api/capabilities.md) of the package
+  [capability index](api/capabilities.md) of the libraries geostack builds on
 
 ## Getting Started
 
 See the [Getting Started tutorial](tutorials/getting_started.md) to set up
-your environment and run your first experiment.
+your environment.

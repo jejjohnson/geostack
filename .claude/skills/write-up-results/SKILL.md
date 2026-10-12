@@ -32,12 +32,12 @@ that is not in the toc is not built.
   (`pixi run dvc metrics show`, `results/metrics/*.json`,
   `results/tables/`) of a committed `dvc.lock`, not from a one-off
   session; say which experiment / config produced it.
-- Figures are made by a notebook (`notebooks/02_results.py` or a new one —
+- Figures are made by a notebook (a notebook in `notebooks/` —
   the `add-notebook` skill), saved under `docs/images/<notebook_name>/`
   and committed with it. Include one with:
 
   ```markdown
-  :::{figure} ../images/02_results/loss_curve.png
+  :::{figure} ../images/<notebook_name>/<figure>.png
   :label: fig-loss
   :alt: Training and validation loss per epoch
 

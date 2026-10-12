@@ -17,9 +17,9 @@ has no package of its own, so only ``UPSTREAM`` is listed). A module's public na
 its ``__all__`` when it defines one, otherwise the classes and functions it
 defines itself (imports are skipped; list constants in ``__all__``).
 
-``--check`` also fails when two modules export the same name for different
-objects, or the package exports a name an ``UPSTREAM`` library exports for
-something else, unless ``ALLOWED_SHARED_NAMES`` gives the reason.
+``--check`` also fails when two modules (of the package or of ``UPSTREAM``)
+export the same name for different objects, unless ``ALLOWED_SHARED_NAMES``
+gives the reason.
 """
 
 from __future__ import annotations
@@ -151,12 +151,6 @@ def collect() -> tuple[dict[str, list[tuple]], list[str]]:
             index[module_name].append(
                 (name, _kind(obj), _summary(obj, home=str(PACKAGE)))
             )
-    clashes = []
-    for name, homes in sorted(owners.items()):
-        if name in ALLOWED_SHARED_NAMES:
-            continue
-        if len({id(o) for o in homes.values()}) > 1:
-            clashes.append(f"{name}: {', '.join(sorted(homes))}")
     for upstream_modules in UPSTREAM.values():
         for module_name in upstream_modules:
             try:
@@ -164,11 +158,13 @@ def collect() -> tuple[dict[str, list[tuple]], list[str]]:
             except ImportError:
                 continue
             for name in _public(upstream):
-                if name in ALLOWED_SHARED_NAMES:
-                    continue
-                for path, obj in owners.get(name, {}).items():
-                    if obj is not getattr(upstream, name):
-                        clashes.append(f"{name}: {path} shadows {module_name}.{name}")
+                owners[name][f"{module_name}.{name}"] = getattr(upstream, name)
+    clashes = []
+    for name, homes in sorted(owners.items()):
+        if name in ALLOWED_SHARED_NAMES:
+            continue
+        if len({id(o) for o in homes.values()}) > 1:
+            clashes.append(f"{name}: {', '.join(sorted(homes))}")
     return index, clashes
 
 
