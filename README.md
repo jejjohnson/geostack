@@ -1,13 +1,13 @@
-# My Research Project
+# GeoStack
 
-[![CI](https://github.com/your-org/your-repo/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/your-repo/actions/workflows/ci.yml)
-[![Docs](https://github.com/your-org/your-repo/actions/workflows/pages.yml/badge.svg)](https://your-org.github.io/your-repo)
+[![CI](https://github.com/jejjohnson/geostack/actions/workflows/ci.yml/badge.svg)](https://github.com/jejjohnson/geostack/actions/workflows/ci.yml)
+[![Docs](https://github.com/jejjohnson/geostack/actions/workflows/pages.yml/badge.svg)](https://jejjohnson.github.io/geostack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Pixi](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh)
 [![DVC](https://img.shields.io/badge/data%20versioned%20with-DVC-945DD6)](https://dvc.org)
 
-> A batteries-included scientific research project template for reproducible experiments.
+> A JAX-native research software stack for geophysical modeling, inference and data assimilation.
 
 ## Features
 
@@ -30,7 +30,7 @@
 ## Project Structure
 
 ```
-research_template/
+geostack/
 ├── .github/workflows/    # 15 GitHub Actions workflows
 ├── .devcontainer/        # VS Code / Codespaces dev container
 ├── configs/              # Hydra configuration hierarchy
@@ -46,7 +46,7 @@ research_template/
 ├── notebooks/            # Jupyter notebooks
 ├── results/              # Experiment results (DVC-managed)
 ├── scripts/              # Entry point scripts
-├── src/myproject/        # Source package
+├── src/geostack/        # Source package
 │   ├── data/             # Data loading utilities
 │   ├── models/           # Model implementations
 │   ├── trainers/         # Training loops
@@ -67,8 +67,8 @@ curl -fsSL https://pixi.sh/install.sh | bash
 ### Installation
 
 ```bash
-git clone https://github.com/your-org/your-repo
-cd your-repo
+git clone https://github.com/jejjohnson/geostack
+cd geostack
 pixi install
 ```
 
@@ -240,14 +240,14 @@ making them diff-friendly and importable as regular Python modules.
 
 ### Citation
 
-If you use this template, please cite it using the metadata in `CITATION.cff`:
+If you use this software, please cite it using the metadata in `CITATION.cff`:
 
 ```bibtex
-@software{doe2024myresearch,
-  author = {Doe, Jane},
-  title  = {My Research Project},
-  year   = {2024},
-  url    = {https://github.com/your-org/your-repo},
+@software{johnson2026geostack,
+  author = {Johnson, J. Emmanuel},
+  title  = {GeoStack},
+  year   = {2026},
+  url    = {https://github.com/jejjohnson/geostack},
 }
 ```
 

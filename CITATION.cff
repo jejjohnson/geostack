@@ -1,18 +1,16 @@
 cff-version: 1.2.0
 message: If you use this software, please cite it as below.
 type: software
-title: My Research Project
-abstract: A scientific research project template for reproducible experiments.
+title: GeoStack
+abstract: A JAX-native research software stack for geophysical modeling, inference and data assimilation.
 authors:
-  - family-names: Doe
-    given-names: Jane
-    orcid: https://orcid.org/0000-0000-0000-0000
-    affiliation: University of Somewhere
-repository-code: https://github.com/your-org/your-repo
-url: https://your-org.github.io/your-repo
+  - family-names: Johnson
+    given-names: J. Emmanuel
+repository-code: https://github.com/jejjohnson/geostack
+url: https://jejjohnson.github.io/geostack
 license: MIT
-version: 0.1.2
-date-released: '2024-01-01'
+version: 0.1.0
+date-released: '2026-10-12'
 keywords:
   - machine learning
   - scientific computing

@@ -1,5 +1,5 @@
 ---
-name: myproject-review
+name: geostack-review
 description: Review a change or pull request in this research project against its own rules — CODE_REVIEW.md, the package / config / pipeline / results / notebook / docs contracts in AGENTS.md, reuse of the package instead of code in scripts and notebooks, and reproducibility. Use when asked to review a diff, branch or PR in this repo.
 ---
 

@@ -1,6 +1,6 @@
-# My Research Project
+# GeoStack
 
-Welcome to the documentation for My Research Project.
+Welcome to the documentation for GeoStack.
 
 ## Overview
 

@@ -5,7 +5,7 @@ Standing instructions for **every** coding agent working in this repository
 `CLAUDE.md` and `.github/copilot-instructions.md` point here.
 
 > **Template note.** This repository is a GitHub template for research
-> projects. Passages that describe the bundled example (the `myproject`
+> projects. Passages that describe the bundled example (the `geostack`
 > package, its configs, its DVC stages, its notebooks) start with an HTML
 > comment `<!-- template-example: … -->`; after adopting the template, rewrite each
 > of them from your own code (the `adopt-template` skill walks through
@@ -29,11 +29,11 @@ into it.
 
 | Path | Owns |
 |---|---|
-| `src/myproject/data/loading.py` | `load_raw_data(data_dir)`, `load_processed_data(data_dir)` (placeholders: return dicts, raise `FileNotFoundError` for a missing directory) |
-| `src/myproject/models/baseline.py` | `BaselineModel(hidden_size, num_layers)` with `forward(x)` |
-| `src/myproject/models/transformer.py` | `TransformerModel(d_model, nhead, num_layers)` with `forward(x)` (a placeholder) |
-| `src/myproject/trainers/trainer.py` | `Trainer(model, lr, epochs).train(train_data, val_data=None)` → `{"train_loss": [...], "val_loss": [...]}` |
-| `src/myproject/utils/reproducibility.py` | `seed_everything(seed)`: seeds `random`, NumPy and, when installed, PyTorch (deterministic cuDNN) |
+| `src/geostack/data/loading.py` | `load_raw_data(data_dir)`, `load_processed_data(data_dir)` (placeholders: return dicts, raise `FileNotFoundError` for a missing directory) |
+| `src/geostack/models/baseline.py` | `BaselineModel(hidden_size, num_layers)` with `forward(x)` |
+| `src/geostack/models/transformer.py` | `TransformerModel(d_model, nhead, num_layers)` with `forward(x)` (a placeholder) |
+| `src/geostack/trainers/trainer.py` | `Trainer(model, lr, epochs).train(train_data, val_data=None)` → `{"train_loss": [...], "val_loss": [...]}` |
+| `src/geostack/utils/reproducibility.py` | `seed_everything(seed)`: seeds `random`, NumPy and, when installed, PyTorch (deterministic cuDNN) |
 | `scripts/` | Entry points: `preprocess.py`, `train.py` (`@hydra.main` over `configs/train.yaml`), `train_zen.py` (the same models and settings with hydra-zen configs; prints the history, writes no pipeline outputs), `evaluate.py`, `convert_notebooks.py` (jupytext → `.ipynb`), `capabilities.py` (the capability index) |
 | `configs/` | Hydra configs: `train.yaml` (defaults `model: baseline`, `data: small`; `training.*`, `logging.*`), `model/{baseline,transformer}.yaml` (each names its class in `_target_`), `data/{small,full}.yaml` |
 | `dvc.yaml` | The pipeline: `preprocess` (`data/raw` → `data/processed`) → `train` (final losses → metrics `results/metrics/train_metrics.json`; per-epoch losses → plot `results/figures/loss_curve.csv`) |
@@ -106,10 +106,10 @@ in the package, a script or a notebook — find out whether it exists:
 
 | You are about to write… | Use instead |
 |---|---|
-| `random.seed(…)`, `np.random.seed(…)`, `torch.manual_seed(…)` at the top of a script | `myproject.utils.reproducibility.seed_everything(cfg.training.seed)` |
+| `random.seed(…)`, `np.random.seed(…)`, `torch.manual_seed(…)` at the top of a script | `geostack.utils.reproducibility.seed_everything(cfg.training.seed)` |
 | File reading from `data/raw` or `data/processed` in a script or notebook | `load_raw_data`, `load_processed_data` (extend them) |
 | An epoch loop in a script | `Trainer.train` |
-| A model class in a script or notebook | `src/myproject/models/` (`BaselineModel` as the pattern) |
+| A model class in a script or notebook | `src/geostack/models/` (`BaselineModel` as the pattern) |
 | A literal learning rate, epoch count, seed or split fraction | a key in `configs/` (`training.lr`, `training.seed`, `configs/data/*.yaml`), overridden on the command line |
 | A config dataclass written by hand | hydra-zen `builds(TheClass, populate_full_signature=True)` |
 | A shell script that runs the steps in order | a stage in `dvc.yaml`, run with `dvc repro` |
@@ -245,7 +245,7 @@ agent can read and follow them), and two read-only review checklists in
 | Reproduce the results, or debug a pipeline that does not reproduce | `reproduce-results` |
 | Write up methods and results in the MyST docs, cite, update `CITATION.cff` | `write-up-results` |
 | Verify before a PR | `pre-pr-check` |
-| Review a change | `myproject-review` (+ the read-only `.claude/agents/reuse-reviewer.md` and `reproducibility-reviewer.md`) |
+| Review a change | `geostack-review` (+ the read-only `.claude/agents/reuse-reviewer.md` and `reproducibility-reviewer.md`) |
 | Write a squash commit message | `squash-commit` |
 | Open or link GitHub issues | `create-gh-issue`, `link-gh-issues` (templates in `.github/ISSUE_TEMPLATE/`; `make gh-labels`, `gh-sub`, `gh-block`, `gh-show`) |
 
@@ -264,7 +264,7 @@ make test                 # uv run pytest -v -o addopts=   (no coverage)
 make test-cov             # pytest with the coverage report (pyproject addopts)
 make lint                 # ruff check .   (entire repo)
 make format               # ruff format . && ruff check --fix .
-make typecheck            # ty check src/myproject
+make typecheck            # ty check src/geostack
 make precommit            # pre-commit on every file
 make capabilities         # regenerate docs/api/capabilities.md
 make docs                 # myst build --html  (into _build/html)

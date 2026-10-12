@@ -1,6 +1,6 @@
 ---
 name: adopt-template
-description: Turn a fresh copy of the research project template into your own project — rename the example package (myproject) and the distribution / project names everywhere, replace the example code, configs, pipeline stages and tests, rewrite every passage marked `template-example:` in the agent files and the example building skills, regenerate the capability index, update the release, citation, docs and label metadata, and verify. Use right after creating a repository from the template, or when asked to rename the package or "make this template mine".
+description: Turn a fresh copy of the research project template into your own project — rename the example package (geostack) and the distribution / project names everywhere, replace the example code, configs, pipeline stages and tests, rewrite every passage marked `template-example:` in the agent files and the example building skills, regenerate the capability index, update the release, citation, docs and label metadata, and verify. Use right after creating a repository from the template, or when asked to rename the package or "make this template mine".
 ---
 
 # Adopt the template
@@ -10,9 +10,9 @@ they pass. Pick the names first:
 
 | Name | Example | Where it appears |
 |---|---|---|
-| Import name | `myproject` | `src/myproject/`, imports, `PKGROOT`, `PACKAGE` in `scripts/capabilities.py`, `dvc.yaml` deps, docs |
-| Distribution name | `my-research-project` | `pyproject.toml`, `pixi.toml`, `release-please-config.json`, `pixi.lock` |
-| Title | `My Research Project` | `README.md`, `myst.yml`, `CITATION.cff`, `docs/index.md`, the package docstring |
+| Import name | `geostack` | `src/geostack/`, imports, `PKGROOT`, `PACKAGE` in `scripts/capabilities.py`, `dvc.yaml` deps, docs |
+| Distribution name | `geostack` | `pyproject.toml`, `pixi.toml`, `release-please-config.json`, `pixi.lock` |
+| Title | `GeoStack` | `README.md`, `myst.yml`, `CITATION.cff`, `docs/index.md`, the package docstring |
 | GitHub `owner/repo` | `your-org/your-repo` | README badges and links, `CITATION.cff`, `docs/tutorials/getting_started.md` |
 | Author | `Jane Doe`, `Your Name` | `myst.yml`, `CITATION.cff`, `LICENSE`, `README.md` |
 
@@ -20,7 +20,7 @@ they pass. Pick the names first:
 
 ```bash
 grep -rnI --exclude-dir={.git,.venv,.pixi,_build} \
-  -e myproject -e my-research-project -e "My Research Project" \
+  -e geostack -e geostack -e "GeoStack" \
   -e your-org -e your-repo -e "Jane Doe" -e "Doe, Jane" -e "Your Name" .
 ```
 
@@ -31,14 +31,14 @@ NEW=coastal_sst              # import name
 DIST=coastal-sst             # distribution name
 TITLE="Coastal SST"
 
-git mv src/myproject "src/$NEW"
+git mv src/geostack "src/$NEW"
 files() {
   grep -rlI --exclude-dir={.git,.venv,.pixi,_build} -e "$1" . \
     | grep -v -e '^./CHANGELOG.md$' -e '^./pixi.lock$' -e '^./uv.lock$' -e '^./.claude/skills/adopt-template/'
 }
-files myproject | xargs sed -i "s/myproject/$NEW/g"
-files my-research-project | xargs sed -i "s/my-research-project/$DIST/g"
-files "My Research Project" | xargs sed -i "s/My Research Project/$TITLE/g"
+files geostack | xargs sed -i "s/geostack/$NEW/g"
+files geostack | xargs sed -i "s/geostack/$DIST/g"
+files "GeoStack" | xargs sed -i "s/GeoStack/$TITLE/g"
 ```
 
 (On macOS use `sed -i ''`.) Then by hand:
@@ -95,7 +95,7 @@ The example package, configs, stages and notebooks are placeholders:
   `write-up-results`) for your project's extension points: real files,
   config groups, stages and test files. Add a skill for each new kind of
   thing people will add; delete the ones that do not apply.
-- Rename `.claude/skills/myproject-review/` to
+- Rename `.claude/skills/geostack-review/` to
   `<your-project>-review/` (and its `name:`), and update the names in the
   "Recipes" table of `AGENTS.md` and in `CLAUDE.md`.
 - Point the two subagents in `.claude/agents/` at your domain: add your

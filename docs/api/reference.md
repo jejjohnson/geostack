@@ -2,13 +2,13 @@
 
 <!-- template-example: the modules, signatures and summaries below are the example package's; rewrite them from your own package after adopting the template. -->
 
-The public API of the `myproject` package, by module. The
+The public API of the `geostack` package, by module. The
 [capability index](capabilities.md) lists the same names with the first
 sentence of each docstring and is regenerated from the code
 (`make capabilities`); this page adds the signatures. The docstrings in
-`src/myproject/` are the full reference.
+`src/geostack/` are the full reference.
 
-## `myproject.data.loading`
+## `geostack.data.loading`
 
 Placeholder data loading functions.
 
@@ -27,7 +27,7 @@ Load processed data from `data_dir`. Returns the splits
 `{"train": ..., "val": ..., "test": ...}`; raises `FileNotFoundError` if the
 directory does not exist.
 
-## `myproject.models.baseline`
+## `geostack.models.baseline`
 
 ```python
 class BaselineModel(hidden_size: int = 64, num_layers: int = 2)
@@ -36,7 +36,7 @@ class BaselineModel(hidden_size: int = 64, num_layers: int = 2)
 A simple baseline model; `forward(x)` runs the forward pass. Configured by
 `configs/model/baseline.yaml` (`model=baseline`, the default).
 
-## `myproject.models.transformer`
+## `geostack.models.transformer`
 
 ```python
 class TransformerModel(d_model: int = 256, nhead: int = 8, num_layers: int = 6)
@@ -45,7 +45,7 @@ class TransformerModel(d_model: int = 256, nhead: int = 8, num_layers: int = 6)
 A placeholder Transformer encoder; `forward(x)` runs the forward pass.
 Configured by `configs/model/transformer.yaml` (`model=transformer`).
 
-## `myproject.trainers.trainer`
+## `geostack.trainers.trainer`
 
 ```python
 class Trainer(model: Any, lr: float = 1e-3, epochs: int = 10)
@@ -55,7 +55,7 @@ Runs experiments. `Trainer.train(train_data, val_data=None) -> dict` returns
 the per-epoch history `{"train_loss": [...], "val_loss": [...]}`
 (`val_loss` is empty without validation data).
 
-## `myproject.utils.reproducibility`
+## `geostack.utils.reproducibility`
 
 ```python
 seed_everything(seed: int = 42) -> None

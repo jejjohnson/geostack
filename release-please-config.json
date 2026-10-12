@@ -2,12 +2,12 @@
   "packages": {
     ".": {
       "release-type": "python",
-      "package-name": "my-research-project",
+      "package-name": "geostack",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "extra-files": [
         "pyproject.toml",
-        "src/myproject/__init__.py",
+        "src/geostack/__init__.py",
         {
           "type": "yaml",
           "path": "CITATION.cff",

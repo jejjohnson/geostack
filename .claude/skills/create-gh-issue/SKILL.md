@@ -95,7 +95,7 @@ Fill in sections according to the template's intent. **Minimum required sections
   ````
 
 - **Code-first, prose-last** — Design Snapshot and Proposed API should LEAD with the exact snippet the implementer will reproduce; prose goes after.
-- **Concrete implementation steps** — each step should name the file path + function, not a generic `...`. Example: `Add \`load_sst\` in \`src/myproject/data/loading.py\``
+- **Concrete implementation steps** — each step should name the file path + function, not a generic `...`. Example: `Add \`load_sst\` in \`src/geostack/data/loading.py\``
 
 ### Step 4 — Pick labels
 

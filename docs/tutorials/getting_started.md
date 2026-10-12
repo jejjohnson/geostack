@@ -13,8 +13,8 @@ curl -fsSL https://pixi.sh/install.sh | bash
 Clone the repository and install the environment:
 
 ```bash
-git clone https://github.com/your-org/your-repo
-cd your-repo
+git clone https://github.com/jejjohnson/geostack
+cd geostack
 pixi install
 ```
 

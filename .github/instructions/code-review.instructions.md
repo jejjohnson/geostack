@@ -17,7 +17,7 @@ When performing code review, use `/CODE_REVIEW.md` as the source of truth for:
 Key principles:
 - Read "Boundaries", "Reuse before you write" and "The contracts" in
   `/AGENTS.md` first; the review procedure is
-  `.claude/skills/myproject-review/SKILL.md`, with the checklists
+  `.claude/skills/geostack-review/SKILL.md`, with the checklists
   in `.claude/agents/reuse-reviewer.md` and
   `.claude/agents/reproducibility-reviewer.md`.
 - Sacrifice *cleverness* for *clarity*. Sacrifice *brevity* for *explicitness*.
