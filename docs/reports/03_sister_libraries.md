@@ -39,7 +39,7 @@ and follow-ups at the end.
 | **Status** | Shipped surface; originally a surface proposal for the libraries layered on pipekit |
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone scoping the library ecosystem on top of pipekit, or deciding where a new operator belongs |
-| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 2](02_pipekit_surface.md) (pipekit core); [Report 4](#r3-ref-report-4) (use cases revisited); forthcoming ones are listed under [References](#r3-references) |
+| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 2](02_pipekit_surface.md) (pipekit core); [Report 9](09_use_cases.md) (use cases revisited); forthcoming ones are listed under [References](#r3-references) |
 | **Checked against** | pipekit and pipekit-array 0.0.2 (`ef3c17f`); geotoolz 0.10.2 (`088475e`); xrtoolz 0.0.5 (`308c7f2`): the revisions pinned in `references/`. pipekit-array and xrtoolz examples are from real runs; geotoolz claims come from reading its source, since its raster stack (rasterio) is not installed here |
 :::
 
@@ -428,14 +428,12 @@ import pipekit as pk
 import xarray as xr
 import xrtoolz
 
-
 class Double(xrtoolz.Operator):
     def __init__(self, var: str = "u") -> None:
         self.var = var
 
     def _apply(self, ds: xr.Dataset) -> xr.Dataset:
         return (2 * ds[self.var]).rename(f"{self.var}2").to_dataset()
-
 
 xrtoolz.Operator is pk.Operator            # → False: a subclass,
 issubclass(xrtoolz.Operator, pk.Operator)  # → True   so it composes with pipekit
@@ -771,19 +769,10 @@ text, and replace the citations placeholder. -->
 
 :::{note} Placeholders
 :class: simple
-The companion reports and the citations are still being written. The entries
-below stand in for them so the links in this page already resolve.
-[Report 1](01_toolz_primer.md) and [Report 2](02_pipekit_surface.md) are
-published.
+The citations are still being written; the entry below stands in for them.
+The companion reports are published: [Report 1](01_toolz_primer.md),
+[Report 2](02_pipekit_surface.md) and [Report 9](09_use_cases.md).
 :::
-
-### Forthcoming reports
-
-(r3-ref-report-4)=
-Report 4 · Use cases revisited
-: *Forthcoming.* The use-case gallery mapped back onto the stack, including
-  the catalog iteration of use cases 2 and 12. Its number (4, or 9 in the
-  overview's reading table) is not yet reconciled.
 
 ### Citations
 

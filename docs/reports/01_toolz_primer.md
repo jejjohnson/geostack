@@ -23,7 +23,7 @@ pipekit is `toolz` with each function replaced by a typed class. This report
 shows what that inheritance gives, the six things plain functions cannot
 carry, and why operators settled on a concrete base class while the data
 flowing through them did not. It is background: no new code lands here. The
-shipped surface is [Report 2](#r1-ref-report-2).
+shipped surface is [Report 2](02_pipekit_surface.md).
 
 +++
 
@@ -35,7 +35,7 @@ shipped surface is [Report 2](#r1-ref-report-2).
 | **Status** | Background and motivation |
 | **Reading time** | about 15 minutes |
 | **Audience** | anyone reviewing the pipekit design before the structural reports |
-| **Companions** | [Report 2](#r1-ref-report-2) (pipekit's shipped surface), [Report 3](#r1-ref-report-3) (sister libraries), [Report 4](#r1-ref-report-4) (use cases revisited); forthcoming, see [References](#r1-references) |
+| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit's shipped surface), [Report 3](03_sister_libraries.md) (sister libraries), [Report 9](09_use_cases.md) (use cases) |
 | **Checked against** | toolz 1.2.0 and pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/pipekit`) |
 :::
 
@@ -62,7 +62,7 @@ The pipekit design makes more sense once you have seen three things: what it
 inherited from `toolz`, what that inheritance cannot do, and why moving from
 "any function" to a typed operator class is the right call rather than
 over-engineering. This is the motivation layer. The operators themselves are
-in [Report 2](#r1-ref-report-2).
+in [Report 2](02_pipekit_surface.md).
 
 (r1-ancestor)=
 ## toolz as the ancestor
@@ -344,7 +344,6 @@ like. Anything structurally compatible counts; nothing has to inherit.
 
 from typing import Protocol
 
-
 class OperatorLike(Protocol):
     def __call__(self, x): ...
     def get_config(self) -> dict: ...
@@ -510,7 +509,7 @@ problems do not.
 (r1-next)=
 ## Where this leaves us
 
-[Report 2](#r1-ref-report-2) turns this background into pipekit's shipped surface:
+[Report 2](02_pipekit_surface.md) turns this background into pipekit's shipped surface:
 
 - `toolz`-style functions for the familiar surface: `pipe`, `compose`,
   `compose_left`, `juxt`, `complement`;
@@ -522,8 +521,8 @@ problems do not.
 - shape inference (`Signature`) and parallelism (`ThreadMap`, `ProcessMap`,
   `AsyncMap`, `BatchedMap`).
 
-[Report 3](#r1-ref-report-3) covers the sister libraries (pipekit-array, geotoolz, xrtoolz), and
-[Report 4](#r1-ref-report-4) maps everything back to the use cases. The
+[Report 3](03_sister_libraries.md) covers the sister libraries (pipekit-array, geotoolz, xrtoolz), and
+[Report 9](09_use_cases.md) maps everything back to the use cases. The
 [overview](../overview.md) places all three in the wider stack.
 
 (r1-references)=
@@ -536,25 +535,10 @@ text, and replace the citations placeholder. -->
 
 :::{note} Placeholders
 :class: simple
-The companion reports and the citations are still being written. The entries
-below stand in for them so the links in this page already resolve.
+The citations are still being written; the entry below stands in for them.
+The companion reports are published: [Report 2](02_pipekit_surface.md),
+[Report 3](03_sister_libraries.md) and [Report 9](09_use_cases.md).
 :::
-
-### Forthcoming reports
-
-(r1-ref-report-2)=
-Report 2 · pipekit's shipped surface
-: *Forthcoming.* The operators, composition, observers, control flow, shape
-  inference and parallelism that pipekit 0.0.2 ships.
-
-(r1-ref-report-3)=
-Report 3 · Sister libraries
-: *Forthcoming.* pipekit-array, geotoolz and xrtoolz, and the carrier each one
-  types against.
-
-(r1-ref-report-4)=
-Report 4 · Use cases revisited
-: *Forthcoming.* The use-case gallery mapped back onto the stack.
 
 ### Citations
 

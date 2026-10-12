@@ -669,8 +669,8 @@ text, and replace the citations placeholder. -->
 
 :::{note} Placeholders
 :class: simple
-Reports 4 and 5 are still being written. The entry below stands in for them
-so the links in this page already resolve. Reports
+Report 5 is still being written. The entry below stands in for it so the
+links in this page already resolve. [Report 9](09_use_cases.md) is published. Reports
 [1](01_toolz_primer.md), [2](02_pipekit_surface.md),
 [3](03_sister_libraries.md) and [6](06_geocatalog.md) are published.
 :::
@@ -678,9 +678,9 @@ so the links in this page already resolve. Reports
 ### Forthcoming reports
 
 (r7-ref-report-4)=
-Reports 4 and 5
-: *Forthcoming.* The rest of the pipekit stack, including the use-case
-  revisit and pipekit-jax.
+Report 5 · pipekit-jax
+: *Forthcoming.* The JAX side of the stack. The use-case revisit is
+  [Report 9](09_use_cases.md).
 
 ### Sources
 
