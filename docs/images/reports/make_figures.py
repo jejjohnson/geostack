@@ -123,8 +123,69 @@ def r1_trajectories() -> Svg:
     return f
 
 
+R2_STATUS = {
+    "as planned": (STATE, False),
+    "differs": (ENG, False),
+    "new": (ML, False),
+    "reserved": (EXT, True),
+}
+R2_GROUPS = [  # (letter, name, module, status)
+    ("A", "Foundations", "_base/", "differs"),
+    ("B", "Composition", "compose.py", "as planned"),
+    ("C", "Building blocks", "blocks.py", "as planned"),
+    ("D", "Control flow", "control.py", "differs"),
+    ("E", "Observers", "observe.py", "differs"),
+    ("F", "Combination", "combine.py", "as planned"),
+    ("G", "Caching", "cache.py", "as planned"),
+    ("H", "Quality control", "qc.py", "as planned"),
+    ("I", "Shape inference", "signature.py", "differs"),
+    ("J", "Parallelism", "parallel.py", "differs"),
+    ("K", "Disk cache", "(nothing yet)", "reserved"),
+    ("L", "Serialisation", "serial.py", "differs"),
+    ("M", "State", "state.py", "differs"),
+    ("N", "Protocols", "protocols.py", "new"),
+    ("", "Hashing (internal)", "hashing.py", "new"),
+]
+
+
+def r2_groups() -> Svg:
+    """Report 2: pipekit 0.0.2's modules, coloured by how each matches the plan."""
+    f = Svg(
+        840,
+        470,
+        "pipekit 0.0.2 by group. As planned: composition, building blocks,"
+        " combination, caching and quality control. Differs from the plan:"
+        " foundations, control flow, observers, shape inference, parallelism,"
+        " serialisation and state. New: protocols and the shared hashing module."
+        " Group K is reserved for a disk-cache backend and ships nothing yet.",
+    )
+    x = 24.0
+    for label, (hue, dashed) in R2_STATUS.items():
+        x += f.chip(x, 18, label, hue=hue, dashed=dashed, size=13) + 12
+    cols, w, h, gx, gy, y0 = 4, 186, 92, 16, 16, 64
+    for i, (letter, name, module, status) in enumerate(R2_GROUPS):
+        hue, dashed = R2_STATUS[status]
+        bx = 24 + (i % cols) * (w + gx)
+        by = y0 + (i // cols) * (h + gy)
+        f.box(
+            bx,
+            by,
+            w,
+            h,
+            f"{letter} · {name}" if letter else name,
+            [module, status],
+            hue=hue,
+            dashed=dashed,
+            title_size=15,
+            sub_size=13,
+        )
+    f.h = int(y0 + 4 * (h + gy) + 6)
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
+    "r2_groups": r2_groups,
 }
 
 
