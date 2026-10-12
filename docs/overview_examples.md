@@ -4,96 +4,119 @@ subtitle: Code sketches for the patterns in the GeoStack overview
 short_title: Examples
 description: Code that goes with the GeoStack overview, from a full methane attribution pipeline to operators, catalogs, patchers, DA cycles, evaluation and reproducibility artifacts.
 numbering:
+  heading_1: true
   heading_2: true
-  heading_3: true
   code: true
 ---
 
 :::{warning} Design sketches
-These snippets show the intended APIs. Several packages they use
-(`statecatalog`, `pipekit-cycle`'s `DACycle`, `pipekit-train`) are planned or
-still moving, so not every snippet runs against the libraries pinned in
-`references/` today. Check the [capability index](api/capabilities.md) for
-what exists now.
+These snippets show the intended APIs. Every call into the stack carries a
+status marker, so you can tell what runs today from what is planned:
+
+- `today`: the name is in the [capability index](api/capabilities.md), at
+  the versions it lists (pipekit 0.0.2, geotoolz 0.10.2 and siblings).
+  `today*` means the name exists but the arguments are sketched.
+- `proposed (X)`: not in the index yet. The letter is the workstream that
+  adds it ([the decision](overview.md#sec-decision)).
+- `unverified`: lives in a library outside the index (gaussx, filterax,
+  plumax, pyrox), so its API was not checked here.
 :::
 
 Each section links back to the part of the [GeoStack overview](overview.md)
-it illustrates.
+it illustrates. Every sketch follows the same conventions: a shapes header
+names the dimensions, the equation sits in a comment above the line that
+computes it, and each line ends with its input → output shapes.
 
 (ex-methane)=
 ## Methane attribution, end to end
 
 The pipeline behind {numref}`fig-methane-walkthrough`: catalog the scenes,
 retrieve, gap-fill, assimilate, index, evaluate and register. Every stage is
-an operator, so the whole thing composes, serialises and reruns.
+an operator, so the whole thing composes, serialises and reruns. The
+problem each stage solves, with its equations, is in the
+[walkthrough](overview.md#sec-walkthrough).
 
 ```{code-block} python
 :caption: Imports shared by every stage.
 :linenos:
 
-import pipekit as pk
-import pipekit_cycle as pc
-import pipekit_train as pt
-import pipekit_evaluate as pe
-import pipekit_experiment as px
+import pipekit as pk                                         # today
+import pipekit_cycle as pc                                   # today
+import pipekit_train as pt                                   # today
+import pipekit_evaluate as pe                                # today
+import pipekit_experiment as px                              # today
 
-import geocatalog as gc
-import geopatcher as gp
-import statecatalog as sc
+import geocatalog as gc  # today (ships as geotoolz-catalog)
+import geopatcher as gp  # today (ships as geotoolz-patcher)
+import geotoolz as gz                                        # today
+import statecatalog as sc                                    # proposed (B)
 
-import geotoolz as gz
-from filterx.adapters.pipekit import EnKFAnalysis
-from plumax.adapters.pipekit import PlumeForward, ColumnObs
+from filterax.adapters.pipekit import EnKFAnalysis           # unverified
+from plumax.adapters.pipekit import PlumeForward, ColumnObs  # unverified
 ```
 
 ::::{tab-set}
 
 :::{tab-item} 1 · Catalog
 ```{code-block} python
-:caption: Open the satellite and in-situ catalogs.
+:caption: Open the satellite and in-situ catalogs (stage 1).
 :linenos:
 
-emit_cat = gc.open_catalog("s3://imeo/emit/2024/*.parquet")
-in_situ_cat = gc.open_catalog("s3://imeo/tccon/2024/*.parquet")
+# Shapes: one GeoSlice per scene or station record
+emit_cat = gc.open_catalog("s3://imeo/emit.parquet")    # → GeoCatalog  today
+tccon_cat = gc.open_catalog("s3://imeo/tccon.parquet")  # → GeoCatalog  today
+
+# scenes = {s : footprint(s) ∩ aoi ≠ ∅, t₀ ≤ tₛ ≤ t₁}
+scenes = gc.query(emit_cat, bbox=aoi, time=(t0, t1))  # → rows  today*
 ```
 :::
 
 :::{tab-item} 2 · Retrieve
 Classical retrieval and its learned replacement share the same slot in the
-pipeline.
+pipeline. `MaskClouds` builds the mask and `ApplyMask` applies it, so the
+retrieval is a small graph rather than a chain.
 
 ```{code-block} python
-:caption: Classical retrieval: a matched filter.
+:caption: Classical retrieval: a cloud-masked matched filter (stage 1).
 :linenos:
 
-retrieval = pk.Sequential([
-    gz.cloud.MaskClouds(qa_band=-1, bits=[10, 11]),
-    gz.radiometry.PercentileClip(p_min=2, p_max=98),
-    gz.matched_filter.CH4MatchedFilter(target_spectrum=ch4_template),
-])
+# Shapes: B bands, H × W pixels
+scene = pk.Input("scene")  # GeoTensor (B, H, W)  today
+
+# cᵢ = 1 if the QA bits flag pixel i as cloud
+clouds = gz.MaskClouds(qa_band=-1, bits=[10, 11])(scene)  # → (H, W)  today
+clear = gz.ApplyMask()(scene, clouds)  # (B, H, W) → (B, H, W)  today*
+
+# αᵢ = (xᵢ − μ)ᵀ Σ⁻¹ t / (tᵀ Σ⁻¹ t), the estimate   [today*]
+alpha = gz.MatchedFilter(target=ch4_template)(clear)  # (B, H, W) → (H, W)
+
+retrieval = pk.Graph(inputs={"scene": scene}, outputs={"alpha": alpha})  # today
 ```
 
 ```{code-block} python
-:caption: Learned retrieval: a registered emulator.
+:caption: Learned retrieval: a registered model in the same slot.
 :linenos:
 
-registry = px.S3ModelRegistry(bucket="imeo-models")
-neural_retrieval = registry.load("ch4_retrieval_v3")
-retrieval_ml = pk.Sequential([
-    gz.cloud.MaskClouds(qa_band=-1, bits=[10, 11]),
-    gz.ModelOp(neural_retrieval),
-])
+# Shapes: B bands, H × W pixels
+registry = px.S3ModelRegistry(bucket="imeo-models")  # today*
+net = registry.load("ch4_retrieval_v3")              # content-addressed  today
+
+# α = g_φ(x), trained with the matched filter as its oracle
+alpha_ml = gz.ModelOp(net)(clear)       # (B, H, W) → (H, W)  today
 ```
 :::
 
 :::{tab-item} 3 · Gap-fill
 ```{code-block} python
-:caption: Kriging with uncertainty, from pyrox-gp.
+:caption: Kriging with uncertainty, from pyrox (stage 3).
 :linenos:
 
-from pyrox_gp.adapters.pipekit import KrigingOperator
+# Shapes: M observations, N grid cells
+from pyrox.adapters.pipekit import KrigingOperator  # unverified
 
-gap_fill = KrigingOperator(
+# m = K_*f (K_ff + σ² I)⁻¹ y  [unverified]
+# v = diag(K_** − K_*f (K_ff + σ² I)⁻¹ K_f*)
+gap_fill = KrigingOperator(                         # (M,) → (N,), (N,)
     kernel="matern52",
     length_scale_km=50.0,
     return_uncertainty=True,
@@ -102,81 +125,87 @@ gap_fill = KrigingOperator(
 :::
 
 :::{tab-item} 4 · Assimilate
+The EnKF analysis needs an ensemble, so the cycle is an `EnsembleDACycle`
+with 40 members. The observation operator matches the instrument the
+observations come from: EMIT.
+
 ```{code-block} python
-:caption: An hourly DA cycle over the plume model.
+:caption: An hourly ensemble DA cycle over the plume model (stage 4).
 :linenos:
 
-da = pc.DACycle(
-    forward_model=PlumeForward(species="CH4", dt=3600.0),
-    obs_op=ColumnObs(instrument="TROPOMI"),
-    analysis_step=EnKFAnalysis(inflation=1.05, localization="gaspari-cohn"),
-    obs_source=pk.Sequential([
-        gc.CatalogTimeQuery(window="hourly"),
-        retrieval,
-    ]),
+# Shapes: N state, M observations, N_e = 40 members, T = 24 steps
+# xᵇₜ = 𝓜(xᵃₜ₋₁)   [unverified]
+forward = PlumeForward(species="CH4", dt=3600.0)  # (N_e, N) → (N_e, N)
+# y_pred = H x for EMIT columns, as in obs_source   [unverified]
+obs_op = ColumnObs(instrument="EMIT")             # (N_e, N) → (N_e, M)
+# xᵃ = xᵇ + K (y − H xᵇ), K = Pᵇ Hᵀ (H Pᵇ Hᵀ + R)⁻¹  [unverified]
+analysis = EnKFAnalysis(                          # (N_e, N) → (N_e, N)
+    inflation=1.05, localization="gaspari-cohn"
+)
+
+da = pc.EnsembleDACycle(  # T × (forecast, analysis)  today*
+    forward_model=forward,
+    obs_op=obs_op,
+    analysis_step=analysis,
+    obs_source=retrieval,                         # EMIT scenes, each hour
     n_steps=24,
+    n_members=40,
 )
 ```
 :::
 
 :::{tab-item} 5 · Index
 ```{code-block} python
-:caption: Write every analysed state into the state catalog.
+:caption: Write every analysed state into the state catalog (stage 5).
 :linenos:
 
-state_cat = sc.DuckDBStateCatalog.open("s3://imeo/methane_da_v3/states.parquet")
-writer = sc.integrations.cycle.CycleStateWriter(
-    state_catalog=state_cat,
-    model_config_hash=pk.config_hash(da),
+# Shapes: T steps, N_e members, N cells
+state_cat = sc.DuckDBStateCatalog.open(               # proposed (B)
+    "s3://imeo/methane_da_v3/states.parquet"
+)
+writer = sc.CycleStateWriter(                         # proposed (B)
+    state_catalog=state_cat, model_config_hash=da_hash
 )
 
-# Full forecasting pipeline
-forecast_pipeline = pk.Sequential([da, writer])
-
-# Run it
-final_state, history = forecast_pipeline(initial_state, initial_carry_state)
+forecast_pipeline = pk.Sequential([da, writer])       # today
+final_state, history = forecast_pipeline(x0, carry0)  # history: (T, N_e, N)
 ```
 :::
 
 :::{tab-item} 6 · Evaluate
+pipekit-evaluate already ships `Task`, `Estimator`, `Oracle`, `Scorer` and
+`Benchmark`. The region, lead-time and multi-track helpers below are
+proposed on top of them (an [open question](overview.md#sec-open-questions)).
+
 ```{code-block} python
-:caption: Evaluate against CAMS, aircraft and TCCON at once.
+:caption: Evaluate against CAMS, aircraft and TCCON at once (stage 5).
 :linenos:
 
-evaluation = pe.Pipeline([
-    pe.ByLeadTime(
-        pe.ByRegion(
-            regions={"permian": permian, "bakken": bakken, "global": None},
-            metric=pe.metrics.pointwise.RMSE(),
-        ),
-    ),
-    pe.metrics.probabilistic.CRPS(ensemble_dim="member"),
-    pe.metrics.physical.MassClosure(tolerance=0.01),
-    pe.ByEvent(
-        detector=pe.events.MethanePlumeDetector(threshold_kg_h=100),
-        metric=pe.metrics.detection.CSI(),
-    ),
+# Shapes: T lead times, N_e members, N cells, R regions
+evaluation = pe.Pipeline([                   # proposed (F)
+    pe.ByLeadTime(pe.ByRegion(               # (T, N) → (T, R)  proposed (F)
+        regions={"permian": permian, "bakken": bakken, "global": None},
+        metric=pe.metrics.RMSE(),
+    )),
+    # CRPS(F, y) = 𝔼|X − y| − ½ 𝔼|X − X′|   [proposed (F)]
+    pe.metrics.CRPS(ensemble_dim="member"),  # (T, N_e, N) → (T, N)
+    # |∑ᵢ xᵢ − ∑ᵢ rᵢ| / ∑ᵢ rᵢ ≤ 0.01, r the reference
+    pe.metrics.MassClosure(tolerance=0.01),  # (T, N) → (T,)  proposed (F)
 ])
 
-multitrack = pe.MultiTrackEvaluation(
+report = pe.MultiTrackEvaluation(            # proposed (F)
     evaluation_pipeline=evaluation,
-    references={
-        "cams":     gc.open_catalog("s3://cams/methane_reanalysis/"),
-        "aircraft": gc.open_catalog("s3://methaneair/2024/"),
-        "tccon":    in_situ_cat,
-    },
-)
-
-report = multitrack.run(predictions=history)
+    references={"cams": cams_cat, "aircraft": aircraft_cat, "tccon": tccon_cat},
+).run(predictions=history)                   # → EvaluationReport
 ```
 :::
 
 :::{tab-item} 7 · Register
 ```{code-block} python
-:caption: Attach the evaluation to the model that produced it.
+:caption: Attach the evaluation to the model that produced it (stage 5).
 :linenos:
 
-registry.attach_evaluation(model_hash=pk.config_hash(da), report=report)
+registry.attach_evaluation(model_hash=da_hash, report=report)  # proposed (E)
 ```
 :::
 ::::
@@ -184,41 +213,48 @@ registry.attach_evaluation(model_hash=pk.config_hash(da), report=report)
 ## Tier examples
 
 (ex-gaussx)=
-### gaussX kernel matrix
+### gaussx kernel matrix
 
-Tier 1 numerics ([briefs](#sec-tier-briefs)): kernels and solvers are
-lineax operators, so the Gram matrix never has to be materialised.
+Tier 1 numerics ([briefs](overview.md#sec-tier-briefs)): kernels and solvers
+are lineax operators, so the Gram matrix never has to be materialised.
 
 ```{code-block} python
-:caption: A Matérn-5/2 GP posterior mean with gaussX.
+:caption: A Matérn-5/2 GP posterior mean with gaussx.
 :linenos:
 
-from gaussx.kernels import Matern52
-from gaussx.linalg import cholesky_solve
+# Shapes: M training points, d input dimensions
+from gaussx.kernels import Matern52                 # unverified
+from gaussx.linalg import cholesky_solve            # unverified
 
 k = Matern52(length_scale=10.0, variance=1.0)
-K = k.gram(x)                          # ←  Gram matrix as lineax operator
-y_pred_mean = K @ cholesky_solve(K + sigma2 * I, y_train)
+# K = [k(xᵢ, xⱼ)]ᵢⱼ
+K = k.gram(x)  # (M, d) → (M, M) operator, never dense
+# m = K (K + σ² I)⁻¹ y
+mean = K @ cholesky_solve(K + sigma2 * I, y_train)  # (M,) → (M,)
 ```
 
-(ex-filterx)=
-### filterX adapter as a DA analysis step
+(ex-filterax)=
+### filterax adapter as a DA analysis step
 
 Tier 2 algorithms plug in through adapters. The analysis step satisfies
-pipekit-cycle's `AnalysisStep` Protocol structurally: no base class needed.
+pipekit-cycle's `AnalysisStep` protocol structurally: no base class needed.
+pipekit-cycle already ships `EnsembleInflator` and `CovarianceLocalizer`, so
+the adapter can take those objects instead of string options.
 
 ```{code-block} python
-:caption: An EnKF analysis step from filterX.
+:caption: An EnKF analysis step from filterax.
 :linenos:
 
-from filterx.adapters.pipekit import EnKFAnalysis
+# Shapes: N state, N_e members
+from filterax.adapters.pipekit import EnKFAnalysis  # unverified
 
-analysis = EnKFAnalysis(
+# Pᵇ ← ρ ∘ (λ Pᵇ), λ = 1.05, ρ a Gaspari–Cohn taper of 500 km
+analysis = EnKFAnalysis(                            # (N_e, N) → (N_e, N)
     inflation=1.05,
     localization="gaspari-cohn",
     localization_radius_km=500.0,
 )
-# Satisfies pipekit_cycle.AnalysisStep Protocol via structural typing
+assert isinstance(analysis, pc.AnalysisStep)        # the protocol: today
 ```
 
 ## Key code patterns
@@ -226,8 +262,7 @@ analysis = EnKFAnalysis(
 (ex-operator)=
 ### Define an operator
 
-A simplified sketch of how `geotoolz.radiometry.PercentileClip` is written
-upstream.
+A simplified sketch of how `geotoolz.PercentileClip` is written upstream.
 
 :::{important} Reuse first
 Use the upstream operator. Define a new one only when the
@@ -239,8 +274,11 @@ the library that owns the concept.
 :caption: An operator is a class with fields and an _apply method.
 :linenos:
 
-from pipekit import Operator
 from typing import ClassVar
+
+import numpy as np
+from pipekit import Operator                           # today
+
 
 class PercentileClip(Operator):
     """Clip a GeoTensor to [p_min, p_max] percentiles per band."""
@@ -251,10 +289,13 @@ class PercentileClip(Operator):
     axis: tuple = (-2, -1)
 
     def _apply(self, gt):
-        import numpy as np
-        lo = np.quantile(gt.data, self.p_min / 100, axis=self.axis, keepdims=True)
-        hi = np.quantile(gt.data, self.p_max / 100, axis=self.axis, keepdims=True)
-        return gt.with_data(np.clip(gt.data, lo, hi))
+        # Shapes: B bands, H × W pixels
+        # q_lo = Q_{p_min}(x_b), q_hi = Q_{p_max}(x_b) for each band b
+        q = dict(axis=self.axis, keepdims=True)
+        lo = np.quantile(gt.data, self.p_min / 100, **q)  # → (B, 1, 1)
+        hi = np.quantile(gt.data, self.p_max / 100, **q)  # → (B, 1, 1)
+        # x_clip = min(max(x, q_lo), q_hi)
+        return gt.with_data(np.clip(gt.data, lo, hi))  # (B, H, W) → (B, H, W)
 ```
 
 `ConfigMixin`, inherited from `Operator`, derives `get_config()` from the
@@ -271,11 +312,10 @@ sandboxed loader and composable with `|`.
 :caption: A linear pipeline.
 :linenos:
 
-# Linear: Sequential
-preprocess = pk.Sequential([
-    gz.radiometry.ToFloat32(),
-    gz.radiometry.PercentileClip(p_min=2, p_max=98),
-    gz.cloud.MaskClouds(qa_band=-1, bits=[10, 11]),
+# Shapes: B bands, H × W pixels; every step maps (B, H, W) → (B, H, W)
+preprocess = pk.Sequential([               # today
+    gz.ToFloat32(),                        # today
+    gz.PercentileClip(p_min=2, p_max=98),  # today
 ])
 ```
 :::
@@ -285,11 +325,7 @@ preprocess = pk.Sequential([
 :caption: The same pipeline with the | operator.
 :linenos:
 
-preprocess = (
-    gz.radiometry.ToFloat32()
-    | gz.radiometry.PercentileClip(p_min=2, p_max=98)
-    | gz.cloud.MaskClouds(qa_band=-1, bits=[10, 11])
-)
+preprocess = gz.ToFloat32() | gz.PercentileClip(p_min=2, p_max=98)  # today
 ```
 :::
 
@@ -298,22 +334,24 @@ preprocess = (
 :caption: A DAG fusing optical, SAR and elevation inputs.
 :linenos:
 
-opt = pk.Input("optical")
-sar = pk.Input("sar")
-dem = pk.Input("dem")
+# Shapes: B optical bands, P SAR polarisations, H × W optical grid
+opt = pk.Input("optical")                               # (B, H, W)  today
+sar = pk.Input("sar")                                   # (P, H′, W′)  today
+dem = pk.Input("dem")                                   # (1, H″, W″)  today
 
-opt_clean = gz.cloud.MaskClouds(qa_band=-1, bits=[10, 11])(opt)
-sar_db    = gz.sar.LinearToDB()(gz.sar.LeeSpeckle(window=7)(sar))
-fused     = gz.fusion.AlignAndStack(target_grid="optical")(opt_clean, sar_db, dem)
-classify  = gz.ModelOp(crop_classifier)(fused)
+# σ⁰_dB = 10 log₁₀ σ⁰, after speckle filtering   [proposed (C)]
+despeckled = gz.sar.LeeSpeckle(window=7)(sar)           # same shape
+sar_db = gz.sar.LinearToDB()(despeckled)  # same shape  proposed (C)
+# regrid SAR and DEM onto the optical grid, then stack along bands
+align = gz.fusion.AlignAndStack(target_grid="optical")  # proposed (C)
+fused = align(opt, sar_db, dem)                         # → (B + P + 1, H, W)
+crop_map = gz.ModelOp(crop_classifier)(fused)  # → (H, W)  today
 
-g = pk.Graph(
+g = pk.Graph(                                           # today
     inputs={"optical": opt, "sar": sar, "dem": dem},
-    outputs={"crop_map": classify, "fused_stack": fused},
+    outputs={"crop_map": crop_map, "fused_stack": fused},
 )
-
-result = g(optical=s2_gt, sar=s1_gt, dem=dem_gt)
-# result["crop_map"], result["fused_stack"]
+result = g(optical=s2_gt, sar=s1_gt, dem=dem_gt)        # dict of GeoTensors
 ```
 :::
 ::::
@@ -321,45 +359,36 @@ result = g(optical=s2_gt, sar=s1_gt, dem=dem_gt)
 (ex-catalogs)=
 ### Catalogs
 
-Observation catalogs index L0–L2 ([lifecycle](#sec-lifecycle)); matchup is
-where the two streams converge ([two streams](#sec-two-streams)).
+Observation catalogs index L0–L2 ([lifecycle](overview.md#sec-lifecycle));
+matchup is where the two streams converge
+([two streams](overview.md#sec-two-streams)).
 
 ```{code-block} python
 :caption: Build, open, query and match a geocatalog.
 :linenos:
 
-# Build a catalog from a directory of GeoTIFFs
-import geocatalog as gc
-
-cat = gc.build_raster_catalog(
+# Shapes: one GeoSlice per file; M matched pairs
+cat = gc.build_raster_catalog(                                   # proposed (B)
     "s3://imeo/sentinel2/2024/*.tif",
     backend="duckdb",
     out_uri="s3://imeo/sentinel2_index_2024.parquet",
 )
+cat = gc.open_catalog("s3://imeo/sentinel2_index_2024.parquet")  # today
 
-# Or load an existing one
-cat = gc.open_catalog("s3://imeo/sentinel2_index_2024.parquet")
+# rows with footprint ∩ aoi ≠ ∅ and t₀ ≤ t ≤ t₁
+rows = gc.query(cat, bbox=aoi, time=(t0, t1))                    # today*
 
-# Iterate slices for a query
-for slice in cat.iter_slices(bbox=aoi, time=(t0, t1)):
-    gt = gc.load_raster(slice)
-    result = preprocess(gt)
-    # ...
-
-# Matchup with in-situ
-in_situ_cat = gc.open_catalog("s3://imeo/tccon_index.parquet")
-
-matched = gc.queries.matchup(
-    primary=in_situ_cat,             # the sparse / accurate stream
-    secondary=cat,                    # the dense satellite stream
+# {(j, k) : |tⱼ − tₖ| ≤ 3 h, d(sⱼ, sₖ) ≤ 25 km}
+matched = gc.queries.matchup(  # → M MatchupPairs  proposed (B)
+    primary=tccon_cat,  # the sparse, accurate stream
+    secondary=cat,  # the dense satellite stream
     time_tolerance=pd.Timedelta(hours=3),
     space_tolerance_km=25.0,
 )
-for pair in matched:
-    obs = gc.load_in_situ(pair.primary_slice)
-    sat = gc.load_raster(pair.secondary_slice)
-    # ... use as (label, feature) pairs
 ```
+
+`gc.intersect` (today) already pairs overlapping rows across two catalogs;
+matchup adds the time and distance tolerances on top of it.
 
 (ex-patcher)=
 ### Patcher
@@ -368,85 +397,71 @@ for pair in matched:
 :caption: Four-axis patching around a model, for any carrier.
 :linenos:
 
-import geopatcher as gp
-from geopatcher.integrations.pipekit import GridSampler, ApplyToChips, Stitch
-
-# Four-axis patcher: geometry × sampler × window × aggregation
-patcher = gp.SpatialPatcher(
+# Shapes: C channels, H × W scene; 256² patches, stride 224
+patcher = gp.SpatialPatcher(                       # today*
     geometry=gp.SpatialRectangular((256, 256)),
     sampler=gp.SpatialRegularStride((224, 224)),
     window=gp.SpatialHann(),
     aggregation=gp.SpatialOverlapAdd(),
 )
+field = gp.RasterField(scene_reader)               # GeoTensor field  today
 
-# Composed into a Sequential
-inference = pk.Sequential([
-    GridSampler(patcher),
-    ApplyToChips(pk.Sequential([
-        preprocess,
-        gz.ModelOp(model, batch_size=8),
-    ])),
-    Stitch(gp.SpatialOverlapAdd()),
+# y(s) = ∑ₚ wₚ(s) f(xₚ)(s) / ∑ₚ wₚ(s), wₚ the Hann window of p
+inference = pk.Sequential([                        # today
+    GridSampler(patcher),  # (C, H, W) → P × (C, 256, 256)  proposed (C)
+    ApplyToChips(preprocess | gz.ModelOp(model)),  # per patch  proposed (C)
+    Stitch(gp.SpatialOverlapAdd()),  # → (K, H, W)  proposed (C)
 ])
-
-# Field adapter for whatever carrier you have
-field = gp.RasterField(scene_reader)        # for GeoTensor
-field = gp.XarrayField(scene_ds)             # for xarray Dataset
-field = gp.XvecField(stations_ds)            # for point cubes
-field = gp.GeoPandasField(zones_gdf)         # for vector
-
 result = inference(field)
 ```
+
+geotoolz already ships a `Stitch` for georeferenced tiles; the patcher's
+stitch should reuse it rather than add a second one.
 
 (ex-da-cycle)=
 ### Data assimilation cycle
 
-Every ingredient satisfies a pipekit-cycle Protocol, so any forward model,
-observation operator or analysis step that fits the Protocol can be swapped
-in.
+Every ingredient satisfies a pipekit-cycle protocol, so any forward model,
+observation operator or analysis step that fits can be swapped in. This
+standalone example assimilates TROPOMI, so its observation operator and its
+observation source both name TROPOMI.
 
 ```{code-block} python
 :caption: An ensemble DA cycle with explicit state carry.
 :linenos:
 
-import pipekit_cycle as pc
-from filterx.adapters.pipekit import EnKFAnalysis
-from plumax.adapters.pipekit import PlumeForward, ColumnObs
+# Shapes: N state, M observations, N_e = 40 members, T = 24 steps
+forward = PlumeForward(species="CH4", dt=3600.0)  # ForwardModel  unverified
+obs_op = ColumnObs(instrument="TROPOMI")  # ObservationOperator  unverified
+analysis = EnKFAnalysis(inflation=1.05)           # AnalysisStep  unverified
 
-# All ingredients are Protocol-satisfying
-forward = PlumeForward(species="CH4", dt=3600.0)         # ForwardModel
-obs_op  = ColumnObs(instrument="TROPOMI")                # ObservationOperator
-analysis = EnKFAnalysis(inflation=1.05)                   # AnalysisStep
-
-# Compose into a DA cycle
-da = pc.EnsembleDACycle(
+da = pc.EnsembleDACycle(                          # today*
     forward_model=forward,
     obs_op=obs_op,
     analysis_step=analysis,
-    obs_source=obs_sequential,                            # pulls obs each step
+    obs_source=tropomi_source,                    # TROPOMI columns, each hour
     n_steps=24,
     n_members=40,
     save_history=True,
 )
 
-# State carry is explicit
-initial_carry = pc.DAState(
-    background_state=initial_state,
-    ensemble_members=initial_ensemble,
+carry0 = pc.DAState(                              # today*
+    background_state=x0,                          # (N,)
+    ensemble_members=X0,                          # (N_e, N)
     t=t0,
     cycle_count=0,
 )
-
-final_state, history = da(initial_state, initial_carry)
+final_state, history = da(x0, carry0)             # history: (T, N_e, N)
 ```
 
 (ex-emulator)=
 ### Swap in a neural emulator
 
 The key win of the architecture: the same DA cycle with a different forward
-model. This is steps 3→4 of the [six-step cycle](#sec-six-steps): train an
-emulator on step-1 simulations, then run step 2's inference loop with the
-emulator swapped in. Step 2 stays alive as the oracle that validated it.
+model. This is steps 3→4 of the
+[six-step cycle](overview.md#sec-six-steps): train an emulator on step-1
+simulations, then run step 2's inference loop with the emulator swapped in.
+Step 2 stays alive as the oracle that validated it.
 
 ::::{tab-set}
 
@@ -455,22 +470,23 @@ emulator swapped in. Step 2 stays alive as the oracle that validated it.
 :caption: Train an emulator offline on simulations.
 :linenos:
 
-# Train an emulator offline
-emulator_loop = pt.TrainingLoop(
+# Shapes: S = 10,000 simulations, N state
+# φ⋆ = argmin_φ 𝔼_θ ‖f(θ) − f_φ(θ)‖², f_φ the emulator
+loop = pt.TrainingLoop(                                      # today*
     model_op=gz.ModelOp(ChemistryEmulatorNet()),
-    dataset=pt.SimulationDataset(
+    dataset=pt.SimulationDataset(  # S × (θ, f(θ))  today
         forward_model=PlumeForward(species="CH4", dt=3600.0),
         prior=AtmosphericPrior(distribution="climatology"),
         n_samples=10_000,
     ),
-    loss=pt.MSE(),
+    loss=pt.MSE(),                                           # today
     optimizer_config={"name": "adam", "lr": 1e-3},
     n_epochs=100,
     backend="lightning",
-    callbacks=[pt.LogToExperiment(tracker=mlflow_tracker)],
+    callbacks=[pt.LogToExperiment(tracker=mlflow_tracker)],  # today
 )
-emulator_op = emulator_loop.run()
-registry.store(emulator_op, name="methane_emulator_v3")
+emulator_op = loop.run()
+registry.store(emulator_op, name="methane_emulator_v3")  # today
 ```
 :::
 
@@ -478,22 +494,22 @@ registry.store(emulator_op, name="methane_emulator_v3")
 ```{code-block} python
 :caption: The same DA cycle; only the forward model changes.
 :linenos:
-:emphasize-lines: 8
-neural_forward = pc.NeuralForward(
+:emphasize-lines: 7
+
+# xᵇₜ = f_φ⋆(xᵃₜ₋₁), the trained emulator
+neural_forward = pc.NeuralForward(  # (N_e, N) → (N_e, N)  today
     model_op=registry.load("methane_emulator_v3"),
     dt=3600.0,
 )
-
-# Same DA cycle, just swap the forward model
 da_emulated = pc.EnsembleDACycle(
-    forward_model=neural_forward,              # ← swapped
-    obs_op=obs_op,                              # same
-    analysis_step=analysis,                     # same
-    obs_source=obs_sequential,                  # same
+    forward_model=neural_forward,   # ← swapped
+    obs_op=obs_op,                  # same
+    analysis_step=analysis,         # same
+    obs_source=tropomi_source,      # same
     n_steps=24,
     n_members=40,
 )
-# Target: ~100× faster forecasts (not yet benchmarked); same composability
+# Target: ~100× faster forecasts. Not yet benchmarked.
 ```
 :::
 ::::
@@ -501,54 +517,27 @@ da_emulated = pc.EnsembleDACycle(
 (ex-evaluation)=
 ### Evaluation pipeline
 
+What exists today is the benchmark cube: a `Task` (prior, simulator,
+observation operator, data), an `Estimator` for each rung of the six-step
+cycle, an `Oracle` (usually rung 2) and a `Scorer`. The multi-track helpers
+sketched in the methane pipeline should be built on these.
+
 ```{code-block} python
-:caption: Multi-track evaluation whose report is a content-addressed artifact.
+:caption: Score an emulator-based estimator against the classical oracle.
 :linenos:
 
-import pipekit_evaluate as pe
-
-evaluation = pe.Pipeline([
-    # Field × Point-wise, decomposed by region and lead time
-    pe.ByLeadTime(
-        pe.ByRegion(
-            regions={"permian": permian_mask, "global": None},
-            metric=pe.metrics.pointwise.RMSE(),
-        ),
-    ),
-    # Field × Spectral
-    pe.metrics.spectral.PSDCompare(
-        spatial_dims=("lat", "lon"),
-        expected_slope=-3.0,
-    ),
-    # Field × Probabilistic
-    pe.metrics.probabilistic.CRPS(ensemble_dim="member"),
-    # Event × Detection
-    pe.ByEvent(
-        detector=pe.events.MethanePlumeDetector(threshold_kg_h=100),
-        metric=pe.metrics.detection.CSI(),
-    ),
-    # Budget × Physical-constraint
-    pe.metrics.physical.MassClosure(tolerance=0.01),
-])
-
-# Multi-track: vs reanalysis, vs analysis, vs observations
-multitrack = pe.MultiTrackEvaluation(
-    evaluation_pipeline=evaluation,
-    references={
-        "cams": cams_cat,
-        "tccon": tccon_cat,
-        "aircraft": methaneair_cat,
-    },
+# Shapes: θ ∈ ℝᵈ parameters, y ∈ ℝᴹ observations
+task = pe.Task(                                          # today*
+    prior=prior, simulator=forward, obs_op=obs_op, data=tccon_cat
 )
-report = multitrack.run(predictions=forecast_history)
+oracle = pe.Oracle(estimator=classical_da)  # rung 2: ground truth  today*
+candidate = pe.Estimator(fn=emulated_da)    # rung 4  today*
 
-# Result is a content-addressed artifact
-print(report.to_pandas())
-report.save("s3://imeo/eval/methane_v3_2024Q3.report")
-
-# Diff against the previous version
-old = pe.EvaluationReport.load("s3://imeo/eval/methane_v2_2024Q3.report")
-diff = report.diff(old)
+# CRPS(F, y) = 𝔼|X − y| − ½ 𝔼|X − X′|   [today*]
+bench = pe.Benchmark(                                                          #
+    task=task, oracle=oracle, estimators=[candidate], scorer=crps
+)
+report = bench.run()                        # → BenchmarkReport  today
 ```
 
 (ex-benchmark)=
@@ -558,9 +547,8 @@ diff = report.diff(old)
 :caption: A pre-registerable, content-addressed benchmark contract.
 :linenos:
 
-from pipekit_evaluate.benchmark import BenchmarkContract
-
-contract = BenchmarkContract(
+# Shapes: (T, lat, lon) in and out; 200 km × 60 day blocks for the splits
+contract = pe.BenchmarkContract(  # proposed (F)
     name="oceanbench_ssh_2025",
     version="1.0.0",
     task="gap_filling",
@@ -575,34 +563,35 @@ contract = BenchmarkContract(
     train_catalog_uri="s3://oceanbench/train.parquet",
     val_catalog_uri="s3://oceanbench/val.parquet",
     test_catalog_uri="s3://oceanbench/test.parquet",
-    splitter_config={
+    splitter_config={             # the one place block sizes live
         "_target_": "pipekit_train.splitters.SpatioTemporalBlockSplit",
         "spatial_block_km": 200,
         "temporal_block_days": 60,
     },
-    block_size_spatial_km=200,
-    block_size_temporal_days=60,
     metric_configs=[...],
     baselines=["pipekit_evaluate.baselines.OptimalInterpolationBaseline"],
     max_test_evaluations=1,
 )
-
-# Content-addressed, pre-registerable
-hash = contract.content_hash()
+digest = contract.content_hash()  # pre-registerable
 contract.to_yaml().save("s3://oceanbench/contracts/v1.0.0.yaml")
 ```
 
+The earlier draft also set `block_size_spatial_km` and
+`block_size_temporal_days` beside `splitter_config`. They now live only in
+the splitter config, so the two cannot disagree.
+
 (ex-repro)=
 ### Reproducibility artifact
+
+pipekit-experiment already ships `InferenceArtifact`, a reproducibility
+snapshot for an inference pipeline. The freeze-and-rerun flow below is
+proposed as an extension of it, not as a second mechanism.
 
 ```{code-block} python
 :caption: Freeze a pipeline, its inputs and its lockfile for a cold rerun.
 :linenos:
 
-import pipekit as pk
-
-# Freeze a pipeline + its inputs + lockfile
-artifact = pk.repro.freeze(
+artifact = px.InferenceArtifact(                       # today*
     pipeline=da_emulated,
     inputs={
         "scene_catalog_uri": "s3://imeo/emit/2024_Q3_frozen/",
@@ -611,10 +600,10 @@ artifact = pk.repro.freeze(
     deps_lock="pixi.lock",
     metadata={"author": "ej", "doi": "10.xxxx/mars-2024Q3"},
 )
-artifact.save("/regulatory/mars_methane_2024Q3.gtar")
+artifact.save("/regulatory/mars_methane_2024Q3.gtar")  # proposed (E)
 
-# Years later
-art = pk.repro.load("/regulatory/mars_methane_2024Q3.gtar")
+# Years later: a cold rerun, no cloud accounts needed   [proposed (E)]
+art = px.InferenceArtifact.load("/regulatory/mars_methane_2024Q3.gtar")  #
 assert art.pipeline_hash == "expected-hash-from-paper"
-result = art.rerun()                # cold-rerun, no cloud accounts needed
+result = art.rerun()                                   # proposed (E)
 ```

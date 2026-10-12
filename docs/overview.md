@@ -10,8 +10,8 @@ keywords:
   - operator graphs
   - remote sensing
 numbering:
+  heading_1: true
   heading_2: true
-  heading_3: true
   figure: true
   table: true
 abbreviations:
@@ -49,9 +49,51 @@ and it ends with the open questions and a plan.
 - **Building something:** start with the [walkthrough](#sec-walkthrough)
   and the [overview examples](overview_examples.md), then search the
   [capability index](api/capabilities.md) before writing new code.
-- **Reviewing the design:** go straight to the
+- **Reviewing the design:** go straight to the [decision](#sec-decision),
+  the [ownership rules](#sec-ownership), the [gates](#sec-gates) and the
   [open questions](#sec-open-questions).
 :::
+
+(sec-decision)=
+## The decision
+
+GeoStack is one operator algebra across three stacks: **GeoML** (numerics
+and inference), **GeoModels** (forward models) and **GeoStack proper**
+(data, pipelines, evaluation). None merges into another: the JAX libraries
+stay pipeline-free and reach pipekit only through thin `adapters/pipekit.py`
+modules.
+
+The work splits into six workstreams. Each makes one decision, and the
+letters tag every `proposed (X)` call on the
+[examples page](overview_examples.md) and every gate in {numref}`tbl-gates`.
+
+- **A · One framework.** Every library invents its own pipeline glue today.
+  pipekit replaces it with one `Operator` protocol, `Sequential` and `Graph`
+  composition, config round-tripping and sandboxed YAML.
+- **B · Indexed data at both ends of the lifecycle.** Observations can be
+  catalogued; model states are scattered files. `geocatalog` indexes L0–L2
+  as `GeoSlice`s, `statecatalog` indexes L3–L5 as `StateSlice`s, and the
+  readers split the same way: `georeader` below L3, `xrreader` from L3 up.
+- **C · Two carriers, one algebra.** `geotoolz` (GeoTensor) and `xrtoolz`
+  (xarray) share the operator algebra and the patcher; only the substrate
+  differs.
+- **D · Data assimilation as a cycle.** pipekit-cycle's `ForwardModel`,
+  `ObservationOperator` and `AnalysisStep` protocols are the only contract.
+  filterax, vardax and plumax satisfy them through adapters, so an emulator
+  replaces a physics model without touching the cycle.
+- **E · Training with lineage.** pipekit-train wraps Lightning, Equinox +
+  Optax and Keras 3; pipekit-experiment adds trackers and a content-addressed
+  `ModelRegistry`.
+- **F · Evaluation as infrastructure.** pipekit-evaluate scores every cell
+  of the benchmark cube against an `Oracle`, and stores reports and contracts
+  as content-addressed artifacts.
+
+**End state.** GeoML owns linear algebra, kernels and inference and never
+imports pipekit outside an adapter. GeoModels owns physics and exposes it
+only through adapters. pipekit owns composition, cycles, training and
+evaluation. geocatalog and statecatalog own the two indexes; geotoolz and
+xrtoolz own the carrier-specific operators. Orchestration and serving stay
+external.
 
 (sec-pitch)=
 ## The elevator pitch
@@ -65,7 +107,7 @@ In one sentence: **the operator-graph abstraction, extended from numerical
 primitives all the way up to end-to-end pipelines, with content-addressed
 data and models throughout.**
 
-You can build great JAX numerics (gaussX, lineax, equinox) and great xarray
+You can build great JAX numerics (gaussx, lineax, equinox) and great xarray
 pipelines today. What you cannot do is connect them. GeoStack fills that gap
 with five building blocks:
 
@@ -92,7 +134,7 @@ actually use.
 :::
 
 :::{card} Adapters
-filterX, vardaX, plumax, pyrox-gp and gaussFlowX plug in through thin
+filterax, vardax, plumax, pyrox and gauss_flows plug in through thin
 adapter modules, without coupling.
 :::
 ::::
@@ -283,12 +325,46 @@ Step 2, the classical method, is the {term}`oracle` that validates steps
 step as ground truth.
 ```
 
+In symbols: let θ be the quantity we want (an emission rate, a model
+state), f the physical forward model, H the observation operator, y the
+observations and ε their error with covariance R. Step 1 is the generative
+story:
+
+```{math}
+:label: eq-generative
+y = H\left(f(\theta)\right) + \varepsilon, ~~~ \varepsilon \sim \mathcal{N}(0, R)
+```
+
+Step 2 inverts it exactly but slowly, by Bayes' rule with a prior p(θ):
+
+```{math}
+:label: eq-posterior
+p(\theta \mid y) \propto p(y \mid \theta) ~ p(\theta)
+```
+
+Step 3 trains an emulator $\hat f_\phi$ with weights φ on step-1
+simulations, and step 4 reruns step 2 with $\hat f_\phi$ in place of f:
+
+```{math}
+:label: eq-emulator
+\phi^\star = \arg\min_\phi \mathbb{E}_{\theta \sim p(\theta)} \left\| f(\theta) - \hat f_\phi(\theta) \right\|^2
+```
+
+Step 5 skips the inversion: it trains a conditional density $q_\psi$ with
+weights ψ that maps observations straight to an approximate posterior, on
+pairs (θ, y) drawn from the generative model {eq}`eq-generative`:
+
+```{math}
+:label: eq-amortized
+\psi^\star = \arg\min_\psi \mathbb{E}_{(\theta, y) \sim p(\theta, y)} \left[ -\log q_\psi(\theta \mid y) \right], ~~~ q_{\psi^\star}(\theta \mid y) \approx p(\theta \mid y)
+```
+
 Two structural commitments fall out of the cycle:
 
 ::::{grid} 1 1 2 2
 
 :::{card} Step 2 is the oracle
-Classical methods (`filterX`, `vardaX`, `pyrox-gp`) are not legacy code
+Classical methods (`filterax`, `vardax`, `pyrox`) are not legacy code
 waiting to be replaced by neural emulators. They become *ground-truth
 generators* that validate steps 3–5. The classical path stays alive,
 promoted to oracle.
@@ -311,7 +387,7 @@ contract.
 | 2 · Model-based inference | `pipekit-cycle.DACycle` with classical analysis steps |
 | 3 · Emulator | `pipekit-train.SimulationDataset`, registered in `pipekit-experiment.ModelRegistry` |
 | 4 · Emulator-based inference | `pipekit-cycle.DACycle` with `NeuralForward` |
-| 5 · Amortized inference | `pipekit-train` with `gaussFlowX` or `pyrox-nn` |
+| 5 · Amortized inference | `pipekit-train` with `gauss_flows` or `pyrox` |
 | 6 · Improve | `pipekit-evaluate.EvaluationReport` diffs |
 :::
 
@@ -388,6 +464,47 @@ Each layer depends only on the layers below it. The domain libraries
 usually imports a single package.
 :::
 
+(sec-ownership)=
+### Ownership rules
+
+A package imports only from tiers below it, and the JAX libraries touch
+pipekit only through an optional adapter module, never in their core.
+
+1. **gaussx** owns structured linear algebra and Gaussian primitives. It
+   imports no GeoStack package.
+2. **geonnax** owns basis functions, neural layers and coordinate
+   transforms. somax and the other models compose them and never
+   reimplement them.
+3. **kernellib** owns covariance kernels and tapers. It imports no
+   inference library.
+4. **optax_bayes** owns the Bayesian learning rule as optax transforms. It
+   imports no model library.
+5. **spectraldiffx** and **finitevolx** own discretisations: spectral and
+   finite-volume operators, no physics.
+6. **pyrox** owns GP and Bayesian NN building blocks for NumPyro. Its
+   pipekit surface (`KrigingOperator`) lives only in
+   `pyrox.adapters.pipekit`.
+7. **filterax** owns ensemble Kalman methods and **vardax** owns 3D/4D-Var.
+   Each exposes an `AnalysisStep` only through `adapters/pipekit.py`.
+8. **gauss_flows** owns Gaussianization and normalizing flows;
+   **xtremax** owns extreme-value and point-process models. Neither imports
+   pipekit outside an adapter.
+9. **somax**, **plumax** and **rtmx** own forward models. They expose
+   `ForwardModel` and `ObservationOperator` only through adapters.
+10. **pipekit** owns `Operator`, composition, control flow, observers,
+    caching, QC, serialisation and `CarryState`. It depends on no array
+    library, xarray or GeoTensor.
+11. **pipekit-cycle** owns `Cycle`, `DACycle`, `EnsembleDACycle` and the DA
+    protocols. It never imports an algorithm library: algorithms arrive by
+    structural typing.
+12. **pipekit-train**, **pipekit-experiment** and **pipekit-evaluate** own
+    training loops, the registry and trackers, and evaluation. None imports
+    a carrier library.
+13. **geocatalog** owns the L0–L2 index and **statecatalog** the L3–L5
+    index. Neither reads files itself: `georeader` and `xrreader` do.
+14. **geotoolz** owns GeoTensor operators and **xrtoolz** xarray operators;
+    **geopatcher** cuts either carrier into patches.
+
 (sec-walkthrough)=
 ## Walkthrough: methane attribution
 
@@ -406,6 +523,125 @@ emission estimates, with ML at several stages.
 The [full pipeline code](#ex-methane), step by step, on the overview
 examples page.
 :::
+
+The data: EMIT imaging-spectrometer scenes (L1 radiances) over an area of
+interest, TCCON column measurements as in-situ truth, and CAMS reanalysis and
+aircraft campaigns as evaluation references. The dimensions used below: B
+spectral bands, H × W pixels per scene, M observations, N grid cells,
+$N_e = 40$ ensemble members and T = 24 hourly steps.
+
+The eight steps of {numref}`fig-methane-walkthrough` group into five stages.
+Each stage states the problem it solves before the code does; stages 3 and 4
+have closed-form special cases that double as test oracles
+({numref}`tbl-gates`).
+
+(sec-stage-retrieve)=
+### Stage 1 · Retrieve methane (steps 1–2: geocatalog → georeader → geotoolz)
+
+**TL;DR.** Find every EMIT scene over the area, mask clouds, and turn each
+pixel's spectrum into a methane enhancement.
+
+**Problem.** For pixel i, $x_i \in \mathbb{R}^B$ is its radiance spectrum,
+μ the scene-background mean, $\Sigma \in \mathbb{R}^{B \times B}$ the
+background covariance and t the methane target signature (unit absorption
+times μ). The matched filter's enhancement estimate $\hat\alpha_i$ is the
+least-squares amplitude of t in the whitened residual:
+
+```{math}
+:label: eq-matched-filter
+\hat\alpha_i = \frac{(x_i - \mu)^\top \Sigma^{-1} t}{t^\top \Sigma^{-1} t}
+```
+
+The classical filter is step 2 of the six-step cycle for the L1→L2 cell. A
+learned retrieval takes the same slot in the pipeline, and the filter stays
+as its oracle.
+
+(sec-stage-matchup)=
+### Stage 2 · Match with in-situ (step 3: geocatalog matchup)
+
+**TL;DR.** Pair each TCCON measurement with the satellite retrieval nearest
+to it in space and time.
+
+**Problem.** In-situ observation j sits at location $s_j$ and time $t_j$;
+satellite retrieval k at $s_k$, $t_k$; d is great-circle distance. A pair
+(j, k) is a matchup when both tolerances hold:
+
+```{math}
+:label: eq-matchup
+|t_j - t_k| \le 3~\mathrm{h} ~~\text{and}~~ d(s_j, s_k) \le 25~\mathrm{km}
+```
+
+The pairs validate stage 1 and are the (label, feature) training data for a
+learned retrieval. How much of their disagreement is representativeness
+error is an [open question](#sec-open-questions).
+
+(sec-stage-gapfill)=
+### Stage 3 · Grid and gap-fill (step 4: pyrox through pipekit)
+
+**TL;DR.** Turn scattered retrievals into a regular map with an uncertainty
+for every grid cell.
+
+**Problem.** $y \in \mathbb{R}^M$ are the L2 retrievals, σ² their noise
+variance and k a Matérn-5/2 kernel with a 50 km length scale. $K_{ff}$ is k
+between the M observation locations, $K_{*f}$ between the N grid cells and
+the observations, and $K_{**}$ between grid cells. The GP posterior mean m
+and variance v on the grid are:
+
+```{math}
+:label: eq-kriging-mean
+m = K_{*f} \left(K_{ff} + \sigma^2 I_M\right)^{-1} y
+```
+
+```{math}
+:label: eq-kriging-var
+v = \operatorname{diag}\left(K_{**} - K_{*f} \left(K_{ff} + \sigma^2 I_M\right)^{-1} K_{f*}\right)
+```
+
+Kriging is the oracle for the L2→L3 cell; DINEOF and neural gap-fillers are
+judged against it. The variance v feeds stage 4 as observation error.
+
+(sec-stage-da)=
+### Stage 4 · Assimilate hourly (step 5: pipekit-cycle → plumax → filterax)
+
+**TL;DR.** Step a transport model forward each hour and pull it towards the
+observations.
+
+**Problem.** $x_t \in \mathbb{R}^N$ is the methane state at hour t, 𝓜 one
+plumax transport step of 3,600 s, H the column observation operator, R the
+observation-error covariance, and $P^b$ the background covariance estimated
+from the $N_e$ members. Each cycle forecasts, then updates every member:
+
+```{math}
+:label: eq-forecast
+x_t^b = \mathcal{M}\left(x_{t-1}^a\right)
+```
+
+```{math}
+:label: eq-enkf
+K = P^b H^\top \left(H P^b H^\top + R\right)^{-1}, ~~~ x_t^a = x_t^b + K \left(y_t - H x_t^b\right)
+```
+
+$P^b$ is inflated by 1.05 and localised with a Gaspari–Cohn taper. The
+estimate is approximate and random: localisation trades exactness for
+removing spurious long-range correlations. With a linear 𝓜 and H, no
+inflation, no localisation and many members, {eq}`eq-enkf` reduces to the
+Kalman filter, which is gate D2.
+
+(sec-stage-evaluate)=
+### Stage 5 · Index, evaluate, register (steps 6–8: statecatalog → pipekit-evaluate → pipekit-experiment)
+
+**TL;DR.** Store every analysis, score it against three independent
+references, and attach the score to the model that made it.
+
+**Problem.** For a forecast distribution F, a reference value y, and
+independent draws X, X′ from F, the continuous ranked probability score is
+below; lower is better, and with one member it reduces to absolute error.
+Mass closure checks that total methane is conserved to within 1 %.
+
+```{math}
+:label: eq-crps
+\mathrm{CRPS}(F, y) = \mathbb{E}_F |X - y| - \frac{1}{2} \mathbb{E}_F |X - X'|
+```
 
 The same pipeline, written as YAML, becomes the regulatory artifact (Report 9,
 use case 9). The same operators run in a notebook (case 1), an ETL job
@@ -431,41 +667,42 @@ plus rioxarray, xvec, cf-xarray, regionmask, xskillscore, dask and intake.
 :::{tab-item} Tier 1 · Numerics
 | Package | What it does |
 |---|---|
-| `gaussX` | Structured linear algebra, Gaussian primitives, exponential family; wraps lineax and matfree |
-| `spectralDiffX` | Pseudospectral differentiation, filters, PDE solvers |
-| `finiteVolX` | Arakawa C-grid finite-volume operators |
-| `optax-bayes` | The Bayesian learning rule as optax gradient transformations |
+| `gaussx` | Structured linear algebra, Gaussian primitives, exponential family; wraps lineax and matfree |
+| `geonnax` | Basis functions, neural layers and coordinate transforms (`lonlat_to_cartesian3d`) |
+| `kernellib` | Covariance kernels and tapers |
+| `spectraldiffx` | Pseudospectral differentiation, filters, PDE solvers |
+| `finitevolx` | Arakawa C-grid finite-volume operators |
+| `optax_bayes` | The Bayesian learning rule as optax gradient transformations |
 | `eqx-trainer` | A minimal JAX / equinox training loop |
 
 Pure math with no domain knowledge: all `eqx.Module`-based, jittable and
-JAX-traceable. See the [gaussX example](#ex-gaussx).
+JAX-traceable. See the [gaussx example](#ex-gaussx).
 :::
 
 :::{tab-item} Tier 2 · Algorithms
 | Package | What it does |
 |---|---|
-| `pyrox-gp` | GP building blocks for NumPyro hierarchical models |
-| `pyrox-nn` | Bayesian deep learning with equinox and NumPyro |
-| `filterX` | Differentiable ensemble Kalman methods |
-| `vardaX` | Learnable variational DA (3D- and 4D-Var) |
-| `gaussFlowX` | Rotation-based Gaussianization and normalizing flows |
+| `pyrox` | GP and Bayesian deep-learning building blocks for NumPyro hierarchical models (a split into `nnox` + `pyrox` is planned) |
+| `filterax` | Differentiable ensemble Kalman methods |
+| `vardax` | Learnable variational DA (3D- and 4D-Var) |
+| `gauss_flows` | Rotation-based Gaussianization and normalizing flows |
+| `xtremax` | Extreme-value and point-process models; computes the L5 extremes |
 | `fairkl` | Fairness-constrained kernel learning (Keras 3) |
 | `keras-nerf` | Neural fields for state estimation (Keras 3) |
 | `keras-flows` | Normalizing flows (Keras 3) |
 
 Keras 3 and Equinox are equal-status backends. Each algorithm's adapter
 (`*.adapters.pipekit`) makes it composable into pipekit pipelines. See the
-[filterX example](#ex-filterx).
+[filterax example](#ex-filterax).
 :::
 
 :::{tab-item} Tier 3 · Domain
 | Package | What it does |
 |---|---|
 | `somax` | Ocean and atmosphere model zoo |
-| `xtremax` | Extreme value modeling |
-| `methanex` | End-to-end methane remote sensing |
 | `plumax` | Atmospheric plume transport |
-| `RTMX` | Radiative transfer operators |
+| `rtmx` | Differentiable radiative transfer operators (planned; no repository yet) |
+| `methanex` | End-to-end methane remote sensing (planned; no repository yet) |
 | `geotoolz` | GeoTensor operators for remote sensing: readers, retrieval, cloud, radiometry, indices, spectral, plume, viz |
 | `xrtoolz` | xarray operators for ocean, atmosphere and reanalysis: validation, CRS, subsetting, masks, interpolation, metrics, kinematics |
 
@@ -502,8 +739,8 @@ substrate differs, the operator algebra is identical.
 | `pipekit-train` | Training for emulators and amortized inference over Lightning, Equinox + Optax or Keras 3 | 11 |
 | `pipekit-experiment` | Tracker adapters (MLflow, W&B, DVC, Hydra) and a content-addressed `ModelRegistry` | 12 |
 | `pipekit-evaluate` | Evaluation on a Unit × Lens × Stage matrix; benchmark contracts as artifacts | 14, 15 |
-| `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`) | 6 |
-| `geopatcher` | Four-axis patcher: geometry × sampler × window × aggregation (~60 classes) | 7 |
+| `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`). Ships as `geotoolz-catalog` in the geotoolz monorepo | 6 |
+| `geopatcher` | Four-axis patcher: geometry × sampler × window × aggregation (~60 classes). Ships as `geotoolz-patcher` in the geotoolz monorepo | 7 |
 | `statecatalog` | Spatiotemporal index for L3–L5 (`StateSlice` with valid time, run time, ensemble, lineage) | 13 |
 :::
 ::::
@@ -567,6 +804,30 @@ Freeze a pipeline for a regulatory cold rerun.
 
 None of these block work; all deserve thought before committing to a
 decision.
+
+:::{dropdown} Raised by the design review
+:open:
+- **Two evaluation APIs.** The [examples](overview_examples.md#ex-evaluation)
+  sketch `pe.Pipeline`, `ByLeadTime`, `MultiTrackEvaluation` and a
+  `BenchmarkContract`. pipekit-evaluate already ships a different model:
+  `Task`, `Estimator`, `Oracle`, `Scorer` and a `Benchmark` cube.
+  Recommended: build the sketched helpers on the shipped classes, so
+  `Oracle` stays the single home of "step 2 as oracle". Alternative: keep
+  both and document the boundary.
+- **Two reproducibility APIs.** The examples sketch `pk.repro.freeze`;
+  pipekit-experiment already ships `InferenceArtifact` and
+  `TrainingArtifact`. Recommended: extend those rather than add a second
+  freeze path.
+- **Where `xrreader` stops and `georeader` starts.** The split by level
+  (L0–L2 below, L3–L5 above) is clean on paper, but gridded L2 products and
+  L3 composites can share formats. Recommended: split by carrier (GeoTensor
+  or xarray), with the level as the default. Alternative: one reader with two
+  backends.
+- **Which stack somax and methanex belong to.** The GeoModels grouping
+  (spectraldiffx, finitevolx, plumax, xtremax, rtmx) leaves both out, and this
+  page places spectraldiffx and finitevolx in Tier 1. The tier and the stack
+  should agree.
+:::
 
 :::{dropdown} Sequencing
 :open:
@@ -636,9 +897,9 @@ Each phase produces packages that are useful on their own.
 
 | Phase | Scope | Status | Time |
 |---|---|---|---|
-| 1 | Numerical foundation: gaussX (v0.0.6), spectralDiffX, finiteVolX, optax-bayes, eqx-trainer | gaussX done; the rest drafts | ongoing |
-| 2 | Algorithms: pyrox-gp, pyrox-nn, filterX, vardaX, gaussFlowX | in progress | each at its own pace |
-| 3 | Domain models: somax, plumax, xtremax, methanex, RTMX | some done | project-driven |
+| 1 | Numerical foundation: gaussx (v0.0.6), geonnax, kernellib, spectraldiffx, finitevolx, optax_bayes, eqx-trainer | gaussx done; the rest drafts | ongoing |
+| 2 | Algorithms: pyrox, filterax, vardax, gauss_flows, xtremax | in progress | each at its own pace |
+| 3 | Domain models: somax, plumax, rtmx and methanex (both planned) | some done | project-driven |
 | 4 | Pipeline framework | **current focus** | ~3–4 months |
 | 5 | Evaluation, benchmarks and cycle discipline | next | ~2 months |
 | 6 | Deferred items, each with a trigger | when projects demand | — |
@@ -653,24 +914,32 @@ Each phase produces packages that are useful on their own.
 - pipekit v0.1: framework core, twelve groups and state primitives
 - pipekit-array v0.1: Array API operators
 - the pipekit-ecosystem monorepo with uv workspaces
+
+**Gate:** A1 config round-trip.
 :::
 
 :::{tab-item} Month 2
 - geocatalog v0.1: InMemory and DuckDB backends, basic queries
 - geopatcher v0.1: the four-axis framework and five Field adapters
 - geotoolz and xrtoolz refactored onto the new framework
+
+**Gates:** B1 backend parity, C1 patch identity.
 :::
 
 :::{tab-item} Month 3
 - statecatalog v0.1
 - pipekit-cycle v0.1: `Cycle`, `DACycle` and three Protocols
-- adapter modules in filterX, vardaX and plumax
+- adapter modules in filterax, vardax and plumax
+
+**Gates:** D1 kriging oracle, D2 Kalman oracle.
 :::
 
 :::{tab-item} Month 4
 - pipekit-train v0.1: Lightning and Equinox backends
 - pipekit-experiment v0.1: MLflow and S3 registry adapters
 - integration testing across all packages
+
+**Gate:** E1 registry round-trip.
 
 **After Phase 4:** the L0–L4 inference loop is structurally complete. ML
 training and serving still need work, but the pipelines exist.
@@ -682,6 +951,8 @@ training and serving still need work, but the pipelines exist.
 - standard baselines: persistence, climatology, OI
 - `ModelRole` and `ArtifactLineage` in pipekit-experiment, the six-step
   cycle's content-addressed lineage
+
+**Gate:** F1 metric identities.
 :::
 
 :::{tab-item} Month 6
@@ -691,6 +962,8 @@ training and serving still need work, but the pipelines exist.
 - multi-track evaluation as a built-in pattern
 - the first worked cycle (likely methane L1→L2 retrieval, steps 1–5)
 - the first worked benchmark (SSH, from the benchmarks gallery)
+
+**Gate:** G1 end to end.
 
 **After Phase 5:** evaluation is first-class, benchmarks are
 content-addressed contracts, and the six-step cycle is tractable end to end.
@@ -714,14 +987,62 @@ Phase 7 covers the documentation site, a research journal, the first
 external benchmark adoption (OceanBench, WeatherBench-Ocean?) and capstone
 tutorials per domain.
 
-:::{warning} Reality check
-1. **Six months for Phases 4–5 is optimistic for one person;** eight to
-   twelve is realistic. Each month still produces usable artifacts.
-2. **Phase 6 may come early.** If a project needs pipekit-jax or in-situ
-   catalogs first, jump phases: the sequence is a default, not a contract.
-3. **Phase 7 is open-ended.** Adoption takes years. The substrate has to be
-   useful without it; adoption is upside.
+(sec-gates)=
+### Gates
+
+A month is done when its gates pass, not when its packages exist. Every pass
+condition is a number or a closed form, and several reuse the walkthrough's
+closed-form stages as oracles.
+
+```{figure} images/overview/roadmap.svg
+:label: fig-roadmap
+:alt: Phases 4 and 5 as six monthly boxes from top to bottom, each followed by a diamond naming the gates that must pass before the next month starts. Phases 1 to 3 run alongside and feed adapters into month 3; phases 6 and 7 follow the last gate.
+:width: 100%
+
+**The framework ships first; every month closes on its gates.**
+
+Phases 1–3 run alongside and meet the chain when the DA adapters land in
+month 3. Phases 6 and 7 wait for projects to pull them.
+```
+
+:::{table} Gates: what must pass before each month closes.
+:label: tbl-gates
+
+| Gate | Workstream | Passes when |
+|---|---|---|
+| A1 Config round-trip | A | For every shipped operator, `loads(dumps(op))` has the same config hash and returns the same output on a fixed input |
+| B1 Backend parity | B | The InMemory and DuckDB geocatalog backends return the identical slice set for the same bbox and time query |
+| C1 Patch identity | C | An identity model through patch → stitch with Hann-window overlap-add reproduces the input to 1e-6 in float64, away from scene edges |
+| D1 Kriging oracle | D | `KrigingOperator`'s mean and variance match {eq}`eq-kriging-mean` and {eq}`eq-kriging-var` to 1e-6 in float64 |
+| D2 Kalman oracle | D | With linear 𝓜 and H, a square-root ensemble analysis with $N_e > N$, no inflation and no localisation matches the Kalman filter mean to 1e-6 in float64 |
+| E1 Registry round-trip | E | Loading a stored operator returns one with the same content hash and bitwise-equal outputs |
+| F1 Metric identities | F | CRPS {eq}`eq-crps` with one member equals absolute error exactly; RMSE of a field against itself is 0 |
+| G1 End to end | all | Stages 1–5 of the walkthrough run from one YAML file, and a cold rerun of the frozen artifact reproduces the evaluation report's hash |
 :::
+
+(sec-risks)=
+### Risks
+
+- **The schedule slips.** Six months for Phases 4–5 is optimistic for one
+  person; eight to twelve is realistic. Fallback: every month ships a usable
+  package, so nothing depends on the whole plan finishing.
+- **Phase 6 is needed early.** A project may need pipekit-jax or in-situ
+  catalogs before the framework is ready. Fallback: wrap jitted functions in
+  pipekit-jax's `JaxModelOp` until the full backend lands, and jump phases;
+  the sequence is a default, not a contract.
+- **The Slice refactor ripples late.** The longer `GeoSlice` stays concrete,
+  the more code binds to it. Fallback: introduce a `Slice` protocol in month
+  2 with `GeoSlice` as its only implementation, and add profile and
+  trajectory slices later.
+- **Two evaluation APIs drift apart.** The sketched evaluation helpers and
+  the shipped `Benchmark` cube could become two half-maintained systems.
+  Fallback: gate F1 runs against the shipped classes only, so the helpers
+  must sit on top of them.
+- **pipekit-train becomes three half-backends.** Equal status for Lightning,
+  Equinox and Keras 3 triples maintenance. Fallback: one default backend per
+  use case; the others are community-supported.
+- **Nobody else adopts it.** Adoption takes years. Fallback: GeoBench is the
+  first consumer, so the substrate earns its keep without outside users.
 
 (sec-reading)=
 ## Where to read next

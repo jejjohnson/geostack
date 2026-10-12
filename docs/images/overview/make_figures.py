@@ -894,24 +894,40 @@ TIERS = [  # (tier, name, note, owned, packages)
     ),
     (
         "3",
-        "Domain libraries",
-        "carrier-specific",
+        "Domain models and libraries",
+        "models · carriers",
         True,
-        ["geotoolz  (GeoTensor)", "xrtoolz  (xarray)", "geopandas  (vector)"],
+        [
+            "somax",
+            "plumax",
+            "rtmx  (planned)",
+            "methanex  (planned)",
+            "geotoolz  (GeoTensor)",
+            "xrtoolz  (xarray)",
+            "geopandas  (vector)",
+        ],
     ),
     (
         "2",
         "Algorithms",
         "JAX-native",
         True,
-        ["pyrox-gp", "pyrox-nn", "filterX", "vardaX", "gaussFlowX"],
+        ["pyrox", "filterax", "vardax", "gauss_flows", "xtremax"],
     ),
     (
         "1",
         "Numerical foundation",
         "JAX-native",
         True,
-        ["gaussX", "spectralDiffX", "finiteVolX", "optax-bayes", "eqx-trainer"],
+        [
+            "gaussx",
+            "geonnax",
+            "kernellib",
+            "spectraldiffx",
+            "finitevolx",
+            "optax_bayes",
+            "eqx-trainer",
+        ],
     ),
     (
         "0",
@@ -948,7 +964,12 @@ def tier_stack() -> Svg:
         hue = ML if owned else EXT
         if tier == "4":
             hue = ENG
-        rows = 2 if len(pkgs) > 8 else 1
+        rows, cx = 1, x + lw  # count rows the chips will wrap into
+        for p in pkgs:
+            cw = _width(p, 12.5) + 22
+            if cx + cw > x + w - 14:
+                rows, cx = rows + 1, x + lw
+            cx += cw + 8
         h = max(84, 30 + rows * 38)
         f.rect(x, y, w, h, stroke=hue[0], fill=hue[1], dashed=not owned)
         f.text(
@@ -1226,8 +1247,13 @@ WALK = [  # (step, name, level, packages)
     ("1", "Catalog the scenes", "", "geocatalog"),
     ("2", "Read + retrieve", "L1 → L2", "georeader + geotoolz"),
     ("3", "Match with in-situ", "", "geocatalog.matchup"),
-    ("4", "Grid + gap-fill", "L2 → L3", "pyrox-gp via pipekit"),
-    ("5", "Data assimilation", "L3 → L4", "pipekit-cycle.DACycle + filterX, plumax"),
+    ("4", "Grid + gap-fill", "L2 → L3", "pyrox via pipekit"),
+    (
+        "5",
+        "Data assimilation",
+        "L3 → L4",
+        "pipekit-cycle.EnsembleDACycle + filterax, plumax",
+    ),
     ("6", "Index outputs", "", "statecatalog"),
     ("7", "Evaluate", "multi-track", "pipekit-evaluate  (vs CAMS, vs aircraft)"),
     ("8", "Register + serve", "", "pipekit-experiment + FastAPI / LitServe"),
@@ -1260,6 +1286,140 @@ def methane_walkthrough() -> Svg:
     return f
 
 
+MONTHS = [  # (month, phase, name, lands, gates)
+    ("1", "4a", "Framework core", "pipekit · pipekit-array · workspace", "A1"),
+    (
+        "2",
+        "4b",
+        "Indexes and patchers",
+        "geocatalog · geopatcher · carriers",
+        "B1 · C1",
+    ),
+    (
+        "3",
+        "4c",
+        "States and cycles",
+        "statecatalog · pipekit-cycle · DA adapters",
+        "D1 · D2",
+    ),
+    ("4", "4d", "Training and registry", "pipekit-train · pipekit-experiment", "E1"),
+    ("5", "5a", "Evaluation", "pipekit-evaluate · splitters · baselines", "F1"),
+    ("6", "5b", "Benchmarks, first cycle", "contracts · methane cycle · SSH", "G1"),
+]
+
+
+def roadmap() -> Svg:
+    f = Svg(
+        1100,
+        900,
+        "The roadmap: six monthly phases from top to bottom, each closed by a"
+        " gate diamond; phases 1 to 3 run alongside and feed month 3; phases 6"
+        " and 7 follow the last gate.",
+    )
+    x, w, bh, step = 24, 640, 64, 116
+    cx, y = x + w / 2, 24
+    for i, (month, phase, name, lands, gate) in enumerate(MONTHS):
+        hue = ENG if i == 0 else (STATE if i >= 4 else OBS)
+        f.rect(x, y, w, bh, stroke=hue[0], fill=hue[1], width=2 if i == 0 else 1.4)
+        f.text(
+            x + 18,
+            y + 26,
+            f"{phase} · MONTH {month}",
+            size=10.5,
+            color=MUTED,
+            anchor="start",
+            weight=700,
+        )
+        f.text(x + 18, y + 47, name, size=14, color=INK, anchor="start", weight=700)
+        f.text(x + w - 18, y + 39, lands, size=12, color=MUTED, anchor="end")
+        gy = y + bh + 26  # centre of the gate diamond
+        f.arrow([(cx, y + bh), (cx, gy - 14)], color=LINE)
+        d = 14
+        f.parts.append(
+            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d} {cx - d},{gy}"'
+            f' fill="{ORACLE[1]}" stroke="{ORACLE[0]}" stroke-width="1.4"/>'
+        )
+        f.text(
+            cx + d + 10,
+            gy + 4.5,
+            f"gate {gate}",
+            size=12,
+            color=ORACLE[0],
+            anchor="start",
+            weight=600,
+        )
+        f.arrow([(cx, gy + d), (cx, y + step - 2)], color=LINE)
+        y += step
+    # Phases 1-3 run alongside and meet the chain at month 3.
+    px, pw = 700, 376
+    f.rect(px, 24, pw, 300, stroke=BORDER, fill=PANEL)
+    f.text(
+        px + 18,
+        50,
+        "PHASES 1\u20133 · ALONGSIDE",
+        size=10.5,
+        color=MUTED,
+        anchor="start",
+        weight=700,
+    )
+    side = [
+        ("1 · GeoML foundations", "gaussx · geonnax · kernellib · optax_bayes"),
+        ("2 · GeoML inference", "pyrox · filterax · vardax · gauss_flows"),
+        ("3 · GeoModels", "spectraldiffx · finitevolx · somax · plumax"),
+    ]
+    for j, (title, pkgs) in enumerate(side):
+        by = 66 + j * 82
+        f.box(px + 16, by, pw - 32, 66, title, [pkgs], hue=ML)
+    m3 = 24 + 2 * step + bh / 2
+    f.arrow([(px, m3), (x + w + 2, m3)], color=ML[0], dashed=True)
+    f.text(
+        px + 18,
+        316,
+        "← adapters land in month 3",
+        size=11.5,
+        color=ML[0],
+        anchor="start",
+        weight=600,
+    )
+    # After the last gate: phases pulled by projects.
+    f.rect(x, y, 1052, 92, stroke=BORDER, fill=CARD, dashed=True)
+    f.text(
+        x + 18,
+        y + 26,
+        "AFTER G1 · PULLED BY PROJECTS",
+        size=10.5,
+        color=MUTED,
+        anchor="start",
+        weight=700,
+    )
+    f.box(
+        x + 16,
+        y + 36,
+        500,
+        46,
+        "6 · Deferred, each with a trigger",
+        ["pipekit-jax · deploy adapters · Slice refactor"],
+        hue=EXT,
+        dashed=True,
+        title_size=13,
+        sub_size=11,
+    )
+    f.box(
+        x + 536,
+        y + 36,
+        500,
+        46,
+        "7 · Polish and community",
+        ["docs site · research journal · benchmark adoption"],
+        hue=EXT,
+        dashed=True,
+        title_size=13,
+        sub_size=11,
+    )
+    f.h = int(y + 92 + 24)
+    return f
+
+
 FIGURES = {
     "modeling_cycle": modeling_cycle,
     "lifecycle": lifecycle,
@@ -1271,6 +1431,7 @@ FIGURES = {
     "tier4_map": tier4_map,
     "dependency_graph": dependency_graph,
     "methane_walkthrough": methane_walkthrough,
+    "roadmap": roadmap,
 }
 
 
