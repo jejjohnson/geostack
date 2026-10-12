@@ -1,0 +1,127 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter Notebooks — stored as Jupytext .py files; .ipynb are generated locally
+*.ipynb
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# IPython
+profile_default/
+ipython_config.py
+
+# marimo session cache
+__marimo__/
+
+# Data files (use DVC instead). The .dvc pointer files `dvc add` writes are
+# committed. data/processed is the preprocess stage's output: the stage
+# creates it, so nothing inside it is tracked by git.
+data/raw/*
+data/processed/
+data/external/*
+!data/raw/.gitkeep
+!data/raw/*.dvc
+!data/external/.gitkeep
+!data/external/*.dvc
+
+# Results (use DVC instead). Metrics declared `cache: false` in dvc.yaml are
+# committed, so `dvc metrics diff` can compare them with HEAD.
+results/figures/*
+results/tables/*
+results/metrics/*
+!results/figures/.gitkeep
+!results/tables/.gitkeep
+!results/metrics/.gitkeep
+!results/metrics/*.json
+
+# DVC
+/tmp
+.dvc/cache
+.dvc/tmp
+.dvc/config.local
+dvc_plots/
+
+# Hydra outputs
+outputs/
+multirun/
+.hydra/
+
+# MLflow
+mlruns/
+
+# Weights & Biases
+wandb/
+
+# Distribution / packaging
+*.egg-info/
+
+# PyTest
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Ruff
+.ruff_cache/
+
+# Type checkers
+.mypy_cache/
+.ty_cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+
+# Pixi
+.pixi/
+
+# uv: pixi.lock is the lockfile of record (runtime, experiments, CI); the uv
+# environment only holds local dev tooling (pytest, ruff, ty, mystmd), so its
+# lockfile is not committed.
+uv.lock
+
+# MyST build output (make docs)
+_build/
+
+# Plans and scratch notes (see AGENTS.md)
+.plans/
+
+# Misc
+*.log
+*.tmp
+*.swp

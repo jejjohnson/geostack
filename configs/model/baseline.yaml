@@ -1,0 +1,4 @@
+_target_: myproject.models.baseline.BaselineModel
+name: baseline
+hidden_size: 64
+num_layers: 2
