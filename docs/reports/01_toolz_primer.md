@@ -282,9 +282,11 @@ operators declare one.
 pipelines that must be audited: a closure cannot be inspected for what it
 captures, serialised, or rebuilt on a worker. pipekit's answer is a class
 flag. Operators whose constructor takes a closure declare
-`forbid_in_yaml = True` (in pipekit: `Tap`, `Lambda`, `Sink`, `Branch`,
-`Switch`, `Try`, `Coalesce`; in geotoolz, `ModelOp`), and a loader can
-refuse them.
+`forbid_in_yaml = True` (in pipekit 0.0.2: `Tap`, `Lambda`, `Sink`,
+`Branch`, `Switch`, `Coalesce`, `ShapeTrace`, `Quarantine`,
+`AssertCallable`), and a loader can refuse them. Operators that only nest
+other operators, such as `Try`, `Retry` or `Cache`, are not flagged: a
+walker finds the flagged children inside them.
 
 :::{important} The gaps in one line
 pipekit is what `toolz` becomes when the pipeline is a first-class object:
