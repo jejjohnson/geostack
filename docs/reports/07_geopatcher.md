@@ -192,8 +192,7 @@ operator output $\hat y_p(x)$ for each cell $x \in \Omega_p$. The stitched
 field is the weight-normalised sum over every patch that covers the cell:
 
 $$
-y(x) \;=\; \frac{\sum_{p \,:\, x \in \Omega_p} w_p(x)\, \hat y_p(x)}
-               {\sum_{p \,:\, x \in \Omega_p} w_p(x)} .
+y(x) = \frac{\sum_{p : x \in \Omega_p} w_p(x) \hat{y}_p(x)}{\sum_{p : x \in \Omega_p} w_p(x)} .
 $$ (r7-eq-ola)
 
 A feathered window such as Hann tapers each patch towards its edges, so
