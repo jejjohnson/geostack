@@ -16,7 +16,6 @@ project:
         - file: docs/tutorials/getting_started
     - title: API Reference
       children:
-        - file: docs/api/reference
         - file: docs/api/capabilities
 site:
   template: book-theme

@@ -7,7 +7,6 @@
       "bump-patch-for-minor-pre-major": true,
       "extra-files": [
         "pyproject.toml",
-        "src/geostack/__init__.py",
         {
           "type": "yaml",
           "path": "CITATION.cff",

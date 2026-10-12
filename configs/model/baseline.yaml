@@ -1,4 +1,0 @@
-_target_: geostack.models.baseline.BaselineModel
-name: baseline
-hidden_size: 64
-num_layers: 2
