@@ -782,7 +782,10 @@ Running example: a streaming mean. After $n$ values $x_1, \dots, x_n$ the
 state holds the running sum and the count, and the step emits their ratio:
 
 $$
-S_n = \sum_{i=1}^{n} x_i = S_{n-1} + x_n, \qquad \bar{x}_n = \frac{S_n}{n}.
+\begin{aligned}
+S_n &= \sum_{i=1}^{n} x_i = S_{n-1} + x_n , \\
+\bar{x}_n &= \frac{S_n}{n} .
+\end{aligned}
 $$ (r2-eq-stream-mean)
 
 The state is the pair $(S_n, n)$; the carrier out is $\bar{x}_n$
