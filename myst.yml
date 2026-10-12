@@ -7,6 +7,7 @@ project:
     - references.bib
   toc:
     - file: docs/index
+    - file: docs/overview
     - title: Notes
       children:
         - file: docs/notes/background
