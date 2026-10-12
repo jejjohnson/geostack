@@ -6,19 +6,19 @@ project:
   bibliography:
     - references.bib
   toc:
-    - file: docs/index
-    - file: docs/overview
-    - file: docs/overview_examples
+    - file: docs/index.md
+    - file: docs/overview.md
+    - file: docs/overview_examples.md
     - title: Notes
       children:
-        - file: docs/notes/background
-        - file: docs/notes/methods
+        - file: docs/notes/background.md
+        - file: docs/notes/methods.md
     - title: Tutorials
       children:
-        - file: docs/tutorials/getting_started
+        - file: docs/tutorials/getting_started.md
     - title: API Reference
       children:
-        - file: docs/api/capabilities
+        - file: docs/api/capabilities.md
 site:
   template: book-theme
   title: GeoStack

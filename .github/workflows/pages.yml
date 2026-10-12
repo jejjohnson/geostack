@@ -28,6 +28,9 @@ jobs:
           cache: true
       - name: Build docs
         run: pixi run -e docs docs-build
+        env:
+          # Project Pages are served under /<repo>/, so assets need that prefix.
+          BASE_URL: /${{ github.event.repository.name }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
