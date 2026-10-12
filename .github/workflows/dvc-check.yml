@@ -6,7 +6,6 @@ on:
       - 'dvc.yaml'
       - 'dvc.lock'
       - '*.dvc'
-      - 'src/**'
       - 'scripts/**'
       - 'configs/**'
 

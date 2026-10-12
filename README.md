@@ -25,7 +25,7 @@
 - 🖥️ **Cross-platform** support (Linux x86-64, macOS ARM64)
 - 📝 **[CITATION.cff](https://citation-file-format.github.io/)** for academic citations
 - 🔬 **Hydra multirun** sweeps for hyperparameter optimization
-- 🤖 **Agent-ready**: [`AGENTS.md`](AGENTS.md) holds the rules every coding agent follows (with the example-specific passages marked for rewriting), [`CODE_REVIEW.md`](CODE_REVIEW.md) the review checklist, [`docs/api/capabilities.md`](docs/api/capabilities.md) indexes every public name in the package (`make capabilities`), and `.claude/` holds step-by-step skills (adopt the template, add an experiment / dataset / model / notebook, reproduce and write up results) and two read-only reviewers
+- 🤖 **Agent-ready**: [`AGENTS.md`](AGENTS.md) holds the rules every coding agent follows (with the example-specific passages marked for rewriting), [`CODE_REVIEW.md`](CODE_REVIEW.md) the review checklist, [`docs/api/capabilities.md`](docs/api/capabilities.md) indexes every public name in the upstream libraries (`make capabilities`), and `.claude/` holds step-by-step skills (adopt the template, add an experiment / dataset / model / notebook, reproduce and write up results) and two read-only reviewers
 
 ## Project Structure
 
@@ -33,10 +33,6 @@
 geostack/
 ├── .github/workflows/    # 15 GitHub Actions workflows
 ├── .devcontainer/        # VS Code / Codespaces dev container
-├── configs/              # Hydra configuration hierarchy
-│   ├── train.yaml        # Main config with defaults
-│   ├── model/            # Model configs (baseline, transformer)
-│   └── data/             # Data configs (small, full)
 ├── data/                 # Data directories (DVC-managed)
 │   ├── raw/
 │   ├── processed/
@@ -45,12 +41,7 @@ geostack/
 ├── marimo_notebooks/     # Marimo reactive notebooks
 ├── notebooks/            # Jupyter notebooks
 ├── results/              # Experiment results (DVC-managed)
-├── scripts/              # Entry point scripts
-├── src/geostack/        # Source package
-│   ├── data/             # Data loading utilities
-│   ├── models/           # Model implementations
-│   ├── trainers/         # Training loops
-│   └── utils/            # Utility functions
+├── scripts/              # Entry point scripts (no local package: see upstream libraries)
 └── tests/                # Test suite
 ```
 
@@ -72,22 +63,6 @@ cd geostack
 pixi install
 ```
 
-### Run an Experiment
-
-```bash
-# Preprocess data
-pixi run preprocess
-
-# Train with default config
-pixi run train
-
-# Train with parameter overrides
-pixi run train training.lr=0.001 model=transformer
-
-# Evaluate
-pixi run evaluate
-```
-
 ## Environments
 
 | Environment | Features | Use Case |
@@ -106,42 +81,11 @@ pixi run -e docs docs-build
 
 ## Configuration Management
 
-This template uses both [Hydra](https://hydra.cc) and [hydra-zen](https://mit-ll-responsible-ai.github.io/hydra-zen/) for configuration management.
-
-### Classic Hydra (YAML-based)
-
-```bash
-# Use default config
-pixi run train
-
-# Override parameters
-pixi run train training.lr=0.001 training.epochs=50
-
-# Use different model config
-pixi run train model=transformer
-
-# Hyperparameter sweep
-pixi run train -m training.lr=0.001,0.01,0.1
-```
-
-### hydra-zen (Python-based, type-safe)
-
-```bash
-pixi run train-zen
-```
-
-hydra-zen eliminates YAML boilerplate by defining configs as Python dataclasses:
-
-```python
-from hydra_zen import builds, make_config, launch
-
-ModelConfig = builds(BaselineModel, hidden_size=64, num_layers=2)
-ExperimentConfig = make_config(model=ModelConfig, seed=42)
-```
+Experiments use [Hydra](https://hydra.cc) and [hydra-zen](https://mit-ll-responsible-ai.github.io/hydra-zen/): every setting of a run lives in `configs/` (added with the first experiment) and is overridable on the command line. See the `add-experiment` skill.
 
 ## Experiment Tracking
 
-This template uses [DVC](https://dvc.org) for data and experiment tracking.
+This project uses [DVC](https://dvc.org) for data and experiment tracking.
 
 ```bash
 # Add data to DVC
@@ -160,9 +104,7 @@ dvc dag
 dvc metrics diff
 ```
 
-The DVC pipeline is defined in `dvc.yaml`:
-1. **preprocess**: Processes raw data → `data/processed/`
-2. **train**: Trains model → final losses in `results/metrics/train_metrics.json` (metrics), per-epoch losses in `results/figures/loss_curve.csv` (plot)
+The DVC pipeline is defined in `dvc.yaml` (no stages yet).
 
 ## Documentation
 

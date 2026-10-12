@@ -8,10 +8,12 @@ specific to Claude Code.
 ## Claude Code specifics
 
 - **Template.** Passages marked `<!-- template-example: … -->` in the agent files
-  describe the bundled example (`geostack`); after adopting the template,
-  rewrite them from your own code (the `adopt-template` skill).
+  still describe the template's example; rewrite them from real code as it
+  lands (the `adopt-template` skill).
+- **No local package.** Reusable code goes upstream (pipekit, geotoolz,
+  xrtoolz, georeader), not into `src/`.
 - **Reuse first.** Search `docs/api/capabilities.md` (every public name in
-  the package) before writing a loader, a model, a training step or a
+  the upstream libraries) before writing a loader, a model, a training step or a
   helper in a script or a notebook; the "Reuse before you write" table in
   `AGENTS.md` maps the usual hand-rolled code to what already exists.
 - **Two environments.** `make` / `uv run` for tests, lint, types and docs;

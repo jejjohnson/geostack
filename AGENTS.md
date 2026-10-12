@@ -4,9 +4,9 @@ Standing instructions for **every** coding agent working in this repository
 (Claude Code, Copilot, Codex, Gemini, …). This is the single source of truth:
 `CLAUDE.md` and `.github/copilot-instructions.md` point here.
 
-> **Template note.** This repository is a GitHub template for research
-> projects. Passages that describe the bundled example (the `geostack`
-> package, its configs, its DVC stages, its notebooks) start with an HTML
+> **Template note.** This repository started from a GitHub template for
+> research projects. Passages that still describe the template's example
+> (its configs, its DVC stages, its notebooks) start with an HTML
 > comment `<!-- template-example: … -->`; after adopting the template, rewrite each
 > of them from your own code (the `adopt-template` skill walks through
 > the whole adoption). List them with
@@ -16,54 +16,41 @@ Standing instructions for **every** coding agent working in this repository
 
 ## What this repo is
 
-<!-- template-example: describes the example project; rewrite from your code. -->
-
-A reproducible research project: an installable Python package holds the
-reusable code, thin scripts run it, Hydra configs hold every setting, a DVC
-pipeline ties data, code, configs and results together, notebooks explore
-and report, and MyST docs write it up. Experiments, notebooks and the docs
-are built on the package, so **the package is the project's library of
-primitives**: a loader, a model or a training step written once there is
-reused everywhere, and anything a script or a notebook needs twice moves
-into it.
+The GeoStack umbrella repository: the design, the experiments and the
+write-up for a JAX-native research stack for geophysical modeling,
+inference and data assimilation. **It has no package of its own.** The
+reusable code lives in the libraries it builds on (pipekit, geotoolz,
+xrtoolz, georeader); thin scripts and notebooks here compose them, Hydra
+configs hold every setting, a DVC pipeline ties data, code, configs and
+results together, and MyST docs write it up. Anything a script or a
+notebook needs twice goes upstream into the library that owns the concept,
+not into a local package.
 
 | Path | Owns |
 |---|---|
-| `src/geostack/data/loading.py` | `load_raw_data(data_dir)`, `load_processed_data(data_dir)` (placeholders: return dicts, raise `FileNotFoundError` for a missing directory) |
-| `src/geostack/models/baseline.py` | `BaselineModel(hidden_size, num_layers)` with `forward(x)` |
-| `src/geostack/models/transformer.py` | `TransformerModel(d_model, nhead, num_layers)` with `forward(x)` (a placeholder) |
-| `src/geostack/trainers/trainer.py` | `Trainer(model, lr, epochs).train(train_data, val_data=None)` → `{"train_loss": [...], "val_loss": [...]}` |
-| `src/geostack/utils/reproducibility.py` | `seed_everything(seed)`: seeds `random`, NumPy and, when installed, PyTorch (deterministic cuDNN) |
-| `scripts/` | Entry points: `preprocess.py`, `train.py` (`@hydra.main` over `configs/train.yaml`), `train_zen.py` (the same models and settings with hydra-zen configs; prints the history, writes no pipeline outputs), `evaluate.py`, `convert_notebooks.py` (jupytext → `.ipynb`), `capabilities.py` (the capability index) |
-| `configs/` | Hydra configs: `train.yaml` (defaults `model: baseline`, `data: small`; `training.*`, `logging.*`), `model/{baseline,transformer}.yaml` (each names its class in `_target_`), `data/{small,full}.yaml` |
-| `dvc.yaml` | The pipeline: `preprocess` (`data/raw` → `data/processed`) → `train` (final losses → metrics `results/metrics/train_metrics.json`; per-epoch losses → plot `results/figures/loss_curve.csv`) |
-| `data/{raw,processed,external}/`, `results/{metrics,figures,tables}/` | DVC-managed data and outputs: gitignored except the `.gitkeep` files, `.dvc` pointers and the `cache: false` metrics JSON; `data/processed/` is the `preprocess` stage's output and is created by it |
-| `notebooks/` | Jupytext percent-format `.py` notebooks (`01_eda.py`, `02_results.py`) |
+| `scripts/` | Entry points: `convert_notebooks.py` (jupytext → `.ipynb`), `capabilities.py` (the capability index of the upstream libraries) |
+| `dvc.yaml` | The pipeline (no stages yet; add them with the `add-experiment` skill) |
+| `data/{raw,processed,external}/`, `results/{metrics,figures,tables}/` | DVC-managed data and outputs: gitignored except the `.gitkeep` files, `.dvc` pointers and the `cache: false` metrics JSON |
+| `notebooks/` | Jupytext percent-format `.py` notebooks (`01_eda.py`) |
 | `marimo_notebooks/` | marimo notebooks (`01_exploration.py`) |
 | `docs/`, `myst.yml`, `references.bib` | MyST documentation (notes, tutorials, API pages, capability index) and its bibliography |
 | `CITATION.cff` | How to cite the project |
-
-`scripts/evaluate.py` writes `results/metrics/eval_metrics.json` but is not
-a DVC stage yet; `configs/data/*.yaml` and `training.batch_size` /
-`val_interval` are not read by any script yet.
 
 ### Boundaries
 
 These hold for every project made from the template:
 
-- **Dependencies point one way: scripts and notebooks → package.** The
-  package never imports a script, Hydra, DVC or a notebook. It takes plain
-  arguments (numbers, paths, arrays), not a `DictConfig`, so it can be
-  tested and reused without a config.
+- **Dependencies point one way: scripts and notebooks → upstream
+  libraries.** Library code never imports a script, Hydra, DVC or a
+  notebook. It takes plain arguments (numbers, paths, arrays), not a
+  `DictConfig`, so it can be tested and reused without a config.
 - **Side effects live in scripts.** Reading configs, choosing paths, writing
-  metrics and figures happen in `scripts/`; the package computes. A
-  function that a script and a notebook both need belongs in the package.
+  metrics and figures happen in `scripts/`; the libraries compute. A
+  function that a script and a notebook both need belongs upstream.
 - **Data and results never go into git.** They are DVC outputs or `dvc add`
   pointers; `.gitignore` keeps `data/*` and `results/*` out.
-- **No GeoML-stack library is a dependency of the template.** A project
-  that builds on one (gaussx, pyrox, xtremax, …) lists it in
-  `UPSTREAM` in `scripts/capabilities.py` so its API joins the capability
-  index.
+- **Every library geostack builds on is listed in `UPSTREAM`** in
+  `scripts/capabilities.py`, so its API joins the capability index.
 
 ## What it is built on
 
@@ -74,10 +61,10 @@ fails on the next run, the next machine or in CI.
 |---|---|---|
 | **pixi** (`pixi.toml`, `pixi.lock`) | The runtime and CI environment: Python, NumPy, SciPy, xarray, netCDF4, matplotlib, DVC, hydra-core, hydra-zen, OmegaConf (conda-forge first, PyPI second); extra environments `docs`, `jupyterlab`, `marimo` | CI's test, lint, type-check, DVC and docs workflows run through `pixi run`. A runtime dependency goes into `pixi.toml` and the lock is regenerated (`pixi lock`, commit `pixi.lock`); one the package imports also goes into `dependencies` in `pyproject.toml`, so the package installs on its own. Never `pip install` / `conda install` into an environment by hand. |
 | **uv** (`pyproject.toml`, `Makefile`) | The local developer loop: pytest, ruff, ty, pre-commit, the MyST CLI | `pyproject.toml` declares only the package's own runtime dependencies (NumPy), so the uv environment holds the package and the tooling but not Hydra or DVC: run tests, lint, types and docs with `make` / `uv run`, experiments with `pixi run`. `uv.lock` is gitignored: `pixi.lock` is the lockfile of record. Always `uv run`, never the system Python. |
-| **Hydra** + **OmegaConf** (`configs/`, `scripts/train.py`) | Every setting of a run, composed from config groups and overridden on the command line | No hard-coded hyperparameter, seed, split or path in a script; read it from `cfg`. Outputs the pipeline tracks go to fixed project-root paths (`get_original_cwd()`), not into Hydra's run directory. |
-| **hydra-zen** (`scripts/train_zen.py`) | Configs generated from Python signatures (`builds`, `make_config`, `ZenStore`) | The structured config is built from the class it configures (`builds(TheClass, populate_full_signature=True)`), so the two cannot drift apart. |
+| **Hydra** + **OmegaConf** (`configs/`) | Every setting of a run, composed from config groups and overridden on the command line | No hard-coded hyperparameter, seed, split or path in a script; read it from `cfg`. Outputs the pipeline tracks go to fixed project-root paths (`get_original_cwd()`), not into Hydra's run directory. |
+| **hydra-zen** | Configs generated from Python signatures (`builds`, `make_config`, `ZenStore`) | The structured config is built from the class it configures (`builds(TheClass, populate_full_signature=True)`), so the two cannot drift apart. |
 | **DVC** (`dvc.yaml`, `.dvc/`, `.dvcignore`) | Data versioning and the pipeline from raw data to metrics | Every stage declares everything it reads (`deps`, `params`) and everything it writes (`outs`, `metrics`, `plots`); commit `dvc.lock` and `.dvc` pointer files, never the data. |
-| **NumPy** / `random` (optionally PyTorch) | Numerics and random draws | Seed once per run, from the config, with the package's seeding helper (`seed_everything(cfg.training.seed)` in the example); in new code prefer an explicit `np.random.default_rng(seed)` passed down. |
+| **NumPy** / `random` (optionally PyTorch) | Numerics and random draws | Seed once per run, from the config, with an explicit `np.random.default_rng(seed)` passed down. |
 | **jupytext** / **marimo** | Notebooks as plain `.py` files | No `.ipynb` is committed (`*.ipynb` is gitignored); notebooks import from the package instead of defining reusable code. |
 | **MyST** (`mystmd`, `myst.yml`) | Documentation and the write-up, with citations from `references.bib` | Pages are MyST Markdown listed in the `myst.yml` toc; cite with `[@key]`. |
 | **pytest**, **ruff**, **ty** | Tests, lint and format (line length 88), type checks | See "Before every commit". |
@@ -89,28 +76,23 @@ in the package, a script or a notebook — find out whether it exists:
 
 1. **Search the capability index.**
    [`docs/api/capabilities.md`](docs/api/capabilities.md) lists every
-   public name in the package, once, with a one-line summary. It is
-   generated (`make capabilities`) and checked by
+   public name in the libraries geostack builds on, once, with a one-line
+   summary. It is generated (`make capabilities`) and checked by
    `tests/test_capabilities.py`, so it is current.
 2. **Search the scripts and configs**: an entry point may already do it
    (`scripts/`), and a setting may already exist (`configs/`).
-3. **If it is missing, add it to the package** in the subpackage that owns
-   the concept (data loading, models, training, utilities), with a test,
-   not inline in the one script or notebook that needs it today.
+3. **If it is missing, add it upstream** in the library that owns the
+   concept, with a test, not inline in the one script or notebook that
+   needs it today.
 4. **One object, one name.** Two modules never export the same name for
    different things (`tests/test_capabilities.py`); a deliberate exception
    goes into `ALLOWED_SHARED_NAMES` in `scripts/capabilities.py` with its
    reason.
 
-<!-- template-example: the names below are the example's; rewrite for your package. -->
-
 | You are about to write… | Use instead |
 |---|---|
-| `random.seed(…)`, `np.random.seed(…)`, `torch.manual_seed(…)` at the top of a script | `geostack.utils.reproducibility.seed_everything(cfg.training.seed)` |
-| File reading from `data/raw` or `data/processed` in a script or notebook | `load_raw_data`, `load_processed_data` (extend them) |
-| An epoch loop in a script | `Trainer.train` |
-| A model class in a script or notebook | `src/geostack/models/` (`BaselineModel` as the pattern) |
-| A literal learning rate, epoch count, seed or split fraction | a key in `configs/` (`training.lr`, `training.seed`, `configs/data/*.yaml`), overridden on the command line |
+| A loader, operator, model or training loop in a script or notebook | the upstream library that owns it (search `docs/api/capabilities.md`) |
+| A literal learning rate, epoch count, seed or split fraction | a key in `configs/`, overridden on the command line |
 | A config dataclass written by hand | hydra-zen `builds(TheClass, populate_full_signature=True)` |
 | A shell script that runs the steps in order | a stage in `dvc.yaml`, run with `dvc repro` |
 | A loop calling `jupytext` / `nbconvert` to make `.ipynb` files | `scripts/convert_notebooks.py` (`pixi run notebooks-to-ipynb`) |
@@ -121,35 +103,34 @@ in the package, a script or a notebook — find out whether it exists:
 
 The step-by-step for each is a skill (see "Recipes").
 
-### 1. The package: pure, typed, tested
+### 1. Reusable code lives upstream
 
-- Reusable code lives in `src/<package>/`, one concept per subpackage; the
-  public functions and classes have type hints and Google-style docstrings
-  and appear in the capability index.
+- geostack has no `src/` package. Reusable code goes into the upstream
+  library that owns the concept (pipekit, geotoolz, xrtoolz, georeader),
+  typed, documented and tested there, and appears here through the
+  capability index.
 - Functions take plain arguments (paths as `str | Path`, numbers, arrays)
   and return values; they do not read configs, environment variables or
   global state, and do not write files unless that is their job and the
   path is an argument.
-- Randomness comes from a seed or generator the caller passes, or from
-  `seed_everything` called once by the entry point.
-- Every public function or class has a test in `tests/`.
+- Randomness comes from a seed or generator the caller passes, seeded once
+  by the entry point from the config.
 
 ### 2. Configs: every setting in `configs/`
 
-- `configs/train.yaml` is the entry config; alternatives are config groups
-  (`configs/model/`, `configs/data/`) chosen with `model=<name>` /
+- Each entry point has one entry config in `configs/`; alternatives are
+  config groups (e.g. `configs/model/`, `configs/data/`) chosen with `model=<name>` /
   `data=<name>` and composed through its `defaults` list.
 - A script reads every value from `cfg`; a new hyperparameter is a new key,
   with its default in the YAML, never a literal in Python.
 - A config group option must provide every key the script reads from that
-  group (in the example, `train.py` builds `cfg.model` with
-  `hydra.utils.instantiate`, so every `configs/model/*.yaml` names its class
-  in `_target_` and lists that class's constructor arguments;
-  `tests/test_configs.py` builds every option).
+  group (when a script builds `cfg.model` with `hydra.utils.instantiate`,
+  every `configs/model/*.yaml` names its class in `_target_` and lists that
+  class's constructor arguments; add a test that builds every option).
 - Sweeps are Hydra multirun (`-m training.lr=0.001,0.01`); a sweep whose
   jobs write to the same fixed output path overwrites itself, so give each
   job its own output or use DVC experiments.
-- The hydra-zen path (`scripts/train_zen.py`) generates its configs from
+- A hydra-zen entry point generates its configs from
   signatures; keep the two entry points configuring the same objects.
 
 ### 3. The pipeline: DVC stages declare everything
@@ -207,15 +188,10 @@ The step-by-step for each is a skill (see "Recipes").
 
 ## What enforces them
 
-<!-- template-example: the test rows describe the example's tests; rewrite them. -->
-
 | Check | Enforces |
 |---|---|
-| `tests/test_data.py` | The loaders return the documented keys |
-| `tests/test_models.py` | `BaselineModel` and `TransformerModel` defaults, custom parameters, `repr`, `forward` |
-| `tests/test_configs.py` | Every `model=` option composes and builds as `train.py` builds it; `train_zen.py` offers the same options and defaults; `train.py` writes scalar metrics and a per-epoch plots CSV (skips without Hydra, i.e. outside pixi) |
 | `tests/test_capabilities.py` | `docs/api/capabilities.md` is current; no name bound to two objects |
-| ruff (`make lint`), ty (`make typecheck`) | Lint (`E F I UP B SIM RUF`) and types on `src/` |
+| ruff (`make lint`), ty (`make typecheck`) | Lint (`E F I UP B SIM RUF`) and types on `scripts/` |
 | `.pre-commit-config.yaml` (`make precommit`) | ruff, ruff-format, whitespace, YAML / JSON syntax, files over 5 MB |
 | `notebooks.yml` | `notebooks/*.py` parse; warns on committed `.ipynb` |
 | `dvc-check.yml` | `dvc status` and `dvc dag` run on PRs touching the pipeline |
@@ -223,10 +199,6 @@ The step-by-step for each is a skill (see "Recipes").
 | `reproducibility.yml` | The whole pipeline (`dvc repro`) weekly and on demand |
 | `citation.yml` | `CITATION.cff` validates |
 | `conventional-commits.yml` | PR titles are Conventional Commits with a lowercase subject |
-
-Nothing tests `Trainer`, `seed_everything`, `preprocess.py` or
-`evaluate.py` yet, and `tests/test_configs.py` covers the `model` group
-only: review the rest by hand.
 
 ## Recipes
 
@@ -264,7 +236,7 @@ make test                 # uv run pytest -v -o addopts=   (no coverage)
 make test-cov             # pytest with the coverage report (pyproject addopts)
 make lint                 # ruff check .   (entire repo)
 make format               # ruff format . && ruff check --fix .
-make typecheck            # ty check src/geostack
+make typecheck            # ty check scripts
 make precommit            # pre-commit on every file
 make capabilities         # regenerate docs/api/capabilities.md
 make docs                 # myst build --html  (into _build/html)
@@ -276,9 +248,7 @@ make help                 # every target
 pixi install                          # the default environment (-e <env> for another)
 pixi run test                         # pytest -v with coverage (what CI runs)
 pixi run lint                         # ruff check .      (what CI runs)
-pixi run typecheck                    # ty check src/     (what CI runs)
-pixi run preprocess                   # also: train, train-zen, evaluate
-pixi run train training.lr=0.01 model=baseline   # Hydra overrides
+pixi run typecheck                    # ty check scripts/ (what CI runs)
 pixi run dvc repro                    # the whole pipeline (dvc repro <stage>: one stage + upstream)
 pixi run dvc status                   # what changed since dvc.lock
 pixi run dvc dag                      # the stage graph
@@ -296,7 +266,7 @@ pixi run -e marimo marimo-edit
 3.14 (`ValueError: badly formed help string` from argparse). Lift the pin
 (and re-lock) only once the Hydra release in `pixi.lock` supports it.
 
-Run one test with `uv run pytest tests/test_models.py::test_baseline_model_init -v -o addopts=`.
+Run one test with `uv run pytest tests/test_capabilities.py -v -o addopts=`.
 
 ### Test tiers
 
@@ -315,7 +285,7 @@ Run one test with `uv run pytest tests/test_models.py::test_baseline_model_init 
 ### Tests that assert on random draws
 
 - **Incidental randomness** (any draw would do): a fixed seed
-  (`np.random.default_rng(0)`, `seed_everything(0)`).
+  (`np.random.default_rng(0)`).
 - **Behaviour under test** (a sampler, a stochastic training step): bound
   the statistic by its own sampling distribution (a number of standard
   errors), not a tolerance tuned on one draw, and say in a comment where
@@ -330,7 +300,7 @@ All of these must pass, from the repo root:
    `tests/` and `scripts/` (notebooks are excluded by the ruff config).
 3. `uv run --group lint ruff format --check .`
 4. `make typecheck` (or `pixi run typecheck`).
-5. After changing a public name in the package: `make capabilities`.
+5. After changing `UPSTREAM` or upgrading an upstream library: `make capabilities`.
 6. After changing `dvc.yaml`, a stage's script or its configs:
    `pixi run dvc status` and `pixi run dvc dag`, and `pixi run dvc repro`
    for the stages you touched (commit `dvc.lock`).
@@ -428,7 +398,7 @@ builds the docs on a pull request, so run `make docs` yourself.
 - **Notebooks** are not rendered into the site; the docs show their saved
   figures.
 - **API pages**: `docs/api/capabilities.md` is generated
-  (`make capabilities`); `docs/api/reference.md` is hand-written.
+  (`make capabilities`).
 
 ## Plans
 

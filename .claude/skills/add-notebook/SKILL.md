@@ -15,7 +15,7 @@ Read contract 5 ("Notebooks") in `AGENTS.md` first. Two kinds, both plain
 
 ## 1. Make sure it does not exist yet
 
-`ls notebooks marimo_notebooks`: extend `01_eda.py` / `02_results.py` (or
+`ls notebooks marimo_notebooks`: extend `01_eda.py` (or
 `01_exploration.py`) when the analysis belongs there. Reusable code a
 notebook needs goes in the package (`docs/api/capabilities.md`), not in a
 cell.

@@ -125,3 +125,4 @@ _build/
 *.log
 *.tmp
 *.swp
+.data/

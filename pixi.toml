@@ -17,7 +17,6 @@ dvc = ">=3"
 hydra-core = ">=1.3"
 
 [pypi-dependencies]
-geostack = { path = ".", editable = true }
 hydra-zen = ">=0.13"
 omegaconf = ">=2.3"
 
@@ -74,12 +73,8 @@ marimo = { features = ["dev", "marimo"], solve-group = "default" }
 test = "pytest -v"
 lint = "ruff check ."
 format = "ruff format ."
-typecheck = "ty check src/"
+typecheck = "ty check scripts/"
 precommit = "pre-commit run --all-files"
-train = "python scripts/train.py"
-train-zen = "python scripts/train_zen.py"
-evaluate = "python scripts/evaluate.py"
-preprocess = "python scripts/preprocess.py"
 notebooks-to-ipynb = "python scripts/convert_notebooks.py --verbose"
 
 [feature.docs.tasks]

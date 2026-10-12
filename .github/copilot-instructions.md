@@ -3,20 +3,21 @@
 Read [`AGENTS.md`](../AGENTS.md) at the repository root first: it is the
 single source of truth for every coding agent working here (the project
 layout, the tools and their rules, "reuse before you write", the contracts
-for the package, configs, the DVC pipeline, results, notebooks and docs,
+for upstream code, configs, the DVC pipeline, results, notebooks and docs,
 what enforces them, commands, the pre-commit checklist, git and PR rules).
 
 The essentials, in case you only read this file:
 
-- This is a research project template. Passages marked
-  `<!-- template-example: … -->` in the agent files describe the bundled example
-  package (`src/geostack/`) and are rewritten after adoption.
-- Reusable code lives in the package; `scripts/` are thin Hydra entry
-  points; notebooks import from the package. Search
+- geostack has no package of its own (no `src/`). Reusable code lives in
+  the libraries it builds on (pipekit, geotoolz, xrtoolz, georeader) and
+  goes upstream there; `scripts/` are thin Hydra entry points and notebooks
+  import from those libraries. Search
   [`docs/api/capabilities.md`](../docs/api/capabilities.md) before writing a
   loader, model, training step or helper.
-- Every setting lives in `configs/` (Hydra; hydra-zen in
-  `scripts/train_zen.py`), never as a literal in a script.
+- Passages marked `<!-- template-example: … -->` in the agent files still
+  describe the template's example and are rewritten as real code lands.
+- Every setting lives in `configs/` (Hydra or hydra-zen), never as a
+  literal in a script.
 - Data and results are DVC-managed, never committed to git; every
   `dvc.yaml` stage declares its `deps`, `params`, `outs` and `metrics`;
   commit `dvc.lock`.
@@ -29,7 +30,7 @@ The essentials, in case you only read this file:
   pass), and a concrete change with every review suggestion.
 - Before committing, from the repo root: `make test`,
   `uv run --group lint ruff check .`, `uv run --group lint ruff format --check .`,
-  `make typecheck`; `make capabilities` after a public API change.
+  `make typecheck`; `make capabilities` after changing `UPSTREAM`.
 - Step-by-step recipes (adopt the template, add an experiment / dataset /
   model / notebook, reproduce results, write them up; pre-PR check;
   review) are plain Markdown in `.claude/skills/<name>/SKILL.md`, and the

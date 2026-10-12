@@ -20,29 +20,12 @@ pixi install
 
 ## Running Experiments
 
-### Data Preprocessing
+geostack has no experiments yet. Each one will be a script in `scripts/` that
+composes the upstream libraries, a Hydra config in `configs/` and a stage in
+`dvc.yaml` (the `add-experiment` skill), run with:
 
 ```bash
-pixi run preprocess
-```
-
-### Training
-
-```bash
-# Using Hydra (classic)
-pixi run train
-
-# Using hydra-zen (type-safe)
-pixi run train-zen
-
-# Override hyperparameters
-pixi run train training.lr=0.01 model=transformer
-```
-
-### Evaluation
-
-```bash
-pixi run evaluate
+pixi run dvc repro
 ```
 
 ## Notebook Environments
