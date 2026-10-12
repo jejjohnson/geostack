@@ -14,6 +14,7 @@ project:
         - file: docs/reports/01_toolz_primer.md
         - file: docs/reports/02_pipekit_surface.md
         - file: docs/reports/03_sister_libraries.md
+        - file: docs/reports/06_geocatalog.md
     - title: Notes
       children:
         - file: docs/notes/background.md
