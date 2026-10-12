@@ -1,0 +1,16 @@
+[submodule "references/pipekit"]
+	path = references/pipekit
+	url = https://github.com/jejjohnson/pipekit.git
+	branch = main
+[submodule "references/geotoolz"]
+	path = references/geotoolz
+	url = https://github.com/jejjohnson/geotoolz.git
+	branch = main
+[submodule "references/xrtoolz"]
+	path = references/xrtoolz
+	url = https://github.com/jejjohnson/xrtoolz.git
+	branch = main
+[submodule "references/georeader"]
+	path = references/georeader
+	url = https://github.com/spaceml-org/georeader.git
+	branch = main

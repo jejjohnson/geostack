@@ -55,7 +55,7 @@ RESET  := \033[0m
 # Phony declarations
 # ---------------------------------------------------------------------------
 .PHONY: help install lint format typecheck test test-cov \
-	precommit build clean version docs docs-serve docs-deploy \
+	precommit clean version docs docs-serve docs-deploy \
 	init gh-labels gh-sub gh-block gh-show capabilities
 
 .DEFAULT_GOAL := help
@@ -122,12 +122,12 @@ typecheck: ## Type-check with ty
 
 test: ## Run tests with pytest (no coverage)
 	@printf "$(YELLOW)>>> Running tests (no coverage)...$(RESET)\n"
-	uv run pytest -v -o addopts=
+	pixi run pytest -v -o addopts=
 	@printf "$(GREEN)>>> Tests passed!$(RESET)\n"
 
 test-cov: ## Run tests with coverage report
 	@printf "$(YELLOW)>>> Running tests with coverage...$(RESET)\n"
-	uv run pytest -v
+	pixi run pytest -v
 	@printf "$(GREEN)>>> Coverage report generated!$(RESET)\n"
 
 # ===========================================================================
@@ -142,11 +142,6 @@ precommit: ## Run pre-commit hooks on all files
 # ===========================================================================
 ##@ Build
 # ===========================================================================
-
-build: ## Build Python wheel and sdist
-	@printf "$(YELLOW)>>> Building package...$(RESET)\n"
-	uv build
-	@printf "$(GREEN)>>> Build complete — see dist/$(RESET)\n"
 
 clean: ## Remove build artefacts and cache directories
 	@printf "$(YELLOW)>>> Cleaning up...$(RESET)\n"
@@ -167,7 +162,7 @@ docs-serve: ## Serve documentation locally
 	uv run --group docs myst start
 
 capabilities: ## Regenerate docs/api/capabilities.md (every public name, for reuse)
-	uv run python scripts/capabilities.py
+	pixi run python scripts/capabilities.py
 
 docs-deploy: ## Deploy documentation to GitHub Pages
 	uv run --group docs myst build --html

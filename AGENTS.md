@@ -28,6 +28,7 @@ not into a local package.
 
 | Path | Owns |
 |---|---|
+| `references/` | Git submodules of the libraries geostack builds on: `pipekit`, `geotoolz`, `xrtoolz` (uv workspaces; members under `packages/`) and `georeader`. Installed into pixi from there (`pixi.toml`). Read them for the real API; change them upstream, never here |
 | `scripts/` | Entry points: `convert_notebooks.py` (jupytext → `.ipynb`), `capabilities.py` (the capability index of the upstream libraries) |
 | `dvc.yaml` | The pipeline (no stages yet; add them with the `add-experiment` skill) |
 | `data/{raw,processed,external}/`, `results/{metrics,figures,tables}/` | DVC-managed data and outputs: gitignored except the `.gitkeep` files, `.dvc` pointers and the `cache: false` metrics JSON |
@@ -60,7 +61,7 @@ fails on the next run, the next machine or in CI.
 | Tool | Used for | The rule it brings |
 |---|---|---|
 | **pixi** (`pixi.toml`, `pixi.lock`) | The runtime and CI environment: Python, NumPy, SciPy, xarray, netCDF4, matplotlib, DVC, hydra-core, hydra-zen, OmegaConf (conda-forge first, PyPI second); extra environments `docs`, `jupyterlab`, `marimo` | CI's test, lint, type-check, DVC and docs workflows run through `pixi run`. A runtime dependency goes into `pixi.toml` and the lock is regenerated (`pixi lock`, commit `pixi.lock`); one the package imports also goes into `dependencies` in `pyproject.toml`, so the package installs on its own. Never `pip install` / `conda install` into an environment by hand. |
-| **uv** (`pyproject.toml`, `Makefile`) | The local developer loop: pytest, ruff, ty, pre-commit, the MyST CLI | `pyproject.toml` declares only the package's own runtime dependencies (NumPy), so the uv environment holds the package and the tooling but not Hydra or DVC: run tests, lint, types and docs with `make` / `uv run`, experiments with `pixi run`. `uv.lock` is gitignored: `pixi.lock` is the lockfile of record. Always `uv run`, never the system Python. |
+| **uv** (`pyproject.toml`, `Makefile`) | The local developer loop: pytest, ruff, ty, pre-commit, the MyST CLI | The uv environment holds the tooling but not the upstream libraries, Hydra or DVC: lint, types and docs run with `make` / `uv run`; tests, the capability index and experiments with `pixi run` (`make test` / `make capabilities` call pixi). `uv.lock` is gitignored: `pixi.lock` is the lockfile of record. Always `uv run`, never the system Python. |
 | **Hydra** + **OmegaConf** (`configs/`) | Every setting of a run, composed from config groups and overridden on the command line | No hard-coded hyperparameter, seed, split or path in a script; read it from `cfg`. Outputs the pipeline tracks go to fixed project-root paths (`get_original_cwd()`), not into Hydra's run directory. |
 | **hydra-zen** | Configs generated from Python signatures (`builds`, `make_config`, `ZenStore`) | The structured config is built from the class it configures (`builds(TheClass, populate_full_signature=True)`), so the two cannot drift apart. |
 | **DVC** (`dvc.yaml`, `.dvc/`, `.dvcignore`) | Data versioning and the pipeline from raw data to metrics | Every stage declares everything it reads (`deps`, `params`) and everything it writes (`outs`, `metrics`, `plots`); commit `dvc.lock` and `.dvc` pointer files, never the data. |
@@ -232,7 +233,7 @@ developer loop; pixi is what CI and the experiments run in.
 
 ```bash
 make install              # uv sync --all-groups + pre-commit hooks
-make test                 # uv run pytest -v -o addopts=   (no coverage)
+make test                 # pixi run pytest -v -o addopts=   (no coverage)
 make test-cov             # pytest with the coverage report (pyproject addopts)
 make lint                 # ruff check .   (entire repo)
 make format               # ruff format . && ruff check --fix .
@@ -300,7 +301,10 @@ All of these must pass, from the repo root:
    `tests/` and `scripts/` (notebooks are excluded by the ruff config).
 3. `uv run --group lint ruff format --check .`
 4. `make typecheck` (or `pixi run typecheck`).
-5. After changing `UPSTREAM` or upgrading an upstream library: `make capabilities`.
+5. After changing `UPSTREAM` or moving a submodule in `references/`
+   (`git submodule update --remote references/<name>`): `pixi lock` and
+   `make capabilities`; commit the submodule, `pixi.lock` and the index
+   together.
 6. After changing `dvc.yaml`, a stage's script or its configs:
    `pixi run dvc status` and `pixi run dvc dag`, and `pixi run dvc repro`
    for the stages you touched (commit `dvc.lock`).
