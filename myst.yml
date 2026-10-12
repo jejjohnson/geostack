@@ -9,6 +9,9 @@ project:
     - file: docs/index.md
     - file: docs/overview.md
     - file: docs/overview_examples.md
+    - title: Reports
+      children:
+        - file: docs/reports/01_toolz_primer.md
     - title: Notes
       children:
         - file: docs/notes/background.md
