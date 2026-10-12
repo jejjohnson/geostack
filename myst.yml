@@ -16,6 +16,7 @@ project:
         - file: docs/reports/03_sister_libraries.md
         - file: docs/reports/06_geocatalog.md
         - file: docs/reports/07_geopatcher.md
+        - file: docs/reports/09_use_cases.md
     - title: Notes
       children:
         - file: docs/notes/background.md

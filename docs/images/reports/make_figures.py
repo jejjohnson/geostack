@@ -452,11 +452,85 @@ def r6_dataflow() -> Svg:
     return f
 
 
+def r9_stack() -> Svg:
+    """Report 9: the stack the use cases run on, with only real dependencies."""
+    f = Svg(
+        840,
+        560,
+        "The stack at the pinned revisions. User code (notebooks, services,"
+        " orchestrators, geoapps) calls four libraries side by side: geotoolz,"
+        " xrtoolz, geopatcher and geocatalog. geotoolz and xrtoolz depend on"
+        " pipekit; geopatcher reaches pipekit only through its pipekit extra;"
+        " geocatalog does not depend on pipekit at all. pipekit's sister"
+        " packages (array, train, experiment, evaluate, cycle, jax) sit beside"
+        " it. georeader, geocloud and xarray are the substrate underneath.",
+    )
+    f.rect(24, 20, 792, 44, stroke=BORDER, fill=PANEL)
+    f.text(
+        420,
+        48,
+        "user code · notebooks · services · orchestrators · geoapps",
+        size=14,
+        color=INK,
+        weight=600,
+    )
+    boxes = [
+        ("geotoolz", ["GeoTensor operators"], OBS),
+        ("xrtoolz", ["xarray operators", "(on xrcore)"], STATE),
+        ("geopatcher", ["patches: split, merge"], ML),
+        ("geocatalog", ["the index: GeoSlice"], ENG),
+    ]
+    xs = [24, 228, 432, 636]
+    for (name, sub, hue), x in zip(boxes, xs, strict=True):
+        f.box(x, 104, 180, 80, name, sub, hue=hue, title_size=15, sub_size=12.5)
+        f.arrow([(x + 90, 64), (x + 90, 102)], color=INK)
+    # pipekit panel
+    f.rect(24, 250, 384, 150, stroke=CORE[0], fill=CORE[1])
+    f.text(44, 276, "pipekit", size=16, weight=700, anchor="start")
+    f.text(
+        44,
+        296,
+        "Operator · Sequential · Graph · parallel · qc",
+        size=12.5,
+        color=MUTED,
+        anchor="start",
+    )
+    chips = ["-array", "-train", "-experiment", "-evaluate", "-cycle", "-jax"]
+    cx, cy = 44.0, 314.0
+    for c in chips:
+        w = f.chip(cx, cy, "pipekit" + c, hue=(BORDER, CARD), size=12)
+        cx += w + 8
+        if cx > 330:
+            cx, cy = 44.0, cy + 34
+    f.arrow([(114, 184), (114, 248)], color=INK)
+    f.arrow([(318, 184), (318, 248)], color=INK)
+    f.arrow([(480, 184), (480, 330), (410, 330)], color=LINE, dashed=True)
+    f.text(488, 300, "[pipekit] extra", size=12, color=MUTED, anchor="start")
+    # substrate
+    f.box(
+        24,
+        460,
+        792,
+        70,
+        "georeader · geocloud · xarray",
+        ["I/O, GeoTensor, object storage: underneath geotoolz too"],
+        hue=(LINE, PANEL),
+        title_size=15,
+        sub_size=12.5,
+    )
+    f.arrow([(580, 184), (580, 458)], color=INK)
+    f.arrow([(726, 184), (726, 458)], color=INK)
+    f.text(734, 230, "no pipekit", size=12, color=MUTED, anchor="start", italic=True)
+    f.h = 546
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
     "r3_layers": r3_layers,
     "r6_dataflow": r6_dataflow,
+    "r9_stack": r9_stack,
 }
 
 

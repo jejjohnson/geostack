@@ -37,7 +37,7 @@ question or a follow-up at the end.
 | **Status** | Shipped surface; originally the v0.1 surface proposal (revised after the L0–L4 analysis) |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone deciding what belongs in pipekit core, or writing an operator against it |
-| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](#r2-ref-report-3) (sister libraries); [Reports 4 and 9](#r2-ref-report-4) (use cases); [Reports 10–13](#r2-ref-report-10) (cycle, train, experiment, state catalog); forthcoming ones are listed under [References](#r2-references) |
+| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Reports 10–13](#r2-ref-report-10) (cycle, train, experiment, state catalog); forthcoming ones are listed under [References](#r2-references) |
 | **Checked against** | pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/pipekit`); every output on this page is from a real run |
 :::
 
@@ -166,14 +166,12 @@ same names, plus `_apply`:
 import pipekit as pk
 from pipekit import Operator
 
-
 class Scale(Operator):
     def __init__(self, factor: float) -> None:
         self.factor = factor              # same name as the argument → get_config
 
     def _apply(self, x):
         return x * self.factor
-
 
 Scale(2.0).state
 # → {'module': '__main__', 'class': 'Scale', 'config': {'factor': 2.0}}
@@ -647,7 +645,7 @@ pipekit's parallelism is intentionally minimal, and that shipped as planned:
 - **No distributed execution.** Dask, Ray, Beam and Flink are downstream.
   Operators are pickleable and stateless when they need to be; scheduling
   them across a cluster is someone else's problem (see the use cases in
-  [Report 4](#r2-ref-report-4)).
+  [Report 9](09_use_cases.md)).
 
 Every parallel case in the
 [use-case gallery](https://github.com/jejjohnson/research_journal_v2/blob/main/notes/geotoolz/plans/geotoolz/examples/usecases.md)
@@ -689,7 +687,7 @@ every upstream library.
 pipekit-array exists (0.0.2), but it ships four names (`array_namespace`,
 `ConcatenateAlong`, `StackAlong`, `MeanScalar`), none of them from this list.
 It is the planned home for most of the list, which makes it the biggest gap
-between plan and code. [Report 3](#r2-ref-report-3) covers it.
+between plan and code. [Report 3](03_sister_libraries.md) covers it.
 
 (r2-group-l)=
 ## Group L · Serialisation (`serial.py`)
@@ -797,18 +795,15 @@ The state is the pair $(S_n, n)$; the carrier out is $\bar{x}_n$
 
 from pipekit import CarryState, StatefulOperator
 
-
 class MeanState(CarryState):
     def __init__(self, total: float, n: int) -> None:
         self.total = total               # Sₙ = ∑ᵢ xᵢ
         self.n = n                       # n
 
-
 class StreamMean(StatefulOperator):
     def _apply(self, x, state):
         st = MeanState(state.total + x, state.n + 1)   # Sₙ = Sₙ₋₁ + xₙ;  n ← n + 1
         return st.total / st.n, st                     # x̄ₙ = Sₙ / n
-
 
 pipe = Scale(1.0) | StreamMean()          # stateless step, then stateful step
 x_bar, st = pipe(4.0, state=MeanState(0.0, 0))   # x̄₁ = 4.0
@@ -911,7 +906,7 @@ The proposal's exclusions all held at 0.0.2:
   op_b])` does not check that `op_a`'s output type matches `op_b`'s input.
   `Signature` checks shape; type checking is a stretch goal.
 - **Carrier-specific operators**: see [](#r2-group-k) and
-  [Report 3](#r2-ref-report-3).
+  [Report 3](03_sister_libraries.md).
 - **A GUI or pipeline builder**: a possibility, not in scope.
 - **Workflow scheduling** (Airflow, Prefect, Dagster): adapters belong in
   extras or downstream libraries. pipekit-experiment's DVC, Hydra and
@@ -994,21 +989,11 @@ text, and replace the citations placeholder. -->
 :class: simple
 The companion reports and the citations are still being written. The entries
 below stand in for them so the links in this page already resolve.
-[Report 1](01_toolz_primer.md) is published.
+Reports [1](01_toolz_primer.md), [3](03_sister_libraries.md) and
+[9](09_use_cases.md) are published.
 :::
 
 ### Forthcoming reports
-
-(r2-ref-report-3)=
-Report 3 · Sister libraries
-: *Forthcoming.* pipekit-array, geotoolz and xrtoolz: the carrier each one
-  types against, and the deferred operators in {numref}`tbl-r2-deferred`.
-
-(r2-ref-report-4)=
-Reports 4 and 9 · Use cases
-: *Forthcoming.* The use-case gallery, including the catalog iteration of use
-  cases 2 and 12 and the sandboxed loading of use case 6. The two numbers are
-  not yet reconciled.
 
 (r2-ref-report-10)=
 Reports 10–13 · pipekit-cycle, pipekit-train, pipekit-experiment, state catalog

@@ -40,7 +40,7 @@ base install did not survive. Both are open questions at the end.
 | **Status** | Built; originally a scoping proposal ("committed") for the catalog split |
 | **Reading time** | about 20 minutes |
 | **Audience** | anyone using or extending the catalog, or deciding how geotoolz and xrtoolz should consume it |
-| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core); [Report 3](03_sister_libraries.md) (sister libraries); [Report 7](#r6-ref-report-7) (geopatcher); earlier reports in the series are listed under [References](#r6-references) |
+| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core); [Report 3](03_sister_libraries.md) (sister libraries); [Report 7](07_geopatcher.md) (geopatcher); earlier reports in the series are listed under [References](#r6-references) |
 | **Design and figures** | the [geocatalog repo](https://github.com/jejjohnson/geocatalog)'s docs (concepts, quickstart, design notes) and figures |
 | **Code checked against** | `geotoolz-catalog` 0.5.1, import name `geocatalog`, in the geotoolz monorepo at `088475e` (the revision pinned in `references/`). Examples are from real runs |
 :::
@@ -705,8 +705,9 @@ text, and replace the citations placeholder. -->
 
 :::{note} Placeholders
 :class: simple
-Reports 4, 5 and 7 are still being written. The entries below stand in for
-them so the links in this page already resolve. Reports
+Report 5 is still being written. The entry below stands in for it so the
+links in this page already resolve. Reports [7](07_geopatcher.md) and
+[9](09_use_cases.md) are published. Reports
 [1](01_toolz_primer.md), [2](02_pipekit_surface.md) and
 [3](03_sister_libraries.md) are published.
 :::
@@ -714,14 +715,9 @@ them so the links in this page already resolve. Reports
 ### Forthcoming reports
 
 (r6-ref-report-4)=
-Reports 4 and 5
-: *Forthcoming.* The rest of the pipekit stack, including the use-case
-  revisit (use cases 2 and 12 drive `CatalogPipeline`).
-
-(r6-ref-report-7)=
-Report 7 · geopatcher
-: *Forthcoming.* `Field`, `Domain`, patchers and aggregation: the other side
-  of the `CatalogDomain` bridge.
+Report 5 · pipekit-jax
+: *Forthcoming.* The JAX side of the stack. The use-case revisit is
+  [Report 9](09_use_cases.md), where use cases 2 and 12 drive `CatalogPipeline`.
 
 ### Sources
 
