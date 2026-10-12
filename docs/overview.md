@@ -615,7 +615,8 @@ v = \operatorname{diag}\left(K_{**} - K_{*f} \left(K_{ff} + \sigma^2 I_M\right)^
 ```
 
 Kriging is the oracle for the L2→L3 cell; DINEOF and neural gap-fillers are
-judged against it. The variance v feeds stage 4 as observation error.
+judged against it. Stage 4 assimilates this map: m is its observation and
+$\mathrm{diag}(v)$ its observation-error covariance.
 
 (sec-stage-da)=
 ### Stage 4 · Assimilate hourly (step 5: pipekit-cycle → plumax → filterax)
@@ -625,7 +626,8 @@ observations.
 
 **Problem.** $x_t \in \mathbb{R}^N$ is the methane state at hour t, 𝓜 one
 plumax transport step of 3,600 s, H the column observation operator, R the
-observation-error covariance, and $P^b$ the background covariance estimated
+observation-error covariance, here $R = \mathrm{diag}(v)$ from the stage-3
+kriging, and $P^b$ the background covariance estimated
 from the $N_e$ members. Each cycle forecasts every member $i = 1, \dots, N_e$:
 
 ```{math}
@@ -841,11 +843,13 @@ decision.
   Recommended: build the sketched helpers on the shipped classes, so
   `Oracle` stays the single home of "step 2 as oracle". Alternative: keep
   both and document the boundary.
-- **What `InferenceArtifact` still needs for a cold rerun.** The examples
-  build on the shipped `InferenceArtifact`; `save`, `load` and `rerun` are
-  proposed extensions. Open: whether a rerun resolves its inputs from the
-  pinned catalog URIs and SHA-256 digests alone, without cloud credentials,
-  and whether `TrainingArtifact` needs the same three methods.
+- **What `InferenceArtifact` still needs for a cold rerun.** The shipped
+  `InferenceArtifact` already saves and loads a pipeline's YAML, its pinned
+  model hashes, the lockfile and metadata. A `rerun` that rebuilds the
+  pipeline and pulls its frozen inputs is proposed. Open: whether that rerun
+  resolves inputs from the pinned catalog URIs and SHA-256 digests alone,
+  without cloud credentials, and how a `Benchmark` (not yet serialisable)
+  is frozen next to it.
 - **Where `xrreader` stops and `georeader` starts.** The split by level
   (L0–L2 below, L3–L5 above) is clean on paper, but gridded L2 products and
   L3 composites can share formats. Recommended: split by carrier (GeoTensor
@@ -1045,7 +1049,7 @@ month 3. Phases 6 and 7 wait for projects to pull them.
 | D2 Kalman oracle | D | With linear 𝓜 and H, no inflation and no localisation, the square-root ensemble analysis mean matches the Kalman update computed from the same ensemble's sample mean and covariance, to 1e-6 in float64 |
 | E1 Registry round-trip | E | Loading a stored operator returns one with the same content hash and bitwise-equal outputs |
 | F1 Metric identities | F | CRPS {eq}`eq-crps` with one member equals absolute error exactly; RMSE of a field against itself is 0 |
-| G1 End to end | all | Stages 1–5 of the walkthrough run from one YAML file, and a cold rerun of the frozen artifact reproduces the evaluation report's hash |
+| G1 End to end | all | Stages 1–5 of the walkthrough run from one YAML file. A cold rerun of the frozen inference artifact reproduces the analysis history's hash, and rerunning the frozen benchmark (its task, estimators, scorers and pinned TCCON references) on that history reproduces the report's hash |
 :::
 
 (sec-risks)=

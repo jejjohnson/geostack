@@ -135,27 +135,31 @@ The EnKF analysis needs an ensemble, so the cycle is an `EnsembleDACycle`
 with 40 members. The observation operator matches the instrument the
 observations come from: EMIT. `retrieval` maps one scene to one map, so the
 cycle's observation source wraps it: each hour it queries the catalog for
-that hour's scenes, reads them with geotoolz's `ReadBounds` and retrieves
-each one. The stochastic analysis draws its perturbations from one key seeded
-from the run's config (`cfg.seed`), so a rerun reproduces them.
+that hour's scenes, reads them with geotoolz's `ReadBounds`, retrieves each
+one, and grids them with the stage-3 kriging. The analysis then assimilates
+the kriged mean with the kriged variance as its observation error. The
+stochastic analysis draws its perturbations from one key seeded from the
+run's config (`cfg.seed`), so a rerun reproduces them.
 
 ```{code-block} python
 :caption: An hourly ensemble DA cycle over the plume model (stage 4).
 :linenos:
 
-# Shapes: N state, M observations, N_e = 40 members, T = 24 steps
-# yₜ = {α(s) : s an EMIT scene with t ≤ tₛ < t + 1 h}
+# Shapes: N state = N grid cells, N_e = 40 members, T = 24 steps
+# yₜ = m, Rₜ = diag(v): stage 3 kriging of this hour's EMIT retrievals
 retrieve_one = retrieval | pk.Pick("alpha")  # named, YAML-safe  proposed (A)
 hourly_obs = pk.Sequential([                      # today
     gc.CatalogTimeQuery(emit_cat, window="1h"),   # t → GeoSlices  proposed (B)
     pk.ThreadMap(gz.ReadBounds() | retrieve_one), # → S × (H, W)  today*
+    gap_fill,                                     # → m, v on N cells
+    pc.GaussianObs(),               # (m, v) → (y, R = diag v)  proposed (D)
 ])
 key = jax.random.PRNGKey(cfg.seed)  # one seed per run, from the config
 
 # xᵇₜ⁽ⁱ⁾ = 𝓜(xᵃₜ₋₁⁽ⁱ⁾)   [unverified]
 forward = PlumeForward(species="CH4", dt=3600.0)  # (N_e, N) → (N_e, N)
-# y_pred = H x for EMIT columns, as in obs_source   [unverified]
-obs_op = ColumnObs(instrument="EMIT")             # (N_e, N) → (N_e, M)
+# y_pred = H x, EMIT columns on the kriging grid   [unverified]
+obs_op = ColumnObs(instrument="EMIT")             # (N_e, N) → (N_e, N)
 # xᵃ⁽ⁱ⁾ = xᵇ⁽ⁱ⁾ + K (y + ε⁽ⁱ⁾ − H xᵇ⁽ⁱ⁾), ε⁽ⁱ⁾ ~ 𝒩(0, R)  [unverified]
 analysis = EnKFAnalysis(                          # (N_e, N) → (N_e, N)
     inflation=1.05, localization="gaspari-cohn"
@@ -165,7 +169,7 @@ da = pc.EnsembleDACycle(  # T × (forecast, analysis)  today*
     forward_model=forward,
     obs_op=obs_op,
     analysis_step=analysis,
-    obs_source=hourly_obs,                        # EMIT scenes, each hour
+    obs_source=hourly_obs,                        # (y, R) each hour
     n_steps=24,
     n_members=40,
     key=key,                                      # draws every ε⁽ⁱ⁾
@@ -553,27 +557,59 @@ da_emulated = pc.EnsembleDACycle(
 (ex-evaluation)=
 ### Evaluation pipeline
 
-What exists today is the benchmark cube: a `Task` (prior, simulator,
-observation operator, data), an `Estimator` for each rung of the six-step
-cycle, an `Oracle` (usually rung 2) and a `Scorer`. The multi-track helpers
-sketched in the methane pipeline should be built on these.
+What exists today is the benchmark cube. `Task`, `Estimator`, `Estimate` and
+`Scorer` are protocols: you satisfy them with your own objects, structurally,
+and `Benchmark` fits each estimator, resolves its reference and scores it.
+These small classes belong upstream (plumax's adapters); they are inline here
+only to show the shape. The multi-track helpers sketched in the methane
+pipeline should be built on the same cube.
 
 ```{code-block} python
 :caption: Score an emulator-based estimator against the classical oracle.
 :linenos:
 
-# Shapes: θ ∈ ℝᵈ parameters, y ∈ ℝᴹ observations
-task = pe.Task(                                          # today*
-    prior=prior, simulator=forward, obs_op=obs_op, data=tccon_cat
-)
-oracle = pe.Oracle(estimator=da)            # rung 2: ground truth  today*
-candidate = pe.Estimator(fn=da_emulated)    # rung 4  today*
+# Shapes: N state, N_e members
+from dataclasses import dataclass
 
-# CRPS(F, y) = 𝔼|X − y| − ½ 𝔼|X − X′|   [today*]
-bench = pe.Benchmark(                                                          #
-    task=task, oracle=oracle, estimators=[candidate], scorer=crps
+
+@dataclass
+class EnsembleEstimate:              # satisfies pe.Estimate
+    members: jax.Array               # (N_e, N)
+
+    def point(self):                 # x̄ = (1/N_e) ∑ᵢ x⁽ⁱ⁾
+        return self.members.mean(axis=0)               # (N_e, N) → (N,)
+
+    def sample(self, n, *, key=None):
+        return self.members[:n]                        # → (n, N)
+
+    def log_prob(self, theta):
+        raise NotImplementedError    # optional in the protocol
+
+
+@dataclass
+class CycleEstimator:                # satisfies pe.Estimator
+    cycle: pc.EnsembleDACycle
+    rung: int                        # 2 = classical, 4 = emulator-based
+    complexity: int = 0
+
+    def fit(self, task):             # a DA cycle has nothing to train
+        return self
+
+    def __call__(self, obs):         # obs arrive through obs_source
+        _, history = self.cycle(x0, carry0)            # (T, N_e, N)
+        return EnsembleEstimate(history[-1])           # final analysis
+
+
+classical = CycleEstimator(da, rung=2)                 # the oracle
+emulated = CycleEstimator(da_emulated, rung=4)
+
+bench = pe.Benchmark(                                  # today
+    task=plume_task,             # a pe.Task from plumax  unverified
+    estimators=[classical, emulated],
+    scorers=[pe.metrics.CRPS()],   # 𝔼|X − y| − ½ 𝔼|X − X′|  proposed (F)
+    reference=classical,         # explicit oracle (default: lowest rung 2)
 )
-report = bench.run()                        # → BenchmarkReport  today
+report = bench.run()                                   # → BenchmarkReport
 ```
 
 (ex-benchmark)=
@@ -619,28 +655,45 @@ the splitter config, so the two cannot disagree.
 (ex-repro)=
 ### Reproducibility artifact
 
-pipekit-experiment already ships `InferenceArtifact`, a reproducibility
-snapshot for an inference pipeline. The freeze-and-rerun flow below is
-proposed as an extension of it, not as a second mechanism.
+pipekit-experiment already ships `InferenceArtifact`: a JSON snapshot of a
+pipeline's YAML, the hashes of the registered models it loads, the lockfile
+and free-form metadata, with `save` and `load`. What it cannot do yet is
+rebuild and rerun the pipeline from its frozen inputs; that `rerun` is
+proposed. Gate G1 freezes the evaluation too, so the report can be
+regenerated, not just the analysis.
 
 ```{code-block} python
-:caption: Freeze a pipeline, its inputs and its lockfile for a cold rerun.
+:caption: Freeze the analysis and its evaluation for a cold rerun.
 :linenos:
 
-artifact = px.InferenceArtifact(                       # today*
-    pipeline=da_emulated,
-    inputs={
+from pathlib import Path
+
+inference = px.InferenceArtifact(                      # today
+    pipeline_yaml=pk.dumps(da_emulated),               # today
+    pinned_model_hashes={"forward_model": emulator_hash},
+    deps_lock=Path("pixi.lock").read_text(),
+    metadata={
         "obs_catalog_uri": "s3://imeo/tropomi/2024_Q3_frozen/",
         "obs_catalog_sha256": "ab12cd34...",
         "seed": cfg.seed,
+        "doi": "10.xxxx/mars-2024Q3",
     },
-    deps_lock="pixi.lock",
-    metadata={"author": "ej", "doi": "10.xxxx/mars-2024Q3"},
 )
-artifact.save("/regulatory/mars_methane_2024Q3.gtar")  # proposed (E)
+inference.save("regulatory/mars_methane_2024Q3.json")  # today
 
-# Years later: a cold rerun, no cloud accounts needed   [proposed (E)]
-art = px.InferenceArtifact.load("/regulatory/mars_methane_2024Q3.gtar")  #
-assert art.pipeline_hash == "expected-hash-from-paper"
-result = art.rerun()                                   # proposed (E)
+evaluation = px.InferenceArtifact(                     # today
+    pipeline_yaml=pk.dumps(bench),     # Benchmark → YAML  proposed (F)
+    deps_lock=Path("pixi.lock").read_text(),
+    metadata={
+        "reference_catalog_uri": "s3://imeo/tccon/2024_Q3_frozen/",
+        "reference_catalog_sha256": "9f3e...",
+        "inference_artifact": "mars_methane_2024Q3.json",
+    },
+)
+evaluation.save("regulatory/mars_methane_2024Q3_eval.json")  # today
+
+# Years later: a cold rerun, no cloud accounts needed
+art = px.InferenceArtifact.load("regulatory/mars_methane_2024Q3.json")  # today
+models = art.reload_models(registry)       # pinned weights back  today
+history = px.rerun(art, models)            # rebuild + run  proposed (E)
 ```
