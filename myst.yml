@@ -12,6 +12,7 @@ project:
     - title: Reports
       children:
         - file: docs/reports/01_toolz_primer.md
+        - file: docs/reports/02_pipekit_surface.md
     - title: Notes
       children:
         - file: docs/notes/background.md
