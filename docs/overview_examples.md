@@ -199,25 +199,33 @@ da_hash = pk.config_hash(da)  # content hash of the config  proposed (A)
 
 :::{tab-item} 5 · Index
 ```{code-block} python
-:caption: Write every analysed state, one file per analysis time and member, and index the files with geocatalog's state profile (stage 5). Report 13 has the design.
+:caption: Write every forecast and analysed state, one file per time, kind and member, and index the files with geocatalog's state profile (stage 5). Report 13 has the design.
 :linenos:
 
 # Shapes: T cycles, N_e members, N cells; r the start time, Δt the cycle length
 members, carry = da(x0, carry0)    # da built with save_history=True  proposed (B)
 # history entry t = (forecast, analysis), each N_e members; vₜ = r + (t + 1) Δt
-root = "s3://imeo/methane_da_v3"                                   # script
+# save(x, uri, **attrs): wrap x as a Dataset with attrs, .to_zarr(uri) script
+root, prev = "s3://imeo/methane_da_v3", [prior_uri] * 40           # script
+zarr_uris = []                                                     # script
 for t, (fc, an) in enumerate(da.history):                          # script
-    v = r + (t + 1) * dt          # an analysis is its own run time: lead 0
+    v = r + (t + 1) * dt          # both states are valid at v
     fc_uris = [f"{root}/fc_{v:%Y%m%dT%H}_m{m}.zarr" for m in range(40)]
-    for m in range(40):           # the gain uses every forecast member
-        ds = to_dataset([an[m]], v, dt)                     # arguments sketched
-        ds.attrs |= {"forecast_reference_time": str(v), "realization": str(m),
-                     "producer": da_hash, "parents": fc_uris}      # script
-        ds.to_zarr(f"{root}/ana_{v:%Y%m%dT%H}_m{m}.zarr")          # script
-state_cat = gc.build.build_state_catalog(            # 40 T rows     proposed (B)
+    an_uris = [f"{root}/ana_{v:%Y%m%dT%H}_m{m}.zarr" for m in range(40)]
+    for m in range(40):
+        # forecast member m: run from the previous analysis, lead Δt
+        save(fc[m], fc_uris[m], kind="forecast", run_time=v - dt,
+             member=str(m), producer=da_hash, parents=[prev[m]])   # script
+        # analysis member m: its own run time (lead 0); the gain uses every
+        # forecast member, so all 40 are its parents
+        save(an[m], an_uris[m], kind="analysis", run_time=v,
+             member=str(m), producer=da_hash, parents=fc_uris)     # script
+    prev, zarr_uris = an_uris, zarr_uris + fc_uris + an_uris        # script
+state_cat = gc.build.build_state_catalog(            # 80 T rows     proposed (B)
     zarr_uris, crs="EPSG:4326", names=gcs.CF_NAMES
 )
-analyses = gcs.load_states(state_cat, aoi)           # (N_e, T, N)   proposed (B)
+analyses = gcs.load_states(state_cat.where("kind == 'analysis'"), aoi)
+# (N_e, T, N)                                                    proposed (B)
 ```
 :::
 

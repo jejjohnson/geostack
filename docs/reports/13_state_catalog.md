@@ -75,7 +75,7 @@ join them.
 
 - **A. State columns in geocatalog.** Today a forecast's run time and member
   can live in extra columns, but nothing names, types or fills them. Reserve
-  four columns in schema v1 and add a builder that reads them from CF or
+  five columns in schema v1 and add a builder that reads them from CF or
   cfgrib metadata.
 - **B. Run-aware loading and typed queries.** `load_xarray` concatenates on
   time and drops duplicates, so overlapping runs lose steps silently. Add
@@ -667,8 +667,8 @@ schema, not fields of a new slice.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `run_time`, `member`, `producer`, `parents` | reserved columns, geocatalog schema v1 (`_schema.py`, `parquet._MIGRATIONS`) | named and typed once: `datetime64[us]`; `string` (a CMIP variant label such as `r1i1p1f1`, or a CF realization number written as text; null for a deterministic run); `string`; `list<string>` (one URI for a forecast, every forecast member for an ensemble analysis) |
-| `build_state_catalog(paths, *, crs, names)` | `geocatalog.build` | fills the four columns from file metadata; one row per file |
+| `kind`, `run_time`, `member`, `producer`, `parents` | reserved columns, geocatalog schema v1 (`_schema.py`, `parquet._MIGRATIONS`) | named and typed once: `string`, one of `analysis`, `forecast` or `reanalysis` (zero leads cannot tell an analysis from a lead-0 forecast, [](#r13-ws-b)); `datetime64[us]`; `string` (a CMIP variant label such as `r1i1p1f1`, or a CF realization number written as text; null for a deterministic run); `string`; `list<string>` (one URI for a forecast, every forecast member for an ensemble analysis) |
+| `build_state_catalog(paths, *, crs, names)` | `geocatalog.build` | fills the five columns from file metadata; one row per file |
 | `CF_NAMES`, `CFGRIB_NAMES` | `geocatalog.states` | where each field is read from: CF attributes and coordinates, or cfgrib's `time`, `step`, `valid_time` and `number` |
 :::
 
@@ -703,13 +703,14 @@ cat.gdf["run_time"] = pd.to_datetime([a["run_time"] for a in attrs])   # user
 from geocatalog.build import build_state_catalog
 from geocatalog.states import CF_NAMES
 cat = build_state_catalog(paths, crs="EPSG:4326", names=CF_NAMES)  # proposed (A2)
-cat.gdf[["run_time", "member", "producer", "parents"]]            # proposed (A1)
+cat.gdf[["kind", "run_time", "member", "producer", "parents"]]    # proposed (A1)
 ```
 
 `names` maps each field to where it is found: a coordinate, a variable, a
 global attribute or a callable on the path (for archives that encode the run
-in the file name, such as `fc_20260102_m0.nc`). `producer` and `parents`
-have no CF name, so they come from attributes the script writes. The member
+in the file name, such as `fc_20260102_m0.nc`). `kind`, `producer` and
+`parents` have no CF name, so they come from attributes the script writes,
+or, for `kind`, from a callable on the path. The member
 column is a string, not the integer of stage 1's glue: a CF realization is a
 number, but a CMIP member is a variant label such as `r1i1p1f1` whose four
 indices (realization, initialization, physics, forcing) all distinguish runs,
@@ -775,7 +776,7 @@ cat.where("kind == 'forecast' and member == 0"
           " and run_time >= '2026-01-02' and run_time < '2026-01-03'")  # today
 
 # After:
-gs.forecast_chain(cat, run_time=pd.Timestamp("2026-01-02"), member=0)
+gs.forecast_chain(cat, run_time=pd.Timestamp("2026-01-02"), member="0")
 # → 1 row, fc_20260102_m0.nc                                       proposed (B2)
 gs.latest_analysis(cat, before=pd.Timestamp("2026-01-03 06:00"))
 # → ana_20260103.nc                                               proposed (B2)
@@ -784,10 +785,13 @@ fc = gs.load_states(gs.forecasts(cat), aoi)    # → (3, 2, 3, 4, 4)  proposed (
 gs.lineage(cat, "ana_20260104.nc")             # → 7 rows           proposed (B2)
 ```
 
-`kind` (analysis or forecast) is not a reserved column: an analysis is a row
-whose leads are all zero, $v_{\min} = v_{\max} = r$, so
-`latest_analysis` can tell without one. Whether to reserve `kind` anyway is
-open question 2.
+`latest_analysis` filters on the reserved `kind` column. Zero leads are not
+enough: in a one-row-per-step archive (a GRIB file per step, or
+[open question 1](#r13-open-questions)'s `explode="step"`) a lead-0 forecast
+row also has $v_{\min} = v_{\max} = r$, so a lead test would return it as
+an analysis. The member filter takes a string, as the column does
+([](#r13-ws-a)); an integer raises `TypeError` rather than silently matching
+nothing.
 
 :::{warning} Differs from the plan
 The scoping report's queries returned "a subset `StateCatalog`" or a list of
@@ -917,10 +921,10 @@ running example's eleven files.
 
 | Gate | Workstream | Passes when |
 |---|---|---|
-| A1 Schema round trip | A1 | a v1 catalog round-trips through GeoParquet with `run_time` as `datetime64[us]` and `member` as `string` (a CMIP variant label `r1i1p1f1` and a null both survive) and `parents` as `list<string>`; a v0 file reads with the four columns all null, and every other column unchanged |
+| A1 Schema round trip | A1 | a v1 catalog round-trips through GeoParquet with `run_time` as `datetime64[us]` and `member` as `string` (a CMIP variant label `r1i1p1f1` and a null both survive) and `parents` as `list<string>`, and `kind` as `string`; a v0 file reads with the five columns all null, and every other column unchanged |
 | A2 Builder | A2 | `build_state_catalog` on the 11 files fills 11 of 11 rows, equal to stage 1's hand-filled columns; with `CFGRIB_NAMES` on a cfgrib-decoded file it reads $r$, $\tau$ and $m$ |
 | B1 No dropped runs | B1 | `load_states` on the 6 forecast files returns sizes (3, 2, 3, 4, 4), equal to stage 3's hand-stacked cube with a maximum absolute difference of 0; the slice for 3 January returns 3 runs (today: 1) |
-| B2 Typed queries | B2 | on the archive, `forecast_chain` returns 1 row, `latest_analysis` `ana_20260103.nc`, `ensemble_at` members `["0", "1"]`, and `lineage` 7 rows in stage 5's order; `forecast_chain` with an exact `pd.Timestamp` returns the row the string query misses |
+| B2 Typed queries | B2 | on the archive, `forecast_chain` returns 1 row, `latest_analysis` `ana_20260103.nc`, `ensemble_at` members `["0", "1"]`, and `lineage` 7 rows in stage 5's order; on a one-row-per-step copy of the archive `latest_analysis` still returns the analysis, not a lead-0 forecast, and `member=0` raises `TypeError`; `forecast_chain` with an exact `pd.Timestamp` returns the row the string query misses |
 | C1 Alignment | C1 | `align_reference` equals `an.sel(time=fc.valid_time)` exactly, and `SkillByLeadTime(RMSE)` on it reproduces [0.076, 0.467, 0.746] to 1e-12; a lead past the last analysis is NaN |
 | C2 Broadcasting | C2 | `RMSE` over `("member", "init_time", "lat", "lon")` with a member-less reference equals the `xr.broadcast` result [0.109, 0.617, 1.132] to 1e-12; results for inputs that already share dimensions are unchanged to 0 |
 | B3 Producers as leaves | B1 | `load_states(group_by="producer")` on stage 6's 6 files returns 3 leaves of sizes (3, 90, 180, 360), (1, 90, 72, 144) and (2, 90, 90, 180), equal to stage 6's hand-grouped tree to 0; the same call without `group_by` raises |
@@ -979,9 +983,9 @@ Foundations first, then the state profile, then its consumers.
    for a 40-member run instead of the scoping report's 2,880). Per step
    answers "valid at $t$" without opening files. Should `build_state_catalog`
    offer an `explode="step"` option?
-2. **Reserve `kind`?** Analyses can be told apart by zero leads. A
-   reanalysis written as a run with $\tau > 0$ cannot. Is a fifth column,
-   `kind`, worth it?
+2. **Which kinds?** `kind` is reserved with three values: `analysis`,
+   `forecast`, `reanalysis`. Do hindcasts and reforecasts need their own
+   values, or are they forecasts with a producer that says so?
 3. **A streaming hook on the cycles.** Should `Cycle` and `EnsembleCycle`
    take an `on_step(k, carriers, state)` callable, so scripts can write while
    the cycle runs? It would also give `SmootherCycle` and `WindowedCycle` a
