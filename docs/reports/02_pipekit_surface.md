@@ -37,7 +37,7 @@ question or a follow-up at the end.
 | **Status** | Shipped surface; originally the v0.1 surface proposal (revised after the L0–L4 analysis) |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone deciding what belongs in pipekit core, or writing an operator against it |
-| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Reports 10–12](#r2-ref-report-10) (cycle, train, experiment); [Report 13](13_state_catalog.md) (state catalog); forthcoming ones are listed under [References](#r2-references) |
+| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (cycle); [Reports 11–12](#r2-ref-report-10) (train, experiment); [Report 13](13_state_catalog.md) (state catalog); forthcoming ones are listed under [References](#r2-references) |
 | **Checked against** | pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/pipekit`); every output on this page is from a real run |
 :::
 
@@ -747,7 +747,7 @@ pk.loads(pk.dumps(pk.Try(pk.Identity(), pk.Const(0), on=(IOError,))))
 ## Group M · State primitives (`state.py`)
 
 Group M was added in the proposal's last revision so that the `pipekit-cycle`
-sibling ([Report 10](#r2-ref-report-10)) could exist without pipekit itself
+sibling ([Report 10](10_pipekit_cycle.md)) could exist without pipekit itself
 shipping cycle abstractions. Its two primitives shipped.
 
 ### The problem
@@ -989,15 +989,16 @@ text, and replace the citations placeholder. -->
 :class: simple
 The companion reports and the citations are still being written. The entries
 below stand in for them so the links in this page already resolve.
-Reports [1](01_toolz_primer.md), [3](03_sister_libraries.md) and
-[9](09_use_cases.md) are published.
+Reports [1](01_toolz_primer.md), [3](03_sister_libraries.md),
+[9](09_use_cases.md), [10](10_pipekit_cycle.md) and [13](13_state_catalog.md)
+are published.
 :::
 
 ### Forthcoming reports
 
 (r2-ref-report-10)=
-Reports 10–12 · pipekit-cycle, pipekit-train, pipekit-experiment
-: *Forthcoming.* The sibling packages built on Groups J, L and M.
+Reports 11–12 · pipekit-train, pipekit-experiment
+: *Forthcoming.* The sibling packages built on Groups J and L.
 
 ### Citations
 

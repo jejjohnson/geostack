@@ -685,6 +685,139 @@ def r13_roadmap() -> Svg:
     return f
 
 
+def r10_ownership() -> Svg:
+    """Report 10: pipekit-cycle between pipekit core and the libraries it serves."""
+    f = Svg(
+        840,
+        500,
+        "Ownership around pipekit-cycle. Scripts build cycles from pipekit-cycle"
+        " and from algorithm libraries; the libraries satisfy pipekit-cycle's"
+        " protocols by structural typing and never import it. pipekit-cycle"
+        " groups the cycles, the DA cycles, the protocols, the generic"
+        " observation and forward helpers, the carry states and the adjoint"
+        " specs. It builds on pipekit core (StatefulOperator, CarryState,"
+        " Sequential); pipekit-jax reads its adjoint specs.",
+    )
+    f.box(
+        24,
+        20,
+        380,
+        64,
+        "scripts and notebooks",
+        ["build a cycle · supply the carrier and state"],
+        hue=(BORDER, PANEL),
+        title_size=15,
+        sub_size=12.5,
+    )
+    f.box(
+        436,
+        20,
+        380,
+        64,
+        "algorithm libraries",
+        ["filterax · vardax · plumax adapters (not checked)"],
+        hue=EXT,
+        dashed=True,
+        title_size=15,
+        sub_size=12.5,
+    )
+    f.rect(24, 120, 792, 230, stroke=ML[0], fill=ML[1])
+    f.text(44, 148, "pipekit-cycle 0.0.2", size=16, weight=700, anchor="start")
+    groups = [
+        ("cycles", ["Cycle", "EnsembleCycle", "WindowedCycle", "Recurrence"]),
+        ("DA cycles", ["DACycle", "EnsembleDACycle", "SmootherCycle", "BFNCycle"]),
+        ("protocols", ["ForwardModel", "ObservationOperator", "AnalysisStep", "+ 11"]),
+        ("helpers", ["IdentityObs", "LinearObs", "CallableObs", "CompositeObs"]),
+        ("", ["CallableForward", "CompositeForward", "NeuralForward"]),
+        ("states, specs", ["DAState", "IterationState", "WindowState", "adjoints"]),
+    ]
+    y = 166.0
+    for label, chips in groups:
+        f.text(44, y + 17, label, size=12.5, color=MUTED, anchor="start")
+        x = 150.0
+        for c in chips:
+            x += f.chip(x, y, c, hue=(BORDER, CARD), size=12) + 8
+        y += 30
+    f.arrow([(214, 84), (214, 118)], color=INK)
+    f.arrow([(626, 84), (626, 118)], color=LINE, dashed=True)
+    f.text(634, 106, "structural typing", size=12, color=MUTED, anchor="start")
+    f.box(
+        24,
+        400,
+        560,
+        76,
+        "pipekit core",
+        ["StatefulOperator · CarryState · Sequential (threads state)"],
+        hue=(BORDER, CARD),
+        title_size=15,
+        sub_size=12.5,
+    )
+    f.box(
+        616,
+        400,
+        200,
+        76,
+        "pipekit-jax",
+        ["reads the adjoint specs"],
+        hue=(BORDER, CARD),
+        title_size=15,
+        sub_size=12.5,
+    )
+    f.arrow([(304, 350), (304, 398)], color=INK)
+    f.arrow([(716, 398), (716, 352)], color=LINE, dashed=True)
+    f.h = 492
+    return f
+
+
+def r10_roadmap() -> Svg:
+    """Report 10: the additions, in order, with their gates."""
+    f = Svg(
+        840,
+        330,
+        "Roadmap. Phase 1 runs three small additions side by side: cycles that"
+        " accept a stateful Sequential as their step (A1), an observation clock"
+        " that survives restarts (B1), and ensemble histories (Report 13, D1)."
+        " Their gates pass before phase 2, which refreshes the README and"
+        " decides the latent-space design.",
+    )
+    items = [
+        ("1a · A1", ["stateful Sequential", "as a cycle step"], ML),
+        ("1b · B1", ["obs_clock", "survives restarts"], ML),
+        ("1c · R13 D1", ["ensemble histories", "(Report 13)"], ENG),
+    ]
+    w = (792 - 2 * 18) / 3
+    for i, (name, sub, hue) in enumerate(items):
+        f.box(24 + i * (w + 18), 24, w, 76, name, sub, hue=hue, title_size=14.5)
+    cx, gy, d = 420, 130, 14
+    f.arrow([(cx, 100), (cx, gy - d - 1)], color=LINE)
+    f.parts.append(
+        f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+        f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}" stroke-width="1.4"/>'
+    )
+    f.text(
+        cx + d + 10,
+        gy + 4.5,
+        "gates A1 · B1 · R13-D1",
+        size=12.5,
+        color=ENG[0],
+        anchor="start",
+        weight=600,
+    )
+    f.arrow([(cx, gy + d), (cx, 188)], color=LINE)
+    f.box(
+        24,
+        190,
+        792,
+        76,
+        "2 · docs and design",
+        ["README for 0.0.2 · latent.md: build it or retire it"],
+        hue=EXT,
+        title_size=14.5,
+    )
+    f.h = 284
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
@@ -693,6 +826,8 @@ FIGURES = {
     "r9_stack": r9_stack,
     "r13_ownership": r13_ownership,
     "r13_roadmap": r13_roadmap,
+    "r10_ownership": r10_ownership,
+    "r10_roadmap": r10_roadmap,
 }
 
 

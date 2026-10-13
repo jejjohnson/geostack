@@ -776,7 +776,7 @@ substrate differs, the operator algebra is identical.
 |---|---|---|
 | `pipekit-array` | Array API operators across NumPy, JAX, CuPy and PyTorch (`StackAlong`, `ConcatenateAlong`, `MeanScalar`) | 3 |
 | `pipekit-jax` | Equinox-backed, JAX-traceable operators; deferred to v0.3+ | 5 |
-| `pipekit-cycle` | Time-stepping and DA: `Cycle`, `EnsembleCycle`, `DACycle` and three Protocols | 10 |
+| `pipekit-cycle` | Time-stepping, DA and iterative inference: `Cycle`, `EnsembleCycle`, `Recurrence`, `DACycle`, `EnsembleDACycle`, `SmootherCycle`, `BFNCycle`; the three core protocols plus eleven cross-library ones | 10 |
 | `pipekit-train` | Training for emulators and amortized inference over Lightning, Equinox + Optax or Keras 3 | 11 |
 | `pipekit-experiment` | Tracker adapters (MLflow, W&B, DVC, Hydra) and a content-addressed `ModelRegistry` | 12 |
 | `pipekit-evaluate` | Evaluation on a Unit × Lens × Stage matrix; benchmark contracts as artifacts | 14, 15 |
@@ -1121,7 +1121,7 @@ notes and will move into `docs/` as they are written up. Until then, the
 | the patcher | Report 7: geopatcher |
 | xrtoolz's role | Report 8: substrate asymmetry with geotoolz |
 | concrete use cases | Report 9: thirteen cases mapped to the stack |
-| time-stepping and DA | Report 10: pipekit-cycle |
+| time-stepping and DA | [Report 10](reports/10_pipekit_cycle.md): pipekit-cycle |
 | training pipelines | Report 11: pipekit-train |
 | registry and tracking | Report 12: pipekit-experiment |
 | L3–L5 indexing | [Report 13](reports/13_state_catalog.md): the state catalog, as geocatalog's state profile |
