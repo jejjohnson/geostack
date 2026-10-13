@@ -298,10 +298,12 @@ assert sorted(cat6.gdf.member) == sorted(
 assert {s: tree[s].sizes["member"] for s in "ABC"} == {"A": 3, "B": 1, "C": 2}
 assert {k: round(v, 4) for k, v in lin_native.items()} == {
     "A": 277.9999, "B": 279.4971, "C": 277.2991}
-assert max(abs(lin_native[k] - lin_common[k]) for k in "ABC") < 1e-10
+lin_gap = max(abs(lin_native[k] - lin_common[k]) for k in "ABC")
+assert f"{lin_gap:.1e}" == "1.2e-11"  # the page shows 1.2e-11
 assert {k: round(p_native[k] - lin_native[k], 3) for k in "ABC"} == {
     "A": 4.289, "B": 4.279, "C": 4.288}
 assert {k: round(p_first[k] - lin_native[k], 3) for k in "ABC"} == {
     "A": 1.544, "B": 4.279, "C": 2.564}
-assert max(abs(p_hybrid[k] - p_native[k]) for k in "ABC") < 1e-10
+hybrid_gap = max(abs(p_hybrid[k] - p_native[k]) for k in "ABC")
+assert f"{hybrid_gap:.1e}" == "1.2e-11"
 assert (round(per_model, 4), round(per_member, 4)) == (278.2654, 278.0159)
