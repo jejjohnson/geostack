@@ -45,7 +45,7 @@ where their concepts already live, and not building `statecatalog`.**
 | **Status** | Redesign of a scoping proposal ("committed": a sister package `statecatalog`). The user asked for it to be reassessed against the geotoolz and xrtoolz stacks; the recommendation below replaces the package |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone who stores, queries or scores forecasts, analyses or reanalyses with the stack |
-| **Companions** | [Report 6](06_geocatalog.md) (geocatalog); [Report 3](03_sister_libraries.md) (xrtoolz and the sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](#r13-ref-report-10) (pipekit-cycle, forthcoming) |
+| **Companions** | [Report 6](06_geocatalog.md) (geocatalog); [Report 3](03_sister_libraries.md) (xrtoolz and the sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (pipekit-cycle) |
 | **Code checked against** | the revisions pinned in `references/`: pipekit and its sister packages at 0.0.2 (`ef3c17f`); geotoolz 0.10.2 with geocatalog 0.5.1 (`088475e`); xrtoolz 0.0.5 with xrreader 0.0.4 (`308c7f2`); pandas 3.0.6, as in `pixi.lock`. Read on 13 October 2026 |
 | **Running example** | every output in the code blocks is from real runs over two synthetic archives: an 11-file regional forecast archive (stages 1 to 5) and a 6-file, three-model archive on three grids (stage 6); both are described in [](#r13-running), and `notebooks/reports/report13_state_catalog.py` regenerates them from fixed seeds and asserts every number shown |
 :::
@@ -581,7 +581,7 @@ observations, feed one bias operator.
 | `CycleStateWriter`, `CycleStateReader` | not built; see [](#r13-ws-d) |
 | `pk.config_hash(op)` | does not exist; `pipekit.hashing.sha256_hex(stable_json(op.get_config()))` computes it, and [Report 9](09_use_cases.md#r9-proposals) proposes `pipeline_hash(op)` (proposal B) |
 | `georeader.read_from_url` | does not exist; states are xarray files, read with `xr.open_dataset` or geocatalog's `load_xarray` |
-| `pc.Sequential` | does not exist. `pipekit.Sequential` threads a carry state when it holds stateful steps, but it is not a `StatefulOperator`, so `Cycle(step_op=pk.Sequential([...]))` raises `TypeError: step_op must be a StatefulOperator or a ForwardModel` even then ([Report 10](#r13-ref-report-10)) |
+| `pc.Sequential` | does not exist. `pipekit.Sequential` threads a carry state when it holds stateful steps, but it is not a `StatefulOperator`, so `Cycle(step_op=pk.Sequential([...]))` raises `TypeError: step_op must be a StatefulOperator or a ForwardModel` even then ([Report 10](10_pipekit_cycle.md#r10-stage-6)) |
 | `pc.EnsembleCycle(step_op, n_steps, n_members)` | exists, with that signature |
 | `pt.SimulationDataset` | exists, but simulates on the fly from a forward model and a prior; it reads no stored states |
 :::
@@ -1025,16 +1025,12 @@ file at the page and delete its entry below. -->
 
 :::{note} Placeholders
 :class: simple
-Report 10 (pipekit-cycle) and the reports on the other pipekit sister packages
-are still being written. Reports [3](03_sister_libraries.md),
-[6](06_geocatalog.md) and [9](09_use_cases.md) are published.
+The reports on the other pipekit sister packages are still being written.
+Reports [3](03_sister_libraries.md), [6](06_geocatalog.md),
+[9](09_use_cases.md) and [10](10_pipekit_cycle.md) are published.
 :::
 
 ### Forthcoming reports
-
-(r13-ref-report-10)=
-Report 10 · pipekit-cycle
-: *Forthcoming.* The cycles, DA cycles and states that produce model states.
 
 (r13-ref-report-11)=
 Reports 11 and 12 · pipekit-train, pipekit-evaluate, pipekit-experiment
