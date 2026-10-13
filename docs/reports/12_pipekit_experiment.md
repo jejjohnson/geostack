@@ -715,11 +715,11 @@ Correctness first, then trackers, then round trips.
 <!-- TODO(ref): placeholders. When a report page lands, point its links in this
 file at the page and delete its entry below. -->
 
-:::{note} Placeholders
+:::{note} Companion reports
 :class: simple
 Reports [9](09_use_cases.md), [10](10_pipekit_cycle.md),
-[11](11_pipekit_train.md) and [13](13_state_catalog.md) are published; the
-reports on pipekit-evaluate are still being written.
+[11](11_pipekit_train.md), [13](13_state_catalog.md) and
+[14](14_pipekit_evaluate.md) (pipekit-evaluate) are published.
 :::
 
 ### Sources

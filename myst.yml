@@ -21,6 +21,7 @@ project:
         - file: docs/reports/11_pipekit_train.md
         - file: docs/reports/12_pipekit_experiment.md
         - file: docs/reports/13_state_catalog.md
+        - file: docs/reports/14_pipekit_evaluate.md
     - title: Notes
       children:
         - file: docs/notes/background.md

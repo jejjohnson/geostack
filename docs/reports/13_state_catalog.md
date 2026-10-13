@@ -1004,21 +1004,13 @@ Foundations first, then the state profile, then its consumers.
 <!-- TODO(ref): placeholders. When a report page lands, point its links in this
 file at the page and delete its entry below. -->
 
-:::{note} Placeholders
+:::{note} Companion reports
 :class: simple
-The report on pipekit-evaluate is still being written. Reports
-[3](03_sister_libraries.md), [6](06_geocatalog.md), [9](09_use_cases.md),
-[10](10_pipekit_cycle.md), [11](11_pipekit_train.md) and
-[12](12_pipekit_experiment.md) are published.
+Reports [3](03_sister_libraries.md), [6](06_geocatalog.md),
+[9](09_use_cases.md), [10](10_pipekit_cycle.md), [11](11_pipekit_train.md),
+[12](12_pipekit_experiment.md) and [14](14_pipekit_evaluate.md) are
+published.
 :::
-
-### Forthcoming reports
-
-(r13-ref-report-11)=
-Later reports · pipekit-evaluate
-: *Forthcoming.* The evaluation consumers of a state catalog.
-  pipekit-train is [Report 11](11_pipekit_train.md) and pipekit-experiment
-  [Report 12](12_pipekit_experiment.md).
 
 ### Sources
 

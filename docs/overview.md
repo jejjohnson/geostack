@@ -88,8 +88,9 @@ letters tag every `proposed (X)` call on the
   planned; pipekit-experiment adds a tracker protocol and a content-addressed
   `ModelRegistry`.
 - **F · Evaluation as infrastructure.** pipekit-evaluate scores every cell
-  of the benchmark cube against an `Oracle`, and stores reports and contracts
-  as content-addressed artifacts.
+  of the benchmark cube against an `Oracle`, with the metrics from
+  `xrtoolz.metrics`; the Unit × Lens × Stage tags and a content-addressed
+  evaluation report are proposed ([Report 14](reports/14_pipekit_evaluate.md)).
 
 **End state.** GeoML owns linear algebra, kernels and inference and never
 imports pipekit outside an adapter. GeoModels owns physics and exposes it
@@ -780,7 +781,7 @@ substrate differs, the operator algebra is identical.
 | `pipekit-cycle` | Time-stepping, DA and iterative inference: `Cycle`, `EnsembleCycle`, `Recurrence`, `DACycle`, `EnsembleDACycle`, `SmootherCycle`, `BFNCycle`; the three core protocols plus eleven cross-library ones | 10 |
 | `pipekit-train` | Training for emulators and amortized inference: Equinox + Optax, NumPyro SVI and MCMC, BlackJAX NUTS; Lightning and Keras 3 scaffolded | 11 |
 | `pipekit-experiment` | A content-addressed `ModelRegistry` (local and fsspec), training and inference artifacts, the tracker protocol, and Hydra, DVC and Metaflow adapters; MLflow and W&B trackers planned | 12 |
-| `pipekit-evaluate` | Evaluation on a Unit × Lens × Stage matrix; benchmark contracts as artifacts | 14, 15 |
+| `pipekit-evaluate` | The benchmark ladder (level × rung × complexity, reference rule, `Benchmark`); Unit × Lens × Stage tags and an evaluation report proposed over `xrtoolz.metrics` | 14, 15 |
 | `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`). Ships as `geotoolz-catalog` in the geotoolz monorepo | 6 |
 | `geopatcher` | Four-axis patcher: geometry × sampler × window × aggregation (~60 classes). Ships as `geotoolz-patcher` in the geotoolz monorepo | 7 |
 | `geocatalog.states` | geocatalog's state profile for L3–L5: run time, member, producer and parent columns; run-aware loading; forecast-chain and lineage queries. Proposed; replaces the planned `statecatalog` package | 13 |
@@ -1126,7 +1127,7 @@ notes and will move into `docs/` as they are written up. Until then, the
 | training pipelines | [Report 11](reports/11_pipekit_train.md): pipekit-train |
 | registry and tracking | [Report 12](reports/12_pipekit_experiment.md): pipekit-experiment |
 | L3–L5 indexing | [Report 13](reports/13_state_catalog.md): the state catalog, as geocatalog's state profile |
-| evaluation | Report 14: pipekit-evaluate |
+| evaluation | [Report 14](reports/14_pipekit_evaluate.md): pipekit-evaluate |
 | benchmark infrastructure | Report 15: contracts, leakage, baselines |
 | the six-step cycle | Report 16: step 2 as oracle, benchmarks as understanding |
 | the data lifecycle in detail | `data_ml_lifecycle.md` |
