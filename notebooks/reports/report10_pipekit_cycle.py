@@ -87,6 +87,9 @@ class KFForward:  # carrier = (mean, covariance)
         return M @ m, M @ P @ M.T + Q
 
 
+# KalmanAnalysis and EnKF below are user-written AnalysisSteps on purpose: the
+# report audits the protocols a user implements, and the algorithm library that
+# owns these numerics (filterax) is not pinned yet (Report 10, upcoming work).
 class KalmanAnalysis:
     def __call__(self, forecast, obs, *, obs_op, obs_err_cov):
         m, P = forecast
@@ -141,9 +144,25 @@ def enkf_run(Ne: int, seed: int) -> float:
     return rms(np.mean(mem, 0) - mA)
 
 
-enkf = {Ne: float(np.median([enkf_run(Ne, s) for s in range(10)]))
+errs = {Ne: np.array([enkf_run(Ne, s) for s in range(10)])
         for Ne in (50, 200, 800)}
-enkf
+enkf = {Ne: float(np.median(e)) for Ne, e in errs.items()}
+
+# The rate check (gate K2). The claim is error ∝ N_e^(−1/2) from 200 to 800
+# members, i.e. a log-log slope of −0.5. Ten seeds per size give a noisy
+# slope, so the check is against the slope's own sampling distribution: a
+# seeded bootstrap over the seeds (resample each size's 10 errors with
+# replacement, recompute the slope of the medians, 4,000 times) gives a 99 %
+# interval, and −0.5 must lie inside it.
+def slope(e200: np.ndarray, e800: np.ndarray) -> float:
+    return float(np.log(np.median(e800) / np.median(e200)) / np.log(4))
+
+
+boot_rng = np.random.default_rng(1)
+boot = np.array([slope(boot_rng.choice(errs[200], 10),
+                       boot_rng.choice(errs[800], 10)) for _ in range(4000)])
+rate_ci = tuple(np.quantile(boot, [0.005, 0.995]))
+enkf, slope(errs[200], errs[800]), rate_ci
 
 
 # %% [markdown]
@@ -226,8 +245,13 @@ assert np.abs(mA - m).max() == 0.0 and np.abs(PA - P).max() == 0.0
 assert round(kf_rmse, 3) == 0.125 and round(prior_rmse, 1) == 17.1
 assert (sA.t, sA.cycle_count, len(da.history)) == (10.0, 10, 10)
 assert round(sd, 3) == 0.193
+# the medians the page prints (a seeded rerun reproduces them exactly) ...
 assert {k: round(v, 3) for k, v in enkf.items()} == {50: 0.367, 200: 0.063,
                                                      800: 0.027}
+# ... and the behaviour they illustrate, bounded by its sampling distribution
+assert rate_ci[0] <= -0.5 <= rate_ci[1]
+assert round(slope(errs[200], errs[800]), 2) == -0.61
+assert (round(rate_ci[0], 2), round(rate_ci[1], 2)) == (-0.96, -0.38)
 assert swaps == {"CallableForward": 0.0, "NeuralForward": 0.0}
 assert round(a_hat, 3) == 120.014 and gn.iters == 6 and gn.converged
 assert abs(grad) < 1e-18

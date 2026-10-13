@@ -8,7 +8,7 @@ Use this script to generate the .ipynb files locally for execution in
 JupyterLab or any other Jupyter-compatible environment.
 
 Usage:
-    # Convert all notebooks in notebooks/
+    # Convert all notebooks in notebooks/ and its subfolders (notebooks/reports/)
     pixi run notebooks-to-ipynb
 
     # Convert a single file
@@ -30,7 +30,7 @@ def convert_notebooks(
     source_dir: Path,
     *,
     output_format: str = "notebook",
-    pattern: str = "*.py",
+    pattern: str = "**/*.py",
     verbose: bool = False,
 ) -> int:
     """Convert Jupytext percent-format scripts to the given output format.
@@ -38,7 +38,8 @@ def convert_notebooks(
     Args:
         source_dir: Directory containing Jupytext percent-format .py files.
         output_format: Target Jupytext format (e.g. 'notebook' for .ipynb).
-        pattern: Glob pattern to match source files within source_dir.
+        pattern: Glob pattern to match source files within source_dir; the
+            default, ``**/*.py``, includes subfolders.
         verbose: If True, print each file being converted.
 
     Returns:
@@ -96,8 +97,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--pattern",
-        default="*.py",
-        help="Glob pattern for source files (default: *.py)",
+        default="**/*.py",
+        help="Glob pattern for source files, recursive (default: **/*.py)",
     )
     parser.add_argument(
         "-v",
