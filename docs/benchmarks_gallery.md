@@ -26,14 +26,14 @@ them, across the ocean, the land, the atmosphere, remote sensing and one
 mathematical-model chain, so the framework can be judged on concrete cases.
 Each entry is a draft contract, specific enough to pre-register after a
 domain expert's review. Three things set this version apart from its source
-draft. **The splits follow Report 15's rule**: the held-out set reproduces
+draft [@geostack_gallery_draft]. **The splits follow Report 15's rule**: the held-out set reproduces
 the gap the product will face in use, so most random space-time blocks
 become withheld platforms or causal splits, and in eleven entries a "split"
 the source names (season, climate phase, altitude, time of day) is a
 breakdown of the score instead. **The stack names are
 the real ones**: each entry lists what imports from the pinned code today
 (61 distinct pieces across the gallery), what a report proposes or the
-overview defers (18), and what nobody has proposed yet (6). **Every claim about the gallery is
+overview defers (18), and what nobody has proposed yet (7). **Every claim about the gallery is
 computed**: the notebook `notebooks/reports/benchmarks_gallery.py` holds
 the contracts as data, hashes them, checks every stack name and asserts
 every count on this page that describes the contracts.
@@ -88,10 +88,10 @@ plus the two the gallery adds to make a draft reviewable.
 
 | Row | Contract field | What it holds |
 |---|---|---|
-| Task | `task` | the level transition (L0 unstructured observations to L4 reanalysis or forecast), with a name |
-| Variant | `variant` | deterministic, probabilistic or both; a probabilistic contract refuses point entries |
+| Task | `task`, `operation` | the level transition (L0 unstructured observations to L4 reanalysis or forecast) and what it does (gap filling, forecast, fusion, …); both are hashed |
+| Variant | `variant` | deterministic, probabilistic or both; a probabilistic contract scores a point entry as a degenerate distribution (its CRPS is its MAE) and the report tags it |
 | Gap the split reproduces | `splits.gap` | the situation in use the held-out set imitates ([Report 15, stage 2](reports/15_benchmarking.md#r15-stage-2)) |
-| Splits | `splits` | withhold by a column (platform, station, float, scene, sensor, source class, campaign), causal, or withhold a region |
+| Splits | `splits` | withhold by a column (platform, station, float, scene, sensor, source class, campaign), causal, withhold a region, or transplant real cloud masks (1.2) |
 | Scores stratified by | `scorers` wrappers | groups the score is broken down by; not splits |
 | References, by track | `references` | one product per track; a missing track is reported unavailable |
 | Baselines | `baselines` | the shared implementations every entry is compared with |
@@ -136,13 +136,13 @@ SSH sets the surface geostrophic flow, and mesoscale eddies carry most of the oc
 | Baselines | OI (L, τ fitted to the training years); persistence (forecast variant); training-period climatology |
 | Scorers | RMSE of SSH and of geostrophic velocity; PSD score, resolved scale; geostrophic balance error; eddy detection (POD, FAR); CRPS, spread-skill (ensemble variant) |
 | Known failure modes | double penalty rewards smoothed maps; spectra too steep at small scales; western boundary currents under-resolved; coastal cells worst; SWOT cross-track artefacts learned as signal |
-| Contract hash | `867c6d7f7bc2…` |
+| Contract hash | `4c466291f4a6…` |
 :::
 
-**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `resolved_scale` (xrtoolz.metrics), `GeostrophicBalanceError` (xrtoolz.metrics), `GeostrophicVelocities` (xrtoolz.ocn), `CalculateSSHAlongtrack` (xrtoolz.ocn), `along_track_psd_score` (xrtoolz.metrics), `OkuboWeiss` (xrtoolz.ocn), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`. **Proposed:** `optimal_interpolation` (Report 15 C1), `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `build_state_catalog` (Report 13 A2). **External:** py-eddy-tracker (eddy tracking).
+**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `resolved_scale` (xrtoolz.metrics), `GeostrophicBalanceError` (xrtoolz.metrics), `GeostrophicVelocities` (xrtoolz.ocn), `CalculateSSHAlongtrack` (xrtoolz.ocn), `along_track_psd_score` (xrtoolz.metrics), `OkuboWeiss` (xrtoolz.ocn), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`. **Proposed:** `optimal_interpolation` (Report 15 C1), `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `build_state_catalog` (Report 13 A2). **External:** py-eddy-tracker (eddy tracking).
 
 :::{warning} Differs from the source
-The source prescribes 200 km × 60 day blocks and, in the same entry, "split by mission, not pooled". [Report 15](reports/15_benchmarking.md#r15-stage-2) shows the mission split is the one that reproduces a mapping product's error (2.70 cm, against 3.83 cm with the blocks), so it is the contract's split. The source's OI baseline uses τ = 15 days while its splits assume 30; the contract fits both scales to the training years instead.
+The source prescribes 200 km × 60 day blocks and, in the same entry, "split by mission, not pooled". [Report 15](reports/15_benchmarking.md#r15-stage-2) shows the mission split is the one that reproduces a mapping product's error (2.73 cm, against 4.26 cm with the blocks), so it is the contract's split. The source's OI baseline uses τ = 15 days while its splits assume 30; the contract fits both scales to the training years instead.
 :::
 
 (gal-1-2)=
@@ -164,13 +164,13 @@ SST is the most observed ocean variable, used from weather forecasting to ENSO m
 | Baselines | OI (L, τ fitted to the training years); training-period climatology; persistence with climatology fill |
 | Scorers | RMSE, bias; PSD score; SSIM, FSS; marine heatwave detection; gradient magnitude near fronts |
 | Known failure modes | clear-sky bias in training; diurnal aliasing of polar orbiters; fronts smoothed; tidal coastal variability missed |
-| Contract hash | `2c6b783b5d20…` |
+| Contract hash | `7df03e454610…` |
 :::
 
-**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `SSIM` (xrtoolz.metrics), `GradientDifference` (xrtoolz.metrics), `SimulatedClouds` (geotoolz.augment). **Name reserved, raises:** `ProbabilityOfDetection`, `DurationError`. **Proposed:** `optimal_interpolation` (Report 15 C1), `ClimatologyForecast` (Report 15 C3), `persistence` (Report 15 C2), `FSS` (Report 14 B1), `MarineHeatwaveDetector` (Report 14 E1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred).
+**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `SSIM` (xrtoolz.metrics), `GradientDifference` (xrtoolz.metrics), `SimulatedClouds` (geotoolz.augment), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `DurationError`. **Proposed:** `optimal_interpolation` (Report 15 C1), `ClimatologyForecast` (Report 15 C3), `persistence` (Report 15 C2), `FSS` (Report 14 B1), `MarineHeatwaveDetector` (Report 14 E1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** cloud-mask transplant split.
 
 :::{warning} Differs from the source
-The source splits by 100 km × 30 day blocks. An SST gap-filler is used to fill cloud gaps, so the held-out set is clear-sky pixels hidden under real cloud masks from other days (geotoolz's `SimulatedClouds` draws synthetic ones today), plus withheld drifters. Balancing the time of day is a stratification of the score, not a split.
+The source splits by 100 km × 30 day blocks. An SST gap-filler is used to fill cloud gaps, so the held-out set is clear-sky pixels hidden under real cloud masks from other days (geotoolz's `SimulatedClouds` draws synthetic ones today; the transplant split itself is proposed by no report yet), plus withheld drifters. Balancing the time of day is a stratification of the score, not a split.
 :::
 
 (gal-1-3)=
@@ -192,7 +192,7 @@ Salinity drives the haline circulation and marks river plumes, ice melt and rain
 | Baselines | World Ocean Atlas climatology; OI (L, τ fitted to the training years); persistence, weekly |
 | Scorers | RMSE, bias; CRPS; river-plume detection; T–S consistency; regional means against ISAS |
 | Known failure modes | satellite retrieval errors spatially structured; near-surface Argo gradient unresolved; river-plume edges sub-daily; ice contamination at high latitude |
-| Contract hash | `0e47b9ba77fd…` |
+| Contract hash | `354c3dd4228d…` |
 :::
 
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `density_from_ts` (xrtoolz.ocn), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `ClimatologyForecast` (Report 15 C3), `optimal_interpolation` (Report 15 C1), `persistence` (Report 15 C2), `ThresholdEventDetector` (Report 14 E1), `split_by` (Report 15 B2), `split_regions` (Report 15 B2), `ProfileSlice` (overview, deferred). **Not pinned:** pyrox-gp (Gaussian-process gap filling).
@@ -220,10 +220,10 @@ Chlorophyll is the most used satellite biogeochemical variable and the base of t
 | Baselines | NASA OC4 band ratio; GIOP; monthly OC-CCI climatology |
 | Scorers | RMSE of log10 chlorophyll, bias by water type; PSD score; bloom onset (POD, FAR with timing tolerance); distribution distance of log chlorophyll; front alignment with SST |
 | Known failure modes | atmospheric correction in coastal waters; sun glint; cloud shadows; sediment-rich water overestimated; models learn the bias |
-| Contract hash | `40840af4f114…` |
+| Contract hash | `3f7436b535a3…` |
 :::
 
-**Stack.** **Today:** `BandRatio` (geotoolz.spectral), `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `Wasserstein1` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`. **Proposed:** `ClimatologyForecast` (Report 15 C3), `EvaluateByGroup` (Report 14 C1), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred).
+**Stack.** **Today:** `BandRatio` (geotoolz.spectral), `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `Wasserstein1` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`. **Proposed:** `ClimatologyForecast` (Report 15 C3), `EvaluateByGroup` (Report 14 C1), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred).
 
 :::{warning} Differs from the source
 The source's province split and its temporal block are kept, the second as a causal split. Withholding cruises is added here: in-situ HPLC samples come by cruise, and two samples from one cruise are not independent. The structural lens in the source (front alignment with SST) needs the SST product of entry 1.2 as a second input, so the contract names that product's hash.
@@ -248,10 +248,10 @@ BGC-Argo has only recently grown large enough for gridded products; three-dimens
 | Baselines | WOA monthly climatology; OI (slow scales); ESPER |
 | Scorers | RMSE per variable and depth; CRPS per depth, calibration on bottles; stoichiometric consistency; oxygen-minimum-zone and DCM detection |
 | Known failure modes | sensor calibration drift sets the floor; near-surface optics, thermocline; very low oxygen overestimated; sparse floats south of 60° S |
-| Contract hash | `8fb617842097…` |
+| Contract hash | `c1231772f6ba…` |
 :::
 
-**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `ReliabilityCurve` (xrtoolz.metrics), `DensityInversionFraction` (xrtoolz.metrics). **Proposed:** `ClimatologyForecast` (Report 15 C3), `optimal_interpolation` (Report 15 C1), `ThresholdEventDetector` (Report 14 E1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred). **External:** ESPER (empirical seawater property estimates). **Not pinned:** pyrox-gp (3-D Gaussian-process gap filling).
+**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `ReliabilityCurve` (xrtoolz.metrics), `DensityInversionFraction` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `ClimatologyForecast` (Report 15 C3), `optimal_interpolation` (Report 15 C1), `ThresholdEventDetector` (Report 14 E1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred), `EvaluateByGroup` (Report 14 C1). **External:** ESPER (empirical seawater property estimates). **Not pinned:** pyrox-gp (3-D Gaussian-process gap filling).
 
 :::{warning} Differs from the source
 Leave-one-float-out is kept: it is the source's headline split and the right one. The source's split by ocean basin becomes a stratification of the score.
@@ -274,7 +274,7 @@ Heatwaves kill, land surface temperature is the most used land remote-sensing va
 
 | Term | Value |
 |---|---|
-| Task | L1 → L2 mapping, and L3 → L4 forecast |
+| Task | L1 → L2 and L3 → L4, mapping and forecast |
 | Variant | both |
 | Gap the split reproduces | mapping at withheld stations; forecasting the future |
 | Splits | withhold by `station`: withheld stations; causal: held-out years; withhold a region: one Köppen–Geiger zone |
@@ -283,10 +283,10 @@ Heatwaves kill, land surface temperature is the most used land remote-sensing va
 | Baselines | persistence (24 h, 168 h); training-period climatology; operational forecast where licensed |
 | Scorers | RMSE, MAE, bias; CRPS, rank histogram; diurnal phase and amplitude; heatwave detection and duration; bias against elevation |
 | Known failure modes | urban heat islands (absent from ERA5-Land too); lapse-rate bias in terrain; uneven station network; diurnal phase over deserts and snow; skin against 2 m temperature |
-| Contract hash | `cbe972a8f817…` |
+| Contract hash | `4d391b4a2cdc…` |
 :::
 
-**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `MAE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `RankHistogram` (xrtoolz.metrics), `Cycle` (pipekit_cycle), `pot_threshold` (xrtoolz.geo). **Name reserved, raises:** `DurationError`. **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` (Report 14 E1), `EvaluateByGroup` (Report 14 C1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `split_regions` (Report 15 B2), `build_state_catalog` (Report 13 A2).
+**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `MAE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `RankHistogram` (xrtoolz.metrics), `Cycle` (pipekit_cycle), `pot_threshold` (xrtoolz.geo), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `DurationError`. **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` (Report 14 E1), `EvaluateByGroup` (Report 14 C1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `split_regions` (Report 15 B2), `build_state_catalog` (Report 13 A2).
 
 :::{warning} Differs from the source
 The 200 km × 30 day blocks become withheld stations for the mapping variant and a causal split for the forecast variant. The Köppen–Geiger zone split stays as the transfer test; elevation band is a stratification.
@@ -302,7 +302,7 @@ Precipitation is intermittent, heavy-tailed and the textbook double-penalty vari
 
 | Term | Value |
 |---|---|
-| Task | L1 → L2 mapping, and L3 → L4 forecast |
+| Task | L1 → L2 and L3 → L4, mapping and forecast |
 | Variant | probabilistic |
 | Gap the split reproduces | forecasting the future; a climate zone for transfer |
 | Splits | causal: held-out years; withhold a region: one climate zone |
@@ -311,7 +311,7 @@ Precipitation is intermittent, heavy-tailed and the textbook double-penalty vari
 | Baselines | persistence (1 h); training-period climatology; operational forecast for leads ≥ 6 h |
 | Scorers | CRPS; POD, FAR, CSI at 1, 10, 50 mm/h; FSS at several scales; RMSE of log precipitation; distribution of intensities, tails |
 | Known failure modes | too much drizzle, too few heavy events; double penalty; convection under-skilled; orography; light rain miscalibrated |
-| Contract hash | `82a508619b59…` |
+| Contract hash | `5d8b9d7fd3e2…` |
 :::
 
 **Stack.** **Today:** `CRPS` (xrtoolz.metrics), `RMSE` (xrtoolz.metrics), `Wasserstein1` (xrtoolz.metrics), `EnsembleCycle` (pipekit_cycle), `SkillByLeadTime` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`, `CriticalSuccessIndex`. **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `FSS` (Report 14 B1), `BrierScore` (Report 14 B3), `split_causal` (Report 15 B2), `split_regions` (Report 15 B2), `EvaluateByGroup` (Report 14 C1).
@@ -330,7 +330,7 @@ Wind is a vector, so its direction needs circular statistics and its errors are 
 
 | Term | Value |
 |---|---|
-| Task | L1 → L2 mapping, and L3 → L4 forecast |
+| Task | L1 → L2 and L3 → L4, mapping and forecast |
 | Variant | both |
 | Gap the split reproduces | mapping at withheld stations; forecasting the future |
 | Splits | withhold by `station`: withheld stations; causal: held-out years; withhold a region: flat, coastal, mountainous |
@@ -339,10 +339,10 @@ Wind is a vector, so its direction needs circular statistics and its errors are 
 | Baselines | persistence; monthly ERA5 climatology (wind roses); operational forecast where licensed |
 | Scorers | vector RMSE; circular direction error; CRPS per component, spread-skill; gust, calm and wind-shift events; Weibull parameters; divergence and curl |
 | Known failure modes | direction error meaningless in calms; terrain channelling; gusts under-skilled; sea-breeze timing; boundary-layer shear |
-| Contract hash | `79ae4f27ff9f…` |
+| Contract hash | `ed870b75c5fd…` |
 :::
 
-**Stack.** **Today:** `WindDirection` (xrtoolz.atm), `WindSpeed` (xrtoolz.atm), `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `DivergenceError` (xrtoolz.metrics), `matchup` (geocatalog.matchup), `Cycle` (pipekit_cycle). **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` (Report 14 E1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `split_regions` (Report 15 B2). **Not proposed yet:** CircularRMSE, Weibull fit.
+**Stack.** **Today:** `WindDirection` (xrtoolz.atm), `WindSpeed` (xrtoolz.atm), `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `DivergenceError` (xrtoolz.metrics), `matchup` (geocatalog.matchup), `Cycle` (pipekit_cycle), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` (Report 14 E1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `split_regions` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** CircularRMSE, Weibull fit.
 
 :::{warning} Differs from the source
 Blocks become withheld stations and a causal split. The source names a "Tepper formula" for direction error; it could not be traced, so the contract defines the error as the wrapped angle difference Δθ = atan2(sin(θ̂ − θ), cos(θ̂ − θ)).
@@ -367,7 +367,7 @@ Pressure tracks synoptic systems, cyclones and blocking. It overlaps entry 3.3, 
 | Baselines | persistence; training-period climatology; operational forecast |
 | Scorers | RMSE, bias; CRPS, rank histogram; cyclone tracks (position, intensity, timing); blocking detection; hydrostatic consistency |
 | Known failure modes | blocking under-predicted; tropical-cyclone intensity; polar lows; lee cyclones |
-| Contract hash | `0612ff1b684f…` |
+| Contract hash | `56fdaee5f14f…` |
 :::
 
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `RankHistogram` (xrtoolz.metrics), `InstanceMatcher` (xrtoolz.metrics), `EnsembleCycle` (pipekit_cycle). **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `EvaluateByGroup` (Report 14 C1), `split_causal` (Report 15 B2), `build_state_catalog` (Report 13 A2). **Not proposed yet:** blocking index. **External:** TempestExtremes (cyclone tracking).
@@ -402,10 +402,10 @@ Methane is the headline case for MARS and IMEO: retrieval at L2, gridding at L3 
 | Baselines | matched filter (plume detection); column retrievals (operational RemoTeC, scientific WFM-DOAS); IME (source rate); CAMS (background) |
 | Scorers | column RMSE (ppb); POD by emission rate (1 to 1,000 kg/h); CRPS of emission posteriors; regional totals against inventories; source persistence; mass conservation, positivity |
 | Known failure modes | retrieval biases (cloud, aerosol, surface); background mistaken for emission; small plumes detected, mass underestimated; attribution between neighbours; minimum detection limit set by physics |
-| Contract hash | `48c16fa63435…` |
+| Contract hash | `b5816fb2f5ff…` |
 :::
 
-**Stack.** **Today:** `MatchedFilter` (geotoolz.matched_filter), `MatchedFilterSNR` (geotoolz.matched_filter), `IMEEstimate` (geotoolz.plume), `CrossSectionalFlux` (geotoolz.plume), `PlumeMask` (geotoolz.plume), `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `BudgetResidual` (xrtoolz.budgets), `DACycle` (pipekit_cycle). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`, `CriticalSuccessIndex`. **Proposed:** `geocatalog.events` (Report 14 E2), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2). **Not proposed yet:** cascade contract (stages by hash). **Not pinned:** plumax (plume forward model).
+**Stack.** **Today:** `MatchedFilter` (geotoolz.matched_filter), `MatchedFilterSNR` (geotoolz.matched_filter), `IMEEstimate` (geotoolz.plume), `CrossSectionalFlux` (geotoolz.plume), `PlumeMask` (geotoolz.plume), `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `BudgetResidual` (xrtoolz.budgets), `DACycle` (pipekit_cycle), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`, `CriticalSuccessIndex`. **Proposed:** `geocatalog.events` (Report 14 E2), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** cascade contract (stages by hash). **Not pinned:** plumax (plume forward model).
 
 :::{warning} Differs from the source
 The source's `BAEMRBaseline` could not be identified as a published retrieval; the column baselines are TROPOMI's operational RemoTeC retrieval and the scientific WFM-DOAS product instead. The source's temporal block becomes a causal split, and its rule that controlled releases be held out in time becomes a split by campaign as well, since the same emitters recur within a campaign. METEC is a ground test facility; the satellite controlled releases are separate campaigns, named as a second reference. The matched filter and the integrated mass enhancement ship in geotoolz today.
@@ -430,10 +430,10 @@ Three-dimensional winds carry chemistry, dust and aerosol, and upper-level jets 
 | Baselines | persistence; training-period climatology; operational forecast |
 | Scorers | vector RMSE per level; CRPS per level, spread-skill; kinetic-energy spectra per level; jet-streak detection; jet position bias; hydrostatic and geostrophic balance |
 | Known failure modes | sparse stratosphere; tropical winds without geostrophy; boundary-layer structure; gravity waves smoothed; jet position errors |
-| Contract hash | `2bceb7585c55…` |
+| Contract hash | `5d85e4dc72cb…` |
 :::
 
-**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `KESpectralFlux` (xrtoolz.transforms), `PowerSpectrum` (xrtoolz.transforms), `GeostrophicImbalance` (xrtoolz.metrics), `ToPressureLevels` (xrtoolz.interpolate), `Cycle` (pipekit_cycle). **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` (Report 14 E1), `EvaluateByGroup` (Report 14 C1), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred), `build_state_catalog` (Report 13 A2).
+**Stack.** **Today:** `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `KESpectralFlux` (xrtoolz.transforms), `PowerSpectrum` (xrtoolz.transforms), `GeostrophicImbalance` (xrtoolz.metrics), `ToPressureLevels` (xrtoolz.interpolate), `Cycle` (pipekit_cycle), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` (Report 14 E1), `EvaluateByGroup` (Report 14 C1), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred), `build_state_catalog` (Report 13 A2).
 
 :::{warning} Differs from the source
 The 500 km × 14 day blocks become a causal split; altitude band is a stratification of the score, not a split.
@@ -458,7 +458,7 @@ The anomaly correlation of 500 hPa geopotential is the headline number of medium
 | Baselines | persistence; training-period climatology; operational forecast; ACC = 0.6 usefulness line |
 | Scorers | anomaly correlation (ACC) of Z500; RMSE of Z500; CRPS; blocking detection; hydrostatic and gradient-wind balance; storm-track latitude bias |
 | Known failure modes | ACC flatters smooth forecasts; blocking under-predicted; sudden stratospheric warmings; tropical–extratropical interaction |
-| Contract hash | `b26e58590340…` |
+| Contract hash | `dae0a2ea5d08…` |
 :::
 
 **Stack.** **Today:** `RemoveClimatology` (xrtoolz.geo), `Correlation` (xrtoolz.metrics), `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `SkillByLeadTime` (xrtoolz.metrics), `EnsembleCycle` (pipekit_cycle). **Proposed:** `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `EvaluateByGroup` (Report 14 C1), `split_causal` (Report 15 B2), `build_state_catalog` (Report 13 A2). **Not proposed yet:** blocking index.
@@ -484,7 +484,7 @@ Hyperspectral data carry far more information than multispectral data and cover 
 
 | Term | Value |
 |---|---|
-| Task | L1 → L1, between instruments (not a level transition) |
+| Task | L1 → L1, spectral translation between instruments (not a level transition) |
 | Variant | deterministic |
 | Gap the split reproduces | a scene not seen in training |
 | Splits | withhold by `scene_id`: withheld scenes; withhold a region: one land-cover class; causal: a later season |
@@ -493,10 +493,10 @@ Hyperspectral data carry far more information than multispectral data and cover 
 | Baselines | spectral unmixing (NMF); per-pixel spectral-angle matching; band-ratio regression |
 | Scorers | spectral angle, RMSE per band; spectral PSD, smoothness; end-member preservation; downstream task (minerals, water quality); SSIM at multispectral resolution |
 | Known failure modes | atmospheric correction differs between instruments; sub-pixel mixing; sun–target–sensor geometry; band centres and widths differ |
-| Contract hash | `97b8ef911472…` |
+| Contract hash | `13544fdb5137…` |
 :::
 
-**Stack.** **Today:** `ApplySRF` (geotoolz.radiometry), `SpectralBinning` (geotoolz.spectral), `ContinuumRemoval` (geotoolz.spectral), `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `SSIM` (xrtoolz.metrics), `SpatialPatcher` (geopatcher). **Proposed:** `split_by` (Report 15 B2), `split_regions` (Report 15 B2), `split_causal` (Report 15 B2). **Not proposed yet:** spectral angle.
+**Stack.** **Today:** `ApplySRF` (geotoolz.radiometry), `SpectralBinning` (geotoolz.spectral), `ContinuumRemoval` (geotoolz.spectral), `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `SSIM` (xrtoolz.metrics), `SpatialPatcher` (geopatcher), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `split_by` (Report 15 B2), `split_regions` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** spectral angle.
 
 :::{warning} Differs from the source
 Leave-one-scene-out is kept as the right unit, and the source's temporal block becomes a causal split (a later season). Band counts per sensor are left out; the contract carries each sensor's spectral response function instead, which `ApplySRF` consumes.
@@ -512,7 +512,7 @@ Polar orbiters see the globe at high resolution a few times a day; geostationary
 
 | Term | Value |
 |---|---|
-| Task | L1 → L1, between instruments (not a level transition) |
+| Task | L1 → L1, translation between instruments (not a level transition) |
 | Variant | deterministic |
 | Gap the split reproduces | a sensor pair not seen in training |
 | Splits | withhold by `sensor_pair`: withheld pairs; causal: held-out season-years |
@@ -521,10 +521,10 @@ Polar orbiters see the globe at high resolution a few times a day; geostationary
 | Baselines | temporal interpolation to geostationary cadence; bilinear regridding of geostationary data; time-aligned averaging |
 | Scorers | RMSE at coincident pixels; spatial PSD; hourly RMSE, diurnal cycle; continuity across the handover; rapid convection detection |
 | Known failure modes | viewing-geometry biases; sub-pixel cloud at geostationary resolution; sun-glint geometry; calibration drift; poor geostationary coverage poleward |
-| Contract hash | `60d64d9e99eb…` |
+| Contract hash | `78d8b29836ef…` |
 :::
 
-**Stack.** **Today:** `matchup` (geocatalog.matchup), `NearestInTime` (geocatalog.matchup), `WithinWindow` (geocatalog.matchup), `ResampleTime` (xrtoolz.interpolate), `RegridLike` (xrtoolz.interpolate), `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics). **Proposed:** `ThresholdEventDetector` (Report 14 E1), `EvaluateByGroup` (Report 14 C1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2).
+**Stack.** **Today:** `matchup` (geocatalog.matchup), `NearestInTime` (geocatalog.matchup), `WithinWindow` (geocatalog.matchup), `ResampleTime` (xrtoolz.interpolate), `RegridLike` (xrtoolz.interpolate), `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `ThresholdEventDetector` (Report 14 E1), `EvaluateByGroup` (Report 14 C1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2).
 
 :::{warning} Differs from the source
 The split by sensor pair is kept. Latitude band and season are stratifications, and a causal split by season-year is added so that a model is not scored on the season it was trained on. The geostationary imagers are named by role (GOES-East and GOES-West) rather than by satellite number, which changes with replacements.
@@ -540,7 +540,7 @@ Radiative transfer is the inner loop of every retrieval, and it is slow. An emul
 
 | Term | Value |
 |---|---|
-| Task | state → L1, forward simulation (down the ladder) |
+| Task | state → L1, radiative transfer emulation (down the ladder) |
 | Variant | deterministic |
 | Gap the split reproduces | a physical regime outside the training distribution |
 | Splits | withhold by `regime`: cloudy, heavy aerosol, high methane |
@@ -549,10 +549,10 @@ Radiative transfer is the inner loop of every retrieval, and it is slow. An emul
 | Baselines | look-up table; per-band polynomial regression; RTTOV, CRTM |
 | Scorers | spectral RMSE (radiance units); Jacobian fidelity; monotonicity where physics requires; speed-up, forward and backward; out-of-distribution failure rate |
 | Known failure modes | background-trained emulators fail on plumes; multiple scattering; accurate radiances with wrong gradients; band edges |
-| Contract hash | `125e09b2eb95…` |
+| Contract hash | `142b6e876738…` |
 :::
 
-**Stack.** **Today:** `SimulationDataset` (pipekit_train), `NeuralForward` (pipekit_cycle), `RMSE` (xrtoolz.metrics). **Proposed:** `split_by` (Report 15 B2). **Not proposed yet:** Jacobian fidelity. **Not pinned:** rtmx (differentiable RTM).
+**Stack.** **Today:** `SimulationDataset` (pipekit_train), `NeuralForward` (pipekit_cycle), `RMSE` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `split_by` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** Jacobian fidelity. **Not pinned:** rtmx (differentiable RTM).
 
 :::{warning} Differs from the source
 Regimes outside the training distribution are kept as the test; surface type and gas concentration range become stratifications. RTTOV and CRTM are fast radiative transfer models, not learned emulators. Jacobian fidelity is the score no library ships.
@@ -577,7 +577,7 @@ The instrument is the boundary between the world and the data, and its response 
 | Baselines | convolution with Gaussian noise; vendor sensor model |
 | Scorers | radiometric RMSE per band; noise statistics (NEdT, NEdL); MTF reconstruction; positivity; anomaly detection |
 | Known failure modes | striping, dead and hot pixels; calibration drift; cross-talk; stray light |
-| Contract hash | `3de5ecdef258…` |
+| Contract hash | `552d4b5145c3…` |
 :::
 
 **Stack.** **Today:** `ApplySRF` (geotoolz.radiometry), `GaussianNoise` (geotoolz.augment), `DestripeColumn` (geotoolz), `SimulationDataset` (pipekit_train), `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics). **Proposed:** `EvaluateByGroup` (Report 14 C1), `split_causal` (Report 15 B2).
@@ -596,7 +596,7 @@ No single sensor gives everything, and most operational L4 products (OSTIA, OC-C
 
 | Term | Value |
 |---|---|
-| Task | L1 → L2, gap filling |
+| Task | L1 → L2, fusion |
 | Variant | both |
 | Gap the split reproduces | the product with one sensor missing |
 | Splits | withhold by `sensor`: one sensor withheld; causal: held-out years |
@@ -605,10 +605,10 @@ No single sensor gives everything, and most operational L4 products (OSTIA, OC-C
 | Baselines | the operational fusion product; inverse-variance weighting; sequential overpass averaging; per-sensor climatology fallback |
 | Scorers | RMSE, bias by sensor combination; continuity across handovers and swath edges; cross-sensor bias; events seen only by the fusion; variance preservation |
 | Known failure modes | calibration errors propagated; geolocation at high latitude; sun-glint by platform; commissioning and end-of-life drift; best sensor wins, poor fallback |
-| Contract hash | `92d04347a6c0…` |
+| Contract hash | `e656878ae382…` |
 :::
 
-**Stack.** **Today:** `matchup` (geocatalog.matchup), `NearestInTime` (geocatalog.matchup), `SpatialMosaic` (xrtoolz.geo), `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `SpatialPatcher` (geopatcher). **Proposed:** `EvaluateByEvent` (Report 14 C2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2).
+**Stack.** **Today:** `matchup` (geocatalog.matchup), `NearestInTime` (geocatalog.matchup), `SpatialMosaic` (xrtoolz.geo), `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `SpatialPatcher` (geopatcher). **Proposed:** `EvaluateByEvent` (Report 14 C2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1).
 
 :::{warning} Differs from the source
 Leave-one-sensor-out is kept: it is the source's split and the right one. The source's split by sensor-combination availability becomes a stratification.
@@ -631,7 +631,7 @@ Methane emission estimation is a chain of five dependent sub-tasks, from radiati
 
 | Term | Value |
 |---|---|
-| Task | state → L1 → L2 → L4, a five-stage chain |
+| Task | state → L1 → L2 → L4, five-stage chain |
 | Variant | probabilistic |
 | Gap the split reproduces | a region, a source class and a controlled-release campaign unseen in training |
 | Splits | withhold a region: one basin (Permian, Bakken, Algeria, Australia); withhold by `source_class`: one class; withhold by `campaign`: one controlled-release campaign; causal: held-out years |
@@ -640,10 +640,10 @@ Methane emission estimation is a chain of five dependent sub-tasks, from radiati
 | Baselines | look-up table RTM; Gaussian plume; SNR-thresholded matched filter; persistence of yesterday's detection; tier-1 emission factors |
 | Scorers | stage 1: spectral RMSE, Jacobian fidelity; stage 2: concentration RMSE, centroid, IoU; stage 3: POD curve, minimum detection limit; stage 4: Brier score; stage 5: per-source mass error, regional bias, cascade calibration |
 | Known failure modes | stage errors compound down the chain; background mistaken for emission; detection floor set by physics; attribution flips; inventory priors regressed to |
-| Contract hash | `3594d37b6d8c…` |
+| Contract hash | `082a84da40ef…` |
 :::
 
-**Stack.** **Today:** `SimulationDataset` (pipekit_train), `NeuralForward` (pipekit_cycle), `DACycle` (pipekit_cycle), `Recurrence` (pipekit_cycle), `MatchedFilter` (geotoolz.matched_filter), `DetectionThreshold` (geotoolz.matched_filter), `IMEEstimate` (geotoolz.plume), `WindAdvectionCone` (geotoolz.plume), `RMSE` (xrtoolz.metrics), `InstanceMatcher` (xrtoolz.metrics), `MaskIoU` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`. **Proposed:** `BrierScore` (Report 14 B3), `geocatalog.events` (Report 14 E2), `CatalogDataset` (Report 11 A1), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2). **Not proposed yet:** cascade contract (stages by hash). **Not pinned:** plumax (plume forward model), rtmx (differentiable RTM).
+**Stack.** **Today:** `SimulationDataset` (pipekit_train), `NeuralForward` (pipekit_cycle), `DACycle` (pipekit_cycle), `Recurrence` (pipekit_cycle), `MatchedFilter` (geotoolz.matched_filter), `DetectionThreshold` (geotoolz.matched_filter), `IMEEstimate` (geotoolz.plume), `WindAdvectionCone` (geotoolz.plume), `RMSE` (xrtoolz.metrics), `InstanceMatcher` (xrtoolz.metrics), `MaskIoU` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`. **Proposed:** `BrierScore` (Report 14 B3), `geocatalog.events` (Report 14 E2), `CatalogDataset` (Report 11 A1), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** cascade contract (stages by hash). **Not pinned:** plumax (plume forward model), rtmx (differentiable RTM).
 
 :::{warning} Differs from the source
 The source proposes a new `MultiStageEvaluation`. A cascade is several contracts: one per stage and one end to end, each with its own hash, plus a list of how each stage's output feeds the next. That needs one field on the contract, not a second evaluation class.
@@ -669,8 +669,9 @@ sixth appears.
 - **The variant follows the variable.** Five entries require a probabilistic
   contract (salinity, biogeochemistry, precipitation, trace gases and the
   emission chain), eight accept both, and five are deterministic. The source's
-  point stands: the contract declares the variant, and the runner refuses a
-  mismatch (Report 15's D1).
+  point stands: the contract declares the variant, and the runner records it
+  on the report, scoring point entries as degenerate distributions (Report
+  15's D1).
 - **Events are everywhere.** Fifteen of the eighteen entries score at least
   one event (eddies, heatwaves, blooms, plumes, cyclones, blocking, rapid
   convection). The three that do not (4.1, 4.3, 4.4) are instrument and
@@ -684,15 +685,17 @@ sixth appears.
   way into its L2, L3 and L4 stages.
 - **Every entry stratifies.** All eighteen break their scores down by
   something (region, season, phase, altitude, water type, sensor
-  combination). Report 14's grouping wrapper, `EvaluateByGroup` (C1), is
-  needed by eight entries, as many as the region split, and every other
-  stratification goes through `EvaluateByRegion`, which ships.
+  combination). Strata that are region masks (basins, fronts, land cover,
+  latitude bands) go through `EvaluateByRegion`, which ships; every other
+  grouping (season, phase, time of day, altitude, emission rate, band) needs
+  Report 14's `EvaluateByGroup` (C1), proposed. That is sixteen entries:
+  only 1.1 and 1.3 stratify by region alone.
 
 (gal-needs)=
 ## What the stack needs
 
 The gallery needs no new package. Most of what it cites ships today; the
-rest is proposed in Reports 11 to 15 or deferred in the overview, and six
+rest is proposed in Reports 11 to 15 or deferred in the overview, and seven
 pieces are proposed nowhere.
 
 :::{figure} images/benchmarks_gallery/readiness.svg
@@ -711,10 +714,10 @@ every entry, are included.
 |---|---|---|---|
 | `BenchmarkContract`, `Benchmark(references=…)` | 18 | pipekit-evaluate | proposed, [Report 15](reports/15_benchmarking.md#r15-ws-a) A1 and D2 |
 | `split_causal`, `split_by` | 16, 13 | geocatalog | proposed, Report 15 B2 |
+| `EvaluateByGroup` | 16 | xrtoolz | proposed, [Report 14](reports/14_pipekit_evaluate.md#r14-ws-c) C1 |
 | `ClimatologyForecast` | 11 | xrtoolz | proposed, Report 15 C3 |
 | `persistence` | 9 | xrtoolz | proposed, Report 15 C2 |
 | `split_regions` | 8 | geocatalog | proposed, Report 15 B2 |
-| `EvaluateByGroup` | 8 | xrtoolz | proposed, [Report 14](reports/14_pipekit_evaluate.md#r14-ws-c) C1 |
 | `ThresholdEventDetector`, `MarineHeatwaveDetector` | 6, 1 | xrtoolz | proposed, Report 14 E1 |
 | `build_state_catalog` | 5 | geocatalog | proposed, [Report 13](reports/13_state_catalog.md#r13-ws-a) A2 |
 | `ProfileSlice` | 5 | geocatalog | deferred in the [overview](overview.md#sec-plan) until an in-situ project needs it |
@@ -725,14 +728,15 @@ every entry, are included.
 | `DurationError` | 2 | xrtoolz | name reserved; no report proposes an implementation yet |
 | blocking index | 2 | xrtoolz, beside the event detectors | not proposed yet |
 | cascade contract (stages by hash) | 2 | pipekit-evaluate, one field on `BenchmarkContract` | not proposed yet |
+| cloud-mask transplant split | 1 | geocatalog.splits, beside `split_by` (geotoolz's `SimulatedClouds` draws synthetic masks, not real ones) | not proposed yet |
 | circular direction error | 1 | xrtoolz.metrics, beside `xrtoolz.atm.WindDirection` | not proposed yet |
 | Weibull parameter recovery | 1 | xrtoolz.metrics (distributional) | not proposed yet |
 | spectral angle | 1 | geotoolz.spectral | not proposed yet |
 | Jacobian fidelity | 1 | a scorer over pipekit-jax gradients | not proposed yet |
 :::
 
-The six pieces nobody proposes are small: each is a function over arrays
-the stack already holds. The cascade contract is the one with design
+The seven pieces nobody proposes are small: each is a function over arrays
+or catalog rows the stack already holds. The cascade contract is the one with design
 content, and it is a field, not a class:
 
 ```{code-block} python
@@ -775,8 +779,9 @@ needed.
 
 ### Sources
 
-- The source draft, "Benchmarks Gallery", the companion to the Report 15
-  scoping report (supplied by the author).
+- The source draft, "Benchmarks Gallery" [@geostack_gallery_draft], the
+  companion to the Report 15 scoping report [@geostack_r15_draft]; both are
+  unpublished and were supplied by the author.
 - OceanBench [@johnson2023oceanbench] and WeatherBench 2
   [@rasp2024weatherbench], the community benchmarks entries 1.1 and 3.3 are
   modelled on.

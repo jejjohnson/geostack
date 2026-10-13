@@ -21,9 +21,11 @@
 # 1. every stack name an entry marks `today` imports from the module given;
 # 2. every name marked `reserved` imports and raises `NotImplementedError`;
 # 3. every name marked `proposed` with a target module does not exist there yet,
-#    and every split an entry declares has the stack piece that makes it;
+#    every split an entry declares has the stack piece that makes it (an
+#    unknown split kind fails), and every stratum of the score has its wrapper;
 # 4. each contract gets a content hash (`pipekit.hashing`), as Report 15's
-#    workstream A would give it;
+#    workstream A would give it, over every field but the stack references
+#    (the level transition and its operation included);
 # 5. the counts the page quotes about the contracts (tracks, variants, split
 #    kinds, needs, reserved names) are computed here and asserted.
 #
@@ -70,6 +72,7 @@ class Entry:
     name: str
     domain: str
     task: str  # level transition, Report 15's A1
+    operation: str  # what the transition does; hashed with it (gap filling, …)
     variant: str  # deterministic | probabilistic | both
     gap: str  # the deployment gap the split reproduces (Report 15, stage 2)
     splits: list[dict]
@@ -113,6 +116,9 @@ ENERGY = Ref("EnergyScore", "proposed", f"{R14} B3", "xrtoolz.metrics")
 NSE = Ref("NSE", "proposed", f"{R14} B3", "xrtoolz.metrics")
 BYGROUP = Ref("EvaluateByGroup", "proposed", f"{R14} C1", "xrtoolz.metrics")
 BYEVENT = Ref("EvaluateByEvent", "proposed", f"{R14} C2", "xrtoolz.metrics")
+# real cloud masks of other days laid over clear scenes; SimulatedClouds draws
+# synthetic fields, so the transplant split is proposed by no report yet
+MASKX = Ref("cloud-mask transplant split", "gap", "this gallery")
 CATDS = Ref("CatalogDataset", "proposed", f"{R11} A1", "pipekit_train")
 POD = Ref("ProbabilityOfDetection", "reserved", "xrtoolz.metrics.object")
 FAR = Ref("FalseAlarmRatio", "reserved", "xrtoolz.metrics.object")
@@ -150,7 +156,7 @@ E: list[Entry] = []
 
 # ---------------------------------------------------------------- 1 · Ocean
 E.append(Entry(
-    "1.1", "Sea surface height", "Ocean", "L1->L2", "both",
+    "1.1", "Sea surface height", "Ocean", "L1->L2", "gap filling", "both",
     "mapping where one altimetry mission flew, from the others",
     [{"kind": "by", "column": "mission", "test": "one nadir mission"},
      {"kind": "causal", "test": "held-out year"}],
@@ -171,10 +177,10 @@ E.append(Entry(
      Ref("CalculateSSHAlongtrack", T, "xrtoolz.ocn"),
      Ref("along_track_psd_score", T, "xrtoolz.metrics"),
      Ref("OkuboWeiss", T, "xrtoolz.ocn"), Ref("py-eddy-tracker", "external", "eddy tracking"),
-     POD, FAR, CRPS, SSR, SPLIT_BY, SPLIT_CAUSAL, STATES, TRACKS, CONTRACT],
+     POD, FAR, CRPS, SSR, SPLIT_BY, SPLIT_CAUSAL, STATES, TRACKS, CONTRACT, BYREGION],
 ))
 E.append(Entry(
-    "1.2", "Sea surface temperature", "Ocean", "L1->L2", "deterministic",
+    "1.2", "Sea surface temperature", "Ocean", "L1->L2", "gap filling", "deterministic",
     "filling cloud gaps: real cloud masks from other days laid over clear scenes",
     [{"kind": "mask transplant", "source": "cloud masks of other days"},
      {"kind": "by", "column": "platform", "test": "withheld drifters"},
@@ -190,11 +196,11 @@ E.append(Entry(
      "fronts smoothed", "tidal coastal variability missed"],
     [OI, CLIM, PERSIST, RMSE, BIAS, PSD, SSIM, FSS, MHW, POD, DUR,
      Ref("GradientDifference", T, "xrtoolz.metrics"),
-     Ref("SimulatedClouds", T, "geotoolz.augment"), SPLIT_BY, SPLIT_CAUSAL,
-     PROFILES, TRACKS, CONTRACT],
+     Ref("SimulatedClouds", T, "geotoolz.augment"), MASKX, SPLIT_BY, SPLIT_CAUSAL,
+     PROFILES, TRACKS, CONTRACT, BYGROUP, BYREGION],
 ))
 E.append(Entry(
-    "1.3", "Sea surface salinity", "Ocean", "L1->L2", "probabilistic",
+    "1.3", "Sea surface salinity", "Ocean", "L1->L2", "gap filling", "probabilistic",
     "mapping where a held-out Argo float measured; a river system for transfer",
     [{"kind": "by", "column": "float_id", "test": "withheld floats"},
      {"kind": "regions", "test": "one major river system"}],
@@ -214,7 +220,7 @@ E.append(Entry(
      TRACKS, CONTRACT],
 ))
 E.append(Entry(
-    "1.4", "Ocean colour", "Ocean", "L1->L2", "deterministic",
+    "1.4", "Ocean colour", "Ocean", "L1->L2", "gap filling", "deterministic",
     "a biogeochemical province not seen in training; in-situ by cruise",
     [{"kind": "regions", "test": "one Longhurst province"},
      {"kind": "by", "column": "cruise", "test": "withheld cruises"},
@@ -231,10 +237,10 @@ E.append(Entry(
      "sediment-rich water overestimated; models learn the bias"],
     [Ref("BandRatio", T, "geotoolz.spectral"), CLIM, RMSE, BIAS, PSD, W1, POD,
      FAR, BYGROUP, SPLIT_REGIONS, SPLIT_BY, SPLIT_CAUSAL, PROFILES, TRACKS,
-     CONTRACT],
+     CONTRACT, BYREGION],
 ))
 E.append(Entry(
-    "1.5", "Ocean biogeochemistry", "Ocean", "L0->L2", "probabilistic",
+    "1.5", "Ocean biogeochemistry", "Ocean", "L0->L2", "discretization and gap filling", "probabilistic",
     "a float's whole record, unseen in training",
     [{"kind": "by", "column": "float_id", "test": "withheld floats"},
      {"kind": "causal", "test": "held-out years"}],
@@ -250,12 +256,12 @@ E.append(Entry(
      RMSE, CRPS, REL, DETECT, Ref("DensityInversionFraction", T, "xrtoolz.metrics"),
      SPLIT_BY, SPLIT_CAUSAL, PROFILES,
      Ref("pyrox-gp", "unpinned", "3-D Gaussian-process gap filling"), TRACKS,
-     CONTRACT],
+     CONTRACT, BYGROUP, BYREGION],
 ))
 
 # ----------------------------------------------------------------- 2 · Land
 E.append(Entry(
-    "2.1", "Near-surface temperature", "Land", "L1->L2 and L3->L4", "both",
+    "2.1", "Near-surface temperature", "Land", "L1->L2 and L3->L4", "mapping and forecast", "both",
     "mapping at withheld stations; forecasting the future",
     [{"kind": "by", "column": "station", "test": "withheld stations"},
      {"kind": "causal", "test": "held-out years"},
@@ -272,10 +278,10 @@ E.append(Entry(
      "skin against 2 m temperature"],
     [PERSIST, CLIM, RMSE, Ref("MAE", T, "xrtoolz.metrics"), BIAS, CRPS, RANK,
      DETECT, DUR, BYGROUP, CYCLE, Ref("pot_threshold", T, "xrtoolz.geo"),
-     SPLIT_BY, SPLIT_CAUSAL, SPLIT_REGIONS, STATES, TRACKS, CONTRACT],
+     SPLIT_BY, SPLIT_CAUSAL, SPLIT_REGIONS, STATES, TRACKS, CONTRACT, BYREGION],
 ))
 E.append(Entry(
-    "2.2", "Precipitation", "Land", "L1->L2 and L3->L4", "probabilistic",
+    "2.2", "Precipitation", "Land", "L1->L2 and L3->L4", "mapping and forecast", "probabilistic",
     "forecasting the future; a climate zone for transfer",
     [{"kind": "causal", "test": "held-out years"},
      {"kind": "regions", "test": "one climate zone"}],
@@ -292,7 +298,7 @@ E.append(Entry(
      SPLIT_CAUSAL, SPLIT_REGIONS, BYGROUP, TRACKS, CONTRACT],
 ))
 E.append(Entry(
-    "2.3", "Near-surface wind", "Land", "L1->L2 and L3->L4", "both",
+    "2.3", "Near-surface wind", "Land", "L1->L2 and L3->L4", "mapping and forecast", "both",
     "mapping at withheld stations; forecasting the future",
     [{"kind": "by", "column": "station", "test": "withheld stations"},
      {"kind": "causal", "test": "held-out years"},
@@ -312,10 +318,10 @@ E.append(Entry(
      Ref("CircularRMSE", "gap", "this gallery"),
      Ref("Weibull fit", "gap", "this gallery"),
      Ref("DivergenceError", T, "xrtoolz.metrics"), MATCH, CYCLE, SPLIT_BY,
-     SPLIT_CAUSAL, SPLIT_REGIONS, TRACKS, CONTRACT],
+     SPLIT_CAUSAL, SPLIT_REGIONS, TRACKS, CONTRACT, BYGROUP, BYREGION],
 ))
 E.append(Entry(
-    "2.4", "Mean sea-level pressure", "Land", "L3->L4", "both",
+    "2.4", "Mean sea-level pressure", "Land", "L3->L4", "forecast", "both",
     "forecasting the future",
     [{"kind": "causal", "test": "held-out years",
       "exclude": "recovery after large eruptions"}],
@@ -336,7 +342,7 @@ E.append(Entry(
 # ----------------------------------------------------------- 3 · Atmosphere
 E.append(Entry(
     "3.1", "Trace gases (methane, CO₂, water vapour)", "Atmosphere",
-    "L0->L1->L2->L4", "probabilistic",
+    "L0->L1->L2->L4", "retrieval to attribution", "probabilistic",
     "a region, a source class and a controlled-release campaign unseen in training",
     [{"kind": "regions", "test": "one producing basin"},
      {"kind": "by", "column": "source_class", "test": "one class"},
@@ -363,10 +369,10 @@ E.append(Entry(
      Ref("PlumeMask", T, "geotoolz.plume"), RMSE, CRPS, POD, FAR, CSI,
      Ref("BudgetResidual", T, "xrtoolz.budgets"), DACYCLE, EVENTS,
      Ref("plumax", "unpinned", "plume forward model"), SPLIT_REGIONS, SPLIT_BY,
-     SPLIT_CAUSAL, CASCADE, TRACKS, CONTRACT],
+     SPLIT_CAUSAL, CASCADE, TRACKS, CONTRACT, BYGROUP, BYREGION],
 ))
 E.append(Entry(
-    "3.2", "Three-dimensional wind", "Atmosphere", "L3->L4", "both",
+    "3.2", "Three-dimensional wind", "Atmosphere", "L3->L4", "forecast", "both",
     "forecasting the future",
     [{"kind": "causal", "test": "held-out years"}],
     ["altitude band", "latitude band"],
@@ -383,11 +389,11 @@ E.append(Entry(
      Ref("PowerSpectrum", T, "xrtoolz.transforms"),
      Ref("GeostrophicImbalance", T, "xrtoolz.metrics"),
      Ref("ToPressureLevels", T, "xrtoolz.interpolate"), DETECT, BYGROUP, CYCLE,
-     SPLIT_CAUSAL, PROFILES, STATES, TRACKS, CONTRACT],
+     SPLIT_CAUSAL, PROFILES, STATES, TRACKS, CONTRACT, BYREGION],
 ))
 E.append(Entry(
     "3.3", "Geopotential and pressure (Z500, MSLP, tropopause)", "Atmosphere",
-    "L3->L4", "both",
+    "L3->L4", "forecast", "both",
     "forecasting the future",
     [{"kind": "causal", "test": "held-out years"}],
     ["ENSO phase", "NAO phase", "lead time"],
@@ -407,7 +413,7 @@ E.append(Entry(
 
 # ------------------------------------------------------- 4 · Remote sensing
 E.append(Entry(
-    "4.1", "Multispectral to hyperspectral", "Remote sensing", "L1->L1",
+    "4.1", "Multispectral to hyperspectral", "Remote sensing", "L1->L1", "spectral translation between instruments",
     "deterministic",
     "a scene not seen in training",
     [{"kind": "by", "column": "scene_id", "test": "withheld scenes"},
@@ -428,10 +434,10 @@ E.append(Entry(
      Ref("SpectralBinning", T, "geotoolz.spectral"),
      Ref("ContinuumRemoval", T, "geotoolz.spectral"),
      Ref("spectral angle", "gap", "this gallery"), RMSE, PSD, SSIM, SPLIT_BY,
-     SPLIT_REGIONS, SPLIT_CAUSAL, Ref("SpatialPatcher", T, "geopatcher"), TRACKS, CONTRACT],
+     SPLIT_REGIONS, SPLIT_CAUSAL, Ref("SpatialPatcher", T, "geopatcher"), TRACKS, CONTRACT, BYGROUP, BYREGION],
 ))
 E.append(Entry(
-    "4.2", "Polar-orbiting and geostationary", "Remote sensing", "L1->L1",
+    "4.2", "Polar-orbiting and geostationary", "Remote sensing", "L1->L1", "translation between instruments",
     "deterministic",
     "a sensor pair not seen in training",
     [{"kind": "by", "column": "sensor_pair", "test": "withheld pairs"},
@@ -449,10 +455,10 @@ E.append(Entry(
     [MATCH, NEAREST, Ref("WithinWindow", T, "geocatalog.matchup"),
      Ref("ResampleTime", T, "xrtoolz.interpolate"),
      Ref("RegridLike", T, "xrtoolz.interpolate"), RMSE, PSD, DETECT, BYGROUP,
-     SPLIT_BY, SPLIT_CAUSAL, TRACKS, CONTRACT],
+     SPLIT_BY, SPLIT_CAUSAL, TRACKS, CONTRACT, BYREGION],
 ))
 E.append(Entry(
-    "4.3", "Radiative transfer emulation", "Remote sensing", "state->L1",
+    "4.3", "Radiative transfer emulation", "Remote sensing", "state->L1", "radiative transfer emulation",
     "deterministic",
     "a physical regime outside the training distribution",
     [{"kind": "by", "column": "regime", "test": "cloudy, heavy aerosol, high methane"}],
@@ -466,10 +472,10 @@ E.append(Entry(
     ["background-trained emulators fail on plumes", "multiple scattering",
      "accurate radiances with wrong gradients", "band edges"],
     [SIMDS, NEURAL, RMSE, Ref("Jacobian fidelity", "gap", "this gallery"),
-     Ref("rtmx", "unpinned", "differentiable RTM"), SPLIT_BY, TRACKS, CONTRACT],
+     Ref("rtmx", "unpinned", "differentiable RTM"), SPLIT_BY, TRACKS, CONTRACT, BYGROUP, BYREGION],
 ))
 E.append(Entry(
-    "4.4", "Sensor operators (SRF, PSF, noise)", "Remote sensing", "truth->L1",
+    "4.4", "Sensor operators (SRF, PSF, noise)", "Remote sensing", "truth->L1", "forward instrument simulation",
     "both",
     "a mission phase not seen in training",
     [{"kind": "causal", "test": "later mission phase"}],
@@ -488,7 +494,7 @@ E.append(Entry(
      SPLIT_CAUSAL, TRACKS, CONTRACT],
 ))
 E.append(Entry(
-    "4.5", "Multi-satellite fusion", "Remote sensing", "L1->L2", "both",
+    "4.5", "Multi-satellite fusion", "Remote sensing", "L1->L2", "fusion", "both",
     "the product with one sensor missing",
     [{"kind": "by", "column": "sensor", "test": "one sensor withheld"},
      {"kind": "causal", "test": "held-out years"}],
@@ -503,13 +509,13 @@ E.append(Entry(
      "sun-glint by platform", "commissioning and end-of-life drift",
      "best sensor wins, poor fallback"],
     [MATCH, NEAREST, Ref("SpatialMosaic", T, "xrtoolz.geo"), RMSE, BIAS, BYEVENT,
-     Ref("SpatialPatcher", T, "geopatcher"), SPLIT_BY, SPLIT_CAUSAL, TRACKS, CONTRACT],
+     Ref("SpatialPatcher", T, "geopatcher"), SPLIT_BY, SPLIT_CAUSAL, TRACKS, CONTRACT, BYGROUP],
 ))
 
 # --------------------------------------------------- 5 · Mathematical models
 E.append(Entry(
     "5.1", "Emission estimation (five-stage chain)", "Mathematical models",
-    "state->L1->L2->L4", "probabilistic",
+    "state->L1->L2->L4", "five-stage chain", "probabilistic",
     "a region, a source class and a controlled-release campaign unseen in training",
     [{"kind": "regions", "test": "one basin (Permian, Bakken, Algeria, Australia)"},
      {"kind": "by", "column": "source_class", "test": "one class"},
@@ -536,7 +542,7 @@ E.append(Entry(
      Ref("MaskIoU", T, "xrtoolz.metrics"), EVENTS, CATDS,
      Ref("plumax", "unpinned", "plume forward model"),
      Ref("rtmx", "unpinned", "differentiable RTM"), SPLIT_REGIONS, SPLIT_BY,
-     SPLIT_CAUSAL, TRACKS, CONTRACT],
+     SPLIT_CAUSAL, TRACKS, CONTRACT, BYGROUP],
 ))
 len(E), Counter(e.domain for e in E)
 
@@ -568,11 +574,32 @@ def check(ref: Ref) -> str:
     return "ok"
 
 
-KIND_REF = {"by": "split_by", "causal": "split_causal", "regions": "split_regions"}
+KIND_REF = {"by": "split_by", "causal": "split_causal", "regions": "split_regions",
+            "mask transplant": "cloud-mask transplant split"}
 for e in E:  # every split an entry declares has the stack piece that makes it
     for sp in e.splits:
-        if sp["kind"] in KIND_REF:
-            assert KIND_REF[sp["kind"]] in {r.name for r in e.refs}, (e.id, sp)
+        assert sp["kind"] in KIND_REF, (e.id, sp)  # an unknown kind fails
+        assert KIND_REF[sp["kind"]] in {r.name for r in e.refs}, (e.id, sp)
+# every stratum of the score has the wrapper that makes it: a region mask
+# (EvaluateByRegion, today), any other grouping (EvaluateByGroup, Report 14 C1),
+# or lead time (SkillByLeadTime, today)
+REGION, GROUP, LEAD = "EvaluateByRegion", "EvaluateByGroup", "SkillByLeadTime"
+STRATUM = {
+    "region (western boundary currents, coastal)": REGION, "time of day": GROUP,
+    "front regions": REGION, "region (river plumes, polar)": REGION,
+    "water type (open ocean, coastal)": REGION, "season": GROUP, "basin": REGION,
+    "depth": GROUP, "elevation band": GROUP, "climate zone": REGION,
+    "intensity threshold": GROUP, "calm against strong wind": GROUP,
+    "terrain class": REGION, "ENSO phase": GROUP, "emission rate": GROUP,
+    "surface type": REGION, "altitude band": GROUP, "latitude band": REGION,
+    "NAO phase": GROUP, "lead time": LEAD, "land-cover class": REGION,
+    "viewing angle": GROUP, "gas concentration range": GROUP, "band": GROUP,
+    "detector element": GROUP, "sensor combination available": GROUP,
+    "stage": GROUP,
+}
+for e in E:
+    for st in e.stratify:
+        assert STRATUM[st] in {r.name for r in e.refs}, (e.id, st)
 refs = {r for e in E for r in e.refs}
 bad = {r.name: check(r) for r in refs if check(r) != "ok"}
 by_status = Counter(r.status for r in refs)
@@ -599,14 +626,14 @@ hashes, tracks_obs, variants, entries_by_kind, causal_only, needs.most_common(12
 
 # %%
 assert hashes == {
-    "1.1": "867c6d7f7bc2", "1.2": "2c6b783b5d20", "1.3": "0e47b9ba77fd",
-    "1.4": "40840af4f114", "1.5": "8fb617842097", "2.1": "cbe972a8f817",
-    "2.2": "82a508619b59", "2.3": "79ae4f27ff9f", "2.4": "0612ff1b684f",
-    "3.1": "48c16fa63435", "3.2": "2bceb7585c55", "3.3": "b26e58590340",
-    "4.1": "97b8ef911472", "4.2": "60d64d9e99eb", "4.3": "125e09b2eb95",
-    "4.4": "3de5ecdef258", "4.5": "92d04347a6c0", "5.1": "3594d37b6d8c",
+    "1.1": "4c466291f4a6", "1.2": "7df03e454610", "1.3": "354c3dd4228d",
+    "1.4": "3f7436b535a3", "1.5": "c1231772f6ba", "2.1": "4d391b4a2cdc",
+    "2.2": "5d8b9d7fd3e2", "2.3": "ed870b75c5fd", "2.4": "56fdaee5f14f",
+    "3.1": "b5816fb2f5ff", "3.2": "5d85e4dc72cb", "3.3": "dae0a2ea5d08",
+    "4.1": "13544fdb5137", "4.2": "78d8b29836ef", "4.3": "142b6e876738",
+    "4.4": "552d4b5145c3", "4.5": "e656878ae382", "5.1": "082a84da40ef",
 }
-assert by_status == Counter({"today": 61, "proposed": 18, "gap": 6, "reserved": 4,
+assert by_status == Counter({"today": 61, "proposed": 18, "gap": 7, "reserved": 4,
                              "unpinned": 4, "external": 3})
 assert tracks_obs == 16
 assert variants == Counter({"both": 8, "probabilistic": 5, "deterministic": 5})
@@ -616,12 +643,13 @@ assert causal_only == ["2.4", "3.2", "3.3", "4.4"]
 assert dict(needs) == {
     "BenchmarkContract": 18, "Benchmark(references=…)": 18, "split_causal": 16,
     "split_by": 13, "ClimatologyForecast": 11, "persistence": 9,
-    "split_regions": 8, "EvaluateByGroup": 8, "ThresholdEventDetector": 6,
+    "EvaluateByGroup": 16, "split_regions": 8, "ThresholdEventDetector": 6,
     "build_state_catalog": 5, "ProfileSlice": 5, "optimal_interpolation": 4,
     "FSS": 2, "BrierScore": 2, "blocking index": 2, "geocatalog.events": 2,
     "cascade contract (stages by hash)": 2, "MarineHeatwaveDetector": 1,
     "CircularRMSE": 1, "Weibull fit": 1, "spectral angle": 1,
-    "Jacobian fidelity": 1, "EvaluateByEvent": 1, "CatalogDataset": 1,
+    "Jacobian fidelity": 1, "cloud-mask transplant split": 1, "EvaluateByEvent": 1,
+    "CatalogDataset": 1,
 }
 reserved_entries = [e.id for e in E if any(r.status == "reserved" for r in e.refs)]
 reserved_uses = Counter(r.name for e in E for r in e.refs if r.status == "reserved")
@@ -629,7 +657,8 @@ assert reserved_entries == ["1.1", "1.2", "1.4", "2.1", "2.2", "3.1", "5.1"]
 assert reserved_uses == Counter({"ProbabilityOfDetection": 6, "FalseAlarmRatio": 4,
                                  "CriticalSuccessIndex": 2, "DurationError": 2})
 assert gaps == ["CircularRMSE", "Jacobian fidelity", "Weibull fit", "blocking index",
-                "cascade contract (stages by hash)", "spectral angle"]
+                "cascade contract (stages by hash)", "cloud-mask transplant split",
+                "spectral angle"]
 
 # %%
 EVENT = {"ProbabilityOfDetection", "ThresholdEventDetector", "MarineHeatwaveDetector",
