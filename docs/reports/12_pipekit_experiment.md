@@ -49,7 +49,7 @@ gate.**
 | **Audience** | anyone storing, promoting or reloading trained models, logging runs to a tracker, or writing an adapter for an orchestration tool |
 | **Companions** | [Report 11](11_pipekit_train.md) (the training loop that fills artifacts and stores models); [Report 10](10_pipekit_cycle.md) (the cycle a reloaded emulator drops into); [Report 9](09_use_cases.md) (use cases 5 and 9: the registry and the regulatory artifact); [Report 13](13_state_catalog.md) (the producer hash) |
 | **Code checked against** | `pipekit-experiment` 0.0.2 at `ef3c17f`, with pipekit, pipekit-train and pipekit-jax from the same revision; hydra-core 1.3.7, hydra-zen 0.17, DVC and Metaflow 2.19 installed for the adapters. Its 52 tests pass. Read on 13 October 2026 |
-| **Running example** | every output below is from real runs of scripts in the session scratchpad (`exp_ab.py`, `exp_c.py`, `exp_c2.py`, `exp_def.py`, `exp_g.py`, `exp_h.py`) |
+| **Running example** | every output below is from one run of `notebooks/reports/report12_pipekit_experiment.py`, which builds its registries, DVC repository and Metaflow flows in a temporary directory and asserts each output the page shows |
 :::
 
 :::{important} How this page treats the scoping report
@@ -80,7 +80,7 @@ workstreams finish the package.
 - **B. Trackers.** There is no `ExperimentTracker` implementation at all.
   Add a file tracker for tests and offline runs (B1), then MLflow (B2) and
   W&B (B3), and fix the training artifact's `tracker_run_id`, which is
-  always `None` (B4).
+  `None` for the shipped `Run` and `repr(handle)` for anything else (B4).
 - **C. Artifacts.** `TrainingArtifact.rerun` does not exist (C1);
   `InferenceArtifact` accepts a tag where it should pin a hash (C2); and the
   training artifact's `model_registry_uri` omits the registry it points at
@@ -119,8 +119,13 @@ chips are missing.
    adapters. Its core depends only on `pipekit`; each tool arrives through
    its own extra.
 2. **pipekit-train** owns the callbacks that talk to it (`LogToExperiment`,
-   `Checkpoint(registry=...)`) and fills `TrainingArtifact`. It never defines
-   a second artifact type.
+   `Checkpoint(registry=...)`) and fills `TrainingArtifact`. Today it also
+   defines a fallback, `_LocalArtifact` (`loop.py:174`), which
+   `_build_artifact` returns when pipekit-experiment is not installed
+   (`loop.py:427-433`): the same fields, but no `save`, `load` or
+   `reload_model`. The rule is that this fallback is the only second type,
+   is never persisted, and is documented as such; removing it (making
+   `[experiment]` a hard dependency of `run()`) is [an open question](#r12-open-questions).
 3. **Model operators** (pipekit-jax's `JaxModelOp`, pipekit-train's
    `EquinoxModelOp`) own their own weight format: `serialize_weights` and
    `from_registry`. The registry stores bytes and never interprets them.
@@ -197,12 +202,12 @@ $h$; changing the config or a weight must change it.
 :caption: Storing a JaxModelOp with its weights, from a real run.
 :linenos:
 
-# Shapes: W (40, 40) float32 → weights.bin 6,816 bytes
+# Shapes: W (40, 40), b (40,) float32 → weights.bin 6,816 bytes
 import pipekit_experiment as px
 from pipekit_jax import JaxModelOp
 
 reg = px.LocalModelRegistry("registry")                                # today
-op = JaxModelOp(eqx.nn.Linear(40, 40, use_bias=False, key=key))       # today
+op = JaxModelOp(eqx.nn.Linear(40, 40, key=key))      # W and b      today
 h = reg.store(op, name="lin40", weights=op.serialize_weights())       # today
 # registry/<h>/operator.json  {"class": "JaxModelOp",
 #                              "config": {"module_class": "Linear"}, …}
@@ -377,11 +382,17 @@ Stacking trackers works as the scoping report promised: each
 every one is user code. The artifact the loop fills has four problems, and
 only one is pipekit-experiment's own:
 
-- **`tracker_run_id` is always `None`.** pipekit-train reads it as
-  `run["run_id"]` (`loop.py:416`), and `Run` is a dataclass, not a mapping
-  (B4).
+- **`tracker_run_id` is never the run id.** `_build_artifact`
+  (`loop.py:414-419`) keeps a callback's `run` only if it has
+  `__getitem__`, and then stores `repr(run)`. The shipped `Run` is a
+  dataclass without `__getitem__`, so the field is `None`, as here; a
+  tracker that returns a mapping or a string gets its whole `repr`
+  (`"{'name': 'emu', 'id': 'run-0'}"` in Report 11's run), never the id
+  alone (B4).
 - **`model_registry_uri` is `registry://<hash>`.** It does not say which
-  registry (C3).
+  registry, and the registries give `Checkpoint` nothing to say it with:
+  `LocalModelRegistry` exposes `root`, `S3ModelRegistry` exposes `uri`, and
+  only the private `_where()` is common to both (C3).
 - **The weights are not stored.** The Equinox adapter re-wraps the trained
   module as `EquinoxModelOp`, which has no `serialize_weights`; this is
   [Report 11](11_pipekit_train.md#r11-ws-b)'s workstream B1.
@@ -516,7 +527,7 @@ and every tag move is deliberate and recorded.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| weight rebinding in `load(ref, like=None)` | `_ModelRegistryBase.load` | with `like` (a skeleton), call `like.from_registry(self, ref)`; without it, raise a message that names `like=` instead of `from_state`'s |
+| weight rebinding in `load(ref, like=None)` | `_ModelRegistryBase.load` | with `like` (a skeleton), call `like.from_registry(self, ref)`; without it, keep today's `Operator.from_state` path, which already rebuilds serializable operators such as `Scale`; only when that path cannot rebuild the stored model (it is `forbid_in_yaml`, or `weights.bin` exists and the class has no way to rebind it) raise a message that names `like=` instead of `from_state`'s |
 | architecture in the hash for weightless stores | `JaxModelOp.state`, `EquinoxModelOp.state`, or a `store` check | `Linear(40, 40)` and `Linear(3, 7)` share a hash without weights |
 | `store(name=...)` honours write-once; `_tags/_history.jsonl` | `registry.py` | a tag moves only with `tag(..., force=True)`, and every move appends (time, tag, old, new) |
 | `gc(keep=...)`, `delete(hash)`, `untag(name)` | `registry.py` | the scoping report's operational policies (§7.2) |
@@ -555,7 +566,7 @@ that `LogToExperiment` has something to log to out of the box.
 | `JSONLTracker(root)` | `pipekit_experiment.trackers` | an offline, testable tracker: one directory per run with `config.json`, `metrics.jsonl`, `artifacts.json`; it creates `Run` and `RunMetrics` |
 | `MLflowTracker(tracking_uri, experiment_name)` | `adapters/mlflow.py` | the scoping report's first adapter; the extra already exists |
 | `WandbTracker(project, entity=None)` | `adapters/wandb.py` | the second adapter; the extra already exists |
-| `tracker_run_id = run.run_id` | pipekit-train `loop.py:416` | reads `run["run_id"]` today, so the field is always `None` |
+| `_run_id(handle)`, used for `tracker_run_id` | pipekit-train `loop.py:414-419` | normalize each return type the `ExperimentTracker` protocol allows: a `Run` gives `run.run_id`; a mapping gives `handle["run_id"]` (or `"id"`); a `str` is the id itself; anything else gives `None` with a warning. Today the check is `hasattr(run, "__getitem__")` and the value `repr(run)`, so a `Run` gives `None` and a mapping or string gives its `repr` |
 | `log_artifact` on train end | pipekit-train `LogToExperiment` | trackers never see the stored model or the artifact |
 :::
 
@@ -572,7 +583,8 @@ enough of its training loop to run it again.
 |---|---|---|
 | `TrainingArtifact.rerun(build_loop)` | `artifacts.py` | `TrainingLoop` is `forbid_in_yaml`, so rerun needs a builder: a script entry point or a Hydra config (D1) that rebuilds the loop, checked against `dataset_hash` |
 | hash-only pins | `InferenceArtifact.__post_init__`, `reload_models` | stage 4: a tag drifts |
-| `model_registry_uri = f"{registry.uri}/{hash}"` | pipekit-train `callbacks.py:265` | `registry://<hash>` does not say which registry |
+| `ModelRegistry.location` | `protocols.py` and both backends in `registry.py` | a public URI for the registry: `LocalModelRegistry` returns `self.root.resolve().as_uri()` (`file:///…`), `S3ModelRegistry` its `uri`; both already compute it privately as `_where()` (`:293`, `:366`). `LocalModelRegistry` has `root` and no `uri`, so the address cannot be built from `uri` |
+| `model_registry_uri = f"{registry.location.rstrip('/')}/{hash}"` | pipekit-train `callbacks.py:266` | `registry://<hash>` does not say which registry |
 | `training_artifact_hash` in the model's metadata | `Checkpoint` → `store(tags=...)` | links the content-addressed model back to its provenance (stage 1's box) |
 :::
 
@@ -618,7 +630,7 @@ checks the code passes today.
 
 | Gate | Workstream | Passes when |
 |---|---|---|
-| A1 Load with weights | A1 | `reg.load("lin40", like=skeleton)` returns weights equal to the stored ones to 0; without `like`, the error names `like=` |
+| A1 Load with weights | A1 | `reg.load("lin40", like=skeleton)` returns weights equal to the stored ones to 0; `reg.load(h_scale)` still rebuilds `Scale(2.0, 1.0)` with no `like`, and `InferenceArtifact.reload_models` and `TrainingArtifact.reload_model` keep working for it; without `like`, loading a `JaxModelOp` raises an error that names `like=` |
 | A2 No collision | A2 | weightless stores of `Linear(40, 40)` and `Linear(3, 7)` get different hashes |
 | A3 Recorded promotion | A3 | `store(name="production")` raises when the tag exists; after two forced moves, `tag_history` returns three entries in order |
 | A4 Garbage collection | A4 | `gc(keep={"production"})` removes every untagged hash and nothing a tag points to |
@@ -626,10 +638,10 @@ checks the code passes today.
 | A6 MLflow registry | A6 | against a local MLflow file store, store, tag and `load(like=)` round-trip stage 1's emulator to 0 |
 | B1 File tracker | B1 | two `JSONLTracker`s on stage 5's loop write identical 50-line metric files, and `isinstance(t, ExperimentTracker)` holds |
 | B2, B3 Service trackers | B2, B3 | against a local MLflow file store (B2) and W&B offline mode (B3), stage 5's 50 metric points are retrievable by run id |
-| B4 Run id | B4 | `art.tracker_run_id` equals the tracker's `Run.run_id` |
+| B4 Run id | B4 | `art.tracker_run_id` equals the id for each return type: a `Run` (`run.run_id`), a mapping (`["run_id"]`), a `str`; an unknown handle gives `None` and one warning |
 | C1 Retrain | C1 | `art.rerun(build_loop)` on Report 11's white-prior emulator gives weights within 1e-6 of the stored ones on CPU, and the same `dataset_hash` |
 | C2 Hash pins | C2 | an `InferenceArtifact` with a tag in `pinned_model_hashes` raises at construction |
-| C3 Registry URI | C3 | `art.model_registry_uri` starts with the registry's root URI |
+| C3 Registry URI | C3 | `art.model_registry_uri` equals `f"{reg.location}/{hash}"` for both `LocalModelRegistry` (a `file://` URI) and `S3ModelRegistry("memory://…")` |
 | D1 Nested Hydra | D1 | `from_yaml(to_yaml(seq))(x) == seq(x)` for stage 6's `Sequential`, and the configs are equal |
 | D2 Metaflow step | D2 | a two-step flow built with `as_step(..., next="end")` runs and returns 3.5 |
 | D3 DVC pointer | D3 | `hash` returns the md5 for pointers with either key order |
@@ -690,7 +702,11 @@ Correctness first, then trackers, then round trips.
 4. **Do tags carry stages?** The scoping report used `candidate` and
    `production` as plain tags. Should stages be a first-class field with
    allowed transitions, as MLflow has?
-5. **A preview with each model.** The scoping report's `preview.json` held
+5. **Should pipekit-train keep `_LocalArtifact`?** It lets `run()` work
+   without pipekit-experiment, at the cost of a second artifact type that
+   cannot be saved or reloaded. The alternative is to require the
+   `[experiment]` extra for `run()` and return only `TrainingArtifact`.
+6. **A preview with each model.** The scoping report's `preview.json` held
    example inputs and outputs for sanity checks. Is it worth adding, and
    does it belong in the registry or the model card?
 
