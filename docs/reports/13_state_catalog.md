@@ -47,7 +47,7 @@ where their concepts already live, and not building `statecatalog`.**
 | **Audience** | anyone who stores, queries or scores forecasts, analyses or reanalyses with the stack |
 | **Companions** | [Report 6](06_geocatalog.md) (geocatalog); [Report 3](03_sister_libraries.md) (xrtoolz and the sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (pipekit-cycle) |
 | **Code checked against** | the revisions pinned in `references/`: pipekit and its sister packages at 0.0.2 (`ef3c17f`); geotoolz 0.10.2 with geocatalog 0.5.1 (`088475e`); xrtoolz 0.0.5 with xrreader 0.0.4 (`308c7f2`); pandas 3.0.6, as in `pixi.lock`. Read on 13 October 2026 |
-| **Running example** | every output in the code blocks is from real runs over two synthetic archives: an 11-file regional forecast archive (stages 1 to 5) and a 6-file, three-model archive on three grids (stage 6); both are described in [](#r13-running) |
+| **Running example** | every output in the code blocks is from real runs over two synthetic archives: an 11-file regional forecast archive (stages 1 to 5) and a 6-file, three-model archive on three grids (stage 6); both are described in [](#r13-running), and `notebooks/reports/report13_state_catalog.py` regenerates them from fixed seeds and asserts every number shown |
 :::
 
 :::{important} What changed from the scoping report
@@ -119,8 +119,10 @@ produces at its own valid time, so $\tau = 0$. A forecast run started at $r$
 produces states at $\tau = \Delta t, 2 \Delta t, \ldots$ for a model step
 $\Delta t$. An ensemble repeats each run $N_e$ times, with members
 $m = 0, \ldots, N_e - 1$. Each state also has a **producer**, the hash of
-the model and configuration that made it, and a **parent**, the state its run
-started from.
+the model and configuration that made it, and its **parents**, the states
+it was computed from: one for a forecast (the state its run started from), and
+the whole forecast ensemble for an ensemble-Kalman analysis, whose gain is
+estimated from all members at once.
 
 :::{table} The fields of a model state, their CF names and where each one lives today.
 :label: tbl-r13-fields
@@ -130,9 +132,9 @@ started from.
 | Valid time | $v$ | `time`, `valid_time` | `time` | geocatalog's row interval (`start_time`, `end_time`) |
 | Run time | $r$ | `forecast_reference_time` / cfgrib `time` | | an extra column, if the user adds it |
 | Lead time | $\tau = v - r$ | `forecast_period` / cfgrib `step` | | derived; xrtoolz's `lead_dim="lead_time"` |
-| Member | $m$ | `realization` / cfgrib `number` | `member_id` (`r1i1p1f1`) | an extra column; xrtoolz's `ensemble_dim="member"` |
+| Member | $m$ | `realization` / cfgrib `number` | `member_id`, a variant label such as `r1i1p1f1` | an extra column; xrtoolz's `ensemble_dim="member"` |
 | Producer | $h$ | | `source_id` | `Run.pipeline_hash` in pipekit-experiment; an extra column in the catalog |
-| Parent | $p(s)$ | | | nowhere |
+| Parents | $P(s)$, a set | | | nowhere |
 :::
 
 The questions the scoping report wanted answered are the right ones: which
@@ -208,11 +210,13 @@ with a standard deviation of 0.05 ppb, and the forecast error grows with lead
 as $\sigma_\tau = 0.1 + 0.5 \tau$ (in days). The data are synthetic, so the
 scores in stage 4 can be checked against their expected values.
 
-The script is `states.py` in the session scratchpad: about 120 lines, run
-with geocatalog 0.5.1 and xrtoolz 0.0.5 from `references/`. Stage 6 widens
-the example from one regional system to a multi-model comparison, with its
-own six-file archive and script (`cmip.py`, about 110 lines). The blocks below
-are excerpts with their real outputs. Lines marked `user` are glue the user
+The notebook [`notebooks/reports/report13_state_catalog.py`](https://github.com/jejjohnson/geostack/blob/main/notebooks/reports/report13_state_catalog.py)
+builds the archive from a fixed seed in a temporary directory, runs every
+stage, and asserts each number on this page; it runs with geocatalog 0.5.1
+and xrtoolz 0.0.5 from `references/`. Stage 6 widens the example from one
+regional system to a multi-model comparison, with its own six-file archive
+in the same notebook. The blocks below are excerpts with their real outputs;
+names such as `cat`, `t3` and `five_days` are defined in the notebook. Lines marked `user` are glue the user
 writes today; the workstreams remove them.
 
 (r13-stage-1)=
@@ -420,8 +424,13 @@ which is an exact selection on the aligned cube, not a query per forecast.
 **TL;DR.** Follow a state back through the runs it came from, and find the
 observations an analysis used.
 
-**Problem.** With $p(s)$ the parent of state $s$, the lineage of $s$ is the
-chain $s, p(s), p(p(s)), \ldots$ until a state has no parent. For an
+**Problem.** With $P(s)$ the set of parents of state $s$, the lineage of $s$
+is every state reachable by following parents, $s$, $P(s)$, $P(P(s))$, and
+so on, until no state has parents left: a directed acyclic graph, which is a
+chain when every state has one parent. This archive is the simple case:
+each analysis lists one parent, the member-0 forecast. An ensemble-Kalman
+analysis would list every forecast member, because its gain is computed from
+all of them. For an
 analysis at time $t$ with an assimilation window of width $w$, the
 observations used are the rows $o$ of an observation catalog whose
 valid time falls in $[t - w/2, t + w/2]$.
@@ -430,7 +439,7 @@ valid time falls in $[t - w/2, t + w/2]$.
 :caption: Lineage is a walk over the parent column; the assimilation window is an ordinary query on the observation catalog.
 :linenos:
 
-# s, p(s), p(p(s)), … until p = ∅
+# s, P(s), P(P(s)), … until P = ∅; one parent per state in this archive
 by_uri = cat.gdf.set_index("filepath")                                  # user
 uri, chain = "ana_20260104.nc", []                                      # user
 while uri:                                                              # user
@@ -445,8 +454,8 @@ window = GeoSlice(bounds=aoi, interval=pd.Interval(t - w / 2, t + w / 2,
 obs_used = obs_cat.query(window)                       # (M rows)          today
 ```
 
-The lineage walk is five lines of user code and is linear in the chain
-length. The scoping report's `assimilation_window` needs no new code: it is
+The lineage walk is five lines of user code when each state has one parent,
+and a graph search when states have several. The scoping report's `assimilation_window` needs no new code: it is
 `GeoCatalog.query` with the window as the interval, or `matchup` with
 `WithinWindow(start, end)` when many analyses are matched at once. Workstream
 B2 adds `lineage`; the window stays an existing call.
@@ -658,7 +667,7 @@ schema, not fields of a new slice.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `run_time`, `member`, `producer`, `parent_uri` | reserved columns, geocatalog schema v1 (`_schema.py`, `parquet._MIGRATIONS`) | named and typed once: `datetime64[us]`, `int64` with −1 for deterministic, `string`, `string` |
+| `run_time`, `member`, `producer`, `parents` | reserved columns, geocatalog schema v1 (`_schema.py`, `parquet._MIGRATIONS`) | named and typed once: `datetime64[us]`; `string` (a CMIP variant label such as `r1i1p1f1`, or a CF realization number written as text; null for a deterministic run); `string`; `list<string>` (one URI for a forecast, every forecast member for an ensemble analysis) |
 | `build_state_catalog(paths, *, crs, names)` | `geocatalog.build` | fills the four columns from file metadata; one row per file |
 | `CF_NAMES`, `CFGRIB_NAMES` | `geocatalog.states` | where each field is read from: CF attributes and coordinates, or cfgrib's `time`, `step`, `valid_time` and `number` |
 :::
@@ -688,19 +697,24 @@ are $[v_{\min} - r, v_{\max} - r]$, derived when needed.
 cat = build_xarray_catalog(paths, crs="EPSG:4326")                     # today
 attrs = [xr.open_dataset(p).attrs for p in cat.gdf.filepath]           # user
 cat.gdf["run_time"] = pd.to_datetime([a["run_time"] for a in attrs])   # user
-# … member, producer, parent_uri the same way                         # user
+# … member, producer, parents the same way                            # user
 
 # After:
 from geocatalog.build import build_state_catalog
 from geocatalog.states import CF_NAMES
 cat = build_state_catalog(paths, crs="EPSG:4326", names=CF_NAMES)  # proposed (A2)
-cat.gdf[["run_time", "member", "producer", "parent_uri"]]         # proposed (A1)
+cat.gdf[["run_time", "member", "producer", "parents"]]            # proposed (A1)
 ```
 
 `names` maps each field to where it is found: a coordinate, a variable, a
 global attribute or a callable on the path (for archives that encode the run
-in the file name, such as `fc_20260102_m0.nc`). `producer` and `parent_uri`
-have no CF name, so they come from attributes the script writes.
+in the file name, such as `fc_20260102_m0.nc`). `producer` and `parents`
+have no CF name, so they come from attributes the script writes. The member
+column is a string, not the integer of stage 1's glue: a CF realization is a
+number, but a CMIP member is a variant label such as `r1i1p1f1` whose four
+indices (realization, initialization, physics, forcing) all distinguish runs,
+so an integer column would lose them. Stage 1's members become `"0"` and
+`"1"`, and its analyses, written with `member=-1`, get a null.
 
 (r13-ws-b)=
 ## Workstream B · Run-aware loading and typed queries
@@ -716,7 +730,7 @@ what a run is; the observation loader stays as it is.
 | `load_states(catalog, slice_, *, data_vars)` | `geocatalog.states` | stacks one file per (run, member) into an (`init_time`, `member`, `lead_time`, y, x) cube with a `valid_time` coordinate; never drops overlapping runs |
 | `forecast_chain`, `latest_analysis`, `ensemble_at`, `lead_window`, `at_time` | `geocatalog.states` | typed filters on the reserved columns; `pd.Timestamp` and `pd.Timedelta` arguments, so no query strings |
 | `load_states(..., group_by="producer")` | `geocatalog.states` | returns an `xr.DataTree` with one leaf per producer and members stacked in each; stage 6's grouping loop. Without `group_by`, rows on different grids raise instead of being interpolated silently |
-| `lineage(catalog, uri, *, depth)` | `geocatalog.states` | the walk over `parent_uri`, with a depth limit |
+| `lineage(catalog, uri, *, depth)` | `geocatalog.states` | the walk over `parents`, breadth first, with a depth limit; returns every ancestor once |
 | `assimilation_window` | not added | it is `query` with an interval, or `matchup` with `WithinWindow` |
 :::
 
@@ -851,7 +865,7 @@ the script, after the call.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `save_history`, `history_stride`, `history` | `pipekit_cycle.EnsembleCycle` (as on `Cycle`) | the ensemble forecast is the case the scoping report wrote for, and it keeps no trajectory |
+| `save_history`, `history_stride`, `history` | `pipekit_cycle.EnsembleCycle` (as on `Cycle`: one `(members, state)` pair per kept step, where `members` is the list of $N_e$ carriers) | the ensemble forecast is the case the scoping report wrote for, and it keeps no trajectory |
 | `save_history`, `history` | `pipekit_cycle.EnsembleDACycle` (as on `DACycle`: one (forecast, analysis) pair per cycle, here of member lists) | the overview's methane walkthrough runs an `EnsembleDACycle` and indexes its analyses |
 | writing one file per (run, member) | geostack `scripts/` | AGENTS.md: side effects live in scripts; the library computes |
 | `CycleStateWriter`, `CycleStateReader` | not added | a writer inside `step_op` cannot tell members apart and has no clock ([](#r13-audit)); reading an initial state is `latest_analysis` and `xr.open_dataset` |
@@ -867,9 +881,10 @@ fcst = pc.EnsembleCycle(step_op=model, n_steps=T, n_members=N_e,
 members, _ = fcst([x_a] * N_e, pc.DAState())                     # today
 # v_k = r + (k + 1) Δt for history entry k (stride 1)
 for m in range(N_e):                                             # user (script)
+    # history entry h = (members, state), so h[0][m] is member m's carrier
     ds = to_dataset([h[0][m] for h in fcst.history], r, dt)      # arguments sketched
     ds.attrs |= {"forecast_reference_time": str(r), "realization": m,
-                 "producer": h_hash, "parent_uri": parent}      # user (script)
+                 "producer": h_hash, "parents": [x_a_uri]}      # user (script)
     ds.to_zarr(root / f"fc_{r:%Y%m%dT%H}_m{m}.zarr")             # user (script)
 cat = build_state_catalog(sorted(root.glob("fc_*.zarr")),
                           crs=crs, names=CF_NAMES)               # proposed (A2)
@@ -902,16 +917,16 @@ running example's eleven files.
 
 | Gate | Workstream | Passes when |
 |---|---|---|
-| A1 Schema round trip | A1 | a v1 catalog round-trips through GeoParquet with `run_time` as `datetime64[us]` and `member` as `int64`; a v0 file reads with the four columns all null, and every other column unchanged |
+| A1 Schema round trip | A1 | a v1 catalog round-trips through GeoParquet with `run_time` as `datetime64[us]` and `member` as `string` (a CMIP variant label `r1i1p1f1` and a null both survive) and `parents` as `list<string>`; a v0 file reads with the four columns all null, and every other column unchanged |
 | A2 Builder | A2 | `build_state_catalog` on the 11 files fills 11 of 11 rows, equal to stage 1's hand-filled columns; with `CFGRIB_NAMES` on a cfgrib-decoded file it reads $r$, $\tau$ and $m$ |
 | B1 No dropped runs | B1 | `load_states` on the 6 forecast files returns sizes (3, 2, 3, 4, 4), equal to stage 3's hand-stacked cube with a maximum absolute difference of 0; the slice for 3 January returns 3 runs (today: 1) |
-| B2 Typed queries | B2 | on the archive, `forecast_chain` returns 1 row, `latest_analysis` `ana_20260103.nc`, `ensemble_at` members [0, 1], and `lineage` 7 rows in stage 5's order; `forecast_chain` with an exact `pd.Timestamp` returns the row the string query misses |
+| B2 Typed queries | B2 | on the archive, `forecast_chain` returns 1 row, `latest_analysis` `ana_20260103.nc`, `ensemble_at` members `["0", "1"]`, and `lineage` 7 rows in stage 5's order; `forecast_chain` with an exact `pd.Timestamp` returns the row the string query misses |
 | C1 Alignment | C1 | `align_reference` equals `an.sel(time=fc.valid_time)` exactly, and `SkillByLeadTime(RMSE)` on it reproduces [0.076, 0.467, 0.746] to 1e-12; a lead past the last analysis is NaN |
 | C2 Broadcasting | C2 | `RMSE` over `("member", "init_time", "lat", "lon")` with a member-less reference equals the `xr.broadcast` result [0.109, 0.617, 1.132] to 1e-12; results for inputs that already share dimensions are unchanged to 0 |
 | B3 Producers as leaves | B1 | `load_states(group_by="producer")` on stage 6's 6 files returns 3 leaves of sizes (3, 90, 180, 360), (1, 90, 72, 144) and (2, 90, 90, 180), equal to stage 6's hand-grouped tree to 0; the same call without `group_by` raises |
 | C3 Area weights | C3 | `Reduce("mean", weights="cell_area")` equals the sin-latitude weighted mean to 1e-12 on each leaf, and the global mean of a constant field is that constant to 1e-12 on every grid |
 | C4 Conservation (existing) | — | `RegridConservative(mode="mean", normalize="destarea")` keeps each model's time-mean area mean to 1e-10 K; the hybrid pipeline equals the native one to 1e-10 K. It passes today: 1.2e-11 ([](#r13-stage-6)) |
-| D1 Ensemble history | D1 | with `save_history=True`, `EnsembleCycle` keeps `len(history) == ceil(T / s)` entries of $N_e$ carriers, and `EnsembleDACycle` one (forecast, analysis) pair of $N_e$ members per cycle; with it off, outputs equal today's to 0 and `history` is empty |
+| D1 Ensemble history | D1 | with `save_history=True`, `EnsembleCycle` keeps `len(history) == ceil(T / s)` `(members, state)` entries with `len(members) == N_e`, and `EnsembleDACycle` one (forecast, analysis) pair of $N_e$ members per cycle; with it off, outputs equal today's to 0 and `history` is empty |
 :::
 
 (r13-risks)=
