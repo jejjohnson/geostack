@@ -861,8 +861,8 @@ decision.
   yet assimilate a different R each hour (the kriged variance of stage 3).
   Recommended: an `obs_err_source` that writes into the state each step.
 - **Two evaluation APIs.** The [examples](overview_examples.md#ex-evaluation)
-  sketch `pe.Pipeline`, `ByLeadTime`, `MultiTrackEvaluation` and a
-  `BenchmarkContract`. pipekit-evaluate already ships a different model:
+  sketch `pe.Pipeline`, `ByLeadTime` and a `BenchmarkContract` (an earlier
+  draft also sketched a `MultiTrackEvaluation`). pipekit-evaluate already ships a different model:
   `Task`, `Estimator`, `Oracle`, `Scorer` and a `Benchmark` cube.
   Recommended: build the sketched helpers on the shipped classes, so
   `Oracle` stays the single home of "step 2 as oracle". Alternative: keep
