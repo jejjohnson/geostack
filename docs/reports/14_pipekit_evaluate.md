@@ -359,7 +359,8 @@ SSIM("z", ["y", "x"])(blur, truth)          # → 0.885                         
 # slope of E(k) over k ∈ [0.05, 0.15] cycles / px
 fit_spectral_slope(isotropic_power_spectrum(truth.z, ["y", "x"]),
                    k_min=0.05, k_max=0.15)  # → −3.10  (blur: −9.39)          today
-resolved_scale(psd_score(blur.z, truth.z, psd_dims=["y", "x"], isotropic=True))
+score = psd_score(blur.z, truth.z, psd_dims=["y", "x"], isotropic=True)
+resolved_scale(score, "freq_r", level=0.5)  # frequency coordinate, 50 % level
 # → 11.98 px  (analytic 12.03 px)                                            today
 bands = {"large": (0, 0.05), "meso": (0.05, 0.125), "small": (0.125, 0.5)}
 FrequencyBandSkill("z", ["y", "x"], bands)(blur, truth)
@@ -698,7 +699,7 @@ propose.
 | Symbol | Destination | Reason |
 |---|---|---|
 | a scorer with `differentiable=True` as a pipekit-train `Loss` | pipekit-evaluate adapter over `pipekit_train.loss` | the scoping report's `MetricAsLoss`; refuses non-differentiable scorers, which today means every xrtoolz metric |
-| per-step scoring in cycles | the `on_step` hook of [Report 10](10_pipekit_cycle.md#r10-open-questions)'s open question 3 | the scoping report's `MetricObserver`; a step inside a `Sequential` is rejected by cycles today (Report 10, workstream A) |
+| per-step scoring in cycles | the `on_step(k, carriers, state)` hook of [Report 13](13_state_catalog.md#r13-open-questions)'s open question 3 | the scoping report's `MetricObserver`; a step inside a `Sequential` is rejected by cycles today (Report 10, workstream A) |
 | a report linked to its model | registry metadata ([Report 12](12_pipekit_experiment.md#r12-ws-c), workstream C) | the scoping report's `attach_evaluation` |
 | `presets.plume()`, `presets.ocean()`, `presets.land_extremes()`, `presets.fusion()` | pipekit-evaluate | the four pilots' scorer lists, in place of `weatherbench()` and `oceanbench()` |
 :::
