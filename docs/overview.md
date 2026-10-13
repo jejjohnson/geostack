@@ -688,8 +688,8 @@ Mass closure checks that total methane is conserved to within 1 %.
 
 The same pipeline, written as YAML, becomes the regulatory artifact (Report 9,
 use case 9). The same operators run in a notebook (case 1), an ETL job
-(case 2), a FastAPI endpoint (case 5) or a Fused UDF (Report 15 and the Fused
-integration design).
+(case 2), a FastAPI endpoint (case 5) or a Fused UDF (the Fused integration
+design).
 
 (sec-tier-briefs)=
 ## Per-tier briefs
@@ -781,8 +781,8 @@ substrate differs, the operator algebra is identical.
 | `pipekit-cycle` | Time-stepping, DA and iterative inference: `Cycle`, `EnsembleCycle`, `Recurrence`, `DACycle`, `EnsembleDACycle`, `SmootherCycle`, `BFNCycle`; the three core protocols plus eleven cross-library ones | 10 |
 | `pipekit-train` | Training for emulators and amortized inference: Equinox + Optax, NumPyro SVI and MCMC, BlackJAX NUTS; Lightning and Keras 3 scaffolded | 11 |
 | `pipekit-experiment` | A content-addressed `ModelRegistry` (local and fsspec), training and inference artifacts, the tracker protocol, and Hydra, DVC and Metaflow adapters; MLflow and W&B trackers planned | 12 |
-| `pipekit-evaluate` | The benchmark ladder (level × rung × complexity, reference rule, `Benchmark`); Unit × Lens × Stage tags and an evaluation report proposed over `xrtoolz.metrics` | 14, 15 |
-| `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`). Ships as `geotoolz-catalog` in the geotoolz monorepo | 6 |
+| `pipekit-evaluate` | The benchmark ladder (level × rung × complexity, reference rule, `Benchmark`); Unit × Lens × Stage tags, an evaluation report and the `BenchmarkContract` proposed over `xrtoolz.metrics` | 14, 15 |
+| `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`). Ships as `geotoolz-catalog` in the geotoolz monorepo; block, platform and causal splits of rows proposed | 6, 15 |
 | `geopatcher` | Four-axis patcher: geometry × sampler × window × aggregation (~60 classes). Ships as `geotoolz-patcher` in the geotoolz monorepo | 7 |
 | `geocatalog.states` | geocatalog's state profile for L3–L5: run time, member, producer and parent columns; run-aware loading; forecast-chain and lineage queries. Proposed; replaces the planned `statecatalog` package | 13 |
 :::
@@ -866,7 +866,10 @@ decision.
   `Task`, `Estimator`, `Oracle`, `Scorer` and a `Benchmark` cube.
   Recommended: build the sketched helpers on the shipped classes, so
   `Oracle` stays the single home of "step 2 as oracle". Alternative: keep
-  both and document the boundary.
+  both and document the boundary. [Report 15](reports/15_benchmarking.md#r15-ws-d)
+  takes the recommendation for the contract and the tracks: `Benchmark`
+  gains `from_contract` and several references per run, and there is no
+  separate `MultiTrackEvaluation`.
 - **What `InferenceArtifact` still needs for a cold rerun.** The shipped
   `InferenceArtifact` already saves and loads a pipeline's YAML, its pinned
   model hashes, the lockfile and metadata. A `rerun` that rebuilds the
@@ -1004,8 +1007,9 @@ training and serving still need work, but the pipelines exist.
 
 :::{tab-item} Month 5
 - pipekit-evaluate v0.1: framework, cheap metrics, `EvaluationReport`
-- leakage-aware splitters in pipekit-train
-- standard baselines: persistence, climatology, OI
+- leakage-aware splits: block, platform and causal splits of catalog rows in
+  geocatalog, and the window guard in time units in pipekit-train
+- standard baselines in xrtoolz: persistence, climatology, OI
 - `ModelRole` and `ArtifactLineage` in pipekit-experiment, the six-step
   cycle's content-addressed lineage
 
@@ -1128,7 +1132,7 @@ notes and will move into `docs/` as they are written up. Until then, the
 | registry and tracking | [Report 12](reports/12_pipekit_experiment.md): pipekit-experiment |
 | L3–L5 indexing | [Report 13](reports/13_state_catalog.md): the state catalog, as geocatalog's state profile |
 | evaluation | [Report 14](reports/14_pipekit_evaluate.md): pipekit-evaluate |
-| benchmark infrastructure | Report 15: contracts, leakage, baselines |
+| benchmark infrastructure | [Report 15](reports/15_benchmarking.md): benchmarks as content-addressed contracts |
 | the six-step cycle | Report 16: step 2 as oracle, benchmarks as understanding |
 | the data lifecycle in detail | `data_ml_lifecycle.md` |
 | concrete benchmarks | `benchmarks_gallery.md`: 23 benchmarks in 6 domains |

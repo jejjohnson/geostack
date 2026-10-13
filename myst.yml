@@ -22,6 +22,7 @@ project:
         - file: docs/reports/12_pipekit_experiment.md
         - file: docs/reports/13_state_catalog.md
         - file: docs/reports/14_pipekit_evaluate.md
+        - file: docs/reports/15_benchmarking.md
     - title: Notes
       children:
         - file: docs/notes/background.md

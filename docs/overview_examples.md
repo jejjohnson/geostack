@@ -664,42 +664,50 @@ report = bench.run()                                   # → BenchmarkReport
 (ex-benchmark)=
 ### Benchmark contract
 
+A benchmark is a frozen contract: the task as a level transition, the
+carriers, the split and the gap it reproduces, the references, the scorers and
+the baselines, hashed with pipekit's `stable_json` and `sha256_hex`.
+[Report 15](reports/15_benchmarking.md) runs this contract's synthetic twin;
+the classes are proposed there (workstreams A, B and D).
+
 ```{code-block} python
 :caption: A pre-registerable, content-addressed benchmark contract.
 :linenos:
 
-# Shapes: (T, lat, lon) in and out; 200 km × 60 day blocks for the splits
-contract = pe.BenchmarkContract(  # proposed (F)
-    name="oceanbench_ssh_2025",
-    version="1.0.0",
-    task="gap_filling",
-    input_carrier_spec={"shape": ("time", "lat", "lon"), "dtype": "float32"},
-    output_carrier_spec={"shape": ("time", "lat", "lon"), "dtype": "float32"},
+# Shapes: along-track obs (t, lat, lon, η) in; (time, lat, lon) maps out
+contract = pe.BenchmarkContract(                                 # proposed (A)
+    name="oceanbench_ssh_2025", version="1.0.0",
+    task="L1->L2",                  # gap filling, as a level transition
     variant="deterministic",
-    reference_catalogs={
+    input={"carrier": "points", "vars": ["ssh"], "units": "m"},
+    output={"carrier": "grid", "dims": ["time", "lat", "lon"], "units": "m"},
+    splits={                        # the one place the split lives
+        "_target_": "geocatalog.splits.split_by",               # proposed (B)
+        "column": "producer", "test": "c2",
+        "gap": "mapping where one altimeter flew, from the others",
+    },
+    references={
         "reanalysis": "s3://glorys/2023/index.parquet",
         "analysis": "s3://duacs/2023/index.parquet",
-        "observations": "s3://altimetry/2023/index.parquet",
+        "observations": "s3://altimetry/2023/c2.parquet",
     },
-    train_catalog_uri="s3://oceanbench/train.parquet",
-    val_catalog_uri="s3://oceanbench/val.parquet",
-    test_catalog_uri="s3://oceanbench/test.parquet",
-    splitter_config={             # the one place block sizes live
-        "_target_": "pipekit_train.splitters.SpatioTemporalBlockSplit",
-        "spatial_block_km": 200,
-        "temporal_block_days": 60,
-    },
-    metric_configs=[...],
-    baselines=["pipekit_evaluate.baselines.OptimalInterpolationBaseline"],
-    max_test_evaluations=1,
+    scorers=[...],
+    baselines=[{"_target_": "xrtoolz.interpolate.optimal_interpolation",
+                "length": 100e3, "time_scale": "30D"}],         # proposed (C)
+    status="pre-registered",
 )
-digest = contract.content_hash()  # pre-registerable
-contract.to_yaml().save("s3://oceanbench/contracts/v1.0.0.yaml")
+digest = contract.content_hash()  # sha256_hex(stable_json(...))  proposed (A)
+report = pe.Benchmark.from_contract(contract, estimators=entries).run()
+report.contract_hash == digest                                  # proposed (A)
 ```
 
-The earlier draft also set `block_size_spatial_km` and
-`block_size_temporal_days` beside `splitter_config`. They now live only in
-the splitter config, so the two cannot disagree.
+The earlier draft set `block_size_spatial_km` and `block_size_temporal_days`
+beside the splitter, prescribed 200 km × 60 day blocks for SSH and
+put the baselines in pipekit-evaluate. Report 15's run shows that for mapping
+the held-out set should be a withheld altimeter, not a block, and that the
+baselines belong beside xrtoolz's gap-fillers; the split is now a single term
+that also states the gap it reproduces. The withheld mission (`"c2"` here) is
+the curator's choice, sketched.
 
 (ex-repro)=
 ### Reproducibility artifact
