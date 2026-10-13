@@ -46,7 +46,7 @@ cycle the wrong observations. This page proposes two small fixes.
 | **Audience** | anyone writing a forward simulation, a DA cycle or an iterative retrieval with the stack, or an adapter for an algorithm library |
 | **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core, where `StatefulOperator` and `CarryState` live); [Report 9](09_use_cases.md) (use cases); [Report 13](13_state_catalog.md) (indexing the states a cycle produces); [Reports 11 and 12](#r10-ref-report-11) (training and the registry, forthcoming) |
 | **Code checked against** | `pipekit-cycle` 0.0.2 and `pipekit` 0.0.2 at `ef3c17f`, the revision pinned in `references/pipekit`; its 100 tests pass. Read on 13 October 2026 |
-| **Running example** | every output below is from one script run on that revision (`report10.py` in the session scratchpad, about 200 lines) |
+| **Running example** | every output below is from one run on that revision of `notebooks/reports/report10_pipekit_cycle.py`, which seeds every draw and asserts each number the page shows |
 :::
 
 :::{important} The code takes precedence
