@@ -818,6 +818,171 @@ def r10_roadmap() -> Svg:
     return f
 
 
+def r11_ownership() -> Svg:
+    """Report 11: pipekit-train's layers, its backends and its two handoffs."""
+    f = Svg(
+        840,
+        520,
+        "pipekit-train 0.0.2. Data sources (pipekit-cycle forward models, Zarr"
+        " stores, plain iterables; geocatalog is planned) feed its datasets."
+        " TrainingLoop runs on one of six backends: Equinox and the three"
+        " Bayesian ones (NumPyro SVI, NumPyro MCMC, BlackJAX) are real, Lightning"
+        " and Keras are scaffolds. The loop returns a trained operator, which"
+        " drops into pipekit-cycle as a NeuralForward, and a TrainingArtifact for"
+        " pipekit-experiment.",
+    )
+    srcs = [
+        ("pipekit-cycle", ["ForwardModel → SimulationDataset"], ML, False),
+        ("Zarr stores", ["XarrayWindowDataset"], STATE, False),
+        ("geocatalog", ["CatalogDataset (planned)"], EXT, True),
+    ]
+    for i, (name, sub, hue, dashed) in enumerate(srcs):
+        f.box(24 + i * 270, 20, 252, 60, name, sub, hue=hue, dashed=dashed)
+        f.arrow([(150 + i * 270, 80), (150 + i * 270, 118)], color=LINE, dashed=dashed)
+    f.rect(24, 120, 792, 210, stroke=ENG[0], fill=ENG[1])
+    f.text(44, 148, "pipekit-train 0.0.2", size=16, weight=700, anchor="start")
+    rows = [
+        (
+            "datasets",
+            [
+                "TrainingDataset",
+                "SimulationDataset",
+                "IterableDataset",
+                "CachedDataset",
+                "XarrayWindowDataset",
+            ],
+        ),
+        ("losses", ["Loss", "MSE", "NLL", "KL", "Composite"]),
+        (
+            "components",
+            [
+                "Callback",
+                "EarlyStopping",
+                "Checkpoint",
+                "LogToExperiment",
+                "JSONLWriter",
+                "HyperSweep",
+            ],
+        ),
+        ("loop", ["TrainingLoop", "TrainerCarryState", "ValidationStep"]),
+    ]
+    y = 164.0
+    for label, chips in rows:
+        f.text(44, y + 17, label, size=12.5, color=MUTED, anchor="start")
+        x = 140.0
+        for c in chips:
+            x += f.chip(x, y, c, hue=(BORDER, CARD), size=11.5) + 7
+        y += 32
+    f.text(44, 312, "backends", size=12.5, color=MUTED, anchor="start")
+    x = 140.0
+    for c, dashed in [
+        ("equinox", False),
+        ("numpyro-svi", False),
+        ("numpyro-mcmc", False),
+        ("blackjax", False),
+        ("lightning", True),
+        ("keras", True),
+    ]:
+        hue = (LINE, PANEL) if dashed else (ENG[0], CARD)
+        x += f.chip(x, 296, c, hue=hue, dashed=dashed, size=11.5) + 7
+    f.box(
+        24,
+        380,
+        380,
+        76,
+        "trained operator",
+        ["EquinoxModelOp · NumpyroPredictiveOp", "→ pc.NeuralForward in a cycle"],
+        hue=ML,
+    )
+    f.box(
+        436,
+        380,
+        380,
+        76,
+        "TrainingArtifact",
+        ["dataset_hash · backend_info · deps_lock", "→ pipekit-experiment registry"],
+        hue=OBS,
+    )
+    f.arrow([(214, 330), (214, 378)], color=INK)
+    f.arrow([(626, 330), (626, 378)], color=INK)
+    f.text(
+        420,
+        490,
+        "dashed: planned or scaffold only",
+        size=12,
+        color=MUTED,
+        italic=True,
+    )
+    f.h = 506
+    return f
+
+
+def r11_roadmap() -> Svg:
+    """Report 11: fixes first, then the missing features, then the backends."""
+    f = Svg(
+        840,
+        470,
+        "Roadmap. Phase 1 fixes what the running example hit: the SimulationDataset"
+        " trajectory path and its hash (A2, A3), the window import (A5), the registry"
+        " round trip and the model hash (B1, B2), checkpoints, sweep selection,"
+        " ValidationStep in the loop and the SVI step (C1 to C4). Phase 2 adds the"
+        " missing pieces the scoping report asked for:"
+        " CatalogDataset (A1), a faster cache (A4) and the amortized-inference recipe"
+        " (D1). Phase 3 builds the Lightning and Keras backends (E1, E2).",
+    )
+    rows = [
+        (
+            [
+                ("1a · A2 A3 A5", ["simulation path, hash,", "window import"], ENG),
+                ("1b · B1 B2", ["registry round trip,", "model hash"], ML),
+                ("1c · C1 to C4", ["checkpoints, sweeps,", "validation, SVI jit"], OBS),
+            ],
+            "A2 · A3 · A5 · B1 · B2 · C1 · C2 · C3 · C4",
+        ),
+        (
+            [
+                ("2a · A1", ["CatalogDataset", "over geocatalog"], ENG),
+                ("2b · A4", ["CachedDataset", "speed and formats"], ENG),
+                ("2c · D1", ["amortized-inference", "recipe and heads"], ML),
+            ],
+            "A1 · A4 · D1",
+        ),
+        (
+            [
+                ("3a · E1", ["Lightning adapter", "(ADR D5, v0.2)"], EXT),
+                ("3b · E2", ["Keras 3 adapter", "(ADR D5, v0.3)"], EXT),
+            ],
+            "E1 · E2",
+        ),
+    ]
+    y = 24.0
+    for items, gate in rows:
+        n = len(items)
+        w = (792 - 18 * (n - 1)) / n
+        for i, (name, sub, hue) in enumerate(items):
+            f.box(24 + i * (w + 18), y, w, 70, name, sub, hue=hue, title_size=14)
+        cx, gy, d = 420, y + 70 + 26, 13
+        f.arrow([(cx, y + 70), (cx, gy - d - 1)], color=LINE)
+        f.parts.append(
+            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+            f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}" stroke-width="1.4"/>'
+        )
+        f.text(
+            cx + d + 10,
+            gy + 4.5,
+            f"gates {gate}",
+            size=12,
+            color=ENG[0],
+            anchor="start",
+            weight=600,
+        )
+        if items is not rows[-1][0]:
+            f.arrow([(cx, gy + d), (cx, gy + 48)], color=LINE)
+        y = gy + 50
+    f.h = int(y - 8)
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
@@ -828,6 +993,8 @@ FIGURES = {
     "r13_roadmap": r13_roadmap,
     "r10_ownership": r10_ownership,
     "r10_roadmap": r10_roadmap,
+    "r11_ownership": r11_ownership,
+    "r11_roadmap": r11_roadmap,
 }
 
 

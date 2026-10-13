@@ -44,7 +44,7 @@ cycle the wrong observations. This page proposes two small fixes.
 | **Status** | Built. Originally a scoping proposal ("committed"); pipekit-cycle 0.0.2 is the design of record, and this page follows it |
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone writing a forward simulation, a DA cycle or an iterative retrieval with the stack, or an adapter for an algorithm library |
-| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core, where `StatefulOperator` and `CarryState` live); [Report 9](09_use_cases.md) (use cases); [Report 13](13_state_catalog.md) (indexing the states a cycle produces); [Reports 11 and 12](#r10-ref-report-11) (training and the registry, forthcoming) |
+| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core, where `StatefulOperator` and `CarryState` live); [Report 9](09_use_cases.md) (use cases); [Report 13](13_state_catalog.md) (indexing the states a cycle produces); [Report 11](11_pipekit_train.md) (training the emulators of stage 4); [Report 12](#r10-ref-report-11) (the registry, forthcoming) |
 | **Code checked against** | `pipekit-cycle` 0.0.2 and `pipekit` 0.0.2 at `ef3c17f`, the revision pinned in `references/pipekit`; its 100 tests pass. Read on 13 October 2026 |
 | **Running example** | every output below is from one run on that revision of `notebooks/reports/report10_pipekit_cycle.py`, which seeds every draw and asserts each number the page shows |
 :::
@@ -727,17 +727,16 @@ file at the page and delete its entry below. -->
 
 :::{note} Placeholders
 :class: simple
-Reports 11 and 12 (pipekit-train and pipekit-experiment) are still being
-written. Reports [2](02_pipekit_surface.md), [9](09_use_cases.md) and
+Report 12 (pipekit-experiment) is still being written. Reports
+[2](02_pipekit_surface.md), [9](09_use_cases.md), [11](11_pipekit_train.md) and
 [13](13_state_catalog.md) are published.
 :::
 
 ### Forthcoming reports
 
 (r10-ref-report-11)=
-Reports 11 and 12 · pipekit-train, pipekit-experiment
-: *Forthcoming.* Training emulators for stage 4's swap, and registering
-  them.
+Report 12 · pipekit-experiment
+: *Forthcoming.* Registering the emulators that stage 4 swaps in.
 
 ### Sources
 

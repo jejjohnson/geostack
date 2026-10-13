@@ -83,8 +83,9 @@ letters tag every `proposed (X)` call on the
   `ObservationOperator` and `AnalysisStep` protocols are the only contract.
   filterax, vardax and plumax satisfy them through adapters, so an emulator
   replaces a physics model without touching the cycle.
-- **E · Training with lineage.** pipekit-train wraps Lightning, Equinox +
-  Optax and Keras 3; pipekit-experiment adds trackers and a content-addressed
+- **E · Training with lineage.** pipekit-train wraps Equinox + Optax today,
+  with NumPyro and BlackJAX for Bayesian fits and Lightning and Keras 3
+  planned; pipekit-experiment adds trackers and a content-addressed
   `ModelRegistry`.
 - **F · Evaluation as infrastructure.** pipekit-evaluate scores every cell
   of the benchmark cube against an `Oracle`, and stores reports and contracts
@@ -777,7 +778,7 @@ substrate differs, the operator algebra is identical.
 | `pipekit-array` | Array API operators across NumPy, JAX, CuPy and PyTorch (`StackAlong`, `ConcatenateAlong`, `MeanScalar`) | 3 |
 | `pipekit-jax` | Equinox-backed, JAX-traceable operators; deferred to v0.3+ | 5 |
 | `pipekit-cycle` | Time-stepping, DA and iterative inference: `Cycle`, `EnsembleCycle`, `Recurrence`, `DACycle`, `EnsembleDACycle`, `SmootherCycle`, `BFNCycle`; the three core protocols plus eleven cross-library ones | 10 |
-| `pipekit-train` | Training for emulators and amortized inference over Lightning, Equinox + Optax or Keras 3 | 11 |
+| `pipekit-train` | Training for emulators and amortized inference: Equinox + Optax, NumPyro SVI and MCMC, BlackJAX NUTS; Lightning and Keras 3 scaffolded | 11 |
 | `pipekit-experiment` | Tracker adapters (MLflow, W&B, DVC, Hydra) and a content-addressed `ModelRegistry` | 12 |
 | `pipekit-evaluate` | Evaluation on a Unit × Lens × Stage matrix; benchmark contracts as artifacts | 14, 15 |
 | `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`). Ships as `geotoolz-catalog` in the geotoolz monorepo | 6 |
@@ -904,8 +905,8 @@ decision.
 - **Where matchup lives.** `geocatalog.queries.matchup()` is the framework
   function, with carrier-specific helpers in xrtoolz and geotoolz. Does
   matchup need its own catalog type? Probably; not yet scoped.
-- **Backend choice in pipekit-train.** Lightning, Equinox + Optax and Keras 3
-  are all supported. In practice: Lightning for PyTorch models, Equinox +
+- **Backend choice in pipekit-train.** Equinox + Optax and the Bayesian
+  backends ship; Lightning and Keras 3 are scaffolds ([Report 11](reports/11_pipekit_train.md)). The intended split: Lightning for PyTorch models, Equinox +
   Optax for JAX-traceable pipelines, Keras 3 for multi-backend. Worth stating
   per use case.
 :::
@@ -1122,7 +1123,7 @@ notes and will move into `docs/` as they are written up. Until then, the
 | xrtoolz's role | Report 8: substrate asymmetry with geotoolz |
 | concrete use cases | Report 9: thirteen cases mapped to the stack |
 | time-stepping and DA | [Report 10](reports/10_pipekit_cycle.md): pipekit-cycle |
-| training pipelines | Report 11: pipekit-train |
+| training pipelines | [Report 11](reports/11_pipekit_train.md): pipekit-train |
 | registry and tracking | Report 12: pipekit-experiment |
 | L3–L5 indexing | [Report 13](reports/13_state_catalog.md): the state catalog, as geocatalog's state profile |
 | evaluation | Report 14: pipekit-evaluate |
