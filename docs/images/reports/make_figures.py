@@ -1310,6 +1310,155 @@ def r14_roadmap() -> Svg:
     return f
 
 
+def r15_ownership() -> Svg:
+    """Report 15: the contract is data in pipekit-evaluate; its terms live elsewhere."""
+    f = Svg(
+        840,
+        560,
+        "Ownership of benchmarking. Benchmark projects and the gallery write"
+        " contracts and read scored reports. pipekit-evaluate ships the runner"
+        " (Benchmark, ReferenceRule, Scorer, Task) and, as the one new surface,"
+        " would add BenchmarkContract: the frozen task, splits, references,"
+        " metrics and baselines, with its hash. Each term of the contract is"
+        " implemented where its data lives: splits over catalog rows in"
+        " geocatalog and the window guard in pipekit-train, baselines and"
+        " probabilistic scores in xrtoolz, and the content-addressed store for"
+        " contracts and submissions in pipekit-experiment. All four hash with"
+        " pipekit's stable_json and sha256_hex.",
+    )
+    f.box(
+        24,
+        20,
+        792,
+        56,
+        "benchmark projects · benchmarks gallery · leaderboards",
+        ["write a contract, publish its hash, submit and verify"],
+        hue=(BORDER, PANEL),
+        title_size=14.5,
+        sub_size=12,
+    )
+    f.rect(24, 110, 792, 120, stroke=ENG[0], fill=ENG[1])
+    f.text(44, 136, "pipekit-evaluate", size=16, weight=700, anchor="start")
+    x = 44.0
+    for c in ["Benchmark", "ReferenceRule", "Scorer", "Task", "BenchmarkReport"]:
+        x += f.chip(x, 150, c, hue=(BORDER, CARD), size=12) + 8
+    f.text(44, 206, "proposed:", size=12.5, color=MUTED, anchor="start")
+    x = 120.0
+    for c in ["BenchmarkContract", "variant · tracks", "contract_hash on reports"]:
+        x += f.chip(x, 190, c, hue=(ENG[0], CARD), dashed=True, size=12) + 8
+    f.arrow([(420, 76), (420, 108)], color=INK)
+    boxes = [
+        ("geocatalog", ["block, platform and", "causal splits of rows"], OBS, 24, 186),
+        (
+            "pipekit-train",
+            ["window splits, guard", "in time, not origins"],
+            ML,
+            222,
+            186,
+        ),
+        (
+            "xrtoolz",
+            ["baselines: OI, persistence,", "climatology · CRPS"],
+            STATE,
+            420,
+            196,
+        ),
+        (
+            "pipekit-experiment",
+            ["content-addressed store", "contracts, submissions"],
+            EXT,
+            628,
+            188,
+        ),
+    ]
+    for name, sub, hue, bx, bw in boxes:
+        f.box(bx, 280, bw, 80, name, sub, hue=hue, title_size=14.5, sub_size=12)
+        f.arrow([(bx + bw / 2, 230), (bx + bw / 2, 278)], color=INK)
+    f.box(
+        24,
+        420,
+        792,
+        60,
+        "pipekit",
+        ["stable_json · sha256_hex: one hash for contracts, reports and models"],
+        hue=(LINE, PANEL),
+        title_size=14.5,
+        sub_size=12,
+    )
+    for bx, bw in [(24, 186), (222, 186), (420, 196), (628, 188)]:
+        f.arrow([(bx + bw / 2, 360), (bx + bw / 2, 418)], color=LINE)
+    f.h = 500
+    return f
+
+
+def r15_roadmap() -> Svg:
+    """Report 15: the contract and its splits first, then baselines and tracks."""
+    f = Svg(
+        840,
+        420,
+        "Roadmap. Phase 1 makes the contract data with a hash (A1, A2) and its"
+        " splits enforceable (B1 to B3). Phase 2 adds the baselines the contract"
+        " pins, beside the xrtoolz gap-fillers (C1 to C3), and the variant and"
+        " track checks in the runner (D1 to D3). Phase 3 stores contracts and"
+        " submissions content-addressed and verifies submissions (E1, E2). The"
+        " blind-test scoring service is left to the projects that run one.",
+    )
+    rows = [
+        (
+            [
+                ("1a · A1 A2", ["BenchmarkContract,", "hash on every report"], ENG),
+                (
+                    "1b · B1 to B3",
+                    ["block, platform, causal", "splits; guard in days"],
+                    OBS,
+                ),
+            ],
+            "A1 · A2 · B1 · B2 · B3",
+        ),
+        (
+            [
+                (
+                    "2a · C1 to C3",
+                    ["OI, persistence and", "climatology baselines"],
+                    STATE,
+                ),
+                ("2b · D1 to D3", ["variant check, tracks,", "named entries"], ENG),
+            ],
+            "C1 · C2 · C3 · D1 · D2 · D3",
+        ),
+        (
+            [("3 · E1 E2", ["contract and submission", "store, verify"], EXT)],
+            "E1 · E2",
+        ),
+    ]
+    y = 24.0
+    for items, gate in rows:
+        n = len(items)
+        w = (792 - 18 * (n - 1)) / n
+        for i, (name, sub, hue) in enumerate(items):
+            f.box(24 + i * (w + 18), y, w, 66, name, sub, hue=hue, title_size=14)
+        cx, gy, d = 420, y + 66 + 24, 12
+        f.arrow([(cx, y + 66), (cx, gy - d - 1)], color=LINE)
+        f.parts.append(
+            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+            f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}" stroke-width="1.4"/>'
+        )
+        f.text(
+            cx + d + 10,
+            gy + 4.5,
+            f"gates {gate}",
+            size=12,
+            color=ENG[0],
+            anchor="start",
+            weight=600,
+        )
+        if items is not rows[-1][0]:
+            f.arrow([(cx, gy + d), (cx, gy + 42)], color=LINE)
+        y = gy + 44
+    f.h = int(y - 10)
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
@@ -1326,6 +1475,8 @@ FIGURES = {
     "r12_roadmap": r12_roadmap,
     "r14_ownership": r14_ownership,
     "r14_roadmap": r14_roadmap,
+    "r15_ownership": r15_ownership,
+    "r15_roadmap": r15_roadmap,
 }
 
 
