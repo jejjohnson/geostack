@@ -572,7 +572,7 @@ observations, feed one bias operator.
 | `CycleStateWriter`, `CycleStateReader` | not built; see [](#r13-ws-d) |
 | `pk.config_hash(op)` | does not exist; `pipekit.hashing.sha256_hex(stable_json(op.get_config()))` computes it, and [Report 9](09_use_cases.md#r9-proposals) proposes `pipeline_hash(op)` (proposal B) |
 | `georeader.read_from_url` | does not exist; states are xarray files, read with `xr.open_dataset` or geocatalog's `load_xarray` |
-| `pc.Sequential` | does not exist; `pipekit.Sequential` is a stateless `Operator`, and `Cycle(step_op=pk.Sequential([...]))` raises `TypeError: step_op must be a StatefulOperator or a ForwardModel` |
+| `pc.Sequential` | does not exist. `pipekit.Sequential` threads a carry state when it holds stateful steps, but it is not a `StatefulOperator`, so `Cycle(step_op=pk.Sequential([...]))` raises `TypeError: step_op must be a StatefulOperator or a ForwardModel` even then ([Report 10](#r13-ref-report-10)) |
 | `pc.EnsembleCycle(step_op, n_steps, n_members)` | exists, with that signature |
 | `pt.SimulationDataset` | exists, but simulates on the fly from a forward model and a prior; it reads no stored states |
 :::
