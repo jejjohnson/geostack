@@ -51,7 +51,7 @@ import pipekit_experiment as px                              # today
 import geocatalog as gc  # today (ships as geotoolz-catalog)
 import geopatcher as gp  # today (ships as geotoolz-patcher)
 import geotoolz as gz                                        # today
-import statecatalog as sc                                    # proposed (B)
+import geocatalog.states as gcs                              # proposed (B)
 
 from filterax.adapters.pipekit import EnKFAnalysis           # unverified
 from plumax.adapters.pipekit import PlumeForward, ColumnObs  # unverified
@@ -199,19 +199,21 @@ da_hash = pk.config_hash(da)  # content hash of the config  proposed (A)
 
 :::{tab-item} 5 · Index
 ```{code-block} python
-:caption: Write every analysed state into the state catalog (stage 5).
+:caption: Write every analysed state, one file per member, and index the files with geocatalog's state profile (stage 5). Report 13 has the design.
 :linenos:
 
-# Shapes: T steps, N_e members, N cells
-state_cat = sc.DuckDBStateCatalog.open(               # proposed (B)
-    "s3://imeo/methane_da_v3/states.parquet"
+# Shapes: T cycles, N_e members, N cells; r the run time, Δt the cycle length
+members, carry = da(x0, carry0)    # da built with save_history=True  proposed (B)
+# history entry t = (forecast, analysis), each N_e members; vₜ = r + (t + 1) Δt
+for m in range(40):                                                # script
+    ds = to_dataset([a[m] for _, a in da.history], r, dt)   # arguments sketched
+    ds.attrs |= {"forecast_reference_time": str(r), "realization": m,
+                 "producer": da_hash, "parent_uri": prior_uri}     # script
+    ds.to_zarr(f"s3://imeo/methane_da_v3/ana_{r:%Y%m%dT%H}_m{m}.zarr")  # script
+state_cat = gc.build.build_state_catalog(            # 40 rows       proposed (B)
+    zarr_uris, crs="EPSG:4326", names=gcs.CF_NAMES
 )
-writer = sc.CycleStateWriter(                         # proposed (B)
-    state_catalog=state_cat, model_config_hash=da_hash
-)
-
-forecast_pipeline = pk.Sequential([da, writer])       # today
-final_state, history = forecast_pipeline(x0, carry0)  # history: (T, N_e, N)
+analyses = gcs.load_states(state_cat, aoi)           # (N_e, T, N)   proposed (B)
 ```
 :::
 

@@ -449,7 +449,7 @@ def lifecycle() -> Svg:
         "read": [(0, 2, "georeader", OBS, False), (3, 5, "xrreader", STATE, False)],
         "index": [
             (0, 2, "geocatalog  (GeoSlice)", OBS, False),
-            (3, 5, "statecatalog  (StateSlice)", STATE, False),
+            (3, 5, "geocatalog.states  (state rows)", STATE, False),
         ],
         "store": [
             (0, 2, "geocloud  (object storage, COG)", ENG, False),
@@ -596,7 +596,7 @@ def three_layers() -> Svg:
             "Scientific data",
             "L0 → L4, both streams",
             OBS,
-            ["georeader · geocatalog", "geotoolz / xrtoolz", "statecatalog"],
+            ["georeader · geocatalog", "geotoolz / xrtoolz", "geocatalog.states"],
         ),
         (
             "ML-ready",
@@ -893,7 +893,6 @@ TIERS = [  # (tier, name, note, owned, packages)
             "geocatalog",
             "geopatcher",
             "xrpatcher",
-            "statecatalog",
         ],
     ),
     (
@@ -1049,7 +1048,10 @@ def tier4_map() -> Svg:
             [
                 ("geocatalog", ["observation index,", "GeoSlice, L0\u2013L2"]),
                 ("geopatcher", ["four-axis patcher;", "Field / Domain"]),
-                ("statecatalog", ["model-state index,", "StateSlice, L3\u2013L4"]),
+                (
+                    "geocatalog.states",
+                    ["model-state profile,", "same index, L3\u2013L4"],
+                ),
             ],
         ),
     ]
@@ -1258,7 +1260,7 @@ WALK = [  # (step, name, level, packages)
         "L3 → L4",
         "pipekit-cycle.EnsembleDACycle + filterax, plumax",
     ),
-    ("6", "Index outputs", "", "statecatalog"),
+    ("6", "Index outputs", "", "geocatalog.states"),
     ("7", "Evaluate", "multi-track", "pipekit-evaluate  (vs CAMS, vs aircraft)"),
     ("8", "Register + serve", "", "pipekit-experiment + FastAPI / LitServe"),
 ]
@@ -1303,8 +1305,8 @@ MONTHS = [  # (month, phase, name, lands, gates)
         "3",
         "4c",
         "States and cycles",
-        "statecatalog · pipekit-cycle · DA adapters",
-        "D1 · D2",
+        "geocatalog.states · pipekit-cycle · DA adapters",
+        "B2 · D1 · D2",
     ),
     ("4", "4d", "Training and registry", "pipekit-train · pipekit-experiment", "E1"),
     ("5", "5a", "Evaluation", "pipekit-evaluate · splitters · baselines", "F1"),
