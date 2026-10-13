@@ -333,7 +333,9 @@ members, state = eda(members_0, pc.DAState(obs_err_cov=R))   # N_e × (N,)     t
 ```
 
 From 200 to 800 members the gap shrinks by a factor of 2.3, close to the
-factor of 2 that $N_e^{-1/2}$ predicts. At 50 members it is six times larger
+factor of 2 that $N_e^{-1/2}$ predicts: the log-log slope is −0.61, and a
+seeded bootstrap over the ten seeds puts its 99 % interval at
+[−0.96, −0.38], which contains −0.5. At 50 members it is six times larger
 than at 200: with no localisation, 50 members estimate a 40 × 40 covariance
 poorly, and the gain carries that error. Inflation and localisation are the
 analysis step's business; pipekit-cycle names their signatures
@@ -643,7 +645,7 @@ checks the code passes today and must keep passing.
 | B1 Restart | B1 | two 5-step calls with `obs_clock="state"` give the 10-step analysis of stage 2 to 0 (today 15.4 ppb); with the default the indices are `[0 … 4, 0 … 4]` as today |
 | B2 Per-step R | B2 | with `obs_err_source` returning $R_t = (0.1 + 0.01 t) I$, the cycle equals a hand-written Kalman filter using the same $R_t$ to 0 |
 | K1 Kalman exactness (existing) | — | stage 2: `DACycle` equals the hand-written filter to 0 in mean and covariance. Passes today |
-| K2 EnKF rate (existing) | — | stage 3: the median RMS gap at $N_e = 800$ is $2 \pm 0.5$ times smaller than at $N_e = 200$, the $N_e^{-1/2}$ rate. Passes today: 2.3 |
+| K2 EnKF rate (existing) | — | stage 3: the log-log slope of the median RMS gap from $N_e = 200$ to 800 is consistent with the $N_e^{-1/2}$ rate: $-0.5$ lies inside its 99 % interval from a seeded bootstrap over the 10 seeds (4,000 resamples). Passes today: slope −0.61, interval [−0.96, −0.38] |
 | K3 Model swap (existing) | — | stage 4: `CallableForward` and `NeuralForward` wrapping the same step give the same analysis to 0. Passes today |
 | K4 Retrieval (existing) | — | stage 5: Gauss–Newton converges in at most 10 iterations with $|J^\top (y - f(\hat{\alpha}))| < 10^{-12}$. Passes today: 6 iterations, 9.9e-20 |
 :::
@@ -714,7 +716,7 @@ Small fixes first, then the documentation and the latent design.
 |---|---|---|
 | Refresh the README for 0.0.2 and fix `filterx` → `filterax` in its quickstart | pipekit-cycle `README.md` | the table lists v0.0.1 and omits `BFNCycle`, the adjoint specs and eleven protocols |
 | Document the carrier convention for covariances and ensembles | pipekit-cycle docs | the analysis never sees the state, so $P$ and the ensemble belong in the carrier (stage 2) |
-| Add an adapter test against one algorithm library | pipekit-cycle tests, with filterax pinned | the protocols' main users are unchecked |
+| Add an adapter test against one algorithm library, and pin filterax in `references/` and `UPSTREAM` | pipekit-cycle tests; `references/filterax`; `scripts/capabilities.py` | the protocols' main users are unchecked; once filterax is pinned, the notebook's `KalmanAnalysis` and `EnKF` (user-written `AnalysisStep`s, as the report's running example) are replaced by imports of filterax's |
 :::
 
 (r10-references)=
