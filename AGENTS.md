@@ -169,8 +169,9 @@ The step-by-step for each is a skill (see "Recipes").
 
 ### 5. Notebooks
 
-- `notebooks/**/*.py` (including `notebooks/reports/`) are jupytext percent-format scripts: a YAML header, then
-  `# %%` / `# %% [markdown]` cells. `.ipynb` files are generated locally
+- `notebooks/**/*.py` (including `notebooks/reports/`) are jupytext
+  percent-format scripts: a YAML header, then `# %%` / `# %% [markdown]`
+  cells. `.ipynb` files are generated locally
   (`pixi run notebooks-to-ipynb`) and never committed.
 - `marimo_notebooks/*.py` are marimo apps (`app = marimo.App(...)`,
   `@app.cell` functions) with a PEP 723 `# /// script` header listing their
