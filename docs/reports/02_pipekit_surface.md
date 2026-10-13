@@ -37,7 +37,7 @@ question or a follow-up at the end.
 | **Status** | Shipped surface; originally the v0.1 surface proposal (revised after the L0–L4 analysis) |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone deciding what belongs in pipekit core, or writing an operator against it |
-| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (cycle); [Report 11](11_pipekit_train.md) (train); [Report 12](#r2-ref-report-10) (experiment); [Report 13](13_state_catalog.md) (state catalog); forthcoming ones are listed under [References](#r2-references) |
+| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (cycle); [Report 11](11_pipekit_train.md) (train); [Report 12](12_pipekit_experiment.md) (experiment); [Report 13](13_state_catalog.md) (state catalog); forthcoming ones are listed under [References](#r2-references) |
 | **Checked against** | pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/pipekit`); every output on this page is from a real run |
 :::
 
@@ -990,15 +990,9 @@ text, and replace the citations placeholder. -->
 The companion reports and the citations are still being written. The entries
 below stand in for them so the links in this page already resolve.
 Reports [1](01_toolz_primer.md), [3](03_sister_libraries.md),
-[9](09_use_cases.md), [10](10_pipekit_cycle.md), [11](11_pipekit_train.md) and
-[13](13_state_catalog.md) are published.
+[9](09_use_cases.md), [10](10_pipekit_cycle.md), [11](11_pipekit_train.md),
+[12](12_pipekit_experiment.md) and [13](13_state_catalog.md) are published.
 :::
-
-### Forthcoming reports
-
-(r2-ref-report-10)=
-Report 12 · pipekit-experiment
-: *Forthcoming.* The sibling package built on Groups J and L.
 
 ### Citations
 
