@@ -1258,16 +1258,16 @@ references.bib and replace the citations placeholder. -->
 
 :::{note} Placeholders
 :class: simple
-Reports 5 and 8 and Reports 10 to 13 (the pipekit sister packages) are still
+Reports 5 and 8 and Reports 10 to 12 (the pipekit sister packages) are still
 being written. Reports [1](01_toolz_primer.md), [2](02_pipekit_surface.md),
-[3](03_sister_libraries.md), [6](06_geocatalog.md) and
-[7](07_geopatcher.md) are published.
+[3](03_sister_libraries.md), [6](06_geocatalog.md),
+[7](07_geopatcher.md) and [13](13_state_catalog.md) are published.
 :::
 
 ### Forthcoming reports
 
 (r9-ref-report-10)=
-Reports 10 to 13 · pipekit-cycle, pipekit-train, pipekit-experiment, state catalog
+Reports 10 to 12 · pipekit-cycle, pipekit-train, pipekit-experiment
 : *Forthcoming.* The sister packages most of these cases rely on.
 
 (r9-ref-report-5)=

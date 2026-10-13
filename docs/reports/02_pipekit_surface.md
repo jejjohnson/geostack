@@ -37,7 +37,7 @@ question or a follow-up at the end.
 | **Status** | Shipped surface; originally the v0.1 surface proposal (revised after the L0–L4 analysis) |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone deciding what belongs in pipekit core, or writing an operator against it |
-| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Reports 10–13](#r2-ref-report-10) (cycle, train, experiment, state catalog); forthcoming ones are listed under [References](#r2-references) |
+| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Reports 10–12](#r2-ref-report-10) (cycle, train, experiment); [Report 13](13_state_catalog.md) (state catalog); forthcoming ones are listed under [References](#r2-references) |
 | **Checked against** | pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/pipekit`); every output on this page is from a real run |
 :::
 
@@ -996,7 +996,7 @@ Reports [1](01_toolz_primer.md), [3](03_sister_libraries.md) and
 ### Forthcoming reports
 
 (r2-ref-report-10)=
-Reports 10–13 · pipekit-cycle, pipekit-train, pipekit-experiment, state catalog
+Reports 10–12 · pipekit-cycle, pipekit-train, pipekit-experiment
 : *Forthcoming.* The sibling packages built on Groups J, L and M.
 
 ### Citations

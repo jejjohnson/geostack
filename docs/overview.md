@@ -71,9 +71,11 @@ letters tag every `proposed (X)` call on the
   pipekit replaces it with one `Operator` protocol, `Sequential` and `Graph`
   composition, config round-tripping and sandboxed YAML.
 - **B · Indexed data at both ends of the lifecycle.** Observations can be
-  catalogued; model states are scattered files. `geocatalog` indexes L0–L2
-  as `GeoSlice`s, `statecatalog` indexes L3–L5 as `StateSlice`s, and the
-  readers split the same way: `georeader` below L3, `xrreader` from L3 up.
+  catalogued; model states are scattered files. `geocatalog` indexes both:
+  L0–L2 observations as rows queried with `GeoSlice`s, and L3–L5 model
+  states through its {term}`state profile` (run time, member, producer and
+  parent columns, in `geocatalog.states`). The readers split by level:
+  `georeader` below L3, `xrreader` from L3 up.
 - **C · Two carriers, one algebra.** `geotoolz` (GeoTensor) and `xrtoolz`
   (xarray) share the operator algebra and the patcher; only the substrate
   differs.
@@ -91,8 +93,9 @@ letters tag every `proposed (X)` call on the
 **End state.** GeoML owns linear algebra, kernels and inference and never
 imports pipekit outside an adapter. GeoModels owns physics and exposes it
 only through adapters. pipekit owns composition, cycles, training and
-evaluation. geocatalog and statecatalog own the two indexes; geotoolz and
-xrtoolz own the carrier-specific operators. Orchestration and serving stay
+evaluation. geocatalog owns the one index, for observations and, through
+its state profile, for model states; geotoolz and xrtoolz own the
+carrier-specific operators. Orchestration and serving stay
 external.
 
 (sec-pitch)=
@@ -119,8 +122,8 @@ xarray and GeoTensor.
 :::
 
 :::{card} Infrastructure
-`geocatalog`, `statecatalog`, `geopatcher`: index observations and model
-states, and cut fields into patches.
+`geocatalog` (with its state profile) and `geopatcher`: index observations
+and model states, and cut fields into patches.
 :::
 
 :::{card} Training and evaluation
@@ -260,8 +263,9 @@ splits where the {term}`carrier` changes:
   `geocatalog` indexes them as {term}`GeoSlice`s, `geotoolz` transforms
   them and `geocloud` stores them as COG on object storage.
 - **Model states and derived products (L3–L5):** `xrreader` reads them into
-  xarray, `statecatalog` indexes them as {term}`StateSlice`s, `xrtoolz`
-  transforms them, and they live as Zarr or NetCDF on object storage.
+  xarray, `geocatalog.states` indexes them in the same catalogs as state
+  rows (its {term}`state profile`), `xrtoolz` transforms and verifies them,
+  and they live as Zarr or NetCDF on object storage.
 - **Derived products (L5):** `xtremax` computes extremes from L4 states.
 - **Both carriers:** `geopatcher` patches fields whatever the carrier.
 
@@ -445,7 +449,7 @@ Most current work happens in the framework and infrastructure tier.
 
 ```{figure} images/overview/tier4_map.svg
 :label: fig-tier4-map
-:alt: Three groups: the pipekit framework packages, the ML-loop packages, and the infrastructure peers geocatalog, geopatcher and statecatalog, with georeader as an external substrate.
+:alt: Three groups: the pipekit framework packages, the ML-loop packages, and the infrastructure peers geocatalog, geopatcher and geocatalog's state profile, with georeader as an external substrate.
 :width: 100%
 
 **The pipekit framework, the ML loops built on it, and the infrastructure peers.**
@@ -507,8 +511,10 @@ pipekit only through an optional adapter module, never in their core.
 12. **pipekit-train**, **pipekit-experiment** and **pipekit-evaluate** own
     training loops, the registry and trackers, and evaluation. None imports
     a carrier library.
-13. **geocatalog** owns the L0–L2 index and **statecatalog** the L3–L5
-    index. Neither reads files itself: `georeader` and `xrreader` do.
+13. **geocatalog** owns the index for both halves of the lifecycle: L0–L2
+    observations, and L3–L5 model states through its state profile,
+    `geocatalog.states` ([Report 13](reports/13_state_catalog.md)). It never
+    imports pipekit or xrtoolz.
 14. **geotoolz** owns GeoTensor operators and **xrtoolz** xarray operators;
     **geopatcher** cuts either carrier into patches.
 
@@ -663,7 +669,7 @@ update applied to the ensemble's own sample mean and covariance, which is
 gate D2.
 
 (sec-stage-evaluate)=
-### Stage 5 · Index, evaluate, register (steps 6–8: statecatalog → pipekit-evaluate → pipekit-experiment)
+### Stage 5 · Index, evaluate, register (steps 6–8: geocatalog.states → pipekit-evaluate → pipekit-experiment)
 
 **TL;DR.** Store every analysis, score it against three independent
 references, and attach the score to the model that made it.
@@ -776,7 +782,7 @@ substrate differs, the operator algebra is identical.
 | `pipekit-evaluate` | Evaluation on a Unit × Lens × Stage matrix; benchmark contracts as artifacts | 14, 15 |
 | `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`). Ships as `geotoolz-catalog` in the geotoolz monorepo | 6 |
 | `geopatcher` | Four-axis patcher: geometry × sampler × window × aggregation (~60 classes). Ships as `geotoolz-patcher` in the geotoolz monorepo | 7 |
-| `statecatalog` | Spatiotemporal index for L3–L5 (`StateSlice` with valid time, run time, ensemble, lineage) | 13 |
+| `geocatalog.states` | geocatalog's state profile for L3–L5: run time, member, producer and parent columns; run-aware loading; forecast-chain and lineage queries. Proposed; replaces the planned `statecatalog` package | 13 |
 :::
 ::::
 
@@ -975,11 +981,12 @@ Each phase produces packages that are useful on their own.
 :::
 
 :::{tab-item} Month 3
-- statecatalog v0.1
+- geocatalog's state profile (`geocatalog.states`) and xrtoolz forecast
+  alignment
 - pipekit-cycle v0.1: `Cycle`, `DACycle` and three Protocols
 - adapter modules in filterax, vardax and plumax
 
-**Gates:** D1 kriging oracle, D2 Kalman oracle.
+**Gates:** B2 state rows, D1 kriging oracle, D2 Kalman oracle.
 :::
 
 :::{tab-item} Month 4
@@ -1060,6 +1067,7 @@ month 3. Phases 6 and 7 wait for projects to pull them.
 |---|---|---|
 | A1 Config round-trip | A | For every shipped operator not marked `forbid_in_yaml`, `loads(dumps(op))` has the same config hash and returns the same output on a fixed input; once the topology serialiser lands, the same holds for a `Graph` |
 | B1 Backend parity | B | The InMemory and DuckDB geocatalog backends return the identical slice set for the same bbox and time query |
+| B2 State rows | B | A cycle's ensemble history, written as one file per run and member and indexed with `build_state_catalog`, loads back with `load_states` with no run dropped and equal to the history to 0 ([Report 13](reports/13_state_catalog.md#r13-gates), gates A2 and B1) |
 | C1 Patch identity | C | An identity model through patch → stitch with Hann-window overlap-add reproduces the input to 1e-6 in float64, away from scene edges |
 | D1 Kriging oracle | D | `KrigingOperator`'s mean and variance match {eq}`eq-kriging-mean` and {eq}`eq-kriging-var` to 1e-6 in float64 |
 | D2 Kalman oracle | D | With linear 𝓜 and H, no inflation and no localisation, the square-root ensemble analysis mean matches the Kalman update computed from the same ensemble's sample mean and covariance, to 1e-6 in float64 |
@@ -1116,7 +1124,7 @@ notes and will move into `docs/` as they are written up. Until then, the
 | time-stepping and DA | Report 10: pipekit-cycle |
 | training pipelines | Report 11: pipekit-train |
 | registry and tracking | Report 12: pipekit-experiment |
-| L3–L5 indexing | Report 13: statecatalog |
+| L3–L5 indexing | [Report 13](reports/13_state_catalog.md): the state catalog, as geocatalog's state profile |
 | evaluation | Report 14: pipekit-evaluate |
 | benchmark infrastructure | Report 15: contracts, leakage, baselines |
 | the six-step cycle | Report 16: step 2 as oracle, benchmarks as understanding |
@@ -1175,9 +1183,11 @@ GeoSlice
 : geocatalog's wire format for one spatiotemporal slice of an observation
   catalog.
 
-StateSlice
-: statecatalog's wire format for one model state, with valid time, run
-  time, ensemble member and lineage.
+state profile
+: geocatalog's reserved columns for model states (run time, ensemble
+  member, producer hash and parent state) and the loader and queries in
+  `geocatalog.states` that use them. It replaces the planned `statecatalog`
+  package and its `StateSlice`.
 
 matchup
 : Pairing observations from different sources that coincide in space and

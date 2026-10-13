@@ -525,12 +525,174 @@ def r9_stack() -> Svg:
     return f
 
 
+def r13_ownership() -> Svg:
+    """Report 13: who produces, indexes and scores model states."""
+    f = Svg(
+        840,
+        470,
+        "Ownership of model states. A script runs pipekit-cycle, writes one"
+        " file per run and member, indexes the files with geocatalog and scores"
+        " the loaded cube with xrtoolz. pipekit-cycle produces states, geocatalog"
+        " indexes them (the new geocatalog.states namespace is the only new"
+        " surface), xrtoolz verifies them, and pipekit-experiment supplies the"
+        " producer hash. None of the four imports another; NetCDF, Zarr and"
+        " GeoParquet files sit underneath.",
+    )
+    f.box(
+        24,
+        20,
+        792,
+        58,
+        "scripts and notebooks (geostack)",
+        ["run the cycle · write one file per (run, member) · build the catalog"],
+        hue=(BORDER, PANEL),
+        title_size=15,
+        sub_size=12.5,
+    )
+    boxes = [
+        ("pipekit-cycle", ["produces states", "Cycle.history"], ML, False),
+        ("geocatalog.states", ["indexes states", "rows · load · queries"], ENG, True),
+        ("xrtoolz.metrics", ["scores states", "SkillByLeadTime · CRPS"], STATE, False),
+        ("pipekit-experiment", ["names the producer", "Run.pipeline_hash"], OBS, False),
+    ]
+    xs = [24, 228, 432, 636]
+    for (name, sub, hue, dashed), x in zip(boxes, xs, strict=True):
+        f.box(
+            x,
+            140,
+            180,
+            90,
+            name,
+            sub,
+            hue=hue,
+            dashed=dashed,
+            title_size=14.5,
+            sub_size=12,
+        )
+        f.arrow([(x + 90, 78), (x + 90, 138)], color=INK)
+    f.text(
+        340,
+        270,
+        "no arrows between the four: none imports another",
+        size=12.5,
+        color=MUTED,
+        anchor="start",
+        italic=True,
+    )
+    f.box(
+        24,
+        300,
+        792,
+        64,
+        "geocatalog core · GeoSlice · backends · GeoParquet",
+        ["the existing index: footprint, valid-time interval, path, extra columns"],
+        hue=(BORDER, CARD),
+        title_size=14.5,
+        sub_size=12,
+    )
+    f.arrow([(318, 230), (318, 298)], color=INK)
+    f.box(
+        24,
+        394,
+        792,
+        56,
+        "NetCDF · Zarr · GeoParquet (xarray, georeader)",
+        ["the state files and the catalog file"],
+        hue=(LINE, PANEL),
+        title_size=14.5,
+        sub_size=12,
+    )
+    f.arrow([(420, 364), (420, 392)], color=INK)
+    return f
+
+
+def r13_roadmap() -> Svg:
+    """Report 13: what ships first, and the gates after each row."""
+    f = Svg(
+        840,
+        470,
+        "Roadmap. Phase 1 runs three independent pieces side by side: the"
+        " reserved state columns in geocatalog (A1), forecast alignment,"
+        " member broadcasting and area weights in xrtoolz (C1 to C3) and"
+        " ensemble histories in"
+        " pipekit-cycle (D1); their gates must pass before phase 2. Phase 2"
+        " adds the state builder (A2), run-aware loading (B1) and the typed"
+        " queries (B2) on top of A1. Phase 3 is the consumers, which are"
+        " upcoming work rather than workstreams.",
+    )
+    rows = [
+        (
+            "1",
+            [
+                ("1a · A1", ["reserved state columns", "geocatalog schema v1"], ENG),
+                (
+                    "1b · C1 C2 C3",
+                    ["align_reference · broadcasting", "cell-area weights"],
+                    STATE,
+                ),
+                ("1c · D1", ["ensemble cycles", "save_history"], ML),
+            ],
+            "A1 · C1 · C2 · C3 · D1",
+        ),
+        (
+            "2",
+            [
+                ("2a · A2", ["build_state_catalog", "CF and cfgrib names"], ENG),
+                ("2b · B1 B2", ["load_states · producer trees", "typed queries"], ENG),
+            ],
+            "A2 · B1 · B2 · B3",
+        ),
+        (
+            "3",
+            [
+                (
+                    "3 · consumers",
+                    ["CatalogDataset · L4 references", "forecast presets"],
+                    EXT,
+                ),
+            ],
+            None,
+        ),
+    ]
+    y = 24.0
+    for _phase, items, gate in rows:
+        n = len(items)
+        gap = 18
+        w = (792 - gap * (n - 1)) / n
+        for i, (name, sub, hue) in enumerate(items):
+            x = 24 + i * (w + gap)
+            f.box(x, y, w, 76, name, sub, hue=hue, title_size=14.5, sub_size=12)
+        if gate:
+            cx, gy, d = 420, y + 76 + 30, 14
+            f.arrow([(cx, y + 76), (cx, gy - d - 1)], color=LINE)
+            f.parts.append(
+                f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+                f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}"'
+                ' stroke-width="1.4"/>'
+            )
+            f.text(
+                cx + d + 10,
+                gy + 4.5,
+                f"gates {gate}",
+                size=12.5,
+                color=ENG[0],
+                anchor="start",
+                weight=600,
+            )
+            f.arrow([(cx, gy + d), (cx, gy + 58)], color=LINE)
+            y = gy + 60
+    f.h = int(y + 76 + 16)
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
     "r3_layers": r3_layers,
     "r6_dataflow": r6_dataflow,
     "r9_stack": r9_stack,
+    "r13_ownership": r13_ownership,
+    "r13_roadmap": r13_roadmap,
 }
 
 
