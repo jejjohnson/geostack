@@ -49,7 +49,7 @@ report artifact and the ladder.** Every number below is from a real run.
 | **Audience** | anyone scoring a model, a retrieval or a forecast with the stack, or designing a benchmark |
 | **Companions** | [Report 13](13_state_catalog.md) (forecast verification, which this extends); [Report 10](10_pipekit_cycle.md), [Report 11](11_pipekit_train.md), [Report 12](12_pipekit_experiment.md) (the cycle, training and registry this connects to); [Report 9](09_use_cases.md) (use cases) |
 | **Code checked against** | `pipekit-evaluate` 0.0.2 at pipekit `ef3c17f`; xrtoolz 0.0.5 at `308c7f2`; geotoolz 0.10.2 with geocatalog at `088475e`. pipekit-evaluate's 18 tests pass. Read on 13 October 2026 |
-| **Running example** | every output is from scripts in the session scratchpad (`exp_a6.py`, `exp_b.py`, `exp_c.py`, `exp_d.py` for the metrics; `lg_benchmark.py` for the ladder) |
+| **Running example** | every output is from one run of `notebooks/reports/report14_pipekit_evaluate.py` (the metrics of stages 1 to 3 and the ladder of stage 4), which seeds every field and asserts each number the page shows |
 | **Design docs** | pipekit-evaluate's `benchmark_ladder.md` and four pilots (ocean, plume, land extremes, fusion), all "design only, no code" |
 :::
 
