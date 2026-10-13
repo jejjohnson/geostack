@@ -15,7 +15,8 @@
 # %% [markdown]
 # # Benchmarks gallery, checked
 #
-# Holds the eighteen draft contracts of `docs/benchmarks_gallery.md` as data
+# Holds the eighteen entries of `docs/benchmarks_gallery.md` as data (seventeen
+# draft contracts and 5.1, a chain written as one aggregate specification)
 # and checks them against the pinned code:
 #
 # 1. every stack name an entry marks `today` imports from the module given;
@@ -118,6 +119,7 @@ BYGROUP = Ref("EvaluateByGroup", "proposed", f"{R14} C1", "xrtoolz.metrics")
 BYEVENT = Ref("EvaluateByEvent", "proposed", f"{R14} C2", "xrtoolz.metrics")
 # real cloud masks of other days laid over clear scenes; SimulatedClouds draws
 # synthetic fields, so the transplant split is proposed by no report yet
+JACOBIAN = Ref("Jacobian fidelity", "gap", "this gallery")
 MASKX = Ref("cloud-mask transplant split", "gap", "this gallery")
 CATDS = Ref("CatalogDataset", "proposed", f"{R11} A1", "pipekit_train")
 POD = Ref("ProbabilityOfDetection", "reserved", "xrtoolz.metrics.object")
@@ -471,7 +473,7 @@ E.append(Entry(
      "out-of-distribution failure rate"],
     ["background-trained emulators fail on plumes", "multiple scattering",
      "accurate radiances with wrong gradients", "band edges"],
-    [SIMDS, NEURAL, RMSE, Ref("Jacobian fidelity", "gap", "this gallery"),
+    [SIMDS, NEURAL, RMSE, JACOBIAN,
      Ref("rtmx", "unpinned", "differentiable RTM"), SPLIT_BY, TRACKS, CONTRACT, BYGROUP, BYREGION],
 ))
 E.append(Entry(
@@ -534,7 +536,7 @@ E.append(Entry(
     ["stage errors compound down the chain", "background mistaken for emission",
      "detection floor set by physics", "attribution flips",
      "inventory priors regressed to"],
-    [CASCADE, SIMDS, NEURAL, DACYCLE, Ref("Recurrence", T, "pipekit_cycle"),
+    [CASCADE, JACOBIAN, SIMDS, NEURAL, DACYCLE, Ref("Recurrence", T, "pipekit_cycle"),
      Ref("MatchedFilter", T, "geotoolz.matched_filter"),
      Ref("DetectionThreshold", T, "geotoolz.matched_filter"),
      Ref("IMEEstimate", T, "geotoolz.plume"),
@@ -544,6 +546,11 @@ E.append(Entry(
      Ref("rtmx", "unpinned", "differentiable RTM"), SPLIT_REGIONS, SPLIT_BY,
      SPLIT_CAUSAL, TRACKS, CONTRACT, BYGROUP],
 ))
+# 1.4's front-alignment scorer reads the SST product of 1.2 as a second input;
+# the contract names it by 1.2's hash, so a change to 1.2 changes 1.4's hash
+BY_ID = {e.id: e for e in E}
+BY_ID["1.4"].tracks["sst (second input)"] = (
+    f"the product of contract 1.2, {BY_ID['1.2'].content_hash()}")
 len(E), Counter(e.domain for e in E)
 
 # %% [markdown]
@@ -627,7 +634,7 @@ hashes, tracks_obs, variants, entries_by_kind, causal_only, needs.most_common(12
 # %%
 assert hashes == {
     "1.1": "4c466291f4a6", "1.2": "7df03e454610", "1.3": "354c3dd4228d",
-    "1.4": "3f7436b535a3", "1.5": "c1231772f6ba", "2.1": "4d391b4a2cdc",
+    "1.4": "ef5ac20bda66", "1.5": "c1231772f6ba", "2.1": "4d391b4a2cdc",
     "2.2": "5d8b9d7fd3e2", "2.3": "ed870b75c5fd", "2.4": "56fdaee5f14f",
     "3.1": "b5816fb2f5ff", "3.2": "5d85e4dc72cb", "3.3": "dae0a2ea5d08",
     "4.1": "13544fdb5137", "4.2": "78d8b29836ef", "4.3": "142b6e876738",
@@ -648,7 +655,7 @@ assert dict(needs) == {
     "FSS": 2, "BrierScore": 2, "blocking index": 2, "geocatalog.events": 2,
     "cascade contract (stages by hash)": 2, "MarineHeatwaveDetector": 1,
     "CircularRMSE": 1, "Weibull fit": 1, "spectral angle": 1,
-    "Jacobian fidelity": 1, "cloud-mask transplant split": 1, "EvaluateByEvent": 1,
+    "Jacobian fidelity": 2, "cloud-mask transplant split": 1, "EvaluateByEvent": 1,
     "CatalogDataset": 1,
 }
 reserved_entries = [e.id for e in E if any(r.status == "reserved" for r in e.refs)]
@@ -675,6 +682,13 @@ assert no_obs == ["4.1", "5.1"]
 assert len(with_events) == 15
 assert set(e.id for e in E) - set(with_events) == {"4.1", "4.3", "4.4"}
 assert cascades == ["3.1", "5.1"] and stratified == 18
+# the readiness figure's alt text: pieces available today per entry, by domain
+today_n = {e.id: per_entry[e.id]["today"] for e in E}
+ola = [today_n[e.id] for e in E if e.domain in ("Ocean", "Land", "Atmosphere")]
+fewest = min(E, key=lambda e: len(e.refs)).id
+most = max(E, key=lambda e: len(e.refs)).id
+assert (min(ola), max(ola)) == (5, 11)
+assert fewest == "4.3" and most == "5.1" and today_n["5.1"] == 11
 
 # %% [markdown]
 # ## The readiness figure
@@ -704,7 +718,7 @@ cell, gapx, x0, y0 = 15, 3, 380, 56
 width = x0 + max(len(e.refs) for e in E) * (cell + gapx) + 24
 fig = ov.Svg(
     int(width), 120 + len(E) * (cell + 6),
-    "Readiness of the eighteen gallery contracts. One row per entry, one square"
+    "Readiness of the eighteen gallery entries. One row per entry, one square"
     " per stack piece the entry needs, coloured by status: today (it imports"
     " from the pinned code), name reserved, proposed by a report, not proposed"
     " yet, an external tool, or a stack library not pinned here.",

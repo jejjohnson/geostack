@@ -1,8 +1,8 @@
 ---
 title: Benchmarks gallery
-subtitle: Eighteen draft benchmark contracts in five domains, checked against the stack as it is
+subtitle: Eighteen draft benchmark entries in five domains, checked against the stack as it is
 short_title: Benchmarks gallery
-description: Worked examples for Report 15. Each entry is a draft benchmark contract (task, variant, splits, references by track, baselines, scorers and known failure modes) with a content hash, and every stack piece it cites is checked against the pinned code. The splits follow Report 15's corrected rule, and the stack names follow Reports 11 to 15.
+description: Worked examples for Report 15. Each entry is a draft benchmark contract, or for the emission chain a set of linked contracts (task, variant, splits, references by track, baselines, scorers and known failure modes) with a content hash, and every stack piece it cites is checked against the pinned code. The splits follow Report 15's corrected rule, and the stack names follow Reports 11 to 15.
 keywords:
   - benchmark
   - contract
@@ -21,11 +21,13 @@ numbering:
 +++ {"part": "abstract"}
 
 [Report 15](reports/15_benchmarking.md) says what makes a benchmark a
-benchmark: a frozen contract with a hash. This gallery writes eighteen of
-them, across the ocean, the land, the atmosphere, remote sensing and one
+benchmark: a frozen contract with a hash. This gallery drafts eighteen
+entries, across the ocean, the land, the atmosphere, remote sensing and one
 mathematical-model chain, so the framework can be judged on concrete cases.
-Each entry is a draft contract, specific enough to pre-register after a
-domain expert's review. Three things set this version apart from its source
+Seventeen entries are each one draft contract, specific enough to
+pre-register after a domain expert's review; the chain (5.1) is written here
+as one aggregate entry and would be pre-registered as six linked contracts.
+The notebook hashes each entry, so 5.1 has one hash on this page, not six. Three things set this version apart from its source
 draft [@geostack_gallery_draft]. **The splits follow Report 15's rule**: the held-out set reproduces
 the gap the product will face in use, so most random space-time blocks
 become withheld platforms or causal splits, and in eleven entries a "split"
@@ -79,7 +81,7 @@ geocatalog's state profile (Report 13), `EventCatalog` is an event profile
 (gal-reading)=
 ## How to read an entry
 
-Each entry is one contract. Its rows are the fields of Report 15's proposed
+Each entry is one contract (5.1, the chain, is one entry standing for six). Its rows are the fields of Report 15's proposed
 `BenchmarkContract` ([workstream A](reports/15_benchmarking.md#r15-ws-a)),
 plus the two the gallery adds to make a draft reviewable.
 
@@ -142,7 +144,7 @@ SSH sets the surface geostrophic flow, and mesoscale eddies carry most of the oc
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `resolved_scale` (xrtoolz.metrics), `GeostrophicBalanceError` (xrtoolz.metrics), `GeostrophicVelocities` (xrtoolz.ocn), `CalculateSSHAlongtrack` (xrtoolz.ocn), `along_track_psd_score` (xrtoolz.metrics), `OkuboWeiss` (xrtoolz.ocn), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`. **Proposed:** `optimal_interpolation` (Report 15 C1), `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `build_state_catalog` (Report 13 A2). **External:** py-eddy-tracker (eddy tracking).
 
 :::{warning} Differs from the source
-The source prescribes 200 km × 60 day blocks and, in the same entry, "split by mission, not pooled". [Report 15](reports/15_benchmarking.md#r15-stage-2) shows the mission split is the one that reproduces a mapping product's error (2.73 cm, against 4.26 cm with the blocks), so it is the contract's split. The source's OI baseline uses τ = 15 days while its splits assume 30; the contract fits both scales to the training years instead.
+The source prescribes 200 km × 60 day blocks and, in the same entry, "split by mission, not pooled". [Report 15](reports/15_benchmarking.md#r15-stage-2) shows the mission split is the one that reproduces a mapping product's error (2.70 cm, against 4.18 cm with the blocks), so it is the contract's split. The source's OI baseline uses τ = 15 days while its splits assume 30; the contract fits both scales to the training years instead.
 :::
 
 (gal-1-2)=
@@ -216,17 +218,17 @@ Chlorophyll is the most used satellite biogeochemical variable and the base of t
 | Gap the split reproduces | a biogeochemical province not seen in training; in-situ by cruise |
 | Splits | withhold a region: one Longhurst province; withhold by `cruise`: withheld cruises; causal: held-out years |
 | Scores stratified by | water type (open ocean, coastal); season |
-| References, by track | analysis: OC-CCI, GlobColour; observations: HPLC chlorophyll (SeaBASS, NOMAD); operational: NASA OC4, GIOP |
+| References, by track | analysis: OC-CCI, GlobColour; observations: HPLC chlorophyll (SeaBASS, NOMAD); operational: NASA OC4, GIOP; sst (second input): the product of contract 1.2, 7df03e4546100b3d84560eb5ddea04aef19c4e2c454ad36511ee20883e6728e7 |
 | Baselines | NASA OC4 band ratio; GIOP; monthly OC-CCI climatology |
 | Scorers | RMSE of log10 chlorophyll, bias by water type; PSD score; bloom onset (POD, FAR with timing tolerance); distribution distance of log chlorophyll; front alignment with SST |
 | Known failure modes | atmospheric correction in coastal waters; sun glint; cloud shadows; sediment-rich water overestimated; models learn the bias |
-| Contract hash | `3f7436b535a3…` |
+| Contract hash | `ef5ac20bda66…` |
 :::
 
 **Stack.** **Today:** `BandRatio` (geotoolz.spectral), `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `Wasserstein1` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`. **Proposed:** `ClimatologyForecast` (Report 15 C3), `EvaluateByGroup` (Report 14 C1), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred).
 
 :::{warning} Differs from the source
-The source's province split and its temporal block are kept, the second as a causal split. Withholding cruises is added here: in-situ HPLC samples come by cruise, and two samples from one cruise are not independent. The structural lens in the source (front alignment with SST) needs the SST product of entry 1.2 as a second input, so the contract names that product's hash.
+The source's province split and its temporal block are kept, the second as a causal split. Withholding cruises is added here: in-situ HPLC samples come by cruise, and two samples from one cruise are not independent. The structural lens in the source (front alignment with SST) needs the SST product of entry 1.2 as a second input, so the contract names that product by contract 1.2's hash.
 :::
 
 (gal-1-5)=
@@ -643,7 +645,7 @@ Methane emission estimation is a chain of five dependent sub-tasks, from radiati
 | Contract hash | `082a84da40ef…` |
 :::
 
-**Stack.** **Today:** `SimulationDataset` (pipekit_train), `NeuralForward` (pipekit_cycle), `DACycle` (pipekit_cycle), `Recurrence` (pipekit_cycle), `MatchedFilter` (geotoolz.matched_filter), `DetectionThreshold` (geotoolz.matched_filter), `IMEEstimate` (geotoolz.plume), `WindAdvectionCone` (geotoolz.plume), `RMSE` (xrtoolz.metrics), `InstanceMatcher` (xrtoolz.metrics), `MaskIoU` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`. **Proposed:** `BrierScore` (Report 14 B3), `geocatalog.events` (Report 14 E2), `CatalogDataset` (Report 11 A1), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** cascade contract (stages by hash). **Not pinned:** plumax (plume forward model), rtmx (differentiable RTM).
+**Stack.** **Today:** `SimulationDataset` (pipekit_train), `NeuralForward` (pipekit_cycle), `DACycle` (pipekit_cycle), `Recurrence` (pipekit_cycle), `MatchedFilter` (geotoolz.matched_filter), `DetectionThreshold` (geotoolz.matched_filter), `IMEEstimate` (geotoolz.plume), `WindAdvectionCone` (geotoolz.plume), `RMSE` (xrtoolz.metrics), `InstanceMatcher` (xrtoolz.metrics), `MaskIoU` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`. **Proposed:** `BrierScore` (Report 14 B3), `geocatalog.events` (Report 14 E2), `CatalogDataset` (Report 11 A1), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** cascade contract (stages by hash), Jacobian fidelity. **Not pinned:** plumax (plume forward model), rtmx (differentiable RTM).
 
 :::{warning} Differs from the source
 The source proposes a new `MultiStageEvaluation`. A cascade is several contracts: one per stage and one end to end, each with its own hash, plus a list of how each stage's output feeds the next. That needs one field on the contract, not a second evaluation class.
@@ -700,9 +702,9 @@ pieces are proposed nowhere.
 
 :::{figure} images/benchmarks_gallery/readiness.svg
 :label: fig-gallery-readiness
-:alt: A grid with one row per gallery entry and one dot per stack piece the entry needs, coloured by status. Ocean, land and atmosphere entries have between four and ten pieces available today. Radiative transfer emulation needs the fewest pieces. The emission chain needs the most pieces overall, with eleven available today.
+:alt: A grid with one row per gallery entry and one dot per stack piece the entry needs, coloured by status. Ocean, land and atmosphere entries have between five and eleven pieces available today. Radiative transfer emulation needs the fewest pieces. The emission chain needs the most pieces overall, with eleven available today.
 
-Readiness of the eighteen contracts, from the notebook: one dot per stack
+Readiness of the eighteen entries, from the notebook: one dot per stack
 piece an entry needs. The contract and the multi-reference runner, needed by
 every entry, are included.
 :::
@@ -732,7 +734,7 @@ every entry, are included.
 | circular direction error | 1 | xrtoolz.metrics, beside `xrtoolz.atm.WindDirection` | not proposed yet |
 | Weibull parameter recovery | 1 | xrtoolz.metrics (distributional) | not proposed yet |
 | spectral angle | 1 | geotoolz.spectral | not proposed yet |
-| Jacobian fidelity | 1 | a scorer over pipekit-jax gradients | not proposed yet |
+| Jacobian fidelity | 2 | a scorer over pipekit-jax gradients | not proposed yet |
 :::
 
 The seven pieces nobody proposes are small: each is a function over arrays
