@@ -169,7 +169,7 @@ The step-by-step for each is a skill (see "Recipes").
 
 ### 5. Notebooks
 
-- `notebooks/*.py` are jupytext percent-format scripts: a YAML header, then
+- `notebooks/**/*.py` (including `notebooks/reports/`) are jupytext percent-format scripts: a YAML header, then
   `# %%` / `# %% [markdown]` cells. `.ipynb` files are generated locally
   (`pixi run notebooks-to-ipynb`) and never committed.
 - `marimo_notebooks/*.py` are marimo apps (`app = marimo.App(...)`,
@@ -257,7 +257,7 @@ pixi run dvc add data/raw/<file>      # track a raw file (commit the .dvc pointe
 pixi run dvc push                     # upload data (dvc pull downloads); needs a
                                       # remote: dvc remote add -d <name> <url>
 pixi run dvc metrics diff             # compare metrics with the last commit
-pixi run notebooks-to-ipynb           # notebooks/*.py → .ipynb (local only)
+pixi run notebooks-to-ipynb           # notebooks/**/*.py → .ipynb (local only)
 pixi run -e docs docs-build           # what pages.yml runs
 pixi run -e jupyterlab lab
 pixi run -e marimo marimo-edit
