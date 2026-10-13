@@ -250,11 +250,16 @@ evaluation = pe.Pipeline([                   # proposed (F)
     pe.metrics.MassClosure(tolerance=0.01),  # (T, N) → (T,)  proposed (F)
 ])
 
-report = pe.MultiTrackEvaluation(            # proposed (F)
-    evaluation_pipeline=evaluation,
+# one runner, several references (Report 15, D2); no MultiTrackEvaluation
+contract = pe.BenchmarkContract(            # proposed (Report 15 A1)
+    name="methane-da", task="L3->L4", operation="analysis",
+    variant="probabilistic", scorers=evaluation, ...)  # arguments sketched
+report = pe.Benchmark.from_contract(         # proposed (Report 15 A2)
+    contract,
+    estimators=[da],                         # the cycle of tab 5, named
     references={"cams": cams_cat, "aircraft": aircraft_cat,
-                "tccon": tccon_test},            # held-out sites only
-).run(predictions=history)                   # → EvaluationReport
+                "tccon": tccon_test},        # held-out sites only; proposed (D2)
+).run()                                      # → one row per track
 ```
 :::
 

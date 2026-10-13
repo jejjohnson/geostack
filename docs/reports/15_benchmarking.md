@@ -261,24 +261,34 @@ gives a new h.
 from pipekit.hashing import sha256_hex, stable_json
 contract = {
     "task": "L1->L2", "operation": "gap filling", "variant": "deterministic",
-    "input": {"carrier": "sparse grid", "sources": ["s2", "s3"], "units": "m"},
+    "input": {"carrier": "sparse grid", "sources": ["s2", "s3"], "units": "m",
+              "aggregate": "mean"},  # coincident s2/s3 samples in one cell
     "output": {"carrier": "grid", "shape": [364, 32, 32], "units": "m"},
     "splits": {"kind": "leave_one_platform_out", "platform": "s1",
                "period": ["2025-01-01", "2025-12-30"]},
-    "references": {"truth": "osse", "reanalysis": "smoothed-50km",
-                   "observations": "s1"},
+    "references": {                 # each derived, with its settings
+        "truth": {"from": "data.generator", "period": [...]},
+        "reanalysis": {"from": "truth", "op": "scipy.ndimage.gaussian_filter",
+                       "sigma_cells": [0, 2, 2], "mode": "wrap", "code": "scipy@…"},
+        "observations": {"from": "data.generator", "platform": "s1", ...}},
     "data": {"generator": GEN},     # grid, L, τ, σ, noise, orbits, seed
-    "metrics": [...],                                      # arguments sketched
+    "metrics": [{"name": "rmse", "code": "xrtoolz.metrics.rmse@308c7f2"}],
+    "scoring": {                    # how each track is matched and reduced
+        "truth": {"carrier": "grid", "dims": ["time", "y", "x"]},
+        "reanalysis": {"carrier": "grid", "dims": ["time", "y", "x"]},
+        "observations": {"carrier": "points", "matchup": "cell_of_obs",
+                         "match_on": ["time", "y", "x"], "dims": ["obs"]}},
     "baselines": [                  # every setting that changes a score
         {"name": "linear_in_time", "method": "linear", "edge_fill_m": 0.0,
          "code": "xrtoolz.interpolate.fillnan_temporal@308c7f2"},
         {"name": "oi_100km", "length_km": 100, "time_days": 30, "window_days": 15,
-         "space_kernel": "gaussian_periodic_images", "images": [-3, 3], ...},
+         "space_kernel": "gaussian_periodic_images", "images": [-3, 3],
+         "code": "notebook source sha256:5288366f…", ...},
         ...],                       # six in all: stage 3's
 }
 # h = SHA-256 of the key-sorted JSON
-h = sha256_hex(stable_json(contract))           # → "1fa3920272a5…"     today
-# reverse key order → same h; withhold s2 → "ddc672e2e856…"; seed 1, another
+h = sha256_hex(stable_json(contract))           # → "4f0a8b663178…"     today
+# reverse key order → same h; withhold s2 → "8d701687cece…"; seed 1, another
 # OI kernel or another edge fill → a new h each
 [f.name for f in dataclasses.fields(pe.BenchmarkReport)]
 # → ["task", "domain", "axis", "results"]: no contract, no model   today
@@ -286,15 +296,22 @@ h = sha256_hex(stable_json(contract))           # → "1fa3920272a5…"     toda
 
 The fingerprint costs nothing: pipekit already uses `stable_json` and
 `sha256_hex` for the registry and the dataset hashes, and the whole contract
-is about 2 KB of JSON. It must identify the data and the baselines, not only
+is about 3 KB of JSON. It must identify the data and the baselines, not only
 name them: labels
 such as `"osse"` and `"s1"` say nothing about which arrays they stand for,
 so this contract hashes the generator's full configuration and seed, and a
 contract over real data would carry the catalog's content hash for each
 input and reference. Each baseline likewise carries every setting that
 changes its score, down to the kernel and the fill for cells with no
-observation on one side, and the revision of the code that implements it;
-stage 3 shows that each of these moves the result. What is missing is the place to put it. pipekit-evaluate's
+observation on one side, and the revision of the code that implements it:
+a library at a pinned commit, or, for the OI that lives in the notebook until
+workstream C1, the SHA-256 of its source, so that editing it changes the
+hash. Each reference carries its derivation (the reanalysis stand-in is a
+Gaussian filter of the truth, and its σ and boundary mode are in the
+contract), and each track says how it is scored: the grids cell by cell, and
+the withheld s1 observations by sampling the map at each observation's cell
+and reducing over the observations. Stage 3 shows that each of these settings
+moves the result. What is missing is the place to put it. pipekit-evaluate's
 `BenchmarkReport` records the task name, the domain, the axis and the cell
 results, so a report cannot say which contract, which model or which data it
 scored, and a submission cannot be checked against anything (workstreams A
@@ -306,7 +323,7 @@ The scoping report's sketch also carried `block_size_spatial_km` and
 split configuration here, so the two cannot disagree; the overview's
 [contract example](../overview_examples.md#ex-benchmark) had already made that
 change. The report expected about 50 KB of YAML; a full contract for this
-benchmark is about 2 KB.
+benchmark is about 3 KB.
 :::
 
 (r15-stage-2)=
@@ -339,7 +356,7 @@ splits = {
     "withhold s2": platform_split("s2"),                # 2.75 / 1.92   user
     "blocks 50 km × 7 d": blocks(50, 7),                # 2.61 / 1.68   user
     "blocks 200 km × 60 d": blocks(200, 60),            # 4.58 / 4.18   user
-    "last 20 % of 2025": causal_split(0.8),             # 8.09 / 7.81   user
+    "last 20 % of 2025": causal_split(0.8),             # 8.65 / 8.39   user
 }
 ```
 
@@ -353,10 +370,10 @@ splits = {
 | withhold s2 | the same, for s2's orbit | 2.75 | 1.92 |
 | blocks 50 km × 7 d | gaps smaller than L and τ | 2.61 | 1.68 |
 | blocks 200 km × 60 d | a region and season with no data at all | 4.58 | 4.18 |
-| last 20 % of 2025 | a forecast of the last 73 days of 2025, with no data | 8.09 | 7.81 |
+| last 20 % of 2025 | a forecast of the last 73 days of 2025, with no data | 8.65 | 8.39 |
 :::
 
-The splits disagree by a factor of nearly five, and no single one is "honest". A
+The splits disagree by a factor of five, and no single one is "honest". A
 mapping product is used where an altimeter did not fly while the others did,
 so the withheld-satellite rows predict its error in use: 2.7 cm against the
 truth for s1. The random split is optimistic by 36 % against that, because
@@ -408,9 +425,12 @@ correlation scale are one answer to that question, not the rule.
 much "the baseline" depends on how it was written.
 
 **Problem.** The input is the 2025 maps gridded from s2 and s3, with no value
-where neither flew; s1 is withheld. A baseline fills every empty cell. Optimal
+where neither flew; s1 is withheld. Where s2 and s3 sample the same cell on
+the same day (242 cells in 2025) the grid holds their mean, and every
+baseline, OI included, reads this grid rather than the raw tracks, so all
+see the same input. A baseline fills every empty cell. Optimal
 interpolation (OI) is the best linear estimate under the covariance
-{eq}`r15-eq-cov`: with y the M observations in a window of ±15 days, C_oo
+{eq}`r15-eq-cov`: with y the M non-empty cells in a window of ±15 days, C_oo
 their M × M covariance plus σₒ² I, C_go the N × M covariance between the N
 grid cells and the observations, μ the window mean, and the spatial factor of
 {eq}`r15-eq-cov` summed over the domain's periodic images so that it stays a
@@ -427,17 +447,18 @@ $$ (r15-eq-oi)
 :caption: Six baselines on the 2025 maps, from a real run (RMSE in cm against the truth and against the withheld s1).
 :linenos:
 
-# Shapes: G (T = 1,095, 32, 32) with NaN off-track; scored on the 364 days of 2025
+# Shapes: G (T = 1,095, 32, 32) with NaN off-track, coincident s2/s3 samples
+#         averaged; every baseline, OI included, reads G; scored on 2025's 364 days
 from xrtoolz.interpolate import fillnan_climatology, fillnan_temporal
-G.ffill("time")      # pandas; persistence (carry fwd) 7.99 / 7.49  user
-fillnan_temporal(G, method="nearest")   # nearest in time    5.60 / 5.72  today
+G.ffill("time")      # pandas; persistence (carry fwd) 7.98 / 7.49  user
+fillnan_temporal(G, method="nearest")   # nearest in time    5.59 / 5.72  today
 fillnan_temporal(G, method="linear")    # linear in time     4.77 / 5.02  today
 fillnan_climatology(G, group="month", residual="zero")
-                                        # monthly clim.      8.36 / 7.88  today
+                                        # monthly clim.      8.35 / 7.87  today
 # η̂ = μ + C_go C_oo⁻¹ (y − μ), one solve per day, ±15 d
 oi(G, length_km=50, time_days=30)       # OI, L = 50 km      2.66 / 3.20  user
 oi(G, length_km=100, time_days=30)      # OI, L = 100 km     1.81 / 2.62  user
-# 1 − 1.78 / RMSE(baseline): 77 % over persistence; 68 % and 62 % over
+# 1 − 1.81 / RMSE(baseline): 77 % over persistence; 68 % and 62 % over
 # nearest and linear interpolation in time
 ```
 
@@ -452,7 +473,7 @@ OI itself depends on its assumptions: half the right correlation length costs
 47 %. And the assumption can break the method. The usual Gaussian over the
 shortest distance on a periodic domain is not a covariance at all: before the
 noise term is added, its smallest eigenvalue on a day of 2025 is
-−9.4 × 10⁻⁶ m² at L = 100 km and −1.8 × 10⁻³ m² at L = 150 km. The noise
+−9.1 × 10⁻⁶ m² at L = 100 km and −1.7 × 10⁻³ m² at L = 150 km. The noise
 σₒ² = 4 × 10⁻⁴ m² hides the first and not the second. The Gaussian summed
 over the domain's periodic images is a valid covariance (smallest eigenvalue
 zero to rounding at both lengths), and it is what the notebook's OI uses, so
@@ -536,7 +557,7 @@ for name, p in entries.items():                     # reanalysis · truth · s1
     scores[name] = (rmse(p, rean), rmse(p, truth), rmse_at(p, s1))      # user
 # OI, L = 100 km          2.27 · 1.81 · 2.62
 # OI, L = 50 km           2.82 · 2.66 · 3.20
-# learned the reanalysis  1.24 · 2.66 · 3.26
+# learned the reanalysis  1.24 · 2.66 · 3.27
 ```
 
 The entry that learned the reanalysis wins its track by a factor of 1.8 and
@@ -683,8 +704,8 @@ h = sha256_hex(stable_json(contract))                   # a dict        today
 # After:
 c = pe.BenchmarkContract(name="ssh-mapping-synthetic", version="1.0.0",
                          task="L1->L2", variant="deterministic",
-                         splits={"_target_": "geocatalog.splits.by_platform",
-                                 "platform": "s1"},          # arguments sketched
+                         splits={"_target_": "geocatalog.splits.split_by",
+                                 "column": "producer", "test": "s1"},  # (B2)
                          status="pre-registered")        # proposed (A1)
 c.content_hash()                                         # proposed (A1)
 rep = pe.Benchmark.from_contract(c, estimators=ests).run()  # proposed (A2)
@@ -762,7 +783,7 @@ argument.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `optimal_interpolation(obs, grid, *, kernel, length, time_scale, noise, window)` and `OptimalInterpolation` | `xrtoolz.interpolate` | stage 3's best baseline, absent from the stack; the kernel is valid on the grid (images summed on periodic domains, or a compactly supported kernel), checked with a Cholesky factorization of the prior before the noise is added |
+| `optimal_interpolation(obs, grid, *, kernel, length, time_scale, noise, window)` and `OptimalInterpolation` | `xrtoolz.interpolate` | stage 3's best baseline, absent from the stack; the kernel is valid on the grid (images summed on periodic domains, or a compactly supported kernel), checked on the prior before the noise is added by its smallest eigenvalue against a scale-aware tolerance (λ_min ≥ −10⁻¹⁰ σ²); a strict Cholesky would reject a valid kernel, since the prior is only semidefinite (colocated observations make it singular) |
 | `persistence(field, *, lead, reference="last_available", gap="nan")` | `xrtoolz.geo` (forecast baselines) | stage 3: persistence is carry-forward with an explicit reference time; nearest and linear interpolation in time are interpolation baselines (`fillnan_temporal`), not persistence, and the improvement over each differs by up to 14 points |
 | `ClimatologyForecast(train_period, freq)` | `xrtoolz.geo`, over `CalculateClimatology` | a climatology fitted on the training years only, unlike `fillnan_climatology` |
 | `linear_trend(field, *, n_recent)` | `xrtoolz.geo` | the scoping report's trend baseline |
@@ -796,6 +817,7 @@ it, scores every declared reference, and names entries.
 | `variant` on `Scorer` and on the entry's `Estimate` (`"deterministic"`, `"probabilistic"`) | `benchmark/protocols.py`, beside Report 14's A1 tags | stage 4: the report should say which rows are point forecasts |
 | point forecasts under CRPS | `xrtoolz.metrics.crps_ensemble` and the runner | a point forecast is scored as a degenerate distribution (its CRPS is its MAE) without duplicating it; stage 4's duplication goes |
 | `references: Mapping[str, ReferenceSource \| str]` | `Benchmark`, building on Report 14's A4 | stage 5's three tracks in one run; a track with no data reports "unavailable", as `CellResult.note` already does for a missing oracle |
+| per-track scoring from the contract's `scoring` (carrier, matchup rule, reduction dims) | `Benchmark.from_contract` | stage 5: a gridded track is scored over `(time, y, x)`, the s1 track only after sampling the map at each observation and reducing over `obs`; without the rule the runner cannot reproduce the observation scores |
 | `MultiTrackEvaluation` | not added | the multi-reference runner is the same object; a second class would duplicate it |
 | `name` on `Estimator`; results keyed by name | `benchmark/protocols.py`, `run.py` | stage 6: two baselines in one cell collide |
 | `datasets(split)` on `Task` | `benchmark/protocols.py` | stage 6: a task has no train and test sets today |
@@ -858,11 +880,11 @@ Each workstream merges only when its gates pass on the running example.
 | B1 Blocks | B | on stage 2's observations, `split_blocks(km=200, days=60, seed=0)` reproduces the notebook's test set and its RMSE (4.18 cm against the truth) to 1e-4, assigning no row that crosses a block boundary; `km=50` with `min_scale=(100, 30)` raises `ValueError` |
 | B2 Platform and causal | B | `split_by("producer", test="s1")` reproduces stage 2's 2.70 cm, and every test time of `split_causal` is later than every training time |
 | B3 Window guard | B | `XarrayWindowDataset(guard=pd.Timedelta("60D"))` on stage 2's series raises `ValueError` naming the empty split; with `guard="2D"` its splits are 871, 105 and 108 windows |
-| C1 OI | C | `optimal_interpolation` reproduces stage 3's 1.81 and 2.62 cm to 1e-4 m; with L = 150 km on the 800 km periodic grid its prior covariance, before the noise term, has smallest eigenvalue ≥ 0 to rounding, where the minimum-image Gaussian gives −1.8 × 10⁻³ m² |
-| C2 Persistence | C | `persistence` reproduces stage 3's carry-forward 7.99 cm and uses no observation after its reference time; nearest and linear interpolation in time (5.60 and 4.77 cm) are separate interpolation baselines, and each configuration hashes differently |
+| C1 OI | C | `optimal_interpolation` reproduces stage 3's 1.81 and 2.62 cm to 1e-4 m; with L = 150 km on the 800 km periodic grid its prior covariance, before the noise term, has smallest eigenvalue λ_min ≥ −10⁻¹⁰ σ² (semidefinite to rounding), where the minimum-image Gaussian gives −1.7 × 10⁻³ m² |
+| C2 Persistence | C | `persistence` reproduces stage 3's carry-forward 7.98 cm and uses no observation after its reference time; nearest and linear interpolation in time (5.59 and 4.77 cm) are separate interpolation baselines, and each configuration hashes differently |
 | C3 Climatology | C | `ClimatologyForecast(train_period=("2023", "2024"))` uses no 2025 value: perturbing every 2025 input changes its output by 0 |
 | D1 Variant | D | on a probabilistic contract, stage 4's map is scored without duplication at its MAE, 1.29 cm, its row is tagged deterministic, and the 20-member ensemble scores 0.96 cm CRPS |
-| D2 Tracks | D | one run reproduces stage 5's nine scores to 1e-4 m, and a track with no reference appears with the note "unavailable" |
+| D2 Tracks | D | one run, driven by the contract's `scoring`, reproduces stage 5's nine scores to 1e-4 m (the s1 track through its matchup, over `obs`), and a track with no reference appears with the note "unavailable" |
 | D3 Names | D | stage 6's four baselines, two at the same cell, run without error and the report is keyed by their names |
 | E1 Store | E | `store.put(c) == c.content_hash()` and `store.get(h)` returns a contract equal to `c` |
 | E2 Verify | E | each of the stage-6 report's three entries verifies with its own model hash, and a submission fails after any change to the contract, its model hash or the report, or when a row has no model hash |
