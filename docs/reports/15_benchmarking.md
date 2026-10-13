@@ -48,7 +48,7 @@ below is from a real run.
 
 | | |
 |---|---|
-| **Status** | Partly built. Originally a scoping proposal ("committed": a framework, with a gallery in `benchmarks_gallery.md`); the framework is kept, the infrastructure is redistributed across the libraries that own each term |
+| **Status** | Partly built. Originally a scoping proposal ("committed": a framework, with a gallery, now the [benchmarks gallery](../benchmarks_gallery.md)); the framework is kept, the infrastructure is redistributed across the libraries that own each term |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone designing a benchmark, entering one, or turning a paper's evaluation into one: paper authors, curators, OceanBench or WeatherBench adopters |
 | **Companions** | [Report 14](14_pipekit_evaluate.md) (pipekit-evaluate, whose runner and report this extends); [Report 11](11_pipekit_train.md) (the training splits); [Report 12](12_pipekit_experiment.md) (the registry); [Report 13](13_state_catalog.md) (analyses, reanalyses and forecasts as catalog rows); [Report 6](06_geocatalog.md) (catalogs and matchups) |
@@ -956,7 +956,7 @@ the store.
 
 | Item | Where | Why |
 |---|---|---|
-| Fill the benchmarks gallery with contracts | `benchmarks_gallery.md` (not yet written) | the scoping report's six domains, each as a contract |
+| Review the gallery's eighteen draft contracts with domain experts, then pre-register them | [benchmarks gallery](../benchmarks_gallery.md) | the drafts hash today, but their metrics, baselines and splits need review before their hashes mean anything |
 | Raise on an empty split | pipekit-train `XarrayWindowDataset` | stage 2: a long guard empties a split silently; independent of B3's units |
 | Index xrtoolz submodules in the capability index | `scripts/capabilities.py` (`UPSTREAM`) | the index lists only top-level `xrtoolz`, so `fillnan_*`, `crps_ensemble` and `rank_methods` are not searchable (Report 14 found the same) |
 | Pin pyrox-gp or gaussx | `references/`, `UPSTREAM` | the scoping report maps Gaussian-process gap filling to them; neither is checked |
