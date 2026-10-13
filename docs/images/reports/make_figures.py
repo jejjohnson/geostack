@@ -924,8 +924,9 @@ def r11_roadmap() -> Svg:
         470,
         "Roadmap. Phase 1 fixes what the running example hit: the SimulationDataset"
         " trajectory path and its hash (A2, A3), the window import (A5), the registry"
-        " round trip (B1), checkpoints and sweep selection (C1, C2) and the SVI step"
-        " (C4). Phase 2 adds the missing pieces the scoping report asked for:"
+        " round trip and the model hash (B1, B2), checkpoints, sweep selection,"
+        " ValidationStep in the loop and the SVI step (C1 to C4). Phase 2 adds the"
+        " missing pieces the scoping report asked for:"
         " CatalogDataset (A1), a faster cache (A4) and the amortized-inference recipe"
         " (D1). Phase 3 builds the Lightning and Keras backends (E1, E2).",
     )
@@ -933,10 +934,10 @@ def r11_roadmap() -> Svg:
         (
             [
                 ("1a · A2 A3 A5", ["simulation path, hash,", "window import"], ENG),
-                ("1b · B1", ["registry round trip", "for EquinoxModelOp"], ML),
-                ("1c · C1 C2 C4", ["checkpoints, sweep", "selection, SVI jit"], OBS),
+                ("1b · B1 B2", ["registry round trip,", "model hash"], ML),
+                ("1c · C1 to C4", ["checkpoints, sweeps,", "validation, SVI jit"], OBS),
             ],
-            "A2 · A3 · A5 · B1 · C1 · C2 · C4",
+            "A2 · A3 · A5 · B1 · B2 · C1 · C2 · C3 · C4",
         ),
         (
             [

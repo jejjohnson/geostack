@@ -48,7 +48,7 @@ drops into a cycle unchanged.
 | **Audience** | anyone training an emulator, a retrieval network or a posterior estimator with the stack, or extending the backends |
 | **Companions** | [Report 10](10_pipekit_cycle.md) (the forward models and cycles an emulator replaces); [Report 13](13_state_catalog.md) (the stored states a dataset reads); [Report 9](09_use_cases.md) (use cases); [Report 12](12_pipekit_experiment.md) (pipekit-experiment) |
 | **Code checked against** | `pipekit-train` 0.0.2 at `ef3c17f`, with pipekit, pipekit-cycle, pipekit-experiment and pipekit-jax from the same revision and geopatcher from geotoolz `088475e`. JAX on CPU with Equinox, Optax, Grain, Orbax, NumPyro and BlackJAX; torch, Lightning and Keras were not installed (their adapters are scaffolds that never import them). Read on 13 October 2026 |
-| **Running example** | every number below is from real runs of scripts in the session scratchpad (`exp_a.py`, `exp_b.py`, `exp_c.py`, `exp_e.py`, `exp_8.py`, `exp_bayes.py`) |
+| **Running example** | every number below is from one run of `notebooks/reports/report11_pipekit_train.py`, which seeds every draw and asserts each number the page shows (wall times are printed, not asserted) |
 | **Design docs** | the package's `docs/design/` (vision, architecture, boundaries, 14 ADRs, API pages, examples) were read alongside the code |
 :::
 
@@ -443,7 +443,12 @@ A calibrated $q_\phi$ has $\mathbb{E}[z^2] = 1$ for
 $z = (\alpha - \mu_\phi) / \sigma_\phi$ and covers the truth with about 95 %
 of its $\pm 2 \sigma$ intervals. No unbiased estimator can beat the
 Cramér–Rao bound $\sigma_{\mathrm{CR}} = \sigma / \lVert J(\alpha) \rVert$
-with $J_b = -k_b e^{-k_b \alpha}$, whose mean over the prior is 0.227.
+with $J_b = -k_b e^{-k_b \alpha}$. An RMSE averages squared errors, so its
+floor is the root-mean-square bound over the prior,
+$\left(\mathbb{E}_\alpha\left[\sigma_{\mathrm{CR}}^2\right]\right)^{1/2} = 0.257$;
+the mean bound, $\mathbb{E}_\alpha[\sigma_{\mathrm{CR}}] = 0.228$, is the
+comparator for a mean posterior width. On the 200 test draws below the two
+are 0.253 and 0.227.
 
 ```{code-block} python
 :caption: The amortized retrieval: the simulator is the dataset, the loss is NLL, and two pieces of glue are user code.
@@ -465,7 +470,7 @@ loop = pt.TrainingLoop(model_op=EquinoxModelOp(Net(key)),  # y → GaussianHead
                        loss=pt.NLL(), optimizer_config={"name": "adam",
                        "lr": 2e-3}, max_steps=8000, batch_size=256)   # today
 q, _ = loop.run()                                          # 425 s on CPU
-# 200 test draws: RMSE 0.303 (Cramér–Rao mean 0.227); bias −0.15
+# 200 test draws: RMSE 0.303 (RMS Cramér–Rao floor 0.253); bias −0.15
 # ±2σ coverage 99.5 %; E[z²] = 0.43: σ̂ is about 1.5× too wide
 ```
 
@@ -837,7 +842,7 @@ them.
 
 :::{figure} ../images/reports/r11_roadmap.svg
 :label: fig-r11-roadmap
-:alt: Phase 1: A2, A3 and A5 dataset fixes, B1 the registry round trip, and C1, C2 and C4 loop fixes, side by side, then their gates. Phase 2: A1 CatalogDataset, A4 cache speed and formats, D1 the amortized recipe, then their gates. Phase 3: E1 Lightning and E2 Keras, then their gates.
+:alt: Phase 1: A2, A3 and A5 dataset fixes, B1 the registry round trip and B2 the model hash, and C1 to C4 loop fixes (checkpoints, sweeps, ValidationStep in the loop, the SVI step), side by side, then their gates. Phase 2: A1 CatalogDataset, A4 cache speed and formats, D1 the amortized recipe, then their gates. Phase 3: E1 Lightning and E2 Keras, then their gates.
 
 Fixes first, then the missing features, then the backends.
 :::

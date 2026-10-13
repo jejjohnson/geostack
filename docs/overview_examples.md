@@ -199,18 +199,22 @@ da_hash = pk.config_hash(da)  # content hash of the config  proposed (A)
 
 :::{tab-item} 5 · Index
 ```{code-block} python
-:caption: Write every analysed state, one file per member, and index the files with geocatalog's state profile (stage 5). Report 13 has the design.
+:caption: Write every analysed state, one file per analysis time and member, and index the files with geocatalog's state profile (stage 5). Report 13 has the design.
 :linenos:
 
-# Shapes: T cycles, N_e members, N cells; r the run time, Δt the cycle length
+# Shapes: T cycles, N_e members, N cells; r the start time, Δt the cycle length
 members, carry = da(x0, carry0)    # da built with save_history=True  proposed (B)
 # history entry t = (forecast, analysis), each N_e members; vₜ = r + (t + 1) Δt
-for m in range(40):                                                # script
-    ds = to_dataset([a[m] for _, a in da.history], r, dt)   # arguments sketched
-    ds.attrs |= {"forecast_reference_time": str(r), "realization": m,
-                 "producer": da_hash, "parent_uri": prior_uri}     # script
-    ds.to_zarr(f"s3://imeo/methane_da_v3/ana_{r:%Y%m%dT%H}_m{m}.zarr")  # script
-state_cat = gc.build.build_state_catalog(            # 40 rows       proposed (B)
+root = "s3://imeo/methane_da_v3"                                   # script
+for t, (fc, an) in enumerate(da.history):                          # script
+    v = r + (t + 1) * dt          # an analysis is its own run time: lead 0
+    fc_uris = [f"{root}/fc_{v:%Y%m%dT%H}_m{m}.zarr" for m in range(40)]
+    for m in range(40):           # the gain uses every forecast member
+        ds = to_dataset([an[m]], v, dt)                     # arguments sketched
+        ds.attrs |= {"forecast_reference_time": str(v), "realization": str(m),
+                     "producer": da_hash, "parents": fc_uris}      # script
+        ds.to_zarr(f"{root}/ana_{v:%Y%m%dT%H}_m{m}.zarr")          # script
+state_cat = gc.build.build_state_catalog(            # 40 T rows     proposed (B)
     zarr_uris, crs="EPSG:4326", names=gcs.CF_NAMES
 )
 analyses = gcs.load_states(state_cat, aoi)           # (N_e, T, N)   proposed (B)
