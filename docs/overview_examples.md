@@ -1,7 +1,7 @@
 ---
 title: Overview examples
 subtitle: Code sketches for the patterns in the GeoStack overview
-short_title: Examples
+short_title: Stack examples
 description: Code that goes with the GeoStack overview, from a full methane attribution pipeline to operators, catalogs, patchers, DA cycles, evaluation and reproducibility artifacts.
 numbering:
   heading_1: true

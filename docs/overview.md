@@ -1022,7 +1022,7 @@ training and serving still need work, but the pipelines exist.
 - `BenchmarkContract` and `CycleStageBenchmark` artifacts
 - multi-track evaluation as a built-in pattern
 - the first worked cycle (likely methane L1→L2 retrieval, steps 1–5)
-- the first worked benchmark (SSH, from the benchmarks gallery)
+- the first worked benchmark (SSH, from the [benchmarks gallery](benchmarks_gallery.md#gal-1-1))
 
 **Gate:** G1 end to end.
 
@@ -1135,7 +1135,7 @@ notes and will move into `docs/` as they are written up. Until then, the
 | benchmark infrastructure | [Report 15](reports/15_benchmarking.md): benchmarks as content-addressed contracts |
 | the six-step cycle | Report 16: step 2 as oracle, benchmarks as understanding |
 | the data lifecycle in detail | `data_ml_lifecycle.md` |
-| concrete benchmarks | `benchmarks_gallery.md`: 23 benchmarks in 6 domains |
+| concrete benchmarks | [Benchmarks gallery](benchmarks_gallery.md): 18 draft contracts in 5 domains |
 
 (sec-summary)=
 ## In summary
