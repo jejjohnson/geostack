@@ -1148,6 +1148,168 @@ def r12_roadmap() -> Svg:
     return f
 
 
+def r14_ownership() -> Svg:
+    """Report 14: metrics live with their carriers; pipekit-evaluate orchestrates."""
+    f = Svg(
+        840,
+        520,
+        "Ownership of evaluation. Scripts and benchmarks call pipekit-evaluate,"
+        " which ships the benchmark ladder (cells, the reference rule, Benchmark,"
+        " Scorer) and, as the one new surface, would add the Unit, Lens and Stage"
+        " tags, a scorer adapter and an evaluation report. The metrics themselves"
+        " live with their carriers: xrtoolz.metrics for fields, statistics,"
+        " events and physical checks, with the lead-time, region and band"
+        " wrappers; geotoolz for detection building blocks; geocatalog for"
+        " matchups. pipekit-cycle, pipekit-train and pipekit-experiment are the"
+        " neighbours it connects to.",
+    )
+    f.box(
+        24,
+        20,
+        792,
+        56,
+        "scripts · benchmarks · pilots (ocean, plume, land extremes, fusion)",
+        ["build tasks, estimators and scorers; read the report"],
+        hue=(BORDER, PANEL),
+        title_size=14.5,
+        sub_size=12,
+    )
+    f.rect(24, 110, 792, 120, stroke=ENG[0], fill=ENG[1])
+    f.text(44, 136, "pipekit-evaluate", size=16, weight=700, anchor="start")
+    x = 44.0
+    for c in ["Cell", "ReferenceRule", "Benchmark", "Scorer", "Oracle"]:
+        x += f.chip(x, 150, c, hue=(BORDER, CARD), size=12) + 8
+    f.text(44, 206, "proposed:", size=12.5, color=MUTED, anchor="start")
+    x = 120.0
+    for c in ["unit · lens · stage tags", "MetricScorer", "EvaluationReport"]:
+        x += f.chip(x, 190, c, hue=(ENG[0], CARD), dashed=True, size=12) + 8
+    f.arrow([(420, 76), (420, 108)], color=INK)
+    boxes = [
+        (
+            "xrtoolz.metrics",
+            ["fields · statistics · events", "physical · by lead, region, band"],
+            STATE,
+            24,
+            272,
+        ),
+        (
+            "geotoolz",
+            ["Threshold · LabelConnected", "PlumeMask · RegionProps"],
+            OBS,
+            300,
+            216,
+        ),
+        (
+            "geocatalog",
+            ["matchup: IouAtLeast,", "NearestInTime, WithinWindow"],
+            OBS,
+            540,
+            276,
+        ),
+    ]
+    for name, sub, hue, bx, bw in boxes:
+        f.box(bx, 280, bw, 80, name, sub, hue=hue, title_size=14.5, sub_size=12)
+        f.arrow([(bx + bw / 2, 230), (bx + bw / 2, 278)], color=INK)
+    f.box(
+        24,
+        410,
+        792,
+        66,
+        "pipekit-cycle · pipekit-train · pipekit-experiment",
+        ["forward models and cycles · losses and validation · runs and the registry"],
+        hue=(LINE, PANEL),
+        title_size=14.5,
+        sub_size=12,
+    )
+    f.arrow([(528, 232), (528, 408)], color=LINE, dashed=True)
+    f.text(536, 392, "planned links", size=12, color=MUTED, anchor="start", italic=True)
+    f.h = 496
+    return f
+
+
+def r14_roadmap() -> Svg:
+    """Report 14: the taxonomy and report first, then the missing metrics."""
+    f = Svg(
+        840,
+        560,
+        "Roadmap. Phase 1 gives pipekit-evaluate its taxonomy tags, a scorer"
+        " adapter over xrtoolz metrics and an evaluation report, and fixes the"
+        " ladder (A1 to A4). Phase 2 fills the metric gaps where their names are"
+        " already reserved: FSS and spectrum comparison, the detection scores, the"
+        " missing point-wise and probabilistic scores, and the seasonal, event and"
+        " member wrappers (B1 to B4, C1 to C3). Phase 3 adds the two new units:"
+        " trajectories (D1, D2) and events as catalog rows (E1, E2). Phase 4"
+        " connects evaluation to training, cycles, the registry and presets (F1"
+        " to F4).",
+    )
+    rows = [
+        (
+            [
+                (
+                    "1 · A1 to A4",
+                    ["tags, MetricScorer,", "EvaluationReport, ladder fixes"],
+                    ENG,
+                )
+            ],
+            "A1 · A2 · A3 · A4",
+        ),
+        (
+            [
+                (
+                    "2a · B1 to B4",
+                    ["FSS, spectrum comparison,", "POD/FAR/CSI, NSE, Brier"],
+                    STATE,
+                ),
+                ("2b · C1 to C3", ["by season, by event,", "by member"], STATE),
+            ],
+            "B1 to B4 · C1 to C3",
+        ),
+        (
+            [
+                ("3a · D1 D2", ["xrtoolz.lagrangian,", "trajectory scores"], ML),
+                ("3b · E1 E2", ["event detectors,", "events as catalog rows"], ML),
+            ],
+            "D1 · D2 · E1 · E2",
+        ),
+        (
+            [
+                (
+                    "4 · F1 to F4",
+                    ["losses, per-step checks,", "registry links, presets"],
+                    EXT,
+                )
+            ],
+            "F1 to F4",
+        ),
+    ]
+    y = 24.0
+    for items, gate in rows:
+        n = len(items)
+        w = (792 - 18 * (n - 1)) / n
+        for i, (name, sub, hue) in enumerate(items):
+            f.box(24 + i * (w + 18), y, w, 66, name, sub, hue=hue, title_size=14)
+        cx, gy, d = 420, y + 66 + 24, 12
+        f.arrow([(cx, y + 66), (cx, gy - d - 1)], color=LINE)
+        f.parts.append(
+            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+            f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}" stroke-width="1.4"/>'
+        )
+        f.text(
+            cx + d + 10,
+            gy + 4.5,
+            f"gates {gate}",
+            size=12,
+            color=ENG[0],
+            anchor="start",
+            weight=600,
+        )
+        if items is not rows[-1][0]:
+            f.arrow([(cx, gy + d), (cx, gy + 42)], color=LINE)
+        y = gy + 44
+    f.h = int(y - 10)
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
@@ -1162,6 +1324,8 @@ FIGURES = {
     "r11_roadmap": r11_roadmap,
     "r12_ownership": r12_ownership,
     "r12_roadmap": r12_roadmap,
+    "r14_ownership": r14_ownership,
+    "r14_roadmap": r14_roadmap,
 }
 
 
