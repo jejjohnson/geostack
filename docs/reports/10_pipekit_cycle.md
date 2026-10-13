@@ -44,7 +44,7 @@ cycle the wrong observations. This page proposes two small fixes.
 | **Status** | Built. Originally a scoping proposal ("committed"); pipekit-cycle 0.0.2 is the design of record, and this page follows it |
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone writing a forward simulation, a DA cycle or an iterative retrieval with the stack, or an adapter for an algorithm library |
-| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core, where `StatefulOperator` and `CarryState` live); [Report 9](09_use_cases.md) (use cases); [Report 13](13_state_catalog.md) (indexing the states a cycle produces); [Report 11](11_pipekit_train.md) (training the emulators of stage 4); [Report 12](#r10-ref-report-11) (the registry, forthcoming) |
+| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core, where `StatefulOperator` and `CarryState` live); [Report 9](09_use_cases.md) (use cases); [Report 13](13_state_catalog.md) (indexing the states a cycle produces); [Report 11](11_pipekit_train.md) (training the emulators of stage 4); [Report 12](12_pipekit_experiment.md) (the registry) |
 | **Code checked against** | `pipekit-cycle` 0.0.2 and `pipekit` 0.0.2 at `ef3c17f`, the revision pinned in `references/pipekit`; its 100 tests pass. Read on 13 October 2026 |
 | **Running example** | every output below is from one run on that revision of `notebooks/reports/report10_pipekit_cycle.py`, which seeds every draw and asserts each number the page shows |
 :::
@@ -725,18 +725,12 @@ Small fixes first, then the documentation and the latent design.
 <!-- TODO(ref): placeholders. When a report page lands, point its links in this
 file at the page and delete its entry below. -->
 
-:::{note} Placeholders
+:::{note} Companion reports
 :class: simple
-Report 12 (pipekit-experiment) is still being written. Reports
-[2](02_pipekit_surface.md), [9](09_use_cases.md), [11](11_pipekit_train.md) and
+Reports [2](02_pipekit_surface.md), [9](09_use_cases.md),
+[11](11_pipekit_train.md), [12](12_pipekit_experiment.md) and
 [13](13_state_catalog.md) are published.
 :::
-
-### Forthcoming reports
-
-(r10-ref-report-11)=
-Report 12 · pipekit-experiment
-: *Forthcoming.* Registering the emulators that stage 4 swaps in.
 
 ### Sources
 

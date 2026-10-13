@@ -46,7 +46,7 @@ drops into a cycle unchanged.
 | **Status** | Partly built. Originally a scoping proposal ("committed"); pipekit-train 0.0.2 is the design of record where it has decided, and the scoping report's unshipped ideas are kept as proposals |
 | **Reading time** | about 35 minutes |
 | **Audience** | anyone training an emulator, a retrieval network or a posterior estimator with the stack, or extending the backends |
-| **Companions** | [Report 10](10_pipekit_cycle.md) (the forward models and cycles an emulator replaces); [Report 13](13_state_catalog.md) (the stored states a dataset reads); [Report 9](09_use_cases.md) (use cases); [Report 12](#r11-ref-report-12) (pipekit-experiment, forthcoming) |
+| **Companions** | [Report 10](10_pipekit_cycle.md) (the forward models and cycles an emulator replaces); [Report 13](13_state_catalog.md) (the stored states a dataset reads); [Report 9](09_use_cases.md) (use cases); [Report 12](12_pipekit_experiment.md) (pipekit-experiment) |
 | **Code checked against** | `pipekit-train` 0.0.2 at `ef3c17f`, with pipekit, pipekit-cycle, pipekit-experiment and pipekit-jax from the same revision and geopatcher from geotoolz `088475e`. JAX on CPU with Equinox, Optax, Grain, Orbax, NumPyro and BlackJAX; torch, Lightning and Keras were not installed (their adapters are scaffolds that never import them). Read on 13 October 2026 |
 | **Running example** | every number below is from one run of `notebooks/reports/report11_pipekit_train.py`, which seeds every draw and asserts each number the page shows (wall times are printed, not asserted) |
 | **Design docs** | the package's `docs/design/` (vision, architecture, boundaries, 14 ADRs, API pages, examples) were read alongside the code |
@@ -911,19 +911,11 @@ Fixes first, then the missing features, then the backends.
 <!-- TODO(ref): placeholders. When a report page lands, point its links in this
 file at the page and delete its entry below. -->
 
-:::{note} Placeholders
+:::{note} Companion reports
 :class: simple
-Report 12 (pipekit-experiment) is still being written. Reports
-[9](09_use_cases.md), [10](10_pipekit_cycle.md) and [13](13_state_catalog.md)
-are published.
+Reports [9](09_use_cases.md), [10](10_pipekit_cycle.md),
+[12](12_pipekit_experiment.md) and [13](13_state_catalog.md) are published.
 :::
-
-### Forthcoming reports
-
-(r11-ref-report-12)=
-Report 12 · pipekit-experiment
-: *Forthcoming.* The registry, trackers and the `TrainingArtifact` this
-  report fills.
 
 ### Sources
 

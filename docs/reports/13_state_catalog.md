@@ -1025,17 +1025,19 @@ file at the page and delete its entry below. -->
 
 :::{note} Placeholders
 :class: simple
-The reports on the other pipekit sister packages are still being written.
-Reports [3](03_sister_libraries.md), [6](06_geocatalog.md),
-[9](09_use_cases.md) and [10](10_pipekit_cycle.md) are published.
+The report on pipekit-evaluate is still being written. Reports
+[3](03_sister_libraries.md), [6](06_geocatalog.md), [9](09_use_cases.md),
+[10](10_pipekit_cycle.md), [11](11_pipekit_train.md) and
+[12](12_pipekit_experiment.md) are published.
 :::
 
 ### Forthcoming reports
 
 (r13-ref-report-11)=
-Report 12 and later · pipekit-experiment, pipekit-evaluate
-: *Forthcoming.* The producer hash and the evaluation consumers of a state
-  catalog. pipekit-train is [Report 11](11_pipekit_train.md).
+Later reports · pipekit-evaluate
+: *Forthcoming.* The evaluation consumers of a state catalog.
+  pipekit-train is [Report 11](11_pipekit_train.md) and pipekit-experiment
+  [Report 12](12_pipekit_experiment.md).
 
 ### Sources
 

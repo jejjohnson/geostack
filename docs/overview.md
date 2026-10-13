@@ -85,7 +85,7 @@ letters tag every `proposed (X)` call on the
   replaces a physics model without touching the cycle.
 - **E · Training with lineage.** pipekit-train wraps Equinox + Optax today,
   with NumPyro and BlackJAX for Bayesian fits and Lightning and Keras 3
-  planned; pipekit-experiment adds trackers and a content-addressed
+  planned; pipekit-experiment adds a tracker protocol and a content-addressed
   `ModelRegistry`.
 - **F · Evaluation as infrastructure.** pipekit-evaluate scores every cell
   of the benchmark cube against an `Oracle`, and stores reports and contracts
@@ -779,7 +779,7 @@ substrate differs, the operator algebra is identical.
 | `pipekit-jax` | Equinox-backed, JAX-traceable operators; deferred to v0.3+ | 5 |
 | `pipekit-cycle` | Time-stepping, DA and iterative inference: `Cycle`, `EnsembleCycle`, `Recurrence`, `DACycle`, `EnsembleDACycle`, `SmootherCycle`, `BFNCycle`; the three core protocols plus eleven cross-library ones | 10 |
 | `pipekit-train` | Training for emulators and amortized inference: Equinox + Optax, NumPyro SVI and MCMC, BlackJAX NUTS; Lightning and Keras 3 scaffolded | 11 |
-| `pipekit-experiment` | Tracker adapters (MLflow, W&B, DVC, Hydra) and a content-addressed `ModelRegistry` | 12 |
+| `pipekit-experiment` | A content-addressed `ModelRegistry` (local and fsspec), training and inference artifacts, the tracker protocol, and Hydra, DVC and Metaflow adapters; MLflow and W&B trackers planned | 12 |
 | `pipekit-evaluate` | Evaluation on a Unit × Lens × Stage matrix; benchmark contracts as artifacts | 14, 15 |
 | `geocatalog` | Spatiotemporal index for L0–L2 (InMemory and DuckDB backends; `GeoSlice`). Ships as `geotoolz-catalog` in the geotoolz monorepo | 6 |
 | `geopatcher` | Four-axis patcher: geometry × sampler × window × aggregation (~60 classes). Ships as `geotoolz-patcher` in the geotoolz monorepo | 7 |
@@ -1124,7 +1124,7 @@ notes and will move into `docs/` as they are written up. Until then, the
 | concrete use cases | Report 9: thirteen cases mapped to the stack |
 | time-stepping and DA | [Report 10](reports/10_pipekit_cycle.md): pipekit-cycle |
 | training pipelines | [Report 11](reports/11_pipekit_train.md): pipekit-train |
-| registry and tracking | Report 12: pipekit-experiment |
+| registry and tracking | [Report 12](reports/12_pipekit_experiment.md): pipekit-experiment |
 | L3–L5 indexing | [Report 13](reports/13_state_catalog.md): the state catalog, as geocatalog's state profile |
 | evaluation | Report 14: pipekit-evaluate |
 | benchmark infrastructure | Report 15: contracts, leakage, baselines |

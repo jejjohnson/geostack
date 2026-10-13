@@ -983,6 +983,171 @@ def r11_roadmap() -> Svg:
     return f
 
 
+def r12_ownership() -> Svg:
+    """Report 12: pipekit-experiment between the stack and external tools."""
+    f = Svg(
+        840,
+        500,
+        "pipekit-experiment 0.0.2 between pipekit's training and inference"
+        " packages and external tools. It ships two protocols, run records, a"
+        " content-addressed model registry with local and fsspec backends,"
+        " training and inference artifacts, and adapters for Hydra, DVC and"
+        " Metaflow. The MLflow and W&B adapters and an MLflow registry are"
+        " planned but not built. pipekit-train calls its trackers and registry;"
+        " serving and orchestration stay external.",
+    )
+    tools = [
+        ("Hydra", False),
+        ("DVC", False),
+        ("Metaflow", False),
+        ("MLflow", True),
+        ("W&B", True),
+    ]
+    f.rect(24, 20, 792, 60, stroke=BORDER, fill=PANEL)
+    f.text(44, 46, "external tools", size=14, weight=600, anchor="start")
+    x = 200.0
+    for name, dashed in tools:
+        hue = (LINE, PANEL) if dashed else (BORDER, CARD)
+        x += f.chip(x, 34, name, hue=hue, dashed=dashed, size=12.5) + 10
+    f.text(
+        600,
+        52,
+        "dashed: no adapter yet",
+        size=12,
+        color=MUTED,
+        anchor="start",
+        italic=True,
+    )
+    f.rect(24, 120, 792, 200, stroke=OBS[0], fill=OBS[1])
+    f.text(44, 148, "pipekit-experiment 0.0.2", size=16, weight=700, anchor="start")
+    rows = [
+        ("protocols", ["ExperimentTracker", "ModelRegistry"], False),
+        ("records", ["Run", "RunMetrics", "RunArtifacts"], False),
+        ("registry", ["LocalModelRegistry", "S3ModelRegistry (fsspec)"], False),
+        ("artifacts", ["TrainingArtifact", "InferenceArtifact"], False),
+        (
+            "adapters",
+            ["HydraConfigLoader", "DVCDatasetVersioning", "MetaflowStepAdapter"],
+            False,
+        ),
+    ]
+    y = 162.0
+    for label, chips, _ in rows:
+        f.text(44, y + 17, label, size=12.5, color=MUTED, anchor="start")
+        x = 150.0
+        for c in chips:
+            x += f.chip(x, y, c, hue=(BORDER, CARD), size=11.5) + 8
+        y += 30
+    f.chip(
+        560, 162, "no tracker implementation", hue=(LINE, PANEL), dashed=True, size=11.5
+    )
+    f.arrow([(420, 80), (420, 118)], color=LINE, both=True)
+    f.box(
+        24,
+        360,
+        380,
+        76,
+        "pipekit-train",
+        ["LogToExperiment → a tracker", "Checkpoint → registry.store"],
+        hue=ENG,
+    )
+    f.box(
+        436,
+        360,
+        380,
+        76,
+        "inference pipelines · pipekit-cycle",
+        ["registry.load or from_registry", "→ NeuralForward, serving"],
+        hue=ML,
+    )
+    f.arrow([(214, 358), (214, 322)], color=INK)
+    f.arrow([(626, 322), (626, 358)], color=INK)
+    f.text(
+        420,
+        470,
+        "registry storage: <hash>/operator.json · weights.bin ·"
+        " metadata.json · _tags/<name>",
+        size=12,
+        color=MUTED,
+    )
+    f.h = 490
+    return f
+
+
+def r12_roadmap() -> Svg:
+    """Report 12: correctness first, then trackers, then the round trips."""
+    f = Svg(
+        840,
+        470,
+        "Roadmap. Phase 1 fixes the registry and artifact paths the running"
+        " example broke: weight rebinding on load (A1), hash identity (A2), tag"
+        " history and safe naming (A3), honest artifact fields (C2, C3) and the"
+        " tracker run id (B4). Phase 2 adds what the scoping report asked for and"
+        " nothing ships yet: a file tracker, MLflow and W&B trackers, an MLflow"
+        " registry, registry gc and robust fsspec writes. Phase 3 closes the round"
+        " trips: retraining from an artifact, nested Hydra YAML, the Metaflow step"
+        " and the run records.",
+    )
+    rows = [
+        (
+            [
+                (
+                    "1a · A1 A2 A3",
+                    ["load with weights, hash", "identity, tag history"],
+                    OBS,
+                ),
+                (
+                    "1b · B4 C2 C3",
+                    ["tracker run id, pinned", "hashes, registry URI"],
+                    OBS,
+                ),
+            ],
+            "A1 · A2 · A3 · B4 · C2 · C3",
+        ),
+        (
+            [
+                ("2a · B1 B2 B3", ["file, MLflow and", "W&B trackers"], ENG),
+                ("2b · A4 A5 A6", ["gc, fsspec writes,", "MLflow registry"], ENG),
+            ],
+            "B1 · B2 · B3 · A4 · A5 · A6",
+        ),
+        (
+            [
+                ("3a · C1", ["TrainingArtifact.rerun"], ML),
+                ("3b · D1 D2 D3", ["Hydra nested, Metaflow", "step, DVC pointer"], ML),
+                ("3c · E1", ["run records", "RunMetrics, RunArtifacts"], ML),
+            ],
+            "C1 · D1 · D2 · D3 · E1",
+        ),
+    ]
+    y = 24.0
+    for items, gate in rows:
+        n = len(items)
+        w = (792 - 18 * (n - 1)) / n
+        for i, (name, sub, hue) in enumerate(items):
+            f.box(24 + i * (w + 18), y, w, 70, name, sub, hue=hue, title_size=14)
+        cx, gy, d = 420, y + 70 + 26, 13
+        f.arrow([(cx, y + 70), (cx, gy - d - 1)], color=LINE)
+        f.parts.append(
+            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+            f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}" stroke-width="1.4"/>'
+        )
+        f.text(
+            cx + d + 10,
+            gy + 4.5,
+            f"gates {gate}",
+            size=12,
+            color=ENG[0],
+            anchor="start",
+            weight=600,
+        )
+        if items is not rows[-1][0]:
+            f.arrow([(cx, gy + d), (cx, gy + 48)], color=LINE)
+        y = gy + 50
+    f.h = int(y - 8)
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
@@ -995,6 +1160,8 @@ FIGURES = {
     "r10_roadmap": r10_roadmap,
     "r11_ownership": r11_ownership,
     "r11_roadmap": r11_roadmap,
+    "r12_ownership": r12_ownership,
+    "r12_roadmap": r12_roadmap,
 }
 
 
