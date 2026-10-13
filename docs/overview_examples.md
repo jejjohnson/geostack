@@ -674,12 +674,13 @@ the classes are proposed there (workstreams A, B and D).
 :caption: A pre-registerable, content-addressed benchmark contract.
 :linenos:
 
-# Shapes: along-track obs (t, lat, lon, η) in; (time, lat, lon) maps out
+# Shapes: along-track obs binned to the grid (time, lat, lon), NaN off-track,
+#         in; (time, lat, lon) maps out
 contract = pe.BenchmarkContract(                                 # proposed (A)
     name="oceanbench_ssh_2025", version="1.0.0",
-    task="L1->L2",                  # gap filling, as a level transition
+    task="L1->L2", operation="gap filling",   # sparse grid → dense grid
     variant="deterministic",
-    input={"carrier": "points", "vars": ["ssh"], "units": "m"},
+    input={"carrier": "sparse grid", "vars": ["ssh"], "units": "m"},
     output={"carrier": "grid", "dims": ["time", "lat", "lon"], "units": "m"},
     splits={                        # the one place the split lives
         "_target_": "geocatalog.splits.split_by",               # proposed (B)

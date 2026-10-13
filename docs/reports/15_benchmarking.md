@@ -38,7 +38,7 @@ names the contract it scored. The run also corrects the scoping report's
 split rule: **the held-out set must reproduce the gap the method will face in
 use**, which is a withheld altimeter for mapping and a block larger than the
 correlation scale only for generalization to unseen regions or periods. On the
-same method, the choice moves the error from 1.68 to 3.83 cm. Every number
+same method, the choice moves the error from 1.68 to 4.26 cm. Every number
 below is from a real run.
 
 +++
@@ -64,7 +64,7 @@ contract failure it lists. Three parts **do not**. Its **task list** restates
 the L0–L4 levels pipekit-evaluate already ships, as transitions between
 them. Its **split rule** (block size above the correlation scale) is right
 for generalization to unseen regions and periods but wrong for mapping, where
-it overstates the error in use by 42 % (stage 2). And
+it overstates the error in use by 56 % (stage 2). And
 its **package plan** puts splitters and baselines in pipekit-train and
 pipekit-evaluate, while the stack's rule ([Report 14](14_pipekit_evaluate.md#r14-ownership))
 is that computations live with their carriers: splits over catalog rows
@@ -96,8 +96,9 @@ pipekit-experiment. No new package, and no hosted scoring service.
   valid covariance in `xrtoolz.interpolate` (C1); persistence with an explicit
   reference time and gap rule (C2); climatology fitted on the training period
   only (C3). The contract pins each configuration.
-- **D. Variants and tracks in the runner.** Scorers declare a variant and the
-  runner refuses an entry that does not match it (D1); one run scores against
+- **D. Variants and tracks in the runner.** Entries and scorers declare a
+  variant, which the report records, and point forecasts are scored under
+  CRPS as the degenerate distributions they are (D1); one run scores against
   several references and reports a missing one as unavailable (D2); entries
   are named, not keyed by their ladder cell (D3).
 - **E. Registry and submissions.** Contracts and reports stored
@@ -106,8 +107,8 @@ pipekit-experiment. No new package, and no hosted scoring service.
 
 **End state.** A curator writes a contract, publishes its hash, and anyone
 can run it: the splits refuse configurations that would leak, the baselines
-are the same code for every entry, the runner refuses an entry of the wrong
-kind and scores every track, and the report names the contract, the model
+are the same code for every entry, the runner records each entry's variant
+and scores every track, and the report names the contract, the model
 and the data. Running the leaderboard, a blind test service and its queue
 stays with the projects that host one.
 
@@ -253,28 +254,34 @@ gives a new h.
 :caption: The stage-1 contract as data, from a real run.
 :linenos:
 
-# Shapes: input 23,360 obs of s2, s3 (t, y, x, η); output (364, 32, 32) maps of 2025
+# Shapes: input the s2, s3 obs binned to the grid (1,095, 32, 32), NaN off-track;
+#         output (364, 32, 32) maps of 2025
 from pipekit.hashing import sha256_hex, stable_json
 contract = {
-    "task": "gap_filling", "variant": "deterministic",
-    "input": {"carrier": "points", "sources": ["s2", "s3"], "units": "m"},
+    "task": "L1->L2", "operation": "gap filling", "variant": "deterministic",
+    "input": {"carrier": "sparse grid", "sources": ["s2", "s3"], "units": "m"},
     "output": {"carrier": "grid", "shape": [364, 32, 32], "units": "m"},
     "splits": {"kind": "leave_one_platform_out", "platform": "s1",
                "period": ["2025-01-01", "2025-12-30"]},
     "references": {"truth": "osse", "reanalysis": "smoothed-50km",
                    "observations": "s1"},
+    "data": {"generator": GEN},     # grid, L, τ, σ, noise, orbits, seed
     "metrics": [...], "baselines": [...],                  # arguments sketched
 }
 # h = SHA-256 of the key-sorted JSON
-h = sha256_hex(stable_json(contract))           # → "0335f1032c69…"     today
-# same content in reverse key order → same h; withhold s2 → "7172a53073aa…"
+h = sha256_hex(stable_json(contract))           # → "9677c757a296…"     today
+# reverse key order → same h; withhold s2 → "aa7284f9dc8b…"; seed 1 → new h
 [f.name for f in dataclasses.fields(pe.BenchmarkReport)]
 # → ["task", "domain", "axis", "results"]: no contract, no model   today
 ```
 
 The fingerprint costs nothing: pipekit already uses `stable_json` and
 `sha256_hex` for the registry and the dataset hashes, and the whole contract
-is 651 bytes of JSON. What is missing is the place to put it. pipekit-evaluate's
+is about 1 KB of JSON. It must identify the data, not only name it: labels
+such as `"osse"` and `"s1"` say nothing about which arrays they stand for,
+so this contract hashes the generator's full configuration and seed, and a
+contract over real data would carry the catalog's content hash for each
+input and reference. What is missing is the place to put it. pipekit-evaluate's
 `BenchmarkReport` records the task name, the domain, the axis and the cell
 results, so a report cannot say which contract, which model or which data it
 scored, and a submission cannot be checked against anything (workstreams A
@@ -314,12 +321,12 @@ scaled coordinates (x/L, y/L, t/τ).
 # Shapes: 35,040 obs; scaled coordinates (n, 3) = (x / L, y / L, t / τ)
 # ŷ = Σ wᵢ yᵢ / Σ wᵢ,  wᵢ = 1 / dᵢ over the 10 nearest      user
 splits = {
-    "random 80/20": random_split(0.2),                  # 2.62 / 1.68   user
-    "withhold s1": platform_split("s1"),                # 3.36 / 2.70   user
-    "withhold s2": platform_split("s2"),                # 2.73 / 1.88   user
-    "blocks 50 km × 7 d": blocks(50, 7),                # 2.67 / 1.80   user
-    "blocks 200 km × 60 d": blocks(200, 60),            # 4.30 / 3.83   user
-    "last 20 % of time": causal_split(0.8),             # 10.56 / 10.36 user
+    "random 80/20": random_split(0.2),                  # 2.61 / 1.68   user
+    "withhold s1": platform_split("s1"),                # 3.37 / 2.73   user
+    "withhold s2": platform_split("s2"),                # 2.75 / 1.91   user
+    "blocks 50 km × 7 d": blocks(50, 7),                # 2.62 / 1.75   user
+    "blocks 200 km × 60 d": blocks(200, 60),            # 4.70 / 4.26   user
+    "last 20 % of 2025": causal_split(0.8),             # 8.98 / 8.78   user
 }
 ```
 
@@ -328,23 +335,23 @@ splits = {
 
 | Split | Reproduces | RMSE vs observations (cm) | RMSE vs truth (cm) |
 |---|---|---|---|
-| random 80/20 | nothing: test points sit beside training points on the same track | 2.62 | 1.68 |
-| withhold s1 | mapping where one altimeter flew, from the other two | 3.36 | 2.70 |
-| withhold s2 | the same, for s2's orbit | 2.73 | 1.88 |
-| blocks 50 km × 7 d | gaps smaller than L and τ | 2.67 | 1.80 |
-| blocks 200 km × 60 d | a region and season with no data at all | 4.30 | 3.83 |
-| last 20 % of time | a forecast 3 to 219 days after the last training observation | 10.56 | 10.36 |
+| random 80/20 | nothing: test points sit beside training points on the same track | 2.61 | 1.68 |
+| withhold s1 | mapping where one altimeter flew, from the other two | 3.37 | 2.73 |
+| withhold s2 | the same, for s2's orbit | 2.75 | 1.91 |
+| blocks 50 km × 7 d | gaps smaller than L and τ | 2.62 | 1.75 |
+| blocks 200 km × 60 d | a region and season with no data at all | 4.70 | 4.26 |
+| last 20 % of 2025 | a forecast of the last 73 days of 2025, with no data | 8.98 | 8.78 |
 :::
 
-The splits disagree by a factor of six, and no single one is "honest". A
+The splits disagree by a factor of five, and no single one is "honest". A
 mapping product is used where an altimeter did not fly while the others did,
 so the withheld-satellite rows predict its error in use: 2.7 cm against the
 truth for s1. The random split is optimistic by 38 % against that, because
 each test point has a training neighbour 25 km away on the same track and the
 same day. The 200 km × 60 day blocks the scoping report prescribes for SSH
-are pessimistic by 42 %, because they ask the method to fill a region and a
+are pessimistic by 56 %, because they ask the method to fill a region and a
 season with no data, a task it is not used for. And which satellite is
-withheld matters (2.70 against 1.88 cm), because s1's orbit leaves wider gaps
+withheld matters (2.73 against 1.91 cm), because s1's orbit leaves wider gaps
 between the other two. A fourth satellite or a different orbit would change
 every row: the split is a term of the contract, not a team's choice.
 
@@ -374,7 +381,7 @@ B3).
 The scoping report's rule is that "the block size for splitting must exceed
 the integral spatial/temporal scale of the variable". That holds for
 generalization to unseen regions or periods, and for forecasts (the causal
-split). For mapping it overstates the error by 42 % here, because the
+split). For mapping it overstates the error by 56 % here, because the
 deployment gaps are the spaces between tracks, not whole regions. The
 corrected rule: **the held-out set reproduces the gap the method will face in
 use**, and the contract states which gap that is. Blocks above the
@@ -392,7 +399,9 @@ where neither flew; s1 is withheld. A baseline fills every empty cell. Optimal
 interpolation (OI) is the best linear estimate under the covariance
 {eq}`r15-eq-cov`: with y the M observations in a window of ±15 days, C_oo
 their M × M covariance plus σₒ² I, C_go the N × M covariance between the N
-grid cells and the observations, and μ the window mean,
+grid cells and the observations, μ the window mean, and the spatial factor of
+{eq}`r15-eq-cov` summed over the domain's periodic images so that it stays a
+valid covariance,
 
 $$
 \begin{aligned}
@@ -407,7 +416,7 @@ $$ (r15-eq-oi)
 
 # Shapes: G (T = 1,095, 32, 32) with NaN off-track; scored on the 364 days of 2025
 from xrtoolz.interpolate import fillnan_climatology, fillnan_temporal
-G.ffill("time")      # pandas in the notebook; carry fwd 7.96 / 7.41  user
+G.ffill("time")      # pandas; persistence (carry fwd) 7.96 / 7.41  user
 fillnan_temporal(G, method="nearest")   # nearest in time    5.76 / 5.80  today
 fillnan_temporal(G, method="linear")    # linear in time     4.97 / 5.18  today
 fillnan_climatology(G, group="month", residual="zero")
@@ -415,19 +424,26 @@ fillnan_climatology(G, group="month", residual="zero")
 # η̂ = μ + C_go C_oo⁻¹ (y − μ), one solve per day, ±15 d
 oi(G, length_km=50, time_days=30)       # OI, L = 50 km      2.67 / 3.22  user
 oi(G, length_km=100, time_days=30)      # OI, L = 100 km     1.78 / 2.59  user
-# 1 − 1.78 / RMSE(baseline): 78 % over carry forward, 69 % over nearest,
-# 64 % over linear
+# 1 − 1.78 / RMSE(baseline): 78 % over persistence; 69 % and 64 % over
+# nearest and linear interpolation in time
 ```
 
-Three methods a paper could each call "persistence" give OI improvements of
-78, 69 and 64 %, so a claim of improvement means nothing until the contract
-pins which one, with its gap handling (all three leave cells empty before the
-first or after the last observation, which the notebook fills with zero). OI itself depends on its assumptions: half the right
-correlation length costs 50 %. And the assumption can break the method: on
-this 800 km periodic domain the Gaussian covariance with L = 150 km is not
-positive definite (its smallest eigenvalue on a day of 2025 is −0.0014 m²,
-against +0.00039 m² for L = 100 km), so a baseline must also fix a valid
-kernel for its domain. xrtoolz ships every gap-filler above except carry
+Only carry forward is persistence: it repeats the last observation. Nearest
+and linear interpolation in time also look at later observations, so they are
+interpolation baselines, not persistence, and a forecast contract could not
+use them. Against these three simple baselines OI improves by 78, 69 and
+64 %, so "an improvement over the baseline" means nothing until the contract
+pins which baseline and its gap handling (all three leave cells empty before
+the first or after the last observation, which the notebook fills with zero).
+OI itself depends on its assumptions: half the right correlation length costs
+50 %. And the assumption can break the method. The usual Gaussian over the
+shortest distance on a periodic domain is not a covariance at all: before the
+noise term is added, its smallest eigenvalue on a day of 2025 is
+−9.4 × 10⁻⁶ m² at L = 100 km and −1.8 × 10⁻³ m² at L = 150 km. The noise
+σₒ² = 4 × 10⁻⁴ m² hides the first and not the second. The Gaussian summed
+over the domain's periodic images is a valid covariance (smallest eigenvalue
+zero to rounding at both lengths), and it is what the notebook's OI uses, so
+a baseline must also fix a valid kernel for its domain. xrtoolz ships every gap-filler above except carry
 forward and OI; it has `fillnan_rbf` and inverse-distance weighting but no
 covariance-based interpolation (workstreams C1 and C2).
 
@@ -474,12 +490,16 @@ crps_ensemble(xr.concat([m25, m25], "member"), truth25, dims=dims)
 # → 1.26 cm, equal to the mean absolute error of m25                    today
 ```
 
-xrtoolz already refuses a one-member ensemble, but the check is on the
-array's shape, not on the entry: the same map entered twice passes and scores
-its mean absolute error, 1.26 cm, against the calibrated ensemble's 0.94 cm.
-Ranking the two by CRPS compares a probabilistic score with a deterministic
-one. The variant is a property of the entry and of the contract, and the
-runner is where to compare them (workstream D1).
+A point forecast is a valid, degenerate predictive distribution, and its CRPS
+is its mean absolute error; WeatherBench 2 scores deterministic baselines
+that way beside ensembles [@rasp2024weatherbench]. So the comparison is
+meaningful: the map scores 1.26 cm, the calibrated ensemble 0.94 cm, and the
+proper score rewards the ensemble for its spread. The defect is in the
+plumbing: xrtoolz refuses a one-member ensemble, so a point entry has to be
+entered twice to be scored. The fix (workstream D1) scores point forecasts
+directly and records each entry's variant on the report, so a reader sees
+which rows are deterministic; refusing them would remove the baselines a
+probabilistic benchmark needs.
 
 (r15-stage-5)=
 ### Stage 5 · Three references (xrtoolz → pipekit-evaluate)
@@ -670,7 +690,7 @@ cannot honour; the contract also says which gap the split reproduces.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `split_blocks(catalog, *, km, days, test_fraction, seed, min_scale=None)` | `geocatalog.splits` (new) | stage 2's blocks; rows carry footprints and intervals; raises when a block is smaller than the declared scale or the domain cannot hold one |
+| `split_blocks(catalog, *, km, days, test_fraction, seed, min_scale=None, crossing="drop")` | `geocatalog.splits` (new) | stage 2's blocks; rows carry footprints and intervals, so a row is assigned only when it lies wholly inside one block (`crossing="drop"`, or `"group"` to merge the blocks it touches); raises when a block is smaller than the declared scale or the domain cannot hold one |
 | `split_by(catalog, column, *, test)` | `geocatalog.splits` | stage 2's withheld satellite, over a platform or producer column ([Report 13](13_state_catalog.md#r13-ws-a)'s `producer`) |
 | `split_causal(catalog, *, train_end, val_end)` | `geocatalog.splits` | the forecast split: every test row after every training row |
 | `split_regions(catalog, regions)` | `geocatalog.splits` | the scoping report's leave-one-region-out, as footprint intersection |
@@ -680,8 +700,11 @@ cannot honour; the contract also says which gap the split reproduces.
 
 ### B1 · Blocks in space and time
 
-A block split assigns each row to the block that contains its centroid and
-start time, then holds out whole blocks. It refuses a block smaller than the
+A block split tiles space and time into blocks and holds out whole blocks. A
+row whose footprint or time
+interval crosses a block boundary would carry observations from one block
+into the other, so such rows go to neither side by default (or, as an option,
+are grouped with every block they touch). It refuses a block smaller than the
 declared correlation scale when the contract asks for generalization, and a
 block that does not fit the catalog's domain.
 
@@ -726,8 +749,8 @@ argument.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `optimal_interpolation(obs, grid, *, kernel, length, time_scale, noise, window)` and `OptimalInterpolation` | `xrtoolz.interpolate` | stage 3's best baseline, absent from the stack; the kernel is valid on the grid (images summed on periodic domains, or a compactly supported kernel), checked with a Cholesky factorization |
-| `persistence(field, *, lead, reference="last_available", gap="nan")` | `xrtoolz.geo` (forecast baselines) | stage 3: three "persistence" baselines differ by 14 points of improvement |
+| `optimal_interpolation(obs, grid, *, kernel, length, time_scale, noise, window)` and `OptimalInterpolation` | `xrtoolz.interpolate` | stage 3's best baseline, absent from the stack; the kernel is valid on the grid (images summed on periodic domains, or a compactly supported kernel), checked with a Cholesky factorization of the prior before the noise is added |
+| `persistence(field, *, lead, reference="last_available", gap="nan")` | `xrtoolz.geo` (forecast baselines) | stage 3: persistence is carry-forward with an explicit reference time; nearest and linear interpolation in time are interpolation baselines (`fillnan_temporal`), not persistence, and the improvement over each differs by up to 14 points |
 | `ClimatologyForecast(train_period, freq)` | `xrtoolz.geo`, over `CalculateClimatology` | a climatology fitted on the training years only, unlike `fillnan_climatology` |
 | `linear_trend(field, *, n_recent)` | `xrtoolz.geo` | the scoping report's trend baseline |
 :::
@@ -757,8 +780,8 @@ it, scores every declared reference, and names entries.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `variant` on `Scorer` and on the entry's `Estimate` (`"deterministic"`, `"probabilistic"`) | `benchmark/protocols.py`, beside Report 14's A1 tags | stage 4: a duplicated map passes as an ensemble |
-| refusal of a mismatched entry | `Benchmark.run` | a deterministic entry on a probabilistic contract, or an ensemble with zero spread, is not scored; the cell's note says why |
+| `variant` on `Scorer` and on the entry's `Estimate` (`"deterministic"`, `"probabilistic"`) | `benchmark/protocols.py`, beside Report 14's A1 tags | stage 4: the report should say which rows are point forecasts |
+| point forecasts under CRPS | `xrtoolz.metrics.crps_ensemble` and the runner | a point forecast is scored as a degenerate distribution (its CRPS is its MAE) without duplicating it; stage 4's duplication goes |
 | `references: Mapping[str, ReferenceSource \| str]` | `Benchmark`, building on Report 14's A4 | stage 5's three tracks in one run; a track with no data reports "unavailable", as `CellResult.note` already does for a missing oracle |
 | `MultiTrackEvaluation` | not added | the multi-reference runner is the same object; a second class would duplicate it |
 | `name` on `Estimator`; results keyed by name | `benchmark/protocols.py`, `run.py` | stage 6: two baselines in one cell collide |
@@ -776,7 +799,7 @@ rep = pe.Benchmark.from_contract(
                 "analysis": None},          # → "unavailable"   proposed (D2)
 ).run()                                                          # proposed (D3)
 pe.Benchmark.from_contract(c_probabilistic, estimators=[oi_100_map]).run()
-# → cell note: "deterministic entry on a probabilistic contract"  proposed (D1)
+# → scored as a point forecast (CRPS = MAE), row tagged "deterministic"  proposed (D1)
 ```
 
 (r15-ws-e)=
@@ -819,13 +842,13 @@ Each workstream merges only when its gates pass on the running example.
 |---|---|---|
 | A1 Contract hash | A | the stage-1 contract as a `BenchmarkContract` hashes to the same value after a YAML round trip and in any key order; changing any one field (the withheld platform, a block size, a baseline argument) changes the hash |
 | A2 Report hash | A | `Benchmark.from_contract(c, …).run().contract_hash == c.content_hash()`, and the report's level is the contract's (L2 for stage 6, not L4) |
-| B1 Blocks | B | on stage 2's observations, `split_blocks(km=200, days=60, seed=0)` reproduces the notebook's test set and its RMSE (3.83 cm against the truth) to 1e-4; `km=50` with `min_scale=(100, 30)` raises `ValueError` |
-| B2 Platform and causal | B | `split_by("producer", test="s1")` reproduces stage 2's 2.70 cm, and every test time of `split_causal` is later than every training time |
+| B1 Blocks | B | on stage 2's observations, `split_blocks(km=200, days=60, seed=0)` reproduces the notebook's test set and its RMSE (4.26 cm against the truth) to 1e-4, assigning no row that crosses a block boundary; `km=50` with `min_scale=(100, 30)` raises `ValueError` |
+| B2 Platform and causal | B | `split_by("producer", test="s1")` reproduces stage 2's 2.73 cm, and every test time of `split_causal` is later than every training time |
 | B3 Window guard | B | `XarrayWindowDataset(guard=pd.Timedelta("60D"))` on stage 2's series raises `ValueError` naming the empty split; with `guard="2D"` its splits are 871, 105 and 108 windows |
-| C1 OI | C | `optimal_interpolation` reproduces stage 3's 1.78 and 2.59 cm to 1e-4 m; with L = 150 km on the 800 km periodic grid its covariance factorizes (smallest eigenvalue > 0), where today's kernel gives −0.0014 m² |
-| C2 Persistence | C | the three persistence configurations reproduce stage 3's 7.96, 5.76 and 4.97 cm, and each configuration hashes differently |
+| C1 OI | C | `optimal_interpolation` reproduces stage 3's 1.78 and 2.59 cm to 1e-4 m; with L = 150 km on the 800 km periodic grid its prior covariance, before the noise term, has smallest eigenvalue ≥ 0 to rounding, where the minimum-image Gaussian gives −1.8 × 10⁻³ m² |
+| C2 Persistence | C | `persistence` reproduces stage 3's carry-forward 7.96 cm and uses no observation after its reference time; nearest and linear interpolation in time (5.76 and 4.97 cm) are separate interpolation baselines, and each configuration hashes differently |
 | C3 Climatology | C | `ClimatologyForecast(train_period=("2023", "2024"))` uses no 2025 value: perturbing every 2025 input changes its output by 0 |
-| D1 Variant | D | on a probabilistic contract, stage 4's duplicated map is refused with a note and the 20-member ensemble scores 0.94 cm CRPS |
+| D1 Variant | D | on a probabilistic contract, stage 4's map is scored without duplication at its MAE, 1.26 cm, its row is tagged deterministic, and the 20-member ensemble scores 0.94 cm CRPS |
 | D2 Tracks | D | one run reproduces stage 5's nine scores to 1e-4 m, and a track with no reference appears with the note "unavailable" |
 | D3 Names | D | stage 6's four baselines, two at the same cell, run without error and the report is keyed by their names |
 | E1 Store | E | `store.put(c) == c.content_hash()` and `store.get(h)` returns a contract equal to `c` |

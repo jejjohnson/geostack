@@ -50,7 +50,7 @@ from pipekit.hashing import sha256_hex, stable_json
 from scipy.ndimage import gaussian_filter
 from scipy.spatial import cKDTree
 from xrtoolz.interpolate import fillnan_climatology, fillnan_temporal
-from xrtoolz.metrics import crps_ensemble, spread_skill_ratio
+from xrtoolz.metrics import crps_ensemble, mae, rmse, spread_skill_ratio
 
 # %% [markdown]
 # ## The field and the altimeters
@@ -64,12 +64,17 @@ from xrtoolz.metrics import crps_ensemble, spread_skill_ratio
 # track across the domain every third day, with noise σₒ = 2 cm.
 
 # %%
-NX = NY = 32
-DX = 25.0  # km
-T = 3 * 365
-L, TAU = 100.0, 30.0  # km, days
-SIG, AMP, SIG_O = 0.08, 0.04, 0.02  # m
-rng = np.random.default_rng(0)
+# Every setting of the synthetic data in one mapping: the contract hashes it
+GEN = {"nx": 32, "dx_km": 25.0, "days": 3 * 365, "start": "2023-01-01",
+       "length_km": 100.0, "time_scale_days": 30.0, "sigma_m": 0.08,
+       "seasonal_amplitude_m": 0.04, "obs_noise_m": 0.02, "revisit_days": 3,
+       "satellites": {"s1": [1, 3], "s2": [-1, 5], "s3": [1, 11]}, "seed": 0}
+NX = NY = GEN["nx"]
+DX = GEN["dx_km"]
+T = GEN["days"]
+L, TAU = GEN["length_km"], GEN["time_scale_days"]
+SIG, AMP, SIG_O = GEN["sigma_m"], GEN["seasonal_amplitude_m"], GEN["obs_noise_m"]
+rng = np.random.default_rng(GEN["seed"])
 
 # C(r, Δt) = σ² exp(−r² / 2L² − Δt² / 2τ²)  ⇔  spectrum ∝ exp(−L²|k|²/2 − τ²ω²/2)
 kx = 2 * np.pi * np.fft.fftfreq(NX, d=DX)
@@ -79,7 +84,7 @@ spectrum = np.exp(-0.5 * L**2 * (KX**2 + KY**2) - 0.5 * TAU**2 * KT**2)
 anom = np.real(np.fft.ifftn(np.fft.fftn(rng.standard_normal((T, NY, NX)))
                             * np.sqrt(spectrum)))
 anom *= SIG / anom.std()
-times = pd.date_range("2023-01-01", periods=T, freq="D")
+times = pd.date_range(GEN["start"], periods=T, freq="D")
 season = AMP * np.cos(2 * np.pi * (times.dayofyear.values - 60) / 365.25)
 eta = anom + season[:, None, None]  # (T, NY, NX)
 x = np.arange(NX) * DX
@@ -88,11 +93,12 @@ truth = xr.DataArray(eta, dims=("time", "y", "x"),
                      coords={"time": times, "y": y, "x": x}, name="ssh")
 
 # satellite s sees cell (i, j) on day t when (j + dₛ i − vₛ t) mod 32 = 0, every 3 days
-SATS = {"s1": (1, 3), "s2": (-1, 5), "s3": (1, 11)}  # track direction, drift
+SATS = {k: tuple(v) for k, v in GEN["satellites"].items()}  # direction, drift
 tt, ii, jj = np.meshgrid(np.arange(T), np.arange(NY), np.arange(NX), indexing="ij")
 rows = []
 for name, (d, v) in SATS.items():
-    t_, i_, j_ = np.nonzero(((jj + d * ii - v * tt) % NX == 0) & (tt % 3 == 0))
+    on = ((jj + d * ii - v * tt) % NX == 0) & (tt % GEN["revisit_days"] == 0)
+    t_, i_, j_ = np.nonzero(on)
     rows.append(pd.DataFrame({"t": t_, "i": i_, "j": j_, "sat": name}))
 obs = pd.concat(rows, ignore_index=True)
 ti, yi, xi, sat = obs.t.values, obs.i.values, obs.j.values, obs.sat.values
@@ -119,15 +125,16 @@ assert round(field["rho30"], 2) == 0.58  # exp(−½) = 0.61; one 3-year sample
 # %%
 contract = {
     "name": "ssh-mapping-synthetic", "version": "1.0.0",
-    "task": "gap_filling", "variant": "deterministic",
-    "input": {"carrier": "points", "vars": ["ssh"], "units": "m",
-              "sources": ["s2", "s3"]},
+    "task": "L1->L2", "operation": "gap filling", "variant": "deterministic",
+    "input": {"carrier": "sparse grid", "from": "along-track obs binned to the grid",
+              "vars": ["ssh"], "units": "m", "sources": ["s2", "s3"]},
     "output": {"carrier": "grid", "dims": ["time", "y", "x"],
                "shape": [364, 32, 32], "units": "m"},
     "splits": {"kind": "leave_one_platform_out", "platform": "s1",
                "period": ["2025-01-01", "2025-12-30"]},
     "references": {"truth": "osse", "reanalysis": "smoothed-50km",
                    "observations": "s1"},
+    "data": {"generator": GEN},  # labels alone do not identify the arrays
     "metrics": [{"name": "rmse", "dims": ["time", "y", "x"]}],
     "baselines": [{"name": "linear_in_time"},
                   {"name": "oi", "length_km": 100, "time_days": 30,
@@ -149,7 +156,10 @@ h0[:12], contract_hash(reordered) == h0, contract_hash(edited)[:12], report_fiel
 
 # %%
 assert contract_hash(reordered) == h0 and contract_hash(edited) != h0
-assert len(h0) == 64 and h0[:12] == "0335f1032c69"
+assert len(h0) == 64 and h0[:12] == "9677c757a296"
+# the generator is part of the contract: another seed is another benchmark
+reseeded = {**contract, "data": {"generator": {**GEN, "seed": 1}}}
+assert contract_hash(reseeded) != h0
 assert report_fields == ["task", "domain", "axis", "results"]
 
 # %% [markdown]
@@ -164,6 +174,13 @@ assert report_fields == ["task", "domain", "axis", "results"]
 coords = np.c_[x[xi], y[yi], ti.astype(float)]  # (n_obs, 3): km, km, day
 scale = np.array([1 / L, 1 / L, 1 / TAU])
 box = np.array([NX * DX / L, NY * DX / L, 1e9])  # periodic in x and y
+# the contract's period: every split is drawn inside 2025, on both sides
+in25 = times.year.values[ti] == 2025
+d25 = ti[in25].min()  # first day of 2025
+
+
+def obs_da(v: np.ndarray) -> xr.DataArray:
+    return xr.DataArray(v, dims="obs")
 
 
 def knn(train: np.ndarray, test: np.ndarray, k: int = 10) -> np.ndarray:
@@ -177,31 +194,37 @@ def knn(train: np.ndarray, test: np.ndarray, k: int = 10) -> np.ndarray:
 
 
 def score(train: np.ndarray, test: np.ndarray) -> tuple[float, float]:
-    pred = knn(train, test)
-    e_obs = np.sqrt(np.mean((pred - yobs[test]) ** 2))
-    e_true = np.sqrt(np.mean((pred - eta[ti[test], yi[test], xi[test]]) ** 2))
+    pred = obs_da(knn(train, test))
+    e_obs = rmse(pred, obs_da(yobs[test]), dim="obs")
+    e_true = rmse(pred, obs_da(eta[ti[test], yi[test], xi[test]]), dim="obs")
     return float(e_obs), float(e_true)
 
 
+def where(mask: np.ndarray) -> np.ndarray:
+    return np.nonzero(mask & in25)[0]
+
+
 def blocks(km: float, days: float, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
-    ids = ((ti // days) * 1000 + y[yi] // km) * 1000 + x[xi] // km
-    u = np.unique(ids)
+    ids = (((ti - d25) // days) * 1000 + y[yi] // km) * 1000 + x[xi] // km
+    u = np.unique(ids[in25])
     test_blocks = u[np.random.default_rng(seed).permutation(u.size)[: u.size // 5]]
     is_test = np.isin(ids, test_blocks)
-    return np.nonzero(~is_test)[0], np.nonzero(is_test)[0]
+    return where(~is_test), where(is_test)
 
 
 r = np.random.default_rng(1).random(ti.size)
+cut = d25 + 0.8 * 364
 splits = {
-    "random 80/20": (np.nonzero(r >= 0.2)[0], np.nonzero(r < 0.2)[0]),
-    "withhold s1": (np.nonzero(sat != "s1")[0], np.nonzero(sat == "s1")[0]),
-    "withhold s2": (np.nonzero(sat != "s2")[0], np.nonzero(sat == "s2")[0]),
+    "random 80/20": (where(r >= 0.2), where(r < 0.2)),
+    "withhold s1": (where(sat != "s1"), where(sat == "s1")),
+    "withhold s2": (where(sat != "s2"), where(sat == "s2")),
     "blocks 50 km × 7 d": blocks(50, 7),
     "blocks 200 km × 60 d": blocks(200, 60),
-    "last 20 % of time": (np.nonzero(ti < 0.8 * T)[0], np.nonzero(ti >= 0.8 * T)[0]),
+    "last 20 % of 2025": (where(ti < cut), where(ti >= cut)),
 }
+n25 = int(in25.sum())
 s2 = {k: score(*v) for k, v in splits.items()}
-{k: tuple(round(e, 4) for e in v) for k, v in s2.items()}
+n25, {k: tuple(round(e, 4) for e in v) for k, v in s2.items()}
 
 # %% [markdown]
 # The training loader's own split: `XarrayWindowDataset` splits its origins
@@ -210,9 +233,15 @@ s2 = {k: score(*v) for k, v in splits.items()}
 # pinned geopatcher ships as `geopatcher.temporal.stencils`).
 
 # %%
+# Report 11's A5: pipekit-train imports geopatcher.time, which the pinned
+# geopatcher ships as geopatcher.temporal.stencils. Alias it only when that
+# exact module is absent, so any other import error still surfaces. The fix
+# belongs upstream in pipekit-train; this cell goes when it lands.
 try:
     importlib.import_module("geopatcher.time")
-except ImportError:
+except ModuleNotFoundError as err:
+    if err.name != "geopatcher.time":
+        raise
     import geopatcher.temporal.stencils as _stencils
 
     sys.modules["geopatcher.time"] = _stencils
@@ -233,11 +262,14 @@ guard, rho_guard
 
 # %%
 r2 = {k: (round(a, 4), round(b, 4)) for k, (a, b) in s2.items()}
+assert n25 == 11_616  # observations in 2025, the contract's period
 assert r2 == {
-    "random 80/20": (0.0262, 0.0168), "withhold s1": (0.0336, 0.027),
-    "withhold s2": (0.0273, 0.0188), "blocks 50 km × 7 d": (0.0267, 0.018),
-    "blocks 200 km × 60 d": (0.043, 0.0383), "last 20 % of time": (0.1056, 0.1036),
+    "random 80/20": (0.0261, 0.0168), "withhold s1": (0.0337, 0.0273),
+    "withhold s2": (0.0275, 0.0191), "blocks 50 km × 7 d": (0.0262, 0.0175),
+    "blocks 200 km × 60 d": (0.047, 0.0426), "last 20 % of 2025": (0.0898, 0.0878),
 }
+assert all(np.all(times.year.values[ti[i]] == 2025)
+           for tr_te in splits.values() for i in tr_te)
 assert guard[None] == (2, [871, 105, 108])
 assert guard[60] == (60, [813, 0, 50])  # the validation split is empty
 assert round(rho_guard, 3) == 0.986
@@ -254,28 +286,52 @@ test_days = np.nonzero(times.year == 2025)[0]
 inp = sat != "s1"
 grid = np.full((T, NY, NX), np.nan)
 grid[ti[inp], yi[inp], xi[inp]] = yobs[inp]
-G = truth.copy(data=grid)
-truth25 = truth.isel(time=test_days)
-held = (sat == "s1") & np.isin(ti, test_days)
+G = truth.copy(data=grid)  # the L1 sparse grid, all three years
+truth25 = truth.isel(time=test_days)  # (364, 32, 32), the contract's output
+held = (sat == "s1") & in25
+# withheld s1 observations, indexed in the 2025 maps' own time coordinate
+held_t = xr.DataArray(times[ti[held]], dims="obs")
+held_y = xr.DataArray(y[yi[held]], dims="obs")
+held_x = xr.DataArray(x[xi[held]], dims="obs")
+grid_dims = ["time", "y", "x"]
 
 
 def rmse_truth(p: xr.DataArray) -> float:
-    return float(np.sqrt(((p.isel(time=test_days) - truth25) ** 2).mean()))
+    return float(rmse(p, truth25, dim=grid_dims))
 
 
 def rmse_s1(p: xr.DataArray) -> float:
-    v = p.values[ti[held], yi[held], xi[held]]
-    return float(np.sqrt(np.mean((v - yobs[held]) ** 2)))
+    v = p.sel(time=held_t, y=held_y, x=held_x)
+    return float(rmse(v, obs_da(yobs[held]), dim="obs"))
+
+
+def in2025(p: xr.DataArray) -> xr.DataArray:
+    return p.isel(time=test_days)
 
 
 carry = pd.DataFrame(grid.reshape(T, -1)).ffill().fillna(0.0).to_numpy()
 base = {
-    "carry forward": G.copy(data=carry.reshape(T, NY, NX)),
-    "nearest in time": fillnan_temporal(G, method="nearest").fillna(0.0),
-    "linear in time": fillnan_temporal(G, method="linear").fillna(0.0),
-    "monthly climatology": fillnan_climatology(G, group="month",
-                                               residual="zero").fillna(0.0),
+    "persistence (carry forward)": in2025(G.copy(data=carry.reshape(T, NY, NX))),
+    "nearest in time": in2025(fillnan_temporal(G, method="nearest").fillna(0.0)),
+    "linear in time": in2025(fillnan_temporal(G, method="linear").fillna(0.0)),
+    "monthly climatology": in2025(fillnan_climatology(G, group="month",
+                                                      residual="zero").fillna(0.0)),
 }
+P = NX * DX
+
+
+def k_min_image(a: np.ndarray, b: np.ndarray, length: float) -> np.ndarray:
+    """exp(−d²/2L²) with d the shortest distance on the circle: not a valid
+    covariance on a periodic domain."""
+    dd = np.abs(a[:, None] - b[None, :])
+    return np.exp(-0.5 * np.minimum(dd, P - dd) ** 2 / length**2)
+
+
+def k_wrapped(a: np.ndarray, b: np.ndarray, length: float) -> np.ndarray:
+    """Σₙ exp(−(d + nP)²/2L²): the Gaussian summed over periodic images, a valid
+    covariance on the circle (the periodization of a positive-definite function)."""
+    d = a[:, None] - b[None, :]
+    return sum(np.exp(-0.5 * (d + n * P) ** 2 / length**2) for n in range(-3, 4))
 
 
 def oi(length: float, window: int = 15) -> tuple[xr.DataArray, xr.DataArray]:
@@ -283,75 +339,73 @@ def oi(length: float, window: int = 15) -> tuple[xr.DataArray, xr.DataArray]:
 
     user: the stack has no OI; workstream C1 proposes it in xrtoolz.interpolate.
     """
-    mean, var = np.zeros((T, NY, NX)), np.zeros((T, NY, NX))
+    mean, var = np.zeros((364, NY, NX)), np.zeros((364, NY, NX))
     gx, gy = (a.ravel() for a in np.meshgrid(x, y))
-    P = NX * DX
     o_t, o_y, o_x, o_v = ti[inp], y[yi[inp]], x[xi[inp]], yobs[inp]
-
-    def d2(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-        dd = np.abs(a[:, None] - b[None, :])
-        return np.minimum(dd, P - dd) ** 2
-
-    for day in test_days:
+    for k, day in enumerate(test_days):
         s = np.abs(o_t - day) <= window
         ot, oy, ox, ov = o_t[s], o_y[s], o_x[s], o_v[s]
-        # C_oo = σ² exp(−r²/2L² − Δt²/2τ²) + σₒ² I               (M, M)
-        Coo = SIG**2 * np.exp(-0.5 * (d2(oy, oy) + d2(ox, ox)) / length**2
-                              - 0.5 * (ot[:, None] - ot[None, :]) ** 2 / TAU**2)
+        # C_oo = σ² k(y) k(x) exp(−Δt²/2τ²) + σₒ² I                (M, M)
+        Coo = (SIG**2 * k_wrapped(oy, oy, length) * k_wrapped(ox, ox, length)
+               * np.exp(-0.5 * (ot[:, None] - ot[None, :]) ** 2 / TAU**2))
         Coo += SIG_O**2 * np.eye(ot.size)
         # C_go between the N grid cells and the M obs                (N, M)
-        Cgo = SIG**2 * np.exp(-0.5 * (d2(gy, oy) + d2(gx, ox)) / length**2
-                              - 0.5 * (day - ot[None, :]) ** 2 / TAU**2)
+        Cgo = (SIG**2 * k_wrapped(gy, oy, length) * k_wrapped(gx, ox, length)
+               * np.exp(-0.5 * (day - ot[None, :]) ** 2 / TAU**2))
         mu = ov.mean()
-        # x̂ = μ + C_go C_oo⁻¹ (y − μ);  σ̂² = σ² − diag(C_go C_oo⁻¹ C_og)
-        mean[day] = (mu + Cgo @ np.linalg.solve(Coo, ov - mu)).reshape(NY, NX)
-        var[day] = (SIG**2 - np.einsum("ij,ji->i", Cgo,
-                                       np.linalg.solve(Coo, Cgo.T))).reshape(NY, NX)
-    return truth.copy(data=mean), truth.copy(data=var)
+        # x̂ = μ + C_go C_oo⁻¹ (y − μ);  σ̂² = σ² k(0)² − diag(C_go C_oo⁻¹ C_og)
+        mean[k] = (mu + Cgo @ np.linalg.solve(Coo, ov - mu)).reshape(NY, NX)
+        prior = SIG**2 * k_wrapped(np.zeros(1), np.zeros(1), length)[0, 0] ** 2
+        var[k] = (prior - np.einsum("ij,ji->i", Cgo,
+                                    np.linalg.solve(Coo, Cgo.T))).reshape(NY, NX)
+    return truth25.copy(data=mean), truth25.copy(data=var)
 
 
 ois = {length: oi(length) for length in (50.0, 100.0)}
 
 
-def min_eig(length: float, day: int = 800, window: int = 15) -> float:
-    """Smallest eigenvalue of C_oo on one day: is the kernel valid on the torus?"""
-    P = NX * DX
+def min_eig(kernel, length: float, day: int = 800, window: int = 15) -> float:
+    """Smallest eigenvalue of the prior covariance on one day, before the noise
+    σₒ² I is added: is the kernel a valid covariance on the torus?"""
     s = (np.abs(ti - day) <= window) & inp
     oy, ox, ot = y[yi[s]], x[xi[s]], ti[s]
-    dy = np.minimum(np.abs(oy[:, None] - oy), P - np.abs(oy[:, None] - oy))
-    dx_ = np.minimum(np.abs(ox[:, None] - ox), P - np.abs(ox[:, None] - ox))
-    C = SIG**2 * np.exp(-0.5 * (dy**2 + dx_**2) / length**2
-                        - 0.5 * (ot[:, None] - ot[None, :]) ** 2 / TAU**2)
-    return float(np.linalg.eigvalsh(C + SIG_O**2 * np.eye(ot.size)).min())
+    C = (SIG**2 * kernel(oy, oy, length) * kernel(ox, ox, length)
+         * np.exp(-0.5 * (ot[:, None] - ot[None, :]) ** 2 / TAU**2))
+    return float(np.linalg.eigvalsh(C).min())
 
 
-eig = {length: min_eig(length) for length in (100.0, 150.0)}
+eig = {(kern.__name__, length): min_eig(kern, length)
+       for kern in (k_min_image, k_wrapped) for length in (100.0, 150.0)}
 base["OI, L = 50 km"] = ois[50.0][0]
 base["OI, L = 100 km"] = ois[100.0][0]
 s3 = {k: (rmse_truth(p), rmse_s1(p)) for k, p in base.items()}
 oi100 = s3["OI, L = 100 km"][0]
 gain = {k: 1 - oi100 / s3[k][0]
-        for k in ("carry forward", "nearest in time", "linear in time")}
+        for k in ("persistence (carry forward)", "nearest in time", "linear in time")}
 {k: tuple(round(e, 4) for e in v) for k, v in s3.items()}, gain, eig
 
 # %%
 r3 = {k: (round(a, 4), round(b, 4)) for k, (a, b) in s3.items()}
 assert r3 == {
-    "carry forward": (0.0796, 0.0741), "nearest in time": (0.0576, 0.058),
+    "persistence (carry forward)": (0.0796, 0.0741), "nearest in time": (0.0576, 0.058),
     "linear in time": (0.0497, 0.0518), "monthly climatology": (0.084, 0.0792),
     "OI, L = 50 km": (0.0267, 0.0322), "OI, L = 100 km": (0.0178, 0.0259),
 }
-assert round(eig[100.0], 6) == 0.000391
-assert round(eig[150.0], 4) == -0.0014  # not positive definite
+# the minimum-image Gaussian is not a covariance on the torus, even at L = 100 km;
+# the wrapped one is (smallest eigenvalue zero to rounding, relative to σ² = 0.0064)
+assert f"{eig[('k_min_image', 100.0)]:.1e}" == "-9.4e-06"
+assert f"{eig[('k_min_image', 150.0)]:.1e}" == "-1.8e-03"
+assert all(abs(eig[("k_wrapped", ln)]) < 1e-12 for ln in (100.0, 150.0))
 assert {k: round(v, 2) for k, v in gain.items()} == {
-    "carry forward": 0.78, "nearest in time": 0.69, "linear in time": 0.64}
+    "persistence (carry forward)": 0.78, "nearest in time": 0.69,
+    "linear in time": 0.64}
 
 # %% [markdown]
 # ## Stage 4 · A deterministic and an ensemble entry under CRPS
 
 # %%
-m25 = ois[100.0][0].isel(time=test_days)
-s25 = np.sqrt(np.maximum(ois[100.0][1].isel(time=test_days), 0.0))
+m25 = ois[100.0][0]
+s25 = np.sqrt(np.maximum(ois[100.0][1], 0.0))
 # xᵢ = x̂ + σ̂ εᵢ, εᵢ ~ 𝒩(0, 1), N_e = 20 members (marginals only)
 eps = np.random.default_rng(5).standard_normal((20, *m25.shape))
 ens = m25 + s25 * xr.DataArray(eps, dims=("member", *m25.dims))
@@ -363,14 +417,14 @@ try:
 except ValueError as e:
     one_member = str(e)
 crps_dup = float(crps_ensemble(xr.concat([m25, m25], "member"), truth25, dims=dims))
-mae = float(abs(m25 - truth25).mean())
+mae_ = float(mae(m25, truth25, dim=grid_dims))
 ssr = float(spread_skill_ratio(ens, truth25, dims=dims))
-crps_ens, one_member, crps_dup, mae, ssr
+crps_ens, one_member, crps_dup, mae_, ssr
 
 # %%
 assert round(crps_ens, 4) == 0.0094 and round(ssr, 2) == 0.98
 assert one_member == "Ensemble/sample dim 'member' has size 1; need at least 2."
-assert round(crps_dup, 4) == round(mae, 4) == 0.0126  # CRPS of a point = MAE
+assert abs(crps_dup - mae_) < 1e-12  # CRPS of a point forecast is its MAE
 
 # %% [markdown]
 # ## Stage 5 · Three references
@@ -384,10 +438,12 @@ rean = truth.copy(data=gaussian_filter(eta, sigma=(0, 2, 2), mode="wrap"))
 rean25 = rean.isel(time=test_days)
 smooth = ois[100.0][0].copy(data=gaussian_filter(ois[100.0][0].values,
                                                  sigma=(0, 2, 2), mode="wrap"))
+# every entry is a contract-shaped (364, 32, 32) map of 2025
 entries = {"OI, L = 100 km": ois[100.0][0], "OI, L = 50 km": ois[50.0][0],
            "learned the reanalysis": smooth}
-tracks = {k: (float(np.sqrt(((p.isel(time=test_days) - rean25) ** 2).mean())),
-              rmse_truth(p), rmse_s1(p)) for k, p in entries.items()}
+assert all(p.shape == (364, NY, NX) for p in entries.values())
+tracks = {k: (float(rmse(p, rean25, dim=grid_dims)), rmse_truth(p), rmse_s1(p))
+          for k, p in entries.items()}
 {k: tuple(round(e, 4) for e in v) for k, v in tracks.items()}
 
 # %%
@@ -448,7 +504,7 @@ class Baseline:  # user: a precomputed map as an Estimator
         return self
 
     def __call__(self, obs: Any) -> Estimate:
-        return Field(base[self.label].isel(time=test_days))
+        return Field(base[self.label])
 
 
 @dataclass
@@ -456,7 +512,7 @@ class RMSEScorer:  # user
     name: str = "rmse"
 
     def __call__(self, prediction: Estimate, reference: Any) -> dict[str, float]:
-        return {"truth": float(np.sqrt(((prediction.point() - reference) ** 2).mean()))}
+        return {"truth": float(rmse(prediction.point(), reference, dim=grid_dims))}
 
 
 ests = [Baseline("linear in time", 2, 0), Baseline("OI, L = 50 km", 2, 1),
