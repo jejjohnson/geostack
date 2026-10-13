@@ -1014,8 +1014,9 @@ Reports [3](03_sister_libraries.md), [6](06_geocatalog.md),
 ### Forthcoming reports
 
 (r13-ref-report-11)=
-Reports 11 and 12 · pipekit-train, pipekit-evaluate, pipekit-experiment
-: *Forthcoming.* The consumers of a state catalog and the producer hash.
+Report 12 and later · pipekit-experiment, pipekit-evaluate
+: *Forthcoming.* The producer hash and the evaluation consumers of a state
+  catalog. pipekit-train is [Report 11](11_pipekit_train.md).
 
 ### Sources
 

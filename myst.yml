@@ -18,6 +18,7 @@ project:
         - file: docs/reports/07_geopatcher.md
         - file: docs/reports/09_use_cases.md
         - file: docs/reports/10_pipekit_cycle.md
+        - file: docs/reports/11_pipekit_train.md
         - file: docs/reports/13_state_catalog.md
     - title: Notes
       children:
