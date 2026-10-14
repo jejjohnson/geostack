@@ -1758,7 +1758,6 @@ def r16_roadmap() -> Svg:
     return f
 
 
-
 def r17_ownership() -> Svg:
     """Report 17: the cycle is the ladder; lineage lives in the registry's hash."""
     f = Svg(
