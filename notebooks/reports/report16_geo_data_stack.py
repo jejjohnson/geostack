@@ -170,6 +170,7 @@ alpha = pipe(field)  # GeoTensor (H, W), ppm·m
 a = np.squeeze(np.asarray(alpha))
 bg_px = alpha_true < 1.0
 sigma_hat = float(np.std(a[bg_px]))
+peak_hat = float(a.max())  # the retrieved peak, against the true 1500
 corr = float(np.corrcoef(a.ravel(), alpha_true.ravel())[0, 1])
 same_grid = (alpha.crs.to_string() == crs) and tuple(alpha.transform)[:6] == tuple(
     from_origin(x0, y0, res, res)
@@ -258,18 +259,24 @@ ime_bias_true_bg = est_true_bg["ime_kg"] / ime_true_mask - 1.0
 
 # %%
 # (a) Two Signature classes
-sig_x = xrcore.Signature({"time": 24, "latitude": 5, "longitude": 5}, dtype="float64")
+sizes = {"time": 24, "latitude": 5, "longitude": 5}
+if STATE == "today":
+    sig_x = xrcore.Signature(sizes, dtype="float64")
+else:  # workstream A: one class, built from a mapping with from_sizes
+    sig_x = xrcore.Signature.from_sizes(sizes, dtype="float64")
 sig_p = pk.Signature(dims=(("time", 24), ("latitude", 5), ("longitude", 5)),
                      dtype="float64")
 wind_mean = Sequential([WindSpeed(u="u10", v="v10", name="ws10"), MeanScalar(axis=0)])
 same_class = xrcore.Signature is pk.Signature
 try:
-    wind_mean.summary(sig_x)
+    summary_x = wind_mean.summary(sig_x)
     sig_error = ""
 except ValueError as e:
-    sig_error = str(e)
+    summary_x, sig_error = "", str(e)
 summary_p = wind_mean.summary(sig_p)
-final_p = repr(MeanScalar(axis=0).compute_output_signature(sig_p))
+# the composed pipeline's last output signature: the summary table's last cell
+final_p = summary_p.rstrip().splitlines()[-1].split("  ")[-1].strip()
+final_x = summary_x.rstrip().splitlines()[-1].split("  ")[-1].strip() if summary_x else ""
 
 # (b) The training dataset's stencil import
 try:
@@ -287,10 +294,14 @@ except ImportError as e:
     xwd_error = str(e)
 
 # (c) What a stencil import loads
+# D3's contract is "NumPy and nothing heavier": check every heavy dependency in
+# the geo stack's tree, not only the two the raster code pulls in
+HEAVY = ("georeader", "rasterio", "shapely", "pyproj", "geopandas", "xarray",
+         "pandas", "scipy", "dask", "zarr")
 probe = subprocess.run(
     [sys.executable, "-c",
      "import sys, geopatcher.temporal.stencils as _; "
-     "print(sorted(m for m in ('georeader', 'rasterio') if m in sys.modules))"],
+     f"print(sorted(m for m in {HEAVY!r} if m in sys.modules))"],
     capture_output=True, text=True, check=True,
 )
 stencil_loads = probe.stdout.strip()
@@ -316,7 +327,7 @@ assert (round(sigma_theory, 1), round(float(alpha_true.max()), 1)) == (103.9, 15
 assert (n_rows, field_type, tuple(field_shape)) == (1, "RasterField", (40, 256, 256))
 assert (n_chips, K_axis) == (9, 3) and same_grid and recon_err < 1e-5
 assert round(sigma_hat, 1) == 107.2 and round(sigma_hat / sigma_theory - 1, 3) == 0.032
-assert round(corr, 2) == 0.73
+assert round(corr, 2) == 0.73 and round(peak_hat) == 1588
 assert mass_factor_err < 1e-12
 assert round(sigma_kg / k_mass, 1) == 111.2 and (n_mask, n_false) == (1246, 3)
 assert (round(ime_true_all, 1), round(ime_true_mask, 1)) == (944.0, 584.6)
@@ -327,17 +338,18 @@ assert round(est["emission_rate_uncertainty_kg_s"], 3) == 0.325
 assert round(ime_bias, 3) == -0.085 and abs(q_closed - est["emission_rate_kg_s"]) < 1e-12
 assert round(ime_bias_true_bg, 3) == 0.017  # the true μ, Σ on the same mask
 # Stages 1 to 5 do not change with the realignment; stage 6's seams do.
+# the composed pipeline ends on the reduced grid, whichever class built the input
 assert final_p == "Signature((latitude=5, longitude=5) float64)" and n_origins == 18
 if STATE == "today":
     assert not same_class and sig_error == "too many values to unpack (expected 2)"
     assert time_import == "No module named 'geopatcher.time'"
     assert xwd_error.startswith("XarrayWindowDataset requires `geopatcher`")
-    assert stencil_loads == "['georeader', 'rasterio']"
+    assert stencil_loads == "['georeader', 'rasterio', 'shapely']"
     assert xr_reqs == ["pipekit>=0.0.1", "xrtoolz-reader>=0.0.2"]
     assert gz_reqs == ["pipekit>=0.0.2"]
 else:  # gate F5: the realigned stack
-    assert same_class and sig_error == ""                       # A
+    assert same_class and sig_error == "" and final_x == final_p  # A1
     assert xwd_error == ""                                      # D1, D2
     assert stencil_loads == "[]"                                # D3
     assert not any("reader" in r for r in xr_reqs)              # C1
-    assert all(r.startswith("pipekit-core") for r in gz_reqs)   # F1
+    assert gz_reqs and all(r.startswith("pipekit-core") for r in gz_reqs)  # F1

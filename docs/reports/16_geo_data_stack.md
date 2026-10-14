@@ -2,7 +2,7 @@
 title: The geo data stack
 subtitle: Report 16 · Realignment plan for pipekit, xrtoolz and geotoolz across 18 distributions
 short_title: 16 · Geo data stack
-description: How pipekit, the xrtoolz family and the five geotoolz packages should divide the work. Checked against the revisions pinned in references/ after geotoolz grew geotoolz-cloud and geotoolz-products; one synthetic methane scene runs through every lane, and the seams that need fixing are exercised as they stand.
+description: How pipekit, the xrtoolz family and the five geotoolz packages should divide the work. Checked against the revisions pinned in references/ after geotoolz grew geotoolz-cloud and geotoolz-products; one synthetic methane scene runs through every lane, and four of the six seams that need fixing are exercised as they stand.
 keywords:
   - pipekit
   - geotoolz
@@ -27,13 +27,19 @@ geotoolz (5). None of them merges into another. pipekit is the composition
 layer; geotoolz-cloud, geotoolz-catalog and geotoolz-patcher serve both
 carrier lanes; geotoolz and geotoolz-products are the GeoTensor lane; the
 xrtoolz family is the xarray lane. One synthetic methane scene runs through
-all of them and the matched filter's noise lands within 3.2 % of its closed
-form. Six seams still need work, and the running example hits each one: two
-`Signature` classes that cannot share a pipeline, eight model wrappers for
-three backends, shared xarray vocabulary that lives in a downloader, a
-training dataset that imports a geopatcher module removed on 8 October, no
-rule for where a mission reader lives, and a distribution name on PyPI that
-belongs to another project. This page decides each one and pulls together
+the packages that touch it (pipekit and pipekit-array, geocatalog,
+geopatcher, geotoolz and the xrtoolz core, reader and top-level package) and
+the matched filter's noise lands within 3.2 % of its closed form. Six seams
+still need work: two `Signature` classes that cannot share a pipeline, eight
+model wrappers for three backends, shared xarray vocabulary that lives in a
+downloader, a training dataset that imports a geopatcher module removed on
+8 October, no rule for where a mission reader lives, and a distribution name
+on PyPI that belongs to another project. The running example exercises four
+of them on the pinned code (the signatures, the vocabulary's dependency, the
+training dataset and the dependency names); the model wrappers and the
+mission readers are read from the source in the audit, and pipekit-jax,
+geotoolz-products, xrtoolz-einx, xrtoolz-grad and xrtoolz-sklearn are not
+imported by the run. This page decides each one and pulls together
 the open questions Reports 3, 6, 7 and 11 left on them.
 
 +++
@@ -443,7 +449,7 @@ from pipekit_train import XarrayWindowDataset
 #   on PyPI … `uv pip install -e ../geopatcher`"                      today
 
 # (c) a pure-numpy stencil import loads the raster stack               → workstream D
-import geopatcher.temporal.stencils   # sys.modules gains georeader, rasterio   today
+import geopatcher.temporal.stencils   # sys.modules gains georeader, rasterio, shapely   today
 
 # (d) base installs                                                    → workstreams C, F
 importlib.metadata.requires("xrtoolz")   # includes xrtoolz-reader>=0.0.2       today
@@ -505,11 +511,11 @@ Smaller findings:
   tiling to `xrpatcher` and ensemble DA to `ekalmX`, and
   `ob-1.1-xrpatcher-integration.md` is still "proposed". `xrtoolz.rs` and
   `xrtoolz.ice` export nothing ([Report 3](03_sister_libraries.md#r3-todos)).
-- **`import geopatcher.temporal.stencils` loads georeader and rasterio.**
-  The package root imports `fields` and `RasterField`, and
+- **`import geopatcher.temporal.stencils` loads georeader, rasterio and
+  shapely.** The package root imports `fields` and `RasterField`, and
   `_src/fields/raster.py:23`, `fields/reproject.py:20` and
-  `_src/matched/field.py:50` import georeader and rasterio at module scope,
-  though the stencils are pure NumPy.
+  `_src/matched/field.py:50` import georeader and rasterio (which brings
+  shapely) at module scope, though the stencils are pure NumPy.
 - **None of the 18 distributions is on PyPI**, and every name is free except
   `pipekit` (version 0.3.5 there belongs to another author).
 
@@ -526,7 +532,7 @@ packages import from pipekit are public.
 |---|---|---|
 | `Signature` (ordered `(name, size)` pairs) | stays in `pipekit.signature` | positional operators (pipekit-array) need axis order |
 | `Signature.from_sizes(mapping, dtype)`, `.sizes` (read-only mapping) | `pipekit.signature`, new | xrtoolz builds and compares signatures by name; a `dict`'s order is the axis order |
-| dtype canonicalisation (`np.dtype(x).name`) | `pipekit.signature`, NumPy imported lazily | xrcore's one behaviour pipekit lacks; pipekit keeps zero dependencies |
+| dtype canonicalisation without NumPy: a string stays as it is, anything else gives its `.name` (a NumPy, JAX or array-API dtype), else its `__name__` (`np.float64`) | `pipekit.signature` | xrcore's one behaviour pipekit lacks; pipekit-core stays dependency-free, and `np.dtype("float64").name == np.float64.__name__ == "float64"`, so the result matches xrcore's |
 | `xrcore.Signature` | re-export of `pipekit.Signature` | `from xrcore import Signature` keeps working |
 | `nested_config`, `callable_name` | `pipekit.config` | used by geotoolz and geopatcher |
 | `require_operator` | `pipekit` | used by geotoolz `augment` |
@@ -681,7 +687,7 @@ geopatcher has `integrations/pipekit.py` for operator graphs, and gains
 ### D3 · A cheap stencil import
 
 The package root imports the raster field, reprojection and matched fields,
-which import georeader and rasterio at module scope. Load them on first use
+which import georeader, rasterio and shapely at module scope. Load them on first use
 from the root, as geocatalog already does for its extras, so
 `geopatcher.temporal.stencils` loads NumPy and nothing heavier. This is the
 lazy half of [Report 7](07_geopatcher.md)'s question 3; moving them behind a
@@ -841,8 +847,8 @@ code passes today and must keep passing.
 | C2 Vocabulary shims | C | `xrreader.types.Variable is xrcore.types.Variable` |
 | D1 Window import | D | `XarrayWindowDataset` imports with the pinned geopatcher and no shim (today `ImportError`); Report 11's stage 8 pairs satisfy $y = M x_{-1}$ to 1e-5 |
 | D2 No upward edges | D | grepping every pipekit package for `geopatcher`, `geocatalog`, `geotoolz` or `xrcore` returns 0 lines (today 2 files); the dataset's `content_hash` on stage 4's cube is identical before and after the move |
-| D3 Cheap stencil import | D | after `import geopatcher.temporal.stencils`, neither `georeader` nor `rasterio` is in `sys.modules` (today both) |
-| E1 Carrier rule | E | the capability index lists no mission name under both geoproducts and xrreader, and the EMIT GeoTIFF and NetCDF readers agree on a fixture's enhancement to 1e-6 |
+| D3 Cheap stencil import | D | in a fresh interpreter, `import geopatcher.temporal.stencils` puts none of `georeader`, `rasterio`, `shapely`, `pyproj`, `geopandas`, `xarray`, `pandas`, `scipy`, `dask` or `zarr` in `sys.modules` (today the first three) |
+| E1 Carrier rule | E | the capability index lists no mission name under both geoproducts and xrreader except EMIT L2B, whose GeoTIFF and NetCDF containers are different carriers by design (stage table above); and those two EMIT readers agree on a fixture's enhancement to 1e-6 |
 | F1 Names | F | `pipekit-core`, `geotoolz-cloud`, `geotoolz-products`, `geotoolz-catalog` and `geotoolz-patcher` resolve to this stack on PyPI |
 | F2 One environment | F | geotoolz and xrtoolz install editable into one environment without `--no-sources` (today a URL conflict) |
 | F3 Packaging tests | F | xrtoolz and pipekit run `test_packaging.py` and a base-install job, which fail on today's zarr floor and `[oceanography]` hint |
