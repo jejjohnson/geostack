@@ -14,20 +14,28 @@ project:
         - file: docs/benchmarks_gallery.md
     - title: Reports
       children:
-        - file: docs/reports/01_toolz_primer.md
-        - file: docs/reports/02_pipekit_surface.md
-        - file: docs/reports/03_sister_libraries.md
-        - file: docs/reports/06_geocatalog.md
-        - file: docs/reports/07_geopatcher.md
-        - file: docs/reports/09_use_cases.md
-        - file: docs/reports/10_pipekit_cycle.md
-        - file: docs/reports/11_pipekit_train.md
-        - file: docs/reports/12_pipekit_experiment.md
-        - file: docs/reports/13_state_catalog.md
-        - file: docs/reports/14_pipekit_evaluate.md
-        - file: docs/reports/15_benchmarking.md
-        - file: docs/reports/16_geo_data_stack.md
-        - file: docs/reports/17_cycle.md
+        - title: Across the stack
+          children:
+            - file: docs/reports/09_use_cases.md
+            - file: docs/reports/16_geo_data_stack.md
+        - title: pipekit
+          children:
+            - file: docs/reports/01_toolz_primer.md
+            - file: docs/reports/02_pipekit_surface.md
+            - file: docs/reports/10_pipekit_cycle.md
+            - file: docs/reports/11_pipekit_train.md
+            - file: docs/reports/12_pipekit_experiment.md
+            - file: docs/reports/14_pipekit_evaluate.md
+        - title: geotoolz and xrtoolz
+          children:
+            - file: docs/reports/03_sister_libraries.md
+            - file: docs/reports/06_geocatalog.md
+            - file: docs/reports/07_geopatcher.md
+            - file: docs/reports/13_state_catalog.md
+        - title: Benchmarking
+          children:
+            - file: docs/reports/15_benchmarking.md
+            - file: docs/reports/17_cycle.md
     - title: Notes
       children:
         - file: docs/notes/background.md
