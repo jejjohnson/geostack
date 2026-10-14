@@ -49,6 +49,7 @@ import jax.numpy as jnp
 import matplotlib
 
 matplotlib.use("Agg")
+matplotlib.rcParams["svg.hashsalt"] = "plumax_01"  # stable SVG ids across reruns
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import rasterio.transform  # noqa: E402
@@ -56,7 +57,9 @@ from georeader.geotensor import GeoTensor  # noqa: E402
 from geotoolz.plume import CrossSectionalFlux, IMEEstimate  # noqa: E402
 from geotoolz.plume._src.array import plume_length  # noqa: E402
 from plumax.gauss_plume import get_dispersion_params, plume_concentration  # noqa: E402
+from plumax.gauss_puff.puff import puff_concentration  # noqa: E402
 from scipy import integrate  # noqa: E402
+from scipy.special import erf  # noqa: E402
 
 jax.config.update("jax_enable_x64", True)
 root = Path.cwd()
@@ -113,6 +116,27 @@ assert stage1["rel_err_H0"] < 1e-6 and stage1["rel_err_H30"] < 1e-6
 assert (round(stage1["sigma_y_500"], 1), round(stage1["sigma_y_2000"], 1)) == (39.0, 146.1)
 assert round(stage1["growth_exponent"], 2) == 0.99  # K-theory would give 0.50
 assert round(stage1["omega_peak_500"], 4) == 0.0068  # kg/m², 500 m downwind
+
+# %% [markdown]
+# The steady plume is the 2D heat equation in travel time τ = x / U started
+# from the "initial condition" U c(0⁺, y, z) = Q δ(y) δ(z − H): the flux
+# U ∬ c dy dz through every cross-section is Q, which is the cross-sectional
+# flux in 3D.
+
+# %%
+# U ∬ c dy dz on a 1 m × 1 m (y, z) grid at x = 500 and 1500 m      (Y, Z) → ()
+yg = jnp.linspace(-1500.0, 1500.0, 3001)
+zg = jnp.linspace(0.0, 1500.0, 1501)
+YG, ZG = jnp.meshgrid(yg, zg, indexing="ij")
+
+
+def plume_flux(x: float, h: float) -> float:
+    c = plume_concentration(jnp.full_like(YG, x), YG, ZG, 0.0, 0.0, h, U, 0.0, Q, D)
+    return float(U * jnp.trapezoid(jnp.trapezoid(c, zg, axis=1), yg))
+
+
+stage1["flux_3d"] = {x: plume_flux(x, 30.0) for x in (500.0, 1500.0)}
+assert all(abs(v / Q - 1) < 1e-3 for v in stage1["flux_3d"].values())
 
 # %% [markdown]
 # ## Stage 2 · Cross-sectional flux
@@ -215,6 +239,53 @@ assert round(stage3["u5_x50"]["ratio"], 3) == 0.990  # Pe = 25
 assert round(stage3["u1_x500"]["ratio"], 3) == 0.995  # Pe = 50
 
 # %% [markdown]
+# The puff itself: in the frame x′ = x − U t moving with the wind, the
+# advection term drops out and ∂c/∂t = K ∇²c; the product of three 1D heat
+# kernels with σᵢ² = 2Kt, plus an image at z = −H for a reflecting ground,
+# is plumax's `puff_concentration`. Check that it conserves mass, that it
+# solves the moving-frame diffusion equation, and that its column is
+# M / (2π σ_x σ_y) exp(…) for any release height.
+
+# %%
+M_PUFF, H_PUFF, T0 = 1.0, 30.0, 100.0  # kg, m, s since release
+
+
+def puff(x, y, z, t):
+    # c = M / ((2π)^{3/2} σ_x σ_y σ_z) e^{…} [e^{−(z−H)²/2σ_z²} + e^{−(z+H)²/2σ_z²}]
+    s = jnp.sqrt(2 * K * t)
+    return puff_concentration(x - U * t, y, z, 0.0, 0.0, H_PUFF, s, s, s, M_PUFF)
+
+
+xg = jnp.linspace(-300.0, 300.0, 301) + U * T0  # 2 m spacing; σ = 45 m
+yg3 = jnp.linspace(-300.0, 300.0, 301)
+zg3 = jnp.linspace(0.0, 400.0, 201)
+X3, Y3, Z3 = jnp.meshgrid(xg, yg3, zg3, indexing="ij")
+c3 = puff(X3, Y3, Z3, T0)                                     # (301, 301, 201)
+# M = ∭_{z ≥ 0} c dV
+mass = float(jnp.trapezoid(jnp.trapezoid(jnp.trapezoid(c3, zg3), yg3), xg))
+# Ω = ∫₀^∞ c dz against M / (2π σ²) e^{−r²/2σ²}, σ² = 2 K t
+col = jnp.trapezoid(c3, zg3)                                         # (301, 301)
+s2 = 2 * K * T0
+col_an = M_PUFF / (2 * np.pi * s2) * jnp.exp(
+    -((X3[..., 0] - U * T0) ** 2 + Y3[..., 0] ** 2) / (2 * s2))
+# ∂c/∂t + U ∂c/∂x − K ∇²c at one point, by central differences
+p0, e, dt = (U * T0 + 20.0, 15.0, 40.0), 1e-1, 1e-3
+f = lambda *a: float(puff(*a))  # noqa: E731
+lap = sum((f(*[p0[j] + e * (j == i) for j in range(3)], T0)
+           - 2 * f(*p0, T0) + f(*[p0[j] - e * (j == i) for j in range(3)], T0)) / e**2
+          for i in range(3))
+dcdt = (f(*p0, T0 + dt) - f(*p0, T0 - dt)) / (2 * dt)
+dcdx = (f(p0[0] + e, *p0[1:], T0) - f(p0[0] - e, *p0[1:], T0)) / (2 * e)
+stage3["puff_mass"] = mass
+stage3["puff_col_err"] = float(jnp.max(jnp.abs(col - col_an)) / jnp.max(col_an))
+stage3["puff_pde_rel"] = abs(dcdt + U * dcdx - K * lap) / abs(dcdt)
+
+# %%
+assert abs(stage3["puff_mass"] - M_PUFF) < 1e-6
+assert stage3["puff_col_err"] < 1e-6
+assert stage3["puff_pde_rel"] < 1e-4
+
+# %% [markdown]
 # ## Stage 4 · The divergence method and Gauss's theorem
 #
 # q = ∇·F, F = u Ω. On the grid, central differences give q at every pixel;
@@ -276,6 +347,39 @@ assert round(stage4["sd_box"], 2) == 1.97
 assert abs(stage4["box_wide_noisy"] - Q) < stage4["sd_box"]
 assert round(stage4["box_wide_noisy"], 2) == 1.51
 assert stage4["n_overpasses_10pct"] == 98
+
+# %% [markdown]
+# What the narrow box misses is the diffusive boundary term the divergence
+# method drops. The Briggs column Ω = Q / (√(2π) U σ_y) e^{−y²/2σ_y²} solves
+# U ∂Ω/∂x = K_eff(x) ∂²Ω/∂y² with K_eff = (U/2) dσ_y²/dx, so on a box
+# [0, x₁] × [−h, h] Gauss's theorem with both terms reads
+# Q = U ∫_{−h}^{h} Ω(x₁, y) dy + 2 ∫₀^{x₁} K_eff Ω(x, h) h / σ_y² dx.
+
+# %%
+H_BOX, X1 = 60.0, 1500.0
+
+
+def k_eff(x):
+    # K_eff = (U/2) dσ_y²/dx, by central differences
+    d = 1e-3 * x
+    return U / 2 * (sigma_y(x + d) ** 2 - sigma_y(x - d) ** 2) / (2 * d)
+
+
+# advective: U ∫_{−h}^{h} Ω(x₁, y) dy = Q erf(h / √2 σ_y(x₁))
+adv_box = float(Q * erf(H_BOX / (np.sqrt(2) * sigma_y(X1))))
+# diffusive: 2 ∫₀^{x₁} K_eff Ω(x, h) h / σ_y² dx, through both side edges
+dif_box = 2 * integrate.quad(
+    lambda x: k_eff(x) * column_analytic(x, H_BOX) * H_BOX / sigma_y(x) ** 2,
+    1e-9, X1, limit=500, points=[1.0, 10.0, 100.0])[0]
+stage4.update({"narrow_adv": adv_box, "narrow_dif": dif_box})
+
+# %%
+# the grid's 0.81 is the advective flux out of the downwind edge (0.82
+# exactly; the grid samples the edge at 20 m); the other 1.18 kg/s leaves
+# through the side edges by crosswind diffusion, which the method drops
+assert round(stage4["narrow_adv"], 2) == 0.82 and round(stage4["narrow_dif"], 2) == 1.18
+assert abs(stage4["narrow_adv"] - stage4["box_narrow"]) < 0.01
+assert abs(stage4["narrow_adv"] + stage4["narrow_dif"] - Q) < 1e-6
 
 # %% [markdown]
 # ## Stage 5 · The integrated mass enhancement
@@ -371,7 +475,7 @@ axs[1].set_xlabel("transect distance (m)"), axs[1].set_ylabel("Q estimate (kg/s)
 axs[1].set_title("cross-sectional flux", fontsize=10)
 axs[1].legend(frameon=False, fontsize=9)
 axs[1].spines[["top", "right"]].set_visible(False)
-fig.savefig(FIG / "csf.svg")
+fig.savefig(FIG / "csf.svg", metadata={"Date": None})
 plt.close(fig)
 
 spec = importlib.util.spec_from_file_location(
