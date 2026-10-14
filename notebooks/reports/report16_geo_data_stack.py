@@ -315,6 +315,19 @@ o_tg = valid_origin_points(times.values, TimeStencil(start="1h", stop="1h",
                                                      step="0h", closed="both"))
 n_origins = len(np.intersect1d(o_in, o_tg))
 
+# (d′) In target mode, build the training windows from the stage 4 cube: the
+# dataset must work, not only import (F5 installs geotoolz-patcher[train])
+if STATE == "target":
+    xwd = XarrayWindowDataset(
+        source={"input": era5, "target": era5},
+        stencils={"input": TimeStencil(start="-5h", stop="0h", step="1h", closed="both"),
+                  "target": TimeStencil(start="1h", stop="1h", step="0h",
+                                        closed="both")},
+        store_version="stage4-wind", split_guard=0)
+    n_windows = sum(len(xwd.with_split(sp)) for sp in ("train", "val", "test"))
+    x_win, y_win = xwd[0]
+    win_shapes = (np.shape(x_win), np.shape(y_win))
+
 # (e) What the base installs pull in
 xr_base = [r for r in md.requires("xrtoolz") if "extra ==" not in r]
 xr_reqs = sorted(r for r in xr_base if "reader" in r or "pipekit" in r)
@@ -350,6 +363,8 @@ if STATE == "today":
 else:  # gate F5: the realigned stack
     assert same_class and sig_error == "" and final_x == final_p  # A1
     assert xwd_error == ""                                      # D1, D2
+    assert n_windows == n_origins == 18                         # F5: it runs
+    assert win_shapes == ((2, 6, 5, 5), (2, 1, 5, 5))  # (u₁₀, v₁₀) × window
     assert stencil_loads == "[]"                                # D3
     assert not any("reader" in r for r in xr_reqs)              # C1
     assert gz_reqs and all(r.startswith("pipekit-core") for r in gz_reqs)  # F1
