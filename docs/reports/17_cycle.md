@@ -34,8 +34,8 @@ is already there: pipekit-evaluate ships it as its **benchmark ladder**, with
 six rungs and a reference rule that scores the emulator against the
 simulator and both fast inversions against the oracle. The run shows why the
 rule matters. An emulator within 3.2 % of the simulator moves the posterior by
-up to 1.9 standard deviations; an amortized predictor that is calibrated
-against the truth is 55 % too wide against the oracle where the column is
+up to 1.9 standard deviations and barely changes its coverage of the truth;
+an amortized predictor that passes against the truth is 53 % too wide against the oracle where the column is
 small. What is missing is small: a cell that names a transition, an oracle
 strength, a way to score the emulator on parameters, and lineage the registry
 cannot overwrite. Every number below is from a real run.
@@ -225,8 +225,8 @@ $$
 y_b = f_b(\alpha) + \varepsilon_b , \qquad f_b(\alpha) = e^{-k_b \alpha} , \qquad \varepsilon_b \sim \mathcal{N}(0, \sigma^2) , \qquad \alpha \sim \mathcal{U}(0, 300) ,
 $$ (r17-eq-model)
 
-with σ = 10⁻³. The test set is n = 500 scenes drawn from the prior with a
-fixed seed. This is the L1 → L2 row: structured observations (transmittances)
+with σ = 10⁻³. The test set is n = 500 scenes drawn from the prior with
+seeds of their own, disjoint from every training set below. This is the L1 → L2 row: structured observations (transmittances)
 in, a retrieved geophysical variable (α) out.
 
 **What exists.** Every step runs on the pinned code except where a line is
@@ -307,11 +307,13 @@ p(\alpha \mid y) \propto \mathbb{1}[0 \le \alpha \le 300] \prod_{b=1}^{5} \mathc
 $$ (r17-eq-posterior)
 
 The **oracle** evaluates it on G = 30,001 nodes over [0, 300], a step of
-0.01 against a smallest posterior standard deviation of 0.062, so it is
-exact to quadrature. No unbiased estimator can beat the Cramér–Rao bound
-σ_CR(α) = σ / ‖J(α)‖, with J_b = −k_b exp(−k_b α) the derivative of f_b. The
-**Laplace** step below it fits α̂ by Gauss–Newton and reports the width
-σ / ‖J(α̂)‖.
+0.01 against a smallest posterior standard deviation of 0.068, so it is
+exact to quadrature. A scale to compare it with is the local Fisher
+information: σ / ‖J(α)‖, with J_b = −k_b exp(−k_b α) the derivative of f_b,
+is the Cramér–Rao bound for an unbiased estimator at α. It is not a bound on
+the oracle, a posterior mean that uses the prior and is biased near the
+boundary α = 0. The **Laplace** step below the oracle fits α̂ by
+Gauss–Newton and reports the width σ / ‖J(α̂)‖.
 
 ```{code-block} python
 :caption: The oracle by quadrature and the Laplace step as a Recurrence, scored against the truth, from a real run.
@@ -328,15 +330,17 @@ gn = pc.Recurrence(
 a_hat, _ = gn(a0, pc.IterationState())                        # today
 # σ_L = σ / ‖J(α̂)‖
 laplace = GaussEstimate(a_hat, SIG / norm(J(a_hat)))          # user
-# RMSE vs α: oracle 0.270, Laplace 0.270; RMS Cramér–Rao 0.269
-# 95 % coverage vs α: oracle 0.960, Laplace 0.958 (s.e. 0.010)
-# Laplace mean within 0.1 oracle widths of the oracle's, every scene
+# RMSE vs α: oracle 0.236, Laplace 0.237; RMS of σ / ‖J(α)‖ 0.247
+# 95 % coverage vs α: oracle 0.962, Laplace 0.960 (s.e. 0.010)
+# Laplace mean within 0.25 oracle widths of the oracle's, every scene
 ```
 
-The oracle sits on the Cramér–Rao bound and covers the truth at the nominal
-rate, so on this problem step 2 is an oracle in the strong sense: the
-forward model is known and the posterior is computed, not approximated. The
-Laplace step agrees with it to a tenth of a standard deviation everywhere,
+The oracle covers the truth at the nominal rate, and its error is of the
+size the local Fisher information sets (a little below it, 0.236 against
+0.247, because the prior and the boundary help). On this problem step 2 is
+an oracle in the strong sense: the forward model is known and the posterior
+is computed, not approximated. The Laplace step agrees with it to a quarter
+of a standard deviation everywhere,
 which is the complexity axis doing its job: a richer inversion must first
 reproduce the simpler one where both are valid.
 
@@ -380,7 +384,7 @@ C6 = fit_emulator(6)           # (1600, 7) → (7, B)           user
 # max_b,α |f̂_b(α) − f_b(α)| / σ over 3,001 values of α
 # degree 4: 2.2 σ (3.2 % of the transmittance at worst)
 # degree 6: 0.03 σ
-# on the 500 test scenes only: degree 4, 2.13 σ (stage 6's figure)
+# on the 500 test scenes only: degree 4, 2.01 σ (stage 6's figure)
 ```
 
 Judged as a forward model, the degree-4 emulator looks good: its worst error is 3.2 % of the
@@ -414,23 +418,25 @@ oracle's standard deviation s, it reads as "how many widths apart".
 # Shapes: n = 500 scenes; G = 30,001 nodes; 2,000 draws per scene
 fast = grid_posterior(y, f_hat_4)             # (n, B) → (n, G)   user
 # (m̂ − m) / s, the mean shift in oracle widths
-# degree 4: RMS 0.45, max 1.89; width ratio 1.00; W₁ / s 0.38
+# degree 4: RMS 0.44, max 1.94; width ratio 1.00; W₁ / s 0.37
 # degree 6: max 0.02
-# 95 % coverage vs α: degree 4 0.928, degree 6 0.960 (the oracle's)
-# W₁ = ∫ |F̂ − F| dα, from samples
-xrtoolz.metrics.wasserstein_1(
-    fast.sample(2000), oracle.sample(2000))   # (n, 2000) → (n,)  today
-#   each sample a (scene, member) DataArray     arguments sketched
-# → 0.38 s; the oracle against itself 0.04 s: the floor at 2,000
+# 95 % coverage vs α: degree 4 0.948, degree 6 0.962 (the oracle's)
+# W₁ = ∫ |F̂ − F| dα, from 2,000 samples of each, in oracle widths
+a = xr.DataArray(fast.sample(2000), dims=("scene", "member"))
+b = xr.DataArray(oracle.sample(2000), dims=("scene", "member"))
+w1 = xrtoolz.metrics.wasserstein_1(a, b)      # (n, 2000) → (n,)  today
+(w1 / oracle.sd()).mean()                      # (n,) → () : 0.37
+# the oracle against itself: 0.04, the sampling floor at 2,000 draws
 ```
 
-A 3 % emulator moves the posterior mean by up to 1.9 widths and pulls the
-coverage of the truth from 96 % to 93 %, while the width of the posterior
-does not change at all: a check on the uncertainty alone would pass. The
+A 3 % emulator moves the posterior mean by up to 1.9 widths, while the
+width of the posterior does not change at all and the coverage of the truth
+drops only from 96.2 % to 94.8 %, within 1.5 standard errors of the oracle's:
+a check against the truth, or on the uncertainty alone, would pass. The
 degree-6 emulator, at 0.03 σ, reproduces the oracle to 0.02 widths. Scoring
 step 4 against the oracle, as the ladder's rule does, is what makes this
-visible; scored against the truth alone, the degree-4 inversion is a
-retrieval with slightly low coverage, and nothing says why. xrtoolz's
+visible; scored against the truth alone, the degree-4 inversion looks like
+a good retrieval. xrtoolz's
 `wasserstein_1` reproduces the exact W₁ but takes samples only, so an exact
 posterior on nodes must be sampled first, and the sampling floor (0.04
 widths at 2,000 draws) hides any distance below it, including the degree-6
@@ -465,16 +471,16 @@ with r_i = α_i − φ(y_i)ᵀβ_μ, and log s(y)² = φ(y)ᵀβ_s + 1.27, since
 # φ(y) = [1, z₁ … z₅, z̄², z̄³],  z_b = −log y_b / (300 k_b)
 # μ = φᵀβ_μ,  log s² = φᵀβ_s + 1.27
 q = amortized(y)                      # (n, B) → μ (n,), s (n,)   user
-# against α: RMSE 0.281; 𝔼[z²] 0.98; 95 % coverage 0.960
-# against the oracle: width ratio 1.14; 1.55 for α < 50 (72 scenes)
-# mean shift for α < 50: 1.24 widths RMS, 3.7 at worst; W₁ / s 0.43
+# against α: RMSE 0.255; 𝔼[z²] 0.90 (s.e. 0.063); 95 % coverage 0.954
+# against the oracle: width ratio 1.16; 1.53 for α < 50 (83 scenes)
+# mean shift for α < 50: 1.04 widths RMS, 3.6 at worst; W₁ / s 0.38
 ```
 
-Against the truth, the predictor is calibrated: 𝔼[z²] = 0.98 and 96 %
-coverage. Against the oracle, it is a different estimator. Where the column
-is small and the posterior narrow, its mean is noisier than the oracle's
-(1.24 widths off) and it widens its intervals by 55 % to stay honest about
-that. The truth only checks that the predictor knows how wrong it is on
+Against the truth, the predictor passes: 𝔼[z²] = 0.90, within 1.6
+standard errors of 1, and 95.4 % coverage. Against the oracle, it is a
+different estimator. Where the column is small and the posterior narrow,
+its mean is noisier than the oracle's (1.04 widths off) and it widens its
+intervals by 53 % to stay honest about that. The truth only checks that the predictor knows how wrong it is on
 average over the prior; the oracle checks that it reproduces the posterior
 scene by scene, which is the question an amortized predictor must answer.
 The ladder scores rung 5 against the oracle only, so today the two verdicts
@@ -511,14 +517,17 @@ is the set of descendants of the old emulator in the graph of parents.
 
 # Shapes: n = 500; spectra (n, B) in σ; posteriors in oracle widths
 report = pe.Benchmark(task=task, scorers=[Score()], level="L2",
-    estimators=[Rung(2, 0, laplace), Rung(2, 1, oracle),
-                EmulatorRung(3, 0, f_hat_4), Rung(4, 0, fast_4),
-                Rung(5, 0, amortized)]).run()    # Rung: user     today
-# L2/r2/c0  known_theta       max |α̂ − α| 1.23, RMSE 0.270
-# L2/r2/c1  known_theta       max |α̂ − α| 1.23, RMSE 0.270
-# L2/r3/c0  simulator_output  max |f̂ − f| 2.13 σ, RMSE 0.294 σ
-# L2/r4/c0  oracle_posterior  max shift 1.89, width ratio 1.00
-# L2/r5/c0  oracle_posterior  max shift 3.70, width ratio 1.14
+    estimators=[
+        Rung(2, 0, laplace),                          # y ↦ Laplace estimate
+        Rung(2, 1, lambda y: grid_posterior(y, f)),           # the oracle
+        EmulatorRung(3, 0, f_hat_4),
+        Rung(4, 0, lambda y: grid_posterior(y, f_hat_4)),     # step 4
+        Rung(5, 0, amortized)]).run()   # Rung, EmulatorRung: user  today
+# L2/r2/c0  known_theta       max |α̂ − α| 1.12, RMSE 0.237
+# L2/r2/c1  known_theta       max |α̂ − α| 1.12, RMSE 0.236
+# L2/r3/c0  simulator_output  max |f̂ − f| 2.01 σ, RMSE 0.277 σ
+# L2/r4/c0  oracle_posterior  max shift 1.94, width ratio 1.00
+# L2/r5/c0  oracle_posterior  max shift 3.63, width ratio 1.16
 EmulatorRung.fit(task)       # reads θ: rung 3 needs θ, not y  user
 
 reg = px.LocalModelRegistry(root)                             # today
@@ -678,7 +687,7 @@ pe.Benchmark(task, estimators, scorers, level="L2").run()     # today
 # → "L2/r3/c0", ref simulator_output; no strength on any row
 # After:
 pe.Benchmark.from_contract(c, estimators=[...]).run()
-# → "L1→L2/r3/c0": f̂(θ) against f(θ), 2.13 σ  proposed (A1, A3)
+# → "L1→L2/r3/c0": f̂(θ) against f(θ), 2.01 σ  proposed (A1, A3)
 # c.oracle = {"artifact": h2, "strength": "physics_derived"}
 # → rows r4 and r5 carry "physics_derived"        proposed (A2)
 ```
@@ -744,7 +753,7 @@ oracle and the truth in one run.
 | Symbol | Destination | Reason |
 |---|---|---|
 | `wasserstein_1(a, b, *, weights_a=None, weights_b=None, ...)` | `xrtoolz.metrics` | stage 4: an exact posterior on nodes is resampled today, and the sampling floor (0.04 widths at 2,000 draws) hides smaller distances |
-| two references for rung 5 (`oracle_posterior` and `known_theta`) | Report 14's A4 in `benchmark/run.py` | stage 5: the truth says "calibrated", the oracle says "55 % too wide where α is small"; both belong on the row |
+| two references for rung 5 (`oracle_posterior` and `known_theta`) | Report 14's A4 in `benchmark/run.py` | stage 5: the truth says "calibrated", the oracle says "53 % too wide where α is small"; both belong on the row |
 :::
 
 ```{code-block} python
@@ -755,7 +764,7 @@ oracle and the truth in one run.
 # W₁ = ∫ |F̂ − F| dα
 xrtoolz.metrics.wasserstein_1(
     nodes, nodes, weights_a=fast.w,
-    weights_b=oracle.w)            # (n, G) → (n,); 0.38 s  proposed (C1)
+    weights_b=oracle.w)            # (n, G) → (n,); 0.37 s  proposed (C1)
 ```
 
 (r17-ws-d)=
@@ -789,11 +798,11 @@ Each workstream merges only when its gates pass on the running example.
 |---|---|---|
 | A1 Transition cell | A | `Cell("L2", 4, source="L1").label == "L1→L2/r4/c0"`, a cell without a source keeps today's label, and `LEVEL_NAMES["L2"] == "retrieved_obs"` |
 | A2 Oracle strength | A | stage 6's rows for rungs 4 and 5 carry `physics_derived`; with a `heuristic` oracle the same run emits one `UserWarning` and reproduces the same scores |
-| A3 Emulator rung | A | stage 6's rung-3 estimator, with no `fit` workaround, scores 2.13 σ (degree 4) and 0.03 σ (degree 6) against the simulator |
+| A3 Emulator rung | A | stage 6's rung-3 estimator, with no `fit` workaround, scores 2.01 σ (degree 4) and 0.03 σ (degree 6) against the simulator |
 | B1 Lineage hash | B | storing the stage-6 emulator with another parent gives another hash, and with the same parent and other tags the same hash |
 | B2 Dependents | B | after stage 6's improvement, `descendants(h3)` is exactly the old rung-4 artifact, and the rung-5 artifact appears in no descendant set of an emulator |
-| C1 Weighted W₁ | C | with weights, `wasserstein_1` reproduces stage 4's exact W₁ / s (0.38 for degree 4, 0.004 for degree 6) to 10⁻³, and is 0 for a posterior against itself |
-| C2 Two references | C | one run reports rung 5's width ratio against the oracle (1.14) and its 𝔼[z²] against the truth (0.98) on the same row |
+| C1 Weighted W₁ | C | with weights, `wasserstein_1` reproduces stage 4's exact W₁ / s (0.37 for degree 4, 0.004 for degree 6) to 10⁻³, and is 0 for a posterior against itself |
+| C2 Two references | C | one run reports rung 5's width ratio against the oracle (1.16) and its 𝔼[z²] against the truth (0.90) on the same row |
 | D1 Docs | D | the overview's oracle sentence matches `DEFAULT_STAGED`, and `myst build --html` reports no warnings |
 | D2 Links | D | Reports 11, 14 and 15 each link to this page (its running example, stage 6 and workstream A), and every link resolves in `myst build` |
 :::

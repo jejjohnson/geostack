@@ -77,6 +77,9 @@ from xrtoolz.metrics import wasserstein_1
 # %%
 K = np.array([0.002, 0.004, 0.006, 0.008, 0.010])
 SIG, A_MAX, N_TEST, N_TRAIN, SEED = 1e-3, 300.0, 500, 2_000, 0
+# The test scenes use their own seeds, outside the SimulationDataset's 0 … 1,999
+# and the amortized head's stream, so no training draw is a test draw
+TEST_SEED = 10_000
 G_ORACLE = 30_001  # quadrature nodes on [0, A_MAX]: a step of 0.01
 
 
@@ -96,9 +99,9 @@ class UniformPrior:  # the ladder's Prior protocol                         user
         return np.where((theta >= 0) & (theta <= A_MAX), -np.log(A_MAX), -np.inf)
 
 
-rng = np.random.default_rng(SEED)
-alpha_test = UniformPrior().sample(N_TEST, key=SEED)
-y_test = f(alpha_test) + SIG * rng.standard_normal((N_TEST, K.size))
+alpha_test = UniformPrior().sample(N_TEST, key=TEST_SEED)
+noise = np.random.default_rng(TEST_SEED + 1).standard_normal((N_TEST, K.size))
+y_test = f(alpha_test) + SIG * noise
 
 
 @dataclass
@@ -147,7 +150,7 @@ assert stage1["cell"] == "L2/r4/c0"  # a cell names one level, not a transition
 #
 # With a flat prior on [0, 300], p(α | y) ∝ 𝟙[0 ≤ α ≤ 300] ∏_b 𝒩(y_b; f_b(α), σ²).
 # The oracle evaluates it on G = 30,001 nodes (exact to quadrature, a step of
-# 0.01 against a smallest posterior standard deviation of 0.062). Below
+# 0.01 against a smallest posterior standard deviation of 0.068). Below
 # it on the complexity axis, a Gauss–Newton fit with its Laplace width
 # σ / ‖J(α̂)‖, run as a `pipekit_cycle.Recurrence` (Report 10, stage 5).
 
@@ -258,17 +261,19 @@ stage2 = {
 {k: round(v, 3) for k, v in stage2.items()}
 
 # %%
-assert round(stage2["oracle_rmse"], 3) == 0.270
-assert round(stage2["cr_rms"], 3) == 0.269  # the oracle sits on the bound
+assert round(stage2["oracle_rmse"], 3) == 0.236
+# σ / ‖J(α)‖ is a local Fisher scale, not a bound on a prior-averaged posterior
+# mean: the prior and the boundary at α = 0 let the oracle go below it
+assert round(stage2["cr_rms"], 3) == 0.247 and stage2["oracle_rmse"] < stage2["cr_rms"]
 # 95 % coverage on n = 500: standard error √(0.95 · 0.05 / 500) = 0.0097, so
-# 0.960 is 1.0 standard error above nominal
-assert round(stage2["oracle_cov95"], 3) == 0.960
+# 0.962 is 1.2 standard errors above nominal
+assert round(stage2["oracle_cov95"], 3) == 0.962
 assert abs(stage2["oracle_cov95"] - 0.95) < 3 * np.sqrt(0.95 * 0.05 / N_TEST)
-assert round(stage2["laplace_rmse"], 3) == 0.270
-assert round(stage2["laplace_cov95"], 3) == 0.958
-assert round(stage2["sd_min"], 3) == 0.062  # six nodes per smallest width
+assert round(stage2["laplace_rmse"], 3) == 0.237
+assert round(stage2["laplace_cov95"], 3) == 0.960
+assert round(stage2["sd_min"], 3) == 0.068  # six nodes per smallest width
 assert stage2["sd_min"] > 5 * (GRID[1] - GRID[0])  # the grid resolves every posterior
-assert stage2["laplace_vs_oracle_mean"] < 0.1  # Laplace ≈ oracle: < 0.1 σ apart
+assert round(stage2["laplace_vs_oracle_mean"], 2) == 0.25  # at worst a quarter width
 
 # %% [markdown]
 # ## Stage 3 · Two emulators of the forward model
@@ -314,6 +319,7 @@ n_train, {d: {k: round(v, 4) for k, v in s.items()} for d, s in stage3.items()}
 
 # %%
 assert n_train == 1_600  # the train split: 80 % of 2,000 seeds
+assert np.intersect1d(a_tr, alpha_test).size == 0  # held out from the emulator
 assert round(stage3[4]["dense_max_over_sigma"], 1) == 2.2
 assert round(stage3[6]["dense_max_over_sigma"], 2) == 0.03
 assert round(stage3[4]["rel_max"], 3) == 0.032  # 3.2 % of the transmittance, worst case
@@ -354,16 +360,17 @@ stage4_truth = {d: coverage95(fast[d], alpha_test) for d in coef}
 
 # %%
 assert {k: round(v, 2) for k, v in stage4[4].items()} == {
-    "shift_rms": 0.45, "shift_max": 1.89, "sd_ratio": 1.0, "w1_over_sd": 0.38}
+    "shift_rms": 0.44, "shift_max": 1.94, "sd_ratio": 1.0, "w1_over_sd": 0.37}
 assert round(stage4[6]["shift_max"], 2) == 0.02
 # xrtoolz's sample-based W₁ agrees with the exact one to its sampling floor:
 # two 2,000-draw samples of the same posterior are already 0.04 σ apart
-assert round(w1_xrtoolz["emulator_4"], 2) == 0.38
+assert round(w1_xrtoolz["emulator_4"], 2) == 0.37
 assert round(w1_xrtoolz["oracle_vs_itself"], 2) == 0.04
 assert stage4[6]["w1_over_sd"] < w1_xrtoolz["oracle_vs_itself"]  # below the floor
 assert round(stage4[6]["w1_over_sd"], 3) == 0.004
-assert round(stage4_truth[4], 3) == 0.928  # the shift costs coverage against θ
-assert round(stage4_truth[6], 3) == 0.960  # the degree-6 emulator is the oracle
+# against θ the shift barely shows: 1.4 points of coverage, 1.4 standard errors
+assert round(stage4_truth[4], 3) == 0.948
+assert round(stage4_truth[6], 3) == 0.962  # the degree-6 emulator is the oracle
 
 # %% [markdown]
 # ## Stage 5 · An amortized Gaussian head
@@ -407,14 +414,17 @@ stage5["n_low"] = int(low.sum())
 {k: round(v, 3) for k, v in stage5.items()}
 
 # %%
-assert round(stage5["rmse"], 3) == 0.281
-# against the truth it is calibrated: 𝔼[z²] = 1 and 95 % coverage (SE 0.0097)
-assert round(stage5["ez2"], 2) == 0.98 and round(stage5["cov95"], 3) == 0.960
-# against the oracle it is not: 14 % too wide, 55 % for α < 50, and its mean
-# is 1.2 oracle standard deviations off there (3.7 at worst)
-assert round(stage5["sd_ratio"], 2) == 1.14 and round(stage5["sd_ratio_low"], 2) == 1.55
-assert round(stage5["shift_rms_low"], 2) == 1.24 and stage5["n_low"] == 72
-assert round(stage5["shift_max"], 1) == 3.7 and round(stage5["w1_over_sd"], 2) == 0.43
+assert np.intersect1d(a_am, alpha_test).size == 0  # held out from the head
+assert round(stage5["rmse"], 3) == 0.255
+# against the truth it passes: 𝔼[z²] = 0.90 is 1.6 standard errors below 1
+# (√(2 / 500) = 0.063 for Gaussian z) and coverage 0.954 (SE 0.0097)
+assert round(stage5["ez2"], 2) == 0.90 and round(stage5["cov95"], 3) == 0.954
+assert abs(stage5["ez2"] - 1) < 2 * np.sqrt(2 / N_TEST)
+# against the oracle it does not: 16 % too wide, 53 % for α < 50, and its mean
+# is 1.0 oracle standard deviation off there (3.6 at worst)
+assert round(stage5["sd_ratio"], 2) == 1.16 and round(stage5["sd_ratio_low"], 2) == 1.53
+assert round(stage5["shift_rms_low"], 2) == 1.04 and stage5["n_low"] == 83
+assert round(stage5["shift_max"], 1) == 3.6 and round(stage5["w1_over_sd"], 2) == 0.38
 
 # %% [markdown]
 # ## Stage 6 · The shipped runner, and the lineage
@@ -482,11 +492,11 @@ cells
 
 # %%
 assert cells == {
-    "L2/r2/c0": ("known_theta", {"s.max_err": 1.23, "s.rmse": 0.27}),
-    "L2/r2/c1": ("known_theta", {"s.max_err": 1.23, "s.rmse": 0.27}),
-    "L2/r3/c0": ("simulator_output", {"s.max_err": 2.13, "s.rmse": 0.294}),
-    "L2/r4/c0": ("oracle_posterior", {"s.shift_max": 1.893, "s.sd_ratio": 1.0}),
-    "L2/r5/c0": ("oracle_posterior", {"s.shift_max": 3.702, "s.sd_ratio": 1.14}),
+    "L2/r2/c0": ("known_theta", {"s.max_err": 1.12, "s.rmse": 0.237}),
+    "L2/r2/c1": ("known_theta", {"s.max_err": 1.12, "s.rmse": 0.236}),
+    "L2/r3/c0": ("simulator_output", {"s.max_err": 2.01, "s.rmse": 0.277}),
+    "L2/r4/c0": ("oracle_posterior", {"s.shift_max": 1.941, "s.sd_ratio": 1.001}),
+    "L2/r5/c0": ("oracle_posterior", {"s.shift_max": 3.631, "s.sd_ratio": 1.157}),
 }
 
 # %% [markdown]
@@ -560,7 +570,7 @@ stage6
 # %%
 assert cells == run(4)  # rerunning the runner is deterministic
 v2_cells = run(6)
-assert v2_cells["L2/r3/c0"] == ("simulator_output", {"s.max_err": 0.03, "s.rmse": 0.004})
+assert v2_cells["L2/r3/c0"] == ("simulator_output", {"s.max_err": 0.03, "s.rmse": 0.003})
 assert v2_cells["L2/r4/c0"] == ("oracle_posterior", {"s.shift_max": 0.022,
                                                      "s.sd_ratio": 1.0})
 assert v2_cells["L2/r5/c0"] == cells["L2/r5/c0"]  # rung 5 did not use the emulator
