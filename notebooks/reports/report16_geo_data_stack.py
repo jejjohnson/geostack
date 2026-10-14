@@ -37,6 +37,7 @@ from __future__ import annotations
 import importlib
 import importlib.metadata as md
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -260,23 +261,21 @@ ime_bias_true_bg = est_true_bg["ime_kg"] / ime_true_mask - 1.0
 # %%
 # (a) Two Signature classes
 sizes = {"time": 24, "latitude": 5, "longitude": 5}
-if STATE == "today":
-    sig_x = xrcore.Signature(sizes, dtype="float64")
-else:  # workstream A: one class, built from a mapping with from_sizes
-    sig_x = xrcore.Signature.from_sizes(sizes, dtype="float64")
+# today's call; after workstream A the merged class still takes a mapping
+sig_x = xrcore.Signature(sizes, dtype="float64")
 sig_p = pk.Signature(dims=(("time", 24), ("latitude", 5), ("longitude", 5)),
                      dtype="float64")
 wind_mean = Sequential([WindSpeed(u="u10", v="v10", name="ws10"), MeanScalar(axis=0)])
 same_class = xrcore.Signature is pk.Signature
+# the composed pipeline's output signature, from pipekit's signature API;
+# summary() is called only to check that the table renders
 try:
-    summary_x = wind_mean.summary(sig_x)
-    sig_error = ""
+    final_x = repr(pk.compute_output_signature(wind_mean, sig_x))
+    summary_x, sig_error = wind_mean.summary(sig_x), ""
 except ValueError as e:
-    summary_x, sig_error = "", str(e)
+    final_x, summary_x, sig_error = "", "", str(e)
+final_p = repr(pk.compute_output_signature(wind_mean, sig_p))
 summary_p = wind_mean.summary(sig_p)
-# the composed pipeline's last output signature: the summary table's last cell
-final_p = summary_p.rstrip().splitlines()[-1].split("  ")[-1].strip()
-final_x = summary_x.rstrip().splitlines()[-1].split("  ")[-1].strip() if summary_x else ""
 
 # (b) The training dataset's stencil import
 try:
@@ -332,8 +331,35 @@ if STATE == "target":
 xr_base = [r for r in md.requires("xrtoolz") if "extra ==" not in r]
 xr_reqs = sorted(r for r in xr_base if "reader" in r or "pipekit" in r)
 gz_reqs = sorted(r for r in md.requires("geotoolz") if r.startswith("pipekit"))
+
+# (f) Which of the 18 distributions still require `pipekit` by name. After F1
+# that name is another project on PyPI, so any such requirement would install
+# it beside pipekit-core without a resolver conflict.
+STACK = ["pipekit-core" if STATE == "target" else "pipekit", "pipekit-array",
+         "pipekit-cycle", "pipekit-evaluate", "pipekit-experiment", "pipekit-jax",
+         "pipekit-train", "xrtoolz", "xrtoolz-core", "xrtoolz-einx", "xrtoolz-grad",
+         "xrtoolz-reader", "xrtoolz-sklearn", "geotoolz", "geotoolz-catalog",
+         "geotoolz-cloud", "geotoolz-patcher", "geotoolz-products"]
+
+
+def req_name(r: str) -> str:
+    """A requirement's distribution name, normalised as in PEP 503."""
+    return re.sub(r"[-_.]+", "-", re.match(r"[A-Za-z0-9._-]+", r).group(0)).lower()
+
+
+missing, stale, on_core = [], [], []
+for dist in STACK:
+    try:
+        names = {req_name(r) for r in md.requires(dist) or []}
+    except md.PackageNotFoundError:
+        missing.append(dist)
+        continue
+    if "pipekit" in names:
+        stale.append(dist)
+    if "pipekit-core" in names:
+        on_core.append(dist)
 (same_class, sig_error, final_p, time_import, xwd_error[:60], stencil_loads,
- n_origins, xr_reqs, gz_reqs)
+ n_origins, xr_reqs, gz_reqs, missing, stale)
 
 # %%
 assert (round(sigma_theory, 1), round(float(alpha_true.max()), 1)) == (103.9, 1500.0)
@@ -353,6 +379,7 @@ assert round(ime_bias_true_bg, 3) == 0.017  # the true μ, Σ on the same mask
 # Stages 1 to 5 do not change with the realignment; stage 6's seams do.
 # the composed pipeline ends on the reduced grid, whichever class built the input
 assert final_p == "Signature((latitude=5, longitude=5) float64)" and n_origins == 18
+assert summary_p.rstrip().endswith(final_p)  # the table renders the same signature
 if STATE == "today":
     assert not same_class and sig_error == "too many values to unpack (expected 2)"
     assert time_import == "No module named 'geopatcher.time'"
@@ -360,11 +387,16 @@ if STATE == "today":
     assert stencil_loads == "['georeader', 'rasterio', 'shapely']"
     assert xr_reqs == ["pipekit>=0.0.1", "xrtoolz-reader>=0.0.2"]
     assert gz_reqs == ["pipekit>=0.0.2"]
+    # every installed stack distribution that depends on pipekit names it so
+    assert {"xrtoolz", "xrtoolz-core", "geotoolz"} <= set(stale) and on_core == []
 else:  # gate F5: the realigned stack
     assert same_class and sig_error == "" and final_x == final_p  # A1
+    assert sig_x == xrcore.Signature.from_sizes(sizes, dtype="float64")  # A1
     assert xwd_error == ""                                      # D1, D2
     assert n_windows == n_origins == 18                         # F5: it runs
     assert win_shapes == ((2, 6, 5, 5), (2, 1, 5, 5))  # (u₁₀, v₁₀) × window
     assert stencil_loads == "[]"                                # D3
     assert not any("reader" in r for r in xr_reqs)              # C1
     assert gz_reqs and all(r.startswith("pipekit-core") for r in gz_reqs)  # F1
+    assert missing == [] and stale == []  # F1, F5: all 18, none on the old name
+    assert {"xrtoolz", "xrtoolz-core", "geotoolz", "geotoolz-patcher"} <= set(on_core)

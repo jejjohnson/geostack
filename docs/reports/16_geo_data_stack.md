@@ -531,15 +531,17 @@ packages import from pipekit are public.
 | Symbol | Destination | Reason |
 |---|---|---|
 | `Signature` (ordered `(name, size)` pairs) | stays in `pipekit.signature` | positional operators (pipekit-array) need axis order |
-| `Signature.from_sizes(mapping, dtype)`, `.sizes` (read-only mapping) | `pipekit.signature`, new | xrtoolz builds and compares signatures by name; a `dict`'s order is the axis order |
+| `Signature(dims)` accepting a mapping as well as pairs, `Signature.from_sizes(mapping, dtype)`, `.sizes` (read-only mapping) | `pipekit.signature`, new | xrtoolz builds and compares signatures by name; a `dict`'s order is the axis order, so `xrcore.Signature({"time": 24, …})` keeps its call semantics, not only its import |
 | dtype canonicalisation without NumPy: a table of the accepted spellings, each mapped to the name `np.dtype(x).name` gives (`"f8"`, `"<f8"`, `"float64"`, `float` → `"float64"`; `"f4"`, `"<f4"` → `"float32"`; the integer, unsigned, bool and complex codes likewise, with any byte-order prefix); a dtype object gives its `.name` and a scalar type its `__name__`, both then looked up in the same table; anything else raises `TypeError` naming the input | `pipekit.signature` | xrcore's one behaviour pipekit lacks; pipekit-core stays dependency-free, and gate A1 checks the table against `np.dtype(x).name` for every entry, so equal dtypes give equal signatures |
 | `xrcore.Signature` | re-export of `pipekit.Signature` | `from xrcore import Signature` keeps working |
 | `nested_config`, `callable_name` | `pipekit.config` | used by geotoolz and geopatcher |
 | `require_operator` | `pipekit` | used by geotoolz `augment` |
 :::
 
-1. **Widen pipekit's class.** Add `from_sizes`, `sizes` and dtype
-   canonicalisation; keep `dims` as ordered pairs.
+1. **Widen pipekit's class.** Let the constructor take a mapping as well as
+   ordered pairs (a mapping is converted to pairs in insertion order), and add
+   `from_sizes`, `sizes` and dtype canonicalisation; `dims` stays ordered
+   pairs. Existing `xrcore.Signature({...})` calls keep working unchanged.
 2. **Re-export it from xrcore.** Replace `xrcore/signature.py` with the
    re-export, construct with `Signature.from_sizes(ds.sizes)`, and compare
    with `a.sizes == b.sizes` where order should not matter.
@@ -556,9 +558,10 @@ sig = xrcore.Signature({"time": 24, "latitude": 5, "longitude": 5})   # today
 wind_mean.summary(sig)                       # → ValueError               today
 # After:
 # {d: n} in insertion order ↦ ((d₁, n₁), …, (d_r, n_r))
-sig = pipekit.Signature.from_sizes({"time": 24, "latitude": 5,
-                                    "longitude": 5})               # proposed (A)
+sig = xrcore.Signature({"time": 24, "latitude": 5,
+                        "longitude": 5})     # the same call     proposed (A)
 xrcore.Signature is pipekit.Signature        # → True               proposed (A)
+sig == pipekit.Signature.from_sizes(sig.sizes)   # → True           proposed (A)
 wind_mean.summary(sig)                       # last: (latitude=5, longitude=5)  proposed (A)
 ```
 
@@ -581,7 +584,7 @@ backend is wrapped once.
 | `pipekit_train.adapters.equinox.EquinoxModelOp` | deprecated alias of the above; the adapter returns `JaxModelOp` | [Report 11](11_pipekit_train.md#r11-ws-b)'s B1; it exists only so pipekit-train avoids pipekit-jax |
 | pipekit-cycle in pipekit-jax's base | `pipekit-jax[diffrax]` | only `diffrax_model.py` needs it, for `RecursiveCheckpointAdjoint`; this removes the reason for the twin |
 | `xrtoolz.inference.ModelOp` | stays: xarray marshalling for any callable | `method=None` means "call the model" |
-| `xrtoolz.inference.JaxModelOp(model, *, jit=True, **kw)` | deprecated wrapper: warns, wraps `model` in `eqx.filter_jit` when `jit` is true (today's default), and builds `ModelOp(model, method=None, **kw)` | answers [Report 3](03_sister_libraries.md#r3-open-questions)'s question 4; existing calls with `jit=` keep working for the deprecation period |
+| `xrtoolz.inference.JaxModelOp(model, *, jit=True, **kw)` | deprecated wrapper: warns, wraps `model` in `jax.jit`, imported lazily, when `jit` is true (today's default and today's implementation), and builds `ModelOp(model, method=None, **kw)` | answers [Report 3](03_sister_libraries.md#r3-open-questions)'s question 4; existing calls with `jit=` keep working for the deprecation period, and the wrapper adds no dependency: xrtoolz declares neither JAX nor Equinox, and Equinox stays out |
 | `xrtoolz.inference.SklearnModelOp` | deprecated alias of `xrsklearn.SklearnOp` | one xarray scikit-learn bridge |
 | `geotoolz.learn.ModelOp`, `SklearnOp` | stay | GeoTensor marshalling |
 :::
@@ -665,7 +668,7 @@ define it, in geotoolz-patcher, and nothing in pipekit imports a geo package.
 |---|---|---|
 | `from geopatcher.time import …` | `from geopatcher.temporal.stencils import …` | D1: the module was renamed in #431 |
 | `XarrayWindowDataset`, `_xreader` | `geopatcher.integrations.train`, behind `geotoolz-patcher[train]` (pipekit-train, xarray, zarr, Grain) | D2: removes the only pipekit → geo edge |
-| `from pipekit_train import XarrayWindowDataset` | removed, with no shim | it raises `ImportError` today (stage 6), so no script depends on it, and a re-export would bring back the pipekit → geo edge D2 removes |
+| `from pipekit_train import XarrayWindowDataset` | removed, with no shim; the notebooks of Reports 11 and 15, which import it through a `geopatcher.time` alias, already try `geopatcher.integrations.train` first | it raises `ImportError` without that alias (stage 6), and a re-export would bring back the pipekit → geo edge D2 removes |
 | the raster fields, reprojection, matched fields and the `RasterDomain` alias | imported on first use from the package root | D3: a stencil import should load NumPy only |
 | `xrpatcher` in xrtoolz's design docs | geopatcher's `XarrayField`, `GridSampler`, `MergePatches` | D4: one patcher for both lanes |
 :::
@@ -682,7 +685,10 @@ It ships first, because the dataset does not import at all today.
 its Grain path, so it needs pipekit-train; the stencils need geopatcher. The
 package that knows both is the one with the integration modules already:
 geopatcher has `integrations/pipekit.py` for operator graphs, and gains
-`integrations/train.py`.
+`integrations/train.py`. Two callers in this repository use the old path: the
+notebooks of Reports 11 and 15. Both import from `geopatcher.integrations.train`
+when it exists and fall back to pipekit-train otherwise, so they keep running
+on either side of D2.
 
 ### D3 · A cheap stencil import
 
@@ -803,7 +809,20 @@ renames every import in three repositories for no functional gain.
 Copy geotoolz's `tests/test_packaging.py`, which fails when a module-level
 import is missing from `[project.dependencies]`, and its base-install CI job
 into every xrtoolz and pipekit package, and the test into geotoolz-cloud and
-geotoolz-products.
+geotoolz-products. That test catches undeclared module-level imports only, so
+two more checks cover the faults F2 fixes:
+
+1. **A minimum-versions job** installs each extra at its floors
+   (`uv pip install --resolution lowest-direct`) and runs a test that calls
+   the code path the extra exists for. For pipekit-train's `cache` extra that
+   is `CachedDataset` with an fsspec URL as its cache directory
+   (`memory://…`, so no cloud is needed), which opens the store through
+   `zarr.storage.FsspecStore` (`dataset.py:478`) and fails on today's
+   `zarr>=2.18` floor; a local path never reaches that line.
+2. **An install-hint test** collects every `pip install <dist>[<extra>]`
+   string in a package's source and checks that `<extra>` is declared in its
+   `[project.optional-dependencies]`, which fails on today's
+   `xrtoolz[oceanography]` hint.
 
 ### F4 · Release in tier order
 
@@ -827,7 +846,9 @@ notebook with `REPORT16_STATE=target`. In that mode the notebook checks the seam
 stage 6 against the realigned stack (one `Signature`, the window dataset
 importing from geopatcher and building 18 windows of the right shapes from
 stage 4's cube, a NumPy-only stencil import, no reader in
-xrtoolz's base install); by default it checks them as they stand today, so
+xrtoolz's base install, and none of the 18 distributions still requiring
+`pipekit` by name, which after F1 is another project that pip would install
+beside `pipekit-core` without a conflict); by default it checks them as they stand today, so
 the page's stage 6 stays reproducible at the pinned revisions.
 
 (r16-gates)=
@@ -841,11 +862,11 @@ code passes today and must keep passing.
 
 | Gate | Workstream | Passes when |
 |---|---|---|
-| A1 One Signature | A | `xrcore.Signature is pipekit.Signature`, and stage 6a's `summary` with a signature built from `{"time": 24, "latitude": 5, "longitude": 5}` ends in `(latitude=5, longitude=5)` (today `ValueError`); and for every spelling in the dtype table (`"f8"`, `"<f4"`, `float`, `"i4"`, `"?"`, …), `Signature.from_sizes(sizes, dtype=x).dtype == np.dtype(x).name`, with NumPy used only by the test |
+| A1 One Signature | A | `xrcore.Signature is pipekit.Signature`, and stage 6a's `summary` with a signature built by today's call, `xrcore.Signature({"time": 24, "latitude": 5, "longitude": 5})`, ends in `(latitude=5, longitude=5)` (today `ValueError`); and for every spelling in the dtype table (`"f8"`, `"<f4"`, `float`, `"i4"`, `"?"`, …), `Signature.from_sizes(sizes, dtype=x).dtype == np.dtype(x).name`, with NumPy used only by the test |
 | A2 Signature round-trip | A | every existing pipekit, pipekit-array and xrtoolz signature test passes against the merged class, with 0 failures |
 | A3 No private imports | A | `grep -r "pipekit\._" ` over geotoolz returns 0 lines (today 3) |
 | B1 One Equinox wrapper | B | pipekit-train's tests pass with the adapter returning `JaxModelOp`, and `pip install pipekit-jax` without extras installs no pipekit-cycle |
-| B2 Alias parity | B | each deprecated alias returns outputs equal to its replacement to 0 on xrtoolz's inference tests and emits exactly one `DeprecationWarning`; `JaxModelOp(net, feature_dim="feature", jit=True)` and `jit=False` both construct and agree to 0 |
+| B2 Alias parity | B | each deprecated alias returns outputs equal to its replacement to 0 on xrtoolz's inference tests and emits exactly one `DeprecationWarning`; `JaxModelOp(net, feature_dim="feature", jit=True)` and `jit=False` both construct and agree to 0, in an environment with JAX and without Equinox |
 | C1 Reader-free xrtoolz | C | `importlib.metadata.requires("xrtoolz")` lists no `xrtoolz-reader` outside `[reader]` (today it does), and `import xrtoolz` succeeds without it |
 | C2 Vocabulary shims | C | for every name the move table sends to `xrcore.types` (`BBox`, `TimeRange`, `DepthRange`, `PressureLevels`, `Variable`, `REGISTRY`, `resolve`, `register`, `apply_cf_attrs`, `validate_dataset`, `validate_variable`, `ValidationReport`, `subset_bbox`, `subset_time`, `subset_where`), `getattr(xrreader.types, n) is getattr(xrcore.types, n)`, so old imports and `isinstance` checks keep working |
 | D1 Window import | D | `XarrayWindowDataset` imports with the pinned geopatcher and no shim (today `ImportError`); Report 11's stage 8 pairs satisfy $y = M x_{-1}$ to 1e-5 |
@@ -854,7 +875,7 @@ code passes today and must keep passing.
 | E1 Carrier rule | E | the capability index lists no mission name under both geoproducts and xrreader except EMIT L2B, whose GeoTIFF and NetCDF containers are different carriers by design (stage table above); and those two EMIT readers agree on a fixture's enhancement to 1e-6 |
 | F1 Names | F | `pipekit-core`, `geotoolz-cloud`, `geotoolz-products`, `geotoolz-catalog` and `geotoolz-patcher` resolve to this stack on PyPI |
 | F2 One environment | F | geotoolz and xrtoolz install editable into one environment without `--no-sources` (today a URL conflict) |
-| F3 Packaging tests | F | xrtoolz and pipekit run `test_packaging.py` and a base-install job, which fail on today's zarr floor and `[oceanography]` hint |
+| F3 Packaging tests | F | xrtoolz and pipekit run `test_packaging.py` and a base-install job; the minimum-versions job fails on today's `zarr>=2.18` floor at `FsspecStore` and the install-hint test fails on today's `[oceanography]` hint, and both pass after F2 |
 | F4 Clean install | F | all 18 distributions install from PyPI into one fresh environment with no git URLs and no resolver conflict |
 | F5 Stack check | F | the scheduled job passes on the latest release of every distribution, with the notebook's `REPORT16_STATE=target` seam checks |
 | K1 Noise floor (existing) | — | stage 2: the background standard deviation of $\hat{\alpha}$ is within 5 % of $\sigma_\alpha = (t^\top \Sigma^{-1} t)^{-1/2}$. Passes today: 107.2 against 103.9, +3.2 % |
