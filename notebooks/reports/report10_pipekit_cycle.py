@@ -260,3 +260,33 @@ assert seq_error == ("step_op must be a StatefulOperator or a ForwardModel, "
                      "got Sequential.")
 assert seen == [0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
 assert round(restart_err, 1) == 15.4 and s2.cycle_count == 10
+
+
+# %% [markdown]
+# ## The readiness figure
+#
+# The audit's readiness figure counts the markers on this page's own sketches
+# (`today`, `proposed (…)`, `user`); `docs/images/reports/make_figures.py`
+# draws it. These are the counts its caption quotes.
+
+# %%
+import importlib.util
+import sys
+from collections import Counter
+from pathlib import Path
+
+root = Path.cwd()
+while not (root / "myst.yml").exists() and root != root.parent:
+    root = root.parent
+spec = importlib.util.spec_from_file_location(
+    "report_figures", root / "docs/images/reports/make_figures.py")
+rf = importlib.util.module_from_spec(spec)
+sys.modules["report_figures"] = rf
+spec.loader.exec_module(rf)
+calls = rf.marked_calls(next((root / "docs/reports").glob("10_*.md")))
+ready = Counter(c.status for c in calls)
+ready
+
+# %%
+assert len(calls) == 27
+assert ready == Counter({'here': 2, 'today': 20, 'user': 5})

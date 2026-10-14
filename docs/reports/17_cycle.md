@@ -616,6 +616,16 @@ runs is a comparison of two reports' rows.
 Four of the eight symbol groups need action. Read on 14 October 2026 at the
 revisions in the report's header, on `main` of each submodule.
 
+:::{figure} ../images/reports/r17_readiness.svg
+:label: fig-r17-readiness
+:alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 40 calls, 21 run today, 6 are proposed by this report's workstreams and 13 are code the reader writes.
+
+What the page's sketches call, read from their markers: one square per stack
+call. Of 40, 21 run today, 6 are proposed by this report's workstreams and
+13 are code the reader writes. A row without squares has no marked call;
+labels on the proposed squares name the workstream item.
+:::
+
 :::{table} The cycle's surface, by symbol group.
 :label: tbl-r17-audit
 

@@ -307,3 +307,33 @@ assert {k: round(p_first[k] - lin_native[k], 3) for k in "ABC"} == {
 hybrid_gap = max(abs(p_hybrid[k] - p_native[k]) for k in "ABC")
 assert f"{hybrid_gap:.1e}" == "1.2e-11"
 assert (round(per_model, 4), round(per_member, 4)) == (278.2654, 278.0159)
+
+
+# %% [markdown]
+# ## The readiness figure
+#
+# The audit's readiness figure counts the markers on this page's own sketches
+# (`today`, `proposed (…)`, `user`); `docs/images/reports/make_figures.py`
+# draws it. These are the counts its caption quotes.
+
+# %%
+import importlib.util
+import sys
+from collections import Counter
+from pathlib import Path
+
+root = Path.cwd()
+while not (root / "myst.yml").exists() and root != root.parent:
+    root = root.parent
+spec = importlib.util.spec_from_file_location(
+    "report_figures", root / "docs/images/reports/make_figures.py")
+rf = importlib.util.module_from_spec(spec)
+sys.modules["report_figures"] = rf
+spec.loader.exec_module(rf)
+calls = rf.marked_calls(next((root / "docs/reports").glob("13_*.md")))
+ready = Counter(c.status for c in calls)
+ready
+
+# %%
+assert len(calls) == 70
+assert ready == Counter({'here': 12, 'today': 24, 'user': 34})

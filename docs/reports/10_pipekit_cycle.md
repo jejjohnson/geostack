@@ -506,6 +506,16 @@ cycle. The `Sequential` case is workstream A.
 Two of the scoping report's pieces need action; the rest ship and work. The
 audit read `references/pipekit` at `ef3c17f` on 13 October 2026.
 
+:::{figure} ../images/reports/r10_readiness.svg
+:label: fig-r10-readiness
+:alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 27 calls, 20 run today, 2 are proposed by this report's workstreams and 5 are code the reader writes.
+
+What the page's sketches call, read from their markers: one square per stack
+call. Of 27, 20 run today, 2 are proposed by this report's workstreams and 5
+are code the reader writes. A row without squares has no marked call; labels
+on the proposed squares name the workstream item.
+:::
+
 :::{table} pipekit-cycle 0.0.2, piece by piece.
 :label: tbl-r10-audit
 

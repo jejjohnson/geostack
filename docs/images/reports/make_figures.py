@@ -8,7 +8,9 @@ the overview's figure script, so every figure in the docs shares one style.
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -1909,6 +1911,157 @@ def r17_roadmap() -> Svg:
     return f
 
 
+# -- readiness: what each report's sketches call, by marker -----------------
+#
+# Every stack call in a report's sketches ends with a marker: ``today`` (it
+# runs on the pinned code), ``proposed (A2)`` (a workstream of this report, or
+# ``proposed (R16 D2)`` for another report's) or ``user`` (code the reader
+# writes, which no stack piece provides). The readiness figure counts them per
+# stage and per workstream, straight from the page, so it cannot drift.
+
+_MARK = re.compile(r"\b(today|user|proposed)(?: \(([^)]*)\))?\s*$")
+
+
+@dataclass(frozen=True)
+class Call:
+    """One marked line of a sketch: where it sits and what its marker says."""
+
+    row: str  # "Stage 1 · …" or "Workstream A · …", parentheses dropped
+    status: str  # "today", "here", "elsewhere" or "user"
+    ref: str  # the workstream id ("A2"), or "" when there is none
+    line: int
+
+
+def marked_calls(md: Path) -> list[Call]:
+    """Every marked line in the fenced code blocks of a report page."""
+    out: list[Call] = []
+    sec = sub = ""
+    fence = False
+    for i, line in enumerate(md.read_text(encoding="utf-8").splitlines(), 1):
+        if line.startswith("```"):
+            fence = not fence
+            continue
+        if not fence:
+            if line.startswith("## "):
+                sec, sub = line[3:].strip(), ""
+            elif line.startswith("### "):
+                sub = line[4:].strip()
+            continue
+        m = _MARK.search(line)
+        if "#" not in line or m is None:
+            continue
+        head = sub if sub.startswith("Stage") else sec
+        if not head.startswith(("Stage", "Workstream")):
+            continue
+        kind, ref = m.group(1), (m.group(2) or "").split(",")[0].strip()
+        if kind == "proposed":
+            kind = "elsewhere" if ref.startswith("R") else "here"
+            ref = ref.split()[-1] if ref else ""
+        out.append(Call(re.sub(r"\s*\(.*\)\s*$", "", head), kind, ref, i))
+    return out
+
+
+READY = ["today", "here", "elsewhere", "user"]
+READY_LABEL = {
+    "today": "runs today",
+    "here": "proposed here",
+    "elsewhere": "proposed in another report",
+    "user": "written by the user",
+}
+READY_HUE = {
+    "today": (STATE[0], STATE[0]),
+    "here": (ENG[0], ENG[0]),
+    "elsewhere": (ENG[0], ENG[1]),
+    "user": (ML[0], ML[1]),
+}
+
+
+def readiness(n: int) -> Svg:
+    """Report ``n``'s readiness: one row per stage or workstream, one square
+    per marked call in its sketch, coloured by marker."""
+    md = next((OUT.parent.parent / "reports").glob(f"{n}_*.md"))
+    calls = marked_calls(md)
+    rows: dict[str, list[Call]] = {
+        re.sub(r"\s*\(.*\)\s*$", "", h.lstrip("# ").strip()): []
+        for h in md.read_text(encoding="utf-8").splitlines()
+        if h.startswith(("### Stage", "## Workstream"))
+    }  # every stage and workstream, sketched or not
+    for c in calls:
+        rows[c.row].append(c)
+    stages = [r for r in rows if r.startswith("Stage")]
+    works = [r for r in rows if r.startswith("Workstream")]
+    cell, gapx, rh = 17, 3, 24
+    names = [r.removeprefix("Workstream ") for r in rows]
+    x0 = min(
+        48 + 6.4 * max(map(len, names)),
+        760 - 24 - max(len(v) for v in rows.values()) * (cell + gapx),
+    )
+    room = int((x0 - 40) / 6.4)  # characters of a 12 px label that fit
+    used = [s for s in READY if any(c.status == s for c in calls)]
+    tally = {s: sum(c.status == s for c in calls) for s in used}
+    f = Svg(
+        760,
+        10,
+        f"Readiness of Report {n}'s sketches: one row per stage of the running"
+        " example and per workstream, one square per stack call in its sketch,"
+        " coloured by its marker. "
+        + ", ".join(f"{tally[s]} {READY_LABEL[s]}" for s in used)
+        + ".",
+    )
+    x = 24.0
+    for s in used:
+        stroke, fill = READY_HUE[s]
+        f.rect(x, 16, cell, cell, stroke=stroke, fill=fill, rx=3)
+        label = f"{READY_LABEL[s]} ({tally[s]})"
+        f.text(x + cell + 6, 29, label, size=12, color=INK, anchor="start")
+        x += cell + 22 + 6.6 * len(label)
+    y = 62.0
+    for title, group in (("The running example", stages), ("The workstreams", works)):
+        if not group:
+            continue
+        f.text(24, y + 4, title, size=13, weight=700, color=INK, anchor="start")
+        y += 14
+        for r in group:
+            label = r.removeprefix("Workstream ")
+            label = label if len(label) <= room else label[: room - 1].rstrip() + "…"
+            f.text(24, y + 13, label, size=12, color=INK, anchor="start")
+            if not rows[r]:
+                f.text(
+                    x0,
+                    y + 13,
+                    "no marked call in its sketches",
+                    size=11.5,
+                    color=MUTED,
+                    anchor="start",
+                    italic=True,
+                )
+            for k, c in enumerate(sorted(rows[r], key=lambda c: READY.index(c.status))):
+                stroke, fill = READY_HUE[c.status]
+                cx = x0 + k * (cell + gapx)
+                f.rect(cx, y, cell, cell, stroke=stroke, fill=fill, rx=3)
+                if c.ref and c.status in ("here", "elsewhere"):
+                    f.text(
+                        cx + cell / 2,
+                        y + 12,
+                        c.ref,
+                        size=8,
+                        color=CARD if c.status == "here" else ENG[0],
+                        weight=700,
+                    )
+            y += rh
+        y += 16
+    f.h = int(y - 4)
+    return f
+
+
+def _readiness(n: int):
+    def build() -> Svg:
+        return readiness(n)
+
+    build.__name__ = f"r{n}_readiness"
+    return build
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
@@ -1931,6 +2084,7 @@ FIGURES = {
     "r16_roadmap": r16_roadmap,
     "r17_ownership": r17_ownership,
     "r17_roadmap": r17_roadmap,
+    **{f"r{n}_readiness": _readiness(n) for n in range(10, 18)},
 }
 
 

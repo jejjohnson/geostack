@@ -467,6 +467,16 @@ Six overlaps need action; seven look like duplication and are not. The
 audit read `references/pipekit` at `ef3c17f`, `references/geotoolz` at
 `088475e` and `references/xrtoolz` at `308c7f2` on 14 October 2026.
 
+:::{figure} ../images/reports/r16_readiness.svg
+:label: fig-r16-readiness
+:alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 41 calls, 29 run today, 10 are proposed by this report's workstreams and 2 are code the reader writes.
+
+What the page's sketches call, read from their markers: one square per stack
+call. Of 41, 29 run today, 10 are proposed by this report's workstreams and
+2 are code the reader writes. A row without squares has no marked call;
+labels on the proposed squares name the workstream item.
+:::
+
 :::{table} Overlaps across the three repositories.
 :label: tbl-r16-audit
 

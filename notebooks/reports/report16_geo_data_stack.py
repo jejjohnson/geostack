@@ -368,3 +368,33 @@ else:  # gate F5: the realigned stack
     assert stencil_loads == "[]"                                # D3
     assert not any("reader" in r for r in xr_reqs)              # C1
     assert gz_reqs and all(r.startswith("pipekit-core") for r in gz_reqs)  # F1
+
+
+# %% [markdown]
+# ## The readiness figure
+#
+# The audit's readiness figure counts the markers on this page's own sketches
+# (`today`, `proposed (…)`, `user`); `docs/images/reports/make_figures.py`
+# draws it. These are the counts its caption quotes.
+
+# %%
+import importlib.util
+import sys
+from collections import Counter
+from pathlib import Path
+
+root = Path.cwd()
+while not (root / "myst.yml").exists() and root != root.parent:
+    root = root.parent
+spec = importlib.util.spec_from_file_location(
+    "report_figures", root / "docs/images/reports/make_figures.py")
+rf = importlib.util.module_from_spec(spec)
+sys.modules["report_figures"] = rf
+spec.loader.exec_module(rf)
+calls = rf.marked_calls(next((root / "docs/reports").glob("16_*.md")))
+ready = Counter(c.status for c in calls)
+ready
+
+# %%
+assert len(calls) == 41
+assert ready == Counter({'here': 10, 'today': 29, 'user': 2})

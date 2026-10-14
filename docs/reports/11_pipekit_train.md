@@ -604,6 +604,16 @@ Of the twenty pieces checked, ten ship and work, eight ship with defects,
 and two are missing. The audit read `references/pipekit` at `ef3c17f` on
 13 October 2026.
 
+:::{figure} ../images/reports/r11_readiness.svg
+:label: fig-r11-readiness
+:alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 32 calls, 24 run today, 3 are proposed by this report's workstreams and 5 are code the reader writes.
+
+What the page's sketches call, read from their markers: one square per stack
+call. Of 32, 24 run today, 3 are proposed by this report's workstreams and 5
+are code the reader writes. A row without squares has no marked call; labels
+on the proposed squares name the workstream item.
+:::
+
 :::{table} pipekit-train 0.0.2, piece by piece.
 :label: tbl-r11-audit
 
