@@ -34,7 +34,7 @@ against code that exists. Three findings shape it:
 - **v0 is a port, not a start.** plumax already has most of v0 on one
   slab; a layered Equinox v0 reproduces its radiance and hand-written
   Jacobian to $10^{-15}$, and one slab at the surface's pressure misstates a
-  band's optical depth by up to 18 %.
+  band's optical depth by up to 19 %.
 - **The source note's Equinox sketch needs three fixes**: no JAX arrays in
   static fields (Equinox warns), no `AbstractVar` on a concrete module, and
   optimistix and optax in place of jaxopt and optax-contrib.
@@ -55,7 +55,7 @@ against code that exists. Three findings shape it:
 | **Reading time** | about 35 minutes |
 | **Audience** | whoever builds radtrax, and anyone deciding whether a retrieval should wait for it |
 | **Companions** | [radtrax · 1](01_column_retrieval.md) (the single-pass column retrieval v0 must reproduce); [radtrax · 2](02_mbmp.md) (the Sentinel-2 multi-pass family); [package boundaries](../package_boundaries.md) (the moves and the dependency rules); [plumax · 1](../plumax/01_emission_rate.md) (the emission rate downstream of the column) |
-| **Code checked against** | plumax 0.1.2 at `28f257e` and gaussx 0.6.5 at `7fa1a38` (clones), geotoolz 0.10.2 at `088475e` and georeader-spaceml 2.4.1 from `references/`, finitevolX at `32ffb45`, spectraldiffx at `b5f3dc4`, pyrox at `94eef13`, somax at `aea3a03`; equinox 0.13.8, lineax 0.1.1, optimistix 0.1.0, optax 0.2.8. Read on 14 October 2026 |
+| **Code checked against** | plumax 0.1.2 at `28f257e`, gaussx 0.6.5 at `7fa1a38`, geotoolz 0.10.2 at `088475e`, georeader-spaceml 2.4.1, finitevolX at `32ffb45` and spectraldiffx at `b5f3dc4` from `references/`; pyrox at `94eef13`, somax at `aea3a03`; equinox 0.13.8, lineax 0.1.1, optimistix 0.1.0, optax 0.2.8. Read on 14 October 2026 |
 | **Running example** | every number is from one run of `notebooks/geomodels/radtrax_03_design.py`, which asserts each one, on a synthetic table of 150 Voigt lines near 4300 cm⁻¹ (2.33 μm); code comments carry the [status markers](../../overview_examples.md#ex-markers) |
 | **Sources** | the design note supplied by the author [@geostack_radtrax_design_note]; Korkin et al. [@korkin2022]; ExoJAX [@kawahara2022]; VLIDORT [@spurr2006]; DISORT [@stamnes1988]; Rodgers [@rodgers2000] |
 :::
@@ -208,7 +208,7 @@ every array a leaf:
 :caption: The corrected v0 forward model and its Jacobian, from a real run.
 :linenos:
 
-# Shapes: L = 20 layers, G = 10,000 wavenumbers, B = 7 bands
+# Shapes: L = 20 layers, G = 14,000 wavenumbers, B = 7 bands (8.5 nm)
 # σ_l = bilinear(σ; ln p_l, T_l);  τ_l = σ_l n_l x_l Δz_l       (L, G)
 tau = TableOpacity(log_p, t_grid, sigma)(atm)    # proposed (radtrax)
 # L = (μ₀/π) A exp(−m Σ_l τ_l),  m = 1/μ₀ + 1/μ                  (G,)
@@ -217,20 +217,20 @@ rad = BeerLambert()(tau, albedo, mu0, mu)        # proposed (radtrax)
 y = Instrument(srf, nu, shift)(rad)              # proposed (radtrax)
 # one slab against plumax: L and ∂L/∂x                           (G,)
 ref = forward_nonlinear(ds, nu, T_K=T0, p_atm=P0, vmr=X0, ...)  # today
-# → radiance to 9 × 10⁻¹⁶, Jacobian to 4 × 10⁻¹⁶, relative      user
+# → radiance to 1.3 × 10⁻¹⁵, Jacobian to 6 × 10⁻¹⁶, relative  user
 # K = ∂y/∂(ΔX₀, A, δ) per pixel, 256 pixels        (256, 3) → (256, 7, 3)
 K = eqx.filter_vmap(jax.jacrev(y_of))(thetas)    # user
-# → finite differences to 2.4 × 10⁻⁸; vmap equals a loop exactly
+# → finite differences to 2.3 × 10⁻⁸; vmap equals a loop exactly
 ```
 
 The layered model reduces to plumax's slab, radiance and Jacobian alike,
 to rounding; the Jacobian that plumax derives by hand comes out of
 `jax.jacrev` unchanged. The layers are not decoration. The same 1.9 ppm
 column ($4.1\times10^{19}$ molecules/cm²) through 20 one-kilometre layers
-and through one slab at the surface's pressure differ by up to 18 % in a
+and through one slab at the surface's pressure differ by up to 19 % in a
 band's optical depth, because the slab broadens every line as if all the
 methane sat at 1 atm; a slab at the column's pressure-weighted mean
-differs by up to 4 %. plumax's forward model and its observation
+differs by up to 3 %. plumax's forward model and its observation
 operator are both single-slab, which is the first thing v0 changes.
 
 :::{warning} Differs from the plan
@@ -421,7 +421,7 @@ README, the papers against their publication records); the rest are the note's.
 | Step | Where | Why |
 |---|---|---|
 | Create the radtrax repository from the package template, with the layout above | new repo | the package does not exist |
-| Port `hapi_lut`, `radtran` and `assimilation`'s observation operator into one layered Equinox forward model | radtrax v0, from plumax | [v0 slice](#rx3-v0): plumax's slab, its hand Jacobian and an 18 % slab error |
+| Port `hapi_lut`, `radtran` and `assimilation`'s observation operator into one layered Equinox forward model | radtrax v0, from plumax | [v0 slice](#rx3-v0): plumax's slab, its hand Jacobian and a 19 % slab error |
 | Build band tables against the background column | radtrax v0 | [radtrax · 2](02_mbmp.md#rx2-band): 1.1 % on band 12 |
 | Add a non-symmetric `BlockTriDiag` | gaussx | [differentiability](#rx3-diff), item 4: discrete ordinates' boundary-value matrix is not symmetric |
 | Add the gradient check (autodiff against finite differences) to every public forward function's tests | radtrax | the one test every release runs |

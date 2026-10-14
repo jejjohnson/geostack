@@ -29,17 +29,19 @@
 # 4. the retrievals, side by side, with geotoolz's `SBMP` operator (stage 4);
 # 5. noise (stage 5).
 #
-# **The methane spectrum is synthetic**, drawn exactly as in radtrax · 1 (same
-# seed, same lines, σ̄₁₁ = 0.04 and σ̄₁₂ = 0.40 m²/kg). Sentinel-2A's band 11
-# and 12 SRFs are real, from georeader.
+# **The methane spectrum is synthetic**, and it is radtrax · 1's: both notebooks
+# draw it from `synthetic_ch4.py` with the same seed (σ̄₁₁ = 0.04 and
+# σ̄₁₂ = 0.40 m²/kg). Sentinel-2A's band 11 and 12 SRFs are real, from
+# georeader.
 #
 # Pinned revisions: georeader-spaceml 2.4.1, geotoolz 0.10.2 at `088475e`
-# (`plume.SBMP`), plumax 0.1.2 at `28f257e` (`radtran.nb_lut`; a clone, not a
-# submodule yet). Needs NumPy, SciPy, xarray, pandas, openpyxl and matplotlib.
+# (`plume.SBMP`) and plumax 0.1.2 at `28f257e` (`radtran.nb_lut`), all from
+# `references/`. Needs NumPy, SciPy, xarray, pandas, openpyxl and matplotlib.
 
 # %%
 from __future__ import annotations
 
+import sys
 import warnings
 from pathlib import Path
 
@@ -50,11 +52,20 @@ matplotlib.rcParams["svg.hashsalt"] = "radtrax_02"  # stable SVG ids across reru
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import xarray as xr  # noqa: E402
-from georeader.readers.S2_SAFE_reader import read_srf  # noqa: E402
 from geotoolz.plume import SBMP  # noqa: E402
 from plumax.radtran.nb_lut import NBLookup, build_nb_lut, inject_plume  # noqa: E402
 from plumax.radtran.srf import SpectralResponseFunction  # noqa: E402
 from scipy.ndimage import gaussian_filter  # noqa: E402
+
+# the shared synthetic spectrum lives beside this notebook
+sys.path.insert(0, str(next(p for p in (Path.cwd(), *Path.cwd().parents)
+                            if (p / "myst.yml").exists()) / "notebooks" / "geomodels"))
+from synthetic_ch4 import (  # noqa: E402  the spectrum shared with radtrax · 1
+    WL,
+    band_mean,
+    methane_cross_section,
+    sentinel2_band_responses,
+)
 
 warnings.filterwarnings("ignore", category=UserWarning)  # openpyxl, SRF sheet
 warnings.filterwarnings("ignore", category=RuntimeWarning)  # SRF normalisation
@@ -116,43 +127,11 @@ assert stage1["tau_r_2p2"] < 1e-3
 
 # %%
 rng = np.random.default_rng(SEED)
-WL = np.arange(1500.0, 2500.0, 0.01)  # nm                               (G,)
-HWHM = 0.1
-
-
-def lines(n: int, lo: float, hi: float, centre: float, width: float):
-    pos = rng.uniform(lo, hi, n)
-    return pos, rng.lognormal(0.0, 0.8, n) * np.exp(
-        -0.5 * ((pos - centre) / width) ** 2
-    )
-
-
-def lorentz_sum(pos, s):
-    # σ_mono(λ) = Σ_i s_i (HWHM/π) / ((λ − λ_i)² + HWHM²)             (G,)
-    out = np.zeros_like(WL)
-    for p, si in zip(pos, s, strict=True):
-        sl = slice(*np.searchsorted(WL, [p - 4.0, p + 4.0]))
-        out[sl] += si * (HWHM / np.pi) / ((WL[sl] - p) ** 2 + HWHM**2)
-    return out
-
-
-band_23 = lorentz_sum(*lines(3000, 2165.0, 2420.0, 2310.0, 70.0))
-band_166 = lorentz_sum(*lines(600, 1620.0, 1710.0, 1666.0, 15.0))
-srf_s2 = read_srf("S2A")  # today
-f11 = np.interp(WL, srf_s2.index.values, srf_s2["B11"].values, left=0, right=0)
-f12 = np.interp(WL, srf_s2.index.values, srf_s2["B12"].values, left=0, right=0)
-
-
-def band_mean(x, f):
-    # ⟨x⟩_b = ∫ x f dλ / ∫ f dλ
-    return (x * f).sum(-1) / f.sum()
-
-
-SIG12, RATIO11 = 0.40, 0.10  # a modelling choice, as in radtrax · 1
-sigma = band_23 * SIG12 / band_mean(band_23, f12)
-sigma = sigma + band_166 * (RATIO11 * SIG12 - band_mean(sigma, f11)) / band_mean(
-    band_166, f11
-)
+f11, f12 = sentinel2_band_responses("S2A")  # georeader's S2A table, on WL  today
+# σ(λ), drawn from the same generator and seed as radtrax · 1, so the two
+# pages share one spectrum (σ̄₁₁ = 0.04, σ̄₁₂ = 0.40 m²/kg, chosen)
+SIG12, RATIO11 = 0.40, 0.10
+sigma = methane_cross_section(rng, f11, f12, SIG12, RATIO11)          # (G,)
 s11, s12 = float(band_mean(sigma, f11)), float(band_mean(sigma, f12))
 OMEGA_BG = 1.9e-6 * (16.04 / 28.96) * 101325.0 / 9.80665  # kg/m²
 SZA, VZA = 35.0, 5.0

@@ -54,6 +54,7 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+matplotlib.rcParams["svg.hashsalt"] = "radtrax_01"  # stable SVG ids across reruns
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import xarray as xr  # noqa: E402
@@ -61,6 +62,16 @@ from georeader import reflectance  # noqa: E402
 from georeader.readers.S2_SAFE_reader import read_srf  # noqa: E402
 from geotoolz.matched_filter import MatchedFilter  # noqa: E402
 from xrtoolz.atm.gas.ch4 import column_mass_to_delta_vmr  # noqa: E402
+
+# the shared synthetic spectrum lives beside this notebook
+sys.path.insert(0, str(next(p for p in (Path.cwd(), *Path.cwd().parents)
+                            if (p / "myst.yml").exists()) / "notebooks" / "geomodels"))
+from synthetic_ch4 import (  # noqa: E402  the spectrum shared with radtrax · 2
+    WL,
+    band_mean,
+    methane_cross_section,
+    sentinel2_band_responses,
+)
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)  # SRF normalisation
 SEED = 0
@@ -80,50 +91,16 @@ FIG.mkdir(parents=True, exist_ok=True)
 
 # %%
 rng = np.random.default_rng(SEED)
-WL = np.arange(1500.0, 2500.0, 0.01)  # nm, monochromatic grid       (G,)
-HWHM = 0.1  # nm: a Lorentz half-width, broadened to keep the grid coarse
-
-
-def lines(n: int, lo: float, hi: float, centre: float, width: float):
-    # positions uniform over the band, log-normal strengths under a Gaussian
-    # envelope exp(−(λ − centre)² / 2 width²)
-    pos = rng.uniform(lo, hi, n)
-    return pos, rng.lognormal(0.0, 0.8, n) * np.exp(
-        -0.5 * ((pos - centre) / width) ** 2
-    )
-
-
-def lorentz_sum(pos, s):
-    # σ_mono(λ) = Σ_i s_i (HWHM/π) / ((λ − λ_i)² + HWHM²)             (G,)
-    out = np.zeros_like(WL)
-    for p, si in zip(pos, s, strict=True):
-        sl = slice(*np.searchsorted(WL, [p - 4.0, p + 4.0]))
-        out[sl] += si * (HWHM / np.pi) / ((WL[sl] - p) ** 2 + HWHM**2)
-    return out
-
-
-band_23 = lorentz_sum(*lines(3000, 2165.0, 2420.0, 2310.0, 70.0))  # 2.3 μm band
-band_166 = lorentz_sum(*lines(600, 1620.0, 1710.0, 1666.0, 15.0))  # 1.66 μm
 
 # Sentinel-2A's spectral response functions, at 1 nm, from georeader
 srf_s2 = read_srf("S2A")  # today
-f11 = np.interp(WL, srf_s2.index.values, srf_s2["B11"].values, left=0, right=0)
-f12 = np.interp(WL, srf_s2.index.values, srf_s2["B12"].values, left=0, right=0)
+f11, f12 = sentinel2_band_responses("S2A")  # the same table, on WL     (G,)
 
-
-def band_mean(x, f):
-    # ⟨x⟩_b = ∫ x f dλ / ∫ f dλ
-    return (x * f).sum(-1) / f.sum()
-
-
-# Scale the two bands so that the band-averaged cross-sections are
+# σ(λ): 3,000 lines at 2.3 μm and 600 at 1.66 μm, scaled so that
 # σ̄₁₂ = 0.40 m²/kg and σ̄₁₁ = 0.04 m²/kg: a modelling choice (a ratio of
-# one tenth), not a measured value
+# one tenth), not a measured value. Shared with radtrax · 2.
 SIG12, RATIO11 = 0.40, 0.10
-sigma = band_23 * SIG12 / band_mean(band_23, f12)
-sigma = sigma + band_166 * (RATIO11 * SIG12 - band_mean(sigma, f11)) / band_mean(
-    band_166, f11
-)
+sigma = methane_cross_section(rng, f11, f12, SIG12, RATIO11)          # (G,)
 s11, s12 = band_mean(sigma, f11), band_mean(sigma, f12)
 
 # Background: 1.9 ppm over a 1013 hPa column, as a mass column
@@ -197,7 +174,10 @@ stage2 = {
     "deficit_030": deficit(0.30),
     "deficit_050": deficit(0.50),
     "deficit_100": deficit(1.0),
-    "depth_030": float(1 - np.exp(-M_AMF * s12 * 0.30)),
+    # the exact plume-induced dip, 1 − T₁₂(Ω_bg + ΔΩ) / T₁₂(Ω_bg), at 0.3 kg/m²
+    "depth_030": float(1 - transmittance(M_AMF, OMEGA_BG + 0.30, f12)
+                       / transmittance(M_AMF, OMEGA_BG, f12)),
+    "depth_030_linear": float(1 - np.exp(-M_AMF * s12 * 0.30)),
 }
 
 fig, ax = plt.subplots(figsize=(6.4, 3.6), constrained_layout=True)
@@ -210,7 +190,7 @@ ax.set_xlabel("column enhancement ΔΩ (kg/m²)")
 ax.set_ylabel("plume optical depth τ_b")
 ax.legend(frameon=False, fontsize=9)
 ax.spines[["top", "right"]].set_visible(False)
-fig.savefig(FIG / "curve_of_growth.svg")
+fig.savefig(FIG / "curve_of_growth.svg", metadata={"Date": None})
 plt.close(fig)
 {k: round(v, 3) for k, v in stage2.items()}
 
@@ -224,7 +204,8 @@ assert (round(stage2["deficit_050"], 2), round(stage2["deficit_100"], 2)) == (
     0.22,
     0.36,
 )
-assert round(stage2["depth_030"], 3) == 0.234  # a 23 % dip in B12 at the peak
+assert round(stage2["depth_030"], 3) == 0.203  # a 20 % dip in B12 at the peak
+assert round(stage2["depth_030_linear"], 3) == 0.234  # the linear model says 23 %
 
 # %% [markdown]
 # ## Stage 3 · The multispectral proxy baseline
@@ -394,7 +375,7 @@ for a, (img, title) in zip(
     a.set_title(title, fontsize=10)
     a.set_xticks([]), a.set_yticks([])
 fig.colorbar(im, ax=axs, shrink=0.85, label="ΔΩ (kg/m²)")
-fig.savefig(FIG / "retrievals.svg")
+fig.savefig(FIG / "retrievals.svg", metadata={"Date": None})
 plt.close(fig)
 
 # %%
@@ -513,7 +494,7 @@ for a, (img, title) in zip(
     a.set_title(title, fontsize=10)
     a.set_xticks([]), a.set_yticks([])
 fig.colorbar(im, ax=axs, shrink=0.85, label="ΔΩ (kg/m²)")
-fig.savefig(FIG / "hyperspectral.svg")
+fig.savefig(FIG / "hyperspectral.svg", metadata={"Date": None})
 plt.close(fig)
 
 # %%

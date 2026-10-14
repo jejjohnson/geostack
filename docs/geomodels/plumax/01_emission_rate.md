@@ -55,7 +55,7 @@ $L = \sqrt{A}$ and 4.37 m/s with geotoolz's default chord length.
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone turning a methane column map into an emission rate, and anyone choosing which of the five methods a product uses |
 | **Companions** | [radtrax · 1](../radtrax/01_column_retrieval.md) (the column map these methods start from); [radtrax · 2](../radtrax/02_mbmp.md) (the Sentinel-2 multi-pass columns); [Report 16](../../reports/16_geo_data_stack.md#r16-stage-5) (one methane scene through geotoolz's IME); [Report 9](../../reports/09_use_cases.md#r9-running) (the use cases built on the IME); [package boundaries](../package_boundaries.md#pb-moves) (the plume operators' move to plumax) |
-| **Code checked against** | plumax 0.1.2 at `28f257e` (a clone; not a submodule yet), geotoolz 0.10.2 at `088475e` and georeader-spaceml 2.4.1 from `references/`, xrtoolz 0.0.5 at `308c7f2`. Read on 14 October 2026 |
+| **Code checked against** | plumax 0.1.2 at `28f257e`, geotoolz 0.10.2 at `088475e` and georeader-spaceml 2.4.1 and xrtoolz 0.0.5 at `308c7f2`, from `references/`. Read on 14 October 2026 |
 | **Running example** | every number and figure is from one run of `notebooks/geomodels/plumax_01_emission_rate.py`, on a synthetic plume of $Q = 2$ kg/s (7.2 t/h) in a 3 m/s wind, which asserts each number the page shows; code comments carry the [status markers](../../overview_examples.md#ex-markers) |
 | **Sources** | the source note [@geostack_plumax_note]; Varon et al. [@varon2018; @varon2021], Frankenberg et al. [@frankenberg2016], Krings et al. [@krings2011], Beirle et al. [@beirle2019], Liu et al. [@liu2021], Koene et al. [@koene2024], Jacob et al. [@jacob2022], Jia et al. [@jia2025] |
 :::
@@ -390,8 +390,8 @@ area_sum(box(-100, 1500, half=600))  # → 2.000 kg/s    user
 area_sum(box(-100, 1500, half=60))   # → 0.81, too narrow
 # the dropped term on that box, K_eff = (U/2) dσ_y²/dx (Briggs)
 # 2 ∫₀^{x₁} K_eff Ω(x, h) h / σ_y² dx → 1.18; + 0.82 = Q   user
-# one overpass, σ_Ω = 0.003 kg/m²: sd 1.97 kg/s (draw 1.51)
-# 98 overpasses for a 10 % sd
+# one overpass, σ_Ω = 0.003 kg/m²: sd = U σ_Ω Δx √n_rows
+# → 1.39 kg/s (2,000 draws: 1.39; this draw 1.51); 49 for a 10 % sd
 ```
 
 The area sum and the boundary flux agree to $10^{-6}$, as Gauss's theorem
@@ -404,9 +404,10 @@ diffusive flux through the narrow box's side edges is 1.18 kg/s. Advective
 (0.82 exactly, 0.81 on the grid) plus diffusive is $Q$ to $10^{-6}$.
 Dropping diffusion is safe only for a boundary that crosses the plume where
 advection carries it, at the downwind edge, and lies outside it everywhere
-else. With noise, the area sum telescopes to the
-two edge columns, so its uncertainty is theirs: about 2 kg/s for one
-overpass at 0.003 kg/m² of noise, the size of the signal itself. That is why
+else. With noise, the area sum of a central difference telescopes to four
+edge columns, each weighted ½, so its uncertainty is theirs: 1.39 kg/s for
+one overpass at 0.003 kg/m² of noise, 70 % of the signal, and 49
+overpasses for a 10 % uncertainty. That is why
 the method averages many overpasses, as the note says it does at TROPOMI's
 scale. xrtoolz's `budgets` (`control_volume_integral`, `boundary_flux`)
 computes both sides of {eq}`er1-eq-div` on a model grid; nothing in the

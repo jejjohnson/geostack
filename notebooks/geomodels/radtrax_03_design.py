@@ -30,7 +30,7 @@
 #
 # The spectrum is synthetic: Voigt lines drawn at random near 4300 cm⁻¹
 # (2.33 μm) and tabulated on a (p, T) grid, as HAPI would. Pinned revisions:
-# plumax 0.1.2 at `28f257e` (clone), gaussx 0.6.5 at `7fa1a38` (clone),
+# plumax 0.1.2 at `28f257e`, gaussx 0.6.5 at `7fa1a38` (from references/),
 # equinox 0.13.8, lineax 0.1.1, optimistix 0.1.0, optax 0.2.8.
 
 # %%
@@ -117,7 +117,9 @@ assert stage1["optimistix_lm"]
 # Equinox, every array a leaf, with an (ln p, T) bilinear table lookup.
 
 # %%
-NU = np.arange(4250.0, 4350.0, 0.01)  # cm⁻¹                            (G,)
+# cm⁻¹; lines sit in 4252–4348, the grid runs ±20 cm⁻¹ wider so the band
+# responses' tails (stage 2) are not cut off                           (G,)
+NU = np.arange(4230.0, 4370.0, 0.01)
 P_GRID = np.geomspace(0.03, 1.1, 10)  # atm
 T_GRID = np.linspace(200.0, 310.0, 6)  # K
 N_LINES = 150
@@ -201,9 +203,12 @@ class ForwardModel(eqx.Module):
         return self.instrument(self.solver(self.opacity(atm), albedo, mu0, mu))
 
 
-# EMIT-like Gaussian bands, 7.4 nm apart ≈ 14 cm⁻¹ here: 7 bands in the window
-centres = np.arange(4257.0, 4345.0, 14.0)
-SRF = np.exp(-0.5 * ((NU[None] - centres[:, None]) / (8.5 / 2.355)) ** 2)
+# EMIT-like Gaussian bands: 14 cm⁻¹ apart (7.6 nm here), 8.5 nm FWHM. A width
+# in wavelength is Δν = ν² Δλ / 10⁷ in wavenumber: 15.7 cm⁻¹ at 4300 cm⁻¹
+centres = np.arange(4257.0, 4345.0, 14.0)                             # (B,)
+FWHM_NM = 8.5
+fwhm_cm = centres**2 * FWHM_NM / 1e7                                  # (B,)
+SRF = np.exp(-0.5 * ((NU[None] - centres[:, None]) / (fwhm_cm[:, None] / 2.355)) ** 2)
 SRF = SRF / SRF.sum(1, keepdims=True)
 fm = ForwardModel(TableOpacity(jnp.log(P_GRID), jnp.asarray(T_GRID), jnp.asarray(SIGMA)),
                   BeerLambert(), Instrument(jnp.asarray(SRF), jnp.asarray(NU), jnp.array(0.0)))
@@ -286,9 +291,9 @@ stage3
 # %%
 assert round(stage3["column_molec_cm2"] / 1e19, 1) == 4.1
 # a slab at the surface broadens the lines, so a band's optical depth differs
-# by up to 18 % from the layered one; at the mean (p, T), by up to 4 %
-assert round(stage3["surface_slab_rel"], 3) == 0.175
-assert round(stage3["mean_slab_rel"], 3) == 0.036
+# by up to 19 % from the layered one; at the mean (p, T), by up to 3 %
+assert round(stage3["surface_slab_rel"], 3) == 0.186
+assert round(stage3["mean_slab_rel"], 3) == 0.031
 
 # %% [markdown]
 # ## Stage 4 · Jacobians over a swath: `filter_vmap` outside `jacrev`

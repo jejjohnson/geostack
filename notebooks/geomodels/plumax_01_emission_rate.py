@@ -32,9 +32,8 @@
 # Everything is analytic or noise-free unless a stage says otherwise; the
 # noise draw is seeded.
 #
-# Pinned revisions: plumax 0.1.2 at `28f257e` (a clone; not a submodule
-# yet), geotoolz 0.10.2 at `088475e` and georeader-spaceml 2.4.1 from
-# `references/`. It needs JAX, NumPy, SciPy, scikit-image and matplotlib; it
+# Pinned revisions: plumax 0.1.2 at `28f257e`, geotoolz 0.10.2 at `088475e`
+# and georeader-spaceml 2.4.1, all from `references/`. It needs JAX, NumPy, SciPy, scikit-image and matplotlib; it
 # runs in under a minute on a laptop CPU.
 
 # %%
@@ -320,17 +319,25 @@ rng = np.random.default_rng(0)
 SIG_OM = 0.003  # kg/m² of retrieval noise per pixel, one overpass
 noisy = F + U * SIG_OM * rng.normal(size=F.shape)
 div_noisy = np.gradient(noisy, PIX, axis=1)
-# the area sum telescopes to the two edge columns, so its noise is theirs:
-# sd = U σ_Ω Δx √(2 n_rows), and averaging N overpasses divides it by √N
+# with np.gradient's central difference, the area sum over columns a..b
+# telescopes to (Δx/2) (F_{b+1} + F_b − F_a − F_{a−1}) per row: four edge
+# columns weighted ½, so sd = U σ_Ω Δx √n_rows, and averaging N overpasses
+# divides it by √N
 n_rows = int((np.abs(ys) <= 600).sum())
-sd_box = U * SIG_OM * PIX * np.sqrt(2 * n_rows)
+sd_box = U * SIG_OM * PIX * np.sqrt(n_rows)
+# check by Monte Carlo: the box sum's spread over 2,000 noise draws
+mc_rng = np.random.default_rng(1)
+wide = box(-100, 1500, 600)
+mc = np.array([np.gradient(U * SIG_OM * mc_rng.normal(size=F.shape), PIX, axis=1)[wide].sum()
+               * PIX**2 for _ in range(2000)])
 stage4 = {
     "box_wide": area_sum(box(-100, 1500, 600)),
     "box_narrow": area_sum(box(-100, 1500, 60)),
     "gauss_gap": abs(area_sum(box(-100, 1500, 600)) - boundary_flux(-100, 1500, 600)),
     "box_wide_noisy": float(div_noisy[box(-100, 1500, 600)].sum() * PIX**2),
     "pixel_noise": float(div_noisy[~box(-100, 3000, 900)].std()),
-    "sd_box": float(sd_box), "n_overpasses_10pct": int(np.ceil((sd_box / (0.1 * Q)) ** 2)),
+    "sd_box": float(sd_box), "sd_box_mc": float(mc.std()),
+    "n_overpasses_10pct": int(np.ceil((sd_box / (0.1 * Q)) ** 2)),
 }
 stage4
 
@@ -341,12 +348,15 @@ assert abs(stage4["box_wide"] - Q) < 1e-5
 assert round(stage4["box_narrow"], 2) == 0.81
 # the area sum and the boundary flux are the same number, to rounding
 assert stage4["gauss_gap"] < 1e-6
-# one overpass at 0.003 kg/m² of noise: the box sum has sd ≈ 2 kg/s, as large
-# as Q; this draw is 1.51, within 1 sd; a 10 % sd needs ~98 overpasses
-assert round(stage4["sd_box"], 2) == 1.97
+# one overpass at 0.003 kg/m² of noise: the box sum has sd 1.39 kg/s, 70 % of
+# Q; this draw is 1.51, within 1 sd; a 10 % sd needs 49 overpasses
+assert round(stage4["sd_box"], 2) == 1.39
+# the formula against 2,000 noise draws: the sample sd of a sample of 2,000
+# has a relative standard error of 1/√(2·1999) ≈ 1.6 %, so 5 % is 3 errors
+assert abs(stage4["sd_box_mc"] / stage4["sd_box"] - 1) < 0.05
 assert abs(stage4["box_wide_noisy"] - Q) < stage4["sd_box"]
 assert round(stage4["box_wide_noisy"], 2) == 1.51
-assert stage4["n_overpasses_10pct"] == 98
+assert stage4["n_overpasses_10pct"] == 49
 
 # %% [markdown]
 # What the narrow box misses is the diffusive boundary term the divergence

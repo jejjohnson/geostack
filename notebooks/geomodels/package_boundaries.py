@@ -29,16 +29,14 @@
 #
 # Nothing is imported or installed: the notebook reads source files and
 # metadata only. geotoolz, xrtoolz, pipekit and georeader come from
-# `references/` at their pinned revisions. plumax, gaussx, finitevolX and
-# spectraldiffx are not submodules yet; they are read from clones under
-# `$GEOMODELS_SRC` (default `~/jejjohnson`) and their commits are asserted.
+# `references/` at their pinned revisions, and so do plumax, gaussx,
+# finitevolX and spectraldiffx, whose commits are asserted below.
 
 # %%
 from __future__ import annotations
 
 import ast
 import importlib.util
-import os
 import re
 import subprocess
 import sys
@@ -50,7 +48,7 @@ root = Path.cwd()
 while not (root / "myst.yml").exists() and root != root.parent:
     root = root.parent
 REFS = root / "references"
-SRC = Path(os.environ.get("GEOMODELS_SRC", Path.home() / "jejjohnson"))
+SRC = REFS  # plumax, gaussx, finitevolX, spectraldiffx: pinned submodules
 FIG = root / "docs/images/package_boundaries"
 FIG.mkdir(parents=True, exist_ok=True)
 

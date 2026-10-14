@@ -55,7 +55,7 @@ everything but the patch whose band ratio changed, which reads as
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone running a Sentinel-2 or Landsat methane retrieval, and anyone choosing between the single-pass and multi-pass forms |
 | **Companions** | [radtrax · 1](01_column_retrieval.md) (the single-pass column retrieval, the band model, the curve of growth and the look-up table this page reuses); [radtrax · 3](03_design.md) (radtrax's design); [plumax · 1](../plumax/01_emission_rate.md) (the emission rate from the column map); the [package boundaries](../package_boundaries.md#pb-today) page (where the code is today) |
-| **Code checked against** | geotoolz 0.10.2 at `088475e` and georeader-spaceml 2.4.1 from `references/`, plumax 0.1.2 at `28f257e` (a clone; not a submodule yet). Read on 14 October 2026 |
+| **Code checked against** | geotoolz 0.10.2 at `088475e`, georeader-spaceml 2.4.1 and plumax 0.1.2 at `28f257e`, all from `references/`. Read on 14 October 2026 |
 | **Running example** | every number and figure is from one run of `notebooks/geomodels/radtrax_02_mbmp.py`, which asserts each one. Code comments carry the [status markers](../../overview_examples.md#ex-markers). The methane spectrum is [radtrax · 1](01_column_retrieval.md)'s synthetic one ($\bar\sigma_{11} = 0.04$, $\bar\sigma_{12} = 0.40$ m²/kg, a modelling choice); the Sentinel-2A band 11 and 12 response functions are real |
 | **Sources** | two derivations supplied by the author: "Deriving the MBMP method family from first principles" [@geostack_mbmp_note] and a second, step-by-step optical derivation (generated with Gemini) [@geostack_mbmp_note_gemini]; Varon et al. [@varon2021; @varon2018], Chen et al. [@chen2022], Watine-Guiu et al. [@watineguiu2023] |
 :::
@@ -173,7 +173,10 @@ $$ (rx2-eq-alpha)
 :linenos:
 
 # Shapes: G = 100,000 wavelengths (0.01 nm); m = 2.225
-f11, f12 = read_srf("S2A")[["B11", "B12"]]                 # today
+srf_s2 = read_srf("S2A")         # 1 nm table, one column per band  today
+# f_b(λ) on the 0.01 nm grid, zero outside the table          (G,) each
+f11 = np.interp(WL, srf_s2.index, srf_s2["B11"], left=0, right=0)  # user
+f12 = np.interp(WL, srf_s2.index, srf_s2["B12"], left=0, right=0)  # user
 # σ̄_b = ⟨σ⟩_b: 0.040 and 0.400 m²/kg (chosen)
 # α_b = −(1/m) ∂ ln T_b / ∂Ω at Ω_bg       → 0.0398, 0.3953  user
 # m α₁₂ ΔΩ / τ₁₂(ΔΩ) at ΔΩ = 0.3 kg/m²     → 1.16           user

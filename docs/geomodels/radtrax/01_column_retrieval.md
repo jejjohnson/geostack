@@ -277,7 +277,8 @@ The curve of growth for band 12 and band 11, on the synthetic spectrum.
 
 The exact optical depth {eq}`rx1-eq-cog` falls short of the linear one
 ([](#fig-rx1-cog)) by 3.8 % at
-0.05 kg/m², 15 % at the plume's peak (0.3 kg/m², a 23 % dip in band 12), 22 %
+0.05 kg/m², 15 % at the plume's peak (0.3 kg/m², where band 12 dips by
+20 %, not the 23 % the linear model gives), 22 %
 at 0.5 and 36 % at 1 kg/m². Band 11 absorbs about a tenth as much, which is
 the ratio this spectrum was built with.
 
