@@ -79,7 +79,8 @@ gap-fillers. A **Differs** box marks each place.
 pipekit-evaluate, hashed with pipekit's `stable_json` and `sha256_hex`, and
 recorded on every report it produces. Each term of the contract is
 implemented where its data lives: splits of catalog rows in geocatalog and of
-training windows in pipekit-train, baselines and probabilistic scores in
+training windows in geopatcher (pipekit-train until Report 16's D2 moves the
+window dataset), baselines and probabilistic scores in
 xrtoolz, and the content-addressed store for contracts and submissions in
 pipekit-experiment. No new package, and no hosted scoring service.
 
@@ -173,7 +174,7 @@ by the library that owns the data the term constrains.
 
 :::{figure} ../images/reports/r15_ownership.svg
 :label: fig-r15-ownership
-:alt: Benchmark projects write contracts and read reports through pipekit-evaluate, which ships Benchmark, ReferenceRule, Scorer, Task and BenchmarkReport and would add BenchmarkContract, variant and track checks and a contract hash on reports. Below it, geocatalog holds block, platform and causal splits of rows, pipekit-train the window splits and their guard, xrtoolz the baselines and CRPS, and pipekit-experiment the content-addressed store. All four use pipekit's hashing.
+:alt: Benchmark projects write contracts and read reports through pipekit-evaluate, which ships Benchmark, ReferenceRule, Scorer, Task and BenchmarkReport and would add BenchmarkContract, variant and track checks and a contract hash on reports. Below it, geocatalog holds block, platform and causal splits of rows, geopatcher the window splits and their guard (in pipekit-train until Report 16's D2 moves them), xrtoolz the baselines and CRPS, and pipekit-experiment the content-addressed store. All four use pipekit's hashing.
 
 The contract lives in pipekit-evaluate; its splits, baselines and storage
 live with their data.
@@ -187,9 +188,12 @@ live with their data.
    held-out platform, a causal cut. A row already carries the footprint, the
    time interval and, with Report 13's profile, the producer, which is all a
    split needs. It never imports pipekit-evaluate.
-3. **pipekit-train** owns splits of training windows inside a dataset, and
-   reads the contract's split as plain arguments (fractions, a guard in time
-   units). It never parses a contract.
+3. **The window dataset** owns splits of training windows inside a dataset,
+   and reads the contract's split as plain arguments (fractions, a guard in
+   time units). It never parses a contract. It is pipekit-train's
+   `XarrayWindowDataset` today and moves to `geopatcher.integrations.train`
+   with [Report 16](16_geo_data_stack.md#r16-ws-d)'s D2; B3 lands wherever it
+   is when B3 is done.
 4. **xrtoolz** owns the baselines for xarray carriers, next to the
    gap-fillers it ships (`fillnan_temporal`, `fillnan_climatology`,
    `fillnan_rbf`, `idw_to_points`), and the probabilistic scores. Baselines
@@ -716,7 +720,8 @@ rep.contract_hash == c.content_hash()                    # proposed (A2)
 ## Workstream B · Splits as contract terms
 
 **Decision.** A split is a function of catalog rows in geocatalog, or of
-windows in pipekit-train, configured by the contract and refusing what it
+windows in `geopatcher.integrations.train` (pipekit-train until Report 16's D2
+moves the window dataset), configured by the contract and refusing what it
 cannot honour; the contract also says which gap the split reproduces.
 
 :::{table} Workstream B's moves.
@@ -728,7 +733,7 @@ cannot honour; the contract also says which gap the split reproduces.
 | `split_by(catalog, column, *, test)` | `geocatalog.splits` | stage 2's withheld satellite, over a platform or producer column ([Report 13](13_state_catalog.md#r13-ws-a)'s `producer`) |
 | `split_causal(catalog, *, train_end, val_end)` | `geocatalog.splits` | the forecast split: every test row after every training row |
 | `split_regions(catalog, regions)` | `geocatalog.splits` | the scoping report's leave-one-region-out, as footprint intersection |
-| `fractions` and `guard` as a `pd.Timedelta` | pipekit-train `XarrayWindowDataset`, `_split_origins` | stage 2: the guard counts origins, and a long one empties the validation split silently |
+| `fractions` and `guard` as a `pd.Timedelta` | `XarrayWindowDataset`, `_split_origins`: in `geopatcher.integrations.train` after Report 16's D2, in pipekit-train before it | stage 2: the guard counts origins, and a long one empties the validation split silently |
 | `gap` field on the contract's split | `BenchmarkContract.splits` | stage 2's correction: the split states the deployment gap it reproduces |
 :::
 
@@ -751,7 +756,9 @@ profile adds.
 
 ### B3 · The window guard in time
 
-`XarrayWindowDataset` takes its guard as a duration, converts it to origins
+`XarrayWindowDataset` (in `geopatcher.integrations.train` once
+[Report 16](16_geo_data_stack.md#r16-ws-d)'s D2 moves it there) takes its
+guard as a duration, converts it to origins
 with the source's step, and raises when any split ends up empty, naming the
 guard and the split's length.
 
@@ -767,7 +774,8 @@ pt.XarrayWindowDataset(..., split_guard=60)    # → val has 0 windows   today
 train, test = gc.splits.split_by(obs_cat, "producer", test="s1")  # proposed (B2)
 gc.splits.split_blocks(obs_cat, km=200, days=60, test_fraction=0.2, seed=0,
                        min_scale=(100, 30))                       # proposed (B1)
-pt.XarrayWindowDataset(..., guard=pd.Timedelta("60D"))
+from geopatcher.integrations.train import XarrayWindowDataset  # proposed (R16 D2)
+XarrayWindowDataset(..., guard=pd.Timedelta("60D"))
 # → ValueError: guard 60 days leaves split 'val' (105 days) empty  proposed (B3)
 ```
 
@@ -879,7 +887,7 @@ Each workstream merges only when its gates pass on the running example.
 | A2 Report hash | A | `Benchmark.from_contract(c, …).run().contract_hash == c.content_hash()`, the report's level is the contract's (L2 for stage 6, not L4), and each of its three rows carries its entry's model hash |
 | B1 Blocks | B | on stage 2's observations, `split_blocks(km=200, days=60, seed=0)` reproduces the notebook's test set and its RMSE (4.18 cm against the truth) to 1e-4, assigning no row that crosses a block boundary; `km=50` with `min_scale=(100, 30)` raises `ValueError` |
 | B2 Platform and causal | B | `split_by("producer", test="s1")` reproduces stage 2's 2.70 cm, and every test time of `split_causal` is later than every training time |
-| B3 Window guard | B | `XarrayWindowDataset(guard=pd.Timedelta("60D"))` on stage 2's series raises `ValueError` naming the empty split; with `guard="2D"` its splits are 871, 105 and 108 windows |
+| B3 Window guard | B | `XarrayWindowDataset(guard=pd.Timedelta("60D"))`, imported from wherever Report 16's D2 has left it, on stage 2's series raises `ValueError` naming the empty split; with `guard="2D"` its splits are 871, 105 and 108 windows |
 | C1 OI | C | `optimal_interpolation` reproduces stage 3's 1.81 and 2.62 cm to 1e-4 m; with L = 150 km on the 800 km periodic grid its prior covariance, before the noise term, has smallest eigenvalue λ_min ≥ −10⁻¹⁰ σ² (semidefinite to rounding), where the minimum-image Gaussian gives −1.7 × 10⁻³ m² |
 | C2 Persistence | C | `persistence` reproduces stage 3's carry-forward 7.98 cm and uses no observation after its reference time; nearest and linear interpolation in time (5.59 and 4.77 cm) are separate interpolation baselines, and each configuration hashes differently |
 | C3 Climatology | C | `ClimatologyForecast(train_period=("2023", "2024"))` uses no 2025 value: perturbing every 2025 input changes its output by 0 |
@@ -957,7 +965,7 @@ the store.
 | Item | Where | Why |
 |---|---|---|
 | Review the gallery's eighteen draft contracts with domain experts, then pre-register them | [benchmarks gallery](../benchmarks_gallery.md) | the drafts hash today, but their metrics, baselines and splits need review before their hashes mean anything |
-| Raise on an empty split | pipekit-train `XarrayWindowDataset` | stage 2: a long guard empties a split silently; independent of B3's units |
+| Raise on an empty split | `XarrayWindowDataset` (pipekit-train today, `geopatcher.integrations.train` after Report 16's D2) | stage 2: a long guard empties a split silently; independent of B3's units |
 | Index xrtoolz submodules in the capability index | `scripts/capabilities.py` (`UPSTREAM`) | the index lists only top-level `xrtoolz`, so `fillnan_*`, `crps_ensemble` and `rank_methods` are not searchable (Report 14 found the same) |
 | Pin pyrox-gp or gaussx | `references/`, `UPSTREAM` | the scoping report maps Gaussian-process gap filling to them; neither is checked |
 | Write the representation contract | Report 15, open question 4 | no level transition to name it by |

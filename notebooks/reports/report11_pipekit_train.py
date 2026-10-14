@@ -464,7 +464,12 @@ except ImportError as e:
 
     sys.modules["geopatcher.time"] = _stencils
 from geopatcher.time import TimeStencil  # noqa: E402
-from pipekit_train import XarrayWindowDataset  # noqa: E402
+try:  # Report 16's D2 moves the dataset; fall back to the pinned location
+    from geopatcher.integrations.train import XarrayWindowDataset
+except ModuleNotFoundError as err:
+    if err.name != "geopatcher.integrations.train":
+        raise
+    from pipekit_train import XarrayWindowDataset
 
 T = 50
 x = SmoothPrior()(seed=3).astype(np.float64)
