@@ -65,6 +65,7 @@ from pipekit_evaluate.benchmark import (
 from pipekit_experiment import LocalModelRegistry
 from pipekit_train import SimulationDataset
 from scipy.stats import norm
+from xrtoolz.metrics import rmse as xr_rmse
 from xrtoolz.metrics import wasserstein_1
 
 # %% [markdown]
@@ -156,6 +157,9 @@ assert stage1["cell"] == "L2/r4/c0"  # a cell names one level, not a transition
 
 # %%
 GRID = np.linspace(0.0, A_MAX, G_ORACLE)
+# trapezoidal weights of the composite rule on [0, A_MAX]: half at each end
+TRAP = np.ones(G_ORACLE)
+TRAP[[0, -1]] = 0.5
 
 
 @dataclass
@@ -208,7 +212,9 @@ def grid_posterior(y: np.ndarray, fwd) -> GridEstimate:
     # log p(α_g | y) = −½ Σ_b (y_b − f_b(α_g))² / σ² + c        (n, B) → (n, G)
     F = fwd(GRID)                                                 # (G, B)
     ll = -0.5 * ((y[:, None, :] - F[None]) ** 2).sum(-1) / SIG**2
-    w = np.exp(ll - ll.max(1, keepdims=True))
+    # w_g ∝ q_g p(α_g | y), q the trapezoidal weights: the uniform prior's
+    # endpoints carry half a node each
+    w = TRAP * np.exp(ll - ll.max(1, keepdims=True))
     return GridEstimate(w / w.sum(1, keepdims=True))
 
 
@@ -248,7 +254,9 @@ def coverage95(est, truth: np.ndarray) -> float:
 
 
 def rmse(a: np.ndarray, b: np.ndarray) -> float:
-    return float(np.sqrt(np.mean((a - b) ** 2)))
+    # √(mean (a − b)²) over every element, by xrtoolz's metric        (n,) → ()
+    da, db = (xr.DataArray(np.ravel(v), dims="i") for v in (a, b))
+    return float(xr_rmse(da, db, dim="i"))                                  # today
 
 
 oracle = grid_posterior(y_test, f)
@@ -278,7 +286,7 @@ assert round(stage2["laplace_rmse"], 3) == 0.237
 assert round(stage2["laplace_cov95"], 3) == 0.960
 assert round(stage2["sd_min"], 3) == 0.068  # six nodes per smallest width
 assert stage2["sd_min"] > 5 * (GRID[1] - GRID[0])  # the grid resolves every posterior
-assert round(stage2["laplace_vs_oracle_mean"], 2) == 0.25  # at worst a quarter width
+assert round(stage2["laplace_vs_oracle_mean"], 2) == 0.26  # at worst a quarter width
 
 # %% [markdown]
 # ## Stage 3 · Two emulators of the forward model
@@ -362,15 +370,24 @@ fast = {d: grid_posterior(y_test, emu[d]) for d in coef}
 stage4 = {d: versus_oracle(fast[d]) for d in coef}
 
 
-def w1_samples(a, b, n: int = 2_000) -> float:
+def w1_samples(a, b, n: int = 2_000, keys: tuple[int, int] = (1, 2)) -> float:
     # xrtoolz's W₁ takes samples only: draw n from each posterior     (500, n) → (500,)
-    da = xr.DataArray(a.sample(n, key=1), dims=("scene", "member"))
-    db = xr.DataArray(b.sample(n, key=2), dims=("scene", "member"))
+    da = xr.DataArray(a.sample(n, key=keys[0]), dims=("scene", "member"))
+    db = xr.DataArray(b.sample(n, key=keys[1]), dims=("scene", "member"))
     return float((wasserstein_1(da, db) / s_or).mean())                     # today
 
 
+# The sample estimate is biased upward: two samples of one posterior are never
+# 0 apart. Its null distribution, the oracle against itself over R independent
+# key pairs, sets the smallest distance it can detect.
+R_NULL = 20
+null = np.array([w1_samples(oracle, oracle, keys=(100 + 2 * r, 101 + 2 * r))
+                 for r in range(R_NULL)])
+emu6 = np.array([w1_samples(fast[6], oracle, keys=(100 + 2 * r, 101 + 2 * r))
+                 for r in range(R_NULL)])
 w1_xrtoolz = {"emulator_4": w1_samples(fast[4], oracle),
-              "oracle_vs_itself": w1_samples(oracle, oracle)}
+              "null_mean": float(null.mean()), "null_sd": float(null.std(ddof=1)),
+              "null_max": float(null.max()), "emulator_6_mean": float(emu6.mean())}
 stage4_truth = {d: coverage95(fast[d], alpha_test) for d in coef}
 # the two coverages are on the same scenes: test the paired difference
 dcov = (covered95(fast[4], alpha_test).astype(float)
@@ -384,11 +401,17 @@ paired = {"diff": float(dcov.mean()),
 assert {k: round(v, 2) for k, v in stage4[4].items()} == {
     "shift_rms": 0.44, "shift_max": 1.94, "sd_ratio": 1.0, "w1_over_sd": 0.37}
 assert round(stage4[6]["shift_max"], 2) == 0.02
-# xrtoolz's sample-based W₁ agrees with the exact one to its sampling floor:
-# two 2,000-draw samples of the same posterior are already 0.04 σ apart
+# xrtoolz's sample-based W₁ agrees with the exact one for degree 4
 assert round(w1_xrtoolz["emulator_4"], 2) == 0.37
-assert round(w1_xrtoolz["oracle_vs_itself"], 2) == 0.04
-assert stage4[6]["w1_over_sd"] < w1_xrtoolz["oracle_vs_itself"]  # below the floor
+# its null: the oracle against itself over 20 key pairs, 0.040 ± 0.0004 σ
+assert round(w1_xrtoolz["null_mean"], 3) == 0.040
+assert round(w1_xrtoolz["null_sd"], 4) == 0.0004
+assert round(w1_xrtoolz["null_max"], 3) == 0.041
+# degree 6 on the same pairs sits inside that null, so the sample estimate
+# cannot tell it from the oracle; the exact W₁ says 0.004
+null_hi = w1_xrtoolz["null_mean"] + 2 * w1_xrtoolz["null_sd"]
+assert round(w1_xrtoolz["emulator_6_mean"], 3) == 0.041
+assert w1_xrtoolz["emulator_6_mean"] < null_hi
 assert round(stage4[6]["w1_over_sd"], 3) == 0.004
 # against θ the shift barely shows: 1.4 points of coverage on the same 500
 # scenes. Paired (11 scenes lost, 4 gained), the difference is −0.014 with
@@ -502,7 +525,7 @@ class Score:  # a ladder Scorer                                        user
         e = np.abs(np.asarray(prediction.point()).ravel() - ref)
         unit = SIG if ref.size == N_TEST * K.size else 1.0  # spectra in σ, α as is
         return {"max_err": round(float(e.max() / unit), 2),
-                "rmse": round(float(np.sqrt(np.mean((e / unit) ** 2))), 3)}
+                "rmse": round(rmse(e / unit, np.zeros_like(e)), 3)}
 
 
 def run(d: int):
@@ -555,7 +578,12 @@ PRIOR = {"law": "uniform", "low": 0.0, "high": A_MAX}
 h0 = reg.store(Artifact("prior", PRIOR), tags={"rung": 1, "role": "prior"})
 h1 = reg.store(Artifact("simulator", {"k": K.tolist(), "sigma": SIG}),
                tags={"rung": 1})
-GRIDCFG = {"nodes": G_ORACLE, "low": 0.0, "high": A_MAX}
+GRIDCFG = {"nodes": G_ORACLE, "low": 0.0, "high": A_MAX, "rule": "trapezoid"}
+# everything the head's predictions depend on, the calibration constant too
+HEAD = {"beta_mu": beta_mu.round(9).tolist(), "beta_s": beta_s.round(9).tolist(),
+        "log_chi2_mean": LOG_CHI2_MEAN}
+h5_other_cal = reg.store(Artifact("gaussian_head", {**HEAD, "log_chi2_mean": -1.0},
+                                  [h0, h1]))
 h2 = reg.store(Artifact("grid_posterior", GRIDCFG, [h0, h1]),
                tags={"rung": 2, "role": "oracle"})
 h2_other_prior = reg.store(Artifact("grid_posterior", {**GRIDCFG, "high": 250.0},
@@ -573,9 +601,8 @@ def store_cycle(d: int) -> dict[int, str]:
     h3 = reg.store(emulator_artifact(d), tags={"rung": 3, "oracle": h1})
     h4 = reg.store(Artifact("grid_posterior", GRIDCFG, [h0, h3]),
                    tags={"rung": 4, "oracle": h2})
-    h5 = reg.store(Artifact("gaussian_head", {"beta_mu": beta_mu.round(9).tolist(),
-                                              "beta_s": beta_s.round(9).tolist()},
-                            [h0, h1]), tags={"rung": 5, "oracle": h2})
+    h5 = reg.store(Artifact("gaussian_head", HEAD, [h0, h1]),
+                   tags={"rung": 5, "oracle": h2})
     return {3: h3, 4: h4, 5: h5}
 
 
@@ -615,6 +642,7 @@ assert changed == {3: True, 4: True, 5: False}
 assert stage6["stale_is_v1_rung4"]  # only the old rung-4 artifact depends on it
 assert by_rung == {1: 2, 2: 1, 3: 2, 4: 2, 5: 1}  # rung 1: the prior and the simulator
 assert h2_other_prior != h2  # another prior support is another oracle
+assert h5_other_cal != v1[5]  # another calibration constant is another head
 assert stage6["same_hash"] and tag_now == "not-the-simulator"  # lineage overwritten
 assert by_parent_tag == []  # parents are config, not tags: the tag filter sees none
 

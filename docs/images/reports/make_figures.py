@@ -1323,7 +1323,8 @@ def r15_ownership() -> Svg:
         " would add BenchmarkContract: the frozen task, splits, references,"
         " metrics and baselines, with its hash. Each term of the contract is"
         " implemented where its data lives: splits over catalog rows in"
-        " geocatalog and the window guard in pipekit-train, baselines and"
+        " geocatalog and the window guard in geopatcher (pipekit-train until"
+        " Report 16's D2 moves the window dataset), baselines and"
         " probabilistic scores in xrtoolz, and the content-addressed store for"
         " contracts and submissions in pipekit-experiment. All four hash with"
         " pipekit's stable_json and sha256_hex.",
@@ -1352,7 +1353,7 @@ def r15_ownership() -> Svg:
     boxes = [
         ("geocatalog", ["block, platform and", "causal splits of rows"], OBS, 24, 186),
         (
-            "pipekit-train",
+            "geopatcher",
             ["window splits, guard", "in time, not origins"],
             ML,
             222,
