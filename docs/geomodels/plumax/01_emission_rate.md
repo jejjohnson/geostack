@@ -79,6 +79,37 @@ commas in the source (`(u, c)`, `λ, c`) and are restored here. A
 **Differs** box marks each place.
 :::
 
+:::{note} Checked against a second derivation
+:class: dropdown
+
+A second derivation of the same five methods (generated with Gemini and
+supplied by the author) was read against this page. It contributed four
+steps the source note skips, now on the page and checked in the notebook:
+the plume's source as an initial condition $U c(0^+) = Q\,\delta\,\delta$
+([plume](#er1-plume)), the puff's moving-frame Green's function
+([puff](#er1-puff)), the step function behind the cross-sectional flux
+([cross-sectional flux](#er1-csf)), and the diffusive boundary term of the divergence method
+([divergence](#er1-divergence)), plus the scaling argument for the IME
+([IME](#er1-ime)). Where it differs from this page:
+
+- **Its puff has no ground.** The unbounded Green's function puts half the
+  mass below the surface for a ground release; plumax's
+  `puff_concentration` adds the image at $z = -H$, and the notebook checks
+  it conserves $M$ above ground.
+- **It drops diffusion from the divergence method everywhere.** That holds
+  only where the boundary lies outside the plume except at the downwind
+  edge; on a box narrower than the plume, diffusion carries 1.18 of the
+  2 kg/s.
+- **Its IME scaling balances the source against advection**, which is zero
+  through a threshold contour ({eq}`er1-eq-adv0`). The diffusive balance
+  gives the same $U\, \text{IME} / L$, which is why the form survives.
+- **It hangs the cross-sectional flux and the IME on the Gaussian plume.**
+  Both, and the divergence method, need only the column equation, so they
+  hold for puffs, non-Gaussian plumes and any $\sigma_y(x)$.
+- Like the source note, it uses constant diffusivities, which plumax's
+  Briggs widths are not ([plume](#er1-plume) section).
+:::
+
 (er1-equation)=
 ## The advection–diffusion equation
 
@@ -130,8 +161,11 @@ The five methods and the equation each comes from.
 height, and invert the column for $Q$.
 
 **Problem.** At steady state, $x$ plays the role of time ($\tau = x / U$) and
-{eq}`er1-eq-highpe` is a two-dimensional heat equation in $(y, z)$. With a
-source at height $H$ and a reflecting ground,
+{eq}`er1-eq-highpe` is a two-dimensional heat equation in $(y, z)$,
+$\partial_\tau c = K_y \partial_{yy} c + K_z \partial_{zz} c$. Integrating
+{eq}`er1-eq-highpe` across $x = 0$ turns the source into its initial
+condition, $U\, c(0^+, y, z) = Q\, \delta(y)\, \delta(z - H)$: the source
+injects $Q / U$ per metre of travel. With a reflecting ground,
 
 $$
 c(x, y, z) = \frac{Q}{2\pi U \sigma_y \sigma_z}
@@ -160,12 +194,17 @@ c = plume_concentration(x, y, z, 0, 0, H, U, 0, Q, D)  # today
 # → Q / (√(2π) U σ_y) e^{−y²/2σ_y²} to 10⁻⁶         user
 # σ_y: 39.0 m at 500 m, 146.1 m at 2 km
 # d ln σ_y / d ln x = 0.99 between 100 and 400 m
+# U ∬ c dy dz on a 1 m grid, H = 30 m              (Y, Z) → ()
+# → Q to 10⁻³ at 500 m and 1.5 km                   user
 ```
 
 The column formula holds for any release height. The two image terms
 together integrate to $\int_{-\infty}^{\infty} e^{-(z-H)^2/2\sigma_z^2}\,dz =
 \sqrt{2\pi}\,\sigma_z$ whatever $H$ is, so plumax's plume released at 30 m has
-the same column as one released at the ground, to quadrature accuracy.
+the same column as one released at the ground, to quadrature accuracy. And
+the flux through every cross-section, $U \iint c\, dy\, dz$, is $Q$: the
+initial condition carried downwind, and the cross-sectional flux in three
+dimensions.
 
 :::{warning} Differs from the plan
 The note derives $\sigma_y^2 = 2 K_y x / U$, the constant-diffusivity
@@ -184,9 +223,23 @@ for every $H$.
 **TL;DR.** Release mass in puffs, keep along-wind diffusion, and recover the
 plume by superposition.
 
-**Problem.** An instantaneous release $M$ at $t = 0$, in the frame moving
-with the wind, diffuses as a three-dimensional Gaussian with
-$\sigma_i^2 = 2 K_i t$. Its column is
+**Problem.** An instantaneous release of mass $M$ at $(0, 0, H)$ and
+$t = 0$ is the initial condition $c(\mathbf{x}, 0) = M\, \delta(x)\,
+\delta(y)\, \delta(z - H)$ of {eq}`er1-eq-adr` with $S = 0$ afterwards. In
+the frame moving with the wind, $x' = x - U t$, the chain rule cancels the
+advection term and leaves the heat equation
+$\partial_t c = K_x \partial_{x'x'} c + K_y \partial_{yy} c + K_z \partial_{zz} c$.
+Its Green's function is the product of three one-dimensional heat kernels,
+$(4\pi K_i t)^{-1/2} e^{-x_i^2 / 4 K_i t}$, and with
+$\sigma_i^2 = 2 K_i t$ and an image at $z = -H$ for a reflecting ground,
+
+$$
+c(x, y, z, t) = \frac{M}{(2\pi)^{3/2} \sigma_x \sigma_y \sigma_z}
+e^{-(x - U t)^2 / 2\sigma_x^2 - y^2 / 2\sigma_y^2}
+\left[ e^{-(z-H)^2 / 2\sigma_z^2} + e^{-(z+H)^2 / 2\sigma_z^2} \right] ,
+$$ (er1-eq-puff3d)
+
+which is plumax's `puff_concentration`. Its column is
 
 $$
 \Omega(x, y, t) = \frac{M}{2\pi\, \sigma_x(t)\, \sigma_y(t)}
@@ -207,6 +260,11 @@ superposed(500, u=5) / kplume(500, u=5)  # Pe 250 → 0.999  user
 superposed(50, u=5) / kplume(50, u=5)    # Pe 25  → 0.990  user
 superposed(500, u=1) / kplume(500, u=1)  # Pe 50  → 0.995  user
 superposed(50, u=1) / kplume(50, u=1)    # Pe 5   → 0.958  user
+# plumax's puff, σ² = 2 K t, t = 100 s, H = 30 m, 2 m grid
+c = puff_concentration(x - U*t, y, z, 0, 0, H, σ, σ, σ, M)   # today
+# ∭_{z ≥ 0} c dV = M to 10⁻⁶                  (301, 301, 201) → ()
+# ∫ c dz = (er1-eq-puffcol) to 10⁻⁶      (301, 301, 201) → (301, 301)
+# ∂c/∂t + U ∂c/∂x − K ∇²c = 0 to 10⁻⁴, central differences   user
 ```
 
 The puff sum and the plume agree to 0.1 % at a Péclet number of 250 and
@@ -229,9 +287,19 @@ $\text{Pe} = 5$.
 **TL;DR.** Integrate the column across the plume at several downwind
 distances and multiply by the wind.
 
-**Problem.** Integrating {eq}`er1-eq-column` at steady state over all $y$
-removes the diffusion term, so $U \int \Omega\, dy$ is constant downwind
-and equals $Q$:
+**Problem.** Integrate {eq}`er1-eq-column` at steady state over all $y$.
+The diffusion term integrates to $K_y [\partial_y \Omega]_{-\infty}^{\infty} = 0$,
+because the plume and its gradient vanish far to the sides, and the source
+term to $Q\, \delta(x)$:
+
+$$
+\frac{d}{dx} \left[ U \int_{-\infty}^{\infty} \Omega\, dy \right] = Q\, \delta(x)
+\quad \Rightarrow \quad
+U \int_{-\infty}^{\infty} \Omega\, dy = Q\, \Theta(x) ,
+$$ (er1-eq-csfstep)
+
+with $\Theta$ the step function and nothing upwind. So the flux is constant
+downwind and equals $Q$:
 
 $$
 Q = U \int_{-\infty}^{\infty} \Omega(x, y)\, dy \quad \text{for every } x > 0 .
@@ -293,8 +361,17 @@ grows downwind.
 Gauss's theorem on a box.
 
 **Problem.** Write the column equation in flux form with
-$\mathbf{F} = \int \mathbf{u}_H\, c\, dz \approx \mathbf{u}_H\, \Omega$. Averaged over
-a long period and neglecting diffusion, the source density is
+$\mathbf{F} = \int \mathbf{u}_H\, c\, dz \approx \mathbf{u}_H\, \Omega$ and integrate it
+over a region $\mathcal{A}$ holding the source. Gauss's theorem turns both
+divergences into boundary integrals:
+
+$$
+Q = \oint_{\partial \mathcal{A}} \mathbf{F} \cdot \hat{\mathbf{n}}\, dl
+- \oint_{\partial \mathcal{A}} K\, \nabla_H \Omega \cdot \hat{\mathbf{n}}\, dl .
+$$ (er1-eq-divfull)
+
+Averaged over a long period and dropping the diffusive term, the source
+density is
 
 $$
 \bar q(x, y) = \nabla_H \cdot \overline{\mathbf{F}} , \qquad
@@ -312,14 +389,23 @@ div = np.gradient(U * column, 20.0, axis=1)            # user
 # Q_A = ∬_A q dA = ∮ F·n dl                      (100, 160) → ()
 area_sum(box(-100, 1500, half=600))  # → 2.000 kg/s    user
 area_sum(box(-100, 1500, half=60))   # → 0.81, too narrow
+# the dropped term on that box, K_eff = (U/2) dσ_y²/dx (Briggs)
+# 2 ∫₀^{x₁} K_eff Ω(x, h) h / σ_y² dx → 1.18; + 0.82 = Q   user
 # one overpass, σ_Ω = 0.003 kg/m²: sd 1.97 kg/s (draw 1.51)
 # 98 overpasses for a 10 % sd
 ```
 
 The area sum and the boundary flux agree to $10^{-6}$, as Gauss's theorem
 requires, and a box wide enough to hold the plume returns $Q$. A box
-narrower than the plume returns 0.81 kg/s: its side edges cut the plume, and
-the method sees no flux there. With noise, the area sum telescopes to the
+narrower than the plume returns 0.81 kg/s. The rest is the diffusive term
+of {eq}`er1-eq-divfull`, which the method drops: plumax's Briggs column
+solves the column equation with an effective diffusivity
+$K_{\text{eff}}(x) = \tfrac{U}{2}\, d\sigma_y^2 / dx$, and with it the
+diffusive flux through the narrow box's side edges is 1.18 kg/s. Advective
+(0.82 exactly, 0.81 on the grid) plus diffusive is $Q$ to $10^{-6}$.
+Dropping diffusion is safe only for a boundary that crosses the plume where
+advection carries it, at the downwind edge, and lies outside it everywhere
+else. With noise, the area sum telescopes to the
 two edge columns, so its uncertainty is theirs: about 2 kg/s for one
 overpass at 0.003 kg/m² of noise, the size of the signal itself. That is why
 the method averages many overpasses, as the note says it does at TROPOMI's
@@ -334,8 +420,9 @@ free even when the 3D flow is, so $\nabla_H \cdot (\mathbf{u}_H \Omega)$ on the
 background; using the **enhancement**, as the note does, is what keeps the
 background out, and Koene et al. [@koene2024] analyse the remainder. And the
 divergence method and the cross-sectional flux are identical only for the
-same domain and the same assumptions about the side and upwind edges, as the
-narrow box shows.
+same domain and the same assumptions about the side and upwind edges: on the
+narrow box more than half of $Q$ leaves by the diffusive term the method
+drops.
 :::
 
 (er1-ime)=
@@ -361,7 +448,14 @@ Q = -\oint_{\partial\mathcal{A}} K_y\, \frac{\partial \Omega}{\partial y}\, n_y\
 $$ (er1-eq-diffQ)
 
 The IME sidesteps the boundary with a residence time,
-$\tau = \text{IME} / Q$, parameterised as $\tau = L / U_{\text{eff}}$:
+$\tau = \text{IME} / Q$, parameterised as $\tau = L / U_{\text{eff}}$.
+A scaling argument gives the same form from either balance. Balancing the
+source against advection, $U\, \Omega / L \sim Q / A$ with
+$\text{IME} \sim \Omega A$, gives $Q \sim U\, \text{IME} / L$. Balancing it
+against what really leaves, crosswind diffusion out of a plume of width
+$W$ and length $L$, gives $Q \sim K_y\, \text{IME} / W^2$, and diffusive
+growth, $W^2 \sim K_y L / U$, turns that into the same $U\, \text{IME} / L$.
+The order-one factor the scaling leaves out is what the calibration fixes:
 
 $$
 \text{IME} = \sum_{j \in \mathcal{A}} \Omega_j A_j , \qquad
@@ -432,8 +526,10 @@ The divergence method and the cross-sectional flux are the same statement in
 differential and integral form. The IME is the cross-sectional flux's area
 analogue: it trades the wind direction for a calibration. plumax also
 carries forward models the note does not cover, a Lagrangian particle model
-and an Eulerian large-eddy model on finitevolx, which is how the IME's
-calibrations are made.
+and an Eulerian large-eddy model on finitevolx, which can generate the
+synthetic plumes an IME calibration is fitted on. The cross-sectional flux,
+the divergence method and the IME use only the column equation, not the
+Gaussian solution, so they hold for any plume shape.
 
 (er1-open-questions)=
 ## Open questions
