@@ -27,6 +27,7 @@ project:
         - file: docs/reports/14_pipekit_evaluate.md
         - file: docs/reports/15_benchmarking.md
         - file: docs/reports/16_geo_data_stack.md
+        - file: docs/reports/17_cycle.md
     - title: Notes
       children:
         - file: docs/notes/background.md
