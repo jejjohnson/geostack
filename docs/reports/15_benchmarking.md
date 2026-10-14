@@ -79,7 +79,8 @@ gap-fillers. A **Differs** box marks each place.
 pipekit-evaluate, hashed with pipekit's `stable_json` and `sha256_hex`, and
 recorded on every report it produces. Each term of the contract is
 implemented where its data lives: splits of catalog rows in geocatalog and of
-training windows in pipekit-train, baselines and probabilistic scores in
+training windows in geopatcher (pipekit-train until Report 16's D2 moves the
+window dataset), baselines and probabilistic scores in
 xrtoolz, and the content-addressed store for contracts and submissions in
 pipekit-experiment. No new package, and no hosted scoring service.
 
@@ -174,7 +175,7 @@ by the library that owns the data the term constrains.
 
 :::{figure} ../images/reports/r15_ownership.svg
 :label: fig-r15-ownership
-:alt: Benchmark projects write contracts and read reports through pipekit-evaluate, which ships Benchmark, ReferenceRule, Scorer, Task and BenchmarkReport and would add BenchmarkContract, variant and track checks and a contract hash on reports. Below it, geocatalog holds block, platform and causal splits of rows, pipekit-train the window splits and their guard, xrtoolz the baselines and CRPS, and pipekit-experiment the content-addressed store. All four use pipekit's hashing.
+:alt: Benchmark projects write contracts and read reports through pipekit-evaluate, which ships Benchmark, ReferenceRule, Scorer, Task and BenchmarkReport and would add BenchmarkContract, variant and track checks and a contract hash on reports. Below it, geocatalog holds block, platform and causal splits of rows, geopatcher the window splits and their guard (in pipekit-train until Report 16's D2 moves them), xrtoolz the baselines and CRPS, and pipekit-experiment the content-addressed store. All four use pipekit's hashing.
 
 The contract lives in pipekit-evaluate; its splits, baselines and storage
 live with their data.
@@ -720,7 +721,8 @@ rep.contract_hash == c.content_hash()                    # proposed (A2)
 ## Workstream B · Splits as contract terms
 
 **Decision.** A split is a function of catalog rows in geocatalog, or of
-windows in pipekit-train, configured by the contract and refusing what it
+windows in `geopatcher.integrations.train` (pipekit-train until Report 16's D2
+moves the window dataset), configured by the contract and refusing what it
 cannot honour; the contract also says which gap the split reproduces.
 
 :::{table} Workstream B's moves.

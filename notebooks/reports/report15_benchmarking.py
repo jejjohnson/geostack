@@ -370,7 +370,12 @@ except ModuleNotFoundError as err:
 
     sys.modules["geopatcher.time"] = _stencils
 from geopatcher.time import TimeStencil  # noqa: E402
-from pipekit_train import XarrayWindowDataset  # noqa: E402
+try:  # Report 16's D2 moves the dataset; fall back to the pinned location
+    from geopatcher.integrations.train import XarrayWindowDataset
+except ModuleNotFoundError as err:
+    if err.name != "geopatcher.integrations.train":
+        raise
+    from pipekit_train import XarrayWindowDataset
 
 cell = truth.isel(y=[0], x=[0]).squeeze("y").drop_vars("y").to_dataset()
 stencils = {"input": TimeStencil("-2D", "0D", "1D", closed="both"),
