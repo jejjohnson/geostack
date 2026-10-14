@@ -12,6 +12,12 @@ project:
       children:
         - file: docs/overview_examples.md
         - file: docs/benchmarks_gallery.md
+    - title: GeoModels
+      children:
+        - file: docs/geomodels/package_boundaries.md
+        - title: radtrax
+          children:
+            - file: docs/geomodels/radtrax/01_column_retrieval.md
     - title: Reports
       children:
         - title: Across the stack
