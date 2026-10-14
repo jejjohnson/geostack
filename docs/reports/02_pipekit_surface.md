@@ -899,9 +899,11 @@ The proposal's exclusions all held at 0.0.2:
 
 - **Distributed execution** (Dask, Ray, Beam, Flink): the orchestrator's
   job.
-- **Automatic differentiation and JAX `jit`**: these clash with dual-mode
-  `__call__`. They live in a separate package; the shipped one is
-  pipekit-jax.
+- **Automatic differentiation and JAX `jit`** as pipekit features: they
+  live in a separate package, pipekit-jax. They do not clash with dual-mode
+  `__call__`, as this page first said: a tracer is not a `Node`, so a
+  pipeline of JAX operators already runs under `jit`, `vmap` and `grad` with
+  respect to its inputs ([Report 5](05_pipekit_jax.md#r5-stage-1)).
 - **Type-checking operator chains at construction**: `Sequential([op_a,
   op_b])` does not check that `op_a`'s output type matches `op_b`'s input.
   `Signature` checks shape; type checking is a stretch goal.

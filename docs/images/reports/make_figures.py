@@ -1912,6 +1912,175 @@ def r17_roadmap() -> Svg:
     return f
 
 
+def r5_ownership() -> Svg:
+    """Report 5: what runs under JAX transformations, and who owns the rest."""
+    f = Svg(
+        840,
+        10,
+        "Ownership of JAX support. At the top, pipekit pipelines of pure JAX"
+        " operators (Sequential, Graph, Fanout) already run under jit, vmap and"
+        " grad with respect to their inputs. pipekit core owns the operators that"
+        " misbehave under tracing (Cache, Snapshot, Sink, Profile, Tap, Branch,"
+        " Switch) and would add trace guards. pipekit-jax 0.0.2 ships JaxModelOp,"
+        " DiffraxForwardModel, to_diffrax_adjoint and truncated_scan, and would"
+        " add JaxOperator, JaxSequential, CondBranch and DebugTap. pipekit-train"
+        " trains the wrapped module and pipekit-cycle owns the forward-model"
+        " protocol and the adjoint specs. JAX, Equinox and diffrax are external.",
+    )
+    f.box(
+        24,
+        20,
+        792,
+        62,
+        "pipekit pipelines of JAX operators",
+        ["Sequential · Graph · Fanout: jit, vmap and grad over inputs run today"],
+        hue=(BORDER, PANEL),
+        title_size=14.5,
+        sub_size=12,
+    )
+    f.rect(24, 112, 384, 168, stroke=OBS[0], fill=OBS[1])
+    f.text(44, 138, "pipekit core", size=16, weight=700, anchor="start")
+    f.text(
+        44,
+        160,
+        "wrong or trace-time only under jit:",
+        size=12,
+        color=MUTED,
+        anchor="start",
+    )
+    x, y = 44.0, 172.0
+    for c in ["Cache", "Snapshot", "Sink", "Profile", "Tap", "Branch", "Switch"]:
+        w = f.chip(x, y, c, hue=(BORDER, CARD), size=11.5)
+        x += w + 8
+        if x > 340:
+            x, y = 44.0, y + 32
+    f.text(44, 252, "proposed:", size=12, color=MUTED, anchor="start")
+    f.chip(118, 236, "trace guards (A)", hue=(OBS[0], CARD), dashed=True, size=11.5)
+    f.rect(432, 112, 384, 168, stroke=ML[0], fill=ML[1])
+    f.text(452, 138, "pipekit-jax 0.0.2", size=16, weight=700, anchor="start")
+    x = 452.0
+    for c in ["JaxModelOp", "DiffraxForwardModel"]:
+        x += f.chip(x, 152, c, hue=(BORDER, CARD), size=11.5) + 8
+    x = 452.0
+    for c in ["to_diffrax_adjoint", "truncated_scan"]:
+        x += f.chip(x, 184, c, hue=(BORDER, CARD), size=11.5) + 8
+    f.text(452, 232, "proposed:", size=12, color=MUTED, anchor="start")
+    x = 526.0
+    for c in ["JaxOperator", "JaxSequential"]:
+        x += f.chip(x, 216, c, hue=(ML[0], CARD), dashed=True, size=11.5) + 8
+    x = 526.0
+    for c in ["CondBranch", "DebugTap"]:
+        x += f.chip(x, 246, c, hue=(ML[0], CARD), dashed=True, size=11.5) + 8
+    f.arrow([(216, 82), (216, 110)], color=INK)
+    f.arrow([(624, 82), (624, 110)], color=INK)
+    f.box(
+        24,
+        318,
+        384,
+        64,
+        "pipekit-train",
+        ["trains the module JaxModelOp wraps"],
+        hue=ENG,
+    )
+    f.box(
+        432,
+        318,
+        384,
+        64,
+        "pipekit-cycle",
+        ["ForwardModel, SupportsAdjoint, adjoint specs"],
+        hue=STATE,
+    )
+    # pipekit-train unwraps JaxModelOp; pipekit-jax implements cycle protocols
+    f.arrow([(216, 316), (216, 298), (500, 298), (500, 282)], color=LINE)
+    f.text(224, 293, "unwraps JaxModelOp", size=11, color=MUTED, anchor="start")
+    f.arrow([(700, 282), (700, 316)], color=LINE)
+    f.text(708, 304, "implements", size=11, color=MUTED, anchor="start")
+    f.box(
+        24,
+        412,
+        792,
+        50,
+        "JAX · Equinox · Optax · diffrax",
+        ["external: the transformations, PyTrees and solvers"],
+        hue=EXT,
+        title_size=13.5,
+        sub_size=11.5,
+    )
+    f.h = 480
+    return f
+
+
+def r5_roadmap() -> Svg:
+    """Report 5: honest core first, then PyTree operators, then wrappers."""
+    f = Svg(
+        840,
+        10,
+        "Roadmap. Phase 1 makes pipekit core honest under tracing: Cache refuses"
+        " traced inputs and the side-effecting observers say they run at trace"
+        " time (A1, A2), and the build-time versus trace-time page is written"
+        " (E1). Phase 2 adds operators that are PyTrees, so gradients reach their"
+        " parameters, with a JSON-safe config (B1, B2), and JAX-native control and"
+        " observation operators (C1, C2). Phase 3, the transformation wrappers"
+        " (D), waits for a project that needs them.",
+    )
+    rows = [
+        (
+            [
+                ("1a · A1 A2", ["Cache refuses tracers,", "observers warn"], OBS),
+                ("1b · E1", ["build time and trace", "time, in the docs"], OBS),
+            ],
+            "A1 · A2 · E1",
+        ),
+        (
+            [
+                ("2a · B1 B2", ["JaxOperator, JaxSequential,", "JSON-safe config"], ML),
+                ("2b · C1 C2", ["CondBranch, CondSwitch,", "DebugTap"], ML),
+            ],
+            "B1 · B2 · C1 · C2",
+        ),
+        (
+            [
+                (
+                    "3 · D",
+                    [
+                        "VMapOver, Checkpoint, ScanSequential,",
+                        "when a project needs them",
+                    ],
+                    EXT,
+                )
+            ],
+            "",
+        ),
+    ]
+    y = 24.0
+    for items, gate in rows:
+        n = len(items)
+        w = (792 - 18 * (n - 1)) / n
+        for i, (name, sub, hue) in enumerate(items):
+            f.box(24 + i * (w + 18), y, w, 70, name, sub, hue=hue, title_size=14)
+        cx, gy, d = 420, y + 70 + 26, 13
+        f.arrow([(cx, y + 70), (cx, gy - d - 1)], color=LINE)
+        f.parts.append(
+            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+            f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}" stroke-width="1.4"/>'
+        )
+        f.text(
+            cx + d + 10,
+            gy + 4.5,
+            f"gates {gate}" if gate else "gate: a project that needs them",
+            size=12,
+            color=ENG[0],
+            anchor="start",
+            weight=600,
+        )
+        if items is not rows[-1][0]:
+            f.arrow([(cx, gy + d), (cx, gy + 48)], color=LINE)
+        y = gy + 50
+    f.h = int(y - 8)
+    return f
+
+
 # -- readiness: what each report's sketches call, by marker -----------------
 #
 # Every stack call in a report's sketches ends with a marker: ``today`` (it
@@ -1980,7 +2149,7 @@ READY_HUE = {
 def readiness(n: int) -> Svg:
     """Report ``n``'s readiness: one row per stage or workstream, one square
     per marked call in its sketch, coloured by marker."""
-    md = next((OUT.parent.parent / "reports").glob(f"{n}_*.md"))
+    md = next((OUT.parent.parent / "reports").glob(f"{n:02d}_*.md"))
     calls = marked_calls(md)
     rows: dict[str, list[Call]] = {
         re.sub(r"\s*\(.*\)\s*$", "", h.lstrip("# ").strip()): []
@@ -2085,7 +2254,9 @@ FIGURES = {
     "r16_roadmap": r16_roadmap,
     "r17_ownership": r17_ownership,
     "r17_roadmap": r17_roadmap,
-    **{f"r{n}_readiness": _readiness(n) for n in range(10, 18)},
+    "r5_ownership": r5_ownership,
+    "r5_roadmap": r5_roadmap,
+    **{f"r{n}_readiness": _readiness(n) for n in (5, *range(10, 18))},
 }
 
 
