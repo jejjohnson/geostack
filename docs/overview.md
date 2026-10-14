@@ -401,7 +401,7 @@ contract.
 | 3 · Emulator | `pipekit-train.SimulationDataset`, registered in `pipekit-experiment.ModelRegistry` |
 | 4 · Emulator-based inference | `pipekit-cycle.DACycle` with `NeuralForward` |
 | 5 · Amortized inference | `pipekit-train` with `gauss_flows` or `pyrox` |
-| 6 · Improve | `pipekit-evaluate.EvaluationReport` diffs |
+| 6 · Improve | `pipekit-evaluate.Benchmark` reruns, compared row by row, with lineage in `pipekit-experiment` |
 :::
 
 (sec-axes-relate)=
@@ -419,8 +419,11 @@ and somewhere on the six-step cycle (production maturity).
 **Every transition crossed with every step is a concrete method.**
 ```
 
-**Every cell is a benchmarkable artifact,** and every cell uses the column
-before it as its oracle. The whole lifecycle is a nested set of six-step
+**Every cell is a benchmarkable artifact,** scored against the earlier step
+that computes the same thing: an emulator against the simulator it
+replaces, and emulator-based and amortized inference against the step-2
+oracle's posterior. pipekit-evaluate's benchmark ladder ships this rule
+([Report 17](reports/17_cycle.md#r17-stage-1)). The whole lifecycle is a nested set of six-step
 cycles, each gated by benchmarks. That is what makes the framework
 improvable in practice: improving a cell re-runs its downstream column,
 lineage is content-addressed, and nothing is opaque.
@@ -1010,8 +1013,8 @@ training and serving still need work, but the pipelines exist.
 - leakage-aware splits: block, platform and causal splits of catalog rows in
   geocatalog, and the window guard in time units in pipekit-train
 - standard baselines in xrtoolz: persistence, climatology, OI
-- `ModelRole` and `ArtifactLineage` in pipekit-experiment, the six-step
-  cycle's content-addressed lineage
+- lineage in pipekit-experiment's content hash, with a dependents query: the
+  six-step cycle's lineage ([Report 17](reports/17_cycle.md#r17-ws-b))
 
 **Gate:** F1 metric identities.
 :::
@@ -1019,8 +1022,10 @@ training and serving still need work, but the pipelines exist.
 :::{tab-item} Month 6
 - particle tracking (`xrtoolz.lagrangian`) and event detection
   (`xrtoolz.events`)
-- `BenchmarkContract` and `CycleStageBenchmark` artifacts
-- multi-track evaluation as a built-in pattern
+- `BenchmarkContract` with transition cells and an oracle strength
+  ([Report 17](reports/17_cycle.md#r17-ws-a))
+- several references per run in the benchmark runner
+  ([Report 15](reports/15_benchmarking.md#r15-ws-d))
 - the first worked cycle (likely methane L1→L2 retrieval, steps 1–5)
 - the first worked benchmark (SSH, from the [benchmarks gallery](benchmarks_gallery.md#gal-1-1))
 

@@ -1759,6 +1759,157 @@ def r16_roadmap() -> Svg:
     return f
 
 
+def r17_ownership() -> Svg:
+    """Report 17: the cycle is the ladder; lineage lives in the registry's hash."""
+    f = Svg(
+        840,
+        560,
+        "Ownership of the six-step cycle. Domain projects run the steps and"
+        " read cycle reports. pipekit-evaluate ships the ladder the cycle"
+        " already is (RUNG_NAMES, DEFAULT_STAGED, Cell, Benchmark) and, as the"
+        " one new surface, would add transition cells, an oracle strength and"
+        " rung-3 scoring on the parameters. pipekit-cycle runs steps 1, 2 and"
+        " 4, pipekit-train trains steps 3 and 5, xrtoolz scores posteriors"
+        " against the oracle, and pipekit-experiment stores every artifact"
+        " with its parents inside its hash. Domain libraries supply the"
+        " physics and the classical oracles through adapters.",
+    )
+    f.box(
+        24,
+        20,
+        792,
+        56,
+        "domain projects · benchmark curators · the benchmarks gallery",
+        ["run steps 1 to 5, read the cycle report, improve one step at a time"],
+        hue=(BORDER, PANEL),
+        title_size=14.5,
+        sub_size=12,
+    )
+    f.rect(24, 110, 792, 120, stroke=ENG[0], fill=ENG[1])
+    f.text(44, 136, "pipekit-evaluate", size=16, weight=700, anchor="start")
+    x = 44.0
+    for c in ["RUNG_NAMES", "DEFAULT_STAGED", "Cell", "Benchmark", "Estimator"]:
+        x += f.chip(x, 150, c, hue=(BORDER, CARD), size=12) + 8
+    f.text(44, 206, "proposed:", size=12.5, color=MUTED, anchor="start")
+    x = 120.0
+    for c in ["transition cells", "OracleStrength", "rung 3 scored on θ"]:
+        x += f.chip(x, 190, c, hue=(ENG[0], CARD), dashed=True, size=12) + 8
+    f.arrow([(420, 76), (420, 108)], color=INK)
+    boxes = [
+        (
+            "pipekit-cycle",
+            ["steps 1, 2, 4: forward,", "Recurrence, NeuralForward"],
+            OBS,
+            24,
+            186,
+        ),
+        (
+            "pipekit-train",
+            ["steps 3, 5: simulation", "data, training loop"],
+            ML,
+            222,
+            186,
+        ),
+        ("xrtoolz", ["posterior distance", "to the oracle (W₁)"], STATE, 420, 196),
+        (
+            "pipekit-experiment",
+            ["registry: parents in", "the hash, dependents"],
+            EXT,
+            628,
+            188,
+        ),
+    ]
+    for name, sub, hue, bx, bw in boxes:
+        f.box(bx, 280, bw, 80, name, sub, hue=hue, title_size=14.5, sub_size=12)
+        f.arrow([(bx + bw / 2, 230), (bx + bw / 2, 278)], color=INK)
+    f.box(
+        24,
+        420,
+        792,
+        60,
+        "domain libraries (plumax, somax, rtmx, filterax, vardax)",
+        ["steps 1 and 2: physics and classical oracles, through adapters/pipekit.py"],
+        hue=(LINE, PANEL),
+        title_size=14.5,
+        sub_size=12,
+    )
+    for bx, bw in [(24, 186), (222, 186)]:
+        f.arrow([(bx + bw / 2, 418), (bx + bw / 2, 362)], color=LINE, dashed=True)
+    f.h = 500
+    return f
+
+
+def r17_roadmap() -> Svg:
+    """Report 17: name the cycle first, then lineage and scoring, then a real cycle."""
+    f = Svg(
+        840,
+        420,
+        "Roadmap. Phase 1 corrects the docs' oracle rule and links the reports"
+        " to the cycle (D1, D2), beside transition cells and an oracle"
+        " strength on the ladder (A1, A2). Phase 2 records lineage inside the"
+        " registry's hash and answers what depends on an artifact (B1, B2),"
+        " beside rung-3 scoring on the parameters and posterior distances to"
+        " the oracle (A3, C1, C2). Phase 3 reruns every gate on a real methane"
+        " retrieval once its physics libraries are pinned.",
+    )
+    rows = [
+        (
+            [
+                ("1a · D1 D2", ["correct the oracle rule,", "link the reports"], ENG),
+                ("1b · A1 A2", ["transition cells,", "oracle strength"], ENG),
+            ],
+            "D1 · D2 · A1 · A2",
+        ),
+        (
+            [
+                ("2a · B1 B2", ["parents in the hash,", "dependents query"], EXT),
+                (
+                    "2b · A3 C1 C2",
+                    ["rung 3 on θ, W₁ with", "weights, two references"],
+                    STATE,
+                ),
+            ],
+            "B1 · B2 · A3 · C1 · C2",
+        ),
+        (
+            [
+                (
+                    "3 · a real cycle",
+                    ["methane L1 → L2 with", "pinned RT and plume code"],
+                    ML,
+                )
+            ],
+            "A to C rerun on real data",
+        ),
+    ]
+    y = 24.0
+    for items, gate in rows:
+        n = len(items)
+        w = (792 - 18 * (n - 1)) / n
+        for i, (name, sub, hue) in enumerate(items):
+            f.box(24 + i * (w + 18), y, w, 66, name, sub, hue=hue, title_size=14)
+        cx, gy, d = 420, y + 66 + 24, 12
+        f.arrow([(cx, y + 66), (cx, gy - d - 1)], color=LINE)
+        f.parts.append(
+            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+            f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}" stroke-width="1.4"/>'
+        )
+        f.text(
+            cx + d + 10,
+            gy + 4.5,
+            f"gates {gate}",
+            size=12,
+            color=ENG[0],
+            anchor="start",
+            weight=600,
+        )
+        if items is not rows[-1][0]:
+            f.arrow([(cx, gy + d), (cx, gy + 42)], color=LINE)
+        y = gy + 44
+    f.h = int(y - 10)
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
@@ -1779,6 +1930,8 @@ FIGURES = {
     "r15_roadmap": r15_roadmap,
     "r16_ownership": r16_ownership,
     "r16_roadmap": r16_roadmap,
+    "r17_ownership": r17_ownership,
+    "r17_roadmap": r17_roadmap,
 }
 
 

@@ -181,7 +181,10 @@ slow.
 ## The running example: an emulator, a retrieval and a stored archive
 
 The stages reuse [Report 10](10_pipekit_cycle.md)'s two problems, so that a
-trained model can be checked against the exact operator it replaces.
+trained model can be checked against the exact operator it replaces. In the
+six-step cycle, stage 2 is step 3 of a forecast (stage 3 runs that emulator
+forward), and stages 6 and 7 are steps 5 and 2 of a retrieval; [Report 17](17_cycle.md#r17-running)
+runs all six steps on the same retrieval.
 
 **The transport model.** A methane enhancement $x \in \mathbb{R}^N$ on a
 periodic transect of $N = 40$ cells moves one cell-fraction downstream per

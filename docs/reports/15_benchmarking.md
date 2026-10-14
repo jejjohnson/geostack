@@ -111,7 +111,8 @@ can run it: the splits refuse configurations that would leak, the baselines
 are the same code for every entry, the runner records each entry's variant
 and scores every track, and the report names the contract and the data,
 and each of its rows the model it scored. Running the leaderboard, a blind test service and its queue
-stays with the projects that host one.
+stays with the projects that host one. Each cell of the six-step cycle is
+benchmarked by one such contract ([Report 17](17_cycle.md#r17-ws-a)).
 
 (r15-framework)=
 ## The framework, as the scoping report put it

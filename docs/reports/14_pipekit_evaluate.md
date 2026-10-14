@@ -488,6 +488,9 @@ all in [](#r14-ws-a):
 - **`to_dict` drops the reference, the note and the axis**, and nothing
   hashes, tables or logs the report.
 
+[Report 17](17_cycle.md#r17-stage-6) runs the same ladder on rungs 2 to 5 of
+one retrieval, including the emulator rungs 3 and 4 this stage leaves empty.
+
 :::{warning} Differs from the plan
 The scoping report did not have a benchmark ladder; its runner was
 `pe.Pipeline([...]).run(predictions, reference)` with an `EvaluationReport`.
