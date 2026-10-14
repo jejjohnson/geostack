@@ -19,6 +19,7 @@ project:
           children:
             - file: docs/geomodels/radtrax/01_column_retrieval.md
             - file: docs/geomodels/radtrax/02_mbmp.md
+            - file: docs/geomodels/radtrax/03_design.md
         - title: plumax
           children:
             - file: docs/geomodels/plumax/01_emission_rate.md
