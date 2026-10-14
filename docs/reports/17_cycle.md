@@ -422,8 +422,8 @@ fast = grid_posterior(y, f_hat_4)             # (n, B) → (n, G)   user
 # degree 6: max 0.02
 # 95 % coverage vs α: degree 4 0.948, degree 6 0.962 (the oracle's)
 # W₁ = ∫ |F̂ − F| dα, from 2,000 samples of each, in oracle widths
-a = xr.DataArray(fast.sample(2000), dims=("scene", "member"))
-b = xr.DataArray(oracle.sample(2000), dims=("scene", "member"))
+a = xr.DataArray(fast.sample(2000, key=1), dims=("scene", "member"))
+b = xr.DataArray(oracle.sample(2000, key=2), dims=("scene", "member"))
 w1 = xrtoolz.metrics.wasserstein_1(a, b)      # (n, 2000) → (n,)  today
 (w1 / oracle.sd()).mean()                      # (n,) → () : 0.37
 # the oracle against itself: 0.04, the sampling floor at 2,000 draws
@@ -431,8 +431,10 @@ w1 = xrtoolz.metrics.wasserstein_1(a, b)      # (n, 2000) → (n,)  today
 
 A 3 % emulator moves the posterior mean by up to 1.9 widths, while the
 width of the posterior does not change at all and the coverage of the truth
-drops only from 96.2 % to 94.8 %, within 1.5 standard errors of the oracle's:
-a check against the truth, or on the uncertainty alone, would pass. The
+drops only from 96.2 % to 94.8 %. On the same 500 scenes the paired
+difference (11 scenes lost, 4 gained) is −1.4 ± 0.8 points, z = −1.8: a
+check against the truth at this sample size would not reject it at 95 %,
+and a check on the uncertainty alone would pass outright. The
 degree-6 emulator, at 0.03 σ, reproduces the oracle to 0.02 widths. Scoring
 step 4 against the oracle, as the ladder's rule does, is what makes this
 visible; scored against the truth alone, the degree-4 inversion looks like
@@ -473,7 +475,9 @@ with r_i = α_i − φ(y_i)ᵀβ_μ, and log s(y)² = φ(y)ᵀβ_s + 1.27, since
 q = amortized(y)                      # (n, B) → μ (n,), s (n,)   user
 # against α: RMSE 0.255; 𝔼[z²] 0.90 (s.e. 0.063); 95 % coverage 0.954
 # against the oracle: width ratio 1.16; 1.53 for α < 50 (83 scenes)
-# mean shift for α < 50: 1.04 widths RMS, 3.6 at worst; W₁ / s 0.38
+# mean shift for α < 50: 1.04 widths RMS, 3.6 at worst
+# W₁ / s 0.38, over the real line: the Gaussian's tails outside [0, 300]
+#   are added in closed form, s (z Φ(z) + φ(z)) on each side
 ```
 
 Against the truth, the predictor passes: 𝔼[z²] = 0.90, within 1.6
@@ -531,12 +535,18 @@ report = pe.Benchmark(task=task, scorers=[Score()], level="L2",
 EmulatorRung.fit(task)       # reads θ: rung 3 needs θ, not y  user
 
 reg = px.LocalModelRegistry(root)                             # today
+h0 = reg.store(Artifact("prior", {"low": 0, "high": 300}),
+               tags={"rung": 1, "role": "prior"})             # today
 h1 = reg.store(Artifact("simulator", {...}),
                tags={"rung": 1})                              # today
+h2 = reg.store(Artifact("grid_posterior", {"nodes": 30001, "low": 0,
+               "high": 300}, parents=[h0, h1]),
+               tags={"rung": 2, "role": "oracle"})            # today
+# another prior support → another oracle hash (asserted)
 h3 = reg.store(Artifact("poly_emulator", {...}, parents=[h1]),
                tags={"rung": 3, "oracle": h1})                # today
-# … rungs 2, 4 and 5 likewise; then step 6: the degree-6 emulator
-# → new hashes for rungs 3 and 4; rung 5's unchanged (parent h1)
+# … rungs 4 and 5 likewise (parents [h0, h3] and [h0, h1]); then step 6
+# → new hashes for rungs 3 and 4; rung 5's unchanged (parents h0, h1)
 dependents(h3)       # → [old rung 4]: a scan of configs      user
 reg.store(emulator_6, tags={"oracle": "x"})
 # → the same hash; its oracle tag is now "x"                  today

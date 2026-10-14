@@ -235,11 +235,16 @@ def laplace(y: np.ndarray) -> GaussEstimate:
     return GaussEstimate(a_hat, SIG / np.linalg.norm(K * f(a_hat), axis=1))
 
 
-def coverage95(est, truth: np.ndarray) -> float:
+def covered95(est, truth: np.ndarray) -> np.ndarray:
+    # 𝟙[α ∈ central 95 % interval], per scene                    (n,) → (n,)
     c = est.cdf()
     lo = GRID[[np.searchsorted(ci, 0.025) for ci in c]]
     hi = GRID[[min(np.searchsorted(ci, 0.975), G_ORACLE - 1) for ci in c]]
-    return float(np.mean((truth >= lo) & (truth <= hi)))
+    return (truth >= lo) & (truth <= hi)
+
+
+def coverage95(est, truth: np.ndarray) -> float:
+    return float(np.mean(covered95(est, truth)))
 
 
 def rmse(a: np.ndarray, b: np.ndarray) -> float:
@@ -333,9 +338,20 @@ assert round(stage3[4]["rel_max"], 3) == 0.032  # 3.2 % of the transmittance, wo
 # between the two posterior distribution functions.
 
 # %%
+def gauss_tails(mu: np.ndarray, sd: np.ndarray) -> np.ndarray:
+    # ∫_{−∞}^0 Φ((α − μ)/s) dα + ∫_{300}^{∞} (1 − Φ((α − μ)/s)) dα, with
+    # ∫_{−∞}^0 Φ((α − μ)/s) dα = s (z Φ(z) + φ(z)), z = −μ/s, and likewise above
+    lo, hi = (0.0 - mu) / sd, (mu - A_MAX) / sd
+    return sd * (lo * norm.cdf(lo) + norm.pdf(lo) + hi * norm.cdf(hi) + norm.pdf(hi))
+
+
 def versus_oracle(est) -> dict[str, float]:
     shift = (est.point() - m_or) / s_or
+    # W₁ = ∫ |F̂ − F| dα over the real line: the oracle has no mass outside
+    # [0, 300], so a Gaussian estimate adds its two tails in closed form
     w1 = np.abs(est.cdf() - oracle.cdf()).sum(1) * (GRID[1] - GRID[0])
+    if isinstance(est, GaussEstimate):
+        w1 = w1 + gauss_tails(est.mean, est.std)
     return {"shift_rms": float(np.sqrt(np.mean(shift**2))),
             "shift_max": float(np.abs(shift).max()),
             "sd_ratio": float(np.mean(est.sd() / s_or)),
@@ -356,7 +372,13 @@ def w1_samples(a, b, n: int = 2_000) -> float:
 w1_xrtoolz = {"emulator_4": w1_samples(fast[4], oracle),
               "oracle_vs_itself": w1_samples(oracle, oracle)}
 stage4_truth = {d: coverage95(fast[d], alpha_test) for d in coef}
-{d: {k: round(v, 3) for k, v in s.items()} for d, s in stage4.items()}, stage4_truth, w1_xrtoolz
+# the two coverages are on the same scenes: test the paired difference
+dcov = (covered95(fast[4], alpha_test).astype(float)
+        - covered95(oracle, alpha_test).astype(float))           # (n,) ∈ {−1, 0, 1}
+paired = {"diff": float(dcov.mean()),
+          "se": float(dcov.std(ddof=1) / np.sqrt(N_TEST)),
+          "n_lost": int((dcov < 0).sum()), "n_gained": int((dcov > 0).sum())}
+{d: {k: round(v, 3) for k, v in s.items()} for d, s in stage4.items()}, stage4_truth, w1_xrtoolz, paired
 
 # %%
 assert {k: round(v, 2) for k, v in stage4[4].items()} == {
@@ -368,8 +390,13 @@ assert round(w1_xrtoolz["emulator_4"], 2) == 0.37
 assert round(w1_xrtoolz["oracle_vs_itself"], 2) == 0.04
 assert stage4[6]["w1_over_sd"] < w1_xrtoolz["oracle_vs_itself"]  # below the floor
 assert round(stage4[6]["w1_over_sd"], 3) == 0.004
-# against θ the shift barely shows: 1.4 points of coverage, 1.4 standard errors
+# against θ the shift barely shows: 1.4 points of coverage on the same 500
+# scenes. Paired (11 scenes lost, 4 gained), the difference is −0.014 with
+# standard error 0.0077: z = −1.8, short of a 95 % two-sided test
 assert round(stage4_truth[4], 3) == 0.948
+assert round(paired["diff"], 3) == -0.014 and round(paired["se"], 4) == 0.0077
+assert (paired["n_lost"], paired["n_gained"]) == (11, 4)
+assert abs(paired["diff"] / paired["se"]) < 1.96
 assert round(stage4_truth[6], 3) == 0.962  # the degree-6 emulator is the oracle
 
 # %% [markdown]
@@ -522,10 +549,19 @@ sys.path.insert(0, str(root))
 from r16ops import Artifact  # noqa: E402
 
 reg = LocalModelRegistry(root / "reg")
+# the prior is an artifact of its own: the oracle, the emulator inversion and
+# the head all depend on its support, so a new support must change their hashes
+PRIOR = {"law": "uniform", "low": 0.0, "high": A_MAX}
+h0 = reg.store(Artifact("prior", PRIOR), tags={"rung": 1, "role": "prior"})
 h1 = reg.store(Artifact("simulator", {"k": K.tolist(), "sigma": SIG}),
                tags={"rung": 1})
-h2 = reg.store(Artifact("grid_posterior", {"nodes": G_ORACLE}, [h1]),
+GRIDCFG = {"nodes": G_ORACLE, "low": 0.0, "high": A_MAX}
+h2 = reg.store(Artifact("grid_posterior", GRIDCFG, [h0, h1]),
                tags={"rung": 2, "role": "oracle"})
+h2_other_prior = reg.store(Artifact("grid_posterior", {**GRIDCFG, "high": 250.0},
+                                    [reg.store(Artifact("prior", {**PRIOR,
+                                                                  "high": 250.0}))]
+                                    + [h1]))
 
 
 def emulator_artifact(d: int) -> Artifact:
@@ -535,11 +571,11 @@ def emulator_artifact(d: int) -> Artifact:
 
 def store_cycle(d: int) -> dict[int, str]:
     h3 = reg.store(emulator_artifact(d), tags={"rung": 3, "oracle": h1})
-    h4 = reg.store(Artifact("grid_posterior", {"nodes": G_ORACLE}, [h3]),
+    h4 = reg.store(Artifact("grid_posterior", GRIDCFG, [h0, h3]),
                    tags={"rung": 4, "oracle": h2})
     h5 = reg.store(Artifact("gaussian_head", {"beta_mu": beta_mu.round(9).tolist(),
                                               "beta_s": beta_s.round(9).tolist()},
-                            [h1]), tags={"rung": 5, "oracle": h2})
+                            [h0, h1]), tags={"rung": 5, "oracle": h2})
     return {3: h3, 4: h4, 5: h5}
 
 
@@ -577,6 +613,7 @@ assert v2_cells["L2/r5/c0"] == cells["L2/r5/c0"]  # rung 5 did not use the emula
 # a new emulator changes rungs 3 and 4 only: rung 5 was trained on the simulator
 assert changed == {3: True, 4: True, 5: False}
 assert stage6["stale_is_v1_rung4"]  # only the old rung-4 artifact depends on it
-assert by_rung == {1: 1, 2: 1, 3: 2, 4: 2, 5: 1}
+assert by_rung == {1: 2, 2: 1, 3: 2, 4: 2, 5: 1}  # rung 1: the prior and the simulator
+assert h2_other_prior != h2  # another prior support is another oracle
 assert stage6["same_hash"] and tag_now == "not-the-simulator"  # lineage overwritten
 assert by_parent_tag == []  # parents are config, not tags: the tag filter sees none
