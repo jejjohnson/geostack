@@ -1459,6 +1459,305 @@ def r15_roadmap() -> Svg:
     return f
 
 
+def r16_ownership() -> Svg:
+    """Report 16: the geo data stack in tiers, foundations at the top."""
+    f = Svg(
+        840,
+        600,
+        "Ownership of the geo data stack, foundations at the top. Tier 1 is"
+        " pipekit core and the external georeader, xarray and obstore. Tier 2"
+        " holds the pipekit subpackages, geotoolz-cloud (object storage) and"
+        " xrtoolz-core (the xarray Operator and, after workstream C, the shared"
+        " xarray vocabulary). Tier 3 holds geotoolz-catalog and"
+        " geotoolz-patcher, which serve both lanes; the patcher's proposed"
+        " training integration is the one new surface. Tier 4 holds the two"
+        " lanes: geotoolz and geotoolz-products on GeoTensor, and the xrtoolz"
+        " family on xarray. The lanes never import each other. Solid arrows are"
+        " base dependencies, dashed ones optional extras.",
+    )
+    big, sub = 14, 11.5
+    # tier 1: foundations
+    f.box(
+        24,
+        20,
+        380,
+        58,
+        "pipekit-core  (import pipekit)",
+        ["Operator · Sequential · Signature · serial"],
+        hue=ML,
+        title_size=big,
+        sub_size=sub,
+    )
+    f.box(
+        436,
+        20,
+        380,
+        58,
+        "georeader · xarray · obstore",
+        ["external: GeoTensor, DataArray, object stores"],
+        hue=EXT,
+        dashed=True,
+        title_size=big,
+        sub_size=sub,
+    )
+    # tier 2
+    f.box(
+        24,
+        128,
+        252,
+        66,
+        "pipekit-*",
+        ["array · cycle · evaluate", "experiment · jax · train"],
+        hue=ML,
+        title_size=big,
+        sub_size=sub,
+    )
+    f.box(
+        294,
+        128,
+        252,
+        66,
+        "geotoolz-cloud",
+        ["store pool · files · cache", "cog · hdf · fs"],
+        hue=ENG,
+        title_size=big,
+        sub_size=sub,
+    )
+    f.box(
+        564,
+        128,
+        252,
+        66,
+        "xrtoolz-core",
+        ["xarray Operator on pipekit", "+ shared vocabulary (C)"],
+        hue=STATE,
+        title_size=big,
+        sub_size=sub,
+    )
+    f.arrow([(150, 128), (150, 80)], color=INK)
+    f.arrow([(480, 128), (480, 80)], color=INK)
+    f.arrow([(720, 128), (720, 80)], color=INK)
+    # tier 3: shared by both lanes
+    f.rect(24, 236, 740, 112, stroke=BORDER, fill=PANEL)
+    f.text(40, 256, "shared by both lanes", size=12, color=MUTED, anchor="start")
+    f.box(
+        40,
+        266,
+        224,
+        68,
+        "geotoolz-catalog",
+        ["which data: GeoSlice", "sources · staging · field_for"],
+        hue=ENG,
+        title_size=big,
+        sub_size=sub,
+    )
+    f.box(
+        280,
+        266,
+        224,
+        68,
+        "geotoolz-patcher",
+        ["which piece: split · merge", "stencils · PatchCache"],
+        hue=ENG,
+        title_size=big,
+        sub_size=sub,
+    )
+    f.box(
+        520,
+        266,
+        228,
+        68,
+        "patcher integrations.train",
+        ["windowed training datasets", "moved from pipekit-train (D)"],
+        hue=OBS,
+        dashed=True,
+        title_size=13.5,
+        sub_size=sub,
+    )
+    f.arrow(
+        [(555, 236), (555, 80)],
+        color=INK,
+        label="georeader",
+        at=(549, 110),
+        label_anchor="end",
+    )
+    f.arrow(
+        [(392, 236), (392, 196)],
+        color=LINE,
+        dashed=True,
+        label="[cloud] · [cog]",
+        at=(398, 222),
+        label_anchor="start",
+    )
+    f.arrow(
+        [(634, 266), (634, 214), (200, 214), (200, 196)],
+        color=LINE,
+        dashed=True,
+        label="[train] → pipekit-train",
+        at=(130, 222),
+        label_anchor="middle",
+    )
+    # tier 4: the two lanes
+    f.text(
+        420, 376, "the lanes never import each other", size=12, color=MUTED, italic=True
+    )
+    f.rect(24, 388, 380, 112, stroke=OBS[0], fill=OBS[1])
+    f.text(40, 408, "GeoTensor lane", size=12, color=OBS[0], anchor="start", weight=600)
+    f.box(
+        40,
+        418,
+        166,
+        68,
+        "geotoolz",
+        ["operators on GeoTensor", "on pipekit-core"],
+        hue=(BORDER, CARD),
+        title_size=big,
+        sub_size=10.5,
+    )
+    f.box(
+        222,
+        418,
+        166,
+        68,
+        "geotoolz-products",
+        ["gridded mission readers", "(E: + EMIT L2B GeoTIFF)"],
+        hue=(BORDER, CARD),
+        title_size=13,
+        sub_size=sub,
+    )
+    f.rect(436, 388, 380, 112, stroke=STATE[0], fill=STATE[1])
+    f.text(452, 408, "xarray lane", size=12, color=STATE[0], anchor="start", weight=600)
+    f.box(
+        452,
+        418,
+        110,
+        68,
+        "xrtoolz",
+        ["diagnostics", "metrics"],
+        hue=(BORDER, CARD),
+        title_size=big,
+        sub_size=sub,
+    )
+    f.box(
+        572,
+        418,
+        110,
+        68,
+        "einx · grad",
+        ["· sklearn", "bridges"],
+        hue=(BORDER, CARD),
+        title_size=13,
+        sub_size=sub,
+    )
+    f.box(
+        692,
+        418,
+        110,
+        68,
+        "xrtoolz-reader",
+        ["CMEMS · CDS", "AEMET"],
+        hue=(BORDER, CARD),
+        title_size=12.5,
+        sub_size=sub,
+    )
+    f.arrow(
+        [(214, 388), (214, 350)],
+        color=LINE,
+        dashed=True,
+        label="[patch] · [cloud]",
+        at=(222, 372),
+        label_anchor="start",
+    )
+    f.arrow([(790, 388), (790, 196)], color=INK)
+    # scripts
+    f.box(
+        24,
+        532,
+        792,
+        50,
+        "scripts and notebooks (geostack)",
+        ["compose both lanes through pipekit, the catalog and the patcher"],
+        hue=(BORDER, PANEL),
+        title_size=big,
+        sub_size=sub,
+    )
+    f.arrow([(420, 532), (420, 502)], color=INK)
+    f.h = 600
+    return f
+
+
+def r16_roadmap() -> Svg:
+    """Report 16: the name and the contract first, then the moves, then release."""
+    f = Svg(
+        840,
+        420,
+        "Roadmap. Phase 1 settles the PyPI name pipekit-core (F1) and makes"
+        " pipekit's Signature and three helpers the one public contract (A)."
+        " Phase 2 runs four independent moves side by side: one model-operator"
+        " family (B), the xarray vocabulary into xrtoolz-core (C), the training"
+        " dataset into geotoolz-patcher (D) and the rule that a mission"
+        " reader lives with its output carrier (E). Phase 3 aligns the pins,"
+        " adds packaging tests and publishes in tier order (F2 to F5).",
+    )
+    rows = [
+        (
+            [
+                ("1a · F1", ["publish as pipekit-core,", "import pipekit"], ENG),
+                ("1b · A", ["one Signature,", "public helpers"], ML),
+            ],
+            "F1 · A1 · A2 · A3",
+        ),
+        (
+            [
+                ("2a · B", ["model", "operators"], ML),
+                ("2b · C", ["vocabulary", "→ xrtoolz-core"], STATE),
+                ("2c · D", ["datasets", "→ patcher"], ENG),
+                ("2d · E", ["mission readers:", "the carrier decides"], OBS),
+            ],
+            "B1 · B2 · C1 · C2 · D1 · D2 · D3 · E1",
+        ),
+        (
+            [
+                (
+                    "3 · F2 to F5",
+                    [
+                        "pins and floors, packaging tests,",
+                        "publish in tier order, stack CI",
+                    ],
+                    EXT,
+                )
+            ],
+            "F2 · F3 · F4 · F5",
+        ),
+    ]
+    y = 24.0
+    for items, gate in rows:
+        n = len(items)
+        w = (792 - 18 * (n - 1)) / n
+        for i, (name, sub, hue) in enumerate(items):
+            f.box(24 + i * (w + 18), y, w, 66, name, sub, hue=hue, title_size=14)
+        cx, gy, d = 420, y + 66 + 24, 12
+        f.arrow([(cx, y + 66), (cx, gy - d - 1)], color=LINE)
+        f.parts.append(
+            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d}'
+            f' {cx - d},{gy}" fill="{ENG[1]}" stroke="{ENG[0]}" stroke-width="1.4"/>'
+        )
+        f.text(
+            cx + d + 10,
+            gy + 4.5,
+            f"gates {gate}",
+            size=12,
+            color=ENG[0],
+            anchor="start",
+            weight=600,
+        )
+        if items is not rows[-1][0]:
+            f.arrow([(cx, gy + d), (cx, gy + 42)], color=LINE)
+        y = gy + 44
+    f.h = int(y - 10)
+    return f
+
+
 FIGURES = {
     "r1_trajectories": r1_trajectories,
     "r2_groups": r2_groups,
@@ -1477,6 +1776,8 @@ FIGURES = {
     "r14_roadmap": r14_roadmap,
     "r15_ownership": r15_ownership,
     "r15_roadmap": r15_roadmap,
+    "r16_ownership": r16_ownership,
+    "r16_roadmap": r16_roadmap,
 }
 
 
