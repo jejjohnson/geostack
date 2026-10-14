@@ -645,3 +645,33 @@ assert h2_other_prior != h2  # another prior support is another oracle
 assert h5_other_cal != v1[5]  # another calibration constant is another head
 assert stage6["same_hash"] and tag_now == "not-the-simulator"  # lineage overwritten
 assert by_parent_tag == []  # parents are config, not tags: the tag filter sees none
+
+
+# %% [markdown]
+# ## The readiness figure
+#
+# The audit's readiness figure counts the markers on this page's own sketches
+# (`today`, `proposed (…)`, `user`); `docs/images/reports/make_figures.py`
+# draws it. These are the counts its caption quotes.
+
+# %%
+import importlib.util
+import sys
+from collections import Counter
+from pathlib import Path
+
+root = Path.cwd()
+while not (root / "myst.yml").exists() and root != root.parent:
+    root = root.parent
+spec = importlib.util.spec_from_file_location(
+    "report_figures", root / "docs/images/reports/make_figures.py")
+rf = importlib.util.module_from_spec(spec)
+sys.modules["report_figures"] = rf
+spec.loader.exec_module(rf)
+calls = rf.marked_calls(next((root / "docs/reports").glob("17_*.md")))
+ready = Counter(c.status for c in calls)
+ready
+
+# %%
+assert len(calls) == 40
+assert ready == Counter({'here': 6, 'today': 21, 'user': 13})

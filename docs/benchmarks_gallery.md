@@ -119,6 +119,13 @@ left off the per-entry lines.
 The most mature domain for machine-learning benchmarks: a community benchmark (OceanBench), strong reference products (GLORYS, DUACS, OSTIA, ISAS, CCI), and known gaps in the subsurface, on the shelves and in biogeochemistry. Each entry says which gap it addresses.
 
 
+:::{figure} images/benchmarks_gallery/schematic_ocean.svg
+:label: fig-gal-ocean
+:alt: Schematic for Ocean: the variables and how they connect, the levels each entry spans from state or L0 to L4, and the GeoStack, GeoML and GeoModels packages that carry each level.
+
+**Ocean at a glance.** Sea surface height sets the geostrophic currents that carry temperature, salinity and chlorophyll; temperature and salinity set the density, whose steric height feeds back on sea surface height; temperature's stratification limits the nutrients that set chlorophyll. Every entry is a gap-filling task from L1 or L0 to L2. Below, the levels each entry spans, and the stack that carries each level: GeoStack for data and pipelines, GeoML for inference, GeoModels for physics. Solid boxes are the entries' variables and dashed ones derived quantities; a dashed chip is a package the domain will use that no entry names yet. Drawn by the gallery notebook.
+:::
+
 (gal-1-1)=
 ### 1.1 · Sea surface height
 
@@ -266,6 +273,13 @@ Leave-one-float-out is kept: it is the source's headline split and the right one
 Land-surface variables have a long meteorological record (ERA5-Land, GHCN, IMERG), but machine-learning benchmarks for them lag weather benchmarks. The entries bring the same multi-track, multi-lens discipline.
 
 
+:::{figure} images/benchmarks_gallery/schematic_land.svg
+:label: fig-gal-land
+:alt: Schematic for Land: the variables and how they connect, the levels each entry spans from state or L0 to L4, and the GeoStack, GeoML and GeoModels packages that carry each level.
+
+**Land at a glance.** Pressure gradients drive the wind, the wind advects heat, warmer air holds more water vapour (Clausius–Clapeyron), the vapour condenses into precipitation, and evaporation cools the surface again. The first three entries are mappings and forecasts; pressure is a forecast. Below, the levels each entry spans, and the stack that carries each level: GeoStack for data and pipelines, GeoML for inference, GeoModels for physics. Solid boxes are the entries' variables and dashed ones derived quantities; a dashed chip is a package the domain will use that no entry names yet. Drawn by the gallery notebook.
+:::
+
 (gal-2-1)=
 ### 2.1 · Near-surface temperature
 
@@ -385,6 +399,13 @@ Blocks become a causal split. ENSO phase and season are stratifications of the s
 The most benchmarked domain (WeatherBench and the evaluations of GraphCast, Pangu-Weather and GenCast). The gallery's distinct contribution is trace gases, which are structured like weather but far less standardized.
 
 
+:::{figure} images/benchmarks_gallery/schematic_atmosphere.svg
+:label: fig-gal-atmosphere
+:alt: Schematic for Atmosphere: the variables and how they connect, the levels each entry spans from state or L0 to L4, and the GeoStack, GeoML and GeoModels packages that carry each level.
+
+**Atmosphere at a glance.** Temperature sets the thickness between pressure levels and so the geopotential; its gradients set the geostrophic and thermal wind, which transports the trace gases; their sources set the fluxes, and their radiative forcing and latent heat feed back on temperature. Trace gases run the whole ladder, from L0 retrieval to L4 attribution. Below, the levels each entry spans, and the stack that carries each level: GeoStack for data and pipelines, GeoML for inference, GeoModels for physics. Solid boxes are the entries' variables and dashed ones derived quantities; a dashed chip is a package the domain will use that no entry names yet. Drawn by the gallery notebook.
+:::
+
 (gal-3-1)=
 ### 3.1 · Trace gases (methane, CO₂, water vapour)
 
@@ -475,6 +496,13 @@ Blocks become a causal split. ACC is a correlation of anomalies, not a spectral 
 
 Benchmarks between instruments: less standardized than weather or ocean benchmarks, and essential to every multi-sensor product. Four of the five are not transitions up the L0–L4 ladder (see the box at the top), which is why a contract names its carriers as well as its levels.
 
+
+:::{figure} images/benchmarks_gallery/schematic_remote_sensing.svg
+:label: fig-gal-remote-sensing
+:alt: Schematic for Remote sensing: the variables and how they connect, the levels each entry spans from state or L0 to L4, and the GeoStack, GeoML and GeoModels packages that carry each level.
+
+**Remote sensing at a glance.** Radiative transfer turns an atmosphere and surface state into a top-of-atmosphere spectrum (4.3); each instrument's spectral and spatial response and noise turn it into L1 (4.4); translation and matchup relate instruments (4.1, 4.2); fusion combines them into an L2 product (4.5). Below, the levels each entry spans, and the stack that carries each level: GeoStack for data and pipelines, GeoML for inference, GeoModels for physics. Solid boxes are the entries' variables and dashed ones derived quantities; a dashed chip is a package the domain will use that no entry names yet. Drawn by the gallery notebook.
+:::
 
 (gal-4-1)=
 ### 4.1 · Multispectral to hyperspectral
@@ -622,6 +650,13 @@ Leave-one-sensor-out is kept: it is the source's split and the right one. The so
 
 Benchmarks of a chain of dependent sub-tasks rather than of one transformation. Methane emission estimation is the example: five linked stages from radiative transfer to an annual total.
 
+
+:::{figure} images/benchmarks_gallery/schematic_mathematical_models.svg
+:label: fig-gal-mathematical-models
+:alt: Schematic for the emission chain: the variables and how they connect, the levels each entry spans from state or L0 to L4, and the GeoStack, GeoML and GeoModels packages that carry each level.
+
+**The emission chain at a glance.** The forward half runs from a source rate and wind, through dispersion and radiative transfer, to radiance; the inverse half retrieves the column, detects and tracks the plume, and totals the emissions, which attribution compares with the source. Below, the levels each entry spans, and the stack that carries each level: GeoStack for data and pipelines, GeoML for inference, GeoModels for physics. Solid boxes are the entries' variables and dashed ones derived quantities; a dashed chip is a package the domain will use that no entry names yet. Drawn by the gallery notebook.
+:::
 
 (gal-5-1)=
 ### 5.1 · Emission estimation (five-stage chain)

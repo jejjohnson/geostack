@@ -31,7 +31,8 @@
 #    kinds, needs, reserved names) are computed here and asserted.
 #
 # It also draws the page's readiness figure into
-# `docs/images/benchmarks_gallery/readiness.svg`. Pinned revisions: pipekit
+# `docs/images/benchmarks_gallery/readiness.svg`, and one schematic per domain
+# (`schematic_<domain>.svg`). Pinned revisions: pipekit
 # 0.0.2 at `ef3c17f`, xrtoolz 0.0.5 at `308c7f2`, geotoolz 0.10.2 (geocatalog
 # 0.5.1) at `088475e`. It needs only those libraries; it runs in seconds.
 
@@ -741,3 +742,278 @@ out = root / "docs/images/benchmarks_gallery"
 out.mkdir(parents=True, exist_ok=True)
 (out / "readiness.svg").write_text(fig.render(), encoding="utf-8")
 {e.id: dict(per_entry[e.id]) for e in E}
+
+# %% [markdown]
+# ## A schematic per domain
+#
+# One figure per domain, in three bands. **How the variables connect**: the
+# entries' geophysical variables (solid, with the entry id) and the derived
+# quantities that link them (dashed), with the physical relation on each
+# arrow. **Which levels each entry spans**: its task, on the L0–L4 ladder
+# (and the state or truth a forward simulation starts from). **Which stack
+# carries each level**: GeoStack (data and pipelines), GeoML (inference) and
+# GeoModels (physics), with the packages the entries name; a dashed chip is
+# a package the domain will use but no entry here names yet.
+
+# %%
+LEVELS = ["state", "L0", "L1", "L2", "L3", "L4"]
+LEVEL_LABEL = {"state": "state / truth", "L0": "L0 raw", "L1": "L1 calibrated",
+               "L2": "L2 retrieved", "L3": "L3 analysis", "L4": "L4 re/forecast"}
+LANES = [("GeoStack", "data · pipelines", ov.OBS), ("GeoML", "inference", ov.ML),
+         ("GeoModels", "physics", ov.STATE)]
+
+
+def task_spans(task: str) -> list[tuple[int, int]]:
+    """'L1->L2 and L3->L4' → [(2, 3), (4, 5)] as indices into LEVELS."""
+    spans = []
+    for seg in task.split(" and "):
+        lv = ["state" if p in ("state", "truth") else p for p in seg.split("->")]
+        spans.append((LEVELS.index(lv[0]), LEVELS.index(lv[-1])))
+    return spans
+
+
+# (key, label lines, entry id or None for a derived quantity, column, row);
+# edges (from, to, relation lines, label dx, label dy); lanes: lane →
+# [(first level, last level, chip lines, named by an entry)], disjoint per lane
+SCHEMATICS = {
+    "Ocean": {
+        "nodes": [("ssh", ["sea surface", "height η"], "1.1", 0, 0),
+                  ("ug", ["geostrophic", "currents"], None, 1, 0),
+                  ("sst", ["sea surface", "temperature T"], "1.2", 2, 0),
+                  ("bgc", ["nutrients, O₂"], "1.5", 3, 0),
+                  ("chl", ["chlorophyll"], "1.4", 3, 1),
+                  ("rho", ["density", "ρ(T, S)"], None, 1, 1),
+                  ("sss", ["sea surface", "salinity S"], "1.3", 2, 1)],
+        "edges": [("ssh", "ug", ["geostrophy"], 0, 0),
+                  ("ug", "sst", ["advects", "T, S, Chl"], 0, 0),
+                  ("sst", "bgc", ["stratifies"], 0, 0),
+                  ("bgc", "chl", ["production"], 40, 0),
+                  ("sst", "rho", ["equation", "of state"], 34, 0),
+                  ("sss", "rho", [], 0, 0),
+                  ("rho", "ssh", ["steric", "height"], -36, 0)],
+        "lanes": {"GeoStack": [(1, 1, ["geocatalog", "tracks, floats"], True),
+                               (2, 3, ["geotoolz BandRatio", "xrtoolz.ocn geostrophy"],
+                                True),
+                               (4, 5, ["xrtoolz.metrics", "pipekit-evaluate"], True)],
+                  "GeoML": [(2, 3, ["pyrox GP", "kernellib kernels"], True),
+                            (4, 5, ["filterax", "vardax"], False)],
+                  "GeoModels": [(4, 5, ["somax", "ocean models"], False)]},
+    },
+    "Land": {
+        "nodes": [("mslp", ["sea-level", "pressure p"], "2.4", 0, 0),
+                  ("wind", ["near-surface", "wind u₁₀"], "2.3", 1, 0),
+                  ("t2m", ["near-surface", "temperature"], "2.1", 2, 0),
+                  ("q", ["humidity q"], None, 3, 0),
+                  ("pr", ["precipitation"], "2.2", 2, 1)],
+        "edges": [("mslp", "wind", ["∇p drives", "the wind"], 0, 0),
+                  ("wind", "t2m", ["advects", "heat"], 0, 0),
+                  ("t2m", "q", ["Clausius–", "Clapeyron"], 0, 0),
+                  ("q", "pr", ["condenses"], 30, 0),
+                  ("pr", "t2m", ["evaporative", "cooling"], -48, 0)],
+        "lanes": {"GeoStack": [(1, 1, ["geocatalog", "stations, gauges"], True),
+                               (2, 3, ["geocatalog.matchup", "xrtoolz.atm"], True),
+                               (4, 5, ["pipekit-cycle Cycle", "xrtoolz.metrics"], True)],
+                  "GeoML": [(2, 3, ["pyrox GP", "mapping"], False),
+                            (4, 5, ["filterax ensembles", "xtremax extremes"], False)],
+                  "GeoModels": [(4, 5, ["somax", "atmosphere models"], False)]},
+    },
+    "Atmosphere": {
+        "nodes": [("z", ["Z500, MSLP,", "tropopause"], "3.3", 0, 0),
+                  ("u", ["three-dimen-", "sional wind"], "3.2", 1, 0),
+                  ("gas", ["CH₄, CO₂,", "H₂O"], "3.1", 2, 0),
+                  ("src", ["sources,", "sinks"], None, 3, 0),
+                  ("t", ["temperature T"], None, 0, 1)],
+        "edges": [("t", "z", ["hypso-", "metric"], 34, 0),
+                  ("z", "u", ["geostrophic,", "thermal"], 0, 0),
+                  ("u", "gas", ["transport"], 0, 0),
+                  ("src", "gas", ["flux"], 0, 0),
+                  ("gas", "t", ["radiative forcing,", "latent heat"], 0, 0,
+                   "elbow")],
+        "lanes": {"GeoStack": [(1, 3, ["geotoolz matched filter, plume",
+                                       "the L0 → L2 retrieval"], True),
+                               (4, 5, ["xrtoolz interpolate,", "metrics, budgets"],
+                                True)],
+                  "GeoML": [(4, 5, ["filterax · vardax", "via DACycle"], True)],
+                  "GeoModels": [(0, 2, ["rtmx", "radiative transfer"], False),
+                                (4, 5, ["plumax", "transport"], True)]},
+    },
+    "Remote sensing": {
+        "nodes": [("state", ["atmosphere +", "surface state"], None, 0, 0),
+                  ("rad", ["top-of-atmosphere", "spectrum L(λ)"], None, 1, 0),
+                  ("hyp", ["hyperspectral", "L1"], "4.1", 2, 0),
+                  ("ms", ["polar multi-", "spectral L1"], "4.2", 1, 1),
+                  ("geo", ["geostationary", "L1"], "4.2", 2, 1),
+                  ("fus", ["fused L2", "product"], "4.5", 3, 0)],
+        "edges": [("state", "rad", ["radiative", "transfer 4.3"], 0, 0),
+                  ("rad", "hyp", ["sensor", "op. 4.4"], 0, 0),
+                  ("rad", "ms", ["SRF, PSF,", "noise 4.4"], 40, 0),
+                  ("hyp", "ms", ["translation", "4.1"], 0, 0),
+                  ("ms", "geo", ["matchup"], 0, 0),
+                  ("geo", "fus", ["fusion 4.5"], 34, 0),
+                  ("hyp", "fus", [], 0, 0)],
+        "lanes": {"GeoStack": [(0, 1, ["pipekit-train", "SimulationDataset"], True),
+                               (2, 2, ["geotoolz", "radiometry"], True),
+                               (3, 3, ["matchup,", "SpatialMosaic"], True)],
+                  "GeoML": [],
+                  "GeoModels": [(0, 1, ["rtmx", "radiative transfer"], True)]},
+    },
+    "Mathematical models": {
+        "nodes": [("q", ["source rate Q,", "wind"], None, 0, 0),
+                  ("c", ["concentration", "field"], None, 1, 0),
+                  ("l", ["radiance L(λ)"], None, 2, 0),
+                  ("col", ["column ΔXCH₄"], "5.1", 2, 1),
+                  ("det", ["detection,", "persistence"], "5.1", 1, 1),
+                  ("tot", ["annual", "emission total"], "5.1", 0, 1)],
+        "edges": [("q", "c", ["dispersion"], 0, 0),
+                  ("c", "l", ["radiative", "transfer"], 0, 0),
+                  ("l", "col", ["retrieval"], 36, 0),
+                  ("col", "det", ["threshold"], 0, 0),
+                  ("det", "tot", ["rate × time"], 0, 0),
+                  ("tot", "q", ["attribution"], -38, 0)],
+        "lanes": {"GeoStack": [(0, 1, ["pipekit-train", "NeuralForward"], True),
+                               (2, 3, ["geotoolz matched", "filter, plume"], True),
+                               (4, 5, ["pipekit-cycle", "DACycle, Recurrence"], True)],
+                  "GeoML": [(4, 5, ["filterax", "vardax"], False)],
+                  "GeoModels": [(0, 2, ["rtmx, plumax", "radiative transfer, dispersion"],
+                                 True)]},
+    },
+}
+
+
+SHORT = {"4.1": "Multi- to hyperspectral", "4.2": "Polar and geostationary",
+         "4.3": "RT emulation", "4.4": "Sensor operators",
+         "2.1": "Near-surface temp.", "3.3": "Geopotential, pressure",
+         "5.1": "Emission estimation"}
+
+
+def halo(f: ov.Svg, x: float, y: float, lines: list[str], size: float = 10.5) -> None:
+    """Muted text with a white halo, so a label stays legible over a line."""
+    for k, t in enumerate(lines):
+        f.parts.append(
+            f'<text x="{x:.1f}" y="{y + k * (size + 2):.1f}" font-size="{size}"'
+            f' fill="{ov.MUTED}" text-anchor="middle" stroke="{ov.CARD}"'
+            f' stroke-width="4" paint-order="stroke">{ov.escape(t)}</text>')
+
+
+def schematic(domain: str, spec: dict) -> ov.Svg:
+    entries = [e for e in E if e.domain == domain]
+    W, nw, nh, gx, gy, top = 760, 130, 50, 194, 104, 58
+    n_rows = 1 + max(r for *_, r in spec["nodes"])
+    has_return = any(pos_r == 0 for *_, pos_r in spec["nodes"]) and n_rows == 1
+    y_grid = top + n_rows * gy + (40 if has_return else 14)
+    y_rows = y_grid + 34
+    y_lanes = y_rows + len(entries) * 28 + 24
+    H = int(y_lanes + len(LANES) * 48 + 10)
+    label = (f"{domain}: how the entries' variables connect, which L0–L4 levels"
+             " each entry spans, and which of GeoStack, GeoML and GeoModels"
+             " carries each level.")
+    f = ov.Svg(W, H, label)
+    f.text(24, 30, "How the variables connect", size=14.5, weight=700,
+           color=ov.INK, anchor="start")
+    pos = {}
+    for key, lines, eid, c, r in spec["nodes"]:
+        x, y = 24 + c * gx, top + r * gy
+        pos[key] = (x, y)
+        hue = ov.STATE if eid else (ov.BORDER, ov.PANEL)
+        f.rect(x, y, nw, nh, stroke=hue[0], fill=hue[1], dashed=eid is None)
+        f.lines(x + nw / 2, y + nh / 2 + 5 - 8 * (len(lines) - 1), lines,
+                gap=16, size=13, color=ov.INK)
+        if eid:
+            f.text(x + 6, y - 6, eid, size=11.5, weight=700, color=ov.STATE[0],
+                   anchor="start")
+
+    def clip(cx: float, cy: float, sx: float, sy: float) -> tuple[float, float]:
+        # where the ray from a box centre (cx, cy) along (sx, sy) leaves the box
+        t = min(abs((nw / 2 + 4) / sx) if sx else 1e9,
+                abs((nh / 2 + 4) / sy) if sy else 1e9)
+        return cx + sx * t, cy + sy * t
+
+    for a, b, rel, ldx, ldy, *mode in spec["edges"]:
+        (xa, ya), (xb, yb) = pos[a], pos[b]
+        ca, cb = (xa + nw / 2, ya + nh / 2), (xb + nw / 2, yb + nh / 2)
+        if mode == ["elbow"]:  # down from a, then across into b's side
+            f.arrow([(ca[0], ya + nh + 2), (ca[0], cb[1]), (xb + nw + 4, cb[1])],
+                    color=ov.LINE)
+            halo(f, (ca[0] + xb + nw) / 2, cb[1] - 18, rel, size=11)
+            continue
+        if ya == yb and xb < xa - gx:  # a long return on one row: go below
+            low = ya + nh + 22
+            f.arrow([(ca[0], ya + nh + 2), (ca[0], low), (cb[0], low),
+                     (cb[0], ya + nh + 4)], color=ov.LINE)
+            halo(f, (ca[0] + cb[0]) / 2, low + 4, rel, size=11)
+            continue
+        dx, dy = cb[0] - ca[0], cb[1] - ca[1]
+        p0, p1 = clip(*ca, dx, dy), clip(*cb, -dx, -dy)
+        f.arrow([p0, p1], color=ov.LINE)
+        if rel:
+            mx = (p0[0] + p1[0]) / 2 + ldx
+            if abs(dy) < 1:  # a horizontal arrow: the label sits above it
+                my = p0[1] - 8 - 12 * (len(rel) - 1) + ldy
+            else:
+                my = (p0[1] + p1[1]) / 2 + ldy - 5 * len(rel) + 4
+            halo(f, mx, my, rel, size=11)
+
+    # which levels each entry spans
+    x0c = 196
+    cw = (W - 24 - x0c) / len(LEVELS)
+    f.text(24, y_grid + 4, "Which levels each entry spans", size=14.5,
+           weight=700, color=ov.INK, anchor="start")
+    for i, lv in enumerate(LEVELS):
+        f.text(x0c + (i + 0.5) * cw, y_grid + 24, LEVEL_LABEL[lv], size=11,
+               color=ov.MUTED)
+    for k, e in enumerate(entries):
+        y = y_rows + k * 28
+        short = SHORT.get(e.id, e.name.split(" (")[0])
+        f.text(24, y + 15, f"{e.id}  {short}", size=12, color=ov.INK,
+               anchor="start")
+        spans = task_spans(e.task)
+        for a, b in spans:
+            xa, xb = x0c + (a + 0.06) * cw, x0c + (b + 0.94) * cw
+            f.rect(xa, y + 2, xb - xa, 20, stroke=ov.OBS[0], fill=ov.OBS[1], rx=10)
+        a, b = max(spans, key=lambda ab: ab[1] - ab[0])
+        if b > a:  # the operation inside the longest bar, when it fits
+            f.text(x0c + (a + b + 1) / 2 * cw, y + 16, e.operation, size=10.5,
+                   color=ov.OBS[0])
+        else:
+            f.text(x0c + (b + 1) * cw + 4, y + 16, e.operation, size=10.5,
+                   color=ov.MUTED, anchor="start")
+
+    # which stack carries each level
+    for j, (name, role, hue) in enumerate(LANES):
+        y = y_lanes + j * 48
+        f.text(24, y + 16, name, size=13.5, weight=700, color=hue[0],
+               anchor="start")
+        f.text(24, y + 32, role, size=11, color=ov.MUTED, anchor="start")
+        f.parts.append(f'<line x1="24" y1="{y + 42}" x2="{W - 24}" '
+                       f'y2="{y + 42}" stroke="{ov.BORDER}" stroke-width="1"/>')
+        chips = spec["lanes"].get(name, [])
+        cols = [c for a, b, *_ in chips for c in range(a, b + 1)]
+        assert len(cols) == len(set(cols)), (domain, name)  # chips never overlap
+        if not chips:
+            f.text(x0c + 6, y + 22, "no GeoML package is named by these entries",
+                   size=11, color=ov.MUTED, anchor="start", italic=True)
+        for a, b, lines, named in chips:
+            xa, xb = x0c + a * cw + 4, x0c + (b + 1) * cw - 4
+            f.rect(xa, y, xb - xa, 36, stroke=hue[0], fill=hue[1], rx=10,
+                   dashed=not named)
+            f.lines((xa + xb) / 2, y + 15, lines, gap=14, size=11, color=ov.INK)
+    return f
+
+
+for domain, spec in SCHEMATICS.items():
+    slug = domain.lower().replace(" ", "_")
+    (out / f"schematic_{slug}.svg").write_text(schematic(domain, spec).render(),
+                                               encoding="utf-8")
+sorted(p.name for p in out.glob("schematic_*.svg"))
+
+# %%
+assert {d for d in SCHEMATICS} == {e.domain for e in E}
+# every entry appears in its domain's schematic: as a variable it maps, or on
+# the relation it emulates (4.3's radiative transfer, 4.4's sensor operator)
+def on_schematic(e) -> bool:
+    spec = SCHEMATICS[e.domain]
+    return (any(n[2] == e.id for n in spec["nodes"])
+            or any(e.id in " ".join(rel) for _, _, rel, _, _ in spec["edges"]))
+
+
+assert all(on_schematic(e) for e in E)

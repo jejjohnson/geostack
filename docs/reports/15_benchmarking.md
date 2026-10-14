@@ -639,6 +639,16 @@ of stage 2 are a convention between the user's task and estimators
 Four of the nine symbol groups need action. Read on 13 October 2026 at the
 revisions in the report's header, on `main` of each submodule.
 
+:::{figure} ../images/reports/r15_readiness.svg
+:label: fig-r15-readiness
+:alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 45 calls, 14 run today, 15 are proposed by this report's workstreams, 1 by another report and 15 are code the reader writes.
+
+What the page's sketches call, read from their markers: one square per stack
+call. Of 45, 14 run today, 15 are proposed by this report's workstreams, 1
+by another report and 15 are code the reader writes. A row without squares
+has no marked call; labels on the proposed squares name the workstream item.
+:::
+
 :::{table} The benchmark surface, by symbol group.
 :label: tbl-r15-audit
 

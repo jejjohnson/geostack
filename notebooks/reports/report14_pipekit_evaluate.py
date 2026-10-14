@@ -419,3 +419,33 @@ assert round(complexity["L4/r2/c1"][1]["rmse.field"], 3) == 0.735
 assert complexity["L4/r2/c0"][1] == {} and complexity["L4/r5/c0"][1] == {}
 assert "generative rung: not scored against a reference" in complexity["L4/r2/c0"][2]
 assert round(by_rule["L4/r5/c0"]["rmse.field"], 3) == 0.490
+
+
+# %% [markdown]
+# ## The readiness figure
+#
+# The audit's readiness figure counts the markers on this page's own sketches
+# (`today`, `proposed (…)`, `user`); `docs/images/reports/make_figures.py`
+# draws it. These are the counts its caption quotes.
+
+# %%
+import importlib.util
+import sys
+from collections import Counter
+from pathlib import Path
+
+root = Path.cwd()
+while not (root / "myst.yml").exists() and root != root.parent:
+    root = root.parent
+spec = importlib.util.spec_from_file_location(
+    "report_figures", root / "docs/images/reports/make_figures.py")
+rf = importlib.util.module_from_spec(spec)
+sys.modules["report_figures"] = rf
+spec.loader.exec_module(rf)
+calls = rf.marked_calls(next((root / "docs/reports").glob("14_*.md")))
+ready = Counter(c.status for c in calls)
+ready
+
+# %%
+assert len(calls) == 27
+assert ready == Counter({'here': 6, 'today': 13, 'user': 8})

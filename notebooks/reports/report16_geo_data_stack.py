@@ -400,3 +400,33 @@ else:  # gate F5: the realigned stack
     assert gz_reqs and all(r.startswith("pipekit-core") for r in gz_reqs)  # F1
     assert missing == [] and stale == []  # F1, F5: all 18, none on the old name
     assert {"xrtoolz", "xrtoolz-core", "geotoolz", "geotoolz-patcher"} <= set(on_core)
+
+
+# %% [markdown]
+# ## The readiness figure
+#
+# The audit's readiness figure counts the markers on this page's own sketches
+# (`today`, `proposed (…)`, `user`); `docs/images/reports/make_figures.py`
+# draws it. These are the counts its caption quotes.
+
+# %%
+import importlib.util
+import sys
+from collections import Counter
+from pathlib import Path
+
+root = Path.cwd()
+while not (root / "myst.yml").exists() and root != root.parent:
+    root = root.parent
+spec = importlib.util.spec_from_file_location(
+    "report_figures", root / "docs/images/reports/make_figures.py")
+rf = importlib.util.module_from_spec(spec)
+sys.modules["report_figures"] = rf
+spec.loader.exec_module(rf)
+calls = rf.marked_calls(next((root / "docs/reports").glob("16_*.md")))
+ready = Counter(c.status for c in calls)
+ready
+
+# %%
+assert len(calls) == 42
+assert ready == Counter({'here': 11, 'today': 29, 'user': 2})

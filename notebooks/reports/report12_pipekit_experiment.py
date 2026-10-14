@@ -372,3 +372,33 @@ assert "missing a self.next() transition" in mf["adapter"][1]
 assert mf["manual"][0] == 0 and "RESULT 3.5" in mf["manual"][1]
 assert empty_list == "FileNotFoundError" and same_as_local
 assert file_store == "FileNotFoundError" and auto_ok
+
+
+# %% [markdown]
+# ## The readiness figure
+#
+# The audit's readiness figure counts the markers on this page's own sketches
+# (`today`, `proposed (…)`, `user`); `docs/images/reports/make_figures.py`
+# draws it. These are the counts its caption quotes.
+
+# %%
+import importlib.util
+import sys
+from collections import Counter
+from pathlib import Path
+
+root = Path.cwd()
+while not (root / "myst.yml").exists() and root != root.parent:
+    root = root.parent
+spec = importlib.util.spec_from_file_location(
+    "report_figures", root / "docs/images/reports/make_figures.py")
+rf = importlib.util.module_from_spec(spec)
+sys.modules["report_figures"] = rf
+spec.loader.exec_module(rf)
+calls = rf.marked_calls(next((root / "docs/reports").glob("12_*.md")))
+ready = Counter(c.status for c in calls)
+ready
+
+# %%
+assert len(calls) == 21
+assert ready == Counter({'here': 3, 'today': 17, 'user': 1})

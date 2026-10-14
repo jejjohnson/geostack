@@ -550,6 +550,16 @@ Of fourteen pieces checked, eight ship and work, three ship with defects or
 gaps, and three are missing. The audit read the pinned revisions on
 13 October 2026.
 
+:::{figure} ../images/reports/r14_readiness.svg
+:label: fig-r14-readiness
+:alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 27 calls, 13 run today, 6 are proposed by this report's workstreams and 8 are code the reader writes.
+
+What the page's sketches call, read from their markers: one square per stack
+call. Of 27, 13 run today, 6 are proposed by this report's workstreams and 8
+are code the reader writes. A row without squares has no marked call; labels
+on the proposed squares name the workstream item.
+:::
+
 :::{table} Evaluation in the stack, piece by piece.
 :label: tbl-r14-audit
 

@@ -594,6 +594,16 @@ they ship, three are split between a library that has them and a gap, and
 one is missing. The audit read the revisions pinned in
 `references/` on 13 October 2026.
 
+:::{figure} ../images/reports/r13_readiness.svg
+:label: fig-r13-readiness
+:alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 70 calls, 24 run today, 12 are proposed by this report's workstreams and 34 are code the reader writes.
+
+What the page's sketches call, read from their markers: one square per stack
+call. Of 70, 24 run today, 12 are proposed by this report's workstreams and
+34 are code the reader writes. A row without squares has no marked call;
+labels on the proposed squares name the workstream item.
+:::
+
 :::{table} What each piece of the proposed statecatalog maps to today.
 :label: tbl-r13-audit
 
