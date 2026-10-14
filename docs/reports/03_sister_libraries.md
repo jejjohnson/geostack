@@ -216,8 +216,11 @@ package.
 
 **What works:**
 - NumPy code is bog-standard.
-- JAX array maths works. `jax.jit` does not compose with a pipekit pipeline,
-  because dual-mode `__call__` is not traceable ([](#r3-other)).
+- JAX array maths works, and so do `jax.jit`, `jax.vmap` and `jax.grad`
+  through a pipeline of JAX operators: a tracer is not a `Node`, so dispatch
+  runs `_apply` ([Report 5](05_pipekit_jax.md#r5-stage-1)). Gradients with
+  respect to parameters held by operators do not reach them
+  ([](#r3-other)).
 - CuPy arrays stay on the GPU through the pipeline.
 - PyTorch keeps gradient tracking, so a pipeline can be differentiated inside
   an autograd context.
@@ -633,9 +636,9 @@ own.
   most, a few pipekit-array operators could get `@njit` inner kernels behind
   a `[fast]` extra. That extra does not exist.
 - **A JAX-traceable library: still deferred, and pipekit-jax is not it.**
-  Making `jax.jit`, `vmap` and `grad` work *through* a pipeline means
-  operators that are PyTrees with static metadata, a `__call__` that doesn't
-  break tracing, and a pure `_apply`. The shipped **pipekit-jax** does
+  Differentiating *through* a pipeline with respect to its operators'
+  parameters means operators that are PyTrees with static metadata and a
+  pure `_apply`; dispatch already lets tracers through. The shipped **pipekit-jax** does
   something else:
   - `JaxModelOp` wraps an `eqx.Module` as an operator, with
     `serialize_weights`, `with_weights` and `from_registry`, so trained
@@ -645,7 +648,10 @@ own.
   - `to_diffrax_adjoint` and `truncated_scan` interpret pipekit-cycle's
     adjoint specs.
 
-  A pipeline of pipekit operators still cannot be jitted.
+  A pipeline of JAX operators can already be jitted, vmapped and
+  differentiated with respect to its inputs; what is missing is
+  differentiating with respect to the operators' own parameters, because no
+  shipped operator is a PyTree ([Report 5](05_pipekit_jax.md#r5-stage-2)).
 - **pipekit-dask: out of scope, and none exists.** Distributing work is the
   orchestrator's job. Operators that pickle can go inside `dask.bag.map` or
   `dask.delayed` as they are.
