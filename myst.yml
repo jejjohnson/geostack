@@ -18,6 +18,9 @@ project:
         - title: radtrax
           children:
             - file: docs/geomodels/radtrax/01_column_retrieval.md
+        - title: plumax
+          children:
+            - file: docs/geomodels/plumax/01_emission_rate.md
     - title: Reports
       children:
         - title: Across the stack
