@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.metadata as md
+import os
 import subprocess
 import sys
 import tempfile
@@ -58,6 +59,10 @@ from rasterio.transform import from_origin
 from xrtoolz.atm import WindSpeed
 
 rng = np.random.default_rng(16)
+# Stage 6's seams are checked as they stand at the pinned revisions ("today"),
+# or against the realigned stack ("target", gate F5's scheduled job)
+STATE = os.environ.get("REPORT16_STATE", "today")
+assert STATE in ("today", "target")
 
 # %% [markdown]
 # ## The scene
@@ -234,8 +239,19 @@ round(U10, 3), round(U_eff, 3)
 est = plume.IMEEstimate(wind_speed=U_eff)(kg_m2, mask)
 ime_bias = est["ime_kg"] / ime_true_mask - 1.0
 q_closed = U_eff * est["ime_kg"] / est["length_m"]
+
+# The same mask with the true background: α̂ = (x − μ)ᵀ Σ⁻¹ t / (tᵀ Σ⁻¹ t)
+# with μ and Σ given, not fitted on chips that contain the plume
+pipe_true = Sequential([
+    GridSampler(patcher=patcher),
+    ApplyToChips(operator=mf.MatchedFilter(mean=mu_true, cov_op=Sigma_true, target=t)),
+    MergePatches(aggregation=spatial.aggregation.OverlapAdd(), domain=field.domain),
+])
+kg_true_bg = plume.ColumnToMass(gas="CH4", units_in="ppm_m")(pipe_true(field))
+est_true_bg = plume.IMEEstimate(wind_speed=U_eff)(kg_true_bg, mask)
+ime_bias_true_bg = est_true_bg["ime_kg"] / ime_true_mask - 1.0
 ({k: round(float(v), 3) for k, v in est.items()}, round(ime_bias, 3),
- abs(q_closed - est["emission_rate_kg_s"]))
+ abs(q_closed - est["emission_rate_kg_s"]), round(ime_bias_true_bg, 3))
 
 # %% [markdown]
 # ## Stage 6 · The seams, as they stand
@@ -262,8 +278,10 @@ try:
 except ModuleNotFoundError as e:
     time_import = str(e)
 try:
-    from pipekit_train import XarrayWindowDataset  # noqa: F401
-
+    if STATE == "today":
+        from pipekit_train import XarrayWindowDataset  # noqa: F401
+    else:  # workstream D2: the dataset lives with the stencils
+        from geopatcher.integrations.train import XarrayWindowDataset  # noqa: F401
     xwd_error = ""
 except ImportError as e:
     xwd_error = str(e)
@@ -287,7 +305,8 @@ o_tg = valid_origin_points(times.values, TimeStencil(start="1h", stop="1h",
 n_origins = len(np.intersect1d(o_in, o_tg))
 
 # (e) What the base installs pull in
-xr_reqs = sorted(r for r in md.requires("xrtoolz") if "reader" in r or "pipekit" in r)
+xr_base = [r for r in md.requires("xrtoolz") if "extra ==" not in r]
+xr_reqs = sorted(r for r in xr_base if "reader" in r or "pipekit" in r)
 gz_reqs = sorted(r for r in md.requires("geotoolz") if r.startswith("pipekit"))
 (same_class, sig_error, final_p, time_import, xwd_error[:60], stencil_loads,
  n_origins, xr_reqs, gz_reqs)
@@ -306,10 +325,19 @@ assert round(est["ime_kg"], 1) == 534.9 and round(est["length_m"], 1) == 1651.1
 assert round(est["emission_rate_kg_s"], 3) == 0.651
 assert round(est["emission_rate_uncertainty_kg_s"], 3) == 0.325
 assert round(ime_bias, 3) == -0.085 and abs(q_closed - est["emission_rate_kg_s"]) < 1e-12
-assert not same_class and sig_error == "too many values to unpack (expected 2)"
-assert final_p == "Signature((latitude=5, longitude=5) float64)"
-assert time_import == "No module named 'geopatcher.time'"
-assert xwd_error.startswith("XarrayWindowDataset requires `geopatcher`")
-assert stencil_loads == "['georeader', 'rasterio']" and n_origins == 18
-assert xr_reqs == ["pipekit>=0.0.1", "xrtoolz-reader>=0.0.2"]
-assert gz_reqs == ["pipekit>=0.0.2"]
+assert round(ime_bias_true_bg, 3) == 0.017  # the true μ, Σ on the same mask
+# Stages 1 to 5 do not change with the realignment; stage 6's seams do.
+assert final_p == "Signature((latitude=5, longitude=5) float64)" and n_origins == 18
+if STATE == "today":
+    assert not same_class and sig_error == "too many values to unpack (expected 2)"
+    assert time_import == "No module named 'geopatcher.time'"
+    assert xwd_error.startswith("XarrayWindowDataset requires `geopatcher`")
+    assert stencil_loads == "['georeader', 'rasterio']"
+    assert xr_reqs == ["pipekit>=0.0.1", "xrtoolz-reader>=0.0.2"]
+    assert gz_reqs == ["pipekit>=0.0.2"]
+else:  # gate F5: the realigned stack
+    assert same_class and sig_error == ""                       # A
+    assert xwd_error == ""                                      # D1, D2
+    assert stencil_loads == "[]"                                # D3
+    assert not any("reader" in r for r in xr_reqs)              # C1
+    assert all(r.startswith("pipekit-core") for r in gz_reqs)   # F1

@@ -69,7 +69,8 @@ home in geotoolz-cloud. The draft also said xrtoolz imports `BBox` and
 
 **Decision.** No package merges into another, and the lanes stay apart: no
 GeoTensor package imports an xarray one or the reverse. Each overlap below
-gets one owner, every move leaves a deprecated alias for the 0.x series, and
+gets one owner, every move but one leaves a deprecated alias for the 0.x
+series (the window dataset's old import, which does not work today), and
 the stack publishes under names nobody else holds.
 
 - **A. pipekit owns the composition contract.** pipekit and xrtoolz-core each
@@ -155,7 +156,9 @@ surface.
    geocloud only through extras; it never imports xarray-lane packages.
 8. **xrtoolz-core** (`import xrcore`) owns the xarray `Operator` and, after C,
    the shared xarray vocabulary: the CF variable registry, validation and
-   subsetting. It imports pipekit, xarray and NumPy only.
+   subsetting. It imports pipekit, xarray and NumPy, and after C pandas,
+   which the moved subsetting code uses and which it declares directly
+   (xarray already requires it, so the install does not grow).
 9. **xrtoolz-einx, xrtoolz-grad and xrtoolz-sklearn** own labelled einsum,
    finite differences and the one xarray scikit-learn bridge. They import
    xrtoolz-core at most.
@@ -403,7 +406,8 @@ The script passes one float from the xarray lane to the GeoTensor lane;
 nothing imports across, which is rule 12. Within the mask the true IME is
 584.6 kg, so the estimate is 8.5 % low. Fitting $\hat{\mu}_k$ and
 $\hat{\Sigma}_k$ on chips that contain the plume absorbs part of the signal:
-with the true $\mu$ and $\Sigma$ the same mask gives +1.7 %. That is a
+with the true $\mu$ and $\Sigma$ the same mask gives +1.7 % (the notebook
+runs both and asserts both). That is a
 retrieval choice, not a packaging one, and is out of scope here.
 
 (r16-stage-6)=
@@ -624,7 +628,9 @@ This corrects one point from the 7 October draft: xrtoolz does not import
 
 1. **Move the modules** from `xrreader/types/_src/` into
    `xrcore/types/`. They need NumPy, pandas, xarray and the standard
-   library, all already in xrtoolz-core's tree.
+   library. pandas is in xrtoolz-core's tree only through xarray today, so
+   the move adds `pandas` to xrtoolz-core's `dependencies`: a package
+   declares what it imports (rule 8).
 2. **Re-export from `xrreader.types`** for the 0.x series.
 3. **Repoint xrtoolz's eight imports**, move xrtoolz-reader to `[reader]`,
    and delete the empty `rs` and `ice` packages.
@@ -653,7 +659,7 @@ define it, in geotoolz-patcher, and nothing in pipekit imports a geo package.
 |---|---|---|
 | `from geopatcher.time import …` | `from geopatcher.temporal.stencils import …` | D1: the module was renamed in #431 |
 | `XarrayWindowDataset`, `_xreader` | `geopatcher.integrations.train`, behind `geotoolz-patcher[train]` (pipekit-train, xarray, zarr, Grain) | D2: removes the only pipekit → geo edge |
-| `from pipekit_train import XarrayWindowDataset` | deprecated lazy re-export for one release | scripts keep importing it from the old place |
+| `from pipekit_train import XarrayWindowDataset` | removed, with no shim | it raises `ImportError` today (stage 6), so no script depends on it, and a re-export would bring back the pipekit → geo edge D2 removes |
 | the raster fields, reprojection, matched fields and the `RasterDomain` alias | imported on first use from the package root | D3: a stencil import should load NumPy only |
 | `xrpatcher` in xrtoolz's design docs | geopatcher's `XarrayField`, `GridSampler`, `MergePatches` | D4: one patcher for both lanes |
 :::
@@ -808,7 +814,12 @@ geotoolz-products.
 ### F5 · One stack check
 
 A scheduled job installs all 18 distributions from PyPI into one fresh
-environment and runs each package's fast tests and this page's notebook.
+environment and runs each package's fast tests and this page's notebook with
+`REPORT16_STATE=target`. In that mode the notebook checks the seams of
+stage 6 against the realigned stack (one `Signature`, the window dataset
+importing from geopatcher, a NumPy-only stencil import, no reader in
+xrtoolz's base install); by default it checks them as they stand today, so
+the page's stage 6 stays reproducible at the pinned revisions.
 
 (r16-gates)=
 ## Testing gates
@@ -836,7 +847,7 @@ code passes today and must keep passing.
 | F2 One environment | F | geotoolz and xrtoolz install editable into one environment without `--no-sources` (today a URL conflict) |
 | F3 Packaging tests | F | xrtoolz and pipekit run `test_packaging.py` and a base-install job, which fail on today's zarr floor and `[oceanography]` hint |
 | F4 Clean install | F | all 18 distributions install from PyPI into one fresh environment with no git URLs and no resolver conflict |
-| F5 Stack check | F | the scheduled job passes on the latest release of every distribution |
+| F5 Stack check | F | the scheduled job passes on the latest release of every distribution, with the notebook's `REPORT16_STATE=target` seam checks |
 | K1 Noise floor (existing) | — | stage 2: the background standard deviation of $\hat{\alpha}$ is within 5 % of $\sigma_\alpha = (t^\top \Sigma^{-1} t)^{-1/2}$. Passes today: 107.2 against 103.9, +3.2 % |
 | K2 Split and merge (existing) | — | stage 2: the identity operator through `GridSampler`, `ApplyToChips` and `MergePatches` returns the scene to 1e-5. Passes today: 0.0 |
 | K3 Column mass (existing) | — | stage 3: `ColumnToMass` equals {eq}`r16-eq-mass` to 1e-12. Passes today |
@@ -864,7 +875,9 @@ release.
   from differently ordered dicts start failing. Fallback: rewrite those
   comparisons to `a.sizes == b.sizes` in the same PR; gate A2 finds any left.
 - **Moved names break downstream code.** Every move in B, C and D leaves a
-  deprecated alias or re-export for the 0.x series. Fallback: if an alias
+  deprecated alias or re-export for the 0.x series, except
+  `pipekit_train.XarrayWindowDataset`, which cannot be imported today and
+  whose re-export would undo D2. Fallback: if an alias
   cannot be kept (a class that changes base), pin the old minor version in
   the dependent package until it migrates.
 - **The other `pipekit` shares the import name.** If its wheel also installs
