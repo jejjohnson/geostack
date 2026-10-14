@@ -12,6 +12,17 @@ project:
       children:
         - file: docs/overview_examples.md
         - file: docs/benchmarks_gallery.md
+    - title: GeoModels
+      children:
+        - file: docs/geomodels/package_boundaries.md
+        - title: radtrax
+          children:
+            - file: docs/geomodels/radtrax/01_column_retrieval.md
+            - file: docs/geomodels/radtrax/02_mbmp.md
+            - file: docs/geomodels/radtrax/03_design.md
+        - title: plumax
+          children:
+            - file: docs/geomodels/plumax/01_emission_rate.md
     - title: Reports
       children:
         - title: Across the stack
@@ -22,6 +33,7 @@ project:
           children:
             - file: docs/reports/01_toolz_primer.md
             - file: docs/reports/02_pipekit_surface.md
+            - file: docs/reports/05_pipekit_jax.md
             - file: docs/reports/10_pipekit_cycle.md
             - file: docs/reports/11_pipekit_train.md
             - file: docs/reports/12_pipekit_experiment.md

@@ -40,7 +40,9 @@ training dataset and the dependency names); the model wrappers and the
 mission readers are read from the source in the audit, and pipekit-jax,
 geotoolz-products, xrtoolz-einx, xrtoolz-grad and xrtoolz-sklearn are not
 imported by the run. This page decides each one and pulls together
-the open questions Reports 3, 6, 7 and 11 left on them.
+the open questions [Reports 3](03_sister_libraries.md#r3-open-questions),
+[6](06_geocatalog.md#r6-open-questions), [7](07_geopatcher.md) and
+[11](11_pipekit_train.md#r11-open-questions) left on them.
 
 +++
 
@@ -95,7 +97,7 @@ the stack publishes under names nobody else holds.
 - **D. geotoolz-patcher owns windows for every carrier.** pipekit-train's
   `XarrayWindowDataset` imports `geopatcher.time`, which no longer exists,
   and it is the only edge from pipekit into the geo stack. Fix the import
-  (Report 11's A5), then move the dataset into the patcher behind a `[train]`
+  ([Report 11's A5](11_pipekit_train.md#r11-ws-a)), then move the dataset into the patcher behind a `[train]`
   extra; the xarray lane drops `xrpatcher` from its design.
 - **E. A mission reader lives with its output carrier.** geotoolz-products and
   xrtoolz-reader both read mission products, with no rule between them. A
@@ -119,7 +121,10 @@ distributions install from PyPI into one environment.
 ## Ownership rules
 
 Foundations sit at the top and every arrow points up: a package imports only
-from tiers above it, and the two lanes never import each other.
+from tiers above it, and the two lanes never import each other
+([](#fig-r16-ownership); the tiers are [](#tbl-r16-tiers)). The geophysical
+model packages that sit on this stack follow
+[their own rules](../geomodels/package_boundaries.md#pb-rules).
 
 :::{figure} ../images/reports/r16_ownership.svg
 :label: fig-r16-ownership
@@ -197,7 +202,12 @@ surface.
 **The problem.** A 256 × 256 scene of 30 m pixels in UTM zone 13N, observed
 in $c = 40$ SWIR bands between 2100 and 2450 nm on 15 July 2026, contains a
 methane plume. The goal is the emission rate $Q$ in kg s⁻¹. The scene is
-synthetic so every stage has an exact answer to check against.
+synthetic so every stage has an exact answer to check against. The methane
+chain's own physics is scoped in GeoModels: the retrieval in
+[radtrax · 1](../geomodels/radtrax/01_column_retrieval.md), the emission
+rate in [plumax · 1](../geomodels/plumax/01_emission_rate.md), and where
+each piece moves in [the package boundaries page](../geomodels/package_boundaries.md#pb-moves);
+this page checks only how the data stack carries it.
 
 **The data.** Let $x_p \in \mathbb{R}^c$ be the radiance spectrum of pixel
 $p$, $\mu \in \mathbb{R}^c$ the background mean, $\Sigma \in \mathbb{R}^{c \times c}$
@@ -205,6 +215,7 @@ the background covariance (rank 6 plus a diagonal), $t \in \mathbb{R}^c$ the
 unit-absorption target (the radiance change per ppm·m of methane, built from
 two absorption bands near 2300 and 2360 nm) and $\alpha_p$ the enhancement in
 ppm·m, peaking at 1500 ppm·m. Each pixel follows the linear model
+{eq}`r16-eq-model`:
 
 $$
 x_p = \mu + L z_p + \alpha_p t , \qquad z_p \sim \mathcal{N}(0, I_c) , \qquad L L^\top = \Sigma .
@@ -252,7 +263,7 @@ extra, which is why rule 4 holds today.
 on each chip, and blend the chips back into one enhancement map.
 
 **Problem.** Chips are $n = 128$ pixels on a side at stride $s = 64$, so the
-scene of $N_x = 256$ pixels has
+scene of $N_x = 256$ pixels has, by {eq}`r16-eq-k`,
 
 $$
 K = \left\lfloor \frac{N_x - n}{s} \right\rfloor + 1 = 3
@@ -260,7 +271,8 @@ $$ (r16-eq-k)
 
 anchors per axis and $K^2 = 9$ chips. On chip $k$ the filter fits a median
 $\hat{\mu}_k$ and a Ledoit–Wolf shrinkage covariance $\hat{\Sigma}_k$
-[@ledoit2004], then estimates the enhancement [@thompson2015]
+[@ledoit2004], then estimates the enhancement {eq}`r16-eq-mf` [@thompson2015]
+(derived in [radtrax · 1, stage 5](../geomodels/radtrax/01_column_retrieval.md#rx1-stage-5)):
 
 $$
 \hat{\alpha}_k(x) = \frac{(x - \hat{\mu}_k)^\top \hat{\Sigma}_k^{-1} t}{t^\top \hat{\Sigma}_k^{-1} t} .
@@ -269,7 +281,7 @@ $$ (r16-eq-mf)
 Each chip carries a separable Hann weight $w_k(p) = h(i)\,h(j)$, with
 $h(i) = \sin^2\!\big(\pi (i + \tfrac{1}{2}) / n\big)$ sampled at pixel
 centres, and the merged map is the weight-normalised sum over the chips
-$\mathcal{K}(p)$ that cover pixel $p$:
+$\mathcal{K}(p)$ that cover pixel $p$, {eq}`r16-eq-ola`:
 
 $$
 \hat{\alpha}(p) = \frac{\sum_{k \in \mathcal{K}(p)} w_k(p)\, \hat{\alpha}_k(p)}{\sum_{k \in \mathcal{K}(p)} w_k(p)} .
@@ -356,7 +368,7 @@ turn it into an effective wind for the plume.
 **Problem.** $u_{10}$ and $v_{10}$ are the 10 m wind components on an
 ERA5-shaped grid of 24 hourly steps and 5 × 5 points, with
 $u_{10} = 3 + 0.5 \sin(2\pi h / 24)$ m s⁻¹ and $v_{10} = 4$ m s⁻¹. The wind
-speed and the effective wind of Varon et al. [@varon2018] are
+speed and the effective wind of Varon et al. [@varon2018] are {eq}`r16-eq-wind`:
 
 $$
 U_{10} = \sqrt{u_{10}^2 + v_{10}^2} , \qquad U_{\mathrm{eff}} = 0.33\, U_{10} + 0.45 .
@@ -381,7 +393,9 @@ U_eff = 0.33 * U10 + 0.45                                          # scalar     
 registry, which it imports from xrtoolz-reader today. After C the same names
 come from xrtoolz-core and nothing in this block changes. A real run would
 download the cube with `xrreader.CDSSource`; it is built in memory here so
-the page needs no credentials.
+the page needs no credentials. This $U_{\mathrm{eff}}$ is calibrated for a
+plume length $L = \sqrt{A}$; stage 5 passes it to an operator whose length is
+the chord (see the note there).
 
 (r16-stage-5)=
 ### Stage 5 · Emission rate (geotoolz)
@@ -389,14 +403,12 @@ the page needs no credentials.
 **TL;DR.** Sum the mass inside the mask and divide by the time the wind takes
 to carry it the plume's length.
 
-**Problem.** With $A_p = 900$ m² the area of pixel $p$ and $\ell$ the plume
-length (the mask's longest axis), the integrated mass enhancement, the
-emission rate and its 1σ uncertainty at geotoolz's default fraction are
-
-$$
-\mathrm{IME} = \sum_{p \in \mathcal{P}} \Delta\Omega_p A_p , \qquad
-Q = \frac{U_{\mathrm{eff}}\, \mathrm{IME}}{\ell} , \qquad \sigma_Q = 0.5\, Q .
-$$ (r16-eq-ime)
+**Problem.** geotoolz's `IMEEstimate` sums the mass over the mask
+($A_p = 900$ m² per pixel) and returns
+$Q = U_{\mathrm{eff}}\,\mathrm{IME}/\ell$, with $\ell$ the mask's longest
+axis (the chord) and $\sigma_Q = 0.5\, Q$ at its default fraction. The
+method and its limits are derived in
+[plumax · 1](../geomodels/plumax/01_emission_rate.md#er1-ime).
 
 ```{code-block} python
 :caption: The emission rate from the GeoTensor and xarray stages together.
@@ -415,6 +427,13 @@ $\hat{\Sigma}_k$ on chips that contain the plume absorbs part of the signal:
 with the true $\mu$ and $\Sigma$ the same mask gives +1.7 % (the notebook
 runs both and asserts both). That is a
 retrieval choice, not a packaging one, and is out of scope here.
+
+:::{note} The wind and the length do not match
+Stage 4's $U_{\mathrm{eff}}$ is a calibration for $L = \sqrt{A}$, and
+`IMEEstimate`'s default length is the chord. On one plume the two need winds
+a factor of 3.7 apart ([plumax · 1](../geomodels/plumax/01_emission_rate.md#er1-ime)),
+so the rate above checks the plumbing (gate K4), not the physics.
+:::
 
 (r16-stage-6)=
 ### Stage 6 · The seams, as they stand (pipekit, xrtoolz, geotoolz-patcher)
@@ -463,7 +482,9 @@ records the same break as its A5.
 (r16-audit)=
 ## Current-state audit
 
-Six overlaps need action; seven look like duplication and are not. The
+Six overlaps need action; seven look like duplication and are not
+([](#tbl-r16-audit); [](#fig-r16-readiness) shows what the page's sketches
+call). The
 audit read `references/pipekit` at `ef3c17f`, `references/geotoolz` at
 `088475e` and `references/xrtoolz` at `308c7f2` on 14 October 2026.
 
@@ -471,10 +492,9 @@ audit read `references/pipekit` at `ef3c17f`, `references/geotoolz` at
 :label: fig-r16-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 42 calls, 29 run today, 11 are proposed by this report's workstreams and 2 are code the reader writes.
 
-What the page's sketches call, read from their markers: one square per stack
-call. Of 42, 29 run today, 11 are proposed by this report's workstreams and
-2 are code the reader writes. A row without squares has no marked call;
-labels on the proposed squares name the workstream item.
+Of the page's 42 marked stack calls, 29 run today, 11 are proposed by this
+report's workstreams and 2 are code the reader writes (how to read it:
+[conventions](../overview.md#sec-conventions)).
 :::
 
 :::{table} Overlaps across the three repositories.
@@ -487,7 +507,7 @@ labels on the proposed squares name the workstream item.
 | `JaxModelOp` ×2, `EquinoxModelOp`, `ModelOp` ×2, `SklearnModelOp`, `SklearnOp` ×2 | `pipekit_jax/model_op.py:42`; `pipekit_train/adapters/equinox.py:66`; `xrtoolz/inference/modelop.py:30, 227, 257`; `xrsklearn/_src/operator.py:32`; `geotoolz/learn/_src/operators.py:45, 469` | `EquinoxModelOp` at 13 sites in pipekit-train; `SklearnModelOp` at 4 | **True duplicate.** Three backends, eight classes, one name for two unrelated classes |
 | `Variable`, `REGISTRY`, `apply_cf_attrs`, `subset_bbox`, `subset_time`, `subset_where` | `xrreader/types/_src/` (2,341 lines; NumPy, pandas, xarray and the standard library) | 8 imports in 7 xrtoolz modules (`atm`, `geo`, `viz`) | **Split ownership.** Vocabulary in the downloader; `xrtoolz` requires `xrtoolz-reader` |
 | `XarrayWindowDataset`, `_xreader.training_iterator` | `pipekit_train/xarray_window.py:134`, `_xreader.py:347` | pipekit-train users | **Split ownership.** Imports `geopatcher.time` (`xarray_window.py:35`, `_xreader.py:380`), removed by geotoolz #431 |
-| `open_emit_ch4_l2b`, `open_ghgsat_ch4_l2`, `open_tropomi_ch4_l2` · `goes`, `himawari`, `carbonmapper` readers | `xrreader/_src/local/openers/` (379 lines) · `geoproducts/` | xrreader users · geoproducts users | **Split ownership.** Two homes for mission readers, no rule between them (Report 3, question 7) |
+| `open_emit_ch4_l2b`, `open_ghgsat_ch4_l2`, `open_tropomi_ch4_l2` · `goes`, `himawari`, `carbonmapper` readers | `xrreader/_src/local/openers/` (379 lines) · `geoproducts/` | xrreader users · geoproducts users | **Split ownership.** Two homes for mission readers, no rule between them ([Report 3, question 7](03_sister_libraries.md#r3-open-questions)) |
 | `exact_quotient` · `count_steps` | `geopatcher/_src/temporal/stencils.py:55` · `geocatalog.grid` | temporal stencils · `GeoSlice` alignment | **Healthy.** Named for what they do since #434; the draft's `divide_evenly` clash is gone |
 | obstore pool, `files`, `cache`, `cog`, `hdf` | `geocloud` | geocatalog staging, geopatcher `CogField`, geotoolz `io.ReadHDF` / `ReadNetCDF`, geoproducts HDF5 | **Healthy.** One pool per process, one home since #431 |
 | `pipekit.Cache` · `geopatcher.run.PatchCache` · `geocloud.cache` · xrreader `cache_path` | four packages | | **Healthy.** Operator results, patches across runs, local copies of remote objects, downloads: four jobs |
@@ -533,7 +553,7 @@ Smaller findings:
 ## Workstream A · pipekit owns the composition contract
 
 **Decision.** There is one `Signature`, pipekit's, and the helpers other
-packages import from pipekit are public.
+packages import from pipekit are public ([](#tbl-r16-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r16-move-a
@@ -583,7 +603,7 @@ This revisits nothing in [Report 2](02_pipekit_surface.md): its
 ## Workstream B · One model-operator family
 
 **Decision.** Each lane owns how its carrier becomes an array and back; each
-backend is wrapped once.
+backend is wrapped once ([](#tbl-r16-move-b)).
 
 :::{table} Workstream B's moves.
 :label: tbl-r16-move-b
@@ -599,7 +619,8 @@ backend is wrapped once.
 | `geotoolz.learn.ModelOp`, `SklearnOp` | stay | GeoTensor marshalling |
 :::
 
-1. **Return `JaxModelOp` from the Equinox adapter**, as Report 11's B1 says,
+1. **Return `JaxModelOp` from the Equinox adapter**, as
+   [Report 11's B1](11_pipekit_train.md#r11-ws-b) says,
    and alias `EquinoxModelOp` to it.
 2. **Move pipekit-cycle into pipekit-jax's `[diffrax]` extra**, so
    pipekit-train's `[equinox]` extra can depend on pipekit-jax.
@@ -624,7 +645,7 @@ op = xrtoolz.inference.ModelOp(model, method=None, feature_dim="feature",
 ## Workstream C · xrtoolz-core owns the shared xarray vocabulary
 
 **Decision.** The names every xarray operator speaks live in xrtoolz-core;
-xrtoolz-reader keeps its archives and readers.
+xrtoolz-reader keeps its archives and readers ([](#tbl-r16-move-c)).
 
 This corrects one point from the 7 October draft: xrtoolz does not import
 `BBox` or `TimeRange` from xrreader. It imports `Variable`, `REGISTRY`,
@@ -669,7 +690,8 @@ from xrreader.types import Variable          # still works, same object      pro
 ## Workstream D · geotoolz-patcher owns windows for every carrier
 
 **Decision.** Windowed sampling for training lives with the stencils that
-define it, in geotoolz-patcher, and nothing in pipekit imports a geo package.
+define it, in geotoolz-patcher, and nothing in pipekit imports a geo package
+([](#tbl-r16-move-d)).
 
 :::{table} Workstream D's moves.
 :label: tbl-r16-move-d
@@ -678,7 +700,7 @@ define it, in geotoolz-patcher, and nothing in pipekit imports a geo package.
 |---|---|---|
 | `from geopatcher.time import …` | `from geopatcher.temporal.stencils import …` | D1: the module was renamed in #431 |
 | `XarrayWindowDataset`, `_xreader` | `geopatcher.integrations.train`, behind `geotoolz-patcher[train]` (pipekit-train, xarray, zarr, Grain) | D2: removes the only pipekit → geo edge |
-| `from pipekit_train import XarrayWindowDataset` | removed, with no shim; the notebooks of Reports 11 and 15, which import it through a `geopatcher.time` alias, already try `geopatcher.integrations.train` first | it raises `ImportError` without that alias (stage 6), and a re-export would bring back the pipekit → geo edge D2 removes |
+| `from pipekit_train import XarrayWindowDataset` | removed, with no shim; the notebooks of [Reports 11](11_pipekit_train.md) and [15](15_benchmarking.md#r15-ws-b), which import it through a `geopatcher.time` alias, already try `geopatcher.integrations.train` first | it raises `ImportError` without that alias (stage 6), and a re-export would bring back the pipekit → geo edge D2 removes |
 | the raster fields, reprojection, matched fields and the `RasterDomain` alias | imported on first use from the package root | D3: a stencil import should load NumPy only |
 | `xrpatcher` in xrtoolz's design docs | geopatcher's `XarrayField`, `GridSampler`, `MergePatches` | D4: one patcher for both lanes |
 :::
@@ -696,7 +718,8 @@ its Grain path, so it needs pipekit-train; the stencils need geopatcher. The
 package that knows both is the one with the integration modules already:
 geopatcher has `integrations/pipekit.py` for operator graphs, and gains
 `integrations/train.py`. Two callers in this repository use the old path: the
-notebooks of Reports 11 and 15. Both import from `geopatcher.integrations.train`
+notebooks of [Reports 11](11_pipekit_train.md#r11-running) and
+[15](15_benchmarking.md#r15-stage-2). Both import from `geopatcher.integrations.train`
 when it exists and fall back to pipekit-train otherwise, so they keep running
 on either side of D2.
 
@@ -737,7 +760,7 @@ x, y = ds[0]                         # (2, 6, 5, 5), (2, 1, 5, 5)  proposed (D2)
 # valid origins: |𝒪| = T − a₋ − a₊ = 24 − 5 − 1 = 18         today (stencils)
 ```
 
-The origin count follows from the stencils: with $a_- = 5$ steps of history
+The origin count {eq}`r16-eq-origins` follows from the stencils: with $a_- = 5$ steps of history
 and $a_+ = 1$ step of lead, an origin $t_0$ is valid only when both windows
 fit inside the $T = 24$ steps, which today's `valid_origin_points` confirms
 on the stage 4 cube:
@@ -755,7 +778,7 @@ swath, 2-D latitude and longitude, profiles or stations belongs to
 xrtoolz-reader.
 
 This answers [Report 3](03_sister_libraries.md#r3-open-questions)'s
-question 7: the TROPOMI reader stays on the xarray side.
+question 7: the TROPOMI reader stays on the xarray side ([](#tbl-r16-move-e)).
 
 :::{table} Workstream E's placements.
 :label: tbl-r16-move-e
@@ -836,6 +859,8 @@ two more checks cover the faults F2 fixes:
 
 ### F4 · Release in tier order
 
+[](#tbl-r16-release) orders the releases by base dependency.
+
 :::{table} Release order, by base dependencies. An extra may name a later tier; it resolves once that tier is published, and gate F4 checks the whole set.
 :label: tbl-r16-release
 
@@ -864,8 +889,8 @@ the page's stage 6 stays reproducible at the pinned revisions.
 (r16-gates)=
 ## Testing gates
 
-Each workstream merges only when its gates pass; the K gates are checks the
-code passes today and must keep passing.
+Each workstream merges only when its gates pass ([](#tbl-r16-gates)); the K
+gates are checks the code passes today and must keep passing.
 
 :::{table} Gates for the proposals and for what ships.
 :label: tbl-r16-gates
@@ -879,7 +904,7 @@ code passes today and must keep passing.
 | B2 Alias parity | B | each deprecated alias returns outputs equal to its replacement to 0 on xrtoolz's inference tests and emits exactly one `DeprecationWarning`; `JaxModelOp(net, feature_dim="feature", jit=True)` and `jit=False` both construct and agree to 0, in an environment with JAX and without Equinox |
 | C1 Reader-free xrtoolz | C | `importlib.metadata.requires("xrtoolz")` lists no `xrtoolz-reader` outside `[reader]` (today it does), and `import xrtoolz` succeeds without it |
 | C2 Vocabulary shims | C | for every name the move table sends to `xrcore.types` (`BBox`, `TimeRange`, `DepthRange`, `PressureLevels`, `Variable`, `REGISTRY`, `resolve`, `register`, `apply_cf_attrs`, `validate_dataset`, `validate_variable`, `ValidationReport`, `subset_bbox`, `subset_time`, `subset_where`), `getattr(xrreader.types, n) is getattr(xrcore.types, n)`, so old imports and `isinstance` checks keep working |
-| D1 Window import | D | `XarrayWindowDataset` imports with the pinned geopatcher and no shim (today `ImportError`); Report 11's stage 8 pairs satisfy $y = M x_{-1}$ to 1e-5 |
+| D1 Window import | D | `XarrayWindowDataset` imports with the pinned geopatcher and no shim (today `ImportError`); [Report 11](11_pipekit_train.md#r11-stage-8)'s stage 8 pairs satisfy $y = M x_{-1}$ to 1e-5 |
 | D2 No upward edges | D | grepping every pipekit package for `geopatcher`, `geocatalog`, `geotoolz` or `xrcore` returns 0 lines (today 2 files); the dataset's `content_hash` on stage 4's cube is identical before and after the move |
 | D3 Cheap stencil import | D | in a fresh interpreter, `import geopatcher.temporal.stencils` puts none of `georeader`, `rasterio`, `shapely`, `pyproj`, `geopandas`, `xarray`, `pandas`, `scipy`, `dask` or `zarr` in `sys.modules` (today the first three) |
 | E1 Carrier rule | E | the capability index lists no mission name under both geoproducts and xrreader except EMIT L2B, whose GeoTIFF and NetCDF containers are different carriers by design (stage table above); and those two EMIT readers agree on a fixture's enhancement to 1e-6 |
@@ -900,7 +925,7 @@ code passes today and must keep passing.
 The name and the contract go first: every later change either ships under the
 new name or touches operators that carry signatures. B, C, D and E are
 independent of each other and run side by side; publishing waits for all of
-them.
+them ([](#fig-r16-roadmap)).
 
 :::{figure} ../images/reports/r16_roadmap.svg
 :label: fig-r16-roadmap
@@ -956,6 +981,8 @@ release.
 (r16-todos)=
 ## Upcoming work
 
+[](#tbl-r16-todos) lists the follow-ups outside the workstreams.
+
 :::{table} Follow-ups outside the workstreams.
 :label: tbl-r16-todos
 
@@ -969,13 +996,6 @@ release.
 
 (r16-references)=
 ## References
-
-:::{note} Companion reports
-:class: simple
-Reports [2](02_pipekit_surface.md), [3](03_sister_libraries.md),
-[6](06_geocatalog.md), [7](07_geopatcher.md) and [11](11_pipekit_train.md)
-are published.
-:::
 
 ### Citations
 

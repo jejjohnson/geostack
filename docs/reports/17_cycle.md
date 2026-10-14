@@ -20,15 +20,11 @@ numbering:
 
 +++ {"part": "abstract"}
 
-A research idea in geoscience usually travels the same road: a forward model
-you can simulate, a slow classical inversion of it, a neural emulator of the
-forward model, the inversion rerun with the emulator, and finally a network
-that maps observations straight to an answer. The scoping report names this
-road the **six-step cycle**, makes step 2 (the classical inversion) the
-permanent **oracle** that validates steps 3 to 5, and argues that writing the
-benchmark for each step is how a team states what it understands. It proposes
-a `CycleStageBenchmark`, a model-role enum and a lineage record. This page
-runs all six steps on one row of the cycle matrix, the L1 → L2 retrieval of a
+The scoping report organises the road from a forward model to an amortized
+predictor as the **six-step cycle** ([overview](../overview.md#sec-six-steps)),
+makes step 2 (the classical inversion) the permanent **oracle** that validates
+steps 3 to 5, and proposes a `CycleStageBenchmark`, a model-role enum and a
+lineage record. This page runs all six steps on one row of the cycle matrix, the L1 → L2 retrieval of a
 methane column from five-band transmittances, on the pinned code. The cycle
 is already there: pipekit-evaluate ships it as its **benchmark ladder**, with
 six rungs and a reference rule that scores the emulator against the
@@ -57,18 +53,17 @@ cannot overwrite. Every number below is from a real run.
 :::
 
 :::{important} What changed from the scoping report
-The scoping report's **central claims stand**: the six-step cycle orders the
-road from a simple model to an amortized predictor, step 2 stays as the
-oracle, and every step needs a benchmark against a reference. The running
-example reproduces each claim on real numbers. Four parts **do not**. The
-**cycle is not new code**: pipekit-evaluate already ships it as the
-benchmark ladder (`RUNG_NAMES`, `DEFAULT_STAGED`, `Benchmark`), so a
-`CycleStageBenchmark` would duplicate it. The **oracle rule** is stated three
-ways in the source; the shipped rule (the emulator against the simulator,
-both fast inversions against the oracle) is the consistent one. The
-**amortized predictor** is trained on simulations, not on step 4's outputs.
-And **lineage in registry tags** can be overwritten, so it moves inside the
-hash. A **Differs** box marks each place.
+The **central claims stand**: the cycle, step 2 as oracle, and a benchmark
+per step; the running example reproduces each. Four parts do not:
+
+- **The cycle is not new code:** it is pipekit-evaluate's benchmark ladder
+  ([](#r17-framework)).
+- **The oracle rule:** the shipped one (emulator against the simulator, both
+  fast inversions against the oracle) is the consistent one ([](#r17-stage-1)).
+- **The amortized predictor** is trained on simulations, not on step 4's
+  outputs ([](#r17-stage-5)).
+- **Lineage in registry tags** can be overwritten, so it moves inside the
+  hash ([](#r17-stage-6)).
 :::
 
 (r17-summary)=
@@ -99,7 +94,8 @@ the oracle with weights; and the docs name the cycle once, consistently.
   and the truth in one run, through [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s
   A4 (C2).
 - **D. The cycle in the docs.** The overview's oracle rule is corrected to the
-  shipped one (D1); Reports 11, 14 and 15 point to the step each of their
+  shipped one (D1); [Reports 11](11_pipekit_train.md),
+  [14](14_pipekit_evaluate.md) and [15](15_benchmarking.md) point to the step each of their
   stages fills (D2).
 
 **End state.** A team writes one contract per cell of its cycle row, runs
@@ -110,50 +106,14 @@ step, the registry lists the artifacts that must be rerun, and no others.
 (r17-framework)=
 ## The framework, as the scoping report put it
 
-This section restates the scoping report's framework; the rest of the page
+This section summarises the scoping report's framework; the rest of the page
 keeps it except where a box says otherwise.
 
-**The six steps.** The scoping report says it follows plumax's framing of
-the same steps (plumax is not pinned here), and the
-[overview](../overview.md#sec-six-steps) adopted it as the third axis.
-
-```{figure} ../images/overview/six_steps.svg
-:label: fig-r17-six-steps
-:alt: Five steps in a row, from simple model to amortized inference. Step 2 validates steps 3 to 5. A shared improve step sits under steps 2 to 5 with two-way links.
-:width: 100%
-
-**The six-step cycle, as the overview draws it.**
-
-Step 1 is the generative story, step 2 its classical inversion and the
-oracle, step 3 an emulator of the forward model, step 4 the inversion rerun
-with the emulator, step 5 an amortized predictor, and step 6 improves any of
-them with the previous step as ground truth.
-```
-
-**Step 2 as oracle.** Classical inversions (the EnKF and 4D-Var in filterax
-and vardax, Gaussian processes in pyrox) are not legacy code waiting to be
-replaced. They are the only thing a neural surrogate can be validated
-against, so they stay runnable on production data, and their compute is a
-permanent cost.
-
-**Benchmarks as formalised understanding.** A benchmark contract declares
-the carriers, the reference, the metrics, the splits, the baselines and the
-expected failure modes. If a team can write all six, it understands the
-problem; the one it cannot write is what it has to learn next.
-
-**The matrix.** The cycle applies at every L0–L4 transition, so the levels
-and the steps form a matrix whose cells are concrete, benchmarkable methods.
-
-```{figure} ../images/overview/axes_matrix.svg
-:label: fig-r17-matrix
-:alt: A grid with lifecycle transitions as rows, from calibration to forecast, and steps 1 to 5 as columns. Each cell names a method; the step-2 column is highlighted as the oracle.
-:width: 100%
-
-**The cycle matrix, as the overview draws it.**
-
-The running example is one cell of each column in the L1 → L2 retrieval
-row.
-```
+The steps, the oracle and the level × step matrix are defined once in the
+overview ([the six steps](../overview.md#sec-six-steps),
+[how the axes relate](../overview.md#sec-axes-relate)); the scoping report
+says it follows plumax's framing of them (plumax is not pinned here). The
+running example is one cell of each column in the L1 → L2 retrieval row.
 
 **Physics-first and data-first.** In a physics-first cycle step 1 is a known
 forward model and step 2 a classical inversion of it, an oracle in the
@@ -170,15 +130,15 @@ estimators and scores each against its reference. Its design note,
 `benchmark_ladder.md`, draws the same staircase and adds a second axis, the
 **complexity** of each rung (a MAP fit below a full posterior, a linear
 emulator below a neural operator), with the same rule along it. The
-overview's [three axes](../overview.md#sec-axes) already include the cycle, so the scoping report's edits to a vision document and a
-"Report 0" land there; neither file exists in this repository.
+overview's [three axes](../overview.md#sec-axes) already include the cycle, so
+the scoping report's edits to a vision document land there.
 :::
 
 (r17-ownership)=
 ## Ownership rules
 
 The cycle is orchestrated by pipekit-evaluate's ladder; each step runs in the
-library that owns its kind of computation.
+library that owns its kind of computation ([](#fig-r17-ownership)).
 
 :::{figure} ../images/reports/r17_ownership.svg
 :label: fig-r17-ownership
@@ -199,15 +159,13 @@ computation lives.
 3. **pipekit-train** owns steps 3 and 5: training data drawn from the step-1
    simulator (`SimulationDataset`) and the training loop. It never parses a
    contract or a cell.
-4. **xrtoolz** owns the scores that compare two distributions, including a
-   posterior against the oracle's (`wasserstein_1`), beside its other
-   probabilistic metrics.
-5. **pipekit-experiment** owns persistence and lineage: every artifact stored
-   by content hash with its parents in the payload. It never interprets a
-   rung.
-6. **Domain libraries** (plumax, somax, rtmx for steps 1; filterax, vardax,
-   pyrox for step 2) own the physics and the classical oracles, and reach
-   pipekit only through `adapters/pipekit.py`.
+
+xrtoolz holds the distance from a posterior to the oracle's (workstream C),
+pipekit-experiment the lineage inside the hash (workstream B), and the domain
+libraries (plumax, somax, radtrax for step 1; filterax, vardax, pyrox for
+step 2) the physics and the classical oracles, reached through
+`adapters/pipekit.py`. Otherwise neighbours follow
+[the stack rules](16_geo_data_stack.md#r16-ownership).
 
 (r17-running)=
 ## The running example: one retrieval, six steps
@@ -215,11 +173,13 @@ computation lives.
 **The problem.** Retrieve a methane column enhancement from a multiband
 sensor, and take the retrieval through all six steps of the cycle: the cell
 of the matrix the scoping report works through in its section 4.1. The
-sensor is Reports 10 and 11's, so their results carry over.
+sensor is [Reports 10](10_pipekit_cycle.md#r10-stage-5) and
+[11](11_pipekit_train.md#r11-running)'s, so their results carry over.
 
 **The data.** A sensor measures transmittances in B = 5 bands. With α the
 column enhancement, k ∈ ℝ⁵ the band absorption coefficients, k = (0.002,
 0.004, 0.006, 0.008, 0.010), and ε the noise, the generative model is
+{eq}`r17-eq-model`:
 
 $$
 y_b = f_b(\alpha) + \varepsilon_b , \qquad f_b(\alpha) = e^{-k_b \alpha} , \qquad \varepsilon_b \sim \mathcal{N}(0, \sigma^2) , \qquad \alpha \sim \mathcal{U}(0, 300) ,
@@ -230,10 +190,10 @@ seeds of their own, disjoint from every training set below. This is the L1 → L
 in, a retrieved geophysical variable (α) out.
 
 **What exists.** Every step runs on the pinned code except where a line is
-marked `user`: the ladder's task, estimates and scorers are user code, as in
+marked `user` ([markers](../overview_examples.md#ex-markers)): the ladder's task, estimates and scorers are user code, as in
 [Report 14](14_pipekit_evaluate.md#r14-stage-4), and the polynomial emulator
 and the Gaussian head are small least-squares fits, so that the whole cycle
-runs in under a minute and every number is checkable. Report 11 trains an
+runs in under a minute and every number is checkable. [Report 11](11_pipekit_train.md) trains an
 amortized retrieval for the same sensor with Equinox through `pipekit-train`
 ([its stage 6](11_pipekit_train.md#r11-stage-6)); the cycle does not depend
 on which kind of model fills a step.
@@ -367,7 +327,7 @@ and score them against the simulator, the reference rung 3 calls for.
 
 **Problem.** An emulator f̂ of degree d writes each band as a polynomial in
 α / 300 with coefficients C ∈ ℝ^{(d+1)×5}, fitted on the training split of
-a `SimulationDataset` of 2,000 seeded draws:
+a `SimulationDataset` of 2,000 seeded draws, {eq}`r17-eq-emulator`:
 
 $$
 C^\star = \arg\min_C \sum_{i=1}^{1600} \big\lVert V(\alpha_i)\, C - f(\alpha_i) \big\rVert^2 , \qquad V(\alpha) = \big[(\alpha/300)^d, \ldots, \alpha/300, 1\big] .
@@ -405,7 +365,7 @@ simulator and score the result against the oracle's posterior.
 
 **Problem.** Step 4 replaces f with f̂ in {eq}`r17-eq-posterior`. With F̂ and
 F the distribution functions of the step-4 and oracle posteriors, the
-1-Wasserstein distance
+1-Wasserstein distance {eq}`r17-eq-w1`
 
 $$
 W_1 = \int_0^{300} \big\lvert \hat{F}(\alpha) - F(\alpha) \big\rvert \, d\alpha
@@ -461,7 +421,7 @@ different verdicts.
 **Problem.** The predictor is q(α | y) = 𝒩(μ(y), s(y)²), with μ and log s²
 linear in features φ(y) ∈ ℝ⁸ built from the per-band inversions
 z_b = −log y_b / k_b. Both are fitted once, by least squares on 20,000
-simulated pairs (α, y) drawn from {eq}`r17-eq-model`:
+simulated pairs (α, y) drawn from {eq}`r17-eq-model`, as {eq}`r17-eq-head`:
 
 $$
 \beta_\mu = \arg\min_\beta \sum_i \big(\alpha_i - \varphi(y_i)^\top \beta\big)^2 , \qquad
@@ -596,6 +556,9 @@ runs is a comparison of two reports' rows.
 (r17-names)=
 ## The scoping report's names, checked
 
+[](#tbl-r17-names) sets every name the scoping report uses against the pinned
+code.
+
 :::{table} Every name the scoping report uses, against the pinned code.
 :label: tbl-r17-names
 
@@ -610,11 +573,11 @@ runs is a comparison of two reports' rows.
 | `pc.NeuralForward(model_op, dt)` | exists (`forward.py:136`) |
 | `pc.Recurrence` for iterative retrieval | exists (`cycle.py:265`); stage 2 runs Gauss–Newton with it |
 | `pt.SimulationDataset(forward_model, prior, n_samples)`, `pt.CachedDataset(source, cache_dir)` | exist (`dataset.py:228`, `:393`) |
-| `pt.TrainingLoop(..., n_epochs=, backend="lightning")` | `TrainingLoop` counts `max_steps`, not epochs; the Lightning backend raises `NotImplementedError` (Report 11) |
+| `pt.TrainingLoop(..., n_epochs=, backend="lightning")` | `TrainingLoop` counts `max_steps`, not epochs; the Lightning backend raises `NotImplementedError` ([Report 11](11_pipekit_train.md#r11-names)) |
 | `pt.MSE`, `pt.NLL` | exist (`loss.py`) |
 | `pa.ModelOp` | no such alias; the Equinox adapter's `EquinoxModelOp` or pipekit-jax's `JaxModelOp` |
 | `px.S3ModelRegistry` | exists (`registry.py`) |
-| `pe.MultiTrackEvaluation`, `EvaluationReport.diff` | do not exist; Report 15 drops the first, Report 14 proposes the report (A3) |
+| `pe.MultiTrackEvaluation`, `EvaluationReport.diff` | do not exist; [Report 15](15_benchmarking.md#r15-ws-d) drops the first, [Report 14](14_pipekit_evaluate.md#r14-ws-a) proposes the report (A3) |
 | `geotoolz.matched_filter.CH4MatchedFilter` | `MatchedFilter`, `MatchedFilterPixel`, `MatchedFilterSNR` exist; no CH₄-specific class |
 | BAEMR retrieval | not identified; the [gallery](../benchmarks_gallery.md#gal-3-1) found the same |
 | `plumax.PlumeForward`, `ColumnObs`, `filterx…EnKFAnalysis`, `pyrox_nn…ConditionalNormalizingFlow`, `RTMX.RTM` | not pinned in `references/`, so not checked; the scoping report's `filterx` is filterax |
@@ -624,17 +587,17 @@ runs is a comparison of two reports' rows.
 (r17-audit)=
 ## Current-state audit
 
-Four of the eight symbol groups need action. Read on 14 October 2026 at the
+Four of the eight symbol groups need action ([](#tbl-r17-audit));
+[](#fig-r17-readiness) shows what the page's sketches call. Read on 14 October 2026 at the
 revisions in the report's header, on `main` of each submodule.
 
 :::{figure} ../images/reports/r17_readiness.svg
 :label: fig-r17-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 40 calls, 21 run today, 6 are proposed by this report's workstreams and 13 are code the reader writes.
 
-What the page's sketches call, read from their markers: one square per stack
-call. Of 40, 21 run today, 6 are proposed by this report's workstreams and
-13 are code the reader writes. A row without squares has no marked call;
-labels on the proposed squares name the workstream item.
+Of the page's 40 marked stack calls, 21 run today, 6 are proposed by this
+report's workstreams and 13 are code the reader writes (how to read it:
+[conventions](../overview.md#sec-conventions)).
 :::
 
 :::{table} The cycle's surface, by symbol group.
@@ -642,7 +605,7 @@ labels on the proposed squares name the workstream item.
 
 | Symbols | Defined in | Used by | Verdict |
 |---|---|---|---|
-| `RUNG_NAMES`, `LEVEL_NAMES`, `Cell` | pipekit-evaluate `benchmark/cube.py` | `Benchmark`, Reports 14 and 15 | **Split ownership.** A cell names one level, not a transition; L2 is named `gap_filled_obs` but described as retrievals (`cube.py:28`) |
+| `RUNG_NAMES`, `LEVEL_NAMES`, `Cell` | pipekit-evaluate `benchmark/cube.py` | `Benchmark`, [Reports 14](14_pipekit_evaluate.md) and [15](15_benchmarking.md) | **Split ownership.** A cell names one level, not a transition; L2 is named `gap_filled_obs` but described as retrievals (`cube.py:28`) |
 | `DEFAULT_STAGED`, `DEFAULT_COMPLEXITY`, `ReferenceRule`, `ReferenceSource` | `benchmark/reference.py` | `Benchmark` | **Healthy.** The cycle's oracle rule, as data a domain can override; no notion of how strong the oracle is |
 | `Benchmark`, `CellResult` | `benchmark/run.py` | stage 6 | **Split ownership.** Every estimator is called on the observations (`run.py:108`), so rung 3 needs glue; one reference per cell (Report 14) |
 | `Estimator`, `Estimate`, `Task`, `Oracle` | `benchmark/protocols.py` | stage 6 | **Healthy.** Enough for every rung once rung 3 is called on θ; `Oracle` is still not consumed (Report 14) |
@@ -673,7 +636,7 @@ Smaller findings:
 
 **Decision.** A cell of the cycle matrix is a ladder cell with a transition,
 and a contract names its oracle and how far to trust it; nothing else about
-the ladder changes.
+the ladder changes ([](#tbl-r17-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r17-move-a
@@ -683,14 +646,14 @@ the ladder changes.
 | `Cell(level, rung, complexity, source=None)` with label `"L1→L2/r4/c0"` | `benchmark/cube.py` | stage 1: one level cannot tell retrieval, gap filling and forecasting apart |
 | `LEVEL_NAMES["L2"] = "retrieved_obs"` | `benchmark/cube.py` | the ladder's own description of L2, and the overview's |
 | `OracleStrength` (`physics_derived`, `classical_method`, `human_labels`, `heuristic`) | `benchmark/reference.py`, beside `ReferenceSource` | the scoping report's strong and weak oracles; the reference rule says where, not how far to trust |
-| `oracle: {artifact, strength}` on `BenchmarkContract`; `strength` on each `CellResult` scored against it | Report 15's contract; `benchmark/run.py` | a report row says what its reference was worth; a `heuristic` or `human_labels` oracle warns and still scores |
+| `oracle: {artifact, strength}` on `BenchmarkContract`; `strength` on each `CellResult` scored against it | [Report 15](15_benchmarking.md#r15-ws-a)'s contract; `benchmark/run.py` | a report row says what its reference was worth; a `heuristic` or `human_labels` oracle warns and still scores |
 | rung 3 called on `task.datasets()[truth_key]` | `Benchmark.run` | stage 6: a forward emulator maps θ to y; the `fit` workaround goes |
 :::
 
 ### A1 · Transition cells
 
-A cell gains an optional source level, so a contract's task (Report 15's
-`"L1->L2"`) and its cell use one vocabulary; without one, a cell is read as
+A cell gains an optional source level, so a contract's task
+([Report 15](15_benchmarking.md#r15-stage-1)'s `"L1->L2"`) and its cell use one vocabulary; without one, a cell is read as
 today. The ladder's L2 is renamed to match its description; Report 15 and
 the gallery use "L1 → L2" for gap filling, which on the renamed levels is
 L2 → L3, and that relabelling is an open question below, not a silent change.
@@ -727,7 +690,8 @@ pe.Benchmark.from_contract(c, estimators=[...]).run()
 ## Workstream B · Lineage in the hash
 
 **Decision.** An artifact's parents are part of what the registry hashes,
-and the registry answers which artifacts descend from a given one.
+and the registry answers which artifacts descend from a given one
+([](#tbl-r17-move-b)).
 
 :::{table} Workstream B's moves.
 :label: tbl-r17-move-b
@@ -735,7 +699,7 @@ and the registry answers which artifacts descend from a given one.
 | Symbol | Destination | Reason |
 |---|---|---|
 | `store(op, *, parents=(), ...)` writing `lineage.json` into the hashed payload | `pipekit_experiment.registry` | stage 6: a tag can be replaced without changing the hash |
-| `ArtifactLineage(parents, oracle, training_artifact)` | `pipekit_experiment.artifacts`, beside `TrainingArtifact` | the scoping report's record, minus the benchmark results, which point the other way (a report names the model, Report 15's E2) |
+| `ArtifactLineage(parents, oracle, training_artifact)` | `pipekit_experiment.artifacts`, beside `TrainingArtifact` | the scoping report's record, minus the benchmark results, which point the other way (a report names the model, [Report 15](15_benchmarking.md#r15-ws-e)'s E2) |
 | `dependents(hash)`, `descendants(hash)` | `ModelRegistry` protocol and both registries | stage 6: "what must be rerun?" is a scan today |
 | a rung tag (`{"rung": 3}`) by convention | the ladder's docs | the role the scoping report's `ModelRole` would carry; `list(tags=)` filters it today |
 :::
@@ -745,8 +709,8 @@ and the registry answers which artifacts descend from a given one.
 A stored artifact's hash covers its operator state, its weights and its
 lineage record. Two artifacts with the same weights and different parents
 are different artifacts; nothing can rewrite a parent after the fact.
-`TrainingArtifact.dataset_hash` becomes one parent among others, and Report
-11's A3 (the simulator in the dataset hash) is what makes that parent
+`TrainingArtifact.dataset_hash` becomes one parent among others, and
+[Report 11](11_pipekit_train.md#r11-ws-a)'s A3 (the simulator in the dataset hash) is what makes that parent
 trustworthy.
 
 ### B2 · Dependents
@@ -776,7 +740,7 @@ reg.descendants(h3)         # → [h4]; rung 5 has parent h1
 
 **Decision.** The distance from a posterior to the oracle's is an xrtoolz
 metric that takes weights, and the amortized rung is scored against the
-oracle and the truth in one run.
+oracle and the truth in one run ([](#tbl-r17-move-c)).
 
 :::{table} Workstream C's moves.
 :label: tbl-r17-move-c
@@ -784,7 +748,7 @@ oracle and the truth in one run.
 | Symbol | Destination | Reason |
 |---|---|---|
 | `wasserstein_1(a, b, *, weights_a=None, weights_b=None, ...)` | `xrtoolz.metrics` | stage 4: an exact posterior on nodes is resampled today, and the estimate's upward bias (the oracle against itself scores 0.040 ± 0.0004 widths at 2,000 draws) hides the degree-6 emulator's exact 0.004 |
-| two references for rung 5 (`oracle_posterior` and `known_theta`) | Report 14's A4 in `benchmark/run.py` | stage 5: the truth says "calibrated", the oracle says "53 % too wide where α is small"; both belong on the row |
+| two references for rung 5 (`oracle_posterior` and `known_theta`) | [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s A4 in `benchmark/run.py` | stage 5: the truth says "calibrated", the oracle says "53 % too wide where α is small"; both belong on the row |
 :::
 
 ```{code-block} python
@@ -810,9 +774,11 @@ that already ran steps of the cycle say which. Both land with this page.
    change corrects the sentence, and replaces the overview's planned
    `ModelRole`, `ArtifactLineage` and `CycleStageBenchmark` with workstreams
    A and B.
-2. **Link the reports to the steps (D2).** Report 11's stage 2 is step 3 of a
+2. **Link the reports to the steps (D2).** [Report 11](11_pipekit_train.md#r11-stage-2)'s stage 2 is step 3 of a
    forecast row (its stage 3 runs that emulator forward, a forecast, not an
-   inversion) and its stages 6 and 7 are steps 5 and 2 of this retrieval; Report 14's stage 4 fills rungs 2 and 5; Report 15's contract
+   inversion) and its stages 6 and 7 are steps 5 and 2 of this retrieval;
+   [Report 14](14_pipekit_evaluate.md#r14-stage-4)'s stage 4 fills rungs 2 and 5;
+   [Report 15](15_benchmarking.md#r15-ws-a)'s contract
    is what each cell is benchmarked by. This change adds one sentence to each
    that points here; the scoping report's 30 to 80 lines per report would
    repeat this page.
@@ -820,7 +786,8 @@ that already ran steps of the cycle say which. Both land with this page.
 (r17-gates)=
 ## Testing gates
 
-Each workstream merges only when its gates pass on the running example.
+Each workstream merges only when its gates ([](#tbl-r17-gates)) pass on the
+running example.
 
 :::{table} Gates, by workstream.
 :label: tbl-r17-gates
@@ -842,7 +809,8 @@ Each workstream merges only when its gates pass on the running example.
 ## Sequencing and risks
 
 The docs and the vocabulary first, because they cost nothing and every later
-change uses them; then lineage and scoring; then a real cycle.
+change uses them; then lineage and scoring; then a real cycle
+([](#fig-r17-roadmap)).
 
 :::{figure} ../images/reports/r17_roadmap.svg
 :label: fig-r17-roadmap
@@ -863,13 +831,13 @@ data.
 - **Weak oracles.** In data-first cycles step 2 is a supervised baseline on
   uncertain labels, and matching it is not being right. Fallback: the
   oracle's strength is on every row (A2), and the physical-constraint scorers
-  of Report 14 are mandatory for rungs scored against a weak oracle.
+  of [Report 14](14_pipekit_evaluate.md#r14-ws-a) are mandatory for rungs scored against a weak oracle.
 - **Exact oracles are rare.** Stage 2's posterior is exact because α is one
   number. For a field or a plume, step 2 is an EnKF, a 4D-Var or MCMC.
   Fallback: the complexity axis (MAP below Laplace below NUTS) validates the
   oracle itself before it validates anything else, as stage 2 does with
   Laplace.
-- **The physics libraries are not pinned.** plumax, rtmx, filterax and vardax
+- **The physics libraries are not pinned.** plumax, radtrax, filterax and vardax
   are named but not in `references/`, so the real methane cycle cannot run
   here yet. Fallback: phase 3 waits for them; phases 1 and 2 need only the
   pinned packages.
@@ -878,7 +846,7 @@ data.
 ## Open questions
 
 1. **Which levels do gap filling and retrieval connect?** The ladder (and
-   Report 15 and the gallery, which follow it) call gap filling L1 → L2; the
+   [Report 15](15_benchmarking.md#r15-framework) and the [gallery](../benchmarks_gallery.md), which follow it) call gap filling L1 → L2; the
    overview's levels and the scoping report's matrix call retrieval L1 → L2
    and gap filling L2 → L3. Recommended: the overview's levels, with Report
    15's and the gallery's tasks relabelled in one change. Alternative: keep
@@ -901,26 +869,21 @@ data.
 (r17-todos)=
 ## Upcoming work
 
+[](#tbl-r17-todos) lists the follow-ups outside the workstreams.
+
 :::{table} Follow-ups from checking the scoping report against the code.
 :label: tbl-r17-todos
 
 | Item | Where | Why |
 |---|---|---|
 | Map each gallery entry to its cells (transition, steps present, oracle strength) | [benchmarks gallery](../benchmarks_gallery.md) | the scoping report's appendix; needs open question 1 settled first |
-| Pin plumax, rtmx, filterax and vardax | `references/`, `UPSTREAM` | the real methane cycle and the scoping report's step-1 and step-2 names cannot be checked otherwise |
+| Pin plumax, radtrax, filterax and vardax | `references/`, `UPSTREAM` | the real methane cycle and the scoping report's step-1 and step-2 names cannot be checked otherwise |
 | Flat configurations for stored artifacts | pipekit `Operator.from_state` or the registry's docs | stage 6: a nested configuration stores but does not reload |
 | The plume pilot as the first real cycle | pipekit-evaluate `docs/design/plume_pilot.md` | the ladder's design note picks it because every rung exists |
 :::
 
 (r17-references)=
 ## References
-
-:::{note} Companion reports
-:class: simple
-Reports [10](10_pipekit_cycle.md), [11](11_pipekit_train.md),
-[12](12_pipekit_experiment.md), [14](14_pipekit_evaluate.md) and
-[15](15_benchmarking.md) are published.
-:::
 
 ### Sources
 

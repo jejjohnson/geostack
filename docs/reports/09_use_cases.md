@@ -38,10 +38,10 @@ and the proposals, lettered A to I, are the stack's backlog.
 
 | | |
 |---|---|
-| **Status** | Use-case mapping; supersedes Report 4, so the reports' "Report 4 or 9" placeholders now point here |
+| **Status** | Use-case mapping; supersedes Report 4 |
 | **Reading time** | about 40 minutes |
 | **Audience** | anyone pressure-testing the library structure against real deployments, or deciding what to build next |
-| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core), [Report 3](03_sister_libraries.md) (sister libraries), [Report 6](06_geocatalog.md) (geocatalog), [Report 7](07_geopatcher.md) (geopatcher); forthcoming ones under [References](#r9-references) |
+| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core), [Report 3](03_sister_libraries.md) (sister libraries), [Report 6](06_geocatalog.md) (geocatalog), [Report 7](07_geopatcher.md) (geopatcher), [Report 16](16_geo_data_stack.md) (the geo data stack); [the GeoModels package boundaries](../geomodels/package_boundaries.md), [radtrax · 1](../geomodels/radtrax/01_column_retrieval.md) and [plumax · 1](../geomodels/plumax/01_emission_rate.md) for the methane physics |
 | **Checked against** | the revisions pinned in `references/`: pipekit and its six sister packages at 0.0.2 (`ef3c17f`); geotoolz 0.10.2 with geocatalog 0.5.1 and geopatcher 0.10.2 (`088475e`); xrtoolz 0.0.5 (`308c7f2`); georeader 2.4.1. The running example's Graph, the registry, the YAML loader and the wind-swap gate are from real runs |
 | **Reference** | the original gallery, [`usecases.md`](https://github.com/jejjohnson/research_journal_v2/blob/main/notes/geotoolz/plans/geotoolz/examples/usecases.md); the geoapps design plan for cases 14 to 19 |
 :::
@@ -52,13 +52,10 @@ Every code block follows the stack's sketch conventions:
 - a **unicode equation** sits above each operation;
 - the **shape transition** runs down the right margin.
 
-Every call into the stack carries a status marker:
-- `today` means the name exists at the pinned revision and was checked;
-- `proposed (X)` means it does not, and proposal X in [](#r9-proposals) would
-  add it;
-- `user` means the code is ordinary application code (a web framework, a
-  helper you write) rather than library API;
-- `# arguments sketched` flags arguments that were not run.
+Every call into the stack carries a
+[status marker](../overview_examples.md#ex-markers) (`today`, `user` or
+`proposed (X)`); here X is a proposal letter in [](#r9-proposals), and
+`# arguments sketched` flags arguments that were not run.
 :::
 
 (r9-shape)=
@@ -72,17 +69,12 @@ Every call into the stack carries a status marker:
 **The stack the cases run on, with only the dependencies that exist.** Solid arrows are runtime dependencies; the dashed one is an optional extra.
 ```
 
-Three facts from the earlier reports shape every case below:
-- **The domain libraries import pipekit directly.** geotoolz re-exports 16
-  pipekit names, so `gz.Tap is pk.Tap` ([Report 3](03_sister_libraries.md#r3-geotoolz)).
-- **geocatalog and geopatcher are used on their own.** Neither domain library
-  imports them, so a case that needs both calls them side by side
-  ([Report 6](06_geocatalog.md#r6-migration),
-  [Report 7](07_geopatcher.md#r7-migration)).
-- **pipekit's sister packages carry most of the deployment infrastructure.**
-  YAML loading, content hashing, the model registry and reproducibility
-  artifacts are in pipekit-experiment; training is in pipekit-train. The
-  original gallery assumed all of them would live in pipekit core.
+[](#fig-r9-stack) is the stack the cases run on; its layering and ownership
+rules are set out in [Report 16](16_geo_data_stack.md#r16-ownership). One
+consequence shapes every case below: geocatalog and geopatcher are used on
+their own, next to the domain libraries, and the deployment infrastructure
+(YAML, hashing, the registry, artifacts) sits in pipekit-experiment rather
+than pipekit core.
 
 (r9-running)=
 ## The running example: one methane plume
@@ -96,28 +88,20 @@ $H \times W$ pixel grid with a pixel area of $\Delta A$ (60 m pixels give
 $\Delta A = 3600 \mathrm{m}^2$). A methane plume absorbs in the shortwave
 infrared, so it shows up as a small, spectrally specific dip in $L$.
 
-**The enhancement.** Let $\mu \in \mathbb{R}^B$ be the background mean
-radiance, $\Sigma \in \mathbb{R}^{B \times B}$ its covariance, and
-$t \in \mathbb{R}^B$ the target signature (the change in radiance per unit
-of methane column). The matched filter estimates the column enhancement
-$\alpha(x)$ at each pixel $x$:
+**The enhancement.** A matched filter against the background mean $\mu$,
+covariance $\Sigma$ and methane target signature $t$ estimates the column
+enhancement $\alpha(x)$ at each pixel $x$; its derivation and its limits are in
+[radtrax · 1, stage 5](../geomodels/radtrax/01_column_retrieval.md#rx1-stage-5).
 
-$$
-\alpha(x) = \frac{(L(x) - \mu)^\top \Sigma^{-1} t}{t^\top \Sigma^{-1} t} .
-$$ (r9-eq-mf)
-
-**The flux.** Converting $\alpha$ to a mass column $\Omega(x)$ in
-$\mathrm{kg}/\mathrm{m}^2$ and masking the plume pixels $\mathcal{P}$ gives the
-integrated mass enhancement, and, with an effective wind speed
-$U_{\mathrm{eff}}$ and a plume length $\ell$, the source rate
-[@varon2018]:
-
-$$
-\begin{aligned}
-\mathrm{IME} &= \sum_{x \in \mathcal{P}} \Omega(x) \Delta A , \\
-Q &= \frac{U_{\mathrm{eff}} \cdot \mathrm{IME}}{\ell} .
-\end{aligned}
-$$ (r9-eq-ime)
+**The flux.** Converting $\alpha$ to a mass column $\Omega(x)$ and masking the
+plume pixels $\mathcal{P}$ gives the integrated mass enhancement
+$\mathrm{IME} = \sum_{x \in \mathcal{P}} \Omega(x) \Delta A$, and the source
+rate $Q = U_{\mathrm{eff}} \cdot \mathrm{IME} / \ell$ for an effective wind
+speed $U_{\mathrm{eff}}$ and a plume length $\ell$ [@varon2018]; the
+derivation, and which length goes with which wind calibration, are in
+[plumax · 1](../geomodels/plumax/01_emission_rate.md#er1-ime). Which package
+owns each step once radtrax and plumax exist is set by the
+[GeoModels package boundaries](../geomodels/package_boundaries.md#pb-moves).
 
 Every piece of this ships in geotoolz, and pipekit's `Graph` composes them,
 because `IMEEstimate` takes two inputs (the mass column and the mask):
@@ -158,8 +142,9 @@ pipeline use a `Sequential` of the same operators.
 (r9-proposals)=
 ## What the cases need that does not ship yet
 
-Running the original gallery against the pinned code leaves nine gaps. Each
-gets a letter, and every `proposed (X)` marker in the cases points at one:
+Running the original gallery against the pinned code leaves nine gaps
+([](#tbl-r9-proposals)). Each gets a letter, and every `proposed (X)` marker
+in the cases points at one:
 
 :::{table} The proposals the cases depend on, in the move schema: symbol, destination, reason.
 :label: tbl-r9-proposals
@@ -168,7 +153,7 @@ gets a letter, and every `proposed (X)` marker in the cases points at one:
 |---|---|---|---|
 | **A** | `to_yaml` that emits nested `_target_` configs | pipekit-experiment `adapters.hydra` | a hand-written nested YAML loads today; dumping a built nested pipeline emits pipekit's debug envelope, which does not load back |
 | **B** | `pipeline_hash(op)` | pipekit-experiment | the registry already computes a stable content hash on `store`; there is no public way to hash without storing |
-| **C** | `CatalogPipeline`, `CatalogReader` | `geocatalog.integrations.pipekit` | assumed by Reports 2, 3 and 6 and by cases 2, 10, 12 and 15; not built ([Report 6](06_geocatalog.md#r6-open-questions), question 4) |
+| **C** | `CatalogPipeline`, `CatalogReader` | `geocatalog.integrations.pipekit` | assumed by Reports [2](02_pipekit_surface.md#r2-group-j), [3](03_sister_libraries.md#r3-todos) and 6 and by cases 2, 10, 12 and 15; not built ([Report 6](06_geocatalog.md#r6-open-questions), question 4) |
 | **D** | `AssertValueRange`, `AssertNoNaN`, `AssertValidFraction` | pipekit-array phase C | promised there; not shipped anywhere |
 | **E** | `AssertCRSEquals`, `AssertResolutionWithin`, `AssertSchema` | `geotoolz.qa` (or a new `geotoolz.checks`) | `geotoolz.qa` holds QA-bit masks today, not assertions |
 | **F** | an allowlisted YAML loader | pipekit-experiment, beside `HydraConfigLoader` | `pipekit.loads_sandboxed` allowlists flat JSON only |
@@ -303,8 +288,8 @@ etl = pk.Sequential([
 | Geo-specific | geotoolz | `AssertCRSEquals`, `AssertResolutionWithin`, `AssertSchema` | proposed (E) |
 :::
 
-**Notes.** The split into three tiers is still the right answer to "where
-does a check go?", but only the first tier exists. Until D lands,
+**Notes.** The split into three tiers ([](#tbl-r9-qc)) is still the right
+answer to "where does a check go?", but only the first tier exists. Until D lands,
 `pk.AssertCallable(lambda gt: np.isfinite(gt.values).mean() >= 0.5)` covers
 the valid fraction, at the cost of a closure (`forbid_in_yaml`). There is no
 `warn` mode in pipekit's asserts: they raise `QCError`, and `Quarantine` is
@@ -781,7 +766,8 @@ u(a) &= \begin{cases} 1 & a \le \tau \\ e^{-(a - \tau)/\lambda} & a > \tau \end{
 $$ (r9-eq-priority)
 
 where $g$ increases with flux, $\tau$ is the notification window and
-$\lambda$ the decay after it.
+$\lambda$ the decay after it. The code below computes {eq}`r9-eq-priority`
+from the running example's evidence.
 
 ```{code-block} python
 :caption: Case 14. The stack produces each detection's evidence; the queue is geoapps.
@@ -810,7 +796,7 @@ that reruns are no-ops and a crashed backfill resumes.
 **Problem.** A pipeline $f$ with version tuple $v$ (pipeline hash, model
 hashes, input product versions). Each step's output is keyed by
 $k = (\text{step}, \text{input id}, v)$. The families differ only in when
-they run, what they cover, and where they write:
+they run, what they cover, and where they write ([](#tbl-r9-families)):
 
 :::{table} The four pipeline families. They share steps and keys, and differ in trigger, scope and stream.
 :label: tbl-r9-families
@@ -864,8 +850,9 @@ the wind product, and compare the two side by side without touching
 production.
 
 **Problem.** Swap $U_{\mathrm{eff}}$ (ERA5) for $U'_{\mathrm{eff}}$
-(GEOS-FP) with the mask held fixed. From {eq}`r9-eq-ime`, the flux scales
-exactly:
+(GEOS-FP) with the mask held fixed. Since $Q = U_{\mathrm{eff}} \cdot
+\mathrm{IME} / \ell$ ([plumax · 1](../geomodels/plumax/01_emission_rate.md#er1-ime)),
+the flux scales exactly:
 
 $$
 \frac{Q'}{Q} = \frac{U'_{\mathrm{eff}}}{U_{\mathrm{eff}}} .
@@ -994,9 +981,11 @@ attributed to.
 | Heavy rain, cyclone | an xarray product through `xrtoolz.geo` | an `xrtoolz.geo` extremes operator | accumulation, track |
 :::
 
-**Notes.** Each kind's operator chain is a pipekit `Graph` like the running
-example, so the platform stores, hashes, reruns and compares every kind the
-same way. The link rule's IoU carry-over matches the stack's
+**Notes.** Each kind's operator chain ([](#tbl-r9-kinds)) is a pipekit
+`Graph` like the running example, so the platform stores, hashes, reruns and compares every kind the
+same way. For methane, the retrieve and quantify steps are the ones the
+[GeoModels boundaries](../geomodels/package_boundaries.md#pb-moves) move into
+radtrax and plumax. The link rule's IoU carry-over matches the stack's
 `geocatalog.matchup.IouAtLeast`, which pairs detections across overpasses.
 Rain and cyclone products are science-side xarray work, not new app
 geometry, which is why xrtoolz carries them.
@@ -1075,7 +1064,7 @@ original's hypothetical xrtoolz modules map onto real ones:
 | 20 Reanalysis vs in-situ | ✓ |  | ✓ |  |  | ✓ |  |
 :::
 
-What the matrix says:
+What the matrix ([](#tbl-r9-matrix)) says:
 
 1. **pipekit is in 19 of 20 cases.** The exception is the explorer, which
    is pure catalog work. It still belongs in a library of its own.
@@ -1111,16 +1100,20 @@ What the matrix says:
 | Training | — | pipekit-train |
 | Spatiotemporal index, `GeoSlice` | geocatalog | geocatalog |
 | Patches, `Field` / `Domain` | geopatcher | geopatcher |
-| `ModelOp` | pipekit-array | geotoolz (`learn`), xrtoolz (`inference`), pipekit-jax (`JaxModelOp`) |
+| `ModelOp` | pipekit-array | geotoolz (`learn`), xrtoolz (`inference`), pipekit-jax (`JaxModelOp`); one family in [Report 16 B](16_geo_data_stack.md#r16-ws-b) |
 | GeoTensor I/O | georeader | georeader |
 :::
 
-Each concern still has one home, so the original's central claim holds.
+Each concern still has one home ([](#tbl-r9-ownership)), so the original's
+central claim holds; the methane physics has its own owners in the
+[GeoModels package boundaries](../geomodels/package_boundaries.md#pb-rules).
 The difference is that pipekit core stayed small: about 3,200 lines, with the
 deployment infrastructure one package over. That answers the original's
 second risk, that pipekit would accrete infrastructure code.
 
 ### Three roles for georeader
+
+Cases reach georeader in three ways ([](#tbl-r9-georeader)).
 
 :::{table} How the cases reach georeader.
 :label: tbl-r9-georeader
@@ -1146,7 +1139,8 @@ second risk, that pipekit would accrete infrastructure code.
 | Across machines | the orchestrator | 12, 15 |
 :::
 
-There is no automatic parallelism anywhere, by design.
+There is no automatic parallelism anywhere, by design: each deployment picks
+its primitive ([](#tbl-r9-parallel)).
 
 ### YAML is the lingua franca, read-only for now
 
@@ -1164,7 +1158,7 @@ pipekit-jax has shipped, but not as the "JAX-traceable pipelines" library
 the original gallery imagined ([Report 3](03_sister_libraries.md#r3-other)).
 It wraps an Equinox model as an operator with byte-identical weight
 round-trips, and adds diffrax forward models for pipekit-cycle. For the
-cases here:
+cases here ([](#tbl-r9-jax)):
 
 :::{table} The JAX benefit per case.
 :label: tbl-r9-jax
@@ -1202,9 +1196,8 @@ still eager Python.
   pipelines. Fallback: keep the YAML as the source of truth until proposal A
   lands.
 - **Private API across packages.** geotoolz and geopatcher's pipekit bridge
-  import `pipekit._base.operator` helpers. A pipekit refactor could break
-  them silently. Fallback: make `nested_config`, `callable_name` and
-  `require_operator` public ([Report 3](03_sister_libraries.md#r3-todos)).
+  import `pipekit._base.operator` helpers; making them public is
+  [Report 16 §A](16_geo_data_stack.md#r16-ws-a).
 
 (r9-open-questions)=
 ## Open questions
@@ -1213,25 +1206,22 @@ still eager Python.
    YAML and artifacts are the busiest parts of the stack in these cases.
    Promoting a small `pipeline_hash` (proposal B) into pipekit core would
    make it reachable without the experiment package.
-2. **Where does the catalog driver live?** This is the same question as
-   [Report 6](06_geocatalog.md#r6-open-questions) question 4, now with four
-   cases depending on it.
-3. **Is the geoapps job queue a stack concern?** Case 15's keyed, resumable
+2. **Is the geoapps job queue a stack concern?** Case 15's keyed, resumable
    steps look general (any batch job wants them). Today they are geoapps'
    Postgres queue; a small stack-level key-value "done" store might belong
    in pipekit-experiment.
-4. **Should event kinds be expressible as configs?** If a kind's operator
+3. **Should event kinds be expressible as configs?** If a kind's operator
    chain is a YAML `Graph`, the platform can add kinds without code. That
    depends on proposal A and on a YAML form of `Graph`, which does not
    exist.
-5. **How are human labels versioned?** Case 18 assumes frozen label sets
+4. **How are human labels versioned?** Case 18 assumes frozen label sets
    with a content hash, which pipekit-train's datasets accept. Who owns the
    label store's hashing: geoapps or pipekit-experiment?
 
 (r9-gates)=
 ## Testing gates for the proposals
 
-Each proposal merges only when its check passes.
+Each proposal merges only when its check passes ([](#tbl-r9-gates)).
 
 :::{table} One gate per proposal, each with a pass condition.
 :label: tbl-r9-gates
@@ -1251,24 +1241,6 @@ Each proposal merges only when its check passes.
 
 (r9-references)=
 ## References
-
-<!-- TODO(ref): placeholders. When a report page lands, point its links in this
-file at the page and delete its entry below. When citations land, add them to
-references.bib and replace the citations placeholder. -->
-
-:::{note} Placeholders
-:class: simple
-Reports 5 and 8 are still being written. Reports [1](01_toolz_primer.md), [2](02_pipekit_surface.md),
-[3](03_sister_libraries.md), [6](06_geocatalog.md),
-[7](07_geopatcher.md), [10](10_pipekit_cycle.md), [11](11_pipekit_train.md),
-[12](12_pipekit_experiment.md) and [13](13_state_catalog.md) are published.
-:::
-
-### Forthcoming reports
-
-(r9-ref-report-5)=
-Reports 5 and 8
-: *Forthcoming.* pipekit-jax and the remaining stack report.
 
 ### Sources
 

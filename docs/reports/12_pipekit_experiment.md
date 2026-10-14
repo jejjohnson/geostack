@@ -33,9 +33,8 @@ an inference artifact breaks in six places: `load` cannot rebuild a JAX
 model, a model stored without weights hashes on its class name alone, tags
 move without a trace, an artifact pins a tag instead of a hash, the training
 artifact loses its tracker run id, and nested pipelines do not survive the
-Hydra round trip. **The code takes precedence where it has decided; every
-idea from the scoping report that has not shipped stays as a proposal with a
-gate.**
+Hydra round trip. **Every idea from the scoping report that has not shipped
+stays as a proposal with a gate.**
 
 +++
 
@@ -47,16 +46,16 @@ gate.**
 | **Status** | Partly built. Originally a scoping proposal ("committed"); pipekit-experiment 0.0.2 is the design of record where it has decided, and the scoping report's unshipped ideas are kept as proposals |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone storing, promoting or reloading trained models, logging runs to a tracker, or writing an adapter for an orchestration tool |
-| **Companions** | [Report 11](11_pipekit_train.md) (the training loop that fills artifacts and stores models); [Report 10](10_pipekit_cycle.md) (the cycle a reloaded emulator drops into); [Report 9](09_use_cases.md) (use cases 5 and 9: the registry and the regulatory artifact); [Report 13](13_state_catalog.md) (the producer hash) |
+| **Companions** | [Report 11](11_pipekit_train.md) (the training loop that fills artifacts and stores models); [Report 10](10_pipekit_cycle.md) (the cycle a reloaded emulator drops into); [Report 9](09_use_cases.md) (use cases 5 and 9: the registry and the regulatory artifact); [Report 13](13_state_catalog.md) (the producer hash); [Report 16](16_geo_data_stack.md#r16-ownership) (the stack rules) |
 | **Code checked against** | `pipekit-experiment` 0.0.2 at `ef3c17f`, with pipekit, pipekit-train and pipekit-jax from the same revision; hydra-core 1.3.7, hydra-zen 0.17, DVC and Metaflow 2.19 installed for the adapters. Its 52 tests pass. Read on 13 October 2026 |
 | **Running example** | every output below is from one run of `notebooks/reports/report12_pipekit_experiment.py`, which builds its registries, DVC repository and Metaflow flows in a temporary directory and asserts each output the page shows |
 :::
 
 :::{important} How this page treats the scoping report
 pipekit-experiment has no design docs of its own, so its code and README are
-the only record of what was decided. Where they decided (the registry's
-hash, the fsspec backend, write-once tags, JSON artifacts), a **Differs** box
-says so and the code stands. Where the scoping report asked for something
+the only record of what was decided (the registry's hash, the fsspec
+backend, write-once tags, JSON artifacts); there the code stands
+([conventions](../overview.md#sec-conventions)). Where the scoping report asked for something
 that does not exist (trackers, the MLflow registry, `rerun`, `gc`, tag
 history), it becomes a workstream rather than an open question.
 :::
@@ -86,7 +85,8 @@ workstreams finish the package.
   training artifact's `model_registry_uri` omits the registry it points at
   (C3).
 - **D. Orchestration adapters.** Nested pipelines do not survive
-  `HydraConfigLoader.to_yaml` and `from_yaml` (D1, Report 9's proposal A);
+  `HydraConfigLoader.to_yaml` and `from_yaml` (D1,
+  [Report 9](09_use_cases.md#r9-proposals)'s proposal A);
   `MetaflowStepAdapter.as_step` builds a step Metaflow rejects (D2); the DVC
   pointer is parsed line by line (D3).
 - **E. Run records.** `Run`, `RunMetrics` and `RunArtifacts` exist, but
@@ -104,7 +104,8 @@ and enough of the loop to retrain.
 ## Ownership rules
 
 pipekit-experiment owns the records a run leaves behind and the registry
-models live in; the external tools own scheduling, dashboards and storage.
+models live in; the external tools own scheduling, dashboards and storage
+([](#fig-r12-ownership)).
 
 :::{figure} ../images/reports/r12_ownership.svg
 :label: fig-r12-ownership
@@ -114,37 +115,20 @@ pipekit-experiment 0.0.2 between pipekit and the tools it adapts. Dashed
 chips are missing.
 :::
 
-1. **pipekit-experiment** owns the `ExperimentTracker` and `ModelRegistry`
-   protocols, the run records, the registries, the artifacts and the tool
-   adapters. Its core depends only on `pipekit`; each tool arrives through
-   its own extra.
-2. **pipekit-train** owns the callbacks that talk to it (`LogToExperiment`,
-   `Checkpoint(registry=...)`) and fills `TrainingArtifact`. Today it also
-   defines a fallback, `_LocalArtifact` (`loop.py:174`), which
-   `_build_artifact` returns when pipekit-experiment is not installed
-   (`loop.py:427-433`): the same fields, but no `save`, `load` or
-   `reload_model`. The rule is that this fallback is the only second type,
-   is never persisted, and is documented as such; removing it (making
-   `[experiment]` a hard dependency of `run()`) is [an open question](#r12-open-questions).
-3. **Model operators** (pipekit-jax's `JaxModelOp`, pipekit-train's
-   `EquinoxModelOp`) own their own weight format: `serialize_weights` and
-   `from_registry`. The registry stores bytes and never interprets them.
-4. **External tools** (MLflow, W&B, DVC, Hydra, Metaflow) own scheduling,
-   dashboards, data storage and configuration. No pipekit pipeline imports
-   one.
-5. **Serving** (FastAPI, LitServe) owns reloading a model on a worker; it
-   reads the registry by tag or hash and nothing else.
+**pipekit-experiment** owns the `ExperimentTracker` and `ModelRegistry`
+protocols, the run records, the registries, the artifacts and the tool
+adapters. Its core depends only on `pipekit`; each tool arrives through its
+own extra. The registry stores weight bytes and never interprets them: each
+model operator (`JaxModelOp`, `EquinoxModelOp`) owns its format through
+`serialize_weights` and `from_registry`.
 
-:::{table} The dependency tiers around pipekit-experiment.
-:label: tbl-r12-tiers
-
-| Tier | Packages | May import | Role |
-|---|---|---|---|
-| External | MLflow, W&B, DVC, Hydra, Metaflow, serving | anything | scheduling, dashboards, storage |
-| Boundary | pipekit-experiment | pipekit; its extras: hydra-core, hydra-zen, dvc, metaflow, fsspec, s3fs; mlflow and wandb (unused) | protocols, registry, artifacts, adapters |
-| Users | pipekit-train, pipekit-cycle, inference scripts | pipekit-experiment | log, store, load |
-| Framework | pipekit, pipekit-jax | | operators, JAX operators |
-:::
+Neighbours (pipekit-train, the external tools, serving) follow
+[the stack rules](16_geo_data_stack.md#r16-ownership). One rule is this
+page's: pipekit-train's fallback `_LocalArtifact` (`loop.py:174`), which
+`_build_artifact` returns when pipekit-experiment is not installed
+(`loop.py:427-433`), is the only second artifact type, is never persisted,
+and is documented as such; removing it (making `[experiment]` a hard
+dependency of `run()`) is [an open question](#r12-open-questions).
 
 :::{warning} Differs from the plan
 The scoping report's extras were `mlflow`, `wandb`, `dvc`, `hydra`,
@@ -157,6 +141,9 @@ the package already has.
 
 (r12-surface)=
 ## What ships
+
+[](#tbl-r12-surface) lists the public surface; the italic rows were planned
+and never built.
 
 :::{table} pipekit-experiment 0.0.2's public surface. Rows in italics are in the scoping report but not in the code.
 :label: tbl-r12-surface
@@ -176,8 +163,8 @@ the package already has.
 ## The running example: one emulator from training to an artifact
 
 The stages follow the linear emulator of [Report 11](11_pipekit_train.md),
-a learned $W \in \mathbb{R}^{40 \times 40}$ that replaces Report 10's
-transport operator $M$, through everything pipekit-experiment does to a
+a learned $W \in \mathbb{R}^{40 \times 40}$ that replaces
+[Report 10](10_pipekit_cycle.md#r10-running)'s transport operator $M$, through everything pipekit-experiment does to a
 model after training. For readable outputs some stages use a two-parameter
 operator `Scale(factor, offset)`, $x \mapsto \text{factor} \cdot x + \text{offset}$,
 alongside it.
@@ -188,7 +175,7 @@ alongside it.
 **TL;DR.** Store the trained emulator and check that its address changes
 exactly when the model does.
 
-**Problem.** The registry addresses a model by
+**Problem.** The registry addresses a model by the hash {eq}`r12-eq-hash`,
 
 $$
 h = \mathrm{SHA256}\left( \mathrm{json}(\text{state}) \Vert \texttt{0x00} \Vert w \right) ,
@@ -387,7 +374,8 @@ only one is pipekit-experiment's own:
   `__getitem__`, and then stores `repr(run)`. The shipped `Run` is a
   dataclass without `__getitem__`, so the field is `None`, as here; a
   tracker that returns a mapping or a string gets its whole `repr`
-  (`"{'name': 'emu', 'id': 'run-0'}"` in Report 11's run), never the id
+  (`"{'name': 'emu', 'id': 'run-0'}"` in
+  [Report 11](11_pipekit_train.md#r11-stage-4)'s run), never the id
   alone (B4).
 - **`model_registry_uri` is `registry://<hash>`.** It does not say which
   registry, and the registries give `Checkpoint` nothing to say it with:
@@ -438,7 +426,8 @@ MetaflowStepAdapter.run(seq, self, name="scaled", inputs=["x"])  # inside a
 
 Flat operators round-trip through Hydra; nested ones do not, because
 `to_yaml` writes pipekit's debug config instead of `_target_` entries, which
-is Report 9's proposal A seen from this side (D1). The DVC adapter works and
+is [Report 9](09_use_cases.md#r9-proposals)'s proposal A seen from this
+side (D1). The DVC adapter works and
 shells out to the `dvc` CLI; its `hash` reads the first `md5:` or `hash:`
 line of the pointer file, so a pointer with `hash: md5` first would return
 the string `"md5"` (D3). `as_step` builds a step without `self.next`, which
@@ -453,6 +442,8 @@ atomic (A5). Real S3 was not tested.
 
 (r12-names)=
 ## The scoping report's names, checked
+
+[](#tbl-r12-names) checks the stack names the scoping report's examples use.
 
 :::{table} The stack names the scoping report's examples use, at the pinned revisions.
 :label: tbl-r12-names
@@ -475,17 +466,17 @@ atomic (A5). Real S3 was not tested.
 ## Current-state audit
 
 Of sixteen pieces checked, eight ship and work, six ship with defects, and
-two are missing. The audit read `references/pipekit` at `ef3c17f` on
+two are missing ([](#tbl-r12-audit)); [](#fig-r12-readiness) counts the
+page's calls by marker. The audit read `references/pipekit` at `ef3c17f` on
 13 October 2026.
 
 :::{figure} ../images/reports/r12_readiness.svg
 :label: fig-r12-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 21 calls, 17 run today, 3 are proposed by this report's workstreams and 1 is code the reader writes.
 
-What the page's sketches call, read from their markers: one square per stack
-call. Of 21, 17 run today, 3 are proposed by this report's workstreams and 1
-is code the reader writes. A row without squares has no marked call; labels
-on the proposed squares name the workstream item.
+What this page's sketches call: of 21 stack calls, 17 run today, 3 are
+proposed by this report's workstreams and 1 is code the reader writes
+([how to read it](../overview.md#sec-conventions)).
 :::
 
 :::{table} pipekit-experiment 0.0.2, piece by piece.
@@ -505,7 +496,7 @@ on the proposed squares name the workstream item.
 | `gc`, delete, untag, `MLflowModelRegistry` | | | **Missing.** |
 | `TrainingArtifact` | `artifacts.py:48` | `TrainingLoop.run` | **Healthy** as a record; no `rerun` (C1) |
 | `InferenceArtifact` | `artifacts.py:88` | use case 9 | **Split ownership.** Pins accept tags |
-| `HydraConfigLoader` | `adapters/hydra.py` | Report 9 | **Healthy** for flat operators; nested fails (D1) |
+| `HydraConfigLoader` | `adapters/hydra.py` | [Report 9](09_use_cases.md#r9-proposals) | **Healthy** for flat operators; nested fails (D1) |
 | `DVCDatasetVersioning` | `adapters/dvc.py` | | **Healthy.** CLI wrapper; line-scanned pointer hash |
 | `MetaflowStepAdapter` | `adapters/metaflow.py:328`, `:359` | | **Healthy** for `run`; `as_step` builds an invalid step |
 | docs | `README.md`, `CHANGELOG.md` | | **Healthy** with two stale claims: "shipped (v0.0.1)", and promotion "atomic" on every backend |
@@ -530,7 +521,7 @@ Smaller findings:
 
 **Decision.** The registry's content hash and storage layout stand; what
 changes is that a stored model comes back whole, its address cannot collide,
-and every tag move is deliberate and recorded.
+and every tag move is deliberate and recorded ([](#tbl-r12-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r12-move-a
@@ -566,7 +557,8 @@ reg.tag_history("production")            # → [(t₁, None, h3), (t₂, h3, h4)
 ## Workstream B · Trackers
 
 **Decision.** Ship trackers, starting with one that needs no service, so
-that `LogToExperiment` has something to log to out of the box.
+that `LogToExperiment` has something to log to out of the box
+([](#tbl-r12-move-b)).
 
 :::{table} Workstream B's moves.
 :label: tbl-r12-move-b
@@ -584,7 +576,7 @@ that `LogToExperiment` has something to log to out of the box.
 ## Workstream C · Artifacts
 
 **Decision.** An artifact pins by hash, names its registry, and keeps
-enough of its training loop to run it again.
+enough of its training loop to run it again ([](#tbl-r12-move-c)).
 
 :::{table} Workstream C's moves.
 :label: tbl-r12-move-c
@@ -602,14 +594,14 @@ enough of its training loop to run it again.
 ## Workstream D · Orchestration adapters
 
 **Decision.** Each adapter round-trips what it is given; the three that ship
-get their gaps closed before more are added.
+get their gaps closed before more are added ([](#tbl-r12-move-d)).
 
 :::{table} Workstream D's moves.
 :label: tbl-r12-move-d
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| nested `_target_` emission in `to_yaml` | `adapters/hydra.py`, with pipekit core's `get_config` | Report 9's proposal A; nested pipelines fail today |
+| nested `_target_` emission in `to_yaml` | `adapters/hydra.py`, with pipekit core's `get_config` | [Report 9](09_use_cases.md#r9-proposals)'s proposal A; nested pipelines fail today |
 | `self.next(...)` in generated steps | `MetaflowStepAdapter.as_step(..., next=...)` | Metaflow rejects the generated step |
 | YAML parse of `.dvc` pointers | `DVCDatasetVersioning.hash` | the line scan depends on key order |
 :::
@@ -618,7 +610,7 @@ get their gaps closed before more are added.
 ## Workstream E · Run records
 
 **Decision.** The run records are produced by the trackers (B1) and given
-the conveniences the scoping report specified.
+the conveniences the scoping report specified ([](#tbl-r12-move-e)).
 
 :::{table} Workstream E's moves.
 :label: tbl-r12-move-e
@@ -633,7 +625,7 @@ the conveniences the scoping report specified.
 ## Testing gates
 
 Each workstream merges only when its gates pass; the existing gates are
-checks the code passes today.
+checks the code passes today ([](#tbl-r12-gates)).
 
 :::{table} Gates for the proposals and for what ships.
 :label: tbl-r12-gates
@@ -649,7 +641,7 @@ checks the code passes today.
 | B1 File tracker | B1 | two `JSONLTracker`s on stage 5's loop write identical 50-line metric files, and `isinstance(t, ExperimentTracker)` holds |
 | B2, B3 Service trackers | B2, B3 | against a local MLflow file store (B2) and W&B offline mode (B3), stage 5's 50 metric points are retrievable by run id |
 | B4 Run id | B4 | `art.tracker_run_id` equals the id for each return type: a `Run` (`run.run_id`), a mapping (`["run_id"]`), a `str`; an unknown handle gives `None` and one warning |
-| C1 Retrain | C1 | `art.rerun(build_loop)` on Report 11's white-prior emulator gives weights within 1e-6 of the stored ones on CPU, and the same `dataset_hash` |
+| C1 Retrain | C1 | `art.rerun(build_loop)` on [Report 11](11_pipekit_train.md#r11-stage-2)'s white-prior emulator gives weights within 1e-6 of the stored ones on CPU, and the same `dataset_hash` |
 | C2 Hash pins | C2 | an `InferenceArtifact` with a tag in `pinned_model_hashes` raises at construction |
 | C3 Registry URI | C3 | `art.model_registry_uri` equals `f"{reg.location}/{hash}"` for both `LocalModelRegistry` (a `file://` URI) and `S3ModelRegistry("memory://…")` |
 | D1 Nested Hydra | D1 | `from_yaml(to_yaml(seq))(x) == seq(x)` for stage 6's `Sequential`, and the configs are equal |
@@ -666,7 +658,7 @@ checks the code passes today.
 
 The registry and artifact fixes come first, because every model that goes
 through the registry today comes back without its weights or loses its
-pin; trackers come second, round trips last.
+pin; trackers come second, round trips last ([](#fig-r12-roadmap)).
 
 :::{figure} ../images/reports/r12_roadmap.svg
 :label: fig-r12-roadmap
@@ -723,6 +715,8 @@ Correctness first, then trackers, then round trips.
 (r12-todos)=
 ## Upcoming work
 
+[](#tbl-r12-todos) lists the follow-ups.
+
 :::{table} Follow-ups from checking the scoping report against the code.
 :label: tbl-r12-todos
 
@@ -737,16 +731,6 @@ Correctness first, then trackers, then round trips.
 
 (r12-references)=
 ## References
-
-<!-- TODO(ref): placeholders. When a report page lands, point its links in this
-file at the page and delete its entry below. -->
-
-:::{note} Companion reports
-:class: simple
-Reports [9](09_use_cases.md), [10](10_pipekit_cycle.md),
-[11](11_pipekit_train.md), [13](13_state_catalog.md) and
-[14](14_pipekit_evaluate.md) (pipekit-evaluate) are published.
-:::
 
 ### Sources
 

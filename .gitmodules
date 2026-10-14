@@ -14,3 +14,19 @@
 	path = references/georeader
 	url = https://github.com/spaceml-org/georeader.git
 	branch = main
+[submodule "references/plumax"]
+	path = references/plumax
+	url = https://github.com/jejjohnson/plumax.git
+	branch = main
+[submodule "references/gaussx"]
+	path = references/gaussx
+	url = https://github.com/jejjohnson/gaussx.git
+	branch = main
+[submodule "references/finitevolX"]
+	path = references/finitevolX
+	url = https://github.com/jejjohnson/finitevolX.git
+	branch = main
+[submodule "references/spectraldiffx"]
+	path = references/spectraldiffx
+	url = https://github.com/jejjohnson/spectraldiffx.git
+	branch = main

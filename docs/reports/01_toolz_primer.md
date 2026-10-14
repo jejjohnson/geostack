@@ -69,7 +69,8 @@ in [Report 2](02_pipekit_surface.md).
 
 [`pytoolz/toolz`](https://github.com/pytoolz/toolz) is pipekit's explicit
 intellectual ancestor. Looking at it directly is the fastest way to see which
-idea pipekit carries forward and what it adds.
+idea pipekit carries forward and what it adds. Its functional core is the
+dozen primitives in [](#tbl-r1-functoolz).
 
 ### The `toolz.functoolz` surface
 
@@ -247,8 +248,9 @@ pk.loads(pk.dumps(Sequential([Identity()])))   # RuntimeError: from_state cannot
 # reconstruct Sequential: config contains non-primitive values ['operators'].
 ```
 
-The nested loader is an open question on the overview page, under
-serialising a `Graph`.
+The nested loader is an open question on the
+[overview page](../overview.md#sec-open-questions), under serialising a
+`Graph`; [Report 9](09_use_cases.md#r9-proposals) proposes the loader.
 
 ### Dual-mode dispatch
 
@@ -482,6 +484,7 @@ carrier-specific operator is written once per library.
 | Carriers, domain libraries | `GeoTensor` in geotoolz; `xr.DataArray` / `xr.Dataset` in xrtoolz | in use |
 :::
 
+[](#tbl-r1-lands) puts the two outcomes side by side.
 It was never one arc from functions to Protocols to typed entities. It was
 two trajectories that shared vocabulary. Operators started at `toolz`
 functions, considered Protocols, and landed on a typed base class. Carriers
@@ -527,18 +530,6 @@ problems do not.
 
 (r1-references)=
 ## References
-
-<!-- TODO(ref): placeholders. When a report page lands, point its links in this
-file at the page (e.g. [Report 2](02_pipekit_surface.md)) and delete its entry
-below. When citations land, add them to references.bib, cite with [@key] in the
-text, and replace the citations placeholder. -->
-
-:::{note} Placeholders
-:class: simple
-The citations are still being written; the entry below stands in for them.
-The companion reports are published: [Report 2](02_pipekit_surface.md),
-[Report 3](03_sister_libraries.md) and [Report 9](09_use_cases.md).
-:::
 
 ### Citations
 

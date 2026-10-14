@@ -37,17 +37,15 @@ question or a follow-up at the end.
 | **Status** | Shipped surface; originally the v0.1 surface proposal (revised after the L0–L4 analysis) |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone deciding what belongs in pipekit core, or writing an operator against it |
-| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (cycle); [Report 11](11_pipekit_train.md) (train); [Report 12](12_pipekit_experiment.md) (experiment); [Report 13](13_state_catalog.md) (state catalog); forthcoming ones are listed under [References](#r2-references) |
+| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (cycle); [Report 11](11_pipekit_train.md) (train); [Report 12](12_pipekit_experiment.md) (experiment); [Report 13](13_state_catalog.md) (state catalog) |
 | **Checked against** | pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/pipekit`); every output on this page is from a real run |
 :::
 
 :::{important} How to read the differences
-Each group says what the proposal planned and what shipped. Where they
-differ, a **Differs from the plan** box says how, and the difference is
-carried to [](#r2-open-questions) (a decision is still needed) or to
-[](#r2-todos) (the fix is clear). The proposal named the release v0.1;
-what shipped is versioned 0.0.2, although pipekit's own docstrings still call
-it "the v0.1 public surface".
+Each group says what the proposal planned and what shipped, following the
+[series conventions](../overview.md#sec-conventions). The proposal named the
+release v0.1; what shipped is versioned 0.0.2, although pipekit's own
+docstrings still call it "the v0.1 public surface".
 :::
 
 (r2-layout)=
@@ -67,31 +65,10 @@ docstring lists the same groups, A to N, one module each
 **pipekit 0.0.2 by group, coloured by how each matches the plan.**
 ```
 
-```{code-block} text
-:caption: The shipped layout of `pipekit/`, with line counts at 0.0.2 (docstrings included).
-
-pipekit/
-  _base/
-    operator.py       338   Operator, ConfigMixin, Carrier
-    sequential.py     243   Sequential
-    graph.py          256   Input, Node, Graph
-  compose.py          104   pipe, compose, compose_left, complement, juxt
-  blocks.py           145   Identity, Const, Lambda, Sink
-  control.py          373   Branch, Switch, Try, Coalesce, Retry
-  observe.py          348   Tap, Snapshot, ShapeTrace, Profile, Histogram
-  combine.py           64   Fanout
-  cache.py            120   Cache, Memoize
-  qc.py               228   Quarantine, AssertShape, AssertDType,
-                            AssertHasAttribute, AssertCallable, QCError
-  signature.py        105   Signature, compute_output_signature
-  parallel.py         286   ThreadMap, ProcessMap, AsyncMap, BatchedMap,
-                            check_pickleable
-  serial.py           144   dumps, loads, loads_sandboxed, register,
-                            unregister, allowed                      (new module)
-  state.py            123   StatefulOperator, CarryState
-  protocols.py         61   Predictor, FittableTransformer           (new group N)
-  hashing.py           84   stable_json, stable_repr, sha256_hex     (new, internal)
-```
+The module-by-module symbols and line counts are in
+[the full inventory](#r2-inventory) ([](#tbl-r2-inventory)); `_base/` splits
+into `operator.py` (338 lines), `sequential.py` (243) and `graph.py` (256).
+In aggregate, [](#tbl-r2-layout) compares the plan with what shipped.
 
 :::{table} The layout, planned and shipped.
 :label: tbl-r2-layout
@@ -257,7 +234,8 @@ a single-input `Graph` composes into a `Sequential`
 ## Group B · Composition convenience (`compose.py`)
 
 Small free functions, not `Operator` subclasses, that carry the `toolz`
-surface ([Report 1](01_toolz_primer.md)). They shipped exactly as proposed.
+surface ([Report 1](01_toolz_primer.md)). They shipped exactly as proposed
+([](#tbl-r2-compose)).
 
 :::{table} Group B at 0.0.2. Outputs are from real runs.
 :label: tbl-r2-compose
@@ -279,7 +257,7 @@ joined with `|`. `Fanout` ([](#r2-group-f)) is the operator-shaped version.
 ## Group C · Building blocks (`blocks.py`)
 
 Tiny operators that look trivial on their own and unlock common patterns in
-combination. Shipped as proposed.
+combination. Shipped as proposed ([](#tbl-r2-blocks)).
 
 :::{table} Group C at 0.0.2.
 :label: tbl-r2-blocks
@@ -302,7 +280,7 @@ ends a pipeline (writes and returns `None`) subclasses with
 Conditionals and exception handling as operators *inside* the pipeline,
 rather than Python `if` and `try` around it. All five proposed operators
 shipped: two from geotoolz core, three promoted from the
-`pipeline_idioms.ipynb` build-your-own notebook.
+`pipeline_idioms.ipynb` build-your-own notebook ([](#tbl-r2-control)).
 
 :::{table} Group D at 0.0.2, with the `forbid_in_yaml` flag as shipped.
 :label: tbl-r2-control
@@ -355,7 +333,8 @@ through `loads` ([](#r2-group-l)).
 
 Identity-with-side-effect operators: the carrier flows through unchanged and
 something useful happens on the side. They matter for notebook exploration
-and debugging, and help with production logging.
+and debugging, and help with production logging. [](#tbl-r2-observe) lists
+the five.
 
 :::{table} Group E at 0.0.2.
 :label: tbl-r2-observe
@@ -457,7 +436,8 @@ The hashing primitives moved into a shared module ([](#r2-hashing)).
 Assertions as pass-through operators. Every QC check turns a research-time
 "I bet this won't break" into a permanent runtime guard, and CI gets a
 pipeline-correctness suite for free. Shipped as proposed, plus a dedicated
-exception, `QCError` (a subclass of `AssertionError`).
+exception, `QCError` (a subclass of `AssertionError`); [](#tbl-r2-qc) lists
+the operators.
 
 :::{table} Group H at 0.0.2.
 :label: tbl-r2-qc
@@ -533,7 +513,8 @@ how every operator must be written.
 ### The four parallelism shapes
 
 Pipelines hit four distinct patterns, and pipekit ships one wrapper for
-each. Every wrapper takes an iterable and returns a list in input order.
+each ([](#tbl-r2-parallel)). Every wrapper takes an iterable and returns a
+list in input order.
 
 :::{table} Group J at 0.0.2: the four shapes and the shipped signatures.
 :label: tbl-r2-parallel
@@ -693,7 +674,8 @@ between plan and code. [Report 3](03_sister_libraries.md) covers it.
 ## Group L · Serialisation (`serial.py`)
 
 The proposal kept serialisation light and inline, next to
-`Operator.from_state`. It shipped as its own module with six names:
+`Operator.from_state`. It shipped as its own module with six names
+([](#tbl-r2-serial)):
 
 :::{table} Group L at 0.0.2.
 :label: tbl-r2-serial
@@ -707,7 +689,7 @@ The proposal kept serialisation light and inline, next to
 | `loads_sandboxed(s)` | `loads`, but raises `PermissionError` for anything not registered |
 :::
 
-The sandboxed loader is for user-uploaded pipelines (use case 6). As
+The sandboxed loader is for user-uploaded pipelines ([use case 6](09_use_cases.md#r9-case-6)). As
 proposed, it lives in core, and domain libraries register their own operators
 with the allowlist.
 
@@ -869,6 +851,9 @@ internal: it is importable as `pipekit.hashing`, but it is not in
 (r2-inventory)=
 ## The full inventory
 
+[](#tbl-r2-inventory) is the canonical list of what each group ships, with
+the proposed and shipped line counts side by side.
+
 :::{table} The v0.1 inventory as proposed, against pipekit 0.0.2. The proposal's line counts are estimates; the shipped counts include docstrings.
 :label: tbl-r2-inventory
 
@@ -899,9 +884,11 @@ The proposal's exclusions all held at 0.0.2:
 
 - **Distributed execution** (Dask, Ray, Beam, Flink): the orchestrator's
   job.
-- **Automatic differentiation and JAX `jit`**: these clash with dual-mode
-  `__call__`. They live in a separate package; the shipped one is
-  pipekit-jax.
+- **Automatic differentiation and JAX `jit`** as pipekit features: they
+  live in a separate package, pipekit-jax. They do not clash with dual-mode
+  `__call__`, as this page first said: a tracer is not a `Node`, so a
+  pipeline of JAX operators already runs under `jit`, `vmap` and `grad` with
+  respect to its inputs ([Report 5](05_pipekit_jax.md#r5-stage-1)).
 - **Type-checking operator chains at construction**: `Sequential([op_a,
   op_b])` does not check that `op_a`'s output type matches `op_b`'s input.
   `Signature` checks shape; type checking is a stretch goal.
@@ -915,16 +902,16 @@ The proposal's exclusions all held at 0.0.2:
 (r2-open-questions)=
 ## Open questions
 
-The proposal carried seven scoping questions, each with a lean. The shipped
-code settles five of them and leaves one open; its lean on question 3
-was overturned.
+The proposal carried seven scoping questions, each with a lean
+([](#tbl-r2-questions)). The shipped code settles five of them and leaves one
+open; its lean on question 3 was overturned.
 
 :::{table} The proposal's scoping questions, and how pipekit 0.0.2 answered them.
 :label: tbl-r2-questions
 
 | # | Question | The proposal's lean | At 0.0.2 |
 |---|---|---|---|
-| 1 | Name: `pipekit`, or `opkit`, `composable`, `pipekit-core`? | `pipekit` | **settled**: `pipekit` |
+| 1 | Name: `pipekit`, or `opkit`, `composable`, `pipekit-core`? | `pipekit` | **settled**: `pipekit` (the PyPI distribution name is revisited in [Report 16 §F](16_geo_data_stack.md#r16-ws-f)) |
 | 2 | Is `ConfigMixin` always on? | yes, with `__config_mixin_auto__` and `__config_exclude__` | **settled** as leaned |
 | 3 | How does `Signature` meet carriers without named dims? | `None` opts out; `summary` raises a clean error | **settled differently**: `None` opts out, `summary` prints `?` |
 | 4 | How is YAML round-trip enforced? | the YAML loader rejects flagged operators; an optional `strict=True` dumper | **open**: there is no YAML loader. `from_state` already rejects flagged operators |
@@ -957,8 +944,8 @@ rather than a fix:
 (r2-todos)=
 ## Upcoming work
 
-Changes whose shape is already clear. Each is a candidate issue on pipekit or
-a sister library.
+Changes whose shape is already clear ([](#tbl-r2-todos)). Each is a candidate
+issue on pipekit or a sister library.
 
 :::{table} Follow-ups from checking the proposal against pipekit 0.0.2.
 :label: tbl-r2-todos
@@ -974,25 +961,10 @@ a sister library.
 | Ship axis-0 batching, `ApplyToBands`, `Subsample`, `Diff` and the numeric asserts | pipekit-array | assigned there by the proposal; nothing has shipped |
 | Decide where `Provenance` and `Watermark` live, and build them | geotoolz, xrtoolz | assigned there by the proposal; not shipped |
 | Build `CatalogPipeline` on `ProcessMap` / `ThreadMap` | a sister library (geotoolz-catalog) | use cases 2 and 12 assume it |
-| Correct the forbid list in Report 1: `Try` is not flagged | geostack docs | fixed in the Report 1 branch |
 :::
 
 (r2-references)=
 ## References
-
-<!-- TODO(ref): placeholders. When a report page lands, point its links in this
-file at the page (e.g. [Report 3](03_sister_libraries.md)) and delete its entry
-below. When citations land, add them to references.bib, cite with [@key] in the
-text, and replace the citations placeholder. -->
-
-:::{note} Placeholders
-:class: simple
-The companion reports and the citations are still being written. The entries
-below stand in for them so the links in this page already resolve.
-Reports [1](01_toolz_primer.md), [3](03_sister_libraries.md),
-[9](09_use_cases.md), [10](10_pipekit_cycle.md), [11](11_pipekit_train.md),
-[12](12_pipekit_experiment.md) and [13](13_state_catalog.md) are published.
-:::
 
 ### Citations
 

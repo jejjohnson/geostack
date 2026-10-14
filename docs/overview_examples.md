@@ -9,23 +9,26 @@ numbering:
   code: true
 ---
 
-:::{warning} Design sketches
+(ex-markers)=
+:::{warning} Design sketches and status markers
 These snippets show the intended APIs. Every call into the stack carries a
-status marker, so you can tell what runs today from what is planned:
+status marker, so you can tell what runs today from what is planned. These
+are the definitions every page in the series uses:
 
 - `today`: the name is in the [capability index](api/capabilities.md), at
   the versions it lists (pipekit 0.0.2, geotoolz 0.10.2 and siblings).
   `today*` means the name exists but the arguments are sketched.
 - `proposed (X)`: not in the index yet. The letter is the workstream that
-  adds it ([the decision](overview.md#sec-decision)).
-- `unverified`: lives in a library outside the index (gaussx, filterax,
-  plumax, pyrox), so its API was not checked here.
+  adds it ([the decision](overview.md#sec-decision), or the page's own
+  workstreams).
+- `user`: a function the page's own notebook defines, not a stack name.
+- `not pinned`: lives in a library that is not pinned in `references/`
+  (gaussx, filterax, plumax, pyrox), so its API was not checked here.
 :::
 
 Each section links back to the part of the [GeoStack overview](overview.md)
-it illustrates. Every sketch follows the same conventions: a shapes header
-names the dimensions, the equation sits in a comment above the line that
-computes it, and each line ends with its input → output shapes.
+it illustrates, and every sketch follows the series' pseudocode convention
+([how the pages are written](overview.md#sec-conventions)).
 
 (ex-methane)=
 ## Methane attribution, end to end
@@ -53,8 +56,8 @@ import geopatcher as gp  # today (ships as geotoolz-patcher)
 import geotoolz as gz                                        # today
 import geocatalog.states as gcs                              # proposed (B)
 
-from filterax.adapters.pipekit import EnKFAnalysis           # unverified
-from plumax.adapters.pipekit import PlumeForward, ColumnObs  # unverified
+from filterax.adapters.pipekit import EnKFAnalysis           # not pinned
+from plumax.adapters.pipekit import PlumeForward, ColumnObs  # not pinned
 ```
 
 ::::{tab-set}
@@ -130,9 +133,9 @@ can fill the observation source below.
 :linenos:
 
 # Shapes: M observations, N grid cells
-from pyrox.adapters.pipekit import KrigingOperator  # unverified
+from pyrox.adapters.pipekit import KrigingOperator  # not pinned
 
-# m = K_*f (K_ff + σ² I)⁻¹ y  [unverified]
+# m = K_*f (K_ff + σ² I)⁻¹ y  [not pinned]
 # v = diag(K_** − K_*f (K_ff + σ² I)⁻¹ K_f*)
 gap_fill = KrigingOperator(                         # (M,) → (N,), (N,)
     kernel="matern52",
@@ -174,11 +177,11 @@ hourly_y = hourly_krige | pk.Pick("mean")         # yₜ = m
 hourly_R = hourly_krige | pk.Pick("var") | pc.DiagCov()  # Rₜ  proposed (D)
 key = jax.random.PRNGKey(cfg.seed)  # one seed per run, from the config
 
-# xᵇₜ⁽ⁱ⁾ = 𝓜(xᵃₜ₋₁⁽ⁱ⁾)   [unverified]
+# xᵇₜ⁽ⁱ⁾ = 𝓜(xᵃₜ₋₁⁽ⁱ⁾)   [not pinned]
 forward = PlumeForward(species="CH4", dt=3600.0)  # (N_e, N) → (N_e, N)
-# y_pred = H x, EMIT columns on the kriging grid   [unverified]
+# y_pred = H x, EMIT columns on the kriging grid   [not pinned]
 obs_op = ColumnObs(instrument="EMIT")             # (N_e, N) → (N_e, N)
-# xᵃ⁽ⁱ⁾ = xᵇ⁽ⁱ⁾ + K (y + ε⁽ⁱ⁾ − H xᵇ⁽ⁱ⁾), ε⁽ⁱ⁾ ~ 𝒩(0, R)  [unverified]
+# xᵃ⁽ⁱ⁾ = xᵇ⁽ⁱ⁾ + K (y + ε⁽ⁱ⁾ − H xᵇ⁽ⁱ⁾), ε⁽ⁱ⁾ ~ 𝒩(0, R)  [not pinned]
 analysis = EnKFAnalysis(                          # (N_e, N) → (N_e, N)
     inflation=1.05, localization="gaspari-cohn"
 )
@@ -232,7 +235,8 @@ analyses = gcs.load_states(state_cat.where("kind == 'analysis'"), aoi)
 :::{tab-item} 6 · Evaluate
 pipekit-evaluate already ships `Task`, `Estimator`, `Oracle`, `Scorer` and
 `Benchmark`. The region, lead-time and multi-track helpers below are
-proposed on top of them (an [open question](overview.md#sec-open-questions)).
+proposed on top of them
+([Report 15, workstream D](reports/15_benchmarking.md#r15-ws-d)).
 
 ```{code-block} python
 :caption: Evaluate against CAMS, aircraft and TCCON at once (stage 5).
@@ -286,8 +290,8 @@ are lineax operators, so the Gram matrix never has to be materialised.
 :linenos:
 
 # Shapes: M training points, d input dimensions
-from gaussx.kernels import Matern52                 # unverified
-from gaussx.linalg import cholesky_solve            # unverified
+from gaussx.kernels import Matern52                 # not pinned
+from gaussx.linalg import cholesky_solve            # not pinned
 
 k = Matern52(length_scale=10.0, variance=1.0)
 # K = [k(xᵢ, xⱼ)]ᵢⱼ
@@ -299,7 +303,8 @@ mean = K @ cholesky_solve(K + sigma2 * I, y_train)  # (M,) → (M,)
 (ex-filterax)=
 ### filterax adapter as a DA analysis step
 
-Tier 2 algorithms plug in through adapters. The analysis step satisfies
+Tier 2 algorithms plug in through adapters; this is the analysis step of
+the methane pipeline's assimilate tab, with its localisation radius. It satisfies
 pipekit-cycle's `AnalysisStep` protocol structurally: no base class needed.
 pipekit-cycle already ships `EnsembleInflator` and `CovarianceLocalizer`, so
 the adapter can take those objects instead of string options.
@@ -309,7 +314,7 @@ the adapter can take those objects instead of string options.
 :linenos:
 
 # Shapes: N state, N_e members
-from filterax.adapters.pipekit import EnKFAnalysis  # unverified
+from filterax.adapters.pipekit import EnKFAnalysis  # not pinned
 
 # Pᵇ ← ρ ∘ (λ Pᵇ), λ = 1.05, ρ a Gaspari–Cohn taper of 500 km
 analysis = EnKFAnalysis(                            # (N_e, N) → (N_e, N)
@@ -458,22 +463,28 @@ matchup adds the time and distance tolerances on top of it.
 (ex-patcher)=
 ### Patcher
 
+The names below are geopatcher's since 0.9.0, which dropped the `Spatial`
+prefixes ([Report 7](reports/07_geopatcher.md#r7-surface));
+[Report 16, stage 2](reports/16_geo_data_stack.md#r16-stage-2) runs the same
+pipeline with a matched filter in place of the model.
+
 ```{code-block} python
 :caption: Four-axis patching around a model, for any carrier.
 :linenos:
 
 # Shapes: C channels, H × W scene; 256² patches, stride 224
+from geopatcher import SpatialPatcher, spatial     # today
 from geopatcher.integrations.pipekit import (     # today
     ApplyToChips,
     GridSampler,
     MergePatches,
 )
 
-patcher = gp.SpatialPatcher(                       # today*
-    geometry=gp.SpatialRectangular((256, 256)),
-    sampler=gp.SpatialRegularStride((224, 224)),
-    window=gp.SpatialHann(),
-    aggregation=gp.SpatialOverlapAdd(),
+patcher = SpatialPatcher(                          # today
+    geometry=spatial.geometry.Rectangular(size=(256, 256)),
+    sampler=spatial.sampler.RegularStride(step=(224, 224)),
+    window=spatial.window.Hann(),
+    aggregation=spatial.aggregation.OverlapAdd(),
 )
 field = gp.RasterField(scene_reader)               # GeoTensor field  today
 
@@ -481,25 +492,22 @@ field = gp.RasterField(scene_reader)               # GeoTensor field  today
 inference = pk.Sequential([                        # today
     GridSampler(patcher=patcher),           # → P × (C, 256, 256)  today
     ApplyToChips(operator=preprocess | gz.ModelOp(model)),  # today
-    MergePatches(aggregation=gp.SpatialOverlapAdd(),
+    MergePatches(aggregation=spatial.aggregation.OverlapAdd(),
                  domain=field.domain),      # P patches → (K, H, W)  today
 ])
 result = inference(field)
 ```
 
-All three steps ship today in `geopatcher.integrations.pipekit`.
-`MergePatches` consumes the `Patch` objects that `ApplyToChips` returns;
-geotoolz's `Stitch` is different, since it mosaics georeferenced tiles.
 `GridSampler` and `MergePatches` are marked `forbid_in_yaml`, so this
 pipeline runs but does not serialise.
 
 (ex-da-cycle)=
 ### Data assimilation cycle
 
-Every ingredient satisfies a pipekit-cycle protocol, so any forward model,
-observation operator or analysis step that fits can be swapped in. This
-standalone example assimilates TROPOMI, so its observation operator and its
-observation source both name TROPOMI.
+The standalone, TROPOMI version of the methane pipeline's
+[assimilate tab](#ex-methane): every ingredient satisfies a pipekit-cycle
+protocol, so any part that fits can be swapped in. The emulator and
+evaluation examples below build on it.
 
 ```{code-block} python
 :caption: An ensemble DA cycle with explicit state carry.
@@ -513,9 +521,9 @@ tropomi_source = pk.Sequential([                  # today
 ])
 key = jax.random.PRNGKey(cfg.seed)  # one seed per run, from the config
 
-forward = PlumeForward(species="CH4", dt=3600.0)  # ForwardModel  unverified
-obs_op = ColumnObs(instrument="TROPOMI")  # ObservationOperator  unverified
-analysis = EnKFAnalysis(inflation=1.05)           # AnalysisStep  unverified
+forward = PlumeForward(species="CH4", dt=3600.0)  # ForwardModel  not pinned
+obs_op = ColumnObs(instrument="TROPOMI")  # ObservationOperator  not pinned
+analysis = EnKFAnalysis(inflation=1.05)           # AnalysisStep  not pinned
 
 da = pc.EnsembleDACycle(                          # today*
     forward_model=forward,
@@ -540,11 +548,8 @@ final_state, history = da(x0, carry0)             # history: (T, N_e, N)
 (ex-emulator)=
 ### Swap in a neural emulator
 
-The key win of the architecture: the same DA cycle with a different forward
-model. This is steps 3→4 of the
-[six-step cycle](overview.md#sec-six-steps): train an emulator on step-1
-simulations, then run step 2's inference loop with the emulator swapped in.
-Step 2 stays alive as the oracle that validated it.
+The same DA cycle with a different forward model: steps 3→4 of the
+[six-step cycle](overview.md#sec-six-steps).
 
 ::::{tab-set}
 
@@ -658,7 +663,7 @@ classical = CycleEstimator(da, x0, carry0, rung=2)     # the oracle
 emulated = CycleEstimator(da_emulated, x0, carry0, rung=4)
 
 bench = pe.Benchmark(                                  # today
-    task=plume_task,             # a pe.Task from plumax  unverified
+    task=plume_task,             # a pe.Task from plumax  not pinned
     estimators=[classical, emulated],
     scorers=[pe.metrics.CRPS()],   # 𝔼|X − y| − ½ 𝔼|X − X′|  proposed (F)
     reference=classical,         # explicit oracle (default: lowest rung 2)
@@ -707,13 +712,11 @@ report = pe.Benchmark.from_contract(contract, estimators=entries).run()
 report.contract_hash == digest                                  # proposed (A)
 ```
 
-The earlier draft set `block_size_spatial_km` and `block_size_temporal_days`
-beside the splitter, prescribed 200 km × 60 day blocks for SSH and
-put the baselines in pipekit-evaluate. Report 15's run shows that for mapping
-the held-out set should be a withheld altimeter, not a block, and that the
-baselines belong beside xrtoolz's gap-fillers; the split is now a single term
-that also states the gap it reproduces. The withheld mission (`"c2"` here) is
-the curator's choice, sketched.
+Splits follow [Report 15, stage 2](reports/15_benchmarking.md#r15-stage-2);
+the withheld mission (`"c2"` here) is the curator's choice, sketched. The
+task string `"L1->L2"` follows pipekit-evaluate's level names, which call L2
+gap-filled observations; the overview's levels put gap filling at L2 → L3
+([two names for L2](overview.md#tbl-levels)).
 
 (ex-repro)=
 ### Reproducibility artifact
