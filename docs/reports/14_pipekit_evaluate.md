@@ -47,7 +47,7 @@ report artifact and the ladder.** Every number below is from a real run.
 | **Status** | Partly built. Originally a two-part scoping proposal ("committed": a framework and a package); the framework is kept, the package's scope is redrawn around what ships |
 | **Reading time** | about 35 minutes |
 | **Audience** | anyone scoring a model, a retrieval or a forecast with the stack, or designing a benchmark |
-| **Companions** | [Report 13](13_state_catalog.md) (forecast verification, which this extends); [Report 10](10_pipekit_cycle.md), [Report 11](11_pipekit_train.md), [Report 12](12_pipekit_experiment.md) (the cycle, training and registry this connects to); [Report 9](09_use_cases.md) (use cases) |
+| **Companions** | [Report 13](13_state_catalog.md) (forecast verification, which this extends); [Report 10](10_pipekit_cycle.md), [Report 11](11_pipekit_train.md), [Report 12](12_pipekit_experiment.md) (the cycle, training and registry this connects to); [Report 9](09_use_cases.md) (use cases); [Report 16](16_geo_data_stack.md#r16-ownership) (the stack rules); [Report 17](17_cycle.md#r17-stage-1) (the ladder vocabulary) |
 | **Code checked against** | `pipekit-evaluate` 0.0.2 at pipekit `ef3c17f`; xrtoolz 0.0.5 at `308c7f2`; geotoolz 0.10.2 with geocatalog at `088475e`. pipekit-evaluate's 18 tests pass. Read on 13 October 2026 |
 | **Running example** | every output is from one run of `notebooks/reports/report14_pipekit_evaluate.py` (the metrics of stages 1 to 3 and the ladder of stage 4), which seeds every field and asserts each number the page shows |
 | **Design docs** | pipekit-evaluate's `benchmark_ladder.md` and four pilots (ocean, plume, land extremes, fusion), all "design only, no code" |
@@ -61,8 +61,8 @@ metric, not a category of its own. Its **gap analysis does not**. It was
 written against an index that shows four xrtoolz names, so it lists as
 missing much that ships. And its **package plan** (pipekit-evaluate owning
 every metric) would duplicate `xrtoolz.metrics`, which already holds them
-with the carrier they need. A **Differs** box marks each place the plan and
-the code part ways.
+with the carrier they need. A **Differs** box carries each argument
+([conventions](../overview.md#sec-conventions)).
 :::
 
 (r14-summary)=
@@ -92,7 +92,8 @@ report, and the benchmark ladder it already ships. There is no
   new `xrtoolz.lagrangian` (D1), and trajectory scores in the reserved
   `xrtoolz.metrics.lagrangian` (D2).
 - **E. The event unit.** Reference detectors (E1) and events as rows of
-  geocatalog with an event profile, as Report 13 did for model states (E2).
+  geocatalog with an event profile, as
+  [Report 13](13_state_catalog.md#r13-ws-a) did for model states (E2).
 - **F. Integration.** Differentiable scorers as pipekit-train losses (F1),
   per-step checks in cycles (F2), reports linked to models in the registry
   (F3), and presets from the four pilots (F4).
@@ -117,7 +118,8 @@ large, high-variance scales, so a forecast can lose its small scales at
 little cost (**scale-blind aggregation**). And agreement on gridded fields
 says nothing about how parcels move through them (**Eulerian blindness**).
 
-**Three axes.** An evaluation is a choice on each of three axes:
+**Three axes.** An evaluation is a choice on each of three axes
+([](#tbl-r14-axes)):
 
 :::{table} The three axes. Units and lenses cross into the matrix of [](#r14-matrix); stages say where a metric may run.
 :label: tbl-r14-axes
@@ -140,7 +142,7 @@ a metric on parts of the data and collects the results; it is not a lens.
 ## Ownership rules
 
 A metric lives with the carrier it reads; pipekit-evaluate composes metrics
-and records what they found.
+and records what they found ([](#fig-r14-ownership)).
 
 :::{figure} ../images/reports/r14_ownership.svg
 :label: fig-r14-ownership
@@ -150,30 +152,15 @@ Ownership of evaluation. The dashed chips are the only new surface in
 pipekit-evaluate; the metrics stay where they are.
 :::
 
-1. **xrtoolz** owns metrics on xarray carriers: point-wise, probabilistic,
-   spectral, structural, event and physical scores, and the decomposition
-   wrappers. It never imports pipekit-evaluate.
-2. **geotoolz** owns GeoTensor detection building blocks (thresholds,
-   connected components, plume masks). It never imports pipekit-evaluate.
-3. **geocatalog** owns matching rows in space and time (`matchup`) and, with
-   workstream E, events as catalog rows.
-4. **pipekit-evaluate** owns the taxonomy tags, the scorer adapter, the
-   evaluation report and the benchmark ladder. It depends on pipekit and
-   imports carrier libraries only through extras.
-5. **pipekit-train** owns differentiable losses; **pipekit-experiment** owns
-   the registry a report is linked to; **pipekit-cycle** owns the cycles a
-   per-step check would observe.
+**pipekit-evaluate** owns the taxonomy tags, the scorer adapter, the
+evaluation report and the benchmark ladder. It depends on pipekit and
+imports carrier libraries only through extras.
 
-:::{table} The dependency tiers for evaluation.
-:label: tbl-r14-tiers
-
-| Tier | Packages | May import | Role |
-|---|---|---|---|
-| Entry points | scripts, benchmarks, pilots | everything below | define tasks, run evaluations |
-| Composition | pipekit-evaluate | pipekit; extras: xrtoolz, xskillscore, properscoring, pipekit-cycle, pipekit-experiment | tags, adapter, report, ladder |
-| Metrics | xrtoolz, geotoolz, geocatalog | their own substrate | scores, wrappers, matching |
-| Framework | pipekit | | operators |
-:::
+Neighbours follow [the stack rules](16_geo_data_stack.md#r16-ownership). For
+this page that means the metrics stay in xrtoolz (xarray carriers, with the
+decomposition wrappers) and geotoolz (GeoTensor detection blocks), neither
+of which imports pipekit-evaluate, and events become geocatalog rows
+(workstream E).
 
 :::{warning} Differs from the plan
 The scoping report put every metric family in pipekit-evaluate
@@ -192,7 +179,8 @@ one index, with a profile for each kind of row.
 ## What the stack scores today
 
 The scoping report's matrix, filled with the names that ship at the pinned
-revisions. Every cell not listed below is empty.
+revisions ([](#tbl-r14-matrix)), and the decomposition wrappers beside it
+([](#tbl-r14-wrappers)). Every cell not listed below is empty.
 
 :::{table} The Lens × Unit matrix at the pinned revisions, one row per non-empty cell. All `xrtoolz.metrics` operators take `(prediction, reference)` datasets; "stub" is a reserved name that raises.
 :label: tbl-r14-matrix
@@ -319,7 +307,8 @@ RMSE("ch4", dims=["y", "x"])(A2, truth2)   # → 4.671   (B: 4.096)            t
 | Relative spectrum difference | user, over `power_spectrum` | 0.000 | 1.000 | A |
 :::
 
-The double penalty is real and the stack can already see past it: SSIM and
+The double penalty is real and the stack can already see past it
+([](#tbl-r14-double)): SSIM and
 `PhaseShiftError` both prefer the plume, and `PhaseShiftError` even reports
 the 6-cell displacement. Two lenses need code. FSS is not shipped (B1). And
 the shipped spectral score is not the lens the scoping report meant:
@@ -494,12 +483,10 @@ one retrieval, including the emulator rungs 3 and 4 this stage leaves empty.
 :::{warning} Differs from the plan
 The scoping report did not have a benchmark ladder; its runner was
 `pe.Pipeline([...]).run(predictions, reference)` with an `EvaluationReport`.
-pipekit-evaluate 0.0.2 ships the ladder of `benchmark_ladder.md` instead:
-`Cell(level, rung, complexity)`, six rungs (`RUNG_NAMES`, with rung 2,
-model-based inference, as the oracle), levels L0 to L4, a `ReferenceRule`
-with two axes (`Axis.STAGED`, `Axis.COMPLEXITY`) and seven
-`ReferenceSource`s, and `Benchmark(...).run()` returning a
-`BenchmarkReport`. Its `Scorer` protocol is the seam the docstring calls
+pipekit-evaluate 0.0.2 ships the ladder of `benchmark_ladder.md` instead
+(cells, rungs, levels and reference rules, as
+[Report 17](17_cycle.md#r17-stage-1) sets them out), with
+`Benchmark(...).run()` returning a `BenchmarkReport`. Its `Scorer` protocol is the seam the docstring calls
 "onto the `Unit x Lens x Stage` taxonomy". This page keeps the ladder and
 builds the scoping report's report and taxonomy on it.
 :::
@@ -524,6 +511,8 @@ producer in xrtoolz and the scores beside the reserved module. No run here.
 (r14-names)=
 ## The scoping report's names, checked
 
+[](#tbl-r14-names) checks the stack names the scoping report's examples use.
+
 :::{table} The stack names the scoping report's examples use, at the pinned revisions.
 :label: tbl-r14-names
 
@@ -547,17 +536,17 @@ producer in xrtoolz and the scores beside the reserved module. No run here.
 ## Current-state audit
 
 Of fourteen pieces checked, eight ship and work, three ship with defects or
-gaps, and three are missing. The audit read the pinned revisions on
+gaps, and three are missing ([](#tbl-r14-audit)); [](#fig-r14-readiness)
+counts the page's calls by marker. The audit read the pinned revisions on
 13 October 2026.
 
 :::{figure} ../images/reports/r14_readiness.svg
 :label: fig-r14-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 27 calls, 13 run today, 6 are proposed by this report's workstreams and 8 are code the reader writes.
 
-What the page's sketches call, read from their markers: one square per stack
-call. Of 27, 13 run today, 6 are proposed by this report's workstreams and 8
-are code the reader writes. A row without squares has no marked call; labels
-on the proposed squares name the workstream item.
+What this page's sketches call: of 27 stack calls, 13 run today, 6 are
+proposed by this report's workstreams and 8 are code the reader writes
+([how to read it](../overview.md#sec-conventions)).
 :::
 
 :::{table} Evaluation in the stack, piece by piece.
@@ -570,13 +559,13 @@ on the proposed squares name the workstream item.
 | `Prior`, `Estimate`, `Task`, `Estimator`, `Oracle`, `Scorer` | `benchmark/protocols.py` | stage 4 | **Split ownership.** No carriers ship; `Oracle` is "not yet consumed"; `Estimate` has no covariance |
 | `Benchmark`, `BenchmarkReport`, `CellResult` | `benchmark/run.py` | stage 4 | **Split ownership.** `to_dict` only; docstring and code disagree on the oracle |
 | Unit × Lens × Stage taxonomy | `pipekit_evaluate/__init__.py:3`, README | | **Missing.** "still planned" |
-| point-wise and probabilistic field metrics | `xrtoolz.metrics` | Report 13 stage 4 | **Healthy.** NumPy, xskillscore |
+| point-wise and probabilistic field metrics | `xrtoolz.metrics` | [Report 13 stage 4](13_state_catalog.md#r13-stage-4) | **Healthy.** NumPy, xskillscore |
 | spectral scores and tools | `xrtoolz.metrics.spectral`, `xrtoolz.transforms` | stage 2 | **Healthy.** `resolved_scale` within 0.4 % of the analytic value |
 | structural field metrics | `xrtoolz.metrics` (`SSIM`, `PhaseShiftError`) | stage 1 | **Healthy.** FSS missing |
 | instance matching | `xrtoolz.metrics` (`match_instances`, `InstanceF1AtIoU`) | stage 3 | **Healthy.** |
 | event detection scores | `xrtoolz.metrics.object` | | **Missing.** Reserved stubs |
 | physical-constraint and budget residuals | `xrtoolz.metrics.physical`, `xrtoolz.budgets` | | **Healthy.** Not run here; residuals, not prediction-against-reference scores |
-| decomposition wrappers | `xrtoolz.metrics` (`SkillByLeadTime`, `EvaluateByRegion`, `FrequencyBandSkill`) | stage 2, Report 13 | **Healthy.** Season, event, member missing |
+| decomposition wrappers | `xrtoolz.metrics` (`SkillByLeadTime`, `EvaluateByRegion`, `FrequencyBandSkill`) | stage 2, [Report 13](13_state_catalog.md#r13-stage-4) | **Healthy.** Season, event, member missing |
 | trajectories | `xrtoolz.metrics.lagrangian` | | **Missing.** Empty module |
 | the capability index | geostack `scripts/capabilities.py` | every scoping report | **Healthy** as code, **misleading** in scope: four xrtoolz names |
 :::
@@ -601,7 +590,7 @@ Smaller findings:
 
 **Decision.** pipekit-evaluate's `Scorer` carries the taxonomy as data, any
 metric operator becomes a scorer through one adapter, and the ladder's
-report becomes the scoping report's `EvaluationReport`.
+report becomes the scoping report's `EvaluationReport` ([](#tbl-r14-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r14-move-a
@@ -636,7 +625,8 @@ report.diff(last_week)                  # per-entry changes      proposed (A3)
 ## Workstream B · The missing metrics
 
 **Decision.** Each missing metric goes into the xrtoolz module that already
-holds its lens, under the name it reserves where one is reserved.
+holds its lens, under the name it reserves where one is reserved
+([](#tbl-r14-move-b)).
 
 :::{table} Workstream B's moves.
 :label: tbl-r14-move-b
@@ -656,7 +646,7 @@ holds its lens, under the name it reserves where one is reserved.
 
 **Decision.** Three more wrappers join `SkillByLeadTime`, `EvaluateByRegion`
 and `FrequencyBandSkill`, with the same shape: a metric in, a dataset with
-one more dimension out.
+one more dimension out ([](#tbl-r14-move-c)).
 
 :::{table} Workstream C's moves.
 :label: tbl-r14-move-c
@@ -673,7 +663,7 @@ one more dimension out.
 
 **Decision.** Particle advection is a transform over velocity fields and
 lives in xrtoolz; trajectory scores live in the module xrtoolz reserves for
-them.
+them ([](#tbl-r14-move-d)).
 
 :::{table} Workstream D's moves.
 :label: tbl-r14-move-d
@@ -688,7 +678,8 @@ them.
 ## Workstream E · The event unit
 
 **Decision.** Events are detected with the stack's segmentation tools and
-stored as catalog rows with an event profile, not in a third catalog type.
+stored as catalog rows with an event profile, not in a third catalog type
+([](#tbl-r14-move-e)).
 
 :::{table} Workstream E's moves.
 :label: tbl-r14-move-e
@@ -696,7 +687,7 @@ stored as catalog rows with an event profile, not in a third catalog type.
 | Symbol | Destination | Reason |
 |---|---|---|
 | `ThresholdEventDetector`, `MarineHeatwaveDetector` (percentile, minimum duration) | `xrtoolz.events` (new) over `geotoolz.segment` and `xrtoolz.geo.pot_threshold` | stage 3's labels are scipy calls; `pot_exceedances` has no ids or durations |
-| event rows: `event_id`, `kind`, `start`, `end`, footprint, attributes, `source_uri` | a geocatalog event profile (`geocatalog.events`), like Report 13's state profile | the scoping report's `EventCatalog`, without a parallel index; matching through `geocatalog.matchup` (`IouAtLeast`, `NearestInTime`) |
+| event rows: `event_id`, `kind`, `start`, `end`, footprint, attributes, `source_uri` | a geocatalog event profile (`geocatalog.events`), like [Report 13](13_state_catalog.md#r13-ws-a)'s state profile | the scoping report's `EventCatalog`, without a parallel index; matching through `geocatalog.matchup` (`IouAtLeast`, `NearestInTime`) |
 :::
 
 (r14-ws-f)=
@@ -704,7 +695,7 @@ stored as catalog rows with an event profile, not in a third catalog type.
 
 **Decision.** Evaluation connects to training, cycles and the registry
 through the seams those packages already have or that their own reports
-propose.
+propose ([](#tbl-r14-move-f)).
 
 :::{table} Workstream F's moves.
 :label: tbl-r14-move-f
@@ -712,7 +703,7 @@ propose.
 | Symbol | Destination | Reason |
 |---|---|---|
 | a scorer with `differentiable=True` as a pipekit-train `Loss` | pipekit-evaluate adapter over `pipekit_train.loss` | the scoping report's `MetricAsLoss`; refuses non-differentiable scorers, which today means every xrtoolz metric |
-| per-step scoring in cycles | the `on_step(k, carriers, state)` hook of [Report 13](13_state_catalog.md#r13-open-questions)'s open question 3 | the scoping report's `MetricObserver`; a step inside a `Sequential` is rejected by cycles today (Report 10, workstream A) |
+| per-step scoring in cycles | the `on_step(k, carriers, state)` hook of [Report 13](13_state_catalog.md#r13-open-questions)'s open question 3 | the scoping report's `MetricObserver`; a step inside a `Sequential` is rejected by cycles today ([Report 10, workstream A](10_pipekit_cycle.md#r10-ws-a)) |
 | a report linked to its model | registry metadata ([Report 12](12_pipekit_experiment.md#r12-ws-c), workstream C) | the scoping report's `attach_evaluation` |
 | `presets.plume()`, `presets.ocean()`, `presets.land_extremes()`, `presets.fusion()` | pipekit-evaluate | the four pilots' scorer lists, in place of `weatherbench()` and `oceanbench()` |
 :::
@@ -721,7 +712,7 @@ propose.
 ## Testing gates
 
 Each workstream merges only when its gates pass; the existing gates are
-checks the code passes today.
+checks the code passes today ([](#tbl-r14-gates)).
 
 :::{table} Gates for the proposals and for what ships.
 :label: tbl-r14-gates
@@ -741,7 +732,7 @@ checks the code passes today.
 | D2 Trajectory scores | D2 | `TrajectoryRMSE` of identical paths is 0 |
 | E1 Detector | E1 | a synthetic heatwave of known start, end and peak is detected with those values |
 | E2 Event rows | E2 | stage 3's events round-trip through GeoParquet, and `matchup(IouAtLeast(0.3))` reproduces `match_instances`' pairing |
-| F1 to F4 Integration | F | a differentiable scorer trains Report 11's emulator to the same weights as `MSE` to 1e-6; a preset runs on its pilot's toy task |
+| F1 to F4 Integration | F | a differentiable scorer trains [Report 11](11_pipekit_train.md#r11-stage-2)'s emulator to the same weights as `MSE` to 1e-6; a preset runs on its pilot's toy task |
 | S1 Resolved scale (existing) | — | stage 2's `resolved_scale` within 1 % of the analytic 12.03 px. Passes today: 11.98 |
 | S2 Phase shift (existing) | — | stage 1's `PhaseShiftError` returns the true shift with zero residual. Passes today |
 | S3 Matching (existing) | — | stage 3's `match_instances` returns tp = fp = fn = 1. Passes today |
@@ -752,7 +743,7 @@ checks the code passes today.
 
 The taxonomy and report come first, because they need no new metrics and
 make every later metric land in a structured place; metrics fill the matrix
-next, then the two new units, then the integrations.
+next, then the two new units, then the integrations ([](#fig-r14-roadmap)).
 
 :::{figure} ../images/reports/r14_roadmap.svg
 :label: fig-r14-roadmap
@@ -790,8 +781,8 @@ the integrations.
 2. **One report type or two?** `BenchmarkReport` (rung by rung) and the
    scoping report's `EvaluationReport` (lens by lens) could be one class
    with two views, or two classes.
-3. **Should events live in geocatalog?** The event profile follows Report
-   13's decision for states. Events also carry lineage to the field they were
+3. **Should events live in geocatalog?** The event profile follows
+   [Report 13](13_state_catalog.md#r13-ws-a)'s decision for states. Events also carry lineage to the field they were
    detected in; is a `source_uri` column enough?
 4. **Where do differentiable metrics come from?** JAX versions of xrtoolz
    kernels, a pipekit-jax metric set, or pipekit-train losses only?
@@ -801,6 +792,8 @@ the integrations.
 
 (r14-todos)=
 ## Upcoming work
+
+[](#tbl-r14-todos) lists the follow-ups.
 
 :::{table} Follow-ups from checking the scoping report against the code.
 :label: tbl-r14-todos
@@ -816,13 +809,6 @@ the integrations.
 
 (r14-references)=
 ## References
-
-:::{note} Companion reports
-:class: simple
-Reports [9](09_use_cases.md), [10](10_pipekit_cycle.md),
-[11](11_pipekit_train.md), [12](12_pipekit_experiment.md) and
-[13](13_state_catalog.md) are published.
-:::
 
 ### Sources
 

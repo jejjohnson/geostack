@@ -54,9 +54,9 @@ everything but the patch whose band ratio changed, which reads as
 | **Status** | Design. The two-pass retrieval ships as geotoolz's `plume.SBMP` and the band table as plumax's `radtran.nb_lut`; the [package boundaries](../package_boundaries.md) page moves both into radtrax. Nothing here changes code |
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone running a Sentinel-2 or Landsat methane retrieval, and anyone choosing between the single-pass and multi-pass forms |
-| **Companions** | [radtrax · 1](01_column_retrieval.md) (the single-pass column retrieval, the curve of growth and the look-up table this page reuses); [plumax · 1](../plumax/01_emission_rate.md) (the emission rate from the column map) |
+| **Companions** | [radtrax · 1](01_column_retrieval.md) (the single-pass column retrieval, the band model, the curve of growth and the look-up table this page reuses); [radtrax · 3](03_design.md) (radtrax's design); [plumax · 1](../plumax/01_emission_rate.md) (the emission rate from the column map); the [package boundaries](../package_boundaries.md#pb-today) page (where the code is today) |
 | **Code checked against** | geotoolz 0.10.2 at `088475e` and georeader-spaceml 2.4.1 from `references/`, plumax 0.1.2 at `28f257e` (a clone; not a submodule yet). Read on 14 October 2026 |
-| **Running example** | every number and figure is from one run of `notebooks/geomodels/radtrax_02_mbmp.py`, which asserts each one. The methane spectrum is radtrax · 1's synthetic one ($\bar\sigma_{11} = 0.04$, $\bar\sigma_{12} = 0.40$ m²/kg, a modelling choice); the Sentinel-2A band 11 and 12 response functions are real |
+| **Running example** | every number and figure is from one run of `notebooks/geomodels/radtrax_02_mbmp.py`, which asserts each one. Code comments carry the [status markers](../../overview_examples.md#ex-markers). The methane spectrum is [radtrax · 1](01_column_retrieval.md)'s synthetic one ($\bar\sigma_{11} = 0.04$, $\bar\sigma_{12} = 0.40$ m²/kg, a modelling choice); the Sentinel-2A band 11 and 12 response functions are real |
 | **Sources** | two derivations supplied by the author: "Deriving the MBMP method family from first principles" [@geostack_mbmp_note] and a second, step-by-step optical derivation (generated with Gemini) [@geostack_mbmp_note_gemini]; Varon et al. [@varon2021; @varon2018], Chen et al. [@chen2022], Watine-Guiu et al. [@watineguiu2023] |
 :::
 
@@ -65,38 +65,22 @@ Both derivations run the same chain: drop emission and scattering from the
 radiative transfer equation, integrate to Beer–Lambert, average over the
 band, then remove the surface by ratios across passes, bands, or both. That
 chain **stands**, and the two agree on the algebra up to the direction of
-the scale factor $c$. Where they differ from each other, or from the run:
+the scale factor $c$. Where they differ from each other, or from the run,
+a [Differs box](../../overview.md#sec-conventions) argues the point:
 
-- **The scale factor.** Derivation (1) fits $c$ over every pixel, plume
-  included; derivation (2) over background pixels. Background is right: the
-  plume biases an all-pixel $c$ by 0.31 %, a uniform offset that costs MBMP
-  11 % of the mass.
-- **Band 11.** Derivation (2) sets $\sigma_{11} = 0$. Band 11 absorbs weakly,
-  so the sensitivity is $\alpha_{12} - \alpha_{11}$, as derivation (1) has
-  it; with $\bar\sigma_{12}$ alone and a Taylor expansion, MBMP recovers
-  78 % of the mass.
-- **The linearisation.** Both invert a straight line. The plume at 0.3 kg/m²
-  is past the linear range: the slope overstates band 12's optical depth by
-  16 % there. Derivation (1)'s validity condition, small
-  $\Delta\Omega / \Omega_{\text{bg}}$, is the wrong one: the plume is 27
-  times the background column, and what matters is the curvature of
-  $\ln \mathcal{T}_b$.
-- **The sensitivity.** Derivation (1) defines
-  $\alpha_b = -\partial \ln \mathcal{T}_b / \partial \Omega$ and then
-  multiplies it by $m$ again; the definition that matches its model is
-  $\alpha_b = -m^{-1}\, \partial \ln \mathcal{T}_b / \partial \Omega$.
-- **Difference of logs, not of δ.** Subtracting $\delta_{\text{MBSP}}$
-  between passes cancels the surface only to first order; subtracting
-  $\ln(1 + \delta)$ cancels it exactly, and is what geotoolz computes.
-- **Names in the stack.** geotoolz's `plume.SBMP`, given a reference scene,
-  computes the MBMP log signal without the scale factors.
+- **Fit the scale factor on background pixels** ([the run](#rx2-running)).
+- **Band 11 absorbs**, so the sensitivity is $\alpha_{12} - \alpha_{11}$ ([results](#tbl-rx2-results)).
+- **The linearisation and its validity condition** ([band model](#rx2-band)).
+- **The sensitivity's $1/m$** ([band model](#rx2-band)).
+- **Difference of logs, not of δ**, and the direction of $c$ ([three methods](#rx2-methods)).
+- **geotoolz's `plume.SBMP` is an MBMP** ([stack](#rx2-stack)).
+- **The dropped $\cos\theta_s$** ([radiative transfer](#rx2-rte)).
 
-Smaller points: derivation (1)'s TOA intensity drops the $\cos\theta_s$ that
-derivation (2) keeps; its formulas' `\,` thin spaces and `\!` arrived as
-commas and `!`, and its subscripts were eaten by Markdown italics
-(`\mathcal{T}*b`), all restored here; its summary chain says MBSP cancels
-"temporal A via regression", where it cancels the albedo within one pass.
-A **Differs** box marks each place.
+Smaller points without a box: derivation (1)'s `\,` thin spaces and `\!`
+arrived as commas and `!`, and its subscripts were eaten by Markdown
+italics (`\mathcal{T}*b`), all restored here; its summary chain says MBSP
+cancels "temporal A via regression", where it cancels the albedo within one
+pass.
 :::
 
 (rx2-rte)=
@@ -117,14 +101,14 @@ source function, emission plus scattering into the beam. Between 1.6 and
 of the sunlight it reflects at 2.2 μm (albedo 0.2, $\theta_s = 35°$).
 Rayleigh scattering: its optical depth falls as $\lambda^{-4}$, 16 times
 weaker at 2 μm than at 1 μm, and is $3.7\times10^{-4}$ in band 12. With
-$J_\lambda \to 0$, along the path $s$,
+$J_\lambda \to 0$, {eq}`rx2-eq-rte` reduces along the path $s$ to
 
 $$
 \frac{dI_\lambda}{ds} = -\sigma_\lambda\, n(s)\, I_\lambda ,
 $$ (rx2-eq-extinction)
 
 with $\sigma_\lambda$ the absorption cross-section and $n$ the absorber's
-density. Integrated down to a Lambertian surface of albedo $A_\lambda$ and
+density. Integrating {eq}`rx2-eq-extinction` down to a Lambertian surface of albedo $A_\lambda$ and
 back up, through the column $\Omega = \int n\, dz$ along the slant paths, it
 gives the TOA reflectance
 
@@ -135,7 +119,8 @@ m = \frac{1}{\cos\theta_s} + \frac{1}{\cos\theta_v} ,
 $$ (rx2-eq-beer)
 
 where $L_\lambda$ is the radiance at the sensor, $E_{\lambda,\odot}$ the
-solar irradiance and $m$ the geometric air-mass factor. Every pixel has two
+solar irradiance and $m$ the geometric air-mass factor, as in
+[radtrax · 1](01_column_retrieval.md#rx1-provenance). Every pixel has two
 unknowns per wavelength, $A_\lambda$ and $\Omega$; the rest of the page is
 about removing $A_\lambda$.
 
@@ -167,14 +152,9 @@ reason they remove a scene-wide brightening, but not a local one.
 plume, and see how far a straight line carries.
 
 **Problem.** Band $b$ integrates over its spectral response $f_b(\lambda)$.
-With the albedo flat across the band,
-
-$$
-R_b = A_b\, \mathcal{T}_b(\Omega) , \qquad
-\mathcal{T}_b(\Omega) = \frac{\int f_b(\lambda)\, e^{-m \sigma_\lambda \Omega}\, d\lambda}
-{\int f_b(\lambda)\, d\lambda} .
-$$ (rx2-eq-band)
-
+With the albedo flat across the band, $R_b = A_b\, \mathcal{T}_b(\Omega)$,
+where $\mathcal{T}_b$ is the band average of $e^{-m \sigma_\lambda \Omega}$, the
+exact band model of [radtrax · 1](01_column_retrieval.md#rx1-model).
 Split $\Omega = \Omega_{\text{bg}} + \Delta\Omega$, with
 $\Omega_{\text{bg}} = 0.0109$ kg/m² (1.9 ppm). The exact plume optical depth
 of band $b$ is
@@ -203,14 +183,13 @@ nb = build_nb_lut(ds, srf, T_K=280, p_atm=0.8, amf=m)       # today
 ```
 
 $\alpha_b$ sits just below $\bar\sigma_b$, because the background has
-already darkened the strongest line cores. The straight line holds near the
-background and not at a strong plume: at 0.3 kg/m², $m\,\alpha_{12}\,\Delta\Omega$
-is 16 % above the exact optical depth, the curve of growth of
-[radtrax · 1](01_column_retrieval.md). Band 11 is the 1.66 μm methane band's
-edge and absorbs a tenth as much as band 12 on this spectrum (the ratio is a
-modelling choice here; it is not zero on real spectra either). plumax's band
-table, `nB`, integrates the plume alone, without the background column; on
-this spectrum that overstates band 12's plume optical depth by 1.1 %.
+already darkened the strongest line cores. At 0.3 kg/m² the straight line
+is 16 % above the exact optical depth, the
+[curve of growth](01_column_retrieval.md#rx1-stage-2). Band 11, the 1.66 μm
+band's edge, absorbs a tenth as much as band 12 on this spectrum (a
+modelling choice; it is not zero on real spectra either). plumax's band
+table, `nB`, integrates the plume without the background column, which
+overstates band 12's plume optical depth by 1.1 %.
 
 :::{warning} Differs from the plan
 Derivation (1) defines $\alpha_b = -\partial \ln \mathcal{T}_b / \partial \Omega$,
@@ -332,7 +311,8 @@ spectral ratio changed (purple).
 | geotoolz `plume.SBMP` (with a reference), exact table | 1.16 | **+0.013** | 0.000 | 0.000 | 0.040 | 0.000 |
 :::
 
-The hierarchy is as the derivations say. SBMP, with or without a scale
+The hierarchy is as the derivations say ([](#fig-rx2-methods),
+[](#tbl-rx2-results)). SBMP, with or without a scale
 factor, reads the wetted field as 0.28–0.29 kg/m² of methane, nearly the
 plume's peak; MBSP reads the stable mineral patch as 0.21 kg/m² and the 4 %
 ratio texture as 0.054 kg/m² of clutter; MBMP removes both, and the
@@ -343,10 +323,9 @@ factor fitted over every pixel takes in the plume, moves by 0.31 % and
 leaves a −0.009 kg/m² offset that costs 11 % of the mass. And the slope that
 converts the signal to a column matters: the exact table recovers 99 %, a
 linear inversion 91 %, the $\delta$ difference 88 %, and $\bar\sigma_{12}$ with
-$\sigma_{11} = 0$ 78 %. geotoolz's `SBMP` is the MBMP log signal plus
-$\ln(c^{(p)} / c^{(r)})$, a constant: it removes every surface term MBMP
-removes, and keeps the 1 % water-vapour change as a +0.013 kg/m² offset over
-the whole scene, which is 16 % extra mass on this plume.
+$\sigma_{11} = 0$ 78 %. geotoolz's `SBMP` keeps the 1 % water-vapour change
+as a +0.013 kg/m² offset over the whole scene, 16 % extra mass on this
+plume ([why](#rx2-stack)).
 
 :::{warning} Differs from the plan
 Derivation (1)'s table says SBMP is vulnerable to temporal surface change
@@ -386,7 +365,8 @@ $$ (rx2-eq-noise)
 # → SBMP 0.016, MBSP 0.018, MBMP 0.025 kg/m²; theory within 3 %
 ```
 
-MBMP pays for its robustness with 1.6 times SBMP's noise. On a surface that
+As {eq}`rx2-eq-noise` predicts, MBMP pays for its robustness with 1.6
+times SBMP's noise. On a surface that
 is stable in time, SBMP with a scale factor is the more precise retrieval;
 on a surface that is uniform in its band ratio, MBSP needs no reference
 pass. MBMP is the default because real surfaces are neither, and its noise
@@ -412,6 +392,9 @@ Derivation (1) lists three cases, and the run bears on each:
 (rx2-cancels)=
 ## What each method cancels
 
+[](#tbl-rx2-cancels) collects the run: what each method removes, what it
+leaves, and its noise.
+
 :::{table} The family as a difference in differences, from the run.
 :label: tbl-rx2-cancels
 
@@ -425,12 +408,13 @@ Derivation (1) lists three cases, and the run bears on each:
 (rx2-stack)=
 ## Where it lives in the stack
 
-| Piece | Today | Notes |
-|---|---|---|
-| Band transmittance $\mathcal{T}_b$, the tables $\tau_b$ and $g$ | plumax `radtran.nb_lut` (`build_nb_lut`, `lookup_nb`, `inject_plume`) | integrates the plume without the background column (1.1 % on band 12 here) |
-| Sentinel-2 response functions | georeader `S2_SAFE_reader.read_srf` | real SRFs; B11 1569–1658 nm, B12 2113–2286 nm at half maximum |
-| The two-pass, two-band log signal | geotoolz `plume.SBMP` with a reference scene | an MBMP without scale factors; the single-pass fallback is a normalised difference, not an MBSP |
-| Scale factors, background masks, exact inversion | none | written in the notebook |
+The [package boundaries inventory](../package_boundaries.md#pb-today) lists
+the pieces: plumax's `radtran.nb_lut` (`build_nb_lut`, `lookup_nb`,
+`inject_plume`) for the band tables, georeader's `read_srf` for the real
+response functions (B11 1569–1658 nm, B12 2113–2286 nm at half maximum),
+and geotoolz's `plume.SBMP` for the two-pass, two-band log signal. The
+scale factors, the background masks and the exact inversion exist nowhere
+in the stack; the notebook writes them.
 
 :::{warning} Differs from the plan
 geotoolz's operator is named `SBMP` and documented as a single-band
@@ -464,16 +448,18 @@ docstring says, not the MBSP of {eq}`rx2-eq-three`.
 (rx2-todos)=
 ## Upcoming work
 
+[](#tbl-rx2-todos) lists the follow-ups.
+
 :::{table} Follow-ups from merging the two derivations.
 :label: tbl-rx2-todos
 
 | Follow-up | Where | Why |
 |---|---|---|
-| Rename `plume.SBMP` (with a reference) to MBMP, and add per-pass scale factors | geotoolz now, radtrax after the move | stage 4: it is an MBMP, and without $c$ a scene-wide water-vapour change is a 0.013 kg/m² offset |
-| Add SBMP and MBSP operators with scale factors fitted on a background mask | radtrax | stage 4: an all-pixel fit costs 11 % of the mass |
-| Invert with the two-band table $g = \tau_{12} - \tau_{11}$ | radtrax, on plumax's `nb_lut` | stage 4: 99 % of the mass against 91 % for the linear slope |
-| Build `nB` against the background column | plumax `radtran.nb_lut` | stage 2: 1.1 % on band 12 |
-| Share the synthetic spectrum and band transmittance between radtrax · 1 and 2 | radtrax | both notebooks carry the same helpers |
+| Rename `plume.SBMP` (with a reference) to MBMP, and add per-pass scale factors | geotoolz now, radtrax after the move | [it is an MBMP](#rx2-stack); without $c$, a 0.013 kg/m² offset |
+| Add SBMP and MBSP operators with scale factors fitted on a background mask | radtrax | [the run](#rx2-running): an all-pixel fit costs 11 % of the mass |
+| Invert with the two-band table $g = \tau_{12} - \tau_{11}$ | radtrax, on plumax's `nb_lut` | [the run](#rx2-running): 99 % of the mass against 91 % for the linear slope |
+| Build `nB` against the background column | plumax `radtran.nb_lut` | [band model](#rx2-band): 1.1 % on band 12 |
+| Share the synthetic spectrum and band transmittance between [radtrax · 1](01_column_retrieval.md) and 2 | radtrax | both notebooks carry the same helpers |
 :::
 
 (rx2-references)=

@@ -31,12 +31,10 @@ canonical differentiable interface), a staged roadmap from Beer–Lambert to
 multiple scattering, and the package's place in the stack, and checks each
 against code that exists. Three findings shape it:
 
-- **v0 is a port, not a start.** plumax already has cross-section tables,
-  a Beer–Lambert forward model with Jacobians, band integration, matched
-  filters and a 3D-Var retrieval. They are NumPy or frozen dataclasses on
-  one slab. A layered Equinox v0 reproduces plumax's slab radiance and
-  hand-written Jacobian to $10^{-15}$, and shows the slab's cost: one slab
-  at the surface's pressure misstates a band's optical depth by up to 18 %.
+- **v0 is a port, not a start.** plumax already has most of v0 on one
+  slab; a layered Equinox v0 reproduces its radiance and hand-written
+  Jacobian to $10^{-15}$, and one slab at the surface's pressure misstates a
+  band's optical depth by up to 18 %.
 - **The source note's Equinox sketch needs three fixes**: no JAX arrays in
   static fields (Equinox warns), no `AbstractVar` on a concrete module, and
   optimistix and optax in place of jaxopt and optax-contrib.
@@ -58,7 +56,7 @@ against code that exists. Three findings shape it:
 | **Audience** | whoever builds radtrax, and anyone deciding whether a retrieval should wait for it |
 | **Companions** | [radtrax · 1](01_column_retrieval.md) (the single-pass column retrieval v0 must reproduce); [radtrax · 2](02_mbmp.md) (the Sentinel-2 multi-pass family); [package boundaries](../package_boundaries.md) (the moves and the dependency rules); [plumax · 1](../plumax/01_emission_rate.md) (the emission rate downstream of the column) |
 | **Code checked against** | plumax 0.1.2 at `28f257e` and gaussx 0.6.5 at `7fa1a38` (clones), geotoolz 0.10.2 at `088475e` and georeader-spaceml 2.4.1 from `references/`, finitevolX at `32ffb45`, spectraldiffx at `b5f3dc4`, pyrox at `94eef13`, somax at `aea3a03`; equinox 0.13.8, lineax 0.1.1, optimistix 0.1.0, optax 0.2.8. Read on 14 October 2026 |
-| **Running example** | every number is from one run of `notebooks/geomodels/radtrax_03_design.py`, which asserts each one, on a synthetic table of 150 Voigt lines near 4300 cm⁻¹ (2.33 μm) |
+| **Running example** | every number is from one run of `notebooks/geomodels/radtrax_03_design.py`, which asserts each one, on a synthetic table of 150 Voigt lines near 4300 cm⁻¹ (2.33 μm); code comments carry the [status markers](../../overview_examples.md#ex-markers) |
 | **Sources** | the design note supplied by the author [@geostack_radtrax_design_note]; Korkin et al. [@korkin2022]; ExoJAX [@kawahara2022]; VLIDORT [@spurr2006]; DISORT [@stamnes1988]; Rodgers [@rodgers2000] |
 :::
 
@@ -68,41 +66,20 @@ atmosphere → spectroscopy → optical properties → solver → instrument, wi
 $\{\tau, \omega, \text{phase moments}, \text{surface}\}$ per layer as the
 interface every solver consumes and automatic differentiation produces the
 K matrix through. So does the **staged roadmap**, v0 Beer–Lambert to v4
-multiple scattering, one fidelity axis per release. What **does not**:
+multiple scattering, one fidelity axis per release. What **does not**,
+each argued in a [Differs box](../../overview.md#sec-conventions) or
+section:
 
-- **v0 is not greenfield.** plumax's `hapi_lut`, `radtran`, `assimilation`
-  and `matched_filter` already cover most of v0 and part of v1, on a single
-  slab; the roadmap below ports them rather than rewriting them.
-- **The Equinox sketch.** Marking arrays `eqx.field(static=True)` makes
-  Equinox warn "A JAX array is being set as static!"; arrays stay leaves,
-  and the derivative is steered with filters. `eqx.AbstractVar` on a
-  concrete `ForwardModel` behaves as an ordinary required field; it belongs
-  on an abstract base. The `bilinear` placeholder is filled in below.
-- **The solvers it names.** JAXopt is no longer maintained (its README says
-  so); fixed points, Gauss–Newton and Levenberg–Marquardt are in
-  optimistix, which plumax already uses, and L-BFGS is in optax itself,
-  not optax-contrib. Lineax's tridiagonal operator is scalar, not block;
-  gaussx's block-tridiagonal operator is symmetric only.
-- **The stack integrations.** finitevolx (C-grid finite volumes for ocean
-  layers) and spectraldiffx (spectral derivatives) do not fit radtrax's
-  layer grid or its band integration, which are a few lines of `jnp`;
-  somax is a model zoo of simple dynamics, not atmospheric correction; the
-  emulator library the note calls gpyroX is pyrox. The plume coupling
-  $\partial y / \partial e$ lives in plumax, which imports radtrax, never
-  the reverse.
-- **Single precision.** The note puts float32's line-centre error at
-  ~$10^{-7}$ cm⁻¹; that is float32's relative precision. In absolute terms
-  float32 resolves 4300 cm⁻¹ to $4.9\times10^{-4}$ cm⁻¹, 7 % of methane's
-  Doppler half-width there.
-- **Sentinel-2.** "Implement Varon et al. exactly" carries the corrections
-  of [radtrax · 2](02_mbmp.md): scale factors on background pixels, the
-  exact two-band table, and band 11's absorption.
+- **v0 is not greenfield**: plumax covers most of it ([today](#rx3-today)).
+- **The Equinox sketch**: static arrays, `AbstractVar` ([v0 slice](#rx3-v0)).
+- **The solvers and the precision it names** ([differentiability](#rx3-diff)).
+- **The stack integrations and the plumax coupling** ([dependencies](#rx3-deps)).
+- **Sentinel-2** carries the corrections of [radtrax · 2](02_mbmp.md).
 
 Two citations are marked rather than corrected: PyMieDiff is arXiv
 2512.08614 (DOI 10.1063/5.0316814), whose journal volume we did not check
 against the note's; and Ray-trax (arXiv 2511.09389) is a ray tracer for
-turbulent astrophysical flows, a pattern reference only. A **Differs** box
-marks each place.
+turbulent astrophysical flows, a pattern reference only.
 :::
 
 (rx3-purpose)=
@@ -126,7 +103,9 @@ them:
 
 1. **Matched-filter targets** for EMIT, PRISMA, EnMAP and AVIRIS-NG: the
    unit absorption spectrum $t = \partial \ln y / \partial \Delta X$ for a
-   scene's geometry and water vapour, replacing a MODTRAN table.
+   scene's geometry and water vapour, replacing a MODTRAN table; it is the
+   $t$ of the matched filter in [radtrax · 1](01_column_retrieval.md#rx1-stage-5)
+   and [Report 16](../../reports/16_geo_data_stack.md#r16-stage-2).
 2. **Optimal-estimation retrievals** of $X_{\text{CH}_4}$, $X_{\text{H}_2\text{O}}$,
    surface and spectral shift, with $K$ from autodiff.
 3. **Multispectral retrievals** (Sentinel-2, Landsat): the band tables and
@@ -141,15 +120,18 @@ them:
 
 **TL;DR.** Most of v0 is in plumax already, in NumPy, on one slab.
 
-| Piece | Where it is today | What it is | What radtrax changes |
-|---|---|---|---|
-| HITRAN cross-section tables $\sigma(\nu; p, T)$ | plumax `hapi_lut` (`fetch_hitran_data`, `build_lut_dataset`, `create_multi_gas_luts`) | HAPI, offline, to an `xarray.Dataset` on a (ν, T, p) grid | kept as the offline table builder behind `radtrax[hitran]` |
-| Beer–Lambert forward model | plumax `radtran.forward` (`forward_nonlinear`, `forward_taylor`, `forward_maclaurin`, normalised variants) | NumPy, one slab at one (p, T), Jacobian derived by hand | Equinox, layered, Jacobian by autodiff |
-| Band integration, band tables | plumax `radtran.srf` (`SpectralResponseFunction`), `radtran.nb_lut`; georeader `read_srf` | NumPy matrix; `nB` without the background column ([radtrax · 2](02_mbmp.md)) | one JAX `Instrument`; tables with the background |
-| PSF, ground sampling | plumax `radtran.instrument` | NumPy with hand-written adjoints for tests | JAX, adjoint by autodiff, the hand adjoints kept as tests |
-| Matched filters | plumax `matched_filter`, `radtran.matched_filter`, `radtran.gaussx_solve`; geotoolz `matched_filter` | three implementations | one JAX core ([package boundaries](../package_boundaries.md)) |
-| Observation operator, 3D-Var | plumax `assimilation` (`RadianceObservationModel`, `run_gauss_newton`, `run_lbfgs`) | JAX, frozen dataclass, linear in $\Delta X$, one slab; optimistix and lineax | the v1 retrieval drivers, on the nonlinear layered model |
-| Structured linear algebra | gaussx (`LowRankUpdate`, `BlockTriDiag`, `solve`) | lineax operators | used as is |
+The [package boundaries inventory](../package_boundaries.md#pb-today) lists
+every module and its size; the table keeps what radtrax changes in each.
+
+| Piece | Today | What radtrax changes |
+|---|---|---|
+| HITRAN cross-section tables $\sigma(\nu; p, T)$ | plumax `hapi_lut`: HAPI, offline, on a (ν, T, p) grid | kept as the offline table builder behind `radtrax[hitran]` |
+| Beer–Lambert forward model | plumax `radtran.forward`: NumPy, one slab at one (p, T), Jacobian by hand | Equinox, layered, Jacobian by autodiff |
+| Band integration, band tables | plumax `radtran.srf`, `radtran.nb_lut`; georeader `read_srf`: `nB` without the background column ([radtrax · 2](02_mbmp.md#rx2-band)) | one JAX `Instrument`; tables with the background |
+| PSF, ground sampling | plumax `radtran.instrument`: NumPy, hand-written adjoints | JAX, adjoint by autodiff, the hand adjoints kept as tests |
+| Matched filters | [three implementations](../package_boundaries.md#pb-stage-3) | one JAX core |
+| Observation operator, 3D-Var | plumax `assimilation`: JAX, frozen dataclass, linear in $\Delta X$, one slab | the v1 retrieval drivers, on the nonlinear layered model |
+| Structured linear algebra | gaussx (`LowRankUpdate`, `BlockTriDiag`, `solve`) | used as is |
 
 The pieces radtrax needs are present; what is missing is the layer
 dimension, a single Equinox forward model they share, and everything past
@@ -278,14 +260,14 @@ fidelity axis, never a refactor and a feature together.
 | Release | Ports from the stack | Adds | Delivers | Closed when |
 |---|---|---|---|---|
 | **v0** Beer–Lambert, 4–6 weeks | plumax `hapi_lut` (tables), `radtran.forward`, `srf`, `nb_lut`, `target` | layers; one Equinox forward model; band tables with the background; tables for CH₄, H₂O, CO₂, N₂O, CO | matched-filter targets $t(\theta_s, \theta_v, h, \text{H}_2\text{O})$ with their gradients | slab equals plumax to $10^{-12}$ (done here); transmittance within 0.1 % of HAPI on AFGL US Standard; $K$ against finite differences |
-| **v1** geometry, surface, instrument, noise, 4–6 weeks | plumax `assimilation`, `radtran.instrument`; geotoolz `plume.SBMP` and the MBSP of [radtrax · 1](01_column_retrieval.md) | Chapman air mass above 70°; kernel BRDFs; SRF shift and FWHM; noise covariance; the multi-pass family of [radtrax · 2](02_mbmp.md) | Rodgers OE for $X_{\text{CH}_4}$, $X_{\text{H}_2\text{O}}$, surface, shift | EMIT plume scenes against the operational product |
+| **v1** geometry, surface, instrument, noise, 4–6 weeks | plumax `assimilation`, `radtran.instrument`; geotoolz `plume.SBMP` (an [MBMP](02_mbmp.md#rx2-stack)) and the MBSP of [radtrax · 1](01_column_retrieval.md) | Chapman air mass above 70°; kernel BRDFs; SRF shift and FWHM; noise covariance; the multi-pass family of [radtrax · 2](02_mbmp.md) | Rodgers OE for $X_{\text{CH}_4}$, $X_{\text{H}_2\text{O}}$, surface, shift | EMIT plume scenes against the operational product |
 | **v2** line-by-line, 8–12 weeks | none | Voigt (direct), DIT/FFT and precomputed line-basis opacity; partition functions; continua (MT_CKD), CIA, line mixing | tables built in JAX, differentiable in the line parameters | 0.1 % against HAPI and LBLRTM on three AFGL atmospheres; single lines to $10^{-6}$ |
 | **v3** single scattering, 8–10 weeks | none | Rayleigh with King factor; HG and double HG; Mie on a precomputed grid; analytic single scatter with a TMS correction | aerosol-aware SWIR forward model | Coulson tables, miepython, 6SV |
 | **v4** multiple scattering, 12–16 weeks | gaussx operators | two-stream and Toon adding; doubling–adding; discrete ordinates with implicit differentiation | TROPOMI-class SWIR + O₂ A-band forward model | DISORT and VLIDORT to 0.5 % in radiance and 2 % in $K$ |
 | **v5+** | pyrox | polarisation; Cox–Munk; 3-D; emulators behind the `RTSolver` protocol | operational throughput | I3RC; an emulator's error budget |
 :::
 
-Each release ships the regression set of the one before; the gradient
+Each release in [](#tbl-rx3-roadmap) ships the regression set of the one before; the gradient
 check, autodiff against central finite differences on a reduced state, is
 the one test every release runs.
 
@@ -383,8 +365,8 @@ three arrays and a band integration is a matrix product, so none of the
 three edges is needed, and each would pull a dynamics package under
 radtrax. The emulator library the note calls gpyroX is pyrox (Gaussian
 processes and Bayesian networks in Equinox and NumPyro). And the coupling
-to plumax runs the other way: the [package boundaries](../package_boundaries.md)
-rule P3 says radtrax never imports plumax, so the end-to-end
+to plumax runs the other way: [rule 2](../package_boundaries.md#pb-rules) of
+the package boundaries says radtrax never imports plumax, so the end-to-end
 $\partial y / \partial e$ lives in plumax, as the composition of its
 plume model with radtrax's forward model.
 :::
@@ -431,15 +413,17 @@ README, the papers against their publication records); the rest are the note's.
 (rx3-todos)=
 ## Upcoming work
 
+[](#tbl-rx3-todos) lists the steps, in order.
+
 :::{table} What radtrax needs, in order.
 :label: tbl-rx3-todos
 
 | Step | Where | Why |
 |---|---|---|
 | Create the radtrax repository from the package template, with the layout above | new repo | the package does not exist |
-| Port `hapi_lut`, `radtran` and `assimilation`'s observation operator into one layered Equinox forward model | radtrax v0, from plumax | stage 2–3: plumax's slab, its hand Jacobian and an 18 % slab error |
-| Build band tables against the background column | radtrax v0 | [radtrax · 2](02_mbmp.md): 1.1 % on band 12 |
-| Add a non-symmetric `BlockTriDiag` | gaussx | stage 5: discrete ordinates' boundary-value matrix is not symmetric |
+| Port `hapi_lut`, `radtran` and `assimilation`'s observation operator into one layered Equinox forward model | radtrax v0, from plumax | [v0 slice](#rx3-v0): plumax's slab, its hand Jacobian and an 18 % slab error |
+| Build band tables against the background column | radtrax v0 | [radtrax · 2](02_mbmp.md#rx2-band): 1.1 % on band 12 |
+| Add a non-symmetric `BlockTriDiag` | gaussx | [differentiability](#rx3-diff), item 4: discrete ordinates' boundary-value matrix is not symmetric |
 | Add the gradient check (autodiff against finite differences) to every public forward function's tests | radtrax | the one test every release runs |
 | Update the [package boundaries](../package_boundaries.md) graph with radtrax's extras | geostack docs | `[hitran]`, `[bayes]` and `[emulate]` are new edges |
 :::

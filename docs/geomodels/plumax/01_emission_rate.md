@@ -54,29 +54,27 @@ $L = \sqrt{A}$ and 4.37 m/s with geotoolz's default chord length.
 | **Status** | Design. The methods ship in plumax (plume, puff, LES) and geotoolz (cross-sectional flux, IME); the [package boundaries](../package_boundaries.md) page moves geotoolz's into plumax. Nothing here changes code |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone turning a methane column map into an emission rate, and anyone choosing which of the five methods a product uses |
-| **Companions** | [radtrax · 1](../radtrax/01_column_retrieval.md) (the column map these methods start from); [Report 16](../../reports/16_geo_data_stack.md) (one methane scene through geotoolz's IME); [package boundaries](../package_boundaries.md) |
+| **Companions** | [radtrax · 1](../radtrax/01_column_retrieval.md) (the column map these methods start from); [radtrax · 2](../radtrax/02_mbmp.md) (the Sentinel-2 multi-pass columns); [Report 16](../../reports/16_geo_data_stack.md#r16-stage-5) (one methane scene through geotoolz's IME); [Report 9](../../reports/09_use_cases.md#r9-running) (the use cases built on the IME); [package boundaries](../package_boundaries.md#pb-moves) (the plume operators' move to plumax) |
 | **Code checked against** | plumax 0.1.2 at `28f257e` (a clone; not a submodule yet), geotoolz 0.10.2 at `088475e` and georeader-spaceml 2.4.1 from `references/`, xrtoolz 0.0.5 at `308c7f2`. Read on 14 October 2026 |
-| **Running example** | every number and figure is from one run of `notebooks/geomodels/plumax_01_emission_rate.py`, on a synthetic plume of $Q = 2$ kg/s (7.2 t/h) in a 3 m/s wind, which asserts each number the page shows |
+| **Running example** | every number and figure is from one run of `notebooks/geomodels/plumax_01_emission_rate.py`, on a synthetic plume of $Q = 2$ kg/s (7.2 t/h) in a 3 m/s wind, which asserts each number the page shows; code comments carry the [status markers](../../overview_examples.md#ex-markers) |
 | **Sources** | the source note [@geostack_plumax_note]; Varon et al. [@varon2018; @varon2021], Frankenberg et al. [@frankenberg2016], Krings et al. [@krings2011], Beirle et al. [@beirle2019], Liu et al. [@liu2021], Koene et al. [@koene2024], Jacob et al. [@jacob2022], Jia et al. [@jia2025] |
 :::
 
 :::{important} What changed from the source note
 The note's **five derivations stand**: each method is an integral of the
 column-integrated advection–diffusion equation, and the cross-sectional
-flux and divergence method are one statement through Gauss's theorem. Three
-arguments **do not**. The **IME's boundary integrals** are not small: on a
-threshold contour the advective one is exactly zero and the diffusive one
-is exactly $Q$, and the note's rearrangement has a sign error. The
-**cross-sectional flux's effective wind** comes from wind shear (and
-turbulent fluctuations), not from diffusion; in the column model the true
-wind gives $Q$ exactly. The **dispersion widths** that plumax and the
-Pasquill–Gifford tables use are empirical and grow like $x$ near the source,
-so $\sigma_y^2 = 2 K_y x / U$ is the constant-diffusivity case, not the
-operational one. Two smaller points: the column of a reflecting-ground plume
-or puff does not depend on the release height, so the "ground-level source"
-restriction is unnecessary, and the formulas' `\,` thin spaces arrived as
-commas in the source (`(u, c)`, `λ, c`) and are restored here. A
-**Differs** box marks each place.
+flux and divergence method are one statement through Gauss's theorem. What
+**does not**, each argued in a
+[Differs box](../../overview.md#sec-conventions):
+
+- **Dispersion widths grow like $x$**, and the column ignores the release height ([plume](#er1-plume)).
+- **The puff sum is the plume only at high Péclet number** ([puff](#er1-puff)).
+- **The cross-sectional flux's effective wind comes from shear** ([cross-sectional flux](#er1-csf)).
+- **The divergence method needs the enhancement and the right box** ([divergence](#er1-divergence)).
+- **The IME's boundary terms are zero and $Q$**, and its calibration is tied to its length ([IME](#er1-ime)).
+
+The formulas' `\,` thin spaces arrived as commas in the source (`(u, c)`,
+`λ, c`) and are restored here.
 :::
 
 :::{note} Checked against a second derivation
@@ -94,7 +92,7 @@ the plume's source as an initial condition $U c(0^+) = Q\,\delta\,\delta$
 
 - **Its puff has no ground.** The unbounded Green's function puts half the
   mass below the surface for a ground release; plumax's
-  `puff_concentration` adds the image at $z = -H$, and the notebook checks
+  `puff_concentration`, {eq}`er1-eq-puff3d`, adds the image at $z = -H$, and the notebook checks
   it conserves $M$ above ground.
 - **It drops diffusion from the divergence method everywhere.** That holds
   only where the boundary lies outside the plume except at the downwind
@@ -106,8 +104,6 @@ the plume's source as an initial condition $U c(0^+) = Q\,\delta\,\delta$
 - **It hangs the cross-sectional flux and the IME on the Gaussian plume.**
   Both, and the divergence method, need only the column equation, so they
   hold for puffs, non-Gaussian plumes and any $\sigma_y(x)$.
-- Like the source note, it uses constant diffusivities, which plumax's
-  Briggs widths are not ([plume](#er1-plume) section).
 :::
 
 (er1-equation)=
@@ -145,7 +141,9 @@ $$
 $$ (er1-eq-column)
 
 Pulling $U$ out of the $z$ integral assumes the wind does not vary with
-height; [stage 2](#er1-csf) measures what that costs.
+height; [stage 2](#er1-csf) measures what that costs. Each method below
+comes from {eq}`er1-eq-highpe` or from this column equation
+([](#fig-er1-derivation)).
 
 :::{figure} ../../images/plumax_01_emission_rate/derivation.svg
 :label: fig-er1-derivation
@@ -173,7 +171,7 @@ e^{-y^2 / 2\sigma_y^2}
 \left[ e^{-(z-H)^2 / 2\sigma_z^2} + e^{-(z+H)^2 / 2\sigma_z^2} \right] ,
 $$ (er1-eq-plume3d)
 
-and its column is
+and the column of {eq}`er1-eq-plume3d` is
 
 $$
 \Omega(x, y) = \frac{Q}{\sqrt{2\pi}\, U\, \sigma_y(x)}\, e^{-y^2 / 2\sigma_y^2(x)} ,
@@ -198,7 +196,7 @@ c = plume_concentration(x, y, z, 0, 0, H, U, 0, Q, D)  # today
 # → Q to 10⁻³ at 500 m and 1.5 km                   user
 ```
 
-The column formula holds for any release height. The two image terms
+The column formula {eq}`er1-eq-plumecol` holds for any release height. The two image terms
 together integrate to $\int_{-\infty}^{\infty} e^{-(z-H)^2/2\sigma_z^2}\,dz =
 \sqrt{2\pi}\,\sigma_z$ whatever $H$ is, so plumax's plume released at 30 m has
 the same column as one released at the ground, to quadrature accuracy. And
@@ -247,7 +245,8 @@ $$
 $$ (er1-eq-puffcol)
 
 again for any release height. A steady release is the superposition
-$\Omega = \int_0^t Q\, \Omega_1(x, y, t - t')\, dt'$ of unit puffs.
+$\Omega = \int_0^t Q\, \Omega_1(x, y, t - t')\, dt'$ of unit puffs, each
+{eq}`er1-eq-puffcol` with $M = 1$.
 
 ```{code-block} python
 :caption: Puffs superposed against the steady plume, K = 10 m²/s, from a real run.
@@ -298,7 +297,7 @@ $$
 U \int_{-\infty}^{\infty} \Omega\, dy = Q\, \Theta(x) ,
 $$ (er1-eq-csfstep)
 
-with $\Theta$ the step function and nothing upwind. So the flux is constant
+with $\Theta$ the step function in {eq}`er1-eq-csfstep` and nothing upwind. So the flux is constant
 downwind and equals $Q$:
 
 $$
@@ -337,7 +336,7 @@ The cross-sectional flux on full and on thresholded transects.
 :::
 
 On full transects the flux is $Q$ at every distance, as {eq}`er1-eq-csf`
-says. A detection threshold removes the plume's flanks, and the far
+says ([](#fig-er1-csf)). A detection threshold removes the plume's flanks, and the far
 transects lose more: 5 % at 400 m, 61 % at 1.6 km, and everything at 2 km,
 where the whole transect is below 2 g/m². Shear changes the wind that
 applies: a plume hugging the ground moves slower than the 10 m wind (2.55
@@ -480,7 +479,7 @@ ime = gz.plume.IMEEstimate(wind_speed=3.0,
 ime(column, mask)                         # → 1.37 kg/s
 ```
 
-Both contour integrals are exact: the advective flux through the contour is
+Both contour integrals, {eq}`er1-eq-adv0` and {eq}`er1-eq-diffQ`, are exact: the advective flux through the contour is
 zero, and the diffusive flux is $Q$ to $10^{-9}$. So the residence-time
 argument is not a way around small boundary terms. It replaces the one
 boundary term that carries the whole source, diffusion across the plume's
@@ -488,7 +487,8 @@ edge, with a calibrated wind. That is also why $U_{\text{eff}}$ depends on
 the threshold, the noise and the turbulence, as the note says. The
 calibration is tied to the length scale it was fitted with: the same
 noise-free plume needs $U_{\text{eff}} = 1.17$ m/s with $L = \sqrt{A}$ and
-4.37 m/s with the chord, a factor of 3.7. geotoolz's `IMEEstimate` offers
+4.37 m/s with the chord, a factor of 3.7. geotoolz's `IMEEstimate`, which
+computes {eq}`er1-eq-ime`, offers
 three length methods (`max_axis` by default, `convex_hull`, `skeleton`),
 none of them $\sqrt{A}$.
 
@@ -504,7 +504,9 @@ fitted a logarithm for one instrument [@varon2018] and other studies fit
 linear forms, so the form, like the coefficients, belongs to the
 calibration. And because geotoolz's default length is the chord, not
 $\sqrt{A}$, a $U_{\text{eff}}$ from a $\sqrt{A}$ calibration must not be
-passed to it unchanged.
+passed to it unchanged;
+[Report 16's stage 5](../../reports/16_geo_data_stack.md#r16-stage-5) is
+such a case.
 :::
 
 (er1-summary)=
@@ -522,8 +524,8 @@ passed to it unchanged.
 | IME | $\iint dA$, then $\tau$ | steady state, calibrated $U_{\text{eff}}$ | wind speed, plume mask, the calibration's $L$ | 50 m to 1 km | geotoolz `plume.IMEEstimate` |
 :::
 
-The divergence method and the cross-sectional flux are the same statement in
-differential and integral form. The IME is the cross-sectional flux's area
+The divergence method and the cross-sectional flux ([](#tbl-er1-summary))
+are the same statement in differential and integral form. The IME is the cross-sectional flux's area
 analogue: it trades the wind direction for a calibration. plumax also
 carries forward models the note does not cover, a Lagrangian particle model
 and an Eulerian large-eddy model on finitevolx, which can generate the
@@ -547,6 +549,8 @@ Gaussian solution, so they hold for any plume shape.
 
 (er1-todos)=
 ## Upcoming work
+
+[](#tbl-er1-todos) lists the follow-ups.
 
 :::{table} Follow-ups from checking the source note.
 :label: tbl-er1-todos

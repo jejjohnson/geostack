@@ -58,18 +58,16 @@ below is from a real run.
 :::
 
 :::{important} What changed from the scoping report
-The scoping report's **central claim stands**: a benchmark is a contract and
-evaluation is the machinery that runs it, and stages 1 to 5 reproduce each
-contract failure it lists. Three parts **do not**. Its **task list** restates
-the L0–L4 levels pipekit-evaluate already ships, as transitions between
-them. Its **split rule** (block size above the correlation scale) is right
-for generalization to unseen regions and periods but wrong for mapping, where
-it overstates the error in use by 55 % (stage 2). And
-its **package plan** puts splitters and baselines in pipekit-train and
-pipekit-evaluate, while the stack's rule ([Report 14](14_pipekit_evaluate.md#r14-ownership))
-is that computations live with their carriers: splits over catalog rows
-belong to geocatalog, and gap-filling baselines sit beside xrtoolz's
-gap-fillers. A **Differs** box marks each place.
+The **central claim stands**: a benchmark is a contract, and stages 1 to 5
+reproduce each contract failure it lists. Three parts do not:
+
+- **Task list:** the L0–L4 levels pipekit-evaluate already ships, as
+  transitions ([](#r15-framework)).
+- **Split rule:** blocks above the correlation scale overstate the mapping
+  error by 55 %; the held-out set reproduces the gap in use ([](#r15-stage-2)).
+- **Package plan:** splits go to geocatalog and baselines beside xrtoolz's
+  gap-fillers, by [Report 14](14_pipekit_evaluate.md#r14-ownership)'s rule
+  ([](#r15-stage-3)).
 :::
 
 (r15-summary)=
@@ -79,8 +77,8 @@ gap-fillers. A **Differs** box marks each place.
 pipekit-evaluate, hashed with pipekit's `stable_json` and `sha256_hex`, and
 recorded on every report it produces. Each term of the contract is
 implemented where its data lives: splits of catalog rows in geocatalog and of
-training windows in geopatcher (pipekit-train until Report 16's D2 moves the
-window dataset), baselines and probabilistic scores in
+training windows in geopatcher (pipekit-train until
+[Report 16's D2](16_geo_data_stack.md#r16-ws-d) moves the window dataset), baselines and probabilistic scores in
 xrtoolz, and the content-addressed store for contracts and submissions in
 pipekit-experiment. No new package, and no hosted scoring service.
 
@@ -111,8 +109,9 @@ can run it: the splits refuse configurations that would leak, the baselines
 are the same code for every entry, the runner records each entry's variant
 and scores every track, and the report names the contract and the data,
 and each of its rows the model it scored. Running the leaderboard, a blind test service and its queue
-stays with the projects that host one. Each cell of the six-step cycle is
-benchmarked by one such contract ([Report 17](17_cycle.md#r17-ws-a)).
+stays with the projects that host one. Each transition of the
+[six-step cycle](../overview.md#sec-six-steps) is benchmarked by one such
+contract ([Report 17](17_cycle.md#r17-ws-a)).
 
 (r15-framework)=
 ## The framework, as the scoping report put it
@@ -122,7 +121,8 @@ keeps it except where a box says otherwise.
 
 **Benchmark versus evaluation.** An evaluation scores one model, once, with
 whatever data and choices are at hand. A benchmark is a shared contract that
-fixes everything a comparison depends on before anyone submits.
+fixes everything a comparison depends on before anyone submits
+([](#tbl-r15-bench-vs-eval)).
 
 :::{table} The scoping report's distinction between an evaluation and a benchmark.
 :label: tbl-r15-bench-vs-eval
@@ -157,9 +157,11 @@ a built-in pattern.
 
 :::{warning} Differs from the plan
 The six tasks are the transitions between the levels pipekit-evaluate
-already names (`benchmark/cube.py`, `LEVEL_NAMES`): L0 unstructured
-observations, L1 structured observations, L2 gap-filled observations, L3
-analysis, L4 reanalysis or forecast. Discretization is L0 → L1, gap filling
+already names (`benchmark/cube.py`, `LEVEL_NAMES`; the levels are listed in
+the overview's [](../overview.md#tbl-levels)). The two lists disagree on L2:
+`LEVEL_NAMES` calls it gap-filled observations, the overview retrieved
+observations; this page keeps the code's meaning pending
+[Report 17 A1](17_cycle.md#r17-ws-a)'s rename. Discretization is L0 → L1, gap filling
 L1 → L2, analysis L2 → L3, reanalysis and forecast end at L4. The contract
 names its task by that transition instead of a second `Literal` list, so a
 benchmark cell and a contract use the same vocabulary. Representation is the
@@ -171,7 +173,7 @@ an encoder or a decoder to map it to.
 ## Ownership rules
 
 The contract is data in pipekit-evaluate; every term it fixes is implemented
-by the library that owns the data the term constrains.
+by the library that owns the data the term constrains ([](#fig-r15-ownership)).
 
 :::{figure} ../images/reports/r15_ownership.svg
 :label: fig-r15-ownership
@@ -182,12 +184,14 @@ live with their data.
 :::
 
 1. **pipekit-evaluate** owns the contract, the runner, the scorer tags
-   (variant beside Report 14's unit, lens and stage) and the report. It
+   (variant beside [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s unit, lens
+   and stage) and the report. It
    imports geocatalog, xrtoolz and pipekit-experiment only through optional
    extras, as it imports pipekit-cycle today.
 2. **geocatalog** owns splits of catalog rows: blocks in space and time, a
    held-out platform, a causal cut. A row already carries the footprint, the
-   time interval and, with Report 13's profile, the producer, which is all a
+   time interval and, with [Report 13](13_state_catalog.md#r13-ws-a)'s
+   profile, the producer, which is all a
    split needs. It never imports pipekit-evaluate.
 3. **The window dataset** owns splits of training windows inside a dataset,
    and reads the contract's split as plain arguments (fractions, a guard in
@@ -195,16 +199,13 @@ live with their data.
    `XarrayWindowDataset` today and moves to `geopatcher.integrations.train`
    with [Report 16](16_geo_data_stack.md#r16-ws-d)'s D2; B3 lands wherever it
    is when B3 is done.
-4. **xrtoolz** owns the baselines for xarray carriers, next to the
-   gap-fillers it ships (`fillnan_temporal`, `fillnan_climatology`,
-   `fillnan_rbf`, `idw_to_points`), and the probabilistic scores. Baselines
-   for GeoTensor carriers go to geotoolz the same way.
-5. **pipekit-experiment** owns persistence: contracts, reports and
-   submissions stored by content hash beside the model registry. It never
-   interprets what it stores.
-6. **Benchmark projects** (OceanBench, WeatherBench, the gallery's entries)
-   own curation, reference data, the leaderboard and any blind scoring
-   service. The framework gives them the contract and the checks.
+
+The baselines and probabilistic scores go to xrtoolz (geotoolz for GeoTensor
+carriers; [](#r15-ws-c)), the content-addressed store to pipekit-experiment
+([](#r15-ws-e)), and curation, the leaderboard and any blind service stay
+with benchmark projects such as OceanBench, WeatherBench and the
+[gallery](../benchmarks_gallery.md)'s entries. Otherwise neighbours follow
+[the stack rules](16_geo_data_stack.md#r16-ownership).
 
 (r15-running)=
 ## The running example: mapping sea surface height from three altimeters
@@ -237,8 +238,9 @@ the observations, produce η on the full grid.
 pipekit's own primitives. The mapping methods are written in the notebook
 where the stack has none: an inverse-distance mapper in space and time
 (xrtoolz's `idw_to_points` weighs in two dimensions only) and an optimal
-interpolation (proposed as C1). Lines marked `user` are code the workstreams
-move upstream.
+interpolation (proposed as C1). Lines marked `user`
+([markers](../overview_examples.md#ex-markers)) are code the workstreams move
+upstream.
 
 (r15-stage-1)=
 ### Stage 1 · Write the contract and hash it (pipekit → pipekit-evaluate)
@@ -247,7 +249,7 @@ move upstream.
 fingerprint that changes when anything in it changes.
 
 **Problem.** A contract c is a nested mapping of the task, carriers, splits,
-references, metrics and baselines. Its address is
+references, metrics and baselines. Its address {eq}`r15-eq-hash` is
 
 $$
 h(c) = \mathrm{SHA256}\left(\mathrm{json}_{\mathrm{sorted}}(c)\right) ,
@@ -378,7 +380,8 @@ splits = {
 | last 20 % of 2025 | a forecast of the last 73 days of 2025, with no data | 8.65 | 8.39 |
 :::
 
-The splits disagree by a factor of five, and no single one is "honest". A
+The splits disagree by a factor of five ([](#tbl-r15-splits)), and no single
+one is "honest". A
 mapping product is used where an altimeter did not fly while the others did,
 so the withheld-satellite rows predict its error in use: 2.7 cm against the
 truth for s1. The random split is optimistic by 36 % against that, because
@@ -439,7 +442,7 @@ interpolation (OI) is the best linear estimate under the covariance
 their M × M covariance plus σₒ² I, C_go the N × M covariance between the N
 grid cells and the observations, μ the window mean, and the spatial factor of
 {eq}`r15-eq-cov` summed over the domain's periodic images so that it stays a
-valid covariance,
+valid covariance, the estimate and its variance are {eq}`r15-eq-oi`:
 
 $$
 \begin{aligned}
@@ -492,8 +495,8 @@ as `Operator` subclasses. A gap-filling baseline is a gap-filler, and xrtoolz
 already holds seven (`fillnan_temporal`, `fillnan_climatology`,
 `fillnan_spatial`, `fillnan_laplacian`, `fillnan_biharmonic`, `fillnan_rbf`,
 `fillnan_idw`) with the xarray carrier they need; a second home
-would split one concept across two packages, which Report 14 refused for
-metrics. The baselines go into `xrtoolz.interpolate` (OI) and beside
+would split one concept across two packages, which
+[Report 14](14_pipekit_evaluate.md#r14-ownership) refused for metrics. The baselines go into `xrtoolz.interpolate` (OI) and beside
 `xrtoolz.geo`'s climatology (persistence, climatology forecasts); the
 contract pins their configuration by name and arguments.
 :::
@@ -506,6 +509,7 @@ score, and see whether the score tells them apart.
 
 **Problem.** The continuous ranked probability score of a forecast
 distribution F against the truth y, estimated from N_e members xᵢ, is
+{eq}`r15-eq-crps`:
 
 $$
 \mathrm{CRPS}(F, y) = \mathbb{E}_F |X - y| - \frac{1}{2} \mathbb{E}_F |X - X'| ,
@@ -614,6 +618,9 @@ of stage 2 are a convention between the user's task and estimators
 (r15-names)=
 ## The scoping report's names, checked
 
+[](#tbl-r15-names) sets every name the scoping report uses against the pinned
+code.
+
 :::{table} Every name the scoping report uses, against the pinned code.
 :label: tbl-r15-names
 
@@ -621,7 +628,7 @@ of stage 2 are a convention between the user's task and estimators
 |---|---|
 | `BenchmarkContract`, `content_hash`, `to_yaml`, `from_yaml` | do not exist; `pipekit.hashing.stable_json` and `sha256_hex` hash any mapping today (stage 1) |
 | task `Literal["discretization", …, "representation"]` | pipekit-evaluate's `LEVEL_NAMES` (L0 to L4) name the same carriers; representation has no level |
-| `Metric.differentiable`, `stage_compatibility`, `variant` | do not exist; Report 14's A1 proposes unit, lens, stage and differentiable tags on `Scorer` |
+| `Metric.differentiable`, `stage_compatibility`, `variant` | do not exist; [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s A1 proposes unit, lens, stage and differentiable tags on `Scorer` |
 | `pipekit_train.splitters` (`SpatioTemporalBlockSplit`, `LeaveOnePlatformOut`, `CausalTemporalSplit`, `LeaveOneRegionOut`) | do not exist; `XarrayWindowDataset` and `SimulationDataset` split 80/10/10 in fixed tenths, the first with a guard band |
 | `PersistenceBaseline`, `ClimatologyBaseline`, `LinearTrendBaseline`, `OptimalInterpolationBaseline` | do not exist as baselines; xrtoolz ships `fillnan_temporal`, `fillnan_climatology`, `CalculateClimatology` and `fillnan_rbf`, and no OI |
 | `MultiTrackEvaluation` | does not exist; Report 14's A4 proposes several references per cell |
@@ -636,17 +643,17 @@ of stage 2 are a convention between the user's task and estimators
 (r15-audit)=
 ## Current-state audit
 
-Four of the nine symbol groups need action. Read on 13 October 2026 at the
+Four of the nine symbol groups need action ([](#tbl-r15-audit)); [](#fig-r15-readiness)
+shows what the page's sketches call. Read on 13 October 2026 at the
 revisions in the report's header, on `main` of each submodule.
 
 :::{figure} ../images/reports/r15_readiness.svg
 :label: fig-r15-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 45 calls, 14 run today, 15 are proposed by this report's workstreams, 1 by another report and 15 are code the reader writes.
 
-What the page's sketches call, read from their markers: one square per stack
-call. Of 45, 14 run today, 15 are proposed by this report's workstreams, 1
-by another report and 15 are code the reader writes. A row without squares
-has no marked call; labels on the proposed squares name the workstream item.
+Of the page's 45 marked stack calls, 14 run today, 15 are proposed by this
+report's workstreams, 1 by another report and 15 are code the reader writes
+(how to read it: [conventions](../overview.md#sec-conventions)).
 :::
 
 :::{table} The benchmark surface, by symbol group.
@@ -658,18 +665,18 @@ has no marked call; labels on the proposed squares name the workstream item.
 | `Benchmark`, `BenchmarkReport`, `CellResult` | pipekit-evaluate `benchmark/run.py` | stage 6 | **Split ownership.** Cells keyed by `(rung, complexity)`; the report records no contract, model or data |
 | `Task`, `Estimator`, `Scorer`, `Estimate` | `benchmark/protocols.py` | stage 6 | **Split ownership.** No split, no variant, no estimator name |
 | `LEVEL_NAMES`, `Cell` | `benchmark/cube.py` | `Benchmark(level="L4")` | **Healthy.** The vocabulary the contract's task should use; the level is never set from the task |
-| `XarrayWindowDataset` split, `_split_origins`, `split_guard` | pipekit-train `xarray_window.py:113-133` | Report 11's window dataset | **Split ownership.** Temporal only, fixed 80/10/10; the guard counts origins and can empty a split (stage 2) |
+| `XarrayWindowDataset` split, `_split_origins`, `split_guard` | pipekit-train `xarray_window.py:113-133` | [Report 11](11_pipekit_train.md)'s window dataset | **Split ownership.** Temporal only, fixed 80/10/10; the guard counts origins and can empty a split (stage 2) |
 | `SimulationDataset` split | pipekit-train `dataset.py:220-226`, `:295-299` | training on simulations | **Healthy.** Disjoint seed ranges per split, so no leakage between draws |
 | `fillnan_temporal`, `fillnan_climatology`, `fillnan_rbf`, `idw_to_points`, `CalculateClimatology` | xrtoolz `interpolate/_src/gap_fill.py`, `knn.py`, `geo/operators.py` | stage 3 | **Healthy.** The baselines a gap-filling benchmark needs, minus OI |
 | `crps_ensemble`, `spread_skill_ratio`, `rank_histogram`, `ensemble_coverage`, `rank_methods`, `rmse_skill_scores` | xrtoolz `metrics/_src/` | stage 4 | **Healthy.** Probabilistic scores and a leaderboard table; the variant is checked on array shape only |
-| `ModelRegistry`, `LocalModelRegistry`, `_JsonArtifact` | pipekit-experiment `protocols.py:51`, `registry.py`, `artifacts.py` | Report 12 | **Split ownership.** Content-addressed storage for operators only; artifacts save as JSON but are not addressed by hash |
+| `ModelRegistry`, `LocalModelRegistry`, `_JsonArtifact` | pipekit-experiment `protocols.py:51`, `registry.py`, `artifacts.py` | [Report 12](12_pipekit_experiment.md) | **Split ownership.** Content-addressed storage for operators only; artifacts save as JSON but are not addressed by hash |
 :::
 
 Smaller findings:
 
 - **`rank_methods` already builds a leaderboard.** xrtoolz's
   `metrics/_src/leaderboard.py` sorts a per-method score dataset into a
-  table; a report's `to_pandas` (Report 14's A3) can feed it.
+  table; a report's `to_pandas` ([Report 14](14_pipekit_evaluate.md#r14-ws-a)'s A3) can feed it.
 - **`rmse_skill_scores` fixes one convention.** It pins `ddof=0` to match an
   upstream OSSE report, the kind of choice a contract has to record.
 - **`fillnan_climatology` computes its climatology from its input.** On a test
@@ -685,7 +692,7 @@ Smaller findings:
 
 **Decision.** A benchmark is a frozen dataclass of plain data in
 `pipekit_evaluate.benchmark.contract`, hashed with pipekit's primitives, and
-its hash travels with every report it produces.
+its hash travels with every report it produces ([](#tbl-r15-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r15-move-a
@@ -694,7 +701,7 @@ its hash travels with every report it produces.
 |---|---|---|
 | `BenchmarkContract(name, version, task, operation, input, output, variant, splits, references, data, scorers, baselines, submission, status)` | `pipekit_evaluate.benchmark.contract` | the scoping report's artifact; `task` is a level transition (`"L1->L2"`) and `operation` what it does (`"gap filling"`); `data` holds the content hashes of the inputs and references (or, for an OSSE, the generator and its seed); each baseline lists every setting that changes its score and its code revision; `status` is `"pre-registered"` or `"exploratory"` |
 | `content_hash`, `to_yaml`, `from_yaml` | the same module, over `pipekit.hashing` | stage 1's hash, with YAML for people and JSON for the hash |
-| `contract_hash` on `BenchmarkReport` (and Report 14's `EvaluationReport`), and `model_hash` on each of its results | `benchmark/run.py`, `report.py` | stage 1: a report names nothing it scored; one run scores several entries (stage 6 runs three), so the model identity belongs to the row, not the report |
+| `contract_hash` on `BenchmarkReport` (and [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s `EvaluationReport`), and `model_hash` on each of its results | `benchmark/run.py`, `report.py` | stage 1: a report names nothing it scored; one run scores several entries (stage 6 runs three), so the model identity belongs to the row, not the report |
 | `Benchmark.from_contract(contract, estimators)` | `benchmark/run.py` | sets the level, the scorers and the references from the contract (stage 6) |
 | templates per task | `pipekit_evaluate.benchmark.templates` | the scoping report's mitigation for long contracts |
 :::
@@ -731,9 +738,10 @@ rep.contract_hash == c.content_hash()                    # proposed (A2)
 ## Workstream B · Splits as contract terms
 
 **Decision.** A split is a function of catalog rows in geocatalog, or of
-windows in `geopatcher.integrations.train` (pipekit-train until Report 16's D2
-moves the window dataset), configured by the contract and refusing what it
-cannot honour; the contract also says which gap the split reproduces.
+windows in `geopatcher.integrations.train` (pipekit-train until
+[Report 16's D2](16_geo_data_stack.md#r16-ws-d) moves the window dataset), configured by the contract and refusing what it
+cannot honour; the contract also says which gap the split reproduces
+([](#tbl-r15-move-b)).
 
 :::{table} Workstream B's moves.
 :label: tbl-r15-move-b
@@ -795,7 +803,7 @@ XarrayWindowDataset(..., guard=pd.Timedelta("60D"))
 
 **Decision.** Baselines are ordinary operators in the carrier library, beside
 the gap-fillers xrtoolz ships; the contract names them and pins every
-argument.
+argument ([](#tbl-r15-move-c)).
 
 :::{table} Workstream C's moves.
 :label: tbl-r15-move-c
@@ -826,14 +834,14 @@ mean, var = xi.optimal_interpolation(G, grid, kernel="gaussian", length=100e3,
 ## Workstream D · Variants and tracks in the runner
 
 **Decision.** The runner checks an entry against the contract before scoring
-it, scores every declared reference, and names entries.
+it, scores every declared reference, and names entries ([](#tbl-r15-move-d)).
 
 :::{table} Workstream D's moves.
 :label: tbl-r15-move-d
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `variant` on `Scorer` and on the entry's `Estimate` (`"deterministic"`, `"probabilistic"`) | `benchmark/protocols.py`, beside Report 14's A1 tags | stage 4: the report should say which rows are point forecasts |
+| `variant` on `Scorer` and on the entry's `Estimate` (`"deterministic"`, `"probabilistic"`) | `benchmark/protocols.py`, beside [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s A1 tags | stage 4: the report should say which rows are point forecasts |
 | point forecasts under CRPS | `xrtoolz.metrics.crps_ensemble` and the runner | a point forecast is scored as a degenerate distribution (its CRPS is its MAE) without duplicating it; stage 4's duplication goes |
 | `references: Mapping[str, ReferenceSource \| str]` | `Benchmark`, building on Report 14's A4 | stage 5's three tracks in one run; a track with no data reports "unavailable", as `CellResult.note` already does for a missing oracle |
 | per-track scoring from the contract's `scoring` (carrier, matchup rule, reduction dims) | `Benchmark.from_contract` | stage 5: a gridded track is scored over `(time, y, x)`, the s1 track only after sampling the map at each observation and reducing over `obs`; without the rule the runner cannot reproduce the observation scores |
@@ -860,7 +868,8 @@ pe.Benchmark.from_contract(c_probabilistic, estimators=[oi_100_map]).run()
 ## Workstream E · Registry and submissions
 
 **Decision.** pipekit-experiment stores contracts, reports and submissions by
-content hash, and a submission verifies by recomputing hashes, not by trust.
+content hash, and a submission verifies by recomputing hashes, not by trust
+([](#tbl-r15-move-e)).
 
 :::{table} Workstream E's moves.
 :label: tbl-r15-move-e
@@ -887,7 +896,8 @@ sub.verify(store)                      # → True                   proposed (E2
 (r15-gates)=
 ## Testing gates
 
-Each workstream merges only when its gates pass on the running example.
+Each workstream merges only when its gates ([](#tbl-r15-gates)) pass on the
+running example.
 
 :::{table} Gates, by workstream.
 :label: tbl-r15-gates
@@ -898,7 +908,7 @@ Each workstream merges only when its gates pass on the running example.
 | A2 Report hash | A | `Benchmark.from_contract(c, …).run().contract_hash == c.content_hash()`, the report's level is the contract's (L2 for stage 6, not L4), and each of its three rows carries its entry's model hash |
 | B1 Blocks | B | on stage 2's observations, `split_blocks(km=200, days=60, seed=0)` reproduces the notebook's test set and its RMSE (4.18 cm against the truth) to 1e-4, assigning no row that crosses a block boundary; `km=50` with `min_scale=(100, 30)` raises `ValueError` |
 | B2 Platform and causal | B | `split_by("producer", test="s1")` reproduces stage 2's 2.70 cm, and every test time of `split_causal` is later than every training time |
-| B3 Window guard | B | `XarrayWindowDataset(guard=pd.Timedelta("60D"))`, imported from wherever Report 16's D2 has left it, on stage 2's series raises `ValueError` naming the empty split; with `guard="2D"` its splits are 871, 105 and 108 windows |
+| B3 Window guard | B | `XarrayWindowDataset(guard=pd.Timedelta("60D"))`, imported from wherever [Report 16's D2](16_geo_data_stack.md#r16-ws-d) has left it, on stage 2's series raises `ValueError` naming the empty split; with `guard="2D"` its splits are 871, 105 and 108 windows |
 | C1 OI | C | `optimal_interpolation` reproduces stage 3's 1.81 and 2.62 cm to 1e-4 m; with L = 150 km on the 800 km periodic grid its prior covariance, before the noise term, has smallest eigenvalue λ_min ≥ −10⁻¹⁰ σ² (semidefinite to rounding), where the minimum-image Gaussian gives −1.7 × 10⁻³ m² |
 | C2 Persistence | C | `persistence` reproduces stage 3's carry-forward 7.98 cm and uses no observation after its reference time; nearest and linear interpolation in time (5.59 and 4.77 cm) are separate interpolation baselines, and each configuration hashes differently |
 | C3 Climatology | C | `ClimatologyForecast(train_period=("2023", "2024"))` uses no 2025 value: perturbing every 2025 input changes its output by 0 |
@@ -913,7 +923,8 @@ Each workstream merges only when its gates pass on the running example.
 ## Sequencing and risks
 
 The contract and the splits come first, because every later check needs
-something to check against; the hosted service never comes into the framework.
+something to check against ([](#fig-r15-roadmap)); the hosted service never
+comes into the framework.
 
 :::{figure} ../images/reports/r15_roadmap.svg
 :label: fig-r15-roadmap
@@ -930,7 +941,7 @@ the store.
 - **Splits over rows need rows.** A dataset that is one Zarr store has one
   catalog row, so a block split cannot see inside it. Fallback: split the
   windows inside the dataset (B3) with the same block rule, or index the store
-  per time step with Report 13's per-step option.
+  per time step with [Report 13](13_state_catalog.md#r13-ws-a)'s per-step option.
 - **A split that matches use needs knowledge of use.** Stage 2 shows the right
   split depends on the gap the method will face, which is a scientific
   judgement. Fallback: the contract's `gap` field is required and free text,
@@ -942,7 +953,7 @@ the store.
 - **Blind tests need a service.** Without one, `max_test_evaluations` is
   recorded but not enforced. Fallback: the contract marks its test set
   `blind`, and projects that run a service enforce it there.
-- **Two report types.** Report 14's `EvaluationReport` and the ladder's
+- **Two report types.** [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s `EvaluationReport` and the ladder's
   `BenchmarkReport` could both grow hashes. Fallback: the hash fields go on
   the one report Report 14's A3 leaves standing.
 
@@ -963,12 +974,14 @@ the store.
 4. **Representation tasks.** They are not a level transition. Do they need a
    contract kind of their own, or are they scored only through a downstream
    task?
-5. **Where does a reanalysis track come from?** Report 13's state profile
+5. **Where does a reanalysis track come from?** [Report 13](13_state_catalog.md#r13-ws-a)'s state profile
    indexes reanalyses as catalog rows. Should a contract's references be
    catalog hashes rather than URIs?
 
 (r15-todos)=
 ## Upcoming work
+
+[](#tbl-r15-todos) lists the follow-ups outside the workstreams.
 
 :::{table} Follow-ups from checking the scoping report against the code.
 :label: tbl-r15-todos
@@ -976,21 +989,14 @@ the store.
 | Item | Where | Why |
 |---|---|---|
 | Review the gallery's eighteen draft contracts with domain experts, then pre-register them | [benchmarks gallery](../benchmarks_gallery.md) | the drafts hash today, but their metrics, baselines and splits need review before their hashes mean anything |
-| Raise on an empty split | `XarrayWindowDataset` (pipekit-train today, `geopatcher.integrations.train` after Report 16's D2) | stage 2: a long guard empties a split silently; independent of B3's units |
-| Index xrtoolz submodules in the capability index | `scripts/capabilities.py` (`UPSTREAM`) | the index lists only top-level `xrtoolz`, so `fillnan_*`, `crps_ensemble` and `rank_methods` are not searchable (Report 14 found the same) |
+| Raise on an empty split | `XarrayWindowDataset` (pipekit-train today, `geopatcher.integrations.train` after [Report 16's D2](16_geo_data_stack.md#r16-ws-d)) | stage 2: a long guard empties a split silently; independent of B3's units |
+| Index xrtoolz submodules in the capability index | `scripts/capabilities.py` (`UPSTREAM`) | the index lists only top-level `xrtoolz`, so `fillnan_*`, `crps_ensemble` and `rank_methods` are not searchable ([Report 14](14_pipekit_evaluate.md#r14-todos) found the same) |
 | Pin pyrox-gp or gaussx | `references/`, `UPSTREAM` | the scoping report maps Gaussian-process gap filling to them; neither is checked |
-| Write the representation contract | Report 15, open question 4 | no level transition to name it by |
+| Write the representation contract | [open question 4](#r15-open-questions) | no level transition to name it by |
 :::
 
 (r15-references)=
 ## References
-
-:::{note} Companion reports
-:class: simple
-Reports [6](06_geocatalog.md), [10](10_pipekit_cycle.md),
-[11](11_pipekit_train.md), [12](12_pipekit_experiment.md),
-[13](13_state_catalog.md) and [14](14_pipekit_evaluate.md) are published.
-:::
 
 ### Sources
 

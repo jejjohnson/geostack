@@ -45,7 +45,7 @@ where their concepts already live, and not building `statecatalog`.**
 | **Status** | Redesign of a scoping proposal ("committed": a sister package `statecatalog`). The user asked for it to be reassessed against the geotoolz and xrtoolz stacks; the recommendation below replaces the package |
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone who stores, queries or scores forecasts, analyses or reanalyses with the stack |
-| **Companions** | [Report 6](06_geocatalog.md) (geocatalog); [Report 3](03_sister_libraries.md) (xrtoolz and the sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (pipekit-cycle) |
+| **Companions** | [Report 6](06_geocatalog.md) (geocatalog); [Report 3](03_sister_libraries.md) (xrtoolz and the sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (pipekit-cycle); [Report 16](16_geo_data_stack.md#r16-ownership) (the stack rules) |
 | **Code checked against** | the revisions pinned in `references/`: pipekit and its sister packages at 0.0.2 (`ef3c17f`); geotoolz 0.10.2 with geocatalog 0.5.1 (`088475e`); xrtoolz 0.0.5 with xrreader 0.0.4 (`308c7f2`); pandas 3.0.6, as in `pixi.lock`. Read on 13 October 2026 |
 | **Running example** | every output in the code blocks is from real runs over two synthetic archives: an 11-file regional forecast archive (stages 1 to 5) and a 6-file, three-model archive on three grids (stage 6); both are described in [](#r13-running), and `notebooks/reports/report13_state_catalog.py` regenerates them from fixed seeds and asserts every number shown |
 :::
@@ -57,9 +57,8 @@ ensembles and lineage belong in the first version. Its packaging does not.
 The report argued that putting model-state fields into geocatalog "would
 corrupt the abstraction". At the pinned revisions the fields fit in
 geocatalog's **rows**, not in `GeoSlice`, and the slice stays what it is: a
-request for a region and a time interval. Each place where the scoping report
-and the code disagree has a **Differs** box, and the gaps go to
-[](#r13-open-questions) or [](#r13-todos).
+request for a region and a time interval. A **Differs** box carries each
+disagreement ([conventions](../overview.md#sec-conventions)).
 :::
 
 (r13-summary)=
@@ -114,7 +113,7 @@ $$
 \tau = v - r
 $$ (r13-eq-lead)
 
-the **lead time**. An **analysis** is the state a data-assimilation step
+the **lead time** ({eq}`r13-eq-lead`). An **analysis** is the state a data-assimilation step
 produces at its own valid time, so $\tau = 0$. A forecast run started at $r$
 produces states at $\tau = \Delta t, 2 \Delta t, \ldots$ for a model step
 $\Delta t$. An ensemble repeats each run $N_e$ times, with members
@@ -122,7 +121,8 @@ $m = 0, \ldots, N_e - 1$. Each state also has a **producer**, the hash of
 the model and configuration that made it, and its **parents**, the states
 it was computed from: one for a forecast (the state its run started from), and
 the whole forecast ensemble for an ensemble-Kalman analysis, whose gain is
-estimated from all members at once.
+estimated from all members at once. [](#tbl-r13-fields) lists each field
+with its CF name and where it lives today.
 
 :::{table} The fields of a model state, their CF names and where each one lives today.
 :label: tbl-r13-fields
@@ -147,7 +147,7 @@ answers each one with the code that exists, and adds what is missing.
 ## Ownership rules
 
 States are produced by pipekit-cycle, indexed by geocatalog and scored by
-xrtoolz, and only scripts join the three.
+xrtoolz, and only scripts join the three ([](#fig-r13-ownership)).
 
 :::{figure} ../images/reports/r13_ownership.svg
 :label: fig-r13-ownership
@@ -157,28 +157,15 @@ Ownership of model states. The dashed box is the only new namespace; the
 other three already ship.
 :::
 
-1. **pipekit-cycle** owns producing states: the cycles and their in-memory
-   `history`. It never imports geocatalog or xrtoolz, and never writes files.
-2. **geocatalog** owns the index of states (`geocatalog.states`): the
-   reserved columns, the state builder, run-aware loading and the state
-   queries. It never imports pipekit or xrtoolz.
-3. **xrtoolz** owns verifying states: alignment with a reference and the
-   lead-time and ensemble metrics. It never imports geocatalog.
-4. **pipekit-experiment** owns the producer's identity (`Run.pipeline_hash`,
-   the registry's content hashes). It never imports a catalog.
-5. **Scripts** (here, geostack's `scripts/`) own the side effects: running
-   the cycle, writing one file per run and member, building the catalog and
-   writing metrics.
+**geocatalog** owns the index of states (`geocatalog.states`): the reserved
+columns, the state builder, run-aware loading and the state queries. It
+never imports pipekit or xrtoolz.
 
-:::{table} The dependency tiers for model states.
-:label: tbl-r13-tiers
-
-| Tier | Packages | May import | Role |
-|---|---|---|---|
-| Entry points | geostack scripts and notebooks | everything below | run, write, index, score |
-| Libraries | pipekit-cycle; geocatalog; xrtoolz; pipekit-experiment | their own substrate only | produce; index; verify; name |
-| Substrate | xarray, pandas, geopandas, pyarrow, DuckDB | | arrays, tables and files |
-:::
+The other three follow [the stack rules](16_geo_data_stack.md#r16-ownership):
+pipekit-cycle produces states in memory and writes no files, xrtoolz
+verifies them, pipekit-experiment names the producer
+(`Run.pipeline_hash`), none of them imports another, and scripts own every
+side effect.
 
 :::{warning} Differs from the plan
 The scoping report placed `statecatalog` as a **sibling of geocatalog** with
@@ -216,8 +203,9 @@ stage, and asserts each number on this page; it runs with geocatalog 0.5.1
 and xrtoolz 0.0.5 from `references/`. Stage 6 widens the example from one
 regional system to a multi-model comparison, with its own six-file archive
 in the same notebook. The blocks below are excerpts with their real outputs;
-names such as `cat`, `t3` and `five_days` are defined in the notebook. Lines marked `user` are glue the user
-writes today; the workstreams remove them.
+names such as `cat`, `t3` and `five_days` are defined in the notebook. Lines
+marked `user` ([markers](../overview_examples.md#ex-markers)) are glue the
+workstreams remove.
 
 (r13-stage-1)=
 ### Stage 1 · Index the archive (scripts → geocatalog)
@@ -264,7 +252,7 @@ coordinate gets the placeholder interval 1900 to 2100 with
 the members of a run, using only the index.
 
 **Problem.** With $\mathcal{C}$ the set of rows, the three questions are
-filters:
+the filters {eq}`r13-eq-queries`:
 
 $$
 \begin{aligned}
@@ -308,7 +296,7 @@ the trap.
 **TL;DR.** Load the six forecast files as one array indexed by run, member
 and lead.
 
-**Problem.** The cube xrtoolz expects is
+**Problem.** The cube xrtoolz expects is {eq}`r13-eq-cube`,
 
 $$
 \begin{aligned}
@@ -362,7 +350,7 @@ and report the error at each lead.
 **Problem.** The verifying reference for run $r$ at lead $\tau$ is the
 analysis at its valid time, $A[r, \tau, x] = a(r + \tau, x)$. With
 $\bar{F}$ the ensemble mean over members and $N = R H W$ the number of
-scored values per lead, the two scores are
+scored values per lead, the two scores are {eq}`r13-eq-skill`,
 
 $$
 \begin{aligned}
@@ -494,7 +482,8 @@ A statistic $S$ over time and members, applied cell by cell, either commutes
 with $\mathcal{R}$ or does not. The time mean is linear, so
 $S(\mathcal{R} x) = \mathcal{R} S(x)$. The 99th percentile $q_{0.99}$ is
 not: averaging cells before taking the percentile removes the cell-scale
-extremes that the percentile measures. That gives three pipelines:
+extremes that the percentile measures. That gives the three pipelines of
+{eq}`r13-eq-pipelines`:
 
 $$
 \begin{aligned}
@@ -571,6 +560,8 @@ observations, feed one bias operator.
 (r13-names)=
 ## The scoping report's names, checked
 
+[](#tbl-r13-names) checks every stack name the scoping report's examples use.
+
 :::{table} Every stack name the scoping report's examples use, at the pinned revisions.
 :label: tbl-r13-names
 
@@ -591,17 +582,17 @@ observations, feed one bias operator.
 
 Eleven pieces of the proposed package were checked: seven are healthy as
 they ship, three are split between a library that has them and a gap, and
-one is missing. The audit read the revisions pinned in
+one is missing ([](#tbl-r13-audit)); [](#fig-r13-readiness) counts the
+page's calls by marker. The audit read the revisions pinned in
 `references/` on 13 October 2026.
 
 :::{figure} ../images/reports/r13_readiness.svg
 :label: fig-r13-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 70 calls, 24 run today, 12 are proposed by this report's workstreams and 34 are code the reader writes.
 
-What the page's sketches call, read from their markers: one square per stack
-call. Of 70, 24 run today, 12 are proposed by this report's workstreams and
-34 are code the reader writes. A row without squares has no marked call;
-labels on the proposed squares name the workstream item.
+What this page's sketches call: of 70 stack calls, 24 run today, 12 are
+proposed by this report's workstreams and 34 are code the reader writes
+([how to read it](../overview.md#sec-conventions)).
 :::
 
 :::{table} What each piece of the proposed statecatalog maps to today.
@@ -652,6 +643,8 @@ Smaller findings:
 (r13-options)=
 ## Options considered
 
+[](#tbl-r13-options) weighs four ways to index model states.
+
 :::{table} Four ways to index model states.
 :label: tbl-r13-options
 
@@ -670,7 +663,7 @@ with one store, which needs only workstream C.
 ## Workstream A · State columns in geocatalog
 
 **Decision.** The state fields are reserved row columns of geocatalog's
-schema, not fields of a new slice.
+schema, not fields of a new slice ([](#tbl-r13-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r13-move-a
@@ -731,7 +724,8 @@ so an integer column would lose them. Stage 1's members become `"0"` and
 ## Workstream B · Run-aware loading and typed queries
 
 **Decision.** `geocatalog.states` holds the loader and the queries that know
-what a run is; the observation loader stays as it is.
+what a run is; the observation loader stays as it is ([](#tbl-r13-move-b));
+[](#tbl-r13-placement) places every new name of workstreams A to C.
 
 :::{table} Workstream B's moves.
 :label: tbl-r13-move-b
@@ -817,7 +811,7 @@ assimilated observations recorded per analysis; it goes to
 ## Workstream C · Forecast alignment in xrtoolz
 
 **Decision.** xrtoolz builds the verifying reference and broadcasts it;
-the metrics stay as they are.
+the metrics stay as they are ([](#tbl-r13-move-c)).
 
 :::{table} Workstream C's moves.
 :label: tbl-r13-move-c
@@ -872,7 +866,7 @@ areas.
 ## Workstream D · Ensemble histories in pipekit-cycle
 
 **Decision.** The cycle's `history` is the write seam; files are written by
-the script, after the call.
+the script, after the call ([](#tbl-r13-move-d)).
 
 :::{table} Workstream D's moves.
 :label: tbl-r13-move-d
@@ -906,8 +900,8 @@ cat = build_state_catalog(sorted(root.glob("fc_*.zarr")),
 
 `to_dataset` is the model's own carrier-to-xarray step, which differs per
 model; it is not a library function. `h_hash` is the producer:
-`sha256_hex(stable_json(fcst.get_config()))` today, or Report 9's proposed
-`pipeline_hash`.
+`sha256_hex(stable_json(fcst.get_config()))` today, or
+[Report 9](09_use_cases.md#r9-proposals)'s proposed `pipeline_hash`.
 
 :::{warning} Differs from the plan
 The scoping report made **pipekit-cycle the primary writer and reader** of
@@ -923,8 +917,8 @@ the whole trajectory is held until the script writes it (see
 (r13-gates)=
 ## Testing gates
 
-Each workstream merges only when its gates pass. The fixtures are the
-running example's eleven files.
+Each workstream merges only when its gates pass ([](#tbl-r13-gates)). The
+fixtures are the running example's eleven files.
 
 :::{table} One gate per proposal, each with a pass condition.
 :label: tbl-r13-gates
@@ -947,7 +941,8 @@ running example's eleven files.
 ## Sequencing and risks
 
 The three phase-1 pieces are independent, so they ship side by side; the
-builder, loader and queries follow because they use A1's columns.
+builder, loader and queries follow because they use A1's columns
+([](#fig-r13-roadmap)).
 
 :::{figure} ../images/reports/r13_roadmap.svg
 :label: fig-r13-roadmap
@@ -1015,6 +1010,8 @@ Foundations first, then the state profile, then its consumers.
 (r13-todos)=
 ## Upcoming work
 
+[](#tbl-r13-todos) lists the follow-ups.
+
 :::{table} Follow-ups from the reassessment.
 :label: tbl-r13-todos
 
@@ -1029,17 +1026,6 @@ Foundations first, then the state profile, then its consumers.
 
 (r13-references)=
 ## References
-
-<!-- TODO(ref): placeholders. When a report page lands, point its links in this
-file at the page and delete its entry below. -->
-
-:::{note} Companion reports
-:class: simple
-Reports [3](03_sister_libraries.md), [6](06_geocatalog.md),
-[9](09_use_cases.md), [10](10_pipekit_cycle.md), [11](11_pipekit_train.md),
-[12](12_pipekit_experiment.md) and [14](14_pipekit_evaluate.md) are
-published.
-:::
 
 ### Sources
 

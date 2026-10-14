@@ -39,42 +39,30 @@ and follow-ups at the end.
 | **Status** | Shipped surface; originally a surface proposal for the libraries layered on pipekit |
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone scoping the library ecosystem on top of pipekit, or deciding where a new operator belongs |
-| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 2](02_pipekit_surface.md) (pipekit core); [Report 9](09_use_cases.md) (use cases revisited); forthcoming ones are listed under [References](#r3-references) |
+| **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 2](02_pipekit_surface.md) (pipekit core); [Report 9](09_use_cases.md) (use cases revisited); [Report 16](16_geo_data_stack.md) (the geo data stack) |
 | **Checked against** | pipekit and pipekit-array 0.0.2 (`ef3c17f`); geotoolz 0.10.2 (`088475e`); xrtoolz 0.0.5 (`308c7f2`): the revisions pinned in `references/`. pipekit-array and xrtoolz examples are from real runs; geotoolz claims come from reading its source, since its raster stack (rasterio) is not installed here |
 :::
 
 :::{important} How to read the differences
-As in [Report 2](02_pipekit_surface.md), each part says what the proposal
-planned and what shipped. A **Differs from the plan** box marks each gap, and
-each gap is carried to [](#r3-open-questions) or [](#r3-todos). The proposal
-called the xarray library `xr_toolz`; it shipped as `xrtoolz`, and this page
-uses the shipped name.
+Each part says what the proposal planned and what shipped, following the
+[series conventions](../overview.md#sec-conventions). The proposal called the
+xarray library `xr_toolz`; it shipped as `xrtoolz`, and this page uses the
+shipped name.
 :::
 
 (r3-layers)=
 ## The layers above pipekit
 
 The proposal drew a strict stack: geotoolz and xrtoolz on top, delegating
-their array maths down to pipekit-array, which sits on pipekit core.
-
-```{code-block} text
-:caption: The layering as proposed.
-
-geotoolz (GeoTensor)     xrtoolz (xarray)     others …
-          │                    │                 │
-          └─────────┬──────────┴─────────────────┘
-                    ▼
-            pipekit-array        ← duck-typed arrays (NumPy, JAX, CuPy, …)
-                    │
-                    ▼
-               pipekit           ← carrier-agnostic framework
-```
-
-What shipped has the same three carriers and different wiring
+their array maths down to pipekit-array, which sits on pipekit core. What
+shipped has the same three carriers and different wiring
 ({numref}`fig-r3-layers`). geotoolz sits directly on pipekit core. xrtoolz
 sits on a small package of its own, `xrcore`, which subclasses pipekit's
 `Operator`. pipekit-array also sits on pipekit core, but neither domain
 library imports it. A fourth sibling, pipekit-jax, has shipped too.
+[](#tbl-r3-layers) sets each proposed layer against what it became. The
+stack-wide layering and its ownership rules are in
+[Report 16](16_geo_data_stack.md#r16-ownership).
 
 ```{figure} ../images/reports/r3_layers.svg
 :label: fig-r3-layers
@@ -122,7 +110,8 @@ def channel_mean(x):                          # x: (..., C)
 
 The proposal's conformance table was out of date in three places. It is
 corrected below from the [NumPy](https://numpy.org/doc/2.0/reference/array_api.html)
-and [array-api-compat](https://data-apis.org/array-api-compat/) documentation:
+and [array-api-compat](https://data-apis.org/array-api-compat/) documentation
+([](#tbl-r3-conformance)):
 
 :::{table} Array API support by backend, corrected.
 :label: tbl-r3-conformance
@@ -176,7 +165,8 @@ shape inference: it drops the reduced dimensions, which is the payoff
 [Report 2](02_pipekit_surface.md#r2-group-i) said core leaves to the sister
 libraries. xrtoolz's operators (in `geo`, `interpolate`, `metrics` and
 xreinx) infer shapes too, but on xrcore's separate `Signature`
-([](#r3-xrtoolz)).
+([](#r3-xrtoolz)). [](#tbl-r3-array-catalogue) lists the whole planned
+catalogue by phase; only phase A ships.
 
 :::{table} The proposed pipekit-array catalogue, by phase, at 0.0.2.
 :label: tbl-r3-array-catalogue
@@ -277,7 +267,8 @@ The proposal made geotoolz a thinner library focused on remote sensing over
 `georeader.GeoTensor`, with its old framework code (`geotoolz.core`) reduced
 to a shim that re-exports pipekit. The shipped geotoolz has **no `core` at
 all**: it depends on pipekit (`pipekit>=0.0.2`) and its top-level `__init__`
-re-exports 16 pipekit names directly. `gz.Operator` is `pipekit.Operator`.
+re-exports 16 pipekit names directly ([](#tbl-r3-gz-reexports)).
+`gz.Operator` is `pipekit.Operator`.
 
 :::{table} The pipekit names geotoolz re-exports at 0.10.2, all the same objects.
 :label: tbl-r3-gz-reexports
@@ -302,6 +293,8 @@ they become public, or geotoolz stops using them ([](#r3-todos)).
 :::
 
 ### Layout
+
+[](#tbl-r3-gz-layout) maps geotoolz's subpackages onto the proposed layout.
 
 :::{table} geotoolz's subpackages at 0.10.2, against the proposed layout.
 :label: tbl-r3-gz-layout
@@ -345,6 +338,9 @@ ship:
 
 ### What geotoolz owns, and what has not shipped
 
+[](#tbl-r3-gz-missing) lists the named symbols that did not ship under their
+proposed name.
+
 :::{table} The proposal's named geotoolz symbols that did not ship under that name.
 :label: tbl-r3-gz-missing
 
@@ -377,7 +373,7 @@ The proposal put eight sensor modules in `geotoolz.readers`, each bundling a
 reader, sensor-specific operators and zero-argument presets. There is no
 `geotoolz.readers`. Readers and presets live in **geoproducts**, downstream of
 geotoolz (its `[operators]` extra pulls geotoolz in), and two of the eight
-have shipped:
+have shipped ([](#tbl-r3-sensors)):
 
 :::{table} The eight planned sensor modules at geotoolz 0.10.2.
 :label: tbl-r3-sensors
@@ -470,7 +466,8 @@ pipekit, all the same objects. It defines no `Tap`, `Sequential`, `Graph`,
 ### Layout
 
 The proposal had sixteen subpackages. xrtoolz folds six of them into one
-`geo` subpackage, and moves data access out to xrreader:
+`geo` subpackage, and moves data access out to xrreader ([](#tbl-r3-xr-layout);
+the named symbols are in [](#tbl-r3-xr-symbols)):
 
 :::{table} xrtoolz's subpackages at 0.0.5, against the proposed layout.
 :label: tbl-r3-xr-layout
@@ -555,11 +552,9 @@ lazily and has a `jit` flag. xrsklearn separately ships `SklearnOp` and
 `XarrayEstimator`.
 
 :::{warning} Differs from the plan
-There are now two classes named `JaxModelOp`: `xrtoolz.inference.JaxModelOp`
-(a JAX callable over xarray, by `feature_dim`) and `pipekit_jax.JaxModelOp`
-(an `eqx.Module` with weight round-trip). They are unrelated. The
-capability-index clash check cannot see this, because the index stops at
-each library's top-level module ([](#r3-todos)).
+There are now two unrelated classes named `JaxModelOp` (`xrtoolz.inference`
+and `pipekit_jax`); [Report 16 B](16_geo_data_stack.md#r16-ws-b) merges them
+into one model-operator family.
 :::
 
 ### The five sibling packages
@@ -592,7 +587,7 @@ reduces through NumPy kernels in `metrics/_src/_pixel_kernels.py`.
 (r3-where)=
 ## Part 4 · Where each symbol lives
 
-The proposal flagged this as the most common confusion. The table below
+The proposal flagged this as the most common confusion. [](#tbl-r3-where)
 shows where each name lives at the pinned revisions.
 
 :::{table} Where each symbol lives at pipekit 0.0.2, geotoolz 0.10.2 and xrtoolz 0.0.5.
@@ -675,6 +670,8 @@ The proposal's three questions, applied to the shipped code:
    carrier has no coherent standard, you would be inventing one alongside the
    operators.
 
+[](#tbl-r3-criteria) applies them to each candidate.
+
 :::{table} The criteria, with the shipped evidence.
 :label: tbl-r3-criteria
 
@@ -696,6 +693,9 @@ the package.
 
 (r3-summary)=
 ## Summary
+
+[](#tbl-r3-summary) sets each layer's proposed status against the pinned
+revisions.
 
 :::{table} The ecosystem as proposed, and at the pinned revisions.
 :label: tbl-r3-summary
@@ -730,25 +730,24 @@ Decisions the shipped code raises:
    already ships both names. Options: give the array versions distinct names
    (`BatchedArrayMap`, say), make them subclasses that add axis-0 splitting,
    or drop them and extend the core classes.
-3. **One `Signature` or two?** xrcore's `Signature` and pipekit's do the same
-   job in different types, and xrtoolz's operators already infer shapes on
-   xrcore's. Merging them would let `Sequential.summary` show xarray
-   operators' shapes alongside array ones.
-4. **One `JaxModelOp` name or two?** `xrtoolz.inference.JaxModelOp` and
-   `pipekit_jax.JaxModelOp` are unrelated classes. Should one be renamed, or
-   should the xrtoolz one wrap the pipekit-jax one?
+3. **One `Signature` or two?** Resolved: one, pipekit's
+   ([Report 16 §A](16_geo_data_stack.md#r16-ws-a)).
+4. **One `JaxModelOp` name or two?** Resolved: one model-operator family
+   ([Report 16 §B](16_geo_data_stack.md#r16-ws-b)).
 5. **Where do the numeric QC asserts go?** `AssertValueRange`, `AssertNoNaN`
    and `AssertValidFraction` were promised to pipekit-array, and pipekit's
    `qc.py` still says they live there. They exist nowhere. Should they wait
    for phase C, or land in geotoolz and xrtoolz first?
 6. **Does geotoolz own geo QC?** `AssertCRSEquals`, `AssertResolutionWithin`
    and `AssertSchema` were part of the case for geotoolz and did not ship.
-7. **Which sensors come next in geoproducts?** Two of eight shipped (GOES,
-   Himawari). xrreader already opens TROPOMI CH₄, so the TROPOMI reader may
-   belong on the xarray side.
+7. **Which sensors come next in geoproducts?** Resolved for TROPOMI: the
+   reader stays on the xarray side
+   ([Report 16 §E](16_geo_data_stack.md#r16-ws-e)).
 
 (r3-todos)=
 ## Upcoming work
+
+[](#tbl-r3-todos) lists the follow-ups whose shape is clear.
 
 :::{table} Follow-ups from checking the proposal against the pinned revisions.
 :label: tbl-r3-todos
@@ -760,25 +759,13 @@ Decisions the shipped code raises:
 | Ship pipekit-array phases B to D, resolving the `BatchedMap` / `Histogram` names first | pipekit-array | 9 of the 13 planned names are missing |
 | Fix pipekit's `qc.py` docstring that says the numeric asserts live in pipekit-array | pipekit `qc.py` | they don't exist yet |
 | Rename `xr_toolz` to `xrtoolz` in pipekit's `combine.py` docstring, and add the merge-semantics note to xrtoolz's `Augment` / `ApplyToEach` | pipekit, xrtoolz | stale name; a note planned on the xrtoolz side |
-| Build `CatalogPipeline` on `ProcessMap` / `ThreadMap` | geocatalog | Reports [2](02_pipekit_surface.md#r2-group-j) and 3 both assume it; use cases 2 and 12 need it |
+| Build `CatalogPipeline` on `ProcessMap` / `ThreadMap` | geocatalog | Reports [2](02_pipekit_surface.md#r2-group-j) and 3 both assume it; use cases [2](09_use_cases.md#r9-case-2) and [12](09_use_cases.md#r9-case-12) need it |
 | Fill or remove the empty `xrtoolz.rs` and `xrtoolz.ice` subpackages | xrtoolz | they ship as docstrings only |
 | Add `SortCoords`, a one-hot encoder and a Nash–Sutcliffe score, or drop them from the plan | xrtoolz | named in the proposal, not shipped |
 :::
 
 (r3-references)=
 ## References
-
-<!-- TODO(ref): placeholders. When a report page lands, point its links in this
-file at the page (e.g. [Report 4](04_use_cases.md)) and delete its entry
-below. When citations land, add them to references.bib, cite with [@key] in the
-text, and replace the citations placeholder. -->
-
-:::{note} Placeholders
-:class: simple
-The citations are still being written; the entry below stands in for them.
-The companion reports are published: [Report 1](01_toolz_primer.md),
-[Report 2](02_pipekit_surface.md) and [Report 9](09_use_cases.md).
-:::
 
 ### Citations
 

@@ -28,7 +28,7 @@ libraries plug in without importing it. The scoping report described this
 package before it was built. Version 0.0.2 ships everything the report
 named and more: eleven further protocols, a back-and-forth nudging cycle and
 adjoint specs that pipekit-jax reads. Where the two disagree, **the code
-holds**. A Kalman filter written as a `DACycle` matches a hand-written loop
+holds** ([conventions](../overview.md#sec-conventions)). A Kalman filter written as a `DACycle` matches a hand-written loop
 exactly, and an EnKF converges to it at the $1/\sqrt{N_e}$ rate. Two real
 gaps remain: a stateful `Sequential` cannot be a cycle's step, and the
 observation index restarts on every call, which silently feeds a restarted
@@ -44,19 +44,9 @@ cycle the wrong observations. This page proposes two small fixes.
 | **Status** | Built. Originally a scoping proposal ("committed"); pipekit-cycle 0.0.2 is the design of record, and this page follows it |
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone writing a forward simulation, a DA cycle or an iterative retrieval with the stack, or an adapter for an algorithm library |
-| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core, where `StatefulOperator` and `CarryState` live); [Report 9](09_use_cases.md) (use cases); [Report 13](13_state_catalog.md) (indexing the states a cycle produces); [Report 11](11_pipekit_train.md) (training the emulators of stage 4); [Report 12](12_pipekit_experiment.md) (the registry) |
+| **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core, where `StatefulOperator` and `CarryState` live); [Report 9](09_use_cases.md) (use cases); [Report 13](13_state_catalog.md) (indexing the states a cycle produces); [Report 11](11_pipekit_train.md) (training the emulators of stage 4); [Report 12](12_pipekit_experiment.md) (the registry); [Report 16](16_geo_data_stack.md#r16-ownership) (the stack rules) |
 | **Code checked against** | `pipekit-cycle` 0.0.2 and `pipekit` 0.0.2 at `ef3c17f`, the revision pinned in `references/pipekit`; its 100 tests pass. Read on 13 October 2026 |
 | **Running example** | every output below is from one run on that revision of `notebooks/reports/report10_pipekit_cycle.py`, which seeds every draw and asserts each number the page shows |
-:::
-
-:::{important} The code takes precedence
-The scoping report and pipekit-cycle 0.0.2 differ in a dozen places,
-mostly in details the report guessed before the code existed: return
-values, carrier shapes, the fields of the carry states, the extras. Each
-difference has a **Differs** box below and the code's behaviour is what this
-page documents. Only behaviour that is missing *and* needed by a real
-workflow becomes a proposal ([](#r10-ws-a), [](#r10-ws-b)); the rest goes to
-[](#r10-open-questions) or [](#r10-todos).
 :::
 
 (r10-summary)=
@@ -66,7 +56,7 @@ workflow becomes a proposal ([](#r10-ws-a), [](#r10-ws-b)); the rest goes to
 pipekit-array, depending only on pipekit, with no JAX and no domain code.
 Its protocols, cycles and helpers are the contract algorithm libraries
 target. Two additions close the gaps the running example hits, and one more
-is already proposed in Report 13.
+is already proposed in [Report 13](13_state_catalog.md#r13-ws-d).
 
 - **A. Stateful pipelines as cycle steps.** `pipekit.Sequential` threads a
   carry state when it holds a stateful step, but it is not a
@@ -90,7 +80,8 @@ can keep its history, which Report 13's state profile indexes.
 ## Ownership rules
 
 pipekit-cycle owns the shape of a run over time; the carrier, the physics
-and the algorithms belong to whoever supplies the steps.
+and the algorithms belong to whoever supplies the steps
+([](#fig-r10-ownership)).
 
 :::{figure} ../images/reports/r10_ownership.svg
 :label: fig-r10-ownership
@@ -100,30 +91,16 @@ pipekit-cycle 0.0.2 between pipekit core and the code that uses it. Dashed
 arrows are structural: nothing is imported.
 :::
 
-1. **pipekit core** owns `StatefulOperator`, `CarryState` and `Sequential`'s
-   state threading. It never imports pipekit-cycle.
-2. **pipekit-cycle** owns the cycles, the DA cycles, the protocols, the
-   generic observation and forward helpers, the carry states and the adjoint
-   specs. It imports only pipekit, and never an array library, JAX or a
-   domain package.
-3. **Algorithm libraries** (filterax, vardax, plumax) own forward models,
-   observation operators and analysis steps. They satisfy the protocols by
-   structural typing and never need to import pipekit-cycle.
-4. **pipekit-jax** owns everything JAX: it interprets the adjoint specs
-   (`to_diffrax_adjoint`, `truncated_scan`). pipekit-cycle never imports it.
-5. **Scripts** own the carrier, the initial state, the observations and
-   every file a run writes ([Report 13](13_state_catalog.md#r13-ws-d)).
+**pipekit-cycle** owns the cycles, the DA cycles, the protocols, the
+generic observation and forward helpers, the carry states and the adjoint
+specs. It imports only pipekit, and never an array library, JAX or a domain
+package.
 
-:::{table} The dependency tiers around pipekit-cycle.
-:label: tbl-r10-tiers
-
-| Tier | Packages | May import | Role |
-|---|---|---|---|
-| Entry points | scripts, notebooks | everything below | build and run cycles |
-| Algorithms | filterax, vardax, plumax adapters | their own numerics; nothing from pipekit-cycle is required | forward models, observation operators, analysis steps |
-| Cycles | pipekit-cycle | pipekit | runs over time and iterations |
-| Framework | pipekit; pipekit-jax beside it | pipekit-jax: pipekit, JAX | operators, state; JAX execution |
-:::
+Neighbours follow [the stack rules](16_geo_data_stack.md#r16-ownership).
+Two matter here: algorithm libraries (filterax, vardax, plumax) satisfy the
+protocols by structural typing without importing pipekit-cycle, and scripts
+own the carrier, the initial state, the observations and every file a run
+writes ([Report 13](13_state_catalog.md#r13-ws-d)).
 
 :::{warning} Differs from the plan
 The scoping report listed three extras: `array`, `jax` and `catalog` (the
@@ -154,7 +131,8 @@ profile in geocatalog that scripts, not cycles, write to.
 | *Adjoint specs* | *`AdjointSpec`, `DirectAdjoint`, `RecursiveCheckpointAdjoint`, `TruncatedAdjoint`, `ImplicitAdjoint`, `BacksolveAdjoint`: frozen dataclasses with no behaviour here, interpreted by pipekit-jax* | *`adjoints`* |
 :::
 
-The eleven further protocols are the shared vocabulary for the algorithm
+The eleven further protocols (the italic rows of [](#tbl-r10-surface)) are
+the shared vocabulary for the algorithm
 libraries: a tangent-linear model and its adjoint (M′, M\*), a low-rank error
 subspace B ≈ LLᵀ, a reduced-order model with `encode`, `decode` and `step`,
 covariance localisers, ensemble inflators, adaptive step schedulers, and
@@ -176,7 +154,7 @@ advection with Courant number 0.4,
 $M = 0.6 I + 0.4 S$ with $S$ the one-cell downstream shift; $Q = 0.01 I$ the
 model-error covariance; $H \in \{0, 1\}^{p \times N}$ the selection of every
 fourth cell; and $R = 0.1 I$ the observation-error covariance. The truth and
-the observations are
+the observations follow {eq}`r10-eq-model`:
 
 $$
 \begin{aligned}
@@ -348,7 +326,7 @@ The scoping report described the ensemble carrier as "a stacked ensemble
 `n_members`, and step each member separately; one carry state is threaded
 through all members in turn. Vectorising over members is the user's
 choice (a batched or vmapped step). Neither ensemble cycle keeps a history,
-which Report 13's D1 adds.
+which [Report 13](13_state_catalog.md#r13-ws-d)'s D1 adds.
 :::
 
 (r10-stage-4)=
@@ -399,7 +377,7 @@ transmittances by iterating until the update is negligible.
 $f_b(\alpha) = \exp(-k_b \alpha)$ in bands $b = 1, \ldots, 5$ with
 absorption coefficients $k_b$, for a column enhancement $\alpha$. With
 measured $y_b$ and Jacobian $J_b = -k_b \exp(-k_b \alpha)$, Gauss–Newton
-iterates
+iterates {eq}`r10-eq-gn`,
 
 $$
 \alpha_{j+1} = \alpha_j + \frac{J^\top \left( y - f(\alpha_j) \right)}{J^\top J} ,
@@ -484,6 +462,8 @@ cycle. The `Sequential` case is workstream A.
 (r10-names)=
 ## The scoping report's names, checked
 
+[](#tbl-r10-names) checks the stack names the scoping report's examples use.
+
 :::{table} The stack names the scoping report's examples use, at the pinned revisions.
 :label: tbl-r10-names
 
@@ -503,17 +483,17 @@ cycle. The `Sequential` case is workstream A.
 (r10-audit)=
 ## Current-state audit
 
-Two of the scoping report's pieces need action; the rest ship and work. The
-audit read `references/pipekit` at `ef3c17f` on 13 October 2026.
+Two of the scoping report's pieces need action; the rest ship and work
+([](#tbl-r10-audit)), and [](#fig-r10-readiness) counts the page's calls by
+marker. The audit read `references/pipekit` at `ef3c17f` on 13 October 2026.
 
 :::{figure} ../images/reports/r10_readiness.svg
 :label: fig-r10-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 27 calls, 20 run today, 2 are proposed by this report's workstreams and 5 are code the reader writes.
 
-What the page's sketches call, read from their markers: one square per stack
-call. Of 27, 20 run today, 2 are proposed by this report's workstreams and 5
-are code the reader writes. A row without squares has no marked call; labels
-on the proposed squares name the workstream item.
+What this page's sketches call: of 27 stack calls, 20 run today, 2 are
+proposed by this report's workstreams and 5 are code the reader writes
+([how to read it](../overview.md#sec-conventions)).
 :::
 
 :::{table} pipekit-cycle 0.0.2, piece by piece.
@@ -522,7 +502,7 @@ on the proposed squares name the workstream item.
 | Symbols | Defined in | Used by | Verdict |
 |---|---|---|---|
 | `Cycle(step_op, n_steps, save_history=False, history_stride=1)` | `cycle.py:71` | `SimulationDataset` (pipekit-train), `Sequential` | **Healthy.** Returns `(carrier, state)`; history on `.history` |
-| `EnsembleCycle(step_op, n_steps, n_members)` | `cycle.py:139` | | **Healthy.** List carrier, shared state; no history (Report 13 D1) |
+| `EnsembleCycle(step_op, n_steps, n_members)` | `cycle.py:139` | | **Healthy.** List carrier, shared state; no history ([Report 13 D1](13_state_catalog.md#r13-ws-d)) |
 | `WindowedCycle(step_op, window, stride=1)` | `cycle.py:202` | | **Healthy.** Input is a list of carriers; returns the window-final carriers |
 | `Recurrence(step_op, condition_op, max_iters=1000)` | `cycle.py:265` | | **Healthy.** Records `iters`, `converged` |
 | `step_op` coercion, `_coerce_step` | `cycle.py:50` | every cycle above | **Split ownership.** Accepts a `StatefulOperator` or a `ForwardModel`; rejects a stateful `Sequential` that pipekit core threads state through |
@@ -561,7 +541,7 @@ Smaller findings:
 ## Workstream A · Stateful pipelines as cycle steps
 
 **Decision.** A `Sequential` that holds at least one stateful step is a
-valid `step_op` for every cycle.
+valid `step_op` for every cycle ([](#tbl-r10-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r10-move-a
@@ -597,7 +577,7 @@ x3, s = pc.Cycle(step, n_steps=3)(x, pc.DAState())            # proposed (A)
 ## Workstream B · Observation inputs on the cycle's clock
 
 **Decision.** The DA cycles take their observation index, and optionally R,
-from the cycle's own clock in the state.
+from the cycle's own clock in the state ([](#tbl-r10-move-b)).
 
 :::{table} Workstream B's moves.
 :label: tbl-r10-move-b
@@ -644,7 +624,7 @@ da5 = pc.DACycle(KFForward(), pc.LinearObs(H), KalmanAnalysis(),
 ## Testing gates
 
 Each workstream merges only when its gates pass; the existing gates are
-checks the code passes today and must keep passing.
+checks the code passes today and must keep passing ([](#tbl-r10-gates)).
 
 :::{table} Gates for the proposals and for what ships.
 :label: tbl-r10-gates
@@ -664,7 +644,8 @@ checks the code passes today and must keep passing.
 ## Sequencing and risks
 
 The two workstreams are independent and small, so they ship together with
-Report 13's ensemble histories; the documentation follows.
+[Report 13](13_state_catalog.md#r13-ws-d)'s ensemble histories; the
+documentation follows ([](#fig-r10-roadmap)).
 
 :::{figure} ../images/reports/r10_roadmap.svg
 :label: fig-r10-roadmap
@@ -695,7 +676,8 @@ Small fixes first, then the documentation and the latent design.
 ## Open questions
 
 1. **Should a plain `Cycle` advance the clock?** `DACycle` advances
-   `DAState.t` by `dt`; `Cycle` leaves it at 0, so Report 13 computes valid
+   `DAState.t` by `dt`; `Cycle` leaves it at 0, so
+   [Report 13](13_state_catalog.md#r13-ws-d) computes valid
    times from the history index. Advancing `t` when the step is a
    `ForwardModel` and the state has `t` would make the two agree.
 2. **Should `AnalysisStep` receive the state?** Passing `state=` as a
@@ -719,6 +701,8 @@ Small fixes first, then the documentation and the latent design.
 (r10-todos)=
 ## Upcoming work
 
+[](#tbl-r10-todos) lists the follow-ups.
+
 :::{table} Follow-ups from checking the scoping report against the code.
 :label: tbl-r10-todos
 
@@ -731,16 +715,6 @@ Small fixes first, then the documentation and the latent design.
 
 (r10-references)=
 ## References
-
-<!-- TODO(ref): placeholders. When a report page lands, point its links in this
-file at the page and delete its entry below. -->
-
-:::{note} Companion reports
-:class: simple
-Reports [2](02_pipekit_surface.md), [9](09_use_cases.md),
-[11](11_pipekit_train.md), [12](12_pipekit_experiment.md) and
-[13](13_state_catalog.md) are published.
-:::
 
 ### Sources
 

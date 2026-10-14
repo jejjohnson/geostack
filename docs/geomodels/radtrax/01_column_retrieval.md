@@ -51,9 +51,9 @@ transfer, a HITRAN table pipeline, a matched filter), which the
 | **Status** | Design. radtrax does not exist yet; this page fixes the physics its first module implements, and names what the stack and plumax already do |
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone writing or reviewing a methane column retrieval, and anyone deciding what radtrax owns |
-| **Companions** | [Report 16](../../reports/16_geo_data_stack.md) (one methane scene through geotoolz, with the matched filter and the IME); [Report 5](../../reports/05_pipekit_jax.md) (pipelines under JAX, for a differentiable radtrax); [Report 17](../../reports/17_cycle.md) (the five-band sensor, a simpler Beer–Lambert model) |
+| **Companions** | [radtrax · 2](02_mbmp.md) (the multi-pass family and the MBSP estimator); [radtrax · 3](03_design.md) (radtrax's design); [plumax · 1](../plumax/01_emission_rate.md) (the emission rate from the column); the [package boundaries](../package_boundaries.md) page (where the code moves); [Report 16](../../reports/16_geo_data_stack.md#r16-running) (one methane scene through geotoolz, with the matched filter and the IME); [Report 9](../../reports/09_use_cases.md#r9-running) (the use cases built on the same scene); [Report 5](../../reports/05_pipekit_jax.md) (pipelines under JAX, for a differentiable radtrax); [Report 17](../../reports/17_cycle.md) (the five-band sensor, a simpler Beer–Lambert model) |
 | **Code checked against** | georeader-spaceml 2.4.1 (the Sentinel-2 L1C reader, its SRF table COPE-GSEG-EOPG-TN-15-0007 v4.0, the EMIT reader and the Gaussian SRF helper); geotoolz 0.10.2 at `088475e` (`plume`, `spectral`, `matched_filter`); xrtoolz 0.0.5 at `308c7f2` (`atm.gas.ch4`). Read on 14 October 2026 |
-| **Running example** | every number and figure is from one run of `notebooks/geomodels/radtrax_01_column_retrieval.py`, which builds the scenes from fixed seeds and asserts each number the page shows |
+| **Running example** | every number and figure is from one run of `notebooks/geomodels/radtrax_01_column_retrieval.py`, which builds the scenes from fixed seeds and asserts each number the page shows; code comments carry the [status markers](../../overview_examples.md#ex-markers) |
 | **Sources** | the source note, "The Core Forward Model Equation" and its four companion sections [@geostack_radtrax_note]; Varon et al. on Sentinel-2 [@varon2021]; Thompson et al. on the matched filter [@thompson2015] |
 :::
 
@@ -65,20 +65,18 @@ scaled so that the band-averaged cross-sections are σ̄₁₂ = 0.40 m²/kg and
 Sentinel-2 response functions are the real ones. Every bias below has the
 sign and the cause it would have on a real spectrum; its size is the size it
 has on this one. Rerunning the notebook on HITRAN lines is the first item of
-[upcoming work](#rx1-todos).
+[](#tbl-rx1-todos).
 :::
 
 :::{important} What changed from the source note
-The source note's **forward model and its inversion stand**: Beer–Lambert
-attenuation along a two-way path, a baseline from scene statistics, and a
-table from a radiative transfer model. Five details **do not**. Band 11 is
-**not blind to methane**: its response reaches 1668 nm, across the 1.66 μm
-band. The **effective cross-section** is the weak-absorption limit of the
-band transmittance, so the table is needed for saturation, not for "mild"
-line-shape effects. **Sentinel-2 L1C** carries a radiometric offset since
-2022. **Landsat L1** is GeoTIFF with scaling coefficients, not NetCDF or
-HDF5. And the **hyperspectral** products that map methane operationally use
-a matched filter, not a continuum fit. A **Differs** box marks each place.
+The source note's **forward model and its inversion stand**. Its details do
+not, and each [Differs box](../../overview.md#sec-conventions) argues one:
+
+- **Units and nuisances**: $\sigma$ per mass, $\tau_{\text{bg}}$ a nuisance ([variables](#rx1-variables)).
+- **Sentinel-2 L1C offset, Landsat L1 format** ([sources](#rx1-provenance)).
+- **The effective cross-section** is the weak-absorption limit ([stage 2](#rx1-stage-2)).
+- **Band 11 is not blind to methane** ([stage 3](#rx1-stage-3)).
+- **Hyperspectral products use a matched filter** ([stage 5](#rx1-stage-5)).
 :::
 
 (rx1-model)=
@@ -118,6 +116,9 @@ for strong lines. The running example measures how wrong in [stage 2](#rx1-stage
 (rx1-variables)=
 ## The variables
 
+[](#tbl-rx1-vars) gives each term of {eq}`rx1-eq-exact`, its units and the
+piece of the stack that supplies it.
+
 :::{table} Every term of the model, where it comes from, and the stack piece that supplies it today.
 :label: tbl-rx1-vars
 
@@ -143,6 +144,8 @@ absorbs, like $\rho$, and never estimated on its own.
 
 (rx1-provenance)=
 ## Where each term comes from
+
+Each term has one source in a satellite product ([](#fig-rx1-provenance)).
 
 :::{figure} ../../images/radtrax_01_column_retrieval/provenance.svg
 :label: fig-rx1-provenance
@@ -200,7 +203,7 @@ srf = read_srf("S2A")              # B11, B12 at 1 nm, offline            today
 
 :::{warning} Differs from the plan
 Three corrections to the note's sources. **Sentinel-2 L1C** is
-$(\text{DN} + \text{offset}) / 10{,}000$ for products from processing baseline
+$(\text{DN} + \text{offset}) / 10{,}000$, {eq}`rx1-eq-dn`, for products from processing baseline
 04.00 onwards, not $\text{DN} / 10{,}000$; georeader reads the offset from the
 product metadata (`radio_add_offsets`). Its angles are 5 km grids in
 `MTD_TL.xml`, interpolated to the pixels. **Landsat L1** is GeoTIFF, with
@@ -219,7 +222,7 @@ a smooth band 11 reflectance between 0.20 and 0.40 and two cover types, with
 band 12 at 0.84 and 0.80 of band 11 and a 1 % per-pixel scatter. A Gaussian
 plume, elongated and rotated by 30°, peaks at $\Delta\Omega = 0.3$ kg/m².
 The background is 1.9 ppm, a column of 0.0109 kg/m², and the sun and view
-zenith angles are 35° and 5°, so $m = 2.225$. Each band adds noise with a
+zenith angles are 35° and 5°, so {eq}`rx1-eq-amf` gives $m = 2.225$. Each band adds noise with a
 standard deviation of 0.0015 in reflectance. [Stage 5](#rx1-stage-5) adds
 an EMIT-like cube.
 
@@ -272,7 +275,8 @@ linear model says.
 The curve of growth for band 12 and band 11, on the synthetic spectrum.
 :::
 
-The exact optical depth falls short of the linear one by 3.8 % at
+The exact optical depth {eq}`rx1-eq-cog` falls short of the linear one
+([](#fig-rx1-cog)) by 3.8 % at
 0.05 kg/m², 15 % at the plume's peak (0.3 kg/m², a 23 % dip in band 12), 22 %
 at 0.5 and 36 % at 1 kg/m². Band 11 absorbs about a tenth as much, which is
 the ratio this spectrum was built with.
@@ -300,7 +304,8 @@ linearly, and integrate the plume's mass.
 Band 11 sees the same surface. (a) The source note fits
 $R_{12} \approx k R_{11} + b$ on pixels outside a suspected-plume mask and
 uses $k R_{11} + b$ as the baseline. (b) Varon et al.'s multi-band
-single-pass (MBSP) retrieval [@varon2021] fits $R_{11} \approx c R_{12}$
+single-pass (MBSP) retrieval [@varon2021], whose estimator
+[radtrax · 2](02_mbmp.md#rx2-methods) derives, fits $R_{11} \approx c R_{12}$
 through the origin over the whole scene and uses the fractional change
 
 $$
@@ -310,7 +315,7 @@ $$ (rx1-eq-mbsp)
 
 to first order, which keeps band 11's own absorption. Both are scored by the
 plume's mass above the median of a ring of clean pixels around it, as the
-integrated mass enhancement method does.
+[integrated mass enhancement](../plumax/01_emission_rate.md#er1-ime) method does.
 
 ```{code-block} python
 :caption: Two proxy baselines on the Sentinel-2 scene, from a real run.
@@ -345,9 +350,9 @@ plume darkens it too; Varon et al. account for this, and the note's linear
 inversion with $\bar\sigma_{12}$ alone does not. The note's regression, with
 an intercept and on clean pixels only, is a variant of MBSP rather than MBSP
 itself, which regresses through the origin over the whole scene and maps
-$\Delta R$ to $\Delta\Omega$ with a radiative transfer model. geotoolz ships
-the **multi-pass** ratio, against a reference scene, as `plume.SBMP`; it has
-no single-pass proxy.
+$\Delta R$ to $\Delta\Omega$ with a radiative transfer model. geotoolz has no
+single-pass proxy; its `plume.SBMP` is a multi-pass retrieval
+([radtrax · 2](02_mbmp.md#rx2-stack)).
 :::
 
 (rx1-stage-4)=
@@ -390,7 +395,8 @@ The truth, the source note's recipe and MBSP with the table.
 :::
 
 The table recovers 96 % of the mass. The remaining 4 % comes from the
-ring's median, which the surface patches pull below zero. Because $g$ is
+ring's median, which the surface patches pull below zero. Because $g$ of
+{eq}`rx1-eq-g` is
 increasing in $\Delta\Omega$ at every $m$ in the table, the inversion is a
 one-dimensional interpolation. The note's table has water vapour as a
 second index. That matters where water and methane lines overlap in band
@@ -442,10 +448,11 @@ The truth, the note's continuum fit and the matched filter with the plume
 left out of its background.
 :::
 
-The continuum fit recovers 95 % of the mass but reads carbonate as methane:
+The continuum fit recovers 95 % of the mass but reads carbonate as methane
+([](#fig-rx1-hyperspectral)):
 pixels with calcite come out 0.0069 kg/m² high, against 0.0029 kg/m² low
 over the rest, and its noise off the plume is 0.0095 kg/m². The matched
-filter learns the carbonate from the scene covariance and leaves no bias
+filter {eq}`rx1-eq-mf` learns the carbonate from the scene covariance and leaves no bias
 there (0.0002 kg/m²), with a noise of 0.0016 kg/m². Its one trap is the
 plume itself: with the plume inside the background statistics, the filter
 recovers only 72 % of the mass; with the suspected plume masked out of the
@@ -458,7 +465,8 @@ The note presents continuum fitting as the hyperspectral strategy. EMIT's
 methane enhancement product and the airborne and spaceborne imaging
 spectrometers it follows use a matched filter, after Thompson et al.
 [@thompson2015]; geotoolz ships one with shrinkage covariances and
-cluster-wise backgrounds. A continuum fit stays useful as a check and where
+cluster-wise backgrounds, which
+[Report 16](../../reports/16_geo_data_stack.md#r16-stage-2) runs chip by chip. A continuum fit stays useful as a check and where
 too few background pixels exist for a covariance. Whether the note's windows
 are free of methane and water lines on a real line list is
 [open](#rx1-open-questions); on this spectrum they are, by construction.
@@ -467,20 +475,24 @@ are free of methane and water lines on a real line list is
 (rx1-radtrax)=
 ## What radtrax would own
 
-:::{table} Each step of the retrieval: what the stack and plumax do today, and what radtrax would hold.
+Where each piece is today is in the
+[package boundaries inventory](../package_boundaries.md#pb-today);
+[](#tbl-rx1-owners) keeps what radtrax would hold.
+
+:::{table} Each step of the retrieval and what radtrax would hold.
 :label: tbl-rx1-owners
 
-| Step | In the stack today | In plumax today | radtrax (proposed) |
-|---|---|---|---|
-| read reflectance, offsets, angles | georeader: Sentinel-2 L1C, EMIT, PRISMA, EnMAP readers | | |
-| response functions | georeader: `read_srf` (Sentinel-2 table), `srf` (Gaussian), `transform_to_srf` | `radtran.srf.SpectralResponseFunction` | one band-integration operator, reading georeader's tables through `[geo]` |
-| cross-sections from a line list | | `hapi_lut`: HITRAN through HAPI, per gas, cached | moved from plumax |
-| band transmittance $T_b(m, \Omega)$ | | `radtran.forward`: exact, Maclaurin and Taylor Beer–Lambert | moved, with the background column of {eq}`rx1-eq-exact` |
-| baselines | geotoolz: `plume.SBMP` (multi-pass), `spectral.ContinuumRemoval` | | `SBMP` moved from geotoolz, and the single-pass MBSP observable {eq}`rx1-eq-mbsp` |
-| table and inversion | | `radtran.nb_lut`: a normalised-brightness table | `Table` over $(m, \Delta\Omega, \text{H}_2\text{O})$, monotone inversion |
-| matched filter | geotoolz: `MatchedFilter`, `ColumnEnhancement` | `matched_filter`, `radtran.matched_filter` | one core, merged from the three |
-| variational retrieval | | `assimilation`: 3D-Var on the radiance operator | moved, or split with vardax ([open](../package_boundaries.md#pb-open-questions)) |
-| units, mass and rate | xrtoolz: `column_mass_to_delta_vmr`; geotoolz: `ColumnToMass`, `IMEEstimate` | | the plume operators go to plumax instead |
+| Step | radtrax (proposed) |
+|---|---|
+| read reflectance, offsets, angles | stays in georeader |
+| response functions | one band-integration operator, reading georeader's tables through `[geo]` |
+| cross-sections from a line list | moved from plumax `hapi_lut` |
+| band transmittance $T_b(m, \Omega)$ | moved from plumax `radtran.forward`, with the background column of {eq}`rx1-eq-exact` |
+| baselines | `SBMP` moved from geotoolz, and the single-pass MBSP observable {eq}`rx1-eq-mbsp` |
+| table and inversion | `Table` over $(m, \Delta\Omega, \text{H}_2\text{O})$, monotone inversion, in place of plumax's `radtran.nb_lut` |
+| matched filter | one core, merged from the three |
+| variational retrieval | moved from plumax `assimilation`, or split with vardax ([open](../package_boundaries.md#pb-open-questions)) |
+| units, mass and rate | stay in xrtoolz; the plume operators go to plumax |
 :::
 
 Written in JAX, the band transmittance is differentiable, so the table
@@ -516,7 +528,6 @@ through it ([Report 5](../../reports/05_pipekit_jax.md)).
 | Follow-up | Where | Why |
 |---|---|---|
 | Rerun the example on HITRAN lines | this page's notebook, with a cached line list | the spectrum here is synthetic |
-| Check `plume.SBMP`'s name and citation | geotoolz `plume/_src/operators.py:118` | it computes a two-band ratio against a reference scene, which Varon et al. [@varon2021] call multi-band multi-pass; its docstring's reference should be checked against that paper |
 | Add the single-pass MBSP observable | radtrax (or geotoolz `plume` until radtrax exists) | stage 3: the stack has no single-pass proxy |
 | Ship a Landsat L1 reader path with the MTL scaling and angle bands | georeader | the note's Landsat route does not exist in the stack |
 :::

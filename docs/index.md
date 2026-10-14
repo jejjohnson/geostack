@@ -7,7 +7,9 @@ Welcome to the documentation for GeoStack.
 A vertically integrated, JAX-native research software stack for geophysical
 modeling, inference and data assimilation. Start with the
 [GeoStack overview](overview.md): the problem, the three organising axes, the
-package map and an end-to-end walkthrough.
+package map and an end-to-end walkthrough. Its
+[reading list](overview.md#sec-reading) links every report, the GeoModels
+pages and the benchmarks gallery.
 
 geostack has no package of its own: scripts and notebooks here compose the
 libraries it builds on,

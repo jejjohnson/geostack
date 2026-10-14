@@ -46,7 +46,7 @@ implementations and two air-mass factors become one each.**
 | **Status** | Proposal. Nothing has moved; radtrax does not exist yet |
 | **Reading time** | about 15 minutes |
 | **Audience** | anyone deciding where a plume, radiative-transfer or retrieval function goes, and anyone reviewing a dependency change in the GeoModels packages |
-| **Companions** | [radtrax · 1](radtrax/01_column_retrieval.md) (the retrieval radtrax implements); [Report 16](../reports/16_geo_data_stack.md) (the same kind of realignment for pipekit, xrtoolz and geotoolz); the [overview](../overview.md) (the three stacks) |
+| **Companions** | [radtrax · 1](radtrax/01_column_retrieval.md) (the retrieval radtrax implements); [radtrax · 2](radtrax/02_mbmp.md) (what `plume.SBMP` computes); [radtrax · 3](radtrax/03_design.md) (radtrax's design); [plumax · 1](plumax/01_emission_rate.md) (the plume operators that move to plumax); [Report 16](../reports/16_geo_data_stack.md) (the same kind of realignment for pipekit, xrtoolz and geotoolz, and one methane scene through these operators); [Report 9](../reports/09_use_cases.md#r9-running) (the use cases that call them); the [overview](../overview.md) (the three stacks) |
 | **Code checked against** | geotoolz 0.10.2 at `088475e`, xrtoolz 0.0.5 at `308c7f2`, pipekit 0.0.2 at `ef3c17f` and georeader-spaceml 2.4.1, from `references/`; plumax 0.1.2 at `28f257e`, gaussx 0.6.5 at `7fa1a38`, finitevolX 0.0.47 at `32ffb45` and spectraldiffx 0.1.1 at `b5f3dc4`, from clones (they are not submodules yet). Read on 14 October 2026 |
 | **Running example** | every number and figure is from one run of `notebooks/geomodels/package_boundaries.py`, which reads source files and `pyproject.toml` metadata only, imports and installs nothing, and asserts each number the page shows |
 :::
@@ -54,12 +54,15 @@ implementations and two air-mass factors become one each.**
 (pb-today)=
 ## Where the code is today
 
+[](#tbl-pb-today) is the inventory the radtrax and plumax pages point to:
+each module, its size and what it holds.
+
 :::{table} Plume, radiative-transfer and retrieval code in the stack, by package.
 :label: tbl-pb-today
 
 | Package | Module | Lines | What it holds |
 |---|---|---|---|
-| geotoolz | `plume` | 1,724 | `SBMP` (a two-band ratio against a reference scene), `PlumeMask`, `PlumeContours`, `PlumeFootprint`, `PlumeShapeFilter`, `PlumeColumnStats`, `PlumeQNDFeatures`, `WindAdvectionCone`, `IMEEstimate`, `CrossSectionalFlux`, `ColumnToMass`, on GeoTensors |
+| geotoolz | `plume` | 1,724 | `SBMP` (an MBMP without scale factors, [radtrax · 2](radtrax/02_mbmp.md#rx2-stack)), `PlumeMask`, `PlumeContours`, `PlumeFootprint`, `PlumeShapeFilter`, `PlumeColumnStats`, `PlumeQNDFeatures`, `WindAdvectionCone`, `IMEEstimate`, `CrossSectionalFlux`, `ColumnToMass`, on GeoTensors |
 | geotoolz | `matched_filter` | 2,622 | NumPy matched filter: backgrounds (empirical, shrunk, low-rank, adaptive window, cluster, streaming), targets from an observation model, `ColumnEnhancement` |
 | plumax | `radtran` | 2,392 | band-integrated Beer–Lambert forward models (exact, Maclaurin, Taylor), `SpectralResponseFunction`, a normalised-brightness LUT, targets, a JAX matched filter, a gaussx Woodbury solve |
 | plumax | `hapi_lut` | 1,001 | HITRAN cross-section tables through HAPI (behind `[hapi]`), Beer–Lambert transmittance, the air-mass factor |
@@ -97,7 +100,7 @@ into_C = {s: edges[s] & C for s in SUBS if edges[s] & C}
 # → coupled: {radtran}, and the package root: {radtran}
 ```
 
-The group imports only itself: `matched_filter` imports `assimilation`
+The group imports only itself ([](#fig-pb-plumax)): `matched_filter` imports `assimilation`
 (for the radiance observation model its targets use), which imports
 `radtran`. Nothing in it touches the dispersion models. Two things outside
 it import `radtran`: `coupled`, which turns a simulated plume into radiance,
@@ -123,7 +126,7 @@ it, and it can live elsewhere if what it imports from geotoolz is public.
 Only the package root imports either module, for its re-exports;
 `compositing`, `measure` and `segment` mention them in docstrings only. So
 neither has a caller to break. Both depend entirely on geotoolz's private
-helpers, though: nodata handling (`invalid_values`, `wrap_filled`), carrier
+helpers, though ([](#tbl-pb-private)): nodata handling (`invalid_values`, `wrap_filled`), carrier
 wrapping (`wrap_like`), band names (`resolve_band`), geometry checks
 (`require_projected_crs`), labelling and thresholds. Code that moves out
 must not import `geotoolz._src`, so those helpers become public first, as
@@ -142,14 +145,16 @@ must not import `geotoolz._src`, so those helpers become public first, as
 | air-mass factor | plumax `hapi_lut/beers.py` (`air_mass_factor`); plumax `radtran/config.py` (`ObservationGeometry.air_mass_factor`) | one function in radtrax |
 :::
 
-The two plumax matched filters share their formula:
+Of the duplicates in [](#tbl-pb-dupes), the two plumax matched filters
+share their formula:
 `radtran.matched_filter` inverts a dense covariance, and
 `matched_filter.core` dispatches on gaussx operators and is the one the
 3D-Var derivation links to. geotoolz's NumPy filter and plumax's newer one
 both carry empirical, shrunk, low-rank, cluster and streaming backgrounds. One
 core keeps the estimators and the operator dispatch; the
 [radtrax page](radtrax/01_column_retrieval.md#rx1-stage-5) runs geotoolz's
-filter today.
+filter today, and [Report 16](../reports/16_geo_data_stack.md#r16-stage-2)
+runs it chip by chip.
 
 (pb-moves)=
 ## The moves
@@ -161,12 +166,12 @@ filter today.
 |---|---|---|---|
 | plumax `radtran`, `hapi_lut`, `assimilation`, `matched_filter` | radtrax | radiative transfer, cross-section tables, the 3D-Var retrieval, the matched filter | plumax → radtrax |
 | geotoolz `matched_filter` | radtrax `[geo]` | GeoTensor carriers and the background estimators, merged into one core | radtrax → geotoolz, georeader, as an extra |
-| geotoolz `plume.SBMP` | radtrax `[geo]` | the multi-pass ratio, beside the single-pass MBSP of [radtrax · 1](radtrax/01_column_retrieval.md#rx1-stage-3) | |
+| geotoolz `plume.SBMP` | radtrax `[geo]` | an MBMP without scale factors ([radtrax · 2](radtrax/02_mbmp.md#rx2-stack)), beside the single-pass MBSP of [radtrax · 1](radtrax/01_column_retrieval.md#rx1-stage-3) | |
 | geotoolz `plume` (the other ten operators) | plumax `[geo]` | masks, contours, footprints, shape filters, column statistics, wind cones, the integrated mass enhancement, cross-sectional flux, unit conversion | plumax → geotoolz, as an extra |
 | geotoolz `_src` helpers used by the above | geotoolz public API | nodata, wrapping, bands, geometry, labels, thresholds | none |
 :::
 
-What stays: georeader's readers and SRF tables (sensor knowledge),
+What stays, outside [](#tbl-pb-moves): georeader's readers and SRF tables (sensor knowledge),
 geotoolz's generic spectral operators (`spectral.BandRatio`,
 `spectral.ContinuumRemoval`), segmentation and measurement, xrtoolz's
 column and unit conversions (`atm.gas.ch4`), and geotoolz-products'
@@ -209,7 +214,7 @@ sccs(shim)                               # → [{geotoolz, plumax, radtrax}] use
 #         finitevolx, radtrax 2 · plumax 3
 ```
 
-The graph is acyclic today and after the moves. Its longest chain is
+The graph is acyclic today and after the moves ([](#fig-pb-graph)). Its longest chain is
 plumax → radtrax → geotoolz → georeader. Every edge between stacks points
 from GeoModels to Numerics (gaussx, finitevolx, spectraldiffx) or to GeoStack (pipekit, geotoolz,
 georeader), and none points back. The one way to break that is the usual
@@ -244,6 +249,8 @@ window dataset.
 
 (pb-gates)=
 ## Testing gates
+
+[](#tbl-pb-gates) states each [rule](#pb-rules) as a check.
 
 :::{table} Each rule as a check.
 :label: tbl-pb-gates
@@ -285,6 +292,8 @@ window dataset.
 
 (pb-todos)=
 ## Upcoming work
+
+[](#tbl-pb-todos) lists the follow-ups this page leaves.
 
 :::{table} Follow-ups.
 :label: tbl-pb-todos

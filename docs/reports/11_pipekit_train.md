@@ -30,10 +30,10 @@ MCMC, BlackJAX) and a windowed Zarr dataset for training on stored model
 states. It is also further from finished than pipekit-cycle. Equinox is the
 only gradient backend that runs, `CatalogDataset` does not exist, and the
 running example hits eight defects, from a trajectory path that crashes to a
-cache that serves the wrong simulator's data. **The code takes precedence
-where it has decided; where it has not, every idea from the scoping report
-stays on the table** as a proposal with a gate. An emulator of Report 10's
-transport model trains to $3.8 \times 10^{-7}$ of the true operator and
+cache that serves the wrong simulator's data. **Every unshipped idea from
+the scoping report stays on the table** as a proposal with a gate. An
+emulator of [Report 10](10_pipekit_cycle.md#r10-running)'s transport model
+trains to $3.8 \times 10^{-7}$ of the true operator and
 drops into a cycle unchanged.
 
 +++
@@ -46,7 +46,7 @@ drops into a cycle unchanged.
 | **Status** | Partly built. Originally a scoping proposal ("committed"); pipekit-train 0.0.2 is the design of record where it has decided, and the scoping report's unshipped ideas are kept as proposals |
 | **Reading time** | about 35 minutes |
 | **Audience** | anyone training an emulator, a retrieval network or a posterior estimator with the stack, or extending the backends |
-| **Companions** | [Report 10](10_pipekit_cycle.md) (the forward models and cycles an emulator replaces); [Report 13](13_state_catalog.md) (the stored states a dataset reads); [Report 9](09_use_cases.md) (use cases); [Report 12](12_pipekit_experiment.md) (pipekit-experiment) |
+| **Companions** | [Report 10](10_pipekit_cycle.md) (the forward models and cycles an emulator replaces); [Report 13](13_state_catalog.md) (the stored states a dataset reads); [Report 9](09_use_cases.md) (use cases); [Report 12](12_pipekit_experiment.md) (pipekit-experiment); [Report 17](17_cycle.md#r17-running) (the five-band sensor); [Report 16](16_geo_data_stack.md#r16-ownership) (the stack rules and the one model-operator family) |
 | **Code checked against** | `pipekit-train` 0.0.2 at `ef3c17f`, with pipekit, pipekit-cycle, pipekit-experiment and pipekit-jax from the same revision and geopatcher from geotoolz `088475e`. JAX on CPU with Equinox, Optax, Grain, Orbax, NumPyro and BlackJAX; torch, Lightning and Keras were not installed (their adapters are scaffolds that never import them). Read on 13 October 2026 |
 | **Running example** | every number below is from one run of `notebooks/reports/report11_pipekit_train.py`, which seeds every draw and asserts each number the page shows (wall times are printed, not asserted) |
 | **Design docs** | the package's `docs/design/` (vision, architecture, boundaries, 14 ADRs, API pages, examples) were read alongside the code |
@@ -56,8 +56,9 @@ drops into a cycle unchanged.
 pipekit-train's own design docs already took most of the scoping report on
 board: its vision cites "Report 11" as a source, and ADRs D1 to D14 record
 what was decided. Where the code or an ADR decided differently (steps rather
-than epochs, the artifact's field names, the extras), a **Differs** box says
-so and the code stands. Where the scoping report asked for something that
+than epochs, the artifact's field names, the extras), the code stands, as
+everywhere in the series ([conventions](../overview.md#sec-conventions)).
+Where the scoping report asked for something that
 has not shipped (`CatalogDataset`, the Lightning and Keras backends, the
 parquet and tfrecord caches, a model that round-trips through the registry),
 it becomes a workstream below rather than an open question, because the
@@ -104,7 +105,8 @@ data and its weights.
 ## Ownership rules
 
 pipekit-train owns the glue between data, a model and a training tool; the
-tools own the training math and the model libraries own the models.
+tools own the training math and the model libraries own the models
+([](#fig-r11-ownership)).
 
 :::{figure} ../images/reports/r11_ownership.svg
 :label: fig-r11-ownership
@@ -114,33 +116,15 @@ pipekit-train 0.0.2: its layers, its backends and its two handoffs. Dashed
 boxes and chips are planned or scaffold only.
 :::
 
-1. **pipekit-train** owns datasets, losses, the loop, callbacks, sweeps,
-   writers and the adapters to training tools. Its core imports only
-   `pipekit`: JAX, torch and Keras arrive through extras, and
-   `pipekit_experiment` is imported only by `LogToExperiment` and the
-   artifact.
-2. **Training tools** (Equinox with Optax, Grain and Orbax; NumPyro;
-   BlackJAX; later Lightning and Keras) own the training math. pipekit-train
-   never reimplements an optimizer step or a sampler.
-3. **pipekit-cycle** owns the forward models a `SimulationDataset` runs and
-   the cycles a trained emulator drops into. It never imports pipekit-train.
-4. **pipekit-experiment** owns the registry and the `TrainingArtifact` type.
-   pipekit-train fills the artifact and stores into the registry, but never
-   defines its own.
-5. **Model libraries** (pyrox, gaussflowx, user code) own model
-   architectures and density estimators. pipekit-train has no
-   model-definition DSL (its `boundaries.md`).
+**pipekit-train** owns datasets, losses, the loop, callbacks, sweeps,
+writers and the adapters to training tools. Its core imports only `pipekit`:
+JAX, torch and Keras arrive through extras, and `pipekit_experiment` is
+imported only by `LogToExperiment` and the artifact. It never reimplements
+an optimizer step or a sampler, never defines its own artifact type, and has
+no model-definition DSL (its `boundaries.md`).
 
-:::{table} The dependency tiers around pipekit-train.
-:label: tbl-r11-tiers
-
-| Tier | Packages | May import | Role |
-|---|---|---|---|
-| Entry points | scripts, notebooks | everything below | build datasets and loops, run them |
-| Training layer | pipekit-train | pipekit; its extras: equinox, optax, grain, orbax, numpyro, blackjax, zarr, fsspec, xarray; pipekit-cycle, pipekit-experiment | datasets, loop, adapters |
-| Neighbours | pipekit-cycle, pipekit-experiment, pipekit-jax | pipekit | forward models; registry and artifacts; JAX operators |
-| Framework | pipekit | | operators and state |
-:::
+Neighbours (the training tools, pipekit-cycle, pipekit-experiment and the
+model libraries) follow [the stack rules](16_geo_data_stack.md#r16-ownership).
 
 :::{warning} Differs from the plan
 The scoping report's extras were `lightning`, `equinox`, `keras`, `array`,
@@ -155,6 +139,8 @@ Equinox extra also pulls Grain, Orbax and jaxtyping.
 
 (r11-surface)=
 ## What ships
+
+[](#tbl-r11-surface) lists the public surface by layer.
 
 :::{table} pipekit-train 0.0.2's public surface. Rows in italics go beyond the scoping report.
 :label: tbl-r11-surface
@@ -186,27 +172,28 @@ six-step cycle, stage 2 is step 3 of a forecast (stage 3 runs that emulator
 forward), and stages 6 and 7 are steps 5 and 2 of a retrieval; [Report 17](17_cycle.md#r17-running)
 runs all six steps on the same retrieval.
 
-**The transport model.** A methane enhancement $x \in \mathbb{R}^N$ on a
-periodic transect of $N = 40$ cells moves one cell-fraction downstream per
-hour under first-order upwind advection, $x_{t+1} = M x_t$ with
-$M = 0.6 I + 0.4 S$ and $S$ the one-cell shift. An **emulator** is a learned
-$\hat{M}$; the target is $\hat{M} = M$.
+**The transport model** is [Report 10](10_pipekit_cycle.md#r10-running)'s
+upwind advection on a periodic 40-cell transect, $x_{t+1} = M x_t$ with
+$M = 0.6 I + 0.4 S$. An **emulator** is a learned $\hat{M}$; the target is
+$\hat{M} = M$.
 
-**The retrieval.** A sensor measures transmittances
-$y_b = \exp(-k_b \alpha) + \varepsilon_b$ in five bands, with
-$k = (0.002, 0.004, 0.006, 0.008, 0.010)$, a column enhancement
-$\alpha \in [0, 300]$ and noise $\varepsilon_b \sim \mathcal{N}(0, 10^{-6})$
-(a standard deviation of $10^{-3}$). An **amortized** retrieval learns
-$p(\alpha \mid y)$ once, for every $y$; a per-scene retrieval (Report 10's
-Gauss–Newton, or MCMC) solves for one $y$ at a time.
+**The retrieval** uses the five-band sensor of
+[Report 17](17_cycle.md#r17-running) unchanged ($y_b = e^{-k_b \alpha} +
+\varepsilon_b$, $k = (0.002, \dots, 0.010)$, $\sigma = 10^{-3}$,
+$\alpha \in [0, 300]$). An **amortized** retrieval learns
+$p(\alpha \mid y)$ once, for every $y$; a per-scene retrieval
+([Report 10](10_pipekit_cycle.md#r10-stage-5)'s Gauss–Newton, or MCMC)
+solves for one $y$ at a time.
 
 **The archive.** Fifty hourly states of the transect, written to a Zarr
-store, stand for the stored model states of [Report 13](13_state_catalog.md).
+store, stand for the stored model states of
+[Report 13](13_state_catalog.md#r13-running).
 
 (r11-stage-1)=
 ### Stage 1 · Training data from a forward model (pipekit-cycle → pipekit-train)
 
-**TL;DR.** Turn Report 10's transport model into 2,000 input–output pairs
+**TL;DR.** Turn [Report 10](10_pipekit_cycle.md#r10-running)'s transport
+model into 2,000 input–output pairs
 with fixed seeds and train, validation and test splits.
 
 **Problem.** A `SimulationDataset` draws $x^{(i)}$ from a prior $\pi$ with
@@ -257,7 +244,7 @@ Grain can shuffle it without materialising it.
 see how the choice of prior decides what it learns.
 
 **Problem.** With pairs $(x^{(i)}, M x^{(i)})$ and a linear model
-$\hat{M} = W$, the mean-squared error
+$\hat{M} = W$, the mean-squared error {eq}`r11-eq-mse`
 
 $$
 L(W) = \frac{1}{n N} \sum_{i=1}^{n} \left\lVert W x^{(i)} - M x^{(i)} \right\rVert^2
@@ -296,7 +283,7 @@ trained, artifact = loop.run()            # (EquinoxModelOp, TrainingArtifact)
 | smooth bumps | step 2,200 (88 epochs) | $3.4 \times 10^{-5}$ | $0.343$ | $1.4 \times 10^{-5}$ | 45.4 s |
 :::
 
-Both runs fit their data. The smooth prior's inputs nearly lie in a
+Both runs fit their data ([](#tbl-r11-priors)). The smooth prior's inputs nearly lie in a
 low-dimensional subspace, so $W$ is fixed only on that subspace and is
 arbitrary off it: a low training loss is not a correct emulator. This is a
 property of the data, not of the code, and it is the reason a
@@ -336,8 +323,8 @@ x6, _ = pc.Cycle(emulator, n_steps=6)(x0, None)                    # today
 ```
 
 The handoff the scoping report promised works as written: `NeuralForward`
-wraps the trained `EquinoxModelOp` directly, and Report 10's cycles accept
-it. The smooth-prior emulator is accurate on smooth states and wrong by
+wraps the trained `EquinoxModelOp` directly, and
+[Report 10](10_pipekit_cycle.md#r10-stage-4)'s cycles accept it. The smooth-prior emulator is accurate on smooth states and wrong by
 half the signal on white ones: an emulator is only as general as its
 prior.
 
@@ -436,7 +423,7 @@ column enhancement, for any measured spectrum, and check its calibration.
 **Problem.** For $\alpha \sim \mathcal{U}(0, 300)$ and the spectra $y$ it
 produces, a network $g_\phi$ outputs a Gaussian
 $q_\phi(\alpha \mid y) = \mathcal{N}(\mu_\phi(y), \sigma_\phi^2(y))$ and is
-trained on the negative log-likelihood
+trained on the negative log-likelihood {eq}`r11-eq-nll`,
 
 $$
 L(\phi) = \mathbb{E}_{\alpha, y} \left[ \frac{1}{2} \log 2 \pi \sigma_\phi^2(y) + \frac{(\alpha - \mu_\phi(y))^2}{2 \sigma_\phi^2(y)} \right] .
@@ -492,6 +479,7 @@ into a recipe.
 amortized network should match.
 
 **Problem.** For one measured $y$ (true $\alpha = 120$), the posterior is
+{eq}`r11-eq-posterior`,
 
 $$
 p(\alpha \mid y) \propto \mathbb{1}[0 \le \alpha \le 300] \prod_{b=1}^{5} \mathcal{N}\left(y_b ; e^{-k_b \alpha}, \sigma^2\right) ,
@@ -563,7 +551,8 @@ pt.CachedDataset(sim_2M, cache_dir="cache")[0]   # simulator now 2M …
 # → returns the cached M pairs: the hash does not include the simulator
 ```
 
-The window dataset is the training reader for Report 13's archives: its
+The window dataset is the training reader for
+[Report 13](13_state_catalog.md#r13-ws-b)'s archives: its
 `content_hash` covers `store_version`, the stencils and the origins, and a
 linear last-step model trained on it reached MSE $3.5 \times 10^{-5}$. Two
 defects stand out. It imports `geopatcher.time`, which the pinned geopatcher
@@ -579,6 +568,8 @@ this simulator (A4).
 
 (r11-names)=
 ## The scoping report's names, checked
+
+[](#tbl-r11-names) checks the stack names the scoping report's examples use.
 
 :::{table} The stack names the scoping report's examples use, at the pinned revisions.
 :label: tbl-r11-names
@@ -601,17 +592,17 @@ this simulator (A4).
 ## Current-state audit
 
 Of the twenty pieces checked, ten ship and work, eight ship with defects,
-and two are missing. The audit read `references/pipekit` at `ef3c17f` on
+and two are missing ([](#tbl-r11-audit)); [](#fig-r11-readiness) counts the
+page's calls by marker. The audit read `references/pipekit` at `ef3c17f` on
 13 October 2026.
 
 :::{figure} ../images/reports/r11_readiness.svg
 :label: fig-r11-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 32 calls, 24 run today, 3 are proposed by this report's workstreams and 5 are code the reader writes.
 
-What the page's sketches call, read from their markers: one square per stack
-call. Of 32, 24 run today, 3 are proposed by this report's workstreams and 5
-are code the reader writes. A row without squares has no marked call; labels
-on the proposed squares name the workstream item.
+What this page's sketches call: of 32 stack calls, 24 run today, 3 are
+proposed by this report's workstreams and 5 are code the reader writes
+([how to read it](../overview.md#sec-conventions)).
 :::
 
 :::{table} pipekit-train 0.0.2, piece by piece.
@@ -668,7 +659,7 @@ Smaller findings from the design docs:
 
 **Decision.** The three training shapes each get a dataset that is correct,
 hashed by everything that determines its contents, and fast enough to feed
-Grain.
+Grain ([](#tbl-r11-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r11-move-a
@@ -692,7 +683,8 @@ Grain.
 3. **Hash the recipe.** `content_hash` covers the catalog's own hash (a
    `CatalogBundle` or the GeoParquet file's checksum), the query, the
    sampler config, the preprocess config, the split and the seed.
-4. **Accept states too.** With Report 13's state profile, the same class
+4. **Accept states too.** With [Report 13](13_state_catalog.md#r13-ws-b)'s
+   state profile, the same class
    reads a state catalog through `load_states`; there is no separate
    `StateCatalog` type to support.
 
@@ -740,7 +732,10 @@ missing.
 ## Workstream B · The trained model's handoff
 
 **Decision.** Every trained operator can be stored with its weights and
-reloaded to the same outputs, and the artifact always names it.
+reloaded to the same outputs, and the artifact always names it
+([](#tbl-r11-move-b)). B1 is absorbed by
+[Report 16 B1](16_geo_data_stack.md#r16-ws-b), which makes `JaxModelOp` the
+one Equinox wrapper and aliases `EquinoxModelOp` to it.
 
 :::{table} Workstream B's moves.
 :label: tbl-r11-move-b
@@ -771,7 +766,7 @@ loaded = reg.load(art.trained_model_hash)       # with weights   proposed (B1, B
 ## Workstream C · Loop components
 
 **Decision.** Checkpoints, sweeps, validation and the SVI backend do what
-their names promise.
+their names promise ([](#tbl-r11-move-c)).
 
 :::{table} Workstream C's moves.
 :label: tbl-r11-move-c
@@ -789,7 +784,7 @@ their names promise.
 
 **Decision.** pipekit-train documents one recipe for amortized inference and
 ships the smallest piece every user rewrote; density estimators stay in the
-model libraries.
+model libraries ([](#tbl-r11-move-d)).
 
 :::{table} Workstream D's moves.
 :label: tbl-r11-move-d
@@ -805,7 +800,7 @@ model libraries.
 ## Workstream E · The Lightning and Keras backends
 
 **Decision.** Build the two backends ADR D5 already scheduled, on the same
-`run(loop) -> (op, backend_info)` seam as Equinox.
+`run(loop) -> (op, backend_info)` seam as Equinox ([](#tbl-r11-move-e)).
 
 :::{table} Workstream E's moves.
 :label: tbl-r11-move-e
@@ -821,7 +816,7 @@ model libraries.
 ## Testing gates
 
 Each workstream merges only when its gates pass; the existing gates are
-checks the code passes today.
+checks the code passes today ([](#tbl-r11-gates)).
 
 :::{table} Gates for the proposals and for what ships.
 :label: tbl-r11-gates
@@ -851,7 +846,7 @@ checks the code passes today.
 
 Fixes come first, because the running example hit them; the missing
 features follow, and the two new backends last, as ADR D5 already orders
-them.
+them ([](#fig-r11-roadmap)).
 
 :::{figure} ../images/reports/r11_roadmap.svg
 :label: fig-r11-roadmap
@@ -904,6 +899,8 @@ Fixes first, then the missing features, then the backends.
 (r11-todos)=
 ## Upcoming work
 
+[](#tbl-r11-todos) lists the follow-ups.
+
 :::{table} Follow-ups from checking the scoping report and the design docs against the code.
 :label: tbl-r11-todos
 
@@ -920,15 +917,6 @@ Fixes first, then the missing features, then the backends.
 
 (r11-references)=
 ## References
-
-<!-- TODO(ref): placeholders. When a report page lands, point its links in this
-file at the page and delete its entry below. -->
-
-:::{note} Companion reports
-:class: simple
-Reports [9](09_use_cases.md), [10](10_pipekit_cycle.md),
-[12](12_pipekit_experiment.md) and [13](13_state_catalog.md) are published.
-:::
 
 ### Sources
 
