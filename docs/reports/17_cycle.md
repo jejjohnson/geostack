@@ -320,7 +320,8 @@ Gauss–Newton and reports the width σ / ‖J(α̂)‖.
 :linenos:
 
 # Shapes: n = 500 scenes; G = 30,001 nodes; B = 5
-# log p(α_g | y) = −½ Σ_b (y_b − f_b(α_g))² / σ² + c, normalised
+# log p(α_g | y) = −½ Σ_b (y_b − f_b(α_g))² / σ² + c
+# w_g ∝ q_g p(α_g | y), q trapezoidal (½ at α = 0 and 300), Σ_g w_g = 1
 oracle = grid_posterior(y, f)                 # (n, B) → (n, G)   user
 # α ← α + Jᵀ(y − f(α)) / JᵀJ  until |Δα| < 10⁻⁸
 gn = pc.Recurrence(
@@ -329,10 +330,12 @@ gn = pc.Recurrence(
     max_iters=50)                             # (n,) → (n,)       today
 a_hat, _ = gn(a0, pc.IterationState())                        # today
 # σ_L = σ / ‖J(α̂)‖
-laplace = GaussEstimate(a_hat, SIG / norm(J(a_hat)))          # user
+J = K * f(a_hat)                              # (n, B): |∂f_b/∂α|
+laplace = GaussEstimate(a_hat,
+                        SIG / np.linalg.norm(J, axis=1))  # (n,)  user
 # RMSE vs α: oracle 0.236, Laplace 0.237; RMS of σ / ‖J(α)‖ 0.247
 # 95 % coverage vs α: oracle 0.962, Laplace 0.960 (s.e. 0.010)
-# Laplace mean within 0.25 oracle widths of the oracle's, every scene
+# Laplace mean within 0.26 oracle widths of the oracle's, every scene
 ```
 
 The oracle covers the truth at the nominal rate, and its error is of the
@@ -426,7 +429,8 @@ a = xr.DataArray(fast.sample(2000, key=1), dims=("scene", "member"))
 b = xr.DataArray(oracle.sample(2000, key=2), dims=("scene", "member"))
 w1 = xrtoolz.metrics.wasserstein_1(a, b)      # (n, 2000) → (n,)  today
 (w1 / oracle.sd()).mean()                      # (n,) → () : 0.37
-# the oracle against itself: 0.04, the sampling floor at 2,000 draws
+# the oracle against itself, over 20 key pairs: 0.040 ± 0.0004
+# degree 6 on the same pairs: 0.041, inside that null; exact W₁ / s 0.004
 ```
 
 A 3 % emulator moves the posterior mean by up to 1.9 widths, while the
@@ -440,9 +444,12 @@ step 4 against the oracle, as the ladder's rule does, is what makes this
 visible; scored against the truth alone, the degree-4 inversion looks like
 a good retrieval. xrtoolz's
 `wasserstein_1` reproduces the exact W₁ but takes samples only, so an exact
-posterior on nodes must be sampled first, and the sampling floor (0.04
-widths at 2,000 draws) hides any distance below it, including the degree-6
-emulator's 0.004 (workstream C1).
+posterior on nodes must be sampled first. Two samples of one posterior are
+never 0 apart, so the sample estimate is biased upward. Over 20 independent
+pairs of 2,000 draws, the oracle against itself scores 0.040 widths
+(standard deviation 0.0004, largest 0.041). The degree-6 emulator scores
+0.041 on the same pairs, inside that spread, so the sample estimate cannot
+tell it from the oracle; the exact W₁ is 0.004 (workstream C1).
 
 (r17-stage-5)=
 ### Stage 5 · An amortized predictor, against the truth and the oracle (numpy → xrtoolz)
@@ -540,12 +547,14 @@ h0 = reg.store(Artifact("prior", {"low": 0, "high": 300}),
 h1 = reg.store(Artifact("simulator", {...}),
                tags={"rung": 1})                              # today
 h2 = reg.store(Artifact("grid_posterior", {"nodes": 30001, "low": 0,
-               "high": 300}, parents=[h0, h1]),
+               "high": 300, "rule": "trapezoid"}, parents=[h0, h1]),
                tags={"rung": 2, "role": "oracle"})            # today
-# another prior support → another oracle hash (asserted)
+# another prior support → another oracle hash (asserted); another
+# calibration constant → another head hash (asserted)
 h3 = reg.store(Artifact("poly_emulator", {...}, parents=[h1]),
                tags={"rung": 3, "oracle": h1})                # today
-# … rungs 4 and 5 likewise (parents [h0, h3] and [h0, h1]); then step 6
+# … rungs 4 and 5 likewise (parents [h0, h3] and [h0, h1]; rung 5's
+# config holds β_μ, β_s and the calibration constant −1.27); then step 6
 # → new hashes for rungs 3 and 4; rung 5's unchanged (parents h0, h1)
 dependents(h3)       # → [old rung 4]: a scan of configs      user
 reg.store(emulator_6, tags={"oracle": "x"})
@@ -554,8 +563,10 @@ reg.list(tags={"parents": [h1]})
 # → []: parents are config, not tags                          today
 ```
 
-The ladder runs the whole cycle in one call and resolves each rung's
-reference as stage 1 read it. After the improvement, rerunning it changes the
+One `Benchmark.run()` call scores rungs 2 to 5 and resolves each rung's
+reference as stage 1 read it. Step 1 is the task built before the call, and
+step 6 happens outside it: the notebook stores the new emulator and calls the
+runner again. After the improvement, rerunning it changes the
 rung-3 and rung-4 rows (to 0.03 σ and a 0.02-width shift) and leaves rung 5's
 unchanged, because rung 5 was trained on the simulator. Three things needed
 glue. Rung 3 is a forward emulator, a map from α to y, but the runner calls
@@ -592,7 +603,7 @@ runs is a comparison of two reports' rows.
 |---|---|
 | the six steps; step 2 as oracle | `RUNG_NAMES` and `DEFAULT_STAGED` in `pipekit_evaluate.benchmark` (stage 1) |
 | `CycleStageBenchmark(target_step, oracle_step, l_transition, oracle_artifact_hash, oracle_strength)` | does not exist; `Cell(level, rung, complexity)` and `ReferenceRule` cover the step and its reference; transition, oracle hash and strength are new (A1, A2) |
-| `CycleBenchmark.run_full_cycle` | does not exist; `Benchmark(...).run()` scores every rung in one call (stage 6) |
+| `CycleBenchmark.run_full_cycle` | does not exist; `Benchmark(...).run()` scores rungs 2 to 5 in one call, while step 1 (the task) and step 6 (store an improvement, rerun) stay outside it (stage 6) |
 | `OracleStrength` | does not exist; `ReferenceSource` says where a reference comes from, not how far to trust it |
 | `ModelRole`, `ArtifactLineage` | do not exist; `LocalModelRegistry.store(..., tags=)` stores free tags outside the hash (stage 6) |
 | `pc.DACycle(forward_model, obs_op, analysis_step, n_steps)` | exists, with `obs_source` and `save_history` as well (`da.py:84`) |
@@ -628,7 +639,7 @@ revisions in the report's header, on `main` of each submodule.
 | `CallableForward`, `NeuralForward`, `Recurrence`, `DACycle` | pipekit-cycle `forward.py`, `cycle.py`, `da.py` | stages 1, 2 and 6; Reports 10 and 11 | **Healthy.** Steps 1, 2 and 4 as operators; an emulator drops in through `NeuralForward` |
 | `SimulationDataset`, `TrainingLoop` | pipekit-train `dataset.py`, `loop.py` | stage 3; Report 11 | **Healthy** for steps 3 and 5; the dataset hash ignores the forward model (Report 11's A3), so it cannot name step 1 as a parent |
 | `LocalModelRegistry.store`, `list`, `tag` | pipekit-experiment `registry.py:113`, `:180` | stage 6; Report 12 | **Split ownership.** Tags are outside the hash and merged on re-store (`:159`); `list` matches whole tag values (`:195`); no reverse lookup |
-| `wasserstein_1`, `Wasserstein1` | xrtoolz `metrics/_src/distributional.py:144` | stage 4 | **Healthy.** Samples only: no weights, so a posterior on nodes is resampled and floored by sampling noise |
+| `wasserstein_1`, `Wasserstein1` | xrtoolz `metrics/_src/distributional.py:144` | stage 4 | **Healthy.** Samples only: no weights, so a posterior on nodes is resampled, and the sample estimate is biased upward by about 0.04 widths at 2,000 draws |
 :::
 
 Smaller findings:
@@ -762,7 +773,7 @@ oracle and the truth in one run.
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `wasserstein_1(a, b, *, weights_a=None, weights_b=None, ...)` | `xrtoolz.metrics` | stage 4: an exact posterior on nodes is resampled today, and the sampling floor (0.04 widths at 2,000 draws) hides smaller distances |
+| `wasserstein_1(a, b, *, weights_a=None, weights_b=None, ...)` | `xrtoolz.metrics` | stage 4: an exact posterior on nodes is resampled today, and the estimate's upward bias (the oracle against itself scores 0.040 ± 0.0004 widths at 2,000 draws) hides the degree-6 emulator's exact 0.004 |
 | two references for rung 5 (`oracle_posterior` and `known_theta`) | Report 14's A4 in `benchmark/run.py` | stage 5: the truth says "calibrated", the oracle says "53 % too wide where α is small"; both belong on the row |
 :::
 
