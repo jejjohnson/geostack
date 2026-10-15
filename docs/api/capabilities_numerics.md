@@ -30,6 +30,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `AbstractIntegrator` | class | Protocol for Gaussian integral approximation. |
 | `AbstractLikelihood` | class | Base class for likelihood functions with optional analytical ELL. |
 | `AbstractLogdetStrategy` | class | Protocol for log-determinant strategies. |
+| `AbstractMultivariateNormal` | class | Common surface of `MultivariateNormal` and `MultivariateNormalPrecision`. |
 | `AbstractPreconditioner` | class | Protocol for preconditioners producing an approximate inverse. |
 | `AbstractSketch` | class | A random sketching matrix $S \in \mathbb{R}^{d \times m}$, sampled once. |
 | `AbstractSolveStrategy` | class | Protocol for linear solve strategies. |
@@ -38,6 +39,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `AssumedDensityFilter` | class | KL-optimal Gaussian projection via moment matching. |
 | `AutoSolver` | class | Automatic solver selection based on operator type and size. |
 | `BBMMSolver` | class | CG solve and SLQ logdet with BBMM's defaults (Gardner et al. 2018). |
+| `BYM2GMRF` | class | The BYM2 pair $(b, u^\ast)$ (Riebler et al., 2016), with its exact density. |
 | `BernoulliLikelihood` | class | Bernoulli likelihood with logit link. |
 | `BinomialLikelihood` | class | Binomial likelihood with logit link. |
 | `BlockDiag` | class | Block diagonal operator ``diag(A₁, A₂, …, Aₖ)``. |
@@ -49,6 +51,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `ColumnID` | class | Column interpolative decomposition $A \approx A_{:,J}\,X$. |
 | `ComposedSolver` | class | Mix-and-match solve and logdet from different strategies. |
 | `ConstantSDE` | class | State-space representation of a constant kernel. |
+| `ConstrainedGMRF` | class | A `GaussianMRF` conditioned on hard linear constraints $A_cx = e$. |
 | `CosineSDE` | class | State-space representation of the cosine kernel. |
 | `CubatureIntegrator` | class | Third-order spherical-radial cubature. |
 | `DAREResult` | class | Result of DARE solver. |
@@ -63,6 +66,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `GaussHermiteIntegrator` | class | Gauss-Hermite quadrature integrator. |
 | `GaussianExpFam` | class | Gaussian in natural (exponential family) parameters. |
 | `GaussianLikelihood` | class | Gaussian likelihood ``log N(y \| f, noise_var * I)``. |
+| `GaussianMRF` | class | Gaussian Markov random field $x \sim \mathcal N(\mu, Q^{-1})$. |
 | `GaussianSites` | class | Time-varying Gaussian likelihood sites in natural parameterization. |
 | `GaussianSketch` | class | Gaussian sketch: i.i.d. entries $S_{ij} \sim \mathcal{N}(0, 1/d)$. |
 | `GaussianState` | class | Gaussian distribution as (mean, covariance operator) pair. |
@@ -70,23 +74,31 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `IndefiniteSLQLogdet` | class | Stochastic ``log\|det(A)\|`` for symmetric (possibly indefinite) operators. |
 | `IntegratedWienerSDE` | class | State-space representation of an integrated Wiener process. |
 | `InterpolatedOperator` | class | Structured Kernel Interpolation: ``K \approx W K_{uu} W^T``. |
+| `IntrinsicGMRF` | class | Improper $\mathcal N(\mu, (\tau R)^+)$ on the complement of $\ker R$. |
 | `JacobiPreconditioner` | class | Diagonal preconditioner ``M^{-1} = diag(1 / \|diag(A)\|)``. |
 | `KeyedSolver` | class | Bind a PRNG key to a strategy's stochastic log-determinant (gh-384). |
 | `Kronecker` | class | Kronecker product operator ``A₁ ⊗ A₂ ⊗ … ⊗ Aₖ``. |
 | `KroneckerSum` | class | Kronecker sum ``A \oplus B = A \otimes I_b + I_a \otimes B``. |
 | `KroneckerSumSqrt` | class | Symmetric square root of ``A \oplus B`` via per-factor eigenvectors. |
+| `LGSSM` | class | Linear-Gaussian state-space model as a density over ``(T, M)``. |
+| `LGSSMFactory` | class | Callable ``obs_mask -> MaskedLGSSM``, for conditional use. |
 | `LOOResult` | class | Result of leave-one-out cross-validation. |
 | `LOVECache` | class | Cached rank-``k`` Lanczos approximation of ``K^{-1}``. |
 | `LSMRSolver` | class | LSMR iterative least-squares solver (Fong & Saunders 2011). |
+| `LaplaceResult` | class | The Gaussian approximation $\mathcal N(\hat x, H^{-1})$ at the mode. |
 | `LinearizedSDE` | class | Linear surrogate $dx = (A_t x + b_t)\,dt + Q_t^{1/2}\,dW$ of an SDE. |
 | `LineaxSolver` | class | A lineax solver as a gaussx solve strategy. |
 | `LowRankUpdate` | class | Low-rank update operator ``L + U diag(d) Vᵀ``. |
 | `LowerBlockTriDiag` | class | Lower triangular block-bidiagonal Cholesky factor. |
 | `MINRESSolver` | class | MINRES solver for symmetric (possibly indefinite) systems. |
+| `MarkovGaussian` | class | Chain-Markov Gaussian over $x_{0:T-1}$ as a density over ``(T, d)``. |
+| `MaskedLGSSM` | class | `LGSSM` whose ``log_prob`` marginalises unobserved channels exactly. |
 | `MaskedOperator` | class | Row/column-masked view of a base operator. |
 | `MaternSDE` | class | State-space representation of the Matern kernel. |
 | `MomentMatchResult` | class | Tilted log-normaliser and its derivatives w.r.t. the cavity mean. |
 | `MonteCarloIntegrator` | class | Monte Carlo moment matching: sample, propagate, compute moments. |
+| `MultivariateNormal` | class | Multivariate normal parameterized by a lineax linear operator. |
+| `MultivariateNormalPrecision` | class | Multivariate normal parameterized by a precision (inverse covariance) operator. |
 | `NegativeBinomialLikelihood` | class | Negative-binomial likelihood with log link (NB2, a gamma-Poisson mixture). |
 | `NystromLogdet` | class | Nyström-preconditioned log-determinant of $A + \mu I$ (Wenger et al., 2022). |
 | `NystromPreconditioner` | class | Randomized Nyström preconditioner for ``A + μ I``. |
@@ -240,6 +252,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `kronecker_sum_solve` | function | Solve a shifted Kronecker-sum system in tensor (unvectorized) form. |
 | `kronecker_sum_tag` | constant | `kronecker_sum_tag` |
 | `kronecker_tag` | constant | `kronecker_tag` |
+| `laplace_mode` | function | Mode, Hessian and log-marginal of the Laplace approximation, in precision form. |
 | `leave_one_out_cv` | function | LOO-CV via the bordered-system identity. |
 | `linear_solve` | function | Solve ``A x = b`` through the unified front door. |
 | `linearize_sde` | function | Optimal linear drift of a nonlinear SDE along a Gaussian path. |
@@ -376,6 +389,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `upper_triangular_tag` | constant | `upper_triangular_tag` |
 | `variational_elbo_gaussian` | function | Uncollapsed (SVGP) ELBO for a Gaussian likelihood. |
 | `variational_elbo_mc` | function | Monte Carlo ELBO for non-conjugate likelihoods. |
+| `vb_mean_correction` | function | Low-rank VB correction of the Laplace mean (Van Niekerk & Rue, 2024). |
 | `whitened_svgp_predict` | function | Whitened SVGP prediction: mean and variance at test points. |
 | `woodbury_solve` | function | Standalone Woodbury identity solve: ``(L + U diag(D) U^T)^{-1} b``. |
 

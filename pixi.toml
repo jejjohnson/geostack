@@ -142,7 +142,10 @@ plotly = ">=5"
 # never touches the default (GeoStack) solve.
 
 [feature.numerics.pypi-dependencies]
-gaussx = { path = "references/numerics/gaussx", editable = true, extras = ["numpyro"] }
+# gaussx's distributions need its numpyro extra; the override above replaces
+# the whole requirement, extras included, so numpyro is listed itself.
+gaussx = { path = "references/numerics/gaussx", editable = true }
+numpyro = ">=0.21"
 finitevolx = { path = "references/numerics/finitevolX", editable = true }
 spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
 

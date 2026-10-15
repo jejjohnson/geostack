@@ -28,17 +28,30 @@ capabilities = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(capabilities)
 
 
-def _skip_reason(layer: str) -> str | None:
-    """Why this layer's index cannot be checked here, or None."""
+def _absent(layer: str) -> list[str]:
+    """The distributions of ``layer`` that are not installed here."""
     absent = []
     for dist in capabilities.LAYERS[layer][1]:
         try:
             importlib.metadata.version(dist)
         except importlib.metadata.PackageNotFoundError:
             absent.append(dist)
-    if absent:
-        env = "default" if layer == "geostack" else layer
+    return absent
+
+
+def _skip_reason(layer: str) -> str | None:
+    """Why this layer's index cannot be checked here, or None.
+
+    Each index is checked only in its own environment, the one whose top
+    layer it is: a lower layer's render depends on what else is installed
+    (diffrax in the geomodels environment adds a line to the GeoStack index).
+    """
+    env = "default" if layer == "geostack" else layer
+    if absent := _absent(layer):
         return f"{layer}: not installed ({', '.join(absent)}); run in `pixi -e {env}`"
+    above = [up for up in LAYERS[LAYERS.index(layer) + 1 :] if not _absent(up)]
+    if above:
+        return f"{layer}: checked in `pixi -e {env}`, not under {above[-1]}"
     try:
         capabilities.collect(layer)
     except ModuleNotFoundError as err:
