@@ -170,8 +170,8 @@ them today, are on the [dependency graph page](docs/api/dependency_graph.md)):
    including lazy, `try`-guarded and `TYPE_CHECKING` ones; dev, docs and
    tutorial dependency groups do not.
 4. **No cycles,** between repositories or between the packages of a workspace.
-5. **Every import is declared:** module-level imports as base dependencies,
-   lazy or guarded ones as extras.
+5. **Every import is declared,** as a base dependency or an extra (an extra
+   for optional modules and lazy or guarded imports).
 6. **Fix a reverse edge by moving code, never by a shim:** move the primitive
    down or the adapter up, and leave no re-export behind.
 7. **georeader is a leaf:** third-party, depended on and never changed.

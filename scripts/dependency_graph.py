@@ -328,8 +328,9 @@ def violations(g: Graph) -> dict[tuple[str, str, str], str]:
         for t, im in found.items():
             if im.how == "typing":
                 continue
-            declared = pkg.base if im.how == "module" else pkg.base | pkg.extras
-            if t not in declared:
+            # an optional module may import an extra at module level, so a
+            # declared extra is enough wherever the import sits
+            if t not in pkg.base | pkg.extras:
                 out[("undeclared", p, t)] = f"{im.where} ({im.how})"
     return out
 
@@ -525,14 +526,21 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         rows = "".join(f"\n    {q(k)}: {q(v)}," for k, v in sorted(d.items()))
         return "{" + rows + "\n}"
 
+    def table(d: dict) -> str:
+        # one entry per pyproject, always expanded, as ruff format keeps it
+        rows = "".join(
+            f"\n    {q(k)}: (\n        {q(v[0])},\n        {q(v[1])},\n    ),"
+            for k, v in sorted(d.items())
+        )
+        return "{" + rows + "\n}"
+
     intro = textwrap.fill(
         f"{repo} sits in {TITLES[layer]}, tier {tier} ({TIER_ROLES[layer][tier]})."
         f" Its packages must not import or depend on"
         f" {', '.join(up) if up else 'any other stack library'}: they sit above"
         f" it, or beside it in the same tier. Every import of a stack library is"
-        f" declared: a module-level import as a base dependency, a lazy or"
-        f" ``try``-guarded one as a dependency or an extra. Dev, docs and"
-        f" tutorial dependency groups are not checked.",
+        f" declared, as a dependency or an extra. Dev, docs and tutorial"
+        f" dependency groups are not checked.",
         width=79,
     )
     template = ROOT / "scripts" / "templates" / "test_dependency_rules.py.tmpl"
@@ -541,7 +549,7 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         intro=intro,
         page=PAGE_URL,
         depth=len(Path(path).parts) - 1,
-        packages=literal(packages),
+        packages=table(packages),
         forbidden=literal(forbidden),
         allowed=literal(ok),
     )

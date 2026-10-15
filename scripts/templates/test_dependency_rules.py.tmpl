@@ -113,10 +113,9 @@ def test_stack_imports_are_declared(dist: str) -> None:
             target = ALLOWED.get(top)
             if target is None or target == dist or how == "typing":
                 continue
-            if target not in (base if how == "module" else base | extras):
-                kind = "a dependency" if how == "module" else "a dependency or extra"
+            if target not in base | extras:
                 found.append(
                     f"{{f.relative_to(ROOT)}}:{{line}} imports {{top}} ({{how}});"
-                    f" declare {{target}} as {{kind}} of {{dist}}"
+                    f" declare {{target}} as a dependency or an extra of {{dist}}"
                 )
     assert not found, "\n".join(found)

@@ -155,11 +155,12 @@ is the rule's name in [](#tbl-dg-violations).
 4. **No cycles** (`cycle`, `package-cycle`): not between repositories, and not
    between the packages of one workspace (pipekit's, geotoolz's, xrtoolz's,
    pyrox's).
-5. **Every import is declared** (`undeclared`). A module-level import is a
-   base dependency. A lazy or guarded one is an extra (or a base
-   dependency). A `TYPE_CHECKING`-only import needs no declaration but still
-   obeys rules 1 and 2. Code the package ships never relies on a dependency
-   group.
+5. **Every import is declared** (`undeclared`), as a base dependency or an
+   extra. An extra suits an optional module (one the package's `__init__`
+   does not import) or a lazy or guarded import; whatever `import <package>`
+   runs needs a base dependency. A `TYPE_CHECKING`-only import needs no
+   declaration but still obeys rules 1 and 2. Code the package ships never
+   relies on a dependency group.
 6. **A reverse edge is fixed by moving code, never by a shim.** When a lower
    repository needs something from a higher one, either the primitive moves
    down into the lower one, or the adapter moves up into the higher one (as
