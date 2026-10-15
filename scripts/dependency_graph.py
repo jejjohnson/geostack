@@ -83,12 +83,19 @@ KNOWN: dict[tuple[str, str, str], str] = {
     ),
     ("tier", "pipekit", "geotoolz"): "the same import",
     ("undeclared", "pipekit-train", "geotoolz-patcher"): "the same import",
-    ("undeclared", "gauss-flows", "gaussx"): (
-        "a try-guarded import in transform_filter.py; declare a [gaussx] extra"
-    ),
     ("undeclared", "somax", "filterax"): (
         "module-level imports in somax/_src/da, declared only in the da"
         " dependency group; make it an extra"
+    ),
+}
+#: imports that stay undeclared on purpose, and why: a guarded integration
+#: with a library that cannot be installed beside the package. Each repository's
+#: guard test carries the same list. {(package, imported distribution): reason}
+UNDECLARED_OK: dict[tuple[str, str], str] = {
+    ("gauss-flows", "gaussx"): (
+        "gaussx is not on PyPI, and gauss_flows' [interp] extra (interpax) caps"
+        " lineax below what gaussx needs; a [gaussx] extra forks the lock and"
+        " moves the base install to a jax its numpyro cannot import"
     ),
 }
 #: repositories that are not ours: a leaf we read, never write (AGENTS.md)
@@ -330,7 +337,7 @@ def violations(g: Graph) -> dict[tuple[str, str, str], str]:
                 continue
             # an optional module may import an extra at module level, so a
             # declared extra is enough wherever the import sits
-            if t not in pkg.base | pkg.extras:
+            if t not in pkg.base | pkg.extras and (p, t) not in UNDECLARED_OK:
                 out[("undeclared", p, t)] = f"{im.where} ({im.how})"
     return out
 
@@ -526,6 +533,20 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         rows = "".join(f"\n    {q(k)}: {q(v)}," for k, v in sorted(d.items()))
         return "{" + rows + "\n}"
 
+    def reasons(d: dict) -> str:
+        # long strings as implicit concatenation, which ruff format keeps
+        if not d:
+            return "{}"
+        rows = ""
+        for k, v in sorted(d.items()):
+            parts = textwrap.wrap(v, 66)
+            body = "".join(
+                f"\n        {json.dumps(part if i == 0 else ' ' + part)}"
+                for i, part in enumerate(parts)
+            )
+            rows += f"\n    {q(k)}: ({body}\n    ),"
+        return "{" + rows + "\n}"
+
     def table(d: dict) -> str:
         # one entry per pyproject, always expanded, as ruff format keeps it
         rows = "".join(
@@ -552,6 +573,9 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         packages=table(packages),
         forbidden=literal(forbidden),
         allowed=literal(ok),
+        exceptions=reasons(
+            {v[1]: why for v, why in UNDECLARED_OK.items() if v[0] in packages}
+        ),
     )
     return path, text
 

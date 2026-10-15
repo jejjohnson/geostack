@@ -24,7 +24,7 @@ lazy, `try`-guarded and type-checking-only imports). It then states eight
 rules that keep the graph free of cycles. The graph obeys them almost
 everywhere: no edge points up a layer and no GeoModels repository imports
 another. It has **one cycle, pipekit ⇄ geotoolz**, made by a single lazy
-import in pipekit-train that is also broken. It also has **three imports
+import in pipekit-train that is also broken. It also has **two imports
 that their package does not declare**. [](#tbl-dg-violations) lists each one
 with its fix.
 
@@ -160,7 +160,9 @@ is the rule's name in [](#tbl-dg-violations).
    does not import) or a lazy or guarded import; whatever `import <package>`
    runs needs a base dependency. A `TYPE_CHECKING`-only import needs no
    declaration but still obeys rules 1 and 2. Code the package ships never
-   relies on a dependency group.
+   relies on a dependency group. The one way out is `UNDECLARED_OK` in
+   `scripts/dependency_graph.py`: a guarded integration with a library that
+   cannot be installed beside the package, listed with its reason.
 6. **A reverse edge is fixed by moving code, never by a shim.** When a lower
    repository needs something from a higher one, either the primitive moves
    down into the lower one, or the adapter moves up into the higher one (as
@@ -220,13 +222,12 @@ the shared vocabulary belongs in filterax, and vardax reuses it
 |---|---|---|---|---|
 | cycle | geotoolz | pipekit | `geotoolz ⇄ pipekit` | pipekit-train's _xreader lazily imports geopatcher.time (which no longer exists); Report 16 D2 moves the dataset to geopatcher.integrations.train |
 | tier | pipekit | geotoolz | `pipekit-train → geotoolz-patcher` | the same import |
-| undeclared | gauss-flows | gaussx | `src/gauss_flows/_src/flows/transform_filter.py (lazy)` | a try-guarded import in transform_filter.py; declare a [gaussx] extra |
 | undeclared | pipekit-train | geotoolz-patcher | `src/pipekit_train/xarray_window.py (guarded)` | the same import |
 | undeclared | somax | filterax | `somax/_src/da/filterax_bridge.py (module)` | module-level imports in somax/_src/da, declared only in the da dependency group; make it an extra |
 <!-- violation-table:end -->
 :::
 
-The fixes, in order of how much they matter:
+The fixes:
 
 1. **Move pipekit-train's window dataset into geotoolz-patcher**
    (`geopatcher.integrations.train`, behind `geotoolz-patcher[train]`). This
@@ -239,9 +240,12 @@ The fixes, in order of how much they matter:
    filterax at module level, but somax declares filterax only in its `da`
    dependency group, so `pip install somax` gives a package whose `da`
    module cannot import. A `[da]` extra with filterax and vardax fixes it.
-3. **Declare gauss_flows's gaussx integration as an extra.** The `try`-guarded
-   import is deliberate, but undeclared, so nothing pins which gaussx it
-   works with. A `[gaussx]` extra keeps it optional and pinned.
+
+gauss_flows's guarded gaussx import stays undeclared, as an exception in
+`UNDECLARED_OK`. gaussx is not on PyPI, and gauss_flows's `[interp]` extra
+(interpax) caps lineax below what gaussx needs. Tried as a `[gaussx]` extra,
+it forked the lock and moved the plain install to a jax that its numpyro
+cannot import, so most of its tests could no longer be collected.
 
 (dg-open)=
 ## Open questions
@@ -265,7 +269,6 @@ The fixes, in order of how much they matter:
 |---|---|---|
 | Move `XarrayWindowDataset` and `_xreader` to `geopatcher.integrations.train` | pipekit, geotoolz | fix 1; Report 16 D2 |
 | A `[da]` extra with filterax and vardax | somax | fix 2 |
-| A `[gaussx]` extra | gauss_flows | fix 3 |
 | The same check inside each repository: `python scripts/dependency_graph.py --guard <repo>` writes its `test_dependency_rules.py` | each upstream repository but georeader | catches a reverse edge before it reaches geostack's pin |
 | Move vardax's observation operators and dynamics onto filterax's | vardax, filterax | open question 1 |
 :::
