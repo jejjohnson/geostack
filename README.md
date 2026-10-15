@@ -105,12 +105,12 @@ flowchart TB
   end
   subgraph geoml["GeoML"]
     direction LR
-    xtremax["xtremax"]
+    vardax["vardax"]
     filterax["filterax"]
     pyrox["pyrox"]
-    vardax["vardax"]
     kernellib["kernellib"]
     optax_bayes["optax_bayes"]
+    xtremax["xtremax"]
     gauss_flows["gauss_flows"]
     geonnax["geonnax"]
   end
@@ -134,7 +134,6 @@ flowchart TB
   geotoolz --> pipekit
   kernellib --> gaussx
   kernellib --> geonnax
-  kernellib -.-> pipekit
   optax_bayes -.-> gaussx
   pipekit --> geotoolz
   plumax --> finitevolX
@@ -147,17 +146,15 @@ flowchart TB
   somax --> finitevolX
   somax --> geonnax
   somax --> pipekit
-  somax -.-> vardax
   spectraldiffx --> gaussx
   vardax --> gaussx
   vardax --> geonnax
   vardax --> pipekit
   xrtoolz --> pipekit
-  xtremax -.-> pyrox
-  linkStyle 4,9 stroke:#c62828,stroke-width:2.5px
+  linkStyle 4,8 stroke:#c62828,stroke-width:2.5px
 ```
 
-18 repositories, 36 packages and 33 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras or dependency groups; an arrow a longer path implies is not drawn. Red arrows form a cycle.
+18 repositories, 36 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out. Red arrows form a cycle.
 
 <!-- dependency-graph:end -->
 
@@ -169,8 +166,9 @@ them today, are on the [dependency graph page](docs/api/dependency_graph.md)):
    and Numerics never import each other.
 2. **Within a layer, tiers point down.** A repository imports only lower
    tiers of its own layer; the GeoModels repositories never import each other.
-3. **Every edge counts:** base dependencies, extras, dependency groups and
-   imports, including lazy, `try`-guarded and `TYPE_CHECKING` ones.
+3. **Every library edge counts:** base dependencies, extras and imports,
+   including lazy, `try`-guarded and `TYPE_CHECKING` ones; dev, docs and
+   tutorial dependency groups do not.
 4. **No cycles,** between repositories or between the packages of a workspace.
 5. **Every import is declared:** module-level imports as base dependencies,
    lazy or guarded ones as extras.

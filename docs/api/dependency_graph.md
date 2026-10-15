@@ -18,8 +18,8 @@ numbering:
 +++ {"part": "abstract"}
 
 geostack builds on eighteen repositories in four layers. This page draws how
-they depend on one another, from what each one declares (base dependencies,
-extras, dependency groups) and what its code actually imports (including
+they depend on one another, from what each library declares (base
+dependencies and extras) and what its code actually imports (including
 lazy, `try`-guarded and type-checking-only imports). It then states eight
 rules that keep the graph free of cycles. The graph obeys them almost
 everywhere: no edge points up a layer and no GeoModels repository imports
@@ -62,12 +62,12 @@ flowchart TB
   end
   subgraph geoml["GeoML"]
     direction LR
-    xtremax["xtremax"]
+    vardax["vardax"]
     filterax["filterax"]
     pyrox["pyrox"]
-    vardax["vardax"]
     kernellib["kernellib"]
     optax_bayes["optax_bayes"]
+    xtremax["xtremax"]
     gauss_flows["gauss_flows"]
     geonnax["geonnax"]
   end
@@ -91,7 +91,6 @@ flowchart TB
   geotoolz --> pipekit
   kernellib --> gaussx
   kernellib --> geonnax
-  kernellib -.-> pipekit
   optax_bayes -.-> gaussx
   pipekit --> geotoolz
   plumax --> finitevolX
@@ -104,17 +103,15 @@ flowchart TB
   somax --> finitevolX
   somax --> geonnax
   somax --> pipekit
-  somax -.-> vardax
   spectraldiffx --> gaussx
   vardax --> gaussx
   vardax --> geonnax
   vardax --> pipekit
   xrtoolz --> pipekit
-  xtremax -.-> pyrox
-  linkStyle 4,9 stroke:#c62828,stroke-width:2.5px
+  linkStyle 4,8 stroke:#c62828,stroke-width:2.5px
 ```
 
-18 repositories, 36 packages and 33 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras or dependency groups; an arrow a longer path implies is not drawn. Red arrows form a cycle.
+18 repositories, 36 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out. Red arrows form a cycle.
 
 <!-- dependency-graph:end -->
 
@@ -148,19 +145,21 @@ is the rule's name in [](#tbl-dg-violations).
    tier. Two repositories of the same tier never import each other. The
    GeoModels repositories share one tier: code two of them need moves down
    to the layer below.
-3. **Every edge counts.** Base dependencies, extras, dependency groups, and
-   imports, whether at module level, inside a function, behind a `try` or
-   under `TYPE_CHECKING`, all go into the graph. An optional edge is still an
-   edge, and optional edges are where cycles hide: the one cycle today is a
-   lazy, guarded import.
+3. **Every library edge counts.** Base dependencies, extras, and imports,
+   whether at module level, inside a function, behind a `try` or under
+   `TYPE_CHECKING`, all go into the graph. An optional edge is still an edge,
+   and optional edges are where cycles hide: the one cycle today is a lazy,
+   guarded import. Dependency groups (`dev`, `docs`, `tutorials`) are not:
+   they install tools for working on the repository, not the library, so a
+   tutorial may use a library above it.
 4. **No cycles** (`cycle`, `package-cycle`): not between repositories, and not
    between the packages of one workspace (pipekit's, geotoolz's, xrtoolz's,
    pyrox's).
 5. **Every import is declared** (`undeclared`). A module-level import is a
    base dependency. A lazy or guarded one is an extra (or a base
    dependency). A `TYPE_CHECKING`-only import needs no declaration but still
-   obeys rules 1 and 2. A dependency group (`dev`, `docs`, `da`) is for
-   running tests and docs, not for code the package ships.
+   obeys rules 1 and 2. Code the package ships never relies on a dependency
+   group.
 6. **A reverse edge is fixed by moving code, never by a shim.** When a lower
    repository needs something from a higher one, either the primitive moves
    down into the lower one, or the adapter moves up into the higher one (as
@@ -185,9 +184,9 @@ is the rule's name in [](#tbl-dg-violations).
 | Layer | Tier | Repositories | Holds |
 |---|---|---|---|
 | GeoModels | 0 | plumax, radtrax, somax | models; never import each other |
-| GeoML | 3 | xtremax | applications |
-| GeoML | 2 | filterax, pyrox, vardax | inference |
-| GeoML | 1 | kernellib, optax_bayes | kernels and optimisers |
+| GeoML | 3 | vardax | variational assimilation (may build on filterax) |
+| GeoML | 2 | filterax, pyrox | ensemble filters and probabilistic models |
+| GeoML | 1 | kernellib, optax_bayes, xtremax | kernels, optimisers and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
 | Numerics | 2 | finitevolX | finite volume |
 | Numerics | 1 | spectraldiffx | spectral |
@@ -198,9 +197,15 @@ is the rule's name in [](#tbl-dg-violations).
 :::
 
 The tiers follow what each repository is for, not only the edges it has
-today. filterax could sit at tier 0, since it imports only gaussx. It is
-placed with vardax and pyrox among the inference libraries, so an inference
-library cannot start importing another one without a decision
+today. filterax could sit lower, since it imports only gaussx; it sits at
+tier 2 so that vardax, alone at tier 3, may build on it and never the other
+way round. The two already overlap: each has its own observation operators
+(filterax's `AbstractObsOperator` and `LinearizableObsOperator`, vardax's
+`LinearObs`, `InterpObs` and `MaskedIdentity`), adjoint strategies and
+dynamics wrappers, and vardax's ensemble posterior already defers to filterax.
+A hybrid ensemble–variational scheme builds vardax's background covariance
+from a filterax ensemble; nothing in filterax needs a variational solver. So
+the shared vocabulary belongs in filterax, and vardax reuses it
 ([open question 1](#dg-open)).
 
 (dg-violations)=
@@ -240,16 +245,14 @@ The fixes, in order of how much they matter:
 (dg-open)=
 ## Open questions
 
-1. **May the inference libraries import each other?** filterax, vardax and
-   pyrox share tier 2. A hybrid ensemble–variational scheme in vardax would
-   want filterax; that needs one of them moved up a tier, and the order
-   decided once.
-2. **Is tier 3 of GeoML needed?** xtremax is there only because its
-   tutorials use pyrox. If the tutorials moved to geostack's notebooks,
-   xtremax would drop to tier 1 and the tier would be empty.
-3. **Should dependency groups count?** Rule 3 counts them, so a `docs` group
-   cannot point up a layer or close a cycle. The cost is that a tutorial
-   dependency constrains the library, as xtremax's does.
+1. **Do vardax's observation operators and dynamics move to filterax, or
+   to a smaller shared package below both?** Tier order decides only which
+   may import which. Moving the shared types into filterax is the smallest
+   step; a separate package is worth it only if a third library (somax's
+   `da` module, a future smoother) needs them without either engine.
+2. **May pyrox and filterax import each other?** They share tier 2. A
+   GP-based observation model in filterax, or an ensemble likelihood in
+   pyrox, would need one of them moved; no code asks for it today.
 
 (dg-todos)=
 ## Upcoming work
@@ -262,13 +265,14 @@ The fixes, in order of how much they matter:
 | Move `XarrayWindowDataset` and `_xreader` to `geopatcher.integrations.train` | pipekit, geotoolz | fix 1; Report 16 D2 |
 | A `[da]` extra with filterax and vardax | somax | fix 2 |
 | A `[gaussx]` extra | gauss_flows | fix 3 |
-| The same check inside each repository (an import-linter contract per workspace) | each upstream repository | catches a reverse edge before it reaches geostack's pin |
+| The same check inside each repository (a generated `test_dependency_rules.py`) | each upstream repository | catches a reverse edge before it reaches geostack's pin |
+| Move vardax's observation operators and dynamics onto filterax's | vardax, filterax | open question 1 |
 :::
 
 (dg-edges)=
 ## Every edge
 
-:::{table} Every dependency between two repositories, with its strongest evidence (base dependency, extra, import, dependency group, in that order) and one package-level example.
+:::{table} Every dependency between two repositories, with its strongest evidence (base dependency, extra, import, in that order) and one package-level example.
 :label: tbl-dg-edges
 
 <!-- edge-table:begin -->
@@ -284,12 +288,10 @@ The fixes, in order of how much they matter:
 | somax | geonnax | base | `somax → geonnax` |
 | somax | pipekit | base | `somax → pipekit` |
 | somax | spectraldiffx | base | `somax → spectraldiffx` |
-| somax | vardax | group | `somax → vardax` |
 | filterax | gaussx | base | `filterax → gaussx` |
 | gauss_flows | gaussx | import | `gauss-flows → gaussx` |
 | kernellib | gaussx | base | `kernellib → gaussx` |
 | kernellib | geonnax | base | `kernellib → geonnax` |
-| kernellib | pipekit | group | `kernellib → pipekit-train` |
 | optax_bayes | gaussx | extra | `optax-bayes → gaussx` |
 | pyrox | gauss_flows | extra | `pyrox-gp → gauss-flows` |
 | pyrox | gaussx | base | `pyrox-gp → gaussx` |
@@ -298,14 +300,12 @@ The fixes, in order of how much they matter:
 | vardax | gaussx | base | `vardax → gaussx` |
 | vardax | geonnax | base | `vardax → geonnax` |
 | vardax | pipekit | base | `vardax → pipekit` |
-| xtremax | pyrox | group | `xtremax → pyrox` |
 | finitevolX | gaussx | base | `finitevolx → gaussx` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
 | geotoolz | georeader | base | `geotoolz → georeader-spaceml` |
 | geotoolz | pipekit | base | `geotoolz → pipekit` |
 | pipekit | geotoolz | import | `pipekit-train → geotoolz-patcher` |
-| xrtoolz | georeader | group | `xrtoolz → georeader-spaceml` |
 | xrtoolz | pipekit | base | `xrtoolz → pipekit` |
 <!-- edge-table:end -->
 :::

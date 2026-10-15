@@ -72,7 +72,8 @@ These hold for every project made from the template:
 - **Edges between layers point down** (see "The layers"). Code that would
   make a lower layer import a higher one belongs in the higher layer.
   Within a layer, each repository has a tier and imports only lower tiers;
-  every edge counts (extras, dependency groups, lazy and guarded imports),
+  every library edge counts (extras, lazy and guarded imports; not dev, docs
+  or tutorial dependency groups),
   every import is declared, and a reverse edge is fixed by moving code, never
   by a re-export. The rules, the graph and where it breaks them today are on
   [`docs/api/dependency_graph.md`](docs/api/dependency_graph.md);

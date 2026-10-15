@@ -1,7 +1,8 @@
 """The dependency graph between the stack's repositories, and its rules.
 
 Reads every submodule under ``references/<layer>/``: each package's
-``pyproject.toml`` (base dependencies, extras, dependency groups) and the
+``pyproject.toml`` (base dependencies and extras; not the dev, docs or
+tutorial dependency groups) and the
 imports in its source (module-level, lazy, ``try``-guarded and
 ``TYPE_CHECKING``-only). It folds packages into repositories, checks the
 graph against the rules on ``docs/api/dependency_graph.md``, and writes the
@@ -52,10 +53,10 @@ TIERS: dict[str, dict[str, int]] = {
         "gauss_flows": 0,
         "kernellib": 1,
         "optax_bayes": 1,
+        "xtremax": 1,
         "filterax": 2,
-        "vardax": 2,
         "pyrox": 2,
-        "xtremax": 3,
+        "vardax": 3,
     },
     "geomodels": {"plumax": 0, "radtrax": 0, "somax": 0},
 }
@@ -65,9 +66,9 @@ TIER_ROLES = {
     "numerics": ("linear algebra and Gaussians", "spectral", "finite volume"),
     "geoml": (
         "layers and flows",
-        "kernels and optimisers",
-        "inference",
-        "applications",
+        "kernels, optimisers and extremes",
+        "ensemble filters and probabilistic models",
+        "variational assimilation (may build on filterax)",
     ),
     "geomodels": ("models; never import each other",),
 }
@@ -110,7 +111,6 @@ class Package:
     path: Path
     base: set[str] = field(default_factory=set)
     extras: set[str] = field(default_factory=set)
-    groups: set[str] = field(default_factory=set)
     modules: list[Path] = field(default_factory=list)
 
 
@@ -133,12 +133,6 @@ def packages() -> dict[str, Package]:
                     for reqs in (project.get("optional-dependencies") or {}).values()
                     for r in reqs
                 }
-                pkg.groups = {
-                    _req(r)
-                    for reqs in (meta.get("dependency-groups") or {}).values()
-                    for r in reqs
-                    if isinstance(r, str)
-                }
                 src = pkg.path / "src" if (pkg.path / "src").is_dir() else pkg.path
                 pkg.modules = sorted(
                     d
@@ -148,7 +142,7 @@ def packages() -> dict[str, Package]:
                 out[pkg.name] = pkg
     names = set(out)
     for pkg in out.values():
-        for attr in ("base", "extras", "groups"):
+        for attr in ("base", "extras"):
             setattr(pkg, attr, (getattr(pkg, attr) & names) - {pkg.name})
     return out
 
@@ -216,11 +210,11 @@ def imports(pkgs: dict[str, Package]) -> dict[str, dict[str, Import]]:
 class Edge:
     source: str
     target: str
-    kind: str  # "base", "extra", "group" or "import": the strongest evidence
+    kind: str  # "base", "extra" or "import": the strongest evidence
     via: str  # one package-level example
 
 
-KIND_RANK = {"base": 0, "extra": 1, "import": 2, "group": 3}
+KIND_RANK = {"base": 0, "extra": 1, "import": 2}
 
 
 def repo_edges(
@@ -228,8 +222,8 @@ def repo_edges(
 ) -> list[Edge]:
     best: dict[tuple[str, str], Edge] = {}
     for p in sorted(pkgs.values(), key=lambda p: p.name):
+        # dependency groups (dev, docs, tutorials) are not library dependencies
         evidence = [(t, "base") for t in p.base] + [(t, "extra") for t in p.extras]
-        evidence += [(t, "group") for t in p.groups]
         evidence += [(t, "import") for t in imp[p.name]]
         for t, kind in sorted(evidence):
             a, b = p.repo, pkgs[t].repo
@@ -309,7 +303,7 @@ def violations(g: Graph) -> dict[tuple[str, str, str], str]:
     pkg_pairs = [
         (p, t)
         for p, pkg in g.pkgs.items()
-        for t in pkg.base | pkg.extras | pkg.groups | set(g.imports[p])
+        for t in pkg.base | pkg.extras | set(g.imports[p])
     ]
     for comp in sccs(list(g.pkgs), pkg_pairs):
         out[("package-cycle", comp[0], "+".join(comp[1:]))] = " ⇄ ".join(comp)
@@ -406,7 +400,8 @@ def block(g: Graph, page: Path) -> str:
         f"{len(g.repos)} repositories, {len(g.pkgs)} packages and {len(g.edges)}"
         " dependencies between repositories, from each submodule's `pyproject.toml`"
         " and imports. Solid arrows are base dependencies or imports, dashed ones"
-        " extras or dependency groups; an arrow a longer path implies is not drawn."
+        " extras; an arrow a longer path implies is not drawn. Dev, docs and"
+        " tutorial dependency groups are not library dependencies and are left out."
     )
     if any(rule == "cycle" for rule, _, _ in found):
         legend += " Red arrows form a cycle."
