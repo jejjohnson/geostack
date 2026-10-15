@@ -38,7 +38,7 @@ question or a follow-up at the end.
 | **Reading time** | about 30 minutes |
 | **Audience** | anyone deciding what belongs in pipekit core, or writing an operator against it |
 | **Companions** | [Report 1](01_toolz_primer.md) (background); [Report 3](03_sister_libraries.md) (sister libraries); [Report 9](09_use_cases.md) (use cases); [Report 10](10_pipekit_cycle.md) (cycle); [Report 11](11_pipekit_train.md) (train); [Report 12](12_pipekit_experiment.md) (experiment); [Report 13](13_state_catalog.md) (state catalog) |
-| **Checked against** | pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/pipekit`); every output on this page is from a real run |
+| **Checked against** | pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/geostack/pipekit`); every output on this page is from a real run |
 :::
 
 :::{important} How to read the differences

@@ -9,11 +9,15 @@ what enforces them, commands, the pre-commit checklist, git and PR rules).
 The essentials, in case you only read this file:
 
 - geostack has no package of its own (no `src/`). Reusable code lives in
-  the libraries it builds on (pipekit, geotoolz, xrtoolz, georeader) and
-  goes upstream there; `scripts/` are thin Hydra entry points and notebooks
-  import from those libraries. Search
-  [`docs/api/capabilities.md`](../docs/api/capabilities.md) before writing a
+  the libraries it builds on, submodules under `references/<layer>/` in four
+  layers (GeoStack, Numerics, GeoML, GeoModels; edges point down), and goes
+  upstream there; `scripts/` are thin Hydra entry points and notebooks
+  import from those libraries. Search the capability indexes, starting at
+  [`docs/api/capabilities.md`](../docs/api/capabilities.md), before writing a
   loader, model, training step or helper.
+- `references/geostack/georeader` is spaceml-org's library, not ours: read
+  it, never edit, commit or push in it, and never open issues or PRs on
+  spaceml-org/georeader (`scripts/check_readonly_submodules.py` checks it).
 - Passages marked `<!-- template-example: … -->` in the agent files still
   describe the template's example and are rewritten as real code lands.
 - Every setting lives in `configs/` (Hydra or hydra-zen), never as a

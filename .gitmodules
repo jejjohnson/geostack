@@ -1,32 +1,72 @@
 [submodule "references/pipekit"]
-	path = references/pipekit
+	path = references/geostack/pipekit
 	url = https://github.com/jejjohnson/pipekit.git
 	branch = main
 [submodule "references/geotoolz"]
-	path = references/geotoolz
+	path = references/geostack/geotoolz
 	url = https://github.com/jejjohnson/geotoolz.git
 	branch = main
 [submodule "references/xrtoolz"]
-	path = references/xrtoolz
+	path = references/geostack/xrtoolz
 	url = https://github.com/jejjohnson/xrtoolz.git
 	branch = main
 [submodule "references/georeader"]
-	path = references/georeader
+	path = references/geostack/georeader
 	url = https://github.com/spaceml-org/georeader.git
 	branch = main
 [submodule "references/plumax"]
-	path = references/plumax
+	path = references/geomodels/plumax
 	url = https://github.com/jejjohnson/plumax.git
 	branch = main
 [submodule "references/gaussx"]
-	path = references/gaussx
+	path = references/numerics/gaussx
 	url = https://github.com/jejjohnson/gaussx.git
 	branch = main
 [submodule "references/finitevolX"]
-	path = references/finitevolX
+	path = references/numerics/finitevolX
 	url = https://github.com/jejjohnson/finitevolX.git
 	branch = main
 [submodule "references/spectraldiffx"]
-	path = references/spectraldiffx
+	path = references/numerics/spectraldiffx
 	url = https://github.com/jejjohnson/spectraldiffx.git
+	branch = main
+[submodule "references/geomodels/radtrax"]
+	path = references/geomodels/radtrax
+	url = https://github.com/jejjohnson/radtrax.git
+	branch = main
+[submodule "references/geomodels/somax"]
+	path = references/geomodels/somax
+	url = https://github.com/jejjohnson/somax.git
+	branch = main
+[submodule "references/geoml/filterax"]
+	path = references/geoml/filterax
+	url = https://github.com/jejjohnson/filterax.git
+	branch = main
+[submodule "references/geoml/vardax"]
+	path = references/geoml/vardax
+	url = https://github.com/jejjohnson/vardax.git
+	branch = main
+[submodule "references/geoml/pyrox"]
+	path = references/geoml/pyrox
+	url = https://github.com/jejjohnson/pyrox.git
+	branch = main
+[submodule "references/geoml/gauss_flows"]
+	path = references/geoml/gauss_flows
+	url = https://github.com/jejjohnson/gauss_flows.git
+	branch = main
+[submodule "references/geoml/xtremax"]
+	path = references/geoml/xtremax
+	url = https://github.com/jejjohnson/xtremax.git
+	branch = main
+[submodule "references/geoml/geonnax"]
+	path = references/geoml/geonnax
+	url = https://github.com/jejjohnson/geonnax.git
+	branch = main
+[submodule "references/geoml/kernellib"]
+	path = references/geoml/kernellib
+	url = https://github.com/jejjohnson/kernellib.git
+	branch = main
+[submodule "references/geoml/optax_bayes"]
+	path = references/geoml/optax_bayes
+	url = https://github.com/jejjohnson/optax_bayes.git
 	branch = main

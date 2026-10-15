@@ -491,7 +491,7 @@ checkpointing for an ODE solve. Neither wraps a pipekit operator.
 Of twelve pieces checked, six ship and work, three ship with defects or run
 at trace time only, one returns wrong values, and two are missing
 ([](#tbl-r5-audit)); [](#fig-r5-readiness) counts the page's calls by
-marker. The audit read `references/pipekit` at `ef3c17f` on 14 October 2026.
+marker. The audit read `references/geostack/pipekit` at `ef3c17f` on 14 October 2026.
 
 :::{figure} ../images/reports/r5_readiness.svg
 :label: fig-r5-readiness
@@ -724,7 +724,7 @@ YAML.
 
 - The scoping report, "Report 5 — `pipekit-jax`: a future-direction
   analysis" [@geostack_r5_draft].
-- pipekit 0.0.2 and pipekit-jax 0.0.2 in `references/pipekit` at `ef3c17f`:
+- pipekit 0.0.2 and pipekit-jax 0.0.2 in `references/geostack/pipekit` at `ef3c17f`:
   source, tests, README, CHANGELOG and docs.
 - JAX [@jax2018github], Equinox [@kidger2021equinox] and diffrax
   [@kidger2021neural], at the versions in the header.

@@ -58,6 +58,9 @@ project:
     - title: API Reference
       children:
         - file: docs/api/capabilities.md
+        - file: docs/api/capabilities_numerics.md
+        - file: docs/api/capabilities_geoml.md
+        - file: docs/api/capabilities_geomodels.md
 site:
   template: book-theme
   title: GeoStack

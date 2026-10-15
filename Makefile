@@ -86,6 +86,7 @@ install: ## Install all dependency groups via uv + pre-commit hooks
 	@printf "$(YELLOW)>>> Installing all dependencies...$(RESET)\n"
 	uv sync --all-groups
 	uv run pre-commit install
+	git -C references/geostack/georeader remote set-url --push origin DISABLED-georeader-is-read-only || true
 	@printf "$(GREEN)>>> Installation complete!$(RESET)\n"
 
 init: ## Bootstrap .env from .env.example if needed
@@ -161,8 +162,11 @@ docs: ## Build documentation with MyST
 docs-serve: ## Serve documentation locally
 	uv run --group docs myst start
 
-capabilities: ## Regenerate docs/api/capabilities.md (every public name, for reuse)
-	pixi run python scripts/capabilities.py
+capabilities: ## Regenerate the capability indexes, one per layer (docs/api/capabilities*.md)
+	pixi run python scripts/capabilities.py --layer geostack
+	pixi run -e numerics python scripts/capabilities.py --layer numerics
+	pixi run -e geoml python scripts/capabilities.py --layer geoml
+	pixi run -e geomodels python scripts/capabilities.py --layer geomodels
 
 docs-deploy: ## Deploy documentation to GitHub Pages
 	BASE_URL=/geostack uv run --group docs myst build --html

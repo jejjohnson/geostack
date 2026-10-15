@@ -30,14 +30,16 @@ A test that needs Hydra or another pixi-only package starts with
 `pytest.importorskip(...)`, so it skips under uv and runs under pixi: when
 you touched configs or scripts, run `pixi run test`.
 
-## When the package's public names changed
+## When the package's public names, a layer's table or a submodule changed
 
 ```bash
-make capabilities
-uv run pytest tests/test_capabilities.py -v -o addopts=
+make capabilities                                   # all four layers
+pixi run pytest tests/test_capabilities.py -v -o addopts=
+pixi run -e geomodels pytest tests/test_capabilities.py -v -o addopts=
 ```
 
-…and commit `docs/api/capabilities.md`.
+…and commit `docs/api/capabilities*.md` with `pixi.lock`. Without
+conda-forge, push the branch: `pixi-lock.yml` regenerates and commits both.
 
 ## When configs, scripts or `dvc.yaml` changed
 

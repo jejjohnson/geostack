@@ -37,3 +37,30 @@ jobs:
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
+
+  layers:
+    # each layer above GeoStack in its own pixi environment: its capability
+    # index is current and it adds no name clash (tests/test_capabilities.py)
+    name: Capabilities (${{ matrix.layer }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        layer: [numerics, geoml, geomodels]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.81.0
+          environments: ${{ matrix.layer }}
+          cache: true
+      - name: Check the index
+        # failing lines become annotations, readable without the full log
+        run: |
+          set +e
+          pixi run -e ${{ matrix.layer }} pytest tests/test_capabilities.py -o addopts= -v 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          grep -E '^(FAILED|ERROR|E  )' pytest.log | head -30 | cut -c1-500 | sed 's/^/::error::/'
+          exit $status

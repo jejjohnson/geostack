@@ -19,8 +19,9 @@ Standing instructions for **every** coding agent working in this repository
 The GeoStack umbrella repository: the design, the experiments and the
 write-up for a JAX-native research stack for geophysical modeling,
 inference and data assimilation. **It has no package of its own.** The
-reusable code lives in the libraries it builds on (pipekit, geotoolz,
-xrtoolz, georeader); thin scripts and notebooks here compose them, Hydra
+reusable code lives in the libraries it builds on, eighteen of them in four
+layers (GeoStack, Numerics, GeoML, GeoModels; see "The layers" below); thin
+scripts and notebooks here compose them, Hydra
 configs hold every setting, a DVC pipeline ties data, code, configs and
 results together, and MyST docs write it up. Anything a script or a
 notebook needs twice goes upstream into the library that owns the concept,
@@ -28,14 +29,29 @@ not into a local package.
 
 | Path | Owns |
 |---|---|
-| `references/` | Git submodules of the libraries geostack builds on: `pipekit`, `geotoolz`, `xrtoolz` (uv workspaces; members under `packages/`) and `georeader`. Installed into pixi from there (`pixi.toml`). Read them for the real API; change them upstream, never here |
-| `scripts/` | Entry points: `convert_notebooks.py` (jupytext → `.ipynb`), `capabilities.py` (the capability index of the upstream libraries) |
+| `references/<layer>/` | Git submodules of the libraries geostack builds on, one folder per layer (`geostack/`, `numerics/`, `geoml/`, `geomodels/`; see "The layers"). Installed into pixi from there (`pixi.toml`): GeoStack in every environment, the other layers in their own environments. Read them for the real API; change them upstream, never here |
+| `scripts/` | Entry points: `convert_notebooks.py` (jupytext → `.ipynb`), `capabilities.py` (the capability indexes of the upstream libraries, one per layer) |
 | `dvc.yaml` | The pipeline (no stages yet; add them with the `add-experiment` skill) |
 | `data/{raw,processed,external}/`, `results/{metrics,figures,tables}/` | DVC-managed data and outputs: gitignored except the `.gitkeep` files, `.dvc` pointers and the `cache: false` metrics JSON |
 | `notebooks/` | Jupytext percent-format `.py` notebooks (`01_eda.py`) |
 | `marimo_notebooks/` | marimo notebooks (`01_exploration.py`) |
-| `docs/`, `myst.yml`, `references.bib` | MyST documentation (notes, tutorials, API pages, capability index) and its bibliography |
+| `docs/`, `myst.yml`, `references.bib` | MyST documentation (notes, tutorials, API pages, capability indexes) and its bibliography |
 | `CITATION.cff` | How to cite the project |
+
+### The layers
+
+| Layer | `references/…` | Libraries | pixi environment | Capability index |
+|---|---|---|---|---|
+| GeoStack | `geostack/` | pipekit, geotoolz, xrtoolz (uv workspaces; members under `packages/`), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
+| Numerics | `numerics/` | gaussx, finitevolX, spectraldiffx | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
+| GeoML | `geoml/` | geonnax, kernellib, optax_bayes, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn) | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
+| GeoModels | `geomodels/` | plumax, somax, radtrax | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
+
+Edges between layers point down: GeoModels may import GeoML, Numerics and
+GeoStack; GeoML may import Numerics and GeoStack; Numerics and GeoStack import
+neither of the others. Each environment installs its layer and the layers it
+may import, every library from its submodule (`[pypi-options.dependency-overrides]`
+in `pixi.toml`), so the libraries' own git pins of one another are ignored.
 
 ### Boundaries
 
@@ -50,8 +66,22 @@ These hold for every project made from the template:
   function that a script and a notebook both need belongs upstream.
 - **Data and results never go into git.** They are DVC outputs or `dvc add`
   pointers; `.gitignore` keeps `data/*` and `results/*` out.
-- **Every library geostack builds on is listed in `UPSTREAM`** in
-  `scripts/capabilities.py`, so its API joins the capability index.
+- **Every library geostack builds on is a submodule in its layer's folder and
+  is listed in its layer's table** in `scripts/capabilities.py` (`UPSTREAM`,
+  `NUMERICS`, `GEOML`, `GEOMODELS`), so its API joins that layer's index.
+- **Edges between layers point down** (see "The layers"). Code that would
+  make a lower layer import a higher one belongs in the higher layer.
+- **georeader is read-only.** It is spaceml-org's library
+  ([spaceml-org/georeader](https://github.com/spaceml-org/georeader)), not
+  ours: geostack pins it and reads it. Never edit, commit or push in
+  `references/geostack/georeader`, and never open issues, pull requests or
+  comments on its repository; moving the pin to another upstream commit is
+  fine. De-duplication never moves code into georeader and files nothing
+  there: when a name clashes with it, the copy in our library changes. The
+  guards: `scripts/check_readonly_submodules.py` (pre-commit and the Lint
+  workflow), the deny rule and hook in `.claude/settings.json`, and the
+  push URL `make install` disables. A further third-party submodule joins
+  `READ_ONLY` in that script.
 
 ## What it is built on
 
@@ -60,7 +90,7 @@ fails on the next run, the next machine or in CI.
 
 | Tool | Used for | The rule it brings |
 |---|---|---|
-| **pixi** (`pixi.toml`, `pixi.lock`) | The runtime and CI environment: Python, NumPy, SciPy, xarray, netCDF4, matplotlib, DVC, hydra-core, hydra-zen, OmegaConf (conda-forge first, PyPI second); extra environments `docs`, `jupyterlab`, `marimo` | CI's test, lint, type-check, DVC and docs workflows run through `pixi run`. A runtime dependency goes into `pixi.toml` and the lock is regenerated (`pixi lock`, commit `pixi.lock`); one the package imports also goes into `dependencies` in `pyproject.toml`, so the package installs on its own. Never `pip install` / `conda install` into an environment by hand. |
+| **pixi** (`pixi.toml`, `pixi.lock`) | The runtime and CI environment: Python, NumPy, SciPy, xarray, netCDF4, matplotlib, DVC, hydra-core, hydra-zen, OmegaConf (conda-forge first, PyPI second); extra environments `docs`, `jupyterlab`, `marimo`, and one per layer above GeoStack: `numerics`, `geoml`, `geomodels` (solve group `geo`, apart from the default solve) | CI's test, lint, type-check, DVC and docs workflows run through `pixi run`. A runtime dependency goes into `pixi.toml` and the lock is regenerated (`pixi lock`, commit `pixi.lock`); one the package imports also goes into `dependencies` in `pyproject.toml`, so the package installs on its own. Never `pip install` / `conda install` into an environment by hand. |
 | **uv** (`pyproject.toml`, `Makefile`) | The local developer loop: pytest, ruff, ty, pre-commit, the MyST CLI | The uv environment holds the tooling but not the upstream libraries, Hydra or DVC: lint, types and docs run with `make` / `uv run`; tests, the capability index and experiments with `pixi run` (`make test` / `make capabilities` call pixi). `uv.lock` is gitignored: `pixi.lock` is the lockfile of record. Always `uv run`, never the system Python. |
 | **Hydra** + **OmegaConf** (`configs/`) | Every setting of a run, composed from config groups and overridden on the command line | No hard-coded hyperparameter, seed, split or path in a script; read it from `cfg`. Outputs the pipeline tracks go to fixed project-root paths (`get_original_cwd()`), not into Hydra's run directory. |
 | **hydra-zen** | Configs generated from Python signatures (`builds`, `make_config`, `ZenStore`) | The structured config is built from the class it configures (`builds(TheClass, populate_full_signature=True)`), so the two cannot drift apart. |
@@ -75,11 +105,14 @@ fails on the next run, the next machine or in CI.
 Before writing a loader, a model, a training step, a metric or a helper —
 in the package, a script or a notebook — find out whether it exists:
 
-1. **Search the capability index.**
-   [`docs/api/capabilities.md`](docs/api/capabilities.md) lists every
-   public name in the libraries geostack builds on, once, with a one-line
-   summary. It is generated (`make capabilities`) and checked by
-   `tests/test_capabilities.py`, so it is current.
+1. **Search the capability indexes.** One page per layer lists every
+   public name in its libraries, once, with a one-line summary:
+   [GeoStack](docs/api/capabilities.md),
+   [Numerics](docs/api/capabilities_numerics.md),
+   [GeoML](docs/api/capabilities_geoml.md) and
+   [GeoModels](docs/api/capabilities_geomodels.md). They are generated
+   (`make capabilities`) and checked by `tests/test_capabilities.py`, so they
+   are current.
 2. **Search the scripts and configs**: an entry point may already do it
    (`scripts/`), and a setting may already exist (`configs/`).
 3. **If it is missing, add it upstream** in the library that owns the
@@ -88,11 +121,14 @@ in the package, a script or a notebook — find out whether it exists:
 4. **One object, one name.** Two modules never export the same name for
    different things (`tests/test_capabilities.py`); a deliberate exception
    goes into `ALLOWED_SHARED_NAMES` in `scripts/capabilities.py` with its
-   reason.
+   reason. The layers above GeoStack ship with clashes today, most of them
+   duplicate implementations; they are listed in `KNOWN_CLASHES` with why,
+   and the test fails on a new one and on one that no longer clashes, so the
+   list only shrinks. Do not add to it; remove the duplicate instead.
 
 | You are about to write… | Use instead |
 |---|---|
-| A loader, operator, model or training loop in a script or notebook | the upstream library that owns it (search `docs/api/capabilities.md`) |
+| A loader, operator, model or training loop in a script or notebook | the upstream library that owns it (search the [capability indexes](docs/api/capabilities.md)) |
 | A literal learning rate, epoch count, seed or split fraction | a key in `configs/`, overridden on the command line |
 | A config dataclass written by hand | hydra-zen `builds(TheClass, populate_full_signature=True)` |
 | A shell script that runs the steps in order | a stage in `dvc.yaml`, run with `dvc repro` |
@@ -107,9 +143,9 @@ The step-by-step for each is a skill (see "Recipes").
 ### 1. Reusable code lives upstream
 
 - geostack has no `src/` package. Reusable code goes into the upstream
-  library that owns the concept (pipekit, geotoolz, xrtoolz, georeader),
-  typed, documented and tested there, and appears here through the
-  capability index.
+  library that owns the concept, in the lowest layer that may hold it (see
+  "The layers"), typed, documented and tested there, and appears here
+  through the capability indexes.
 - Functions take plain arguments (paths as `str | Path`, numbers, arrays)
   and return values; they do not read configs, environment variables or
   global state, and do not write files unless that is their job and the
@@ -192,7 +228,8 @@ The step-by-step for each is a skill (see "Recipes").
 
 | Check | Enforces |
 |---|---|
-| `tests/test_capabilities.py` | `docs/api/capabilities.md` is current; no name bound to two objects |
+| `tests/test_capabilities.py` | each layer's capability index is current; no new name bound to two objects (GeoStack in `ci.yml`'s test job, the other layers in its `layers` job) |
+| `pixi-lock.yml` | on a feature branch whose `pixi.toml`, submodules or `capabilities.py` changed: regenerates `pixi.lock` and the indexes and commits them |
 | ruff (`make lint`), ty (`make typecheck`) | Lint (`E F I UP B SIM RUF`) and types on `scripts/` |
 | `.pre-commit-config.yaml` (`make precommit`) | ruff, ruff-format, whitespace, YAML / JSON syntax, files over 5 MB |
 | `notebooks.yml` | `notebooks/*.py` parse; warns on committed `.ipynb` |
@@ -240,7 +277,7 @@ make lint                 # ruff check .   (entire repo)
 make format               # ruff format . && ruff check --fix .
 make typecheck            # ty check scripts
 make precommit            # pre-commit on every file
-make capabilities         # regenerate docs/api/capabilities.md
+make capabilities         # regenerate the four capability indexes (one per layer)
 make docs                 # myst build --html  (into _build/html)
 make docs-serve           # myst start (live preview)
 make help                 # every target
@@ -262,6 +299,8 @@ pixi run notebooks-to-ipynb           # notebooks/**/*.py → .ipynb (local only
 pixi run -e docs docs-build           # what pages.yml runs
 pixi run -e jupyterlab lab
 pixi run -e marimo marimo-edit
+pixi run -e geomodels python notebooks/geomodels/<notebook>.py   # a GeoModels page's notebook
+pixi run -e geoml pytest tests/test_capabilities.py -o addopts=   # one layer's index
 ```
 
 `pixi.toml` pins `python` below 3.14: Hydra 1.3 does not run on Python
@@ -302,10 +341,11 @@ All of these must pass, from the repo root:
    `tests/` and `scripts/` (notebooks are excluded by the ruff config).
 3. `uv run --group lint ruff format --check .`
 4. `make typecheck` (or `pixi run typecheck`).
-5. After changing `UPSTREAM` or moving a submodule in `references/`
-   (`git submodule update --remote references/<name>`): `pixi lock` and
-   `make capabilities`; commit the submodule, `pixi.lock` and the index
-   together.
+5. After changing a layer's table in `scripts/capabilities.py` or moving a
+   submodule (`git submodule update --remote references/<layer>/<name>`):
+   `pixi lock` and `make capabilities`, then commit the submodule,
+   `pixi.lock` and the indexes together. Where conda-forge is unreachable,
+   push the branch and let `pixi-lock.yml` commit the lock and the indexes.
 6. After changing `dvc.yaml`, a stage's script or its configs:
    `pixi run dvc status` and `pixi run dvc dag`, and `pixi run dvc repro`
    for the stages you touched (commit `dvc.lock`).
@@ -402,8 +442,8 @@ builds the docs on a pull request, so run `make docs` yourself.
   together with the notebook that makes them.
 - **Notebooks** are not rendered into the site; the docs show their saved
   figures.
-- **API pages**: `docs/api/capabilities.md` is generated
-  (`make capabilities`).
+- **API pages**: the four capability indexes (`docs/api/capabilities*.md`)
+  are generated (`make capabilities`).
 
 ## Plans
 

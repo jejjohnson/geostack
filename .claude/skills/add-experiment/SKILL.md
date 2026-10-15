@@ -18,7 +18,7 @@ Read contracts 2 to 4 ("Configs", "The pipeline", "Results") in
 - `pixi run dvc dag` and `dvc.yaml`: the step may already be a stage.
 - `pixi run dvc exp show` lists experiments already run from this commit.
 - Reusable logic (a metric, a loss, an evaluation loop) goes in the
-  package first: search `docs/api/capabilities.md` (the `add-model` and
+  package first: search the capability indexes, `docs/api/capabilities*.md` (the `add-model` and
   `add-dataset` skills cover models and data).
 
 ## 2. Pick the kind

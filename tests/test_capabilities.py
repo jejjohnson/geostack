@@ -27,40 +27,70 @@ assert _spec is not None and _spec.loader is not None
 capabilities = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(capabilities)
 
-_absent = []
-for _dist in capabilities.UPSTREAM:
+
+def _absent(layer: str) -> list[str]:
+    """The distributions of ``layer`` that are not installed here."""
+    absent = []
+    for dist in capabilities.LAYERS[layer][1]:
+        try:
+            importlib.metadata.version(dist)
+        except importlib.metadata.PackageNotFoundError:
+            absent.append(dist)
+    return absent
+
+
+def _skip_reason(layer: str) -> str | None:
+    """Why this layer's index cannot be checked here, or None.
+
+    Each index is checked only in its own environment, the one whose top
+    layer it is: a lower layer's render depends on what else is installed
+    (diffrax in the geomodels environment adds a line to the GeoStack index).
+    """
+    env = "default" if layer == "geostack" else layer
+    if absent := _absent(layer):
+        return f"{layer}: not installed ({', '.join(absent)}); run in `pixi -e {env}`"
+    above = [up for up in LAYERS[LAYERS.index(layer) + 1 :] if not _absent(up)]
+    if above:
+        return f"{layer}: checked in `pixi -e {env}`, not under {above[-1]}"
     try:
-        importlib.metadata.version(_dist)
-    except importlib.metadata.PackageNotFoundError:
-        _absent.append(_dist)
-if _absent:
-    pytest.skip(
-        f"upstream libraries not installed ({', '.join(_absent)}); run in pixi",
-        allow_module_level=True,
+        capabilities.collect(layer)
+    except ModuleNotFoundError as err:
+        if (err.name or "").split(".")[0] == capabilities.PACKAGE:
+            raise
+        return f"{layer}: a public module imports {err.name!r}, which is not installed"
+    return None
+
+
+LAYERS = list(capabilities.LAYERS)
+
+# Importing the libraries compiles them; an upstream docstring with an invalid
+# escape (kernellib's ``4\pi``) warns then, and that is upstream's to fix, not
+# a failure of the index.
+pytestmark = pytest.mark.filterwarnings("ignore::SyntaxWarning")
+
+
+@pytest.mark.parametrize("layer", LAYERS)
+def test_capability_index_is_current(layer: str) -> None:
+    if reason := _skip_reason(layer):
+        pytest.skip(reason)
+    page = capabilities.LAYERS[layer][2]
+    current = page.read_text(encoding="utf-8") if page.exists() else ""
+    assert not capabilities.stale(current, capabilities.render(layer)), (
+        f"docs/api/{page.name} is stale: run `make capabilities` and commit it."
     )
 
-try:
-    capabilities.collect()
-except ModuleNotFoundError as err:
-    if (err.name or "").split(".")[0] == capabilities.PACKAGE:
-        raise
-    pytest.skip(
-        f"a public module imports {err.name!r}, which is not installed",
-        allow_module_level=True,
-    )
 
-
-def test_capability_index_is_current() -> None:
-    current = capabilities.INDEX.read_text(encoding="utf-8")
-    assert not capabilities.stale(current, capabilities.render()), (
-        "docs/api/capabilities.md is stale: run `make capabilities` and commit it."
-    )
-
-
-def test_no_name_is_bound_to_two_objects() -> None:
-    _, clashes = capabilities.collect()
+@pytest.mark.parametrize("layer", LAYERS)
+def test_no_name_is_bound_to_two_objects(layer: str) -> None:
+    if reason := _skip_reason(layer):
+        pytest.skip(reason)
+    clashes, gone = capabilities.check_clashes(layer)
     assert not clashes, (
         "a name is exported for different objects by two modules, or shadows "
         f"an upstream name: {clashes}. Rename it, or add it to "
         "ALLOWED_SHARED_NAMES in scripts/capabilities.py with a reason."
+    )
+    assert not gone, (
+        f"{gone} no longer clash: remove them from KNOWN_CLASHES in "
+        "scripts/capabilities.py, so the list only shrinks."
     )

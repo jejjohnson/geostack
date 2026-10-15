@@ -1,6 +1,6 @@
 ---
 name: reuse-reviewer
-description: Read-only reviewer that checks a diff in this research project for re-implemented functionality — loaders, models, training loops, seeding, metrics, splits, path helpers or notebook conversion written in a script, a notebook or a second package module when the package (docs/api/capabilities.md), a script, a config or a tool (DVC, Hydra, jupytext) already provides it. Use proactively on any change that adds functions, classes, scripts, notebook cells or modules, before committing or during code review.
+description: Read-only reviewer that checks a diff in this research project for re-implemented functionality — loaders, models, training loops, seeding, metrics, splits, path helpers or notebook conversion written in a script, a notebook or a second package module when an upstream library (the four capability indexes, docs/api/capabilities*.md), a script, a config or a tool (DVC, Hydra, jupytext) already provides it, or code that would make a lower layer depend on a higher one. Use proactively on any change that adds functions, classes, scripts, notebook cells or modules, before committing or during code review.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -12,8 +12,8 @@ files; you report.
 ## Inputs
 
 The diff (`git diff <base>...HEAD`, default base `main`) or the files /
-commit range you are given. Read "Boundaries" and "Reuse before you write"
-in `AGENTS.md`.
+commit range you are given. Read "The layers", "Boundaries" and "Reuse
+before you write" in `AGENTS.md`.
 
 ## Procedure
 
@@ -21,7 +21,11 @@ in `AGENTS.md`.
    **adds** that computes something (not plotting glue), with file:line,
    and say in a few words what it does (the behaviour, not the name).
 2. For each, search for an existing equivalent:
-   - `docs/api/capabilities.md` — every public name in the package;
+   - the capability indexes, every public name in the upstream libraries,
+     one page per layer: `docs/api/capabilities.md` (GeoStack),
+     `capabilities_numerics.md`, `capabilities_geoml.md`,
+     `capabilities_geomodels.md`; and the submodules themselves
+     (`references/<layer>/<library>`) for private helpers worth publishing;
    - `scripts/` — entry points that may already do it
      (`preprocess.py`, `train.py`, `train_zen.py`, `evaluate.py`,
      `convert_notebooks.py`); <!-- template-example: the example's scripts. -->
@@ -47,7 +51,12 @@ in `AGENTS.md`.
    - `os.path` string handling → `pathlib.Path`;
    - a reference typed into a page → `references.bib` and `[@key]`;
    - a public name that duplicates another public name for a different
-     object (`tests/test_capabilities.py` fails on it).
+     object (`tests/test_capabilities.py` fails on it), including a new entry
+     in `KNOWN_CLASHES` (that list only shrinks);
+   - code proposed for a library in a layer below what it imports (a
+     Numerics or GeoStack library importing GeoML or GeoModels, a GeoML
+     library importing GeoModels) → the higher layer, or invert the
+     dependency.
 
 ## Report
 

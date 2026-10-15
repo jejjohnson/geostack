@@ -814,7 +814,7 @@ the integrations.
 
 - The scoping report, "Report 14 — `pipekit-evaluate`: multidimensional
   evaluation as first-class infrastructure" (supplied by the author).
-- pipekit-evaluate 0.0.2 in `references/pipekit/packages/pipekit-evaluate`:
+- pipekit-evaluate 0.0.2 in `references/geostack/pipekit/packages/pipekit-evaluate`:
   its source, tests, README, CHANGELOG, `benchmark_ladder.md` and the four
   pilot designs.
 - xrtoolz 0.0.5 (`xrtoolz.metrics`, `.transforms`, `.geo`, `.budgets`),
