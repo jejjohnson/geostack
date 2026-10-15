@@ -57,6 +57,7 @@ project:
         - file: docs/tutorials/getting_started.md
     - title: API Reference
       children:
+        - file: docs/api/dependency_graph.md
         - file: docs/api/capabilities.md
         - file: docs/api/capabilities_numerics.md
         - file: docs/api/capabilities_geoml.md
