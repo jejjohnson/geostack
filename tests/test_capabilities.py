@@ -63,6 +63,11 @@ def _skip_reason(layer: str) -> str | None:
 
 LAYERS = list(capabilities.LAYERS)
 
+# Importing the libraries compiles them; an upstream docstring with an invalid
+# escape (kernellib's ``4\pi``) warns then, and that is upstream's to fix, not
+# a failure of the index.
+pytestmark = pytest.mark.filterwarnings("ignore::SyntaxWarning")
+
 
 @pytest.mark.parametrize("layer", LAYERS)
 def test_capability_index_is_current(layer: str) -> None:
