@@ -265,7 +265,7 @@ The fixes, in order of how much they matter:
 | Move `XarrayWindowDataset` and `_xreader` to `geopatcher.integrations.train` | pipekit, geotoolz | fix 1; Report 16 D2 |
 | A `[da]` extra with filterax and vardax | somax | fix 2 |
 | A `[gaussx]` extra | gauss_flows | fix 3 |
-| The same check inside each repository (a generated `test_dependency_rules.py`) | each upstream repository | catches a reverse edge before it reaches geostack's pin |
+| The same check inside each repository: `python scripts/dependency_graph.py --guard <repo>` writes its `test_dependency_rules.py` | each upstream repository but georeader | catches a reverse edge before it reaches geostack's pin |
 | Move vardax's observation operators and dynamics onto filterax's | vardax, filterax | open question 1 |
 :::
 

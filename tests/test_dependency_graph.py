@@ -59,3 +59,10 @@ def test_a_reverse_layer_edge_is_caught() -> None:
     upward = dg.Edge("gaussx", "plumax", "import", "gaussx → plumax")
     broken = dg.Graph(GRAPH.pkgs, GRAPH.imports, [*GRAPH.edges, upward])
     assert ("upward", "gaussx", "plumax") in dg.violations(broken)
+
+
+@pytest.mark.parametrize("repo", sorted(GRAPH.repos))
+def test_every_guard_renders(repo: str) -> None:
+    path, source = dg.guard(repo, GRAPH)
+    compile(source, path, "exec")
+    assert path.endswith("test_dependency_rules.py")

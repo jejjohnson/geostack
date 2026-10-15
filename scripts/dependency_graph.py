@@ -22,8 +22,10 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import re
 import sys
+import textwrap
 import tomllib
 import warnings
 from collections import defaultdict
@@ -470,11 +472,93 @@ def render(page: Path, g: Graph) -> str:
     return out
 
 
+#: where each repository's guard test goes, relative to its root
+GUARD_PATHS = {
+    "pipekit": "packages/pipekit/tests/test_dependency_rules.py",
+    "geotoolz": "packages/geotoolz/tests/test_dependency_rules.py",
+    "xrtoolz": "packages/xrtoolz-core/tests/test_dependency_rules.py",
+    "pyrox": "packages/pyrox/tests/test_dependency_rules.py",
+}
+PAGE_URL = (
+    "https://github.com/jejjohnson/geostack/blob/main/docs/api/dependency_graph.md"
+)
+
+
+def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
+    """(path in the repository, source) of the repository's guard test."""
+    g = g or build()
+    layer = g.repos[repo]
+    tier = TIERS[layer][repo]
+    base = REFS / layer / repo
+    path = GUARD_PATHS.get(repo, "tests/test_dependency_rules.py")
+
+    def allowed(other: str) -> bool:
+        lay = g.repos[other]
+        if other == repo:
+            return True
+        if lay == layer:
+            return TIERS[lay].get(other, 0) < tier
+        return LAYERS.index(lay) < LAYERS.index(layer)
+
+    mods = {m.name: p for p in g.pkgs.values() for m in p.modules}
+    forbidden = {m: p.name for m, p in mods.items() if not allowed(p.repo)}
+    ok = {m: p.name for m, p in mods.items() if allowed(p.repo)}
+    packages = {
+        p.name: (
+            str((p.path / "pyproject.toml").relative_to(base)),
+            tuple(str(m.relative_to(base)) for m in p.modules),
+        )
+        for p in g.pkgs.values()
+        if p.repo == repo
+    }
+    up = sorted({g.pkgs[d].repo for d in forbidden.values()})
+
+    def q(v: object) -> str:
+        if isinstance(v, tuple):
+            inner = ", ".join(q(x) for x in v)
+            return f"({inner},)" if len(v) == 1 else f"({inner})"
+        return json.dumps(v)
+
+    def literal(d: dict) -> str:
+        if not d:
+            return "{}"
+        rows = "".join(f"\n    {q(k)}: {q(v)}," for k, v in sorted(d.items()))
+        return "{" + rows + "\n}"
+
+    intro = textwrap.fill(
+        f"{repo} sits in {TITLES[layer]}, tier {tier} ({TIER_ROLES[layer][tier]})."
+        f" Its packages must not import or depend on"
+        f" {', '.join(up) if up else 'any other stack library'}: they sit above"
+        f" it, or beside it in the same tier. Every import of a stack library is"
+        f" declared: a module-level import as a base dependency, a lazy or"
+        f" ``try``-guarded one as a dependency or an extra. Dev, docs and"
+        f" tutorial dependency groups are not checked.",
+        width=79,
+    )
+    template = ROOT / "scripts" / "templates" / "test_dependency_rules.py.tmpl"
+    text = template.read_text(encoding="utf-8").format(
+        repo=repo,
+        intro=intro,
+        page=PAGE_URL,
+        depth=len(Path(path).parts) - 1,
+        packages=literal(packages),
+        forbidden=literal(forbidden),
+        allowed=literal(ok),
+    )
+    return path, text
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="exit 1 if stale")
+    parser.add_argument(
+        "--guard", metavar="REPO", help="print REPO's dependency-rules test"
+    )
     args = parser.parse_args(argv)
     g = build()
+    if args.guard:
+        print(guard(args.guard, g)[1], end="")
+        return 0
     status = 0
     for page in PAGES:
         new = render(page, g)
