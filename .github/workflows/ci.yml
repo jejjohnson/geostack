@@ -57,4 +57,10 @@ jobs:
           environments: ${{ matrix.layer }}
           cache: true
       - name: Check the index
-        run: pixi run -e ${{ matrix.layer }} pytest tests/test_capabilities.py -o addopts= -v
+        # failing lines become annotations, readable without the full log
+        run: |
+          set +e
+          pixi run -e ${{ matrix.layer }} pytest tests/test_capabilities.py -o addopts= -v 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          grep -E '^(FAILED|ERROR|E  )' pytest.log | head -30 | cut -c1-500 | sed 's/^/::error::/'
+          exit $status
