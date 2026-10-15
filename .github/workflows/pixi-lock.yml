@@ -1,0 +1,64 @@
+name: Pixi lock
+
+# Regenerate pixi.lock and the capability indexes on a feature branch whose
+# pixi.toml or submodules changed, and commit them back. Pushes made with
+# GITHUB_TOKEN do not start other workflows, so this job runs the tests itself
+# after committing; re-run the PR's checks (or push again) once it has.
+
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - pixi.toml
+      - .gitmodules
+      - "references/**"
+      - scripts/capabilities.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pixi-lock-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lock:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          ref: ${{ github.ref }}
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.81.0
+          run-install: false
+          cache: false
+      - name: Lock
+        run: pixi lock
+      - name: Regenerate the capability indexes
+        # a new name clash fails the tests below, not the regeneration
+        run: |
+          pixi run -e default python scripts/capabilities.py --layer geostack || true
+          for layer in numerics geoml geomodels; do
+            pixi run -e "$layer" python scripts/capabilities.py --layer "$layer" || true
+          done
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pixi.lock docs/api/capabilities*.md
+          if git diff --cached --quiet; then
+            echo "pixi.lock and the indexes are current"
+          else
+            git commit -m "chore: regenerate pixi.lock and the capability indexes"
+            git push
+          fi
+      - name: Test every layer
+        run: |
+          pixi run -e default pytest -o addopts= -q
+          for layer in numerics geoml geomodels; do
+            pixi run -e "$layer" pytest tests/test_capabilities.py -o addopts= -q
+          done

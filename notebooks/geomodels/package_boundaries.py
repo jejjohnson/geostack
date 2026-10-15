@@ -29,7 +29,7 @@
 #
 # Nothing is imported or installed: the notebook reads source files and
 # metadata only. geotoolz, xrtoolz, pipekit and georeader come from
-# `references/` at their pinned revisions, and so do plumax, gaussx,
+# `references/<layer>/` at their pinned revisions, and so do plumax, gaussx,
 # finitevolX and spectraldiffx, whose commits are asserted below.
 
 # %%
@@ -48,7 +48,9 @@ root = Path.cwd()
 while not (root / "myst.yml").exists() and root != root.parent:
     root = root.parent
 REFS = root / "references"
-SRC = REFS  # plumax, gaussx, finitevolX, spectraldiffx: pinned submodules
+GEOSTACK, NUMERICS, GEOMODELS = REFS / "geostack", REFS / "numerics", REFS / "geomodels"
+LAYER = {"plumax": GEOMODELS, "gaussx": NUMERICS, "finitevolX": NUMERICS,
+         "spectraldiffx": NUMERICS}
 FIG = root / "docs/images/package_boundaries"
 FIG.mkdir(parents=True, exist_ok=True)
 
@@ -63,7 +65,7 @@ def head(repo: Path) -> str:
 
 
 commits = {
-    name: head(SRC / name)
+    name: head(LAYER[name] / name)
     for name in ("plumax", "gaussx", "finitevolX", "spectraldiffx")
 }
 commits
@@ -92,7 +94,7 @@ def imports_of(path: Path) -> set[str]:
     return out
 
 
-PLX = SRC / "plumax/src/plumax"
+PLX = GEOMODELS / "plumax/src/plumax"
 SUBS = sorted(
     p.name for p in PLX.iterdir() if p.is_dir() and not p.name.startswith("_")
 )
@@ -164,7 +166,7 @@ assert sum(plx_loc[s] for s in stays) == 12_307  # the dispersion side
 # ## Stage 2 · What geotoolz's `plume` and `matched_filter` import from geotoolz
 
 # %%
-GZ = REFS / "geotoolz/packages/geotoolz/src/geotoolz"
+GZ = GEOSTACK / "geotoolz/packages/geotoolz/src/geotoolz"
 
 
 def internal_imports(pkg: str) -> dict[str, list[str]]:
@@ -261,7 +263,7 @@ dupes = {
     "matched filter, image": find(GZ, "apply_image")
     + find(PLX, "apply_image")
     + find(PLX, "matched_filter_image"),
-    "Gaussian SRF": find(REFS / "georeader/georeader", "srf")
+    "Gaussian SRF": find(GEOSTACK / "georeader/georeader", "srf")
     + find(PLX, "SpectralResponseFunction"),
     "air-mass factor": find(PLX, "air_mass_factor"),
 }
@@ -321,15 +323,15 @@ def deps(pyproject: Path) -> tuple[set[str], set[str]]:
 
 
 META = {
-    "pipekit": REFS / "pipekit/packages/pipekit/pyproject.toml",
-    "pipekit-cycle": REFS / "pipekit/packages/pipekit-cycle/pyproject.toml",
-    "georeader-spaceml": REFS / "georeader/pyproject.toml",
-    "geotoolz": REFS / "geotoolz/packages/geotoolz/pyproject.toml",
-    "xrtoolz": REFS / "xrtoolz/packages/xrtoolz/pyproject.toml",
-    "gaussx": SRC / "gaussx/pyproject.toml",
-    "spectraldiffx": SRC / "spectraldiffx/pyproject.toml",
-    "finitevolx": SRC / "finitevolX/pyproject.toml",
-    "plumax": SRC / "plumax/pyproject.toml",
+    "pipekit": GEOSTACK / "pipekit/packages/pipekit/pyproject.toml",
+    "pipekit-cycle": GEOSTACK / "pipekit/packages/pipekit-cycle/pyproject.toml",
+    "georeader-spaceml": GEOSTACK / "georeader/pyproject.toml",
+    "geotoolz": GEOSTACK / "geotoolz/packages/geotoolz/pyproject.toml",
+    "xrtoolz": GEOSTACK / "xrtoolz/packages/xrtoolz/pyproject.toml",
+    "gaussx": NUMERICS / "gaussx/pyproject.toml",
+    "spectraldiffx": NUMERICS / "spectraldiffx/pyproject.toml",
+    "finitevolx": NUMERICS / "finitevolX/pyproject.toml",
+    "plumax": GEOMODELS / "plumax/pyproject.toml",
 }
 today = {n: deps(p) for n, p in META.items()}
 

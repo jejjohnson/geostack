@@ -15,3 +15,12 @@ repos:
       - id: check-json
       - id: check-added-large-files
         args: [--maxkb=5000]
+
+  - repo: local
+    hooks:
+      - id: readonly-submodules
+        name: read-only submodules are unchanged (georeader)
+        entry: python3 scripts/check_readonly_submodules.py
+        language: system
+        pass_filenames: false
+        always_run: true

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(/references/geostack/georeader/**)",
+      "Bash(gh issue create *spaceml-org/georeader*)",
+      "Bash(gh pr create *spaceml-org/georeader*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_readonly.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -485,8 +485,8 @@ records the same break as its A5.
 Six overlaps need action; seven look like duplication and are not
 ([](#tbl-r16-audit); [](#fig-r16-readiness) shows what the page's sketches
 call). The
-audit read `references/pipekit` at `ef3c17f`, `references/geotoolz` at
-`088475e` and `references/xrtoolz` at `308c7f2` on 14 October 2026.
+audit read `references/geostack/pipekit` at `ef3c17f`, `references/geostack/geotoolz` at
+`088475e` and `references/geostack/xrtoolz` at `308c7f2` on 14 October 2026.
 
 :::{figure} ../images/reports/r16_readiness.svg
 :label: fig-r16-readiness

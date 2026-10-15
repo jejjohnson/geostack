@@ -593,7 +593,7 @@ this simulator (A4).
 
 Of the twenty pieces checked, ten ship and work, eight ship with defects,
 and two are missing ([](#tbl-r11-audit)); [](#fig-r11-readiness) counts the
-page's calls by marker. The audit read `references/pipekit` at `ef3c17f` on
+page's calls by marker. The audit read `references/geostack/pipekit` at `ef3c17f` on
 13 October 2026.
 
 :::{figure} ../images/reports/r11_readiness.svg
@@ -922,7 +922,7 @@ Fixes first, then the missing features, then the backends.
 
 - The scoping report, "Report 11 — `pipekit-train`: training pipelines for
   emulators and amortized inference" (supplied by the author).
-- pipekit-train 0.0.2 in `references/pipekit/packages/pipekit-train`: its
+- pipekit-train 0.0.2 in `references/geostack/pipekit/packages/pipekit-train`: its
   source, tests, README, CHANGELOG and `docs/design/` (vision, architecture,
   boundaries, decisions D1–D14, API pages and examples).
 - The running example's scripts and outputs, described in

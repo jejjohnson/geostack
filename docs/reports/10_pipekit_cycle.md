@@ -45,7 +45,7 @@ cycle the wrong observations. This page proposes two small fixes.
 | **Reading time** | about 25 minutes |
 | **Audience** | anyone writing a forward simulation, a DA cycle or an iterative retrieval with the stack, or an adapter for an algorithm library |
 | **Companions** | [Report 2](02_pipekit_surface.md) (pipekit core, where `StatefulOperator` and `CarryState` live); [Report 9](09_use_cases.md) (use cases); [Report 13](13_state_catalog.md) (indexing the states a cycle produces); [Report 11](11_pipekit_train.md) (training the emulators of stage 4); [Report 12](12_pipekit_experiment.md) (the registry); [Report 16](16_geo_data_stack.md#r16-ownership) (the stack rules) |
-| **Code checked against** | `pipekit-cycle` 0.0.2 and `pipekit` 0.0.2 at `ef3c17f`, the revision pinned in `references/pipekit`; its 100 tests pass. Read on 13 October 2026 |
+| **Code checked against** | `pipekit-cycle` 0.0.2 and `pipekit` 0.0.2 at `ef3c17f`, the revision pinned in `references/geostack/pipekit`; its 100 tests pass. Read on 13 October 2026 |
 | **Running example** | every output below is from one run on that revision of `notebooks/reports/report10_pipekit_cycle.py`, which seeds every draw and asserts each number the page shows |
 :::
 
@@ -485,7 +485,7 @@ cycle. The `Sequential` case is workstream A.
 
 Two of the scoping report's pieces need action; the rest ship and work
 ([](#tbl-r10-audit)), and [](#fig-r10-readiness) counts the page's calls by
-marker. The audit read `references/pipekit` at `ef3c17f` on 13 October 2026.
+marker. The audit read `references/geostack/pipekit` at `ef3c17f` on 13 October 2026.
 
 :::{figure} ../images/reports/r10_readiness.svg
 :label: fig-r10-readiness
@@ -720,6 +720,6 @@ Small fixes first, then the documentation and the latent design.
 
 - The scoping report, "Report 10 — `pipekit-cycle`: time-stepping, DA, and
   observation operators" (supplied by the author).
-- pipekit-cycle 0.0.2 in `references/pipekit/packages/pipekit-cycle`: its
+- pipekit-cycle 0.0.2 in `references/geostack/pipekit/packages/pipekit-cycle`: its
   source, README, CHANGELOG, `docs/design/latent.md` and tests.
 - The running example's script and outputs, described in [](#r10-running).

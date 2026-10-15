@@ -467,7 +467,7 @@ atomic (A5). Real S3 was not tested.
 
 Of sixteen pieces checked, eight ship and work, six ship with defects, and
 two are missing ([](#tbl-r12-audit)); [](#fig-r12-readiness) counts the
-page's calls by marker. The audit read `references/pipekit` at `ef3c17f` on
+page's calls by marker. The audit read `references/geostack/pipekit` at `ef3c17f` on
 13 October 2026.
 
 :::{figure} ../images/reports/r12_readiness.svg
@@ -736,7 +736,7 @@ Correctness first, then trackers, then round trips.
 
 - The scoping report, "Report 12 — `pipekit-experiment`: experiment
   tracking and model registry" (supplied by the author).
-- pipekit-experiment 0.0.2 in `references/pipekit/packages/pipekit-experiment`:
+- pipekit-experiment 0.0.2 in `references/geostack/pipekit/packages/pipekit-experiment`:
   its source, tests, README, CHANGELOG and `pyproject.toml`.
 - The running example's scripts and outputs, described in
   [](#r12-running).

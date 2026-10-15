@@ -36,7 +36,7 @@ shipped surface is [Report 2](02_pipekit_surface.md).
 | **Reading time** | about 15 minutes |
 | **Audience** | anyone reviewing the pipekit design before the structural reports |
 | **Companions** | [Report 2](02_pipekit_surface.md) (pipekit's shipped surface), [Report 3](03_sister_libraries.md) (sister libraries), [Report 9](09_use_cases.md) (use cases) |
-| **Checked against** | toolz 1.2.0 and pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/pipekit`) |
+| **Checked against** | toolz 1.2.0 and pipekit 0.0.2 (`ef3c17f`, the revision pinned in `references/geostack/pipekit`) |
 :::
 
 :::{important} What changed since the first draft

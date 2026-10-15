@@ -41,28 +41,54 @@ geostack/
 ├── marimo_notebooks/     # Marimo reactive notebooks
 ├── notebooks/            # Jupyter notebooks
 ├── results/              # Experiment results (DVC-managed)
-├── references/           # Git submodules: pipekit, geotoolz, xrtoolz, georeader
+├── references/           # Git submodules, one folder per layer:
+│   ├── geostack/         #   pipekit, geotoolz, xrtoolz, georeader
+│   ├── numerics/         #   gaussx, finitevolX, spectraldiffx
+│   ├── geoml/            #   geonnax, kernellib, optax_bayes, filterax, vardax,
+│   │                     #   gauss_flows, xtremax, pyrox
+│   └── geomodels/        #   plumax, somax, radtrax
 ├── scripts/              # Entry point scripts (no local package: see references/)
 └── tests/                # Test suite
 ```
 
 ## Reference libraries
 
-geostack has no package of its own. It builds on four libraries, pinned as
-git submodules under `references/` and installed into the pixi environment
-from there:
+geostack has no package of its own. It builds on eighteen libraries in four
+layers, pinned as git submodules under `references/<layer>/` and installed
+into pixi from there. GeoStack is in every environment; the other layers
+each have one (`pixi run -e numerics|geoml|geomodels …`). Edges between
+layers point down: GeoModels → GeoML → Numerics, and both upper layers may
+use GeoStack.
 
 | Submodule | Repository | Provides |
 |---|---|---|
-| `references/pipekit` | [jejjohnson/pipekit](https://github.com/jejjohnson/pipekit) | Carrier-agnostic operator-graph framework, plus `-array`, `-cycle`, `-evaluate`, `-experiment`, `-jax`, `-train` |
-| `references/geotoolz` | [jejjohnson/geotoolz](https://github.com/jejjohnson/geotoolz) | Remote-sensing operators on GeoTensor, plus `-catalog`, `-cloud`, `-patcher`, `-products` |
-| `references/xrtoolz` | [jejjohnson/xrtoolz](https://github.com/jejjohnson/xrtoolz) | Operators for xarray data cubes, plus `-core`, `-einx`, `-grad`, `-reader`, `-sklearn` |
-| `references/georeader` | [spaceml-org/georeader](https://github.com/spaceml-org/georeader) | Raster reading and the GeoTensor carrier |
+| `references/geostack/pipekit` | [jejjohnson/pipekit](https://github.com/jejjohnson/pipekit) | Carrier-agnostic operator-graph framework, plus `-array`, `-cycle`, `-evaluate`, `-experiment`, `-jax`, `-train` |
+| `references/geostack/geotoolz` | [jejjohnson/geotoolz](https://github.com/jejjohnson/geotoolz) | Remote-sensing operators on GeoTensor, plus `-catalog`, `-cloud`, `-patcher`, `-products` |
+| `references/geostack/xrtoolz` | [jejjohnson/xrtoolz](https://github.com/jejjohnson/xrtoolz) | Operators for xarray data cubes, plus `-core`, `-einx`, `-grad`, `-reader`, `-sklearn` |
+| `references/geostack/georeader` | [spaceml-org/georeader](https://github.com/spaceml-org/georeader) | Raster reading and the GeoTensor carrier |
+| `references/numerics/gaussx` | [jejjohnson/gaussx](https://github.com/jejjohnson/gaussx) | Structured linear algebra and Gaussian primitives on lineax |
+| `references/numerics/finitevolX` | [jejjohnson/finitevolX](https://github.com/jejjohnson/finitevolX) | Arakawa C-grid finite-volume operators |
+| `references/numerics/spectraldiffx` | [jejjohnson/spectraldiffx](https://github.com/jejjohnson/spectraldiffx) | Pseudospectral differentiation, filters and PDE solvers |
+| `references/geoml/geonnax` | [jejjohnson/geonnax](https://github.com/jejjohnson/geonnax) | Basis functions, neural layers and coordinate transforms in Equinox |
+| `references/geoml/kernellib` | [jejjohnson/kernellib](https://github.com/jejjohnson/kernellib) | Covariance kernels and scalable kernel methods |
+| `references/geoml/optax_bayes` | [jejjohnson/optax_bayes](https://github.com/jejjohnson/optax_bayes) | The Bayesian learning rule as optax transformations |
+| `references/geoml/filterax` | [jejjohnson/filterax](https://github.com/jejjohnson/filterax) | Differentiable ensemble Kalman filters and smoothers |
+| `references/geoml/vardax` | [jejjohnson/vardax](https://github.com/jejjohnson/vardax) | Variational data assimilation (BLUE/OI, 3D-Var, 4D-Var, …) |
+| `references/geoml/gauss_flows` | [jejjohnson/gauss_flows](https://github.com/jejjohnson/gauss_flows) | Gaussianization (RBIG) and normalizing flows |
+| `references/geoml/xtremax` | [jejjohnson/xtremax](https://github.com/jejjohnson/xtremax) | Extreme-value and point-process models |
+| `references/geoml/pyrox` | [jejjohnson/pyrox](https://github.com/jejjohnson/pyrox) | Equinox + NumPyro: GPs, Bayesian NNs, latent Gaussian models (`pyrox`, `-gp`, `-lgm`, `-nn`) |
+| `references/geomodels/plumax` | [jejjohnson/plumax](https://github.com/jejjohnson/plumax) | Plume transport: Gaussian plume and puff, Lagrangian, LES |
+| `references/geomodels/somax` | [jejjohnson/somax](https://github.com/jejjohnson/somax) | Simple ocean and atmosphere models |
+| `references/geomodels/radtrax` | [jejjohnson/radtrax](https://github.com/jejjohnson/radtrax) | Differentiable radiative transfer for methane remote sensing |
 
-[`docs/api/capabilities.md`](docs/api/capabilities.md) lists their public API.
-To move a reference forward: `git submodule update --remote references/<name>`,
+The capability indexes list their public API, one page per layer:
+[GeoStack](docs/api/capabilities.md),
+[Numerics](docs/api/capabilities_numerics.md),
+[GeoML](docs/api/capabilities_geoml.md),
+[GeoModels](docs/api/capabilities_geomodels.md).
+To move a reference forward: `git submodule update --remote references/<layer>/<name>`,
 then `pixi lock`, `make capabilities`, and commit the submodule, `pixi.lock`
-and the index together.
+and the indexes together (or push and let `pixi-lock.yml` do the last two).
 
 ## Quick Start
 

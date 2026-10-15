@@ -28,50 +28,70 @@ shapely = "*"
 hydra-zen = ">=0.13"
 omegaconf = ">=2.3"
 # The reference libraries geostack builds on, installed editable from the
-# git submodules in references/ (git submodule update --init).
-georeader-spaceml = { path = "references/georeader", editable = true }
-pipekit = { path = "references/pipekit/packages/pipekit", editable = true }
-pipekit-array = { path = "references/pipekit/packages/pipekit-array", editable = true }
-pipekit-cycle = { path = "references/pipekit/packages/pipekit-cycle", editable = true }
-pipekit-evaluate = { path = "references/pipekit/packages/pipekit-evaluate", editable = true }
-pipekit-experiment = { path = "references/pipekit/packages/pipekit-experiment", editable = true }
-pipekit-jax = { path = "references/pipekit/packages/pipekit-jax", editable = true }
-pipekit-train = { path = "references/pipekit/packages/pipekit-train", editable = true }
-geotoolz = { path = "references/geotoolz/packages/geotoolz", editable = true }
-geotoolz-catalog = { path = "references/geotoolz/packages/geotoolz-catalog", editable = true }
-geotoolz-cloud = { path = "references/geotoolz/packages/geotoolz-cloud", editable = true }
-geotoolz-patcher = { path = "references/geotoolz/packages/geotoolz-patcher", editable = true }
-geotoolz-products = { path = "references/geotoolz/packages/geotoolz-products", editable = true }
-xrtoolz = { path = "references/xrtoolz/packages/xrtoolz", editable = true }
-xrtoolz-core = { path = "references/xrtoolz/packages/xrtoolz-core", editable = true }
-xrtoolz-einx = { path = "references/xrtoolz/packages/xrtoolz-einx", editable = true }
-xrtoolz-grad = { path = "references/xrtoolz/packages/xrtoolz-grad", editable = true }
-xrtoolz-reader = { path = "references/xrtoolz/packages/xrtoolz-reader", editable = true }
-xrtoolz-sklearn = { path = "references/xrtoolz/packages/xrtoolz-sklearn", editable = true }
+# git submodules in references/geostack/ (git submodule update --init).
+georeader-spaceml = { path = "references/geostack/georeader", editable = true }
+pipekit = { path = "references/geostack/pipekit/packages/pipekit", editable = true }
+pipekit-array = { path = "references/geostack/pipekit/packages/pipekit-array", editable = true }
+pipekit-cycle = { path = "references/geostack/pipekit/packages/pipekit-cycle", editable = true }
+pipekit-evaluate = { path = "references/geostack/pipekit/packages/pipekit-evaluate", editable = true }
+pipekit-experiment = { path = "references/geostack/pipekit/packages/pipekit-experiment", editable = true }
+pipekit-jax = { path = "references/geostack/pipekit/packages/pipekit-jax", editable = true }
+pipekit-train = { path = "references/geostack/pipekit/packages/pipekit-train", editable = true }
+geotoolz = { path = "references/geostack/geotoolz/packages/geotoolz", editable = true }
+geotoolz-catalog = { path = "references/geostack/geotoolz/packages/geotoolz-catalog", editable = true }
+geotoolz-cloud = { path = "references/geostack/geotoolz/packages/geotoolz-cloud", editable = true }
+geotoolz-patcher = { path = "references/geostack/geotoolz/packages/geotoolz-patcher", editable = true }
+geotoolz-products = { path = "references/geostack/geotoolz/packages/geotoolz-products", editable = true }
+xrtoolz = { path = "references/geostack/xrtoolz/packages/xrtoolz", editable = true }
+xrtoolz-core = { path = "references/geostack/xrtoolz/packages/xrtoolz-core", editable = true }
+xrtoolz-einx = { path = "references/geostack/xrtoolz/packages/xrtoolz-einx", editable = true }
+xrtoolz-grad = { path = "references/geostack/xrtoolz/packages/xrtoolz-grad", editable = true }
+xrtoolz-reader = { path = "references/geostack/xrtoolz/packages/xrtoolz-reader", editable = true }
+xrtoolz-sklearn = { path = "references/geostack/xrtoolz/packages/xrtoolz-sklearn", editable = true }
 
 [pypi-options.dependency-overrides]
 # The reference repos are uv workspaces whose own [tool.uv.sources] point
 # sibling packages at workspace or git sources; pin every one of them to
 # the submodule checkout so the solve has a single source per package.
-georeader-spaceml = { path = "references/georeader", editable = true }
-pipekit = { path = "references/pipekit/packages/pipekit", editable = true }
-pipekit-array = { path = "references/pipekit/packages/pipekit-array", editable = true }
-pipekit-cycle = { path = "references/pipekit/packages/pipekit-cycle", editable = true }
-pipekit-evaluate = { path = "references/pipekit/packages/pipekit-evaluate", editable = true }
-pipekit-experiment = { path = "references/pipekit/packages/pipekit-experiment", editable = true }
-pipekit-jax = { path = "references/pipekit/packages/pipekit-jax", editable = true }
-pipekit-train = { path = "references/pipekit/packages/pipekit-train", editable = true }
-geotoolz = { path = "references/geotoolz/packages/geotoolz", editable = true }
-geotoolz-catalog = { path = "references/geotoolz/packages/geotoolz-catalog", editable = true }
-geotoolz-cloud = { path = "references/geotoolz/packages/geotoolz-cloud", editable = true }
-geotoolz-patcher = { path = "references/geotoolz/packages/geotoolz-patcher", editable = true }
-geotoolz-products = { path = "references/geotoolz/packages/geotoolz-products", editable = true }
-xrtoolz = { path = "references/xrtoolz/packages/xrtoolz", editable = true }
-xrtoolz-core = { path = "references/xrtoolz/packages/xrtoolz-core", editable = true }
-xrtoolz-einx = { path = "references/xrtoolz/packages/xrtoolz-einx", editable = true }
-xrtoolz-grad = { path = "references/xrtoolz/packages/xrtoolz-grad", editable = true }
-xrtoolz-reader = { path = "references/xrtoolz/packages/xrtoolz-reader", editable = true }
-xrtoolz-sklearn = { path = "references/xrtoolz/packages/xrtoolz-sklearn", editable = true }
+georeader-spaceml = { path = "references/geostack/georeader", editable = true }
+pipekit = { path = "references/geostack/pipekit/packages/pipekit", editable = true }
+pipekit-array = { path = "references/geostack/pipekit/packages/pipekit-array", editable = true }
+pipekit-cycle = { path = "references/geostack/pipekit/packages/pipekit-cycle", editable = true }
+pipekit-evaluate = { path = "references/geostack/pipekit/packages/pipekit-evaluate", editable = true }
+pipekit-experiment = { path = "references/geostack/pipekit/packages/pipekit-experiment", editable = true }
+pipekit-jax = { path = "references/geostack/pipekit/packages/pipekit-jax", editable = true }
+pipekit-train = { path = "references/geostack/pipekit/packages/pipekit-train", editable = true }
+geotoolz = { path = "references/geostack/geotoolz/packages/geotoolz", editable = true }
+geotoolz-catalog = { path = "references/geostack/geotoolz/packages/geotoolz-catalog", editable = true }
+geotoolz-cloud = { path = "references/geostack/geotoolz/packages/geotoolz-cloud", editable = true }
+geotoolz-patcher = { path = "references/geostack/geotoolz/packages/geotoolz-patcher", editable = true }
+geotoolz-products = { path = "references/geostack/geotoolz/packages/geotoolz-products", editable = true }
+xrtoolz = { path = "references/geostack/xrtoolz/packages/xrtoolz", editable = true }
+xrtoolz-core = { path = "references/geostack/xrtoolz/packages/xrtoolz-core", editable = true }
+xrtoolz-einx = { path = "references/geostack/xrtoolz/packages/xrtoolz-einx", editable = true }
+xrtoolz-grad = { path = "references/geostack/xrtoolz/packages/xrtoolz-grad", editable = true }
+xrtoolz-reader = { path = "references/geostack/xrtoolz/packages/xrtoolz-reader", editable = true }
+xrtoolz-sklearn = { path = "references/geostack/xrtoolz/packages/xrtoolz-sklearn", editable = true }
+# Numerics, GeoML and GeoModels: installed only in the environments below,
+# each sibling pinned to its submodule (their own [tool.uv.sources] pin older
+# commits of one another; see .plans/submodules_by_stack.md).
+gaussx = { path = "references/numerics/gaussx", editable = true }
+finitevolx = { path = "references/numerics/finitevolX", editable = true }
+spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
+geonnax = { path = "references/geoml/geonnax", editable = true }
+kernellib = { path = "references/geoml/kernellib", editable = true }
+optax-bayes = { path = "references/geoml/optax_bayes", editable = true }
+filterax = { path = "references/geoml/filterax", editable = true }
+vardax = { path = "references/geoml/vardax", editable = true }
+gauss-flows = { path = "references/geoml/gauss_flows", editable = true }
+xtremax = { path = "references/geoml/xtremax", editable = true }
+pyrox = { path = "references/geoml/pyrox/packages/pyrox", editable = true }
+pyrox-gp = { path = "references/geoml/pyrox/packages/pyrox-gp", editable = true }
+pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = true }
+pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
+plumax = { path = "references/geomodels/plumax", editable = true }
+somax = { path = "references/geomodels/somax", editable = true }
+radtrax = { path = "references/geomodels/radtrax", editable = true }
 
 [feature.dev.dependencies]
 pytest = ">=8"
@@ -116,11 +136,47 @@ anywidget = "*"
 vegafusion = {version = ">=2", extras = ["embed"]}
 plotly = ">=5"
 
+# ── The layers above GeoStack ──────────────────────────────────────────────
+# Numerics ← GeoML ← GeoModels: each environment adds one layer on top of the
+# ones it may import. They share a solve group of their own, so the JAX stack
+# never touches the default (GeoStack) solve.
+
+[feature.numerics.pypi-dependencies]
+gaussx = { path = "references/numerics/gaussx", editable = true }
+finitevolx = { path = "references/numerics/finitevolX", editable = true }
+spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
+
+[feature.geoml.pypi-dependencies]
+geonnax = { path = "references/geoml/geonnax", editable = true }
+kernellib = { path = "references/geoml/kernellib", editable = true }
+optax-bayes = { path = "references/geoml/optax_bayes", editable = true }
+filterax = { path = "references/geoml/filterax", editable = true }
+vardax = { path = "references/geoml/vardax", editable = true }
+gauss-flows = { path = "references/geoml/gauss_flows", editable = true }
+xtremax = { path = "references/geoml/xtremax", editable = true }
+pyrox = { path = "references/geoml/pyrox/packages/pyrox", editable = true }
+pyrox-gp = { path = "references/geoml/pyrox/packages/pyrox-gp", editable = true }
+pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = true }
+pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
+
+[feature.geomodels.pypi-dependencies]
+plumax = { path = "references/geomodels/plumax", editable = true }
+somax = { path = "references/geomodels/somax", editable = true }
+radtrax = { path = "references/geomodels/radtrax", editable = true }
+# what the GeoModels notebooks import beyond the libraries
+optax = "*"
+openpyxl = "*"
+tqdm = "*"
+scikit-image = "*"
+
 [environments]
 default = { features = ["dev"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "default" }
 jupyterlab = { features = ["dev", "jupyterlab"], solve-group = "default" }
 marimo = { features = ["dev", "marimo"], solve-group = "default" }
+numerics = { features = ["dev", "numerics"], solve-group = "geo" }
+geoml = { features = ["dev", "numerics", "geoml"], solve-group = "geo" }
+geomodels = { features = ["dev", "numerics", "geoml", "geomodels"], solve-group = "geo" }
 
 [tasks]
 test = "pytest -v"

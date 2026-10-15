@@ -27,40 +27,52 @@ assert _spec is not None and _spec.loader is not None
 capabilities = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(capabilities)
 
-_absent = []
-for _dist in capabilities.UPSTREAM:
+
+def _skip_reason(layer: str) -> str | None:
+    """Why this layer's index cannot be checked here, or None."""
+    absent = []
+    for dist in capabilities.LAYERS[layer][1]:
+        try:
+            importlib.metadata.version(dist)
+        except importlib.metadata.PackageNotFoundError:
+            absent.append(dist)
+    if absent:
+        env = "default" if layer == "geostack" else layer
+        return f"{layer}: not installed ({', '.join(absent)}); run in `pixi -e {env}`"
     try:
-        importlib.metadata.version(_dist)
-    except importlib.metadata.PackageNotFoundError:
-        _absent.append(_dist)
-if _absent:
-    pytest.skip(
-        f"upstream libraries not installed ({', '.join(_absent)}); run in pixi",
-        allow_module_level=True,
-    )
-
-try:
-    capabilities.collect()
-except ModuleNotFoundError as err:
-    if (err.name or "").split(".")[0] == capabilities.PACKAGE:
-        raise
-    pytest.skip(
-        f"a public module imports {err.name!r}, which is not installed",
-        allow_module_level=True,
-    )
+        capabilities.collect(layer)
+    except ModuleNotFoundError as err:
+        if (err.name or "").split(".")[0] == capabilities.PACKAGE:
+            raise
+        return f"{layer}: a public module imports {err.name!r}, which is not installed"
+    return None
 
 
-def test_capability_index_is_current() -> None:
-    current = capabilities.INDEX.read_text(encoding="utf-8")
-    assert not capabilities.stale(current, capabilities.render()), (
-        "docs/api/capabilities.md is stale: run `make capabilities` and commit it."
+LAYERS = list(capabilities.LAYERS)
+
+
+@pytest.mark.parametrize("layer", LAYERS)
+def test_capability_index_is_current(layer: str) -> None:
+    if reason := _skip_reason(layer):
+        pytest.skip(reason)
+    page = capabilities.LAYERS[layer][2]
+    current = page.read_text(encoding="utf-8") if page.exists() else ""
+    assert not capabilities.stale(current, capabilities.render(layer)), (
+        f"docs/api/{page.name} is stale: run `make capabilities` and commit it."
     )
 
 
-def test_no_name_is_bound_to_two_objects() -> None:
-    _, clashes = capabilities.collect()
+@pytest.mark.parametrize("layer", LAYERS)
+def test_no_name_is_bound_to_two_objects(layer: str) -> None:
+    if reason := _skip_reason(layer):
+        pytest.skip(reason)
+    clashes, gone = capabilities.check_clashes(layer)
     assert not clashes, (
         "a name is exported for different objects by two modules, or shadows "
         f"an upstream name: {clashes}. Rename it, or add it to "
         "ALLOWED_SHARED_NAMES in scripts/capabilities.py with a reason."
+    )
+    assert not gone, (
+        f"{gone} no longer clash: remove them from KNOWN_CLASHES in "
+        "scripts/capabilities.py, so the list only shrinks."
     )
