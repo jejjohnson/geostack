@@ -33,6 +33,14 @@ and the proposals, lettered A to I, are the stack's backlog.
 
 +++
 
+:::{seealso} The domain-neutral version lives in pipekit
+pipekit's own docs distil these cases into fourteen
+[deployment patterns](https://jejjohnson.github.io/pipekit/patterns/), each
+with its pieces, its status and a runnable tutorial, without the geo
+libraries. This report stays the stack-wide view: the methane plume, the
+libraries each case needs, and the proposals A to I.
+:::
+
 :::{note} About this report
 :class: dropdown
 
