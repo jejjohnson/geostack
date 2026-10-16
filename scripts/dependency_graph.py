@@ -64,7 +64,7 @@ TIERS: dict[str, dict[str, int]] = {
         "pyrox": 2,
         "vardax": 3,
     },
-    "geomodels": {"plumax": 0, "radtrax": 0, "somax": 0},
+    "geomodels": {"radtrax": 0, "somax": 0, "plumax": 1},
 }
 #: what each tier holds, for the page
 TIER_ROLES = {
@@ -76,7 +76,10 @@ TIER_ROLES = {
         "ensemble filters and probabilistic models",
         "variational assimilation (may build on filterax)",
     ),
-    "geomodels": ("models; never import each other",),
+    "geomodels": (
+        "radiative transfer and dynamics",
+        "plume models, which may build on radtrax",
+    ),
 }
 #: violations the graph has today, with why; the check fails on a new one and
 #: on one that is gone, so the list only shrinks

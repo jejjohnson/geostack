@@ -122,8 +122,7 @@ What it shows:
 - **gaussx is the foundation.** Every repository in Numerics, GeoML and
   GeoModels except geonnax reaches it. A breaking change in gaussx is a
   change to almost the whole stack.
-- **The GeoModels repositories are independent.** plumax, somax and radtrax
-  import no one in their own layer.
+- **plumax is the one GeoModels repository that imports another.** It builds on radtrax: plume physics uses radiative transfer, never the reverse ([package boundaries](../geomodels/package_boundaries.md#pb-rules), rule 2). somax imports no one in its layer.
 - **The one cycle is inside GeoStack** (in red): pipekit-train imports
   `geopatcher.time` from geotoolz-patcher, and geotoolz depends on pipekit.
   The import is lazy and behind a `try`, so nothing fails at install time,
@@ -141,9 +140,7 @@ is the rule's name in [](#tbl-dg-violations).
    GeoModels on top. GeoStack and Numerics never import each other.
 2. **Within a layer, tiers point down** (`tier`). Each repository has a tier
    in its layer ([](#tbl-dg-tiers)) and imports only repositories of a lower
-   tier. Two repositories of the same tier never import each other. The
-   GeoModels repositories share one tier: code two of them need moves down
-   to the layer below.
+   tier. Two repositories of the same tier never import each other. In GeoModels, radtrax and somax share tier 0 and plumax sits above them in tier 1, because its plume-to-radiance coupling composes a plume model with radtrax's forward model.
 3. **Every library edge counts.** Base dependencies, extras, and imports,
    whether at module level, inside a function, behind a `try` or under
    `TYPE_CHECKING`, all go into the graph. An optional edge is still an edge,
@@ -186,7 +183,8 @@ is the rule's name in [](#tbl-dg-violations).
 <!-- tier-table:begin -->
 | Layer | Tier | Repositories | Holds |
 |---|---|---|---|
-| GeoModels | 0 | plumax, radtrax, somax | models; never import each other |
+| GeoModels | 1 | plumax | plume models, which may build on radtrax |
+| GeoModels | 0 | radtrax, somax | radiative transfer and dynamics |
 | GeoML | 3 | vardax | variational assimilation (may build on filterax) |
 | GeoML | 2 | filterax, pyrox | ensemble filters and probabilistic models |
 | GeoML | 1 | kernellib, optax_bayes, xtremax | kernels, optimisers and extremes |

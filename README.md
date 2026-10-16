@@ -165,7 +165,7 @@ them today, are on the [dependency graph page](docs/api/dependency_graph.md)):
 1. **Layers point down.** GeoModels → GeoML → Numerics / GeoStack; GeoStack
    and Numerics never import each other.
 2. **Within a layer, tiers point down.** A repository imports only lower
-   tiers of its own layer; the GeoModels repositories never import each other.
+   tiers of its own layer; in GeoModels only plumax imports another (radtrax).
 3. **Every library edge counts:** base dependencies, extras and imports,
    including lazy, `try`-guarded and `TYPE_CHECKING` ones; dev, docs and
    tutorial dependency groups do not.
