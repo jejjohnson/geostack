@@ -60,7 +60,7 @@ import numpy as np  # noqa: E402
 import xarray as xr  # noqa: E402
 from georeader import reflectance  # noqa: E402
 from georeader.readers.S2_SAFE_reader import read_srf  # noqa: E402
-from geotoolz.matched_filter import MatchedFilter  # noqa: E402
+from geoops.matched_filter import MatchedFilter  # noqa: E402
 from xrtoolz.atm.gas.ch4 import column_mass_to_delta_vmr  # noqa: E402
 
 # the shared synthetic spectrum lives beside this notebook

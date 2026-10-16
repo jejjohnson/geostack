@@ -51,9 +51,9 @@ import xarray as xr
 import xrcore
 from geocatalog import GeoSlice, build, patch
 from geopatcher import SpatialPatcher, spatial
-from geotoolz import matched_filter as mf
-from geotoolz import plume
-from geotoolz.patch_ops import ApplyToChips, GridSampler, MergePatches
+from geoops import matched_filter as mf
+from geoops import plume
+from geoops.patch_ops import ApplyToChips, GridSampler, MergePatches
 from pipekit import Lambda, Sequential
 from pipekit_array import MeanScalar
 from rasterio.transform import from_origin
@@ -330,7 +330,7 @@ if STATE == "target":
 # (e) What the base installs pull in
 xr_base = [r for r in md.requires("xrtoolz") if "extra ==" not in r]
 xr_reqs = sorted(r for r in xr_base if "reader" in r or "pipekit" in r)
-gz_reqs = sorted(r for r in md.requires("geotoolz") if r.startswith("pipekit"))
+gz_reqs = sorted(r for r in md.requires("geotoolz-ops") if r.startswith("pipekit"))
 
 # (f) Which of the 18 distributions still require `pipekit` by name. After F1
 # that name is another project on PyPI, so any such requirement would install

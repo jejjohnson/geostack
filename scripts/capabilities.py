@@ -69,7 +69,7 @@ UPSTREAM: dict[str, list[str]] = {
         "georeader.rasterio_reader",
         "georeader.mosaic",
     ],
-    "geotoolz": ["geotoolz"],
+    "geotoolz-ops": ["geoops"],
     "geotoolz-catalog": ["geocatalog"],
     "geotoolz-cloud": ["geocloud"],
     "geotoolz-patcher": ["geopatcher"],
@@ -90,7 +90,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "pipekit-jax": "JAX / Equinox carrier integration for pipekit.",
     "pipekit-train": "Training pipelines for emulators and amortized inference.",
     "georeader-spaceml": "Raster reading and the GeoTensor carrier.",
-    "geotoolz": "Composable remote-sensing operators on GeoTensor.",
+    "geotoolz-ops": "Composable remote-sensing operators on GeoTensor.",
     "geotoolz-catalog": "Spatiotemporal catalog over geospatial files.",
     "geotoolz-cloud": "Cloud object storage and batched async COG reads.",
     "geotoolz-patcher": "Four-axis patcher: split, run per patch, stitch.",
@@ -254,11 +254,11 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         " xarray-aware descriptor used by xrtoolz operators."
     ),
     "Composite": (
-        "geotoolz.Composite builds a band composite; pipekit_train.Composite is"
+        "geoops.Composite builds a band composite; pipekit_train.Composite is"
         " a weighted sum of losses."
     ),
     "SklearnOp": (
-        "One scikit-learn adapter per carrier: geotoolz.SklearnOp for"
+        "One scikit-learn adapter per carrier: geoops.SklearnOp for"
         " GeoTensor, xrsklearn.SklearnOp for xarray."
     ),
     "register": (

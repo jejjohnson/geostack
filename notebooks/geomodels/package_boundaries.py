@@ -165,7 +165,7 @@ assert sum(plx_loc[s] for s in stays) == 12_307  # the dispersion side
 # ## Stage 2 · What geotoolz's `plume` and `matched_filter` import from geotoolz
 
 # %%
-GZ = GEOSTACK / "geotoolz/packages/geotoolz/src/geotoolz"
+GZ = GEOSTACK / "geotoolz/packages/geotoolz-ops/src/geoops"
 
 
 def internal_imports(pkg: str) -> dict[str, list[str]]:
@@ -197,14 +197,14 @@ callers = sorted(
     if not f.is_relative_to(GZ / "plume")
     and not f.is_relative_to(GZ / "matched_filter")
     and any(
-        m.startswith(("geotoolz.plume", "geotoolz.matched_filter"))
+        m.startswith(("geoops.plume", "geoops.matched_filter"))
         for m in imports_of(f)
     )
 )
 root_reexports = [
     m
     for m in sorted(imports_of(GZ / "__init__.py"))
-    if m in ("geotoolz.plume", "geotoolz.matched_filter")
+    if m in ("geoops.plume", "geoops.matched_filter")
 ]
 stage2 = {
     "plume": gz_plume,
@@ -221,19 +221,19 @@ stage2
 assert stage2["loc"] == {"plume": 1_724, "matched_filter": 2_622}
 assert stage2["n_private_plume"] == 9 and stage2["n_private_mf"] == 6
 assert set(gz_plume) == {
-    "geotoolz._src.bands",
-    "geotoolz._src.config",
-    "geotoolz._src.geo",
-    "geotoolz._src.labels",
-    "geotoolz._src.optional",
-    "geotoolz._src.shape",
-    "geotoolz._src.valid",
-    "geotoolz._src.wrap",
-    "geotoolz.segment._src.array",
+    "geoops._src.bands",
+    "geoops._src.config",
+    "geoops._src.geo",
+    "geoops._src.labels",
+    "geoops._src.optional",
+    "geoops._src.shape",
+    "geoops._src.valid",
+    "geoops._src.wrap",
+    "geoops.segment._src.array",
 }
 # only the package root imports them: nothing else in geotoolz calls them
 assert stage2["callers"] == ["__init__.py"]
-assert stage2["root_reexports"] == ["geotoolz.matched_filter", "geotoolz.plume"]
+assert stage2["root_reexports"] == ["geoops.matched_filter", "geoops.plume"]
 
 # %% [markdown]
 # ## Stage 3 · Implementations that exist more than once
@@ -328,7 +328,7 @@ META = {
     "pipekit": GEOSTACK / "pipekit/packages/pipekit/pyproject.toml",
     "pipekit-cycle": GEOSTACK / "pipekit/packages/pipekit-cycle/pyproject.toml",
     "georeader-spaceml": GEOSTACK / "georeader/pyproject.toml",
-    "geotoolz": GEOSTACK / "geotoolz/packages/geotoolz/pyproject.toml",
+    "geotoolz": GEOSTACK / "geotoolz/packages/geotoolz-ops/pyproject.toml",
     "xrtoolz": GEOSTACK / "xrtoolz/packages/xrtoolz/pyproject.toml",
     "gaussx": NUMERICS / "gaussx/pyproject.toml",
     "spectraldiffx": NUMERICS / "spectraldiffx/pyproject.toml",
@@ -400,7 +400,7 @@ assert stage4["today"] == {
     "xrtoolz": (["pipekit"], []),
 }
 assert stage4["cycles_today"] == [] and stage4["cycles_after"] == []
-# re-exporting the moved code from geotoolz closes two loops through the extras
+# re-exporting the moved code from geoops closes two loops through the extras
 assert stage4["cycles_shim"] == [["geotoolz", "plumax", "radtrax"]]
 assert stage4["layers_after"] == {
     "pipekit": 0,
