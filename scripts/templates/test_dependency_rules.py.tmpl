@@ -35,22 +35,70 @@ ALLOWED: dict[str, str] = {allowed}
 #: distribution -> reason
 UNDECLARED_OK: dict[str, str] = {exceptions}
 
+#: directories that hold no import root
+SKIP_DIRS = {skip_dirs}
+
 
 def _norm(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
+def _project(meta: dict) -> dict:
+    """The project table of a PEP 621 or a poetry ``pyproject.toml``."""
+    return meta.get("project") or meta["tool"]["poetry"]
+
+
 def _declared(pyproject: str) -> tuple[set[str], set[str]]:
     """(base dependencies, extras) of a package, as normalised names."""
     meta = tomllib.loads((ROOT / pyproject).read_text(encoding="utf-8"))
-    project = meta["project"]
+    project = _project(meta)
 
     def names(reqs: list[str]) -> set[str]:
         heads = (re.split(r"[\s\[<>=!~;@(]", r.strip(), maxsplit=1)[0] for r in reqs)
         return {{_norm(h) for h in heads}}
 
-    extras = project.get("optional-dependencies", {{}}).values()
-    return names(project.get("dependencies", [])), names([r for v in extras for r in v])
+    deps = project.get("dependencies") or []
+    if isinstance(deps, dict):  # poetry: a name -> constraint table
+        optional = {{
+            _norm(n)
+            for n, c in deps.items()
+            if isinstance(c, dict) and c.get("optional")
+        }}
+        listed = [r for v in (project.get("extras") or {{}}).values() for r in v]
+        return {{_norm(n) for n in deps}} - optional, optional | names(listed)
+    extras = (project.get("optional-dependencies") or {{}}).values()
+    return names(deps), names([r for v in extras for r in v])
+
+
+def _roots(meta: dict, path: Path) -> tuple[str, ...]:
+    """A package's import roots: from its build metadata, else from its tree.
+
+    Hatch's ``packages`` and poetry's ``packages`` name them; without either, a
+    ``src/`` layout holds packages (namespace ones too) and single-file
+    modules, and a flat layout holds the directories with an ``__init__.py``.
+    """
+    tool = meta.get("tool", {{}})
+    wheel = tool.get("hatch", {{}}).get("build", {{}}).get("targets", {{}}).get("wheel", {{}})
+    named = list(wheel.get("packages", []))
+    for entry in tool.get("poetry", {{}}).get("packages", []):
+        named.append(str(Path(entry.get("from", ".")) / entry["include"]))
+    if named:
+        found = [path / n for n in named if (path / n).exists()]
+    elif (path / "src").is_dir():
+        found = [
+            p
+            for p in (path / "src").iterdir()
+            if p.name not in SKIP_DIRS
+            and (p.stem if p.suffix == ".py" else p.name).isidentifier()
+            and ((p.is_dir() and any(p.rglob("*.py"))) or p.suffix == ".py")
+        ]
+    else:
+        found = [
+            d
+            for d in path.iterdir()
+            if (d / "__init__.py").exists() and d.name not in SKIP_DIRS
+        ]
+    return tuple(str(r.relative_to(ROOT)) for r in sorted(found))
 
 
 def _type_checking(test: ast.expr) -> bool:
@@ -165,14 +213,19 @@ def _uses(dist: str) -> set[str]:
 
 
 def test_packages_are_current() -> None:
-    # a workspace member added after this file was generated would go unchecked
+    # a workspace member or an import root added after this file was generated
+    # would go unchecked
     pyprojects = sorted(ROOT.glob("packages/*/pyproject.toml"))
     found = {{}}
     for pyproject in pyprojects or [ROOT / "pyproject.toml"]:
         meta = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-        found[_norm(meta["project"]["name"])] = str(pyproject.relative_to(ROOT))
-    expected = {{dist: entry[0] for dist, entry in PACKAGES.items()}}
-    assert found == expected, "the packages changed: regenerate this file"
+        found[_norm(_project(meta)["name"])] = (
+            str(pyproject.relative_to(ROOT)),
+            _roots(meta, pyproject.parent),
+        )
+    assert found == PACKAGES, (
+        "the packages or their roots changed: regenerate this file"
+    )
 
 
 @pytest.mark.parametrize("dist", sorted(PACKAGES))

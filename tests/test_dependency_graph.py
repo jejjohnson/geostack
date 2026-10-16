@@ -211,5 +211,21 @@ def test_namespace_and_single_file_roots_are_found(tmp_path: Path) -> None:
 @pytest.mark.parametrize("repo", sorted(GRAPH.repos))
 def test_every_guard_renders(repo: str) -> None:
     path, source = dg.guard(repo, GRAPH)
-    compile(source, path, "exec")
     assert path.endswith("test_dependency_rules.py")
+    # run its freshness check as if it sat at its path in the submodule: it
+    # rediscovers the packages and their roots the way this script does
+    where = dg.REFS / GRAPH.repos[repo] / repo / path
+    namespace = {"__file__": str(where), "__name__": "guard"}
+    exec(compile(source, str(where), "exec"), namespace)
+    namespace["test_packages_are_current"]()
+
+
+def test_a_guard_catches_a_stale_import_root() -> None:
+    path, source = dg.guard("pipekit", GRAPH)
+    where = dg.REFS / "geostack" / "pipekit" / path
+    namespace = {"__file__": str(where), "__name__": "guard"}
+    exec(compile(source, str(where), "exec"), namespace)
+    pyproject, roots = namespace["PACKAGES"]["pipekit-train"]
+    namespace["PACKAGES"]["pipekit-train"] = (pyproject, roots[:-1])
+    with pytest.raises(AssertionError, match="regenerate"):
+        namespace["test_packages_are_current"]()

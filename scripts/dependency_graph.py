@@ -800,6 +800,7 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         packages=table(packages),
         forbidden=literal(forbidden),
         allowed=literal(ok),
+        skip_dirs="{" + "".join(f"\n    {q(d)}," for d in sorted(SKIP_DIRS)) + "\n}",
         exceptions=reasons(
             {v[1]: why for v, why in UNDECLARED_OK.items() if v[0] in packages}
         ),
