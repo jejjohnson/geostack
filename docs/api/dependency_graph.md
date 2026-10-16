@@ -21,12 +21,11 @@ geostack builds on eighteen repositories in four layers. This page draws how
 they depend on one another, from what each library declares (base
 dependencies and extras) and what its code actually imports (including
 lazy, `try`-guarded and type-checking-only imports). It then states eight
-rules that keep the graph free of cycles. The graph obeys them almost
-everywhere: no edge points up a layer and no GeoModels repository imports
-another. It has **one cycle, pipekit ⇄ geotoolz**, made by a single lazy
-import in pipekit-train that is also broken. It also has **two imports
-that their package does not declare**. [](#tbl-dg-violations) lists each one
-with its fix.
+rules that keep the graph free of cycles.
+
+<!-- violation-summary:begin -->
+Today it has **one cycle between repositories (geotoolz ⇄ pipekit)**, **one edge that does not point down a tier** and **four imports their package does not declare**. [](#tbl-dg-violations) lists each one with its fix.
+<!-- violation-summary:end -->
 
 +++
 
@@ -173,9 +172,10 @@ is the rule's name in [](#tbl-dg-violations).
 7. **A third-party repository is a leaf** (`third-party`). georeader belongs
    to spaceml-org: we depend on it and never change it, and nothing of ours
    moves into it.
-8. **A new repository arrives with its place** (`untiered`). Adding a
+8. **A new repository arrives with its place** (`untiered`, `stale-tier`). Adding a
    submodule means adding it to `TIERS` in `scripts/dependency_graph.py` with
-   its layer and tier, in the same pull request.
+   its layer and tier, in the same pull request, and removing or renaming one
+   means changing its entry there too.
 
 (dg-tiers)=
 ## Layers and tiers
@@ -220,10 +220,12 @@ the shared vocabulary belongs in filterax, and vardax reuses it
 <!-- violation-table:begin -->
 | Rule | From | To | Where | Why, and the fix |
 |---|---|---|---|---|
-| cycle | geotoolz | pipekit | `geotoolz ⇄ pipekit` | pipekit-train's _xreader lazily imports geopatcher.time (which no longer exists); Report 16 D2 moves the dataset to geopatcher.integrations.train |
-| tier | pipekit | geotoolz | `pipekit-train → geotoolz-patcher` | the same import |
-| undeclared | pipekit-train | geotoolz-patcher | `src/pipekit_train/xarray_window.py (guarded)` | the same import |
-| undeclared | somax | filterax | `somax/_src/da/filterax_bridge.py (module)` | module-level imports in somax/_src/da, declared only in the da dependency group; make it an extra |
+| cycle | geotoolz | pipekit | `geotoolz ⇄ pipekit` | pipekit-train's _xreader and xarray_window import geopatcher.time (which no longer exists); Report 16 D2 moves the dataset to geopatcher.integrations.train |
+| tier | pipekit-train | geotoolz-patcher | `import, src/pipekit_train/xarray_window.py (guarded)` | the same imports |
+| undeclared | pipekit-train:src/pipekit_train/_xreader.py | geotoolz-patcher | `lazy` | the same imports |
+| undeclared | pipekit-train:src/pipekit_train/xarray_window.py | geotoolz-patcher | `guarded` | the same imports |
+| undeclared | somax:somax/_src/da/filterax_bridge.py | filterax | `module` | module-level imports in somax/_src/da, declared only in the da dependency group; make it an extra |
+| undeclared | somax:somax/_src/da/obs.py | filterax | `module` | the same extra |
 <!-- violation-table:end -->
 :::
 
@@ -233,7 +235,7 @@ The fixes:
    (`geopatcher.integrations.train`, behind `geotoolz-patcher[train]`). This
    is [Report 16](../reports/16_geo_data_stack.md#r16-ws-d)'s step D2, and
    rule 6's "move the adapter up". It removes the cycle, the tier break and
-   the undeclared import, which are three rows for one import. The import is
+   the two undeclared imports, which are four rows for one dataset. The imports are
    broken anyway: geotoolz-patcher has `geopatcher.temporal`, not
    `geopatcher.time`.
 2. **Make somax's filterax import an extra.** `somax/_src/da` imports

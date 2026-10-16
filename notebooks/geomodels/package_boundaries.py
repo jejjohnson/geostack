@@ -353,39 +353,19 @@ def edges(graph, with_extras=True):
     }
 
 
+# the cycle check is the one tests/test_dependency_graph.py enforces
+dg_spec = importlib.util.spec_from_file_location(
+    "dependency_graph", root / "scripts/dependency_graph.py"
+)
+dg = importlib.util.module_from_spec(dg_spec)
+sys.modules["dependency_graph"] = dg  # dataclasses look their module up
+dg_spec.loader.exec_module(dg)
+
+
 def sccs(graph) -> list[list[str]]:
-    """Tarjan: the strongly connected components with more than one node."""
-    adj = defaultdict(set)
-    for a, b in edges(graph):
-        adj[a].add(b)
-    index, low, stack, on, out, i = {}, {}, [], set(), [], [0]
-
-    def visit(v):
-        index[v] = low[v] = i[0]
-        i[0] += 1
-        stack.append(v)
-        on.add(v)
-        for w in adj[v]:
-            if w not in index:
-                visit(w)
-                low[v] = min(low[v], low[w])
-            elif w in on:
-                low[v] = min(low[v], index[w])
-        if low[v] == index[v]:
-            comp = []
-            while True:
-                w = stack.pop()
-                on.discard(w)
-                comp.append(w)
-                if w == v:
-                    break
-            if len(comp) > 1:
-                out.append(sorted(comp))
-
-    for v in sorted(set(graph) | {b for _, b in edges(graph)}):
-        if v not in index:
-            visit(v)
-    return out
+    """The strongly connected components with more than one node."""
+    nodes = set(graph) | {b for _, b in edges(graph)}
+    return dg.sccs(sorted(nodes), sorted(edges(graph)))
 
 
 def layers(graph) -> dict[str, int]:

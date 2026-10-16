@@ -9,8 +9,10 @@ README. It reads files only, so it runs in every environment.
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -55,10 +57,115 @@ def test_the_cycle_check_is_live() -> None:
     assert ["geotoolz", "pipekit", "plumax"] in dg.sccs(list(GRAPH.repos), edges)
 
 
+def _with_dependency(source: str, target: str) -> dg.Graph:
+    """The graph with one more base dependency, source → target."""
+    pkg = GRAPH.pkgs[source]
+    pkgs = {**GRAPH.pkgs, source: replace(pkg, base=pkg.base | {target})}
+    return dg.graph(pkgs, GRAPH.imports)
+
+
+def _with_import(source: str, target: str, where: str) -> dg.Graph:
+    """The graph with one more module-level import, in a new file."""
+    imp = {p: dict(found) for p, found in GRAPH.imports.items()}
+    new = dg.Import(target, where, "module")
+    imp[source][target] = [*imp[source].get(target, []), new]
+    return dg.graph(GRAPH.pkgs, imp)
+
+
 def test_a_reverse_layer_edge_is_caught() -> None:
-    upward = dg.Edge("gaussx", "plumax", "import", "gaussx → plumax")
-    broken = dg.Graph(GRAPH.pkgs, GRAPH.imports, [*GRAPH.edges, upward])
+    broken = _with_dependency("gaussx", "plumax")
     assert ("upward", "gaussx", "plumax") in dg.violations(broken)
+
+
+def test_the_foundation_layers_do_not_import_each_other() -> None:
+    assert ("upward", "gaussx", "pipekit") in dg.violations(
+        _with_dependency("gaussx", "pipekit")
+    )
+    assert ("upward", "pipekit", "gaussx") in dg.violations(
+        _with_dependency("pipekit", "gaussx")
+    )
+    _, source = dg.guard("gaussx", GRAPH)
+    assert '"pipekit": "pipekit"' in source.split("ALLOWED")[0]  # forbidden
+
+
+def test_a_second_package_edge_between_known_repositories_is_new() -> None:
+    new, _ = dg.check(_with_dependency("pipekit-cycle", "geotoolz-cloud"))
+    assert ("tier", "pipekit-cycle", "geotoolz-cloud") in new
+
+
+def test_a_second_undeclared_import_is_new() -> None:
+    new, _ = dg.check(_with_import("somax", "filterax", "somax/_src/new.py"))
+    assert set(new) == {("undeclared", "somax:somax/_src/new.py", "filterax")}
+
+
+def test_a_stale_tier_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(dg.TIERS["geoml"], "gone", 0)
+    assert ("stale-tier", "gone", "geoml") in dg.violations(GRAPH)
+
+
+def test_every_edge_of_a_longer_cycle_is_red() -> None:
+    # the counterfactual re-export closes geotoolz → plumax → pipekit → geotoolz
+    g = _with_dependency("geotoolz", "plumax")
+    lines = dg.mermaid(g, "```mermaid").splitlines()
+    drawn = [line.split() for line in lines if "-->" in line or "-.->" in line]
+    loop = {"geotoolz", "pipekit", "plumax"}
+    on_loop = {str(i) for i, (a, _, b) in enumerate(drawn) if {a, b} <= loop}
+    style = next(line for line in lines if "linkStyle" in line)
+    assert set(style.split()[1].split(",")) == on_loop
+    assert len(on_loop) >= 3
+
+
+IMPORTS = """
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import a
+else:
+    import b
+if not TYPE_CHECKING:
+    import c
+else:
+    import d
+try:
+    import e
+except ImportError:
+    import f
+else:
+    import g
+finally:
+    import h
+def lazy():
+    import i
+"""
+
+
+def test_imports_are_classified_by_branch() -> None:
+    found = dict(dg._imports(ast.parse(IMPORTS)))
+    assert found == {
+        "typing": "module",
+        "a": "typing",
+        "b": "module",
+        "c": "module",
+        "d": "typing",
+        "e": "guarded",
+        "f": "guarded",
+        "g": "guarded",
+        "h": "module",
+        "i": "lazy",
+    }
+
+
+def test_namespace_and_single_file_roots_are_found(tmp_path: Path) -> None:
+    (tmp_path / "src" / "ns" / "inner").mkdir(parents=True)
+    (tmp_path / "src" / "ns" / "inner" / "mod.py").write_text("")
+    (tmp_path / "src" / "single.py").write_text("")
+    (tmp_path / "src" / "tests").mkdir()
+    (tmp_path / "src" / "tests" / "test_x.py").write_text("")
+    roots = dg._roots({}, tmp_path)
+    assert [dg._module_name(r) for r in roots] == ["ns", "single"]
+    hatch = {
+        "tool": {"hatch": {"build": {"targets": {"wheel": {"packages": ["src/ns"]}}}}}
+    }
+    assert dg._roots(hatch, tmp_path) == [tmp_path / "src" / "ns"]
 
 
 @pytest.mark.parametrize("repo", sorted(GRAPH.repos))

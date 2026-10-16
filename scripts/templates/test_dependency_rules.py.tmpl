@@ -53,11 +53,19 @@ def _declared(pyproject: str) -> tuple[set[str], set[str]]:
     return names(project.get("dependencies", [])), names([r for v in extras for r in v])
 
 
+def _type_checking(test: ast.expr) -> bool:
+    if isinstance(test, ast.Name):
+        return test.id == "TYPE_CHECKING"
+    return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+
+
 def _imports(path: Path) -> list[tuple[str, str, int]]:
     """(top-level module, how, line) for each absolute import in a file.
 
     ``how`` is ``module``, ``lazy`` (inside a function), ``guarded`` (inside a
-    ``try``) or ``typing`` (under ``TYPE_CHECKING``).
+    ``try``, its handlers or its ``else``; ``finally`` always runs) or
+    ``typing`` (under ``if TYPE_CHECKING``, or the ``else`` of
+    ``if not TYPE_CHECKING``).
     """
     with warnings.catch_warnings():  # an invalid escape must not drop the file
         warnings.simplefilter("ignore")
@@ -65,29 +73,43 @@ def _imports(path: Path) -> list[tuple[str, str, int]]:
     out: list[tuple[str, str, int]] = []
 
     def visit(node: ast.AST, how: str) -> None:
+        if isinstance(node, ast.Import):
+            out.extend((a.name.split(".")[0], how, node.lineno) for a in node.names)
+            return
+        if isinstance(node, ast.ImportFrom):
+            if node.module and not node.level:
+                out.append((node.module.split(".")[0], how, node.lineno))
+            return
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
+            how = "lazy" if how == "module" else how
+        elif isinstance(node, ast.Try | ast.TryStar):
+            guarded = "guarded" if how == "module" else how
+            for child in [*node.body, *node.handlers, *node.orelse]:
+                visit(child, guarded)
+            for child in node.finalbody:
+                visit(child, how)
+            return
+        elif isinstance(node, ast.If):
+            test, body, orelse = node.test, "typing", how
+            if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+                test, body, orelse = test.operand, how, "typing"
+            if _type_checking(test):
+                for child in node.body:
+                    visit(child, body)
+                for child in node.orelse:
+                    visit(child, orelse)
+                return
         for child in ast.iter_child_nodes(node):
-            here = how
-            if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
-                here = "lazy" if how == "module" else how
-            elif isinstance(child, ast.Try):
-                here = "guarded" if how == "module" else how
-            elif isinstance(child, ast.If) and "TYPE_CHECKING" in ast.unparse(
-                child.test
-            ):
-                here = "typing"
-            if isinstance(child, ast.Import):
-                line = child.lineno
-                out.extend((a.name.split(".")[0], here, line) for a in child.names)
-            elif isinstance(child, ast.ImportFrom) and child.module and not child.level:
-                out.append((child.module.split(".")[0], here, child.lineno))
-            visit(child, here)
+            visit(child, how)
 
     visit(tree, "module")
     return out
 
 
 def _files(roots: tuple[str, ...]) -> list[Path]:
-    return sorted(f for r in roots for f in (ROOT / r).rglob("*.py"))
+    # an import root is a package directory or a single-module ``.py`` file
+    paths = [ROOT / r for r in roots]
+    return sorted(f for p in paths for f in ([p] if p.is_file() else p.rglob("*.py")))
 
 
 @pytest.mark.parametrize("dist", sorted(PACKAGES))

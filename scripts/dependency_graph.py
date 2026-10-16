@@ -38,8 +38,11 @@ REFS = ROOT / "references"
 PAGES = (ROOT / "docs" / "api" / "dependency_graph.md", ROOT / "README.md")
 BEGIN, END = "<!-- dependency-graph:begin -->", "<!-- dependency-graph:end -->"
 
-#: layers from the bottom up; an edge may point to its own layer or one below
+#: layers from the bottom up
 LAYERS = ("geostack", "numerics", "geoml", "geomodels")
+#: an edge between layers points to a lower rank; GeoStack and Numerics share
+#: the bottom rank, so neither may import the other
+LAYER_RANK = {"geostack": 0, "numerics": 0, "geoml": 1, "geomodels": 2}
 TITLES = {
     "geostack": "GeoStack",
     "numerics": "Numerics",
@@ -76,17 +79,30 @@ TIER_ROLES = {
 }
 #: violations the graph has today, with why; the check fails on a new one and
 #: on one that is gone, so the list only shrinks
+#: Rules between packages name the two packages, and ``undeclared`` names the
+#: importing file, so a new edge or a new import is a new entry
 KNOWN: dict[tuple[str, str, str], str] = {
     ("cycle", "geotoolz", "pipekit"): (
-        "pipekit-train's _xreader lazily imports geopatcher.time (which no longer"
-        " exists); Report 16 D2 moves the dataset to geopatcher.integrations.train"
+        "pipekit-train's _xreader and xarray_window import geopatcher.time (which"
+        " no longer exists); Report 16 D2 moves the dataset to"
+        " geopatcher.integrations.train"
     ),
-    ("tier", "pipekit", "geotoolz"): "the same import",
-    ("undeclared", "pipekit-train", "geotoolz-patcher"): "the same import",
-    ("undeclared", "somax", "filterax"): (
+    ("tier", "pipekit-train", "geotoolz-patcher"): "the same imports",
+    (
+        "undeclared",
+        "pipekit-train:src/pipekit_train/_xreader.py",
+        "geotoolz-patcher",
+    ): "the same imports",
+    (
+        "undeclared",
+        "pipekit-train:src/pipekit_train/xarray_window.py",
+        "geotoolz-patcher",
+    ): "the same imports",
+    ("undeclared", "somax:somax/_src/da/filterax_bridge.py", "filterax"): (
         "module-level imports in somax/_src/da, declared only in the da"
         " dependency group; make it an extra"
     ),
+    ("undeclared", "somax:somax/_src/da/obs.py", "filterax"): "the same extra",
 }
 #: imports that stay undeclared on purpose, and why: a guarded integration
 #: with a library that cannot be installed beside the package. Each repository's
@@ -120,7 +136,46 @@ class Package:
     path: Path
     base: set[str] = field(default_factory=set)
     extras: set[str] = field(default_factory=set)
-    modules: list[Path] = field(default_factory=list)
+    modules: list[Path] = field(default_factory=list)  # import roots
+
+
+def _module_name(root: Path) -> str:
+    """The top-level import name of an import root: a directory or a ``.py``."""
+    return root.stem if root.suffix == ".py" else root.name
+
+
+def _files(root: Path) -> list[Path]:
+    return [root] if root.is_file() else sorted(root.rglob("*.py"))
+
+
+def _roots(meta: dict, path: Path) -> list[Path]:
+    """A package's import roots: from its build metadata, else from its tree.
+
+    Hatch's ``packages`` and poetry's ``packages`` name them; without either, a
+    ``src/`` layout holds packages (namespace ones too) and single-file
+    modules, and a flat layout holds the directories with an ``__init__.py``.
+    """
+    tool = meta.get("tool", {})
+    wheel = tool.get("hatch", {}).get("build", {}).get("targets", {}).get("wheel", {})
+    named = list(wheel.get("packages", []))
+    for entry in tool.get("poetry", {}).get("packages", []):
+        named.append(str(Path(entry.get("from", ".")) / entry["include"]))
+    if named:
+        return sorted(path / n for n in named if (path / n).exists())
+    src = path / "src"
+    if src.is_dir():
+        return sorted(
+            p
+            for p in src.iterdir()
+            if p.name not in SKIP_DIRS
+            and _module_name(p).isidentifier()
+            and ((p.is_dir() and any(p.rglob("*.py"))) or p.suffix == ".py")
+        )
+    return sorted(
+        d
+        for d in path.iterdir()
+        if (d / "__init__.py").exists() and d.name not in SKIP_DIRS
+    )
 
 
 def packages() -> dict[str, Package]:
@@ -142,12 +197,7 @@ def packages() -> dict[str, Package]:
                     for reqs in (project.get("optional-dependencies") or {}).values()
                     for r in reqs
                 }
-                src = pkg.path / "src" if (pkg.path / "src").is_dir() else pkg.path
-                pkg.modules = sorted(
-                    d
-                    for d in src.iterdir()
-                    if (d / "__init__.py").exists() and d.name not in SKIP_DIRS
-                )
+                pkg.modules = _roots(meta, pkg.path)
                 out[pkg.name] = pkg
     names = set(out)
     for pkg in out.values():
@@ -163,26 +213,47 @@ class Import:
     how: str  # "module", "lazy", "guarded" or "typing"
 
 
+def _type_checking(test: ast.expr) -> bool:
+    """Whether a test is ``TYPE_CHECKING`` or ``typing.TYPE_CHECKING``."""
+    if isinstance(test, ast.Name):
+        return test.id == "TYPE_CHECKING"
+    return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+
+
 def _imports(tree: ast.AST) -> list[tuple[str, str]]:
     """(top-level module, how) for every absolute import in a module."""
     out: list[tuple[str, str]] = []
 
     def visit(node: ast.AST, how: str) -> None:
+        if isinstance(node, ast.Import):
+            out.extend((a.name.split(".")[0], how) for a in node.names)
+            return
+        if isinstance(node, ast.ImportFrom):
+            if node.module and not node.level:
+                out.append((node.module.split(".")[0], how))
+            return
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
+            how = "lazy" if how == "module" else how
+        elif isinstance(node, ast.Try | ast.TryStar):
+            # the body, handlers and else may not run; finally always does
+            guarded = "guarded" if how == "module" else how
+            for child in [*node.body, *node.handlers, *node.orelse]:
+                visit(child, guarded)
+            for child in node.finalbody:
+                visit(child, how)
+            return
+        elif isinstance(node, ast.If):
+            test, body, orelse = node.test, "typing", how
+            if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+                test, body, orelse = test.operand, how, "typing"
+            if _type_checking(test):
+                for child in node.body:
+                    visit(child, body)
+                for child in node.orelse:
+                    visit(child, orelse)
+                return
         for child in ast.iter_child_nodes(node):
-            here = how
-            if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
-                here = "lazy" if how == "module" else how
-            elif isinstance(child, ast.Try):
-                here = "guarded" if how == "module" else how
-            elif isinstance(child, ast.If) and "TYPE_CHECKING" in ast.unparse(
-                child.test
-            ):
-                here = "typing"
-            if isinstance(child, ast.Import):
-                out.extend((a.name.split(".")[0], here) for a in child.names)
-            elif isinstance(child, ast.ImportFrom) and child.module and not child.level:
-                out.append((child.module.split(".")[0], here))
-            visit(child, here)
+            visit(child, how)
 
     visit(tree, "module")
     return out
@@ -191,27 +262,32 @@ def _imports(tree: ast.AST) -> list[tuple[str, str]]:
 RANK = {"module": 0, "guarded": 1, "lazy": 2, "typing": 3}
 
 
-def imports(pkgs: dict[str, Package]) -> dict[str, dict[str, Import]]:
-    """For each package, the other packages it imports, the strongest way."""
-    owner = {m.name: p.name for p in pkgs.values() for m in p.modules}
-    out: dict[str, dict[str, Import]] = {}
+def imports(pkgs: dict[str, Package]) -> dict[str, dict[str, list[Import]]]:
+    """For each package, the other packages it imports: one ``Import`` per file
+    (the strongest way that file imports it), strongest first."""
+    owner = {_module_name(m): p.name for p in pkgs.values() for m in p.modules}
+    out: dict[str, dict[str, list[Import]]] = {}
     for pkg in pkgs.values():
-        found: dict[str, Import] = {}
+        found: dict[tuple[str, str], Import] = {}
         for module in pkg.modules:
-            for f in sorted(module.rglob("*.py")):
+            for f in _files(module):
                 # an upstream invalid escape warns; under warnings-as-errors that
                 # would turn into a SyntaxError and silently drop the file
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     tree = ast.parse(f.read_text(encoding="utf-8"))
+                where = str(f.relative_to(pkg.path))
                 for top, how in _imports(tree):
                     dist = owner.get(top)
                     if dist is None or dist == pkg.name:
                         continue
-                    old = found.get(dist)
+                    old = found.get((dist, where))
                     if old is None or RANK[how] < RANK[old.how]:
-                        found[dist] = Import(dist, str(f.relative_to(pkg.path)), how)
-        out[pkg.name] = found
+                        found[(dist, where)] = Import(dist, where, how)
+        by_target: dict[str, list[Import]] = defaultdict(list)
+        for im in sorted(found.values(), key=lambda i: (RANK[i.how], i.where)):
+            by_target[im.target].append(im)
+        out[pkg.name] = dict(by_target)
     return out
 
 
@@ -220,28 +296,43 @@ class Edge:
     source: str
     target: str
     kind: str  # "base", "extra" or "import": the strongest evidence
-    via: str  # one package-level example
+    via: str  # between repositories, one package-level example; between
+    # packages, the importing file of an import edge
 
 
 KIND_RANK = {"base": 0, "extra": 1, "import": 2}
 
 
-def repo_edges(
-    pkgs: dict[str, Package], imp: dict[str, dict[str, Import]]
+def package_edges(
+    pkgs: dict[str, Package], imp: dict[str, dict[str, list[Import]]]
 ) -> list[Edge]:
+    """Every dependency between two packages, with its strongest evidence."""
     best: dict[tuple[str, str], Edge] = {}
     for p in sorted(pkgs.values(), key=lambda p: p.name):
         # dependency groups (dev, docs, tutorials) are not library dependencies
-        evidence = [(t, "base") for t in p.base] + [(t, "extra") for t in p.extras]
-        evidence += [(t, "import") for t in imp[p.name]]
-        for t, kind in sorted(evidence):
-            a, b = p.repo, pkgs[t].repo
-            if a == b:
-                continue
-            edge = Edge(a, b, kind, f"{p.name} → {t}")
-            old = best.get((a, b))
-            if old is None or KIND_RANK[kind] < KIND_RANK[old.kind]:
-                best[(a, b)] = edge
+        evidence = [Edge(p.name, t, "base", "") for t in p.base]
+        evidence += [Edge(p.name, t, "extra", "") for t in p.extras]
+        evidence += [
+            Edge(p.name, t, "import", f"{ims[0].where} ({ims[0].how})")
+            for t, ims in imp[p.name].items()
+        ]
+        for e in evidence:
+            old = best.get((e.source, e.target))
+            if old is None or KIND_RANK[e.kind] < KIND_RANK[old.kind]:
+                best[(e.source, e.target)] = e
+    return sorted(best.values(), key=lambda e: (e.source, e.target))
+
+
+def repo_edges(pkgs: dict[str, Package], pkg_edges: list[Edge]) -> list[Edge]:
+    """The package edges folded into repositories, each with its strongest."""
+    best: dict[tuple[str, str], Edge] = {}
+    for e in pkg_edges:
+        a, b = pkgs[e.source].repo, pkgs[e.target].repo
+        if a == b:
+            continue
+        old = best.get((a, b))
+        if old is None or KIND_RANK[e.kind] < KIND_RANK[old.kind]:
+            best[(a, b)] = Edge(a, b, e.kind, f"{e.source} → {e.target}")
     return sorted(best.values(), key=lambda e: (e.source, e.target))
 
 
@@ -286,7 +377,8 @@ def sccs(nodes: list[str], edges: list[tuple[str, str]]) -> list[list[str]]:
 @dataclass
 class Graph:
     pkgs: dict[str, Package]
-    imports: dict[str, dict[str, Import]]
+    imports: dict[str, dict[str, list[Import]]]
+    pkg_edges: list[Edge]
     edges: list[Edge]
 
     @property
@@ -294,14 +386,22 @@ class Graph:
         return {p.repo: p.layer for p in self.pkgs.values()}
 
 
+def graph(pkgs: dict[str, Package], imp: dict[str, dict[str, list[Import]]]) -> Graph:
+    pkg_edges = package_edges(pkgs, imp)
+    return Graph(pkgs, imp, pkg_edges, repo_edges(pkgs, pkg_edges))
+
+
 def build() -> Graph:
     pkgs = packages()
-    imp = imports(pkgs)
-    return Graph(pkgs, imp, repo_edges(pkgs, imp))
+    return graph(pkgs, imports(pkgs))
 
 
 def violations(g: Graph) -> dict[tuple[str, str, str], str]:
-    """Every rule the graph breaks: {(rule, a, b): evidence}."""
+    """Every rule the graph breaks: {(rule, a, b): evidence}.
+
+    The rules between repositories are checked on each package edge, so a
+    second package edge between the same two repositories is a new entry.
+    """
     out: dict[tuple[str, str, str], str] = {}
     layer = g.repos
     pairs = [(e.source, e.target) for e in g.edges]
@@ -309,11 +409,7 @@ def violations(g: Graph) -> dict[tuple[str, str, str], str]:
         out[("cycle", comp[0], comp[1] if len(comp) == 2 else "+".join(comp[1:]))] = (
             " ⇄ ".join(comp)
         )
-    pkg_pairs = [
-        (p, t)
-        for p, pkg in g.pkgs.items()
-        for t in pkg.base | pkg.extras | set(g.imports[p])
-    ]
+    pkg_pairs = [(e.source, e.target) for e in g.pkg_edges]
     for comp in sccs(list(g.pkgs), pkg_pairs):
         out[("package-cycle", comp[0], "+".join(comp[1:]))] = " ⇄ ".join(comp)
     for repo, lay in layer.items():
@@ -321,24 +417,34 @@ def violations(g: Graph) -> dict[tuple[str, str, str], str]:
             out[("untiered", repo, lay)] = (
                 "add it to TIERS in scripts/dependency_graph.py"
             )
-    for e in g.edges:
-        la, lb = LAYERS.index(layer[e.source]), LAYERS.index(layer[e.target])
-        tiers = TIERS[layer[e.source]]
-        if lb > la:
-            out[("upward", e.source, e.target)] = e.via
-        elif la == lb and tiers.get(e.target, 0) >= tiers.get(e.source, 0):
-            out[("tier", e.source, e.target)] = e.via
-        if e.source in THIRD_PARTY:
-            out[("third-party", e.source, e.target)] = e.via
+    for lay, tiers in TIERS.items():
+        for repo in tiers:
+            if layer.get(repo) != lay:
+                out[("stale-tier", repo, lay)] = (
+                    "no such submodule in this layer; remove it from TIERS"
+                )
+    for e in g.pkg_edges:
+        a, b = g.pkgs[e.source], g.pkgs[e.target]
+        if a.repo == b.repo:
+            continue
+        evidence = e.kind + (f", {e.via}" if e.via else "")
+        tiers = TIERS[a.layer]
+        if a.layer != b.layer and LAYER_RANK[b.layer] >= LAYER_RANK[a.layer]:
+            out[("upward", e.source, e.target)] = evidence
+        elif a.layer == b.layer and tiers.get(b.repo, 0) >= tiers.get(a.repo, 0):
+            out[("tier", e.source, e.target)] = evidence
+        if a.repo in THIRD_PARTY:
+            out[("third-party", e.source, e.target)] = evidence
     for p, found in g.imports.items():
         pkg = g.pkgs[p]
-        for t, im in found.items():
-            if im.how == "typing":
-                continue
+        for t, ims in found.items():
             # an optional module may import an extra at module level, so a
             # declared extra is enough wherever the import sits
-            if t not in pkg.base | pkg.extras and (p, t) not in UNDECLARED_OK:
-                out[("undeclared", p, t)] = f"{im.where} ({im.how})"
+            if t in pkg.base | pkg.extras or (p, t) in UNDECLARED_OK:
+                continue
+            for im in ims:
+                if im.how != "typing":
+                    out[("undeclared", f"{p}:{im.where}", t)] = im.how
     return out
 
 
@@ -379,7 +485,8 @@ def _reduced(g: Graph) -> list[Edge]:
 
 def mermaid(g: Graph, fence: str) -> str:
     """The repository graph as a Mermaid flowchart, top layer first."""
-    known_cycle = {(a, b) for (rule, a, b) in violations(g) if rule == "cycle"}
+    comps = sccs(list(g.repos), [(e.source, e.target) for e in g.edges])
+    component = {repo: i for i, comp in enumerate(comps) for repo in comp}
     lines = [fence, "flowchart TB"]
     for layer in reversed(LAYERS):
         lines.append(f'  subgraph {layer}["{TITLES[layer]}"]')
@@ -394,7 +501,8 @@ def mermaid(g: Graph, fence: str) -> str:
     for i, e in enumerate(drawn):
         arrow = "-->" if e.kind in ("base", "import") else "-.->"
         lines.append(f"  {e.source} {arrow} {e.target}")
-        if {(e.source, e.target), (e.target, e.source)} & known_cycle:
+        # an edge lies on a cycle when both ends are in one component
+        if component.get(e.source, -1) == component.get(e.target, -2):
             red.append(str(i))
     if red:
         lines.append(f"  linkStyle {','.join(red)} stroke:#c62828,stroke-width:2.5px")
@@ -461,10 +569,58 @@ def violation_table(g: Graph) -> str:
     return "\n".join(rows)
 
 
+NUMBERS = ("no", "one", "two", "three", "four", "five", "six", "seven", "eight")
+#: how the summary names each rule's rows, singular and plural
+RULE_NOUNS = {
+    "cycle": ("cycle between repositories", "cycles between repositories"),
+    "package-cycle": ("cycle between packages", "cycles between packages"),
+    "upward": ("edge up a layer", "edges up a layer"),
+    "tier": (
+        "edge that does not point down a tier",
+        "edges that do not point down a tier",
+    ),
+    "third-party": (
+        "edge out of a third-party repository",
+        "edges out of a third-party repository",
+    ),
+    "undeclared": (
+        "import its package does not declare",
+        "imports their package does not declare",
+    ),
+    "untiered": ("repository without a tier", "repositories without a tier"),
+    "stale-tier": ("tier for a missing repository", "tiers for missing repositories"),
+}
+
+
+def violation_summary(g: Graph) -> str:
+    """One sentence counting the rows of the violation table, by rule."""
+    found = violations(g)
+    counts: dict[str, int] = defaultdict(int)
+    for rule, _, _ in found:
+        counts[rule] += 1
+    if not counts:
+        return "Today the graph breaks none of them."
+    cycles = [v for (rule, _, _), v in sorted(found.items()) if rule == "cycle"]
+    parts = []
+    for rule, (one, many) in RULE_NOUNS.items():
+        n = counts.get(rule, 0)
+        if n:
+            word = NUMBERS[n] if n < len(NUMBERS) else str(n)
+            noun = one if n == 1 else many
+            if rule == "cycle":
+                noun += f" ({'; '.join(cycles)})"
+            parts.append(f"**{word} {noun}**")
+    listed = (
+        parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
+    )
+    return f"Today it has {listed}. [](#tbl-dg-violations) lists each one with its fix."
+
+
 TABLES = {
     "edge-table": edge_table,
     "tier-table": tier_table,
     "violation-table": violation_table,
+    "violation-summary": violation_summary,
 }
 
 
@@ -506,9 +662,9 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
             return True
         if lay == layer:
             return TIERS[lay].get(other, 0) < tier
-        return LAYERS.index(lay) < LAYERS.index(layer)
+        return LAYER_RANK[lay] < LAYER_RANK[layer]
 
-    mods = {m.name: p for p in g.pkgs.values() for m in p.modules}
+    mods = {_module_name(m): p for p in g.pkgs.values() for m in p.modules}
     forbidden = {m: p.name for m, p in mods.items() if not allowed(p.repo)}
     ok = {m: p.name for m, p in mods.items() if allowed(p.repo)}
     packages = {
