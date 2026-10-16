@@ -125,6 +125,20 @@ def test_eager_modules_follow_module_level_imports(tmp_path: Path) -> None:
     assert dg._eager(parsed, [pkg]) == {"pkg", "pkg.a", "pkg.sub", "pkg.sub.b", "pkg.c"}
 
 
+def test_a_stub_import_is_a_typing_only_edge(tmp_path: Path) -> None:
+    pkg = tmp_path / "src" / "gaussx"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("")
+    (pkg / "__init__.pyi").write_text("from pipekit import Operator\n")
+    pkgs = {**GRAPH.pkgs, "gaussx": replace(GRAPH.pkgs["gaussx"], modules=[pkg])}
+    pkgs["gaussx"] = replace(pkgs["gaussx"], path=tmp_path)
+    imp = dg.imports(pkgs)
+    assert imp["gaussx"]["pipekit"][0].how == "typing"
+    found = dg.violations(dg.graph(pkgs, imp))
+    assert ("upward", "gaussx", "pipekit") in found
+    assert not any(k[0] == "undeclared" and k[2] == "pipekit" for k in found)
+
+
 def test_poetry_optional_dependencies_are_extras() -> None:
     project = {
         "dependencies": {
@@ -134,7 +148,7 @@ def test_poetry_optional_dependencies_are_extras() -> None:
         },
         "extras": {"web": ["requests"]},
     }
-    assert dg._declared(project) == ({"python", "numpy"}, {"pydantic", "requests"})
+    assert dg.declared(project) == ({"python", "numpy"}, {"pydantic", "requests"})
 
 
 def test_a_stale_tier_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:

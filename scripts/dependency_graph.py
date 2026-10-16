@@ -146,7 +146,10 @@ def _module_name(root: Path) -> str:
 
 
 def _files(root: Path) -> list[Path]:
-    return [root] if root.is_file() else sorted(root.rglob("*.py"))
+    """The source files under an import root, shipped type stubs included."""
+    if root.is_file():
+        return [root]
+    return sorted(f for f in root.rglob("*.py*") if f.suffix in (".py", ".pyi"))
 
 
 def _roots(meta: dict, path: Path) -> list[Path]:
@@ -179,7 +182,7 @@ def _roots(meta: dict, path: Path) -> list[Path]:
     )
 
 
-def _declared(project: dict) -> tuple[set[str], set[str]]:
+def declared(project: dict) -> tuple[set[str], set[str]]:
     """(base dependencies, extras) of a PEP 621 or a poetry project table."""
     deps = project.get("dependencies") or []
     if isinstance(deps, dict):  # poetry: a name -> constraint table
@@ -212,7 +215,7 @@ def packages() -> dict[str, Package]:
                 pkg = Package(
                     _norm(project["name"]), repo.name, layer, pyproject.parent
                 )
-                pkg.base, pkg.extras = _declared(project)
+                pkg.base, pkg.extras = declared(project)
                 pkg.modules = _roots(meta, pkg.path)
                 out[pkg.name] = pkg
     names = set(out)
@@ -335,7 +338,12 @@ def imports(pkgs: dict[str, Package]) -> dict[str, dict[str, list[Import]]]:
                     warnings.simplefilter("ignore")
                     tree = ast.parse(f.read_text(encoding="utf-8"))
                 module, package = _dotted(f, root)
-                parsed[module] = _imports(tree, package)
+                names = _imports(tree, package)
+                if f.suffix == ".pyi":
+                    # a stub never runs: its imports are edges, typing-only
+                    module += " (stub)"
+                    names = [(name, "typing") for name, _ in names]
+                parsed[module] = names
                 wheres[module] = str(f.relative_to(pkg.path))
         eager = _eager(parsed, pkg.modules)
         found: dict[tuple[str, str], Import] = {}

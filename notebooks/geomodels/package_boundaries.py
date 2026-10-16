@@ -37,7 +37,6 @@ from __future__ import annotations
 
 import ast
 import importlib.util
-import re
 import subprocess
 import sys
 import tomllib
@@ -305,21 +304,24 @@ NODES = {  # distribution name → (label, stack)
 }
 
 
-def req_name(r: str) -> str:
-    return re.sub(r"[-_.]+", "-", re.match(r"[A-Za-z0-9._-]+", r).group(0)).lower()
+# the dependency parser and the cycle check are the ones
+# tests/test_dependency_graph.py enforces
+dg_spec = importlib.util.spec_from_file_location(
+    "dependency_graph", root / "scripts/dependency_graph.py"
+)
+dg = importlib.util.module_from_spec(dg_spec)
+sys.modules["dependency_graph"] = dg  # dataclasses look their module up
+dg_spec.loader.exec_module(dg)
 
 
 def deps(pyproject: Path) -> tuple[set[str], set[str]]:
     """(base, extras) stack dependencies declared in a pyproject.toml."""
     d = tomllib.loads(pyproject.read_text(encoding="utf-8"))
     p = d.get("project") or d["tool"]["poetry"]
-    base = p.get("dependencies") or []
-    base = base if isinstance(base, list) else list(base)
-    extra = [r for v in (p.get("optional-dependencies") or {}).values() for r in v]
-    me = req_name(p["name"])
+    base, extra = dg.declared(p)
     # an extra that names the package itself (an "all" extra) is not an edge
-    keep = lambda rs: ({req_name(r) for r in rs} & set(NODES)) - {me}  # noqa: E731
-    return keep(base), keep(extra)
+    keep = set(NODES) - {dg._norm(p["name"])}
+    return base & keep, extra & keep
 
 
 META = {
@@ -351,15 +353,6 @@ def edges(graph, with_extras=True):
         for a, (base, extra) in graph.items()
         for b in (base | extra if with_extras else base)
     }
-
-
-# the cycle check is the one tests/test_dependency_graph.py enforces
-dg_spec = importlib.util.spec_from_file_location(
-    "dependency_graph", root / "scripts/dependency_graph.py"
-)
-dg = importlib.util.module_from_spec(dg_spec)
-sys.modules["dependency_graph"] = dg  # dataclasses look their module up
-dg_spec.loader.exec_module(dg)
 
 
 def sccs(graph) -> list[list[str]]:
