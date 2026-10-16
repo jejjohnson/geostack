@@ -59,9 +59,11 @@ def _type_checking(test: ast.expr) -> bool:
     return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
 
 
-def _imports(path: Path) -> list[tuple[str, str, int]]:
-    """(top-level module, how, line) for each absolute import in a file.
+def _imports(path: Path, package: str) -> list[tuple[str, str, int]]:
+    """(module, how, line) for each import in a file, as absolute dotted names.
 
+    ``from m import a`` gives ``m`` and ``m.a`` (``a`` may be a submodule);
+    ``package`` is the file's package, which resolves relative imports.
     ``how`` is ``module``, ``lazy`` (inside a function), ``guarded`` (inside a
     ``try``, its handlers or its ``else``; ``finally`` always runs) or
     ``typing`` (under ``if TYPE_CHECKING``, or the ``else`` of
@@ -74,11 +76,20 @@ def _imports(path: Path) -> list[tuple[str, str, int]]:
 
     def visit(node: ast.AST, how: str) -> None:
         if isinstance(node, ast.Import):
-            out.extend((a.name.split(".")[0], how, node.lineno) for a in node.names)
+            out.extend((a.name, how, node.lineno) for a in node.names)
             return
         if isinstance(node, ast.ImportFrom):
-            if node.module and not node.level:
-                out.append((node.module.split(".")[0], how, node.lineno))
+            module = node.module or ""
+            if node.level:
+                base = package.split(".") if package else []
+                keep = len(base) - node.level + 1
+                if keep < 1:
+                    return
+                module = ".".join([*base[:keep], *([module] if module else [])])
+            if module:
+                out.append((module, how, node.lineno))
+                names = (a.name for a in node.names if a.name != "*")
+                out.extend((f"{{module}}.{{n}}", how, node.lineno) for n in names)
             return
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
             how = "lazy" if how == "module" else how
@@ -106,20 +117,74 @@ def _imports(path: Path) -> list[tuple[str, str, int]]:
     return out
 
 
-def _files(roots: tuple[str, ...]) -> list[Path]:
-    # an import root is a package directory or a single-module ``.py`` file
-    paths = [ROOT / r for r in roots]
-    return sorted(f for p in paths for f in ([p] if p.is_file() else p.rglob("*.py")))
+Modules = dict[str, tuple[Path, list[tuple[str, str, int]]]]
+
+
+def _modules(roots: tuple[str, ...]) -> Modules:
+    """Each module under the import roots (a package directory or a single
+    ``.py`` file): dotted name -> (file, its imports)."""
+    out: Modules = {{}}
+    for r in roots:
+        root = ROOT / r
+        for f in [root] if root.is_file() else sorted(root.rglob("*.py")):
+            parts = f.relative_to(root.parent).with_suffix("").parts
+            if parts[-1] == "__init__":
+                parts = package = parts[:-1]
+            else:
+                package = parts[:-1]
+            out[".".join(parts)] = (f, _imports(f, ".".join(package)))
+    return out
+
+
+def _eager(modules: Modules, roots: tuple[str, ...]) -> set[str]:
+    """The modules ``import <package>`` runs: the roots, then every module a
+    module it runs imports at module level, with the packages on the way."""
+    todo = [Path(r).stem for r in roots]
+    seen: set[str] = set()
+    while todo:
+        name = todo.pop()
+        if name in seen or name not in modules:
+            continue
+        seen.add(name)
+        for imported, how, _ in modules[name][1]:
+            if how == "module":
+                parts = imported.split(".")
+                todo.extend(".".join(parts[:i]) for i in range(1, len(parts) + 1))
+    return seen
+
+
+def _uses(dist: str) -> set[str]:
+    """The other packages of this repository that a package uses."""
+    base, extras = _declared(PACKAGES[dist][0])
+    imported = {{
+        ALLOWED.get(name.split(".")[0])
+        for _, imports in _modules(PACKAGES[dist][1]).values()
+        for name, _, _ in imports
+    }}
+    return ((base | extras | imported) & set(PACKAGES)) - {{dist}}
+
+
+def test_packages_are_current() -> None:
+    # a workspace member added after this file was generated would go unchecked
+    pyprojects = sorted(ROOT.glob("packages/*/pyproject.toml"))
+    found = {{}}
+    for pyproject in pyprojects or [ROOT / "pyproject.toml"]:
+        meta = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+        found[_norm(meta["project"]["name"])] = str(pyproject.relative_to(ROOT))
+    expected = {{dist: entry[0] for dist, entry in PACKAGES.items()}}
+    assert found == expected, "the packages changed: regenerate this file"
 
 
 @pytest.mark.parametrize("dist", sorted(PACKAGES))
 def test_no_import_points_up(dist: str) -> None:
-    found = [
-        f"{{f.relative_to(ROOT)}}:{{line}} imports {{top}} ({{FORBIDDEN[top]}})"
-        for f in _files(PACKAGES[dist][1])
-        for top, _, line in _imports(f)
-        if top in FORBIDDEN
-    ]
+    found = sorted(
+        {{
+            f"{{f.relative_to(ROOT)}}:{{line}} imports {{top}} ({{FORBIDDEN[top]}})"
+            for f, imports in _modules(PACKAGES[dist][1]).values()
+            for name, _, line in imports
+            if (top := name.split(".")[0]) in FORBIDDEN
+        }}
+    )
     assert not found, "\n".join(found)
 
 
@@ -130,18 +195,44 @@ def test_no_dependency_points_up(dist: str) -> None:
     assert not found, f"{{dist}} declares {{found}}"
 
 
+def test_no_cycle_between_packages() -> None:
+    uses = {{dist: _uses(dist) for dist in PACKAGES}}
+
+    def reaches(a: str, b: str) -> bool:
+        seen: set[str] = set()
+        todo = [a]
+        while todo:
+            v = todo.pop()
+            if v == b:
+                return True
+            if v not in seen:
+                seen.add(v)
+                todo.extend(uses[v])
+        return False
+
+    cyclic = sorted(d for d in PACKAGES if any(reaches(t, d) for t in uses[d]))
+    assert not cyclic, f"these packages use one another in a cycle: {{cyclic}}"
+
+
 @pytest.mark.parametrize("dist", sorted(PACKAGES))
 def test_stack_imports_are_declared(dist: str) -> None:
     base, extras = _declared(PACKAGES[dist][0])
-    found = []
-    for f in _files(PACKAGES[dist][1]):
-        for top, how, line in _imports(f):
+    modules = _modules(PACKAGES[dist][1])
+    eager = _eager(modules, PACKAGES[dist][1])
+    found = set()
+    for module, (f, imports) in modules.items():
+        for name, how, line in imports:
+            top = name.split(".")[0]
             target = ALLOWED.get(top)
-            if target in (None, dist) or how == "typing" or target in UNDECLARED_OK:
+            if target in (None, dist, *UNDECLARED_OK) or how == "typing":
                 continue
+            where = f"{{f.relative_to(ROOT)}}:{{line}} imports {{top}} ({{how}})"
             if target not in base | extras:
-                found.append(
-                    f"{{f.relative_to(ROOT)}}:{{line}} imports {{top}} ({{how}});"
-                    f" declare {{target}} as a dependency or an extra of {{dist}}"
+                found.add(
+                    f"{{where}}; declare {{target}} as a dependency or an extra of {{dist}}"
                 )
-    assert not found, "\n".join(found)
+            elif target not in base and how == "module" and module in eager:
+                # an extra suits an optional module or a lazy or guarded import,
+                # not what importing the package runs
+                found.add(f"{{where}}, run on import; make {{target}} a dependency")
+    assert not found, "\n".join(sorted(found))

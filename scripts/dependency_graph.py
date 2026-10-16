@@ -13,6 +13,7 @@ Usage::
 
     python scripts/dependency_graph.py          # rewrite the diagrams
     python scripts/dependency_graph.py --check  # exit 1 if stale or broken
+    python scripts/dependency_graph.py --guard REPO  # write REPO's guard test
 
 ``tests/test_dependency_graph.py`` runs the check. It needs only the standard
 library and the submodules, so it runs in every environment.
@@ -178,6 +179,27 @@ def _roots(meta: dict, path: Path) -> list[Path]:
     )
 
 
+def _declared(project: dict) -> tuple[set[str], set[str]]:
+    """(base dependencies, extras) of a PEP 621 or a poetry project table."""
+    deps = project.get("dependencies") or []
+    if isinstance(deps, dict):  # poetry: a name -> constraint table
+        optional = {
+            _norm(n)
+            for n, c in deps.items()
+            if isinstance(c, dict) and c.get("optional")
+        }
+        extras = optional | {
+            _req(r) for reqs in (project.get("extras") or {}).values() for r in reqs
+        }
+        return {_norm(n) for n in deps} - optional, extras
+    extras = {
+        _req(r)
+        for reqs in (project.get("optional-dependencies") or {}).values()
+        for r in reqs
+    }
+    return {_req(r) for r in deps if isinstance(r, str)}, extras
+
+
 def packages() -> dict[str, Package]:
     """Every distribution in the submodules, by normalised name."""
     out: dict[str, Package] = {}
@@ -190,13 +212,7 @@ def packages() -> dict[str, Package]:
                 pkg = Package(
                     _norm(project["name"]), repo.name, layer, pyproject.parent
                 )
-                base = project.get("dependencies") or []
-                pkg.base = {_req(r) for r in base if isinstance(r, str)}
-                pkg.extras = {
-                    _req(r)
-                    for reqs in (project.get("optional-dependencies") or {}).values()
-                    for r in reqs
-                }
+                pkg.base, pkg.extras = _declared(project)
                 pkg.modules = _roots(meta, pkg.path)
                 out[pkg.name] = pkg
     names = set(out)
@@ -211,6 +227,7 @@ class Import:
     target: str  # distribution
     where: str  # file, relative to the package
     how: str  # "module", "lazy", "guarded" or "typing"
+    eager: bool = False  # the file runs on ``import <package>``
 
 
 def _type_checking(test: ast.expr) -> bool:
@@ -220,17 +237,32 @@ def _type_checking(test: ast.expr) -> bool:
     return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
 
 
-def _imports(tree: ast.AST) -> list[tuple[str, str]]:
-    """(top-level module, how) for every absolute import in a module."""
+def _imports(tree: ast.AST, package: str = "") -> list[tuple[str, str]]:
+    """(module, how) for every import in a module, as absolute dotted names.
+
+    ``from m import a`` gives ``m`` and ``m.a`` (``a`` may be a submodule).
+    ``package`` is the module's own package, which resolves relative imports;
+    without it they are skipped.
+    """
     out: list[tuple[str, str]] = []
 
     def visit(node: ast.AST, how: str) -> None:
         if isinstance(node, ast.Import):
-            out.extend((a.name.split(".")[0], how) for a in node.names)
+            out.extend((a.name, how) for a in node.names)
             return
         if isinstance(node, ast.ImportFrom):
-            if node.module and not node.level:
-                out.append((node.module.split(".")[0], how))
+            module = node.module or ""
+            if node.level:
+                # level 1 is the module's own package, level 2 its parent, …
+                base = package.split(".") if package else []
+                keep = len(base) - node.level + 1
+                if keep < 1:
+                    return
+                module = ".".join([*base[:keep], *([module] if module else [])])
+            if module:
+                out.append((module, how))
+                names = (a.name for a in node.names if a.name != "*")
+                out.extend((f"{module}.{n}", how) for n in names)
             return
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
             how = "lazy" if how == "module" else how
@@ -262,28 +294,60 @@ def _imports(tree: ast.AST) -> list[tuple[str, str]]:
 RANK = {"module": 0, "guarded": 1, "lazy": 2, "typing": 3}
 
 
+def _dotted(f: Path, root: Path) -> tuple[str, str]:
+    """(module, its package) of a file under an import root, as dotted names."""
+    parts = f.relative_to(root.parent).with_suffix("").parts
+    if parts[-1] == "__init__":
+        return ".".join(parts[:-1]), ".".join(parts[:-1])
+    return ".".join(parts), ".".join(parts[:-1])
+
+
+def _eager(parsed: dict[str, list[tuple[str, str]]], roots: list[Path]) -> set[str]:
+    """The modules ``import <package>`` runs: the roots, then every module a
+    module it runs imports at module level, with the packages on the way."""
+    todo = [_module_name(r) for r in roots]
+    seen: set[str] = set()
+    while todo:
+        module = todo.pop()
+        if module in seen or module not in parsed:
+            continue
+        seen.add(module)
+        for name, how in parsed[module]:
+            if how == "module":
+                parts = name.split(".")
+                todo.extend(".".join(parts[:i]) for i in range(1, len(parts) + 1))
+    return seen
+
+
 def imports(pkgs: dict[str, Package]) -> dict[str, dict[str, list[Import]]]:
     """For each package, the other packages it imports: one ``Import`` per file
     (the strongest way that file imports it), strongest first."""
     owner = {_module_name(m): p.name for p in pkgs.values() for m in p.modules}
     out: dict[str, dict[str, list[Import]]] = {}
     for pkg in pkgs.values():
-        found: dict[tuple[str, str], Import] = {}
-        for module in pkg.modules:
-            for f in _files(module):
+        parsed: dict[str, list[tuple[str, str]]] = {}
+        wheres: dict[str, str] = {}
+        for root in pkg.modules:
+            for f in _files(root):
                 # an upstream invalid escape warns; under warnings-as-errors that
                 # would turn into a SyntaxError and silently drop the file
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     tree = ast.parse(f.read_text(encoding="utf-8"))
-                where = str(f.relative_to(pkg.path))
-                for top, how in _imports(tree):
-                    dist = owner.get(top)
-                    if dist is None or dist == pkg.name:
-                        continue
-                    old = found.get((dist, where))
-                    if old is None or RANK[how] < RANK[old.how]:
-                        found[(dist, where)] = Import(dist, where, how)
+                module, package = _dotted(f, root)
+                parsed[module] = _imports(tree, package)
+                wheres[module] = str(f.relative_to(pkg.path))
+        eager = _eager(parsed, pkg.modules)
+        found: dict[tuple[str, str], Import] = {}
+        for module, names in parsed.items():
+            where = wheres[module]
+            for name, how in names:
+                dist = owner.get(name.split(".")[0])
+                if dist is None or dist == pkg.name:
+                    continue
+                old = found.get((dist, where))
+                if old is None or RANK[how] < RANK[old.how]:
+                    found[(dist, where)] = Import(dist, where, how, module in eager)
         by_target: dict[str, list[Import]] = defaultdict(list)
         for im in sorted(found.values(), key=lambda i: (RANK[i.how], i.where)):
             by_target[im.target].append(im)
@@ -438,13 +502,19 @@ def violations(g: Graph) -> dict[tuple[str, str, str], str]:
     for p, found in g.imports.items():
         pkg = g.pkgs[p]
         for t, ims in found.items():
-            # an optional module may import an extra at module level, so a
-            # declared extra is enough wherever the import sits
-            if t in pkg.base | pkg.extras or (p, t) in UNDECLARED_OK:
+            if t in pkg.base or (p, t) in UNDECLARED_OK:
                 continue
             for im in ims:
-                if im.how != "typing":
+                if im.how == "typing":
+                    continue
+                # an extra declares an import that ``import <package>`` does
+                # not run: an optional module, or a lazy or guarded import
+                if t not in pkg.extras:
                     out[("undeclared", f"{p}:{im.where}", t)] = im.how
+                elif im.how == "module" and im.eager:
+                    out[("undeclared", f"{p}:{im.where}", t)] = (
+                        f"module, run by `import {p}`: an extra is not enough"
+                    )
     return out
 
 
@@ -716,8 +786,9 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         f" Its packages must not import or depend on"
         f" {', '.join(up) if up else 'any other stack library'}: they sit above"
         f" it, or beside it in the same tier. Every import of a stack library is"
-        f" declared, as a dependency or an extra. Dev, docs and tutorial"
-        f" dependency groups are not checked.",
+        f" declared, as a dependency or an extra, and what importing a package"
+        f" runs needs a dependency. Its packages form no cycle. Dev, docs and"
+        f" tutorial dependency groups are not checked.",
         width=79,
     )
     template = ROOT / "scripts" / "templates" / "test_dependency_rules.py.tmpl"
@@ -740,12 +811,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="exit 1 if stale")
     parser.add_argument(
-        "--guard", metavar="REPO", help="print REPO's dependency-rules test"
+        "--guard",
+        metavar="REPO",
+        help="write REPO's dependency-rules test into its submodule",
     )
     args = parser.parse_args(argv)
     g = build()
     if args.guard:
-        print(guard(args.guard, g)[1], end="")
+        if args.guard in THIRD_PARTY:
+            print(f"{args.guard} is third party: geostack never writes to it")
+            return 1
+        path, text = guard(args.guard, g)
+        dest = REFS / g.repos[args.guard] / args.guard / path
+        dest.write_text(text, encoding="utf-8")
+        print(f"wrote {dest.relative_to(ROOT)}")
         return 0
     status = 0
     for page in PAGES:

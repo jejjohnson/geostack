@@ -64,10 +64,12 @@ def _with_dependency(source: str, target: str) -> dg.Graph:
     return dg.graph(pkgs, GRAPH.imports)
 
 
-def _with_import(source: str, target: str, where: str) -> dg.Graph:
+def _with_import(
+    source: str, target: str, where: str, *, eager: bool = False
+) -> dg.Graph:
     """The graph with one more module-level import, in a new file."""
     imp = {p: dict(found) for p, found in GRAPH.imports.items()}
-    new = dg.Import(target, where, "module")
+    new = dg.Import(target, where, "module", eager)
     imp[source][target] = [*imp[source].get(target, []), new]
     return dg.graph(GRAPH.pkgs, imp)
 
@@ -96,6 +98,43 @@ def test_a_second_package_edge_between_known_repositories_is_new() -> None:
 def test_a_second_undeclared_import_is_new() -> None:
     new, _ = dg.check(_with_import("somax", "filterax", "somax/_src/new.py"))
     assert set(new) == {("undeclared", "somax:somax/_src/new.py", "filterax")}
+
+
+def test_an_extra_does_not_declare_what_import_runs() -> None:
+    # gaussx is an extra of optax-bayes: enough for an optional module only
+    where = "src/optax_bayes/new.py"
+    key = ("undeclared", f"optax-bayes:{where}", "gaussx")
+    assert key not in dg.violations(_with_import("optax-bayes", "gaussx", where))
+    eager = _with_import("optax-bayes", "gaussx", where, eager=True)
+    assert key in dg.violations(eager)
+
+
+def test_eager_modules_follow_module_level_imports(tmp_path: Path) -> None:
+    pkg = tmp_path / "src" / "pkg"
+    (pkg / "sub").mkdir(parents=True)
+    (pkg / "__init__.py").write_text("from . import a\nfrom .sub import b\n")
+    (pkg / "a.py").write_text("def f():\n    from . import lazy\n")
+    (pkg / "sub" / "__init__.py").write_text("")
+    (pkg / "sub" / "b.py").write_text("from ..c import x\n")
+    for name in ("lazy", "c", "optional"):
+        (pkg / f"{name}.py").write_text("")
+    parsed = {}
+    for f in dg._files(pkg):
+        module, package = dg._dotted(f, pkg)
+        parsed[module] = dg._imports(ast.parse(f.read_text()), package)
+    assert dg._eager(parsed, [pkg]) == {"pkg", "pkg.a", "pkg.sub", "pkg.sub.b", "pkg.c"}
+
+
+def test_poetry_optional_dependencies_are_extras() -> None:
+    project = {
+        "dependencies": {
+            "python": ">=3.11",
+            "numpy": ">=1",
+            "Pydantic": {"version": ">=2", "optional": True},
+        },
+        "extras": {"web": ["requests"]},
+    }
+    assert dg._declared(project) == ({"python", "numpy"}, {"pydantic", "requests"})
 
 
 def test_a_stale_tier_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -140,6 +179,7 @@ def lazy():
 
 def test_imports_are_classified_by_branch() -> None:
     found = dict(dg._imports(ast.parse(IMPORTS)))
+    del found["typing.TYPE_CHECKING"]  # from m import a gives m and m.a
     assert found == {
         "typing": "module",
         "a": "typing",
