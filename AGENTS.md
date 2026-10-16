@@ -71,6 +71,15 @@ These hold for every project made from the template:
   `NUMERICS`, `GEOML`, `GEOMODELS`), so its API joins that layer's index.
 - **Edges between layers point down** (see "The layers"). Code that would
   make a lower layer import a higher one belongs in the higher layer.
+  Within a layer, each repository has a tier and imports only lower tiers;
+  every library edge counts (extras, lazy and guarded imports; not dev, docs
+  or tutorial dependency groups),
+  every import is declared, and a reverse edge is fixed by moving code, never
+  by a re-export. The rules, the graph and where it breaks them today are on
+  [`docs/api/dependency_graph.md`](docs/api/dependency_graph.md);
+  `tests/test_dependency_graph.py` checks them, with a `KNOWN` list in
+  `scripts/dependency_graph.py` that only shrinks. A new submodule gets its
+  layer and tier in `TIERS` there.
 - **georeader is read-only.** It is spaceml-org's library
   ([spaceml-org/georeader](https://github.com/spaceml-org/georeader)), not
   ours: geostack pins it and reads it. Never edit, commit or push in
@@ -229,6 +238,7 @@ The step-by-step for each is a skill (see "Recipes").
 | Check | Enforces |
 |---|---|
 | `tests/test_capabilities.py` | each layer's capability index is current; no new name bound to two objects (GeoStack in `ci.yml`'s test job, the other layers in its `layers` job) |
+| `tests/test_dependency_graph.py` | no cycle, no upward or same-tier edge, no undeclared import beyond `KNOWN`; the diagram in `README.md` and `docs/api/dependency_graph.md` is current |
 | `pixi-lock.yml` | on a feature branch whose `pixi.toml`, submodules or `capabilities.py` changed: regenerates `pixi.lock` and the indexes and commits them |
 | ruff (`make lint`), ty (`make typecheck`) | Lint (`E F I UP B SIM RUF`) and types on `scripts/` |
 | `.pre-commit-config.yaml` (`make precommit`) | ruff, ruff-format, whitespace, YAML / JSON syntax, files over 5 MB |
@@ -278,6 +288,7 @@ make format               # ruff format . && ruff check --fix .
 make typecheck            # ty check scripts
 make precommit            # pre-commit on every file
 make capabilities         # regenerate the four capability indexes (one per layer)
+make dependency-graph     # regenerate the dependency graph (README.md, docs/api/)
 make docs                 # myst build --html  (into _build/html)
 make docs-serve           # myst start (live preview)
 make help                 # every target
@@ -349,7 +360,9 @@ All of these must pass, from the repo root:
 6. After changing `dvc.yaml`, a stage's script or its configs:
    `pixi run dvc status` and `pixi run dvc dag`, and `pixi run dvc repro`
    for the stages you touched (commit `dvc.lock`).
-7. After changing a dependency: `pixi lock` and commit `pixi.lock`.
+7. After changing a dependency: `pixi lock` and commit `pixi.lock`. After
+   moving or adding a submodule: `make dependency-graph`, and commit the
+   README and `docs/api/dependency_graph.md` with it.
 8. After changing `docs/`, `myst.yml` or `references.bib`: `make docs`.
 
 ## Coding principles

@@ -56,7 +56,8 @@ RESET  := \033[0m
 # ---------------------------------------------------------------------------
 .PHONY: help install lint format typecheck test test-cov \
 	precommit clean version docs docs-serve docs-deploy \
-	init gh-labels gh-sub gh-block gh-show capabilities
+	init gh-labels gh-sub gh-block gh-show capabilities \
+	dependency-graph
 
 .DEFAULT_GOAL := help
 
@@ -167,6 +168,9 @@ capabilities: ## Regenerate the capability indexes, one per layer (docs/api/capa
 	pixi run -e numerics python scripts/capabilities.py --layer numerics
 	pixi run -e geoml python scripts/capabilities.py --layer geoml
 	pixi run -e geomodels python scripts/capabilities.py --layer geomodels
+
+dependency-graph: ## Regenerate the dependency graph in README.md and docs/api/dependency_graph.md
+	uv run python scripts/dependency_graph.py
 
 docs-deploy: ## Deploy documentation to GitHub Pages
 	BASE_URL=/geostack uv run --group docs myst build --html

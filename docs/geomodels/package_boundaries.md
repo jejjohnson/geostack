@@ -303,5 +303,5 @@ window dataset.
 | Add plumax, gaussx, finitevolX and spectraldiffx as submodules, in `UPSTREAM` | geostack `references/`, `scripts/capabilities.py` | this page reads them from clones; the capability index does not list them |
 | Publish the helpers `plume` and `matched_filter` use | geotoolz `_src` | rule 4 |
 | Delete `radtran.matched_filter` in favour of `matched_filter.core` | plumax | two filters in one package, before either moves |
-| Make the cycle check a test | geostack `tests/` | gate P1 |
+| Make the cycle check a test | geostack `tests/` | gate P1; done for the whole stack in `tests/test_dependency_graph.py` ([Dependency graph](../api/dependency_graph.md)) |
 :::
