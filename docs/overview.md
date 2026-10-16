@@ -1102,8 +1102,8 @@ Start with the [capability index](api/capabilities.md) and the
 
 **pipekit**
 
-- [Report 1](reports/01_toolz_primer.md): the toolz lineage, and why pipekit's operators are classes.
-- [Report 2](reports/02_pipekit_surface.md): what pipekit 0.0.2 ships, in fourteen groups (A–N).
+- [Report 1](reports/01_toolz_primer.md): the toolz lineage, and why pipekit's operators are classes; now pipekit's [Background](https://jejjohnson.github.io/pipekit/background/toolz/) page.
+- [Report 2](reports/02_pipekit_surface.md): what pipekit 0.0.2 ships, in fourteen groups (A–N); the tour is now pipekit's [tour of the core](https://jejjohnson.github.io/pipekit/core-tour/), and the planning stays here.
 - [Report 5](reports/05_pipekit_jax.md): jit, vmap and grad through pipelines, and what pipekit-jax ships.
 - [Report 10](reports/10_pipekit_cycle.md): pipekit-cycle, time-stepping and data assimilation.
 - [Report 11](reports/11_pipekit_train.md): pipekit-train, training for emulators and amortized inference.
