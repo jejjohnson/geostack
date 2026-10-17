@@ -822,19 +822,31 @@ SIX = [
 ]
 
 
+SIX_MATH = [
+    "y = H(f(θ)) + ε",
+    "p(θ | y) = p(y | θ) p(θ) / p(y)",
+    "f(θ; φ) ≈ f(θ)",
+    "p(θ | y), with f(·; φ) for f",
+    "q(θ | y; ψ) ≈ p(θ | y)",
+]
+
+
 def six_steps() -> Svg:
     f = Svg(
         1180,
-        372,
-        "The six-step cycle: five steps from simple model to"
-        " amortized inference; step 2 is the oracle that validates steps 3"
-        " to 5, and improvement runs alongside steps 2 to 5 as one shared"
-        " step.",
+        500,
+        "The six-step cycle: five steps from simple model to amortized"
+        " inference, each with its defining equation. Step 1 simulates the"
+        " training data for steps 3 and 5; step 2 is the oracle that validates"
+        " steps 3 to 5; step 6 improves any step against the one before it."
+        " Cost per query falls from hours to milliseconds as training cost moves"
+        " up front.",
     )
-    w, h, y, gap = 204, 100, 110, 28
+    w, h, y, gap = 204, 124, 116, 28
     xs = [24 + i * (w + gap) for i in range(5)]
+    cxs = [x + w / 2 for x in xs]
     for i, ((n, name, sub), x) in enumerate(zip(SIX, xs, strict=True)):
-        hue = ORACLE if n == "2" else (ML if n in "345" else (BORDER, CARD))
+        hue = ORACLE if n == "2" else (ML if n in "345" else STATE)
         f.rect(x, y, w, h, stroke=hue[0], fill=hue[1])
         f.text(
             x + 14,
@@ -845,21 +857,35 @@ def six_steps() -> Svg:
             anchor="start",
             weight=700,
         )
+        if n == "2":
+            f.text(
+                x + w - 14,
+                y + 24,
+                "inner loop: x, θ",
+                size=10.5,
+                color=STATE[0],
+                anchor="end",
+                weight=700,
+            )
         f.text(x + 14, y + 44, name, size=12.5, color=INK, anchor="start", weight=700)
         f.lines(x + 14, y + 64, sub, gap=14.5, size=11.5, color=MUTED, anchor="start")
+        f.parts.append(
+            f'<line x1="{x + 14}" y1="{y + 94}" x2="{x + w - 14}" y2="{y + 94}"'
+            f' stroke="{hue[0]}" stroke-opacity="0.25"/>'
+        )
+        f.text(x + 14, y + 113, SIX_MATH[i], size=12.5, color=hue[0], anchor="start")
         if i < 4:
             f.arrow([(x + w + 2, y + h / 2), (x + w + gap - 2, y + h / 2)], color=INK)
     # Step 2 validates 3, 4 and 5.
-    sx, bus = xs[1] + w / 2, 66
+    sx, bus = cxs[1], 72
     f.arrow(
-        [(sx, y - 2), (sx, bus), (xs[4] + w / 2, bus)],
+        [(sx, y - 2), (sx, bus), (cxs[4], bus)],
         color=ORACLE[0],
         dashed=True,
         head=False,
     )
     for k in (2, 3, 4):
-        tx = xs[k] + w / 2
-        f.arrow([(tx, bus), (tx, y - 4)], color=ORACLE[0], dashed=True)
+        f.arrow([(cxs[k], bus), (cxs[k], y - 4)], color=ORACLE[0], dashed=True)
     f.text(
         sx + 12,
         bus - 12,
@@ -869,12 +895,31 @@ def six_steps() -> Svg:
         anchor="start",
         weight=600,
     )
-    # Step 6: one shared improvement step under all of them, linked to 2-5.
-    iy, ih = 270, 72
+    # Step 1 simulates the training data for the emulator and the amortized map.
+    sim = y + h + 30
+    f.arrow(
+        [(cxs[0], y + h + 2), (cxs[0], sim), (cxs[4], sim)],
+        color=STATE[0],
+        dashed=True,
+        head=False,
+    )
+    for k in (2, 4):
+        f.arrow([(cxs[k], sim), (cxs[k], y + h + 4)], color=STATE[0], dashed=True)
+    f.text(
+        cxs[0] + 12,
+        sim + 18,
+        "simulate (θ, y) pairs: the training data for steps 3 and 5",
+        size=12,
+        color=STATE[0],
+        anchor="start",
+        weight=600,
+    )
+    # Step 6: improve any step k against step k - 1 as ground truth.
+    iy, ih = sim + 40, 58
     f.rect(xs[0], iy, xs[4] + w - xs[0], ih, stroke=INK, fill=PANEL)
     f.text(
-        xs[0] + 16,
-        iy + 26,
+        xs[0] + 14,
+        iy + 22,
         "STEP 6",
         size=10.5,
         color=MUTED,
@@ -882,20 +927,48 @@ def six_steps() -> Svg:
         weight=700,
     )
     f.text(
-        xs[0] + 16, iy + 48, "Improve", size=14, color=INK, anchor="start", weight=700
+        xs[0] + 14, iy + 42, "Improve", size=14, color=INK, anchor="start", weight=700
     )
     f.text(
-        xs[0] + w + gap / 2,
+        xs[0] + 92,
         iy + 42,
-        "upgrade the model, data, emulator or"
-        " predictor, using the previous step as ground truth",
-        size=12,
+        "outer loop: structure",
+        size=10.5,
         color=INK,
         anchor="start",
+        weight=700,
     )
-    for k in (1, 2, 3, 4):
-        cx = xs[k] + w / 2
-        f.arrow([(cx, y + h + 4), (cx, iy - 4)], color=INK, both=True)
+    for k in range(1, 5):
+        f.text(
+            cxs[k], iy + 24, f"improve step {k + 1}", size=11.5, color=INK, weight=600
+        )
+        f.text(cxs[k], iy + 42, f"ground truth: step {k}", size=11.5, color=MUTED)
+    # Cost: per query it falls; training is paid once, up front.
+    ay = iy + ih + 40
+    f.arrow([(xs[0], ay), (xs[4] + w, ay)], color=MUTED)
+    f.text(
+        xs[0],
+        ay - 10,
+        "cost per query",
+        size=11,
+        color=MUTED,
+        anchor="start",
+        weight=700,
+    )
+    for k, label in [(1, "hours"), (3, "seconds"), (4, "milliseconds")]:
+        f.parts.append(
+            f'<line x1="{cxs[k]}" y1="{ay - 4}" x2="{cxs[k]}" y2="{ay + 4}"'
+            f' stroke="{MUTED}" stroke-width="1.4"/>'
+        )
+        f.text(cxs[k], ay - 10, label, size=11.5, color=INK, weight=600)
+    f.text(
+        (xs[0] + xs[4] + w) / 2,
+        ay + 22,
+        "training cost moves up front: steps 3 and 5 train once,"
+        " then every query is cheap",
+        size=11.5,
+        color=MUTED,
+    )
     return f
 
 

@@ -339,14 +339,18 @@ composable.
 
 ```{figure} images/overview/six_steps.svg
 :label: fig-six-steps
-:alt: Five steps in a row, from simple model to amortized inference. Step 2 validates steps 3 to 5. A shared improve step sits under steps 2 to 5 with two-way links.
+:alt: Five steps in a row, from simple model to amortized inference, each with its defining equation. Step 1 simulates (θ, y) pairs that train steps 3 and 5; step 2 validates steps 3 to 5. A shared improve step under steps 2 to 5 lists each step's ground truth, the step before it. An axis below shows the cost per query falling from hours to milliseconds.
 :width: 100%
 
 **From a simple model to amortized inference, with one shared improve step.**
 
 Step 2, the classical method, is the {term}`oracle` that validates steps
-3–5. Step 6 is shared: any of steps 2–5 can be improved, using the previous
-step as ground truth.
+3–5; it is the inner loop of [](#fig-modeling-cycle). Step 1 also
+simulates the (θ, y) pairs that train the emulator and the amortized map.
+Step 6 is shared: any of steps 2–5 can be improved, using the previous step
+as ground truth, and changing the structure is the outer loop. Moving right,
+the cost of each query falls from hours to milliseconds because the training
+cost is paid once, up front.
 ```
 
 In symbols: let θ be the quantity we want (an emission rate, a model
