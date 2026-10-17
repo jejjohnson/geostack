@@ -163,7 +163,7 @@ every operation sits somewhere on all three.
 | Axis | Orders | Figure |
 |---|---|---|
 | 1 · Modeling cycle | the research loop: model, observe, compare, refine | {numref}`fig-modeling-cycle` |
-| 2 · Data lifecycle | data maturity, from raw telemetry (L0) to derived products (L5) | {numref}`fig-lifecycle` |
+| 2 · Data lifecycle | data maturity, from raw telemetry (L0) to derived products (L5) | {numref}`fig-lifecycle`, {numref}`fig-lifecycle-engineering` |
 | 3 · Six-step cycle | the journey from a simple model to amortized inference | {numref}`fig-six-steps` |
 :::
 
@@ -198,18 +198,17 @@ composable.
 (sec-lifecycle)=
 ### The L0–L5 data lifecycle (axis 2)
 
-```{figure} images/overview/lifecycle.svg
+```{figure} images/overview/lifecycle_science.svg
 :label: fig-lifecycle
-:alt: Six maturity levels, L0 to L5, across the top. Below, the science axis fans radiances out into ocean, atmosphere, land and ice lanes; further below, the engineering axis shows which GeoStack tool transforms, patches, carries, reads, indexes and stores each level.
+:alt: Six maturity levels, L0 to L5, across the top, each step named on its arrow. Below, telemetry becomes one stream of radiances, which retrieval fans out into ocean, atmosphere, land and ice lanes that run through analysis and reanalysis to dashed derived products.
 :width: 100%
 
-**The data lifecycle on two perpendicular axes.**
+**The data lifecycle, science axis.**
 
-The science axis fans one stream of radiances out into ocean, atmosphere,
-land and ice at retrieval, and ends in derived products such as extremes
-(L5, dashed: examples still to be defined). The engineering axis maps every
-level to the tool that handles it, switching carrier from GeoTensor to
-xarray between L2 and L3.
+One stream of radiances fans out into ocean, atmosphere, land and ice at
+retrieval, and ends in derived products such as extremes (L5, dashed:
+examples still to be defined). {numref}`fig-lifecycle-engineering` maps the
+same levels to the tools that handle them.
 ```
 
 :::{table} The six levels of the data lifecycle.
@@ -244,19 +243,41 @@ carries its own analysis and reanalysis or forecast. L5 holds the products
 derived from those states, such as extremes (marine heatwaves, droughts,
 storms) or impact indicators. Which products belong in L5 is still open.
 
-**The engineering axis** runs top to bottom, from transforming data down to
-storing it, and maps every level to the GeoStack tool that handles it. It
-splits where the {term}`carrier` changes:
+```{figure} images/overview/lifecycle_engineering.svg
+:label: fig-lifecycle-engineering
+:alt: The same six levels across the top. Below, a compute row names what performs the step into each level (radtrax at L2, GeoML at L3, GeoModels with data assimilation at L4, xtremax at L5), then rows for compose (pipekit, all levels), transform (geotoolz, xrtoolz), patch (geopatcher), carry (GeoTensor, xarray), read (georeader, xrreader), index (geocatalog, geocatalog.states) and store (geocloud, all levels), split by a dashed line where the carrier switches from GeoTensor to xarray.
+:width: 100%
+
+**The data lifecycle, engineering axis.**
+
+The top row names what performs each step; the rows below map every level
+to the tool that composes, transforms, patches, carries, reads, indexes and
+stores it, switching carrier from GeoTensor to xarray between L2 and L3.
+```
+
+**The engineering axis** runs top to bottom, from computing a level down to
+storing it, and maps every level to the GeoStack tool that handles it.
+
+- **Compute:** what performs the step into each level. radtrax retrieves
+  (L1 → L2); GeoML grids and gap-fills (L2 → L3: pyrox, kernellib, vardax's
+  optimal interpolation); GeoModels with data assimilation model and
+  assimilate (L3 → L4: somax and plumax with filterax and vardax), the inner
+  loop of {numref}`fig-modeling-cycle`; xtremax derives extremes (L4 → L5).
+- **Compose:** `pipekit` wires every level into operator graphs, cycles and
+  training loops, whatever the carrier.
+
+The rows below split where the {term}`carrier` changes:
 
 - **Observations (L0–L2):** `georeader` reads them into a {term}`GeoTensor`,
-  `geocatalog` indexes them as {term}`GeoSlice`s, `geotoolz` transforms
-  them and `geocloud` stores them as COG on object storage.
+  `geocatalog` indexes them as {term}`GeoSlice`s and `geotoolz` transforms
+  them.
 - **Model states and derived products (L3–L5):** `xrreader` reads them into
   xarray, `geocatalog.states` indexes them in the same catalogs as state
-  rows (its {term}`state profile`), `xrtoolz` transforms and verifies them,
-  and they live as Zarr or NetCDF on object storage.
-- **Derived products (L5):** `xtremax` computes extremes from L4 states.
-- **Both carriers:** `geopatcher` patches fields whatever the carrier.
+  rows (its {term}`state profile`), and `xrtoolz` transforms and verifies
+  them.
+- **Both carriers:** `geopatcher` patches fields whatever the carrier, and
+  `geocloud` stores both on object storage: COG for observations, Zarr or
+  NetCDF for states.
 
 :::{aside}
 `xrreader` exists today as the `xrtoolz-reader` package (it imports as

@@ -346,63 +346,69 @@ STEPS = [
 ]
 
 
-def lifecycle() -> Svg:
-    f = Svg(
-        1250,
-        800,
-        "The L0 to L5 data lifecycle on two perpendicular axes:"
-        " the science axis fans retrievals out into ocean, atmosphere, land"
-        " and ice and ends in derived products such as extremes; the"
-        " engineering axis maps each level to the GeoStack tools that"
-        " transform, patch, carry, read, index and store it.",
-    )
-    x0, cw, gap = 186, 152, 24  # first column x, column width, gap
-    cx = [x0 + i * (cw + gap) for i in range(6)]
-    hues = [OBS, OBS, OBS, STATE, STATE, DERIVED]
+# lifecycle columns: label gutter, column width, gap (wide enough to name the step)
+LC_X0, LC_CW, LC_GAP = 150, 134, 62
+LC_CX = [LC_X0 + i * (LC_CW + LC_GAP) for i in range(6)]
+LC_HUES = [OBS, OBS, OBS, STATE, STATE, DERIVED]
+LC_W = LC_CX[-1] + LC_CW + 24
 
-    # Column headers: the six maturity levels and the step between each pair.
-    for i, (lvl, name, sub) in enumerate(LEVELS):
-        hue = hues[i]
-        f.rect(cx[i], 46, cw, 76, stroke=hue[0], fill=hue[1], dashed=i == 5)
-        f.text(cx[i] + 12, 64, lvl, size=11, color=hue[0], anchor="start", weight=700)
-        f.text(cx[i] + 12, 82, name, size=13.5, color=INK, anchor="start", weight=600)
-        f.lines(cx[i] + 12, 99, sub, gap=14, size=11, color=MUTED, anchor="start")
-    for i, step in enumerate(STEPS):
-        a, b = cx[i] + cw, cx[i + 1]
-        f.arrow([(a + 2, 84), (b - 2, 84)], color=INK)
-        f.text((a + b) / 2, 140, step, size=11.5, color=INK, weight=500)
+
+def _lifecycle_levels(f: Svg, top: float) -> float:
+    """The six levels with each step named on its own arrow; returns the bottom."""
+    cx, cw = LC_CX, LC_CW
     for a, b, label, hue in [
         (0, 2, "observations  (GeoTensor world)", OBS),
         (3, 4, "model states  (xarray world)", STATE),
         (5, 5, "derived products", DERIVED),
     ]:
-        f.text((cx[a] + cx[b] + cw) / 2, 30, label, size=12, color=hue[0], weight=600)
+        f.text((cx[a] + cx[b] + cw) / 2, top, label, size=12, color=hue[0], weight=600)
+    y = top + 16
+    for i, (lvl, name, sub) in enumerate(LEVELS):
+        hue = LC_HUES[i]
+        f.rect(cx[i], y, cw, 76, stroke=hue[0], fill=hue[1], dashed=i == 5)
+        f.text(
+            cx[i] + 11, y + 18, lvl, size=11, color=hue[0], anchor="start", weight=700
+        )
+        f.text(cx[i] + 11, y + 36, name, size=13, color=INK, anchor="start", weight=600)
+        f.lines(cx[i] + 11, y + 53, sub, gap=14, size=11, color=MUTED, anchor="start")
+    for i, step in enumerate(STEPS):
+        a, b = cx[i] + cw, cx[i + 1]
+        f.arrow([(a + 2, y + 52), (b - 2, y + 52)], color=INK)
+        words = step.split(" + ")
+        rows = [words[0] + " +", words[1]] if len(words) == 2 else words
+        f.lines((a + b) / 2, y + 22, rows, gap=13, size=11, color=INK, weight=500)
+    return y + 76
 
-    # Science axis: one stream until retrieval, then one lane per domain.
-    top, lane_h, lane_gap = 178, 46, 14
+
+def lifecycle_science() -> Svg:
+    f = Svg(
+        LC_W,
+        420,
+        "The L0 to L5 data lifecycle, science axis: telemetry becomes one"
+        " stream of radiances for every geoscience, retrieval fans it out into"
+        " ocean, atmosphere, land and ice, each domain carries its own analysis"
+        " and reanalysis or forecast, and derived products such as extremes"
+        " come last (dashed: examples still to be defined).",
+    )
+    cx, cw, gap = LC_CX, LC_CW, LC_GAP
+    head = _lifecycle_levels(f, 30)
+    top, lane_h, lane_gap = head + 40, 46, 12
     lanes = [top + i * (lane_h + lane_gap) for i in range(4)]
     bottom = lanes[-1] + lane_h
-    f.text(
-        24, top - 8, "SCIENCE AXIS", size=11, color=MUTED, anchor="start", weight=700
-    )
+    mid = (top + bottom) / 2
+    f.text(24, top + 4, "SCIENCE", size=11, color=MUTED, anchor="start", weight=700)
     f.lines(
         24,
-        top + 12,
-        ["what is measured", "and modelled"],
+        top + 22,
+        ["what is", "measured and", "modelled"],
         size=11.5,
         color=MUTED,
         anchor="start",
     )
-    f.box(cx[0], top, cw, bottom - top, "Telemetry", ["counts, packets"])
-    f.box(
-        cx[1],
-        top,
-        cw,
-        bottom - top,
-        "Radiances",
-        ["one stream for", "every geoscience"],
-    )
-    f.arrow([(cx[0] + cw, (top + bottom) / 2), (cx[1] - 2, (top + bottom) / 2)])
+    # one stream before retrieval, at lane height on the axis of the fan
+    f.box(cx[0], mid - 30, cw, 60, "Telemetry", ["counts, packets"])
+    f.box(cx[1], mid - 30, cw, 60, "Radiances", ["one stream for", "every geoscience"])
+    f.arrow([(cx[0] + cw, mid), (cx[1] - 2, mid)])
     rows = {
         "Ocean": [
             "SST · SSH · colour",
@@ -429,7 +435,7 @@ def lifecycle() -> Svg:
         hue = DOMAINS[name]
         ym = y + lane_h / 2
         f.arrow(
-            [(fan_x, (top + bottom) / 2), (fan_x + 6, ym), (cx[2] - 2, ym)],
+            [(fan_x, mid), (fan_x + gap * 0.55, ym), (cx[2] - 2, ym)],
             color=hue[0],
             curve=True,
         )
@@ -445,14 +451,14 @@ def lifecycle() -> Svg:
                 dashed=i == 3,
             )
             f.text(
-                x + 12, y + 19, name, size=11, color=hue[0], anchor="start", weight=700
+                x + 11, y + 19, name, size=11, color=hue[0], anchor="start", weight=700
             )
-            f.text(x + 12, y + 36, cell, size=12, color=INK, anchor="start")
+            f.text(x + 11, y + 36, cell, size=11.5, color=INK, anchor="start")
             if i:
                 f.arrow([(x - gap + 2, ym), (x - 2, ym)], color=hue[0], dashed=i == 3)
     f.text(
         fan_x + 4,
-        bottom + 22,
+        bottom + 24,
         "retrieval fans out: radiances → ocean, atmosphere, land, ice",
         size=11.5,
         color=INK,
@@ -461,69 +467,108 @@ def lifecycle() -> Svg:
     )
     f.text(
         cx[5] + cw,
-        bottom + 22,
+        bottom + 24,
         "L5: examples, to be defined",
         size=11.5,
         color=DERIVED[0],
         anchor="end",
         italic=True,
     )
+    f.h = int(bottom + 44)
+    return f
 
-    # Engineering axis: which GeoStack tool owns each level, down to storage.
-    etop, rh, rg = 470, 34, 12
+
+def lifecycle_engineering() -> Svg:
+    f = Svg(
+        LC_W,
+        560,
+        "The L0 to L5 data lifecycle, engineering axis: pipekit composes every"
+        " level; radtrax retrieves, GeoML grids and gap-fills, GeoModels with"
+        " data assimilation model and assimilate, and xtremax derives; geotoolz"
+        " and xrtoolz transform, geopatcher patches, GeoTensor and xarray"
+        " carry, georeader and xrreader read, geocatalog indexes and geocloud"
+        " stores, with the carrier switching from GeoTensor to xarray between"
+        " L2 and L3.",
+    )
+    cx, cw, gap = LC_CX, LC_CW, LC_GAP
+    etop = _lifecycle_levels(f, 30) + 40
+    rh, rg = 34, 12
     f.text(
+        24, etop - 16, "ENGINEERING", size=11, color=MUTED, anchor="start", weight=700
+    )
+    # compute: what performs the step into each level, two lines per cell
+    f.text(24, etop + 27, "compute", size=12.5, color=INK, anchor="start", weight=600)
+    f.lines(
         24,
-        etop - 14,
-        "ENGINEERING AXIS",
+        etop + 42,
+        ["the step into", "each level"],
         size=11,
         color=MUTED,
         anchor="start",
-        weight=700,
     )
+    compute = [
+        (2, "radtrax", "retrieval", OBS),
+        (3, "GeoML", "pyrox · kernellib · vardax OI", ML),
+        (4, "GeoModels + DA", "somax · plumax · filterax · vardax", STATE),
+        (5, "xtremax", "extremes", DERIVED),
+    ]
+    for lvl, title, sub, hue in compute:
+        x = cx[lvl]
+        f.rect(x, etop, cw, 56, stroke=hue[0], fill=hue[1], rx=10)
+        f.text(x + cw / 2, etop + 23, title, size=12.5, color=INK, weight=600)
+        words, line, out = sub.split(" · "), "", []
+        for w in words:  # wrap on the dots to fit the column
+            cand = f"{line} · {w}" if line else w
+            if _width(cand, 10.5) > cw - 14 and line:
+                out.append(line)
+                cand = w
+            line = cand
+        out.append(line)
+        f.lines(x + cw / 2, etop + 39, out, gap=12, size=10.5, color=MUTED)
+    rows_top = etop + 56 + rg + 6
     split = cx[3] - gap / 2
+    span = {  # role: [(first level, last level, label, hue)]
+        "compose": [(0, 5, "pipekit  (operators, graphs, cycles, training)", ENG)],
+        "transform": [(1, 2, "geotoolz", OBS), (3, 5, "xrtoolz", STATE)],
+        "patch": [(1, 4, "geopatcher  (carrier-neutral fields)", ENG)],
+        "carry": [(0, 2, "GeoTensor", OBS), (3, 5, "xarray", STATE)],
+        "read": [(0, 2, "georeader", OBS), (3, 5, "xrreader", STATE)],
+        "index": [
+            (0, 2, "geocatalog  (GeoSlice)", OBS),
+            (3, 5, "geocatalog.states  (state rows)", STATE),
+        ],
+        "store": [
+            (
+                0,
+                5,
+                "geocloud  (object storage: COG for observations, Zarr / NetCDF"
+                " for states)",
+                ENG,
+            ),
+        ],
+    }
+    end = rows_top + len(span) * (rh + rg) - rg
     f.arrow(
-        [(split, etop - 6), (split, etop + 6 * (rh + rg) + 2)],
-        color=STATE[0],
-        dashed=True,
-        head=False,
+        [(split, etop - 8), (split, end + 6)], color=STATE[0], dashed=True, head=False
     )
+    for r, (role, bars) in enumerate(span.items()):
+        y = rows_top + r * (rh + rg)
+        f.text(
+            24, y + rh / 2 + 4, role, size=12.5, color=INK, anchor="start", weight=600
+        )
+        for a, b, label, hue in bars:
+            x, w = cx[a], cx[b] + cw - cx[a]
+            f.rect(x, y, w, rh, stroke=hue[0], fill=hue[1], rx=rh / 2)
+            f.text(x + w / 2, y + rh / 2 + 4.5, label, size=12.5, color=INK, weight=500)
     f.text(
         split,
-        etop + 6 * (rh + rg) + 18,
+        end + 24,
         "carrier switch: GeoTensor → xarray",
         size=11.5,
         color=STATE[0],
         weight=600,
     )
-    span = {  # role: [(first level, last level, label, hue, dashed)]
-        "transform": [
-            (1, 2, "geotoolz", OBS, False),
-            (3, 4, "xrtoolz", STATE, False),
-            (5, 5, "xtremax", DERIVED, False),
-        ],
-        "patch": [(1, 4, "geopatcher  (carrier-neutral fields)", ENG, False)],
-        "carry": [(0, 2, "GeoTensor", OBS, False), (3, 5, "xarray", STATE, False)],
-        "read": [(0, 2, "georeader", OBS, False), (3, 5, "xrreader", STATE, False)],
-        "index": [
-            (0, 2, "geocatalog  (GeoSlice)", OBS, False),
-            (3, 5, "geocatalog.states  (state rows)", STATE, False),
-        ],
-        "store": [
-            (0, 2, "geocloud  (object storage, COG)", ENG, False),
-            (3, 5, "Zarr / NetCDF on object storage", EXT, True),
-        ],
-    }
-    for r, (role, bars) in enumerate(span.items()):
-        y = etop + r * (rh + rg)
-        f.text(
-            24, y + rh / 2 + 4, role, size=12.5, color=INK, anchor="start", weight=600
-        )
-        for a, b, label, hue, dashed in bars:
-            x, w = cx[a], cx[b] + cw - cx[a]
-            f.rect(x, y, w, rh, stroke=hue[0], fill=hue[1], rx=rh / 2, dashed=dashed)
-            f.text(x + w / 2, y + rh / 2 + 4.5, label, size=12.5, color=INK, weight=500)
-    f.arrow([(150, etop + 2), (150, etop + 6 * (rh + rg) - 14)], color=MUTED)
-    f.text(150, etop + 6 * (rh + rg) + 4, "toward storage", size=11, color=MUTED)
+    f.h = int(end + 44)
     return f
 
 
@@ -1485,7 +1530,8 @@ def roadmap() -> Svg:
 
 FIGURES = {
     "modeling_cycle": modeling_cycle,
-    "lifecycle": lifecycle,
+    "lifecycle_science": lifecycle_science,
+    "lifecycle_engineering": lifecycle_engineering,
     "two_streams": two_streams,
     "three_layers": three_layers,
     "six_steps": six_steps,
