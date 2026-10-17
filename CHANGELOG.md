@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.1](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.0...geostack-v0.2.1) (2026-10-17)
+
+
+### Documentation
+
+* add the stack's dependency graph and the rules that keep it acyclic ([#49](https://github.com/jejjohnson/geostack/issues/49)) ([289d63f](https://github.com/jejjohnson/geostack/commit/289d63fbf3f770773432f391f6e4957d45ea84b9))
+* **design:** add geoarray and labeled-lane design pages ([#56](https://github.com/jejjohnson/geostack/issues/56)) ([85d29c1](https://github.com/jejjohnson/geostack/commit/85d29c17aa73198349a6b7f0316fe8ef8f2ba904))
+* **design:** decide C1 and D1 in the geoarray design ([#57](https://github.com/jejjohnson/geostack/issues/57)) ([3ffe5bf](https://github.com/jejjohnson/geostack/commit/3ffe5bfc10c8d0f5a734e3e4508acbcae9603511))
+* improve the overview diagrams ([#54](https://github.com/jejjohnson/geostack/issues/54)) ([b71fc6c](https://github.com/jejjohnson/geostack/commit/b71fc6c55f71f5b106013ffa01b33a11a219d986))
+* name the numerics layer GeoNumerics ([#55](https://github.com/jejjohnson/geostack/issues/55)) ([f114652](https://github.com/jejjohnson/geostack/commit/f114652732e4884e5d6abc7c8e4f1bbbbd2103a2))
+* put plumax one tier above radtrax in GeoModels ([#51](https://github.com/jejjohnson/geostack/issues/51)) ([3934cd8](https://github.com/jejjohnson/geostack/commit/3934cd833a6ad9bebfcf8a0c9c2d339e7341abb3))
+* **reports:** point reports 1, 2 and 9 to pipekit's own docs ([#52](https://github.com/jejjohnson/geostack/issues/52)) ([b75559d](https://github.com/jejjohnson/geostack/commit/b75559d2b030560c4a1ef787803d34d9e8c09749))
+
 ## [0.2.0](https://github.com/jejjohnson/geostack/compare/geostack-v0.1.0...geostack-v0.2.0) (2026-10-14)
 
 
