@@ -271,12 +271,12 @@ stage3
 
 # %%
 assert stage3["matched_filter_snr"] == [
-    "geotoolz/matched_filter/_src/array.py",
+    "geoops/matched_filter/_src/array.py",
     "plumax/matched_filter/core.py",
     "plumax/radtran/matched_filter.py",
 ]
 assert stage3["matched filter, image"] == [
-    "geotoolz/matched_filter/_src/array.py",
+    "geoops/matched_filter/_src/array.py",
     "plumax/matched_filter/core.py",
     "plumax/radtran/matched_filter.py",
 ]
