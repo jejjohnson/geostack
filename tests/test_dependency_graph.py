@@ -243,3 +243,17 @@ def test_a_guard_catches_a_stale_import_root() -> None:
     namespace["PACKAGES"]["pipekit-train"] = (pyproject, roots[:-1])
     with pytest.raises(AssertionError, match="regenerate"):
         namespace["test_packages_are_current"]()
+
+
+def test_layer_figure_is_current() -> None:
+    """The README's layered figure is drawn from the page's graph: regenerate it."""
+    path = ROOT / "docs" / "images" / "overview" / "make_figures.py"
+    spec = importlib.util.spec_from_file_location("make_figures", path)
+    assert spec is not None and spec.loader is not None
+    figures = importlib.util.module_from_spec(spec)
+    sys.modules["make_figures"] = figures  # dataclasses look their module up
+    spec.loader.exec_module(figures)
+    svg = path.parent / "dependency_graph.svg"
+    assert figures.dependency_graph().render() == svg.read_text(encoding="utf-8"), (
+        "docs/images/overview/dependency_graph.svg is stale: run make dependency-graph"
+    )
