@@ -1131,146 +1131,127 @@ def axes_matrix() -> Svg:
     return f
 
 
-TIERS = [  # (tier, name, note, owned, packages)
-    ("6", "Serving", "external", False, ["FastAPI", "LitServe", "Fused", "Modal"]),
-    (
-        "5",
-        "Orchestration",
-        "external",
-        False,
-        ["Prefect", "MLflow", "DVC", "Hydra", "Metaflow", "W&B"],
+NUMERICS = ("#475569", "#f1f5f9")  # GeoNumerics: structured numerics
+
+# (name, job, hue, packages); a package in READ_ONLY_PKGS is third-party
+LAYERS = {
+    "GeoModels": (
+        "Physics: forward models of the ocean, plumes and radiation",
+        STATE,
+        ["plumax", "somax", "radtrax"],
     ),
-    (
-        "4",
-        "Pipeline infrastructure",
-        "carrier-neutral",
-        True,
+    "GeoML": (
+        "Learning and inference: networks, kernels, GPs, filters, extremes",
+        ML,
         [
-            "pipekit",
-            "pipekit-array",
-            "pipekit-jax",
-            "pipekit-cycle",
-            "pipekit-train",
-            "pipekit-evaluate",
-            "pipekit-experiment",
-            "geocatalog",
-            "geopatcher",
-            "xrpatcher",
-        ],
-    ),
-    (
-        "3",
-        "Domain models and libraries",
-        "models · carriers",
-        True,
-        [
-            "somax",
-            "plumax",
-            "rtmx  (planned)",
-            "methanex  (planned)",
-            "geotoolz  (GeoTensor)",
-            "xrtoolz  (xarray)",
-            "geopandas  (vector)",
-        ],
-    ),
-    (
-        "2",
-        "Algorithms",
-        "JAX-native",
-        True,
-        ["pyrox", "filterax", "vardax", "gauss_flows", "xtremax"],
-    ),
-    (
-        "1",
-        "Numerical foundation",
-        "JAX-native",
-        True,
-        [
-            "gaussx",
             "geonnax",
             "kernellib",
-            "spectraldiffx",
-            "finitevolx",
+            "pyrox",
+            "vardax",
+            "filterax",
+            "gauss_flows",
+            "xtremax",
             "optax_bayes",
-            "eqx-trainer",
         ],
     ),
-    (
-        "0",
-        "Ecosystem",
-        "external",
-        False,
-        [
-            "JAX",
-            "equinox",
-            "lineax",
-            "optax",
-            "diffrax",
-            "numpyro",
-            "xarray",
-            "pandas",
-            "rasterio",
-            "scipy",
-            "georeader",
-        ],
+    "GeoNumerics": (
+        "Structured linear algebra, PDE operators, spectral methods",
+        NUMERICS,
+        ["gaussx", "finitevolX", "spectraldiffx"],
     ),
-]
+    "GeoStack": (
+        "Data in, data out: read, transform, patch, compose",
+        OBS,
+        ["pipekit", "geotoolz", "xrtoolz", "georeader"],
+    ),
+}
+READ_ONLY_PKGS = {"georeader"}
+
+
+def _layer(f: Svg, x: float, y: float, w: float, h: float, name: str) -> None:
+    job, hue, pkgs = LAYERS[name]
+    f.rect(x, y, w, h, stroke=hue[0], fill=hue[1])
+    f.text(x + 20, y + 30, name, size=16, color=hue[0], anchor="start", weight=700)
+    f.text(x + 20, y + 52, job, size=12.5, color=INK, anchor="start")
+    cx, cy = x + 20, y + 66
+    for p in pkgs:
+        label = f"{p} · third-party, read-only" if p in READ_ONLY_PKGS else p
+        cw = _width(label, 11.5) + 18
+        if cx + cw > x + w - 16:
+            cx, cy = x + 20, cy + 32
+        f.chip(
+            cx,
+            cy,
+            label,
+            hue=(LINE, CARD),
+            dashed=p in READ_ONLY_PKGS,
+            size=11.5,
+            h=24,
+            pad=9,
+        )
+        cx += cw + 7
+
+
+def _external(
+    f: Svg, x: float, y: float, w: float, title: str, pkgs: list[str]
+) -> None:
+    f.rect(x, y, w, 60, stroke=EXT[0], fill=EXT[1], dashed=True)
+    f.text(x + 20, y + 35, title, size=12.5, color=MUTED, anchor="start", weight=700)
+    cx = x + 20 + _width(title, 12.5) + 24
+    for p in pkgs:
+        cx += f.chip(cx, y + 18, p, hue=(BORDER, CARD), size=11.5, h=24, pad=9) + 7
 
 
 def tier_stack() -> Svg:
     f = Svg(
         1100,
-        700,
-        "The stack in seven tiers: external ecosystem at the"
-        " bottom, owned numerical, algorithm, domain and pipeline tiers in"
-        " the middle, external orchestration and serving on top.",
+        608,
+        "The stack in four owned layers between external foundations and"
+        " external orchestration: GeoStack (data) and GeoNumerics (numerics)"
+        " side by side at the bottom, GeoML (learning) on both, GeoModels"
+        " (physics) on top. Imports point down; GeoStack and GeoNumerics never"
+        " import each other.",
     )
-    x, lw, w, y = 64, 230, 1012, 24
-    for tier, name, note, owned, pkgs in TIERS:
-        hue = ML if owned else EXT
-        if tier == "4":
-            hue = ENG
-        rows, cx = 1, x + lw  # count rows the chips will wrap into
-        for p in pkgs:
-            cw = _width(p, 12.5) + 22
-            if cx + cw > x + w - 14:
-                rows, cx = rows + 1, x + lw
-            cx += cw + 8
-        h = max(84, 30 + rows * 38)
-        f.rect(x, y, w, h, stroke=hue[0], fill=hue[1], dashed=not owned)
-        f.text(
-            x + 18,
-            y + 28,
-            f"TIER {tier}",
-            size=10.5,
-            color=MUTED,
-            anchor="start",
-            weight=700,
-        )
-        f.text(x + 18, y + 47, name, size=14, color=INK, anchor="start", weight=700)
-        f.text(
-            x + 18,
-            y + 64,
-            ("owned · " if owned else "") + note,
-            size=11.5,
-            color=hue[0] if owned else MUTED,
-            anchor="start",
-        )
-        cx, cy = x + lw, y + 18
-        for p in pkgs:
-            ext = p == "georeader"
-            cw = _width(p, 12.5) + 22
-            if cx + cw > x + w - 14:
-                cx, cy = x + lw, cy + 38
-            f.chip(cx, cy, p, hue=(OBS if ext else (BORDER, CARD)), dashed=False)
-            cx += cw + 8
-        y += h + 14
-    f.arrow([(36, y - 24), (36, 40)], color=MUTED)
-    f.text(28, (y + 30) / 2, "builds on", size=11.5, color=MUTED)
+    x, w = 64, 1012
+    half = (w - 20) / 2
+    _external(
+        f,
+        x,
+        20,
+        w,
+        "External · orchestration and serving",
+        ["Prefect", "DVC", "Hydra", "MLflow", "FastAPI"],
+    )
+    _layer(f, x, 112, w, 104, "GeoModels")
+    _layer(f, x, 248, w, 104, "GeoML")
+    _layer(f, x, 400, half, 104, "GeoNumerics")
+    _layer(f, x + half + 20, 400, half, 104, "GeoStack")
+    _external(
+        f,
+        x,
+        530,
+        w,
+        "External · foundations",
+        ["JAX", "Equinox", "lineax", "NumPyro", "xarray", "rasterio"],
+    )
+    # Imports point down: GeoModels -> GeoML -> both bottom layers.
+    mid = x + w / 2
+    f.arrow([(mid, 218), (mid, 246)], color=INK)
+    for cx in (x + half / 2, x + half + 20 + half / 2):
+        f.arrow([(cx, 354), (cx, 398)], color=INK)
+    f.text(
+        mid,
+        380,
+        "side by side: neither imports the other",
+        size=11,
+        color=MUTED,
+        italic=True,
+    )
+    f.arrow([(36, 112), (36, 504)], color=MUTED)
+    f.text(28, 308, "imports point down", size=11.5, color=MUTED)
     f.parts[-1] = f.parts[-1].replace(
-        "<text ", f'<text transform="rotate(-90 28 {(y + 30) / 2})" ', 1
+        "<text ", '<text transform="rotate(-90 28 308)" ', 1
     )
-    f.h = int(y + 10)
     return f
 
 

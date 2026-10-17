@@ -2,7 +2,7 @@
 title: GeoStack overview
 subtitle: A JAX-native research stack for geophysical modeling, inference and data assimilation
 short_title: Overview
-description: The entry point to GeoStack. Three organising axes, the seven-tier stack, an end-to-end methane walkthrough, the open questions and a plan.
+description: The entry point to GeoStack. Three organising axes, the four-layer stack, an end-to-end methane walkthrough, the open questions and a plan.
 keywords:
   - geophysics
   - data assimilation
@@ -421,7 +421,7 @@ contract.
 
 | Step | Lives in |
 |---|---|
-| 1 · Simple model | Tier 3 domain libraries (`somax`, `plumax`) |
+| 1 · Simple model | GeoModels (`somax`, `plumax`, `radtrax`) |
 | 2 · Model-based inference | `pipekit-cycle.DACycle` with classical analysis steps |
 | 3 · Emulator | `pipekit-train.SimulationDataset`, registered in `pipekit-experiment.ModelRegistry` |
 | 4 · Emulator-based inference | `pipekit-cycle.DACycle` with `NeuralForward` |
@@ -462,20 +462,24 @@ lineage is content-addressed, and nothing is opaque.
 (sec-stack)=
 ## The big picture stack
 
-Two zoom levels: the tiers first, then the packages inside Tier 4.
+Two zoom levels: the layers first, then the packages inside GeoStack.
 
 (sec-tiers)=
-### Seven tiers
+### Four layers
 
 ```{figure} images/overview/tier_stack.svg
 :label: fig-tier-stack
-:alt: Seven stacked tiers, from the external ecosystem at the bottom through owned numerical, algorithm, domain and pipeline tiers to external orchestration and serving at the top.
+:alt: Four owned layers between external foundations at the bottom and external orchestration and serving at the top. GeoStack (data) and GeoNumerics (numerics) sit side by side at the bottom, GeoML (learning and inference) on both, GeoModels (physics) on top; imports point down. georeader is marked third-party and read-only.
 :width: 100%
 
-**The stack in seven tiers.**
+**The stack in four layers.**
 
-Solid tiers are owned; dashed tiers are external. `georeader` sits in Tier 0
-as the GeoTensor substrate.
+Each layer has one job: GeoStack moves data in and out, GeoNumerics does
+structured numerics, GeoML learns and infers, GeoModels simulates physics.
+Imports point down, and GeoStack and GeoNumerics never import each other
+([](#fig-dependency-graph) and `tests/test_dependency_graph.py` check it).
+Dashed rows are external; `georeader` belongs to GeoStack but is
+spaceml-org's, read here and never written.
 ```
 
 (sec-tier4)=
@@ -511,12 +515,12 @@ edges optional extras.
 (sec-ownership)=
 ### Ownership rules
 
-A package imports only from tiers below it, so there are no circular
+A package imports only from layers below it, so there are no circular
 dependencies; geotoolz and xrtoolz re-export the common framework symbols,
 so user code usually imports a single package. The three stacks of [the decision](#sec-decision) each have
 their rules: GeoStack's (pipekit and its packages, geocatalog, geopatcher,
 geotoolz and xrtoolz) are [Report 16's](reports/16_geo_data_stack.md#r16-ownership),
-and GeoModels' (somax, plumax, radtrax, on top of the Numerics layer) are on
+and GeoModels' (somax, plumax, radtrax, on top of the GeoNumerics layer) are on
 [the package boundaries page](geomodels/package_boundaries.md#pb-rules).
 GeoML's rules are stated only here: the JAX libraries touch pipekit only
 through an optional adapter module, never in their core.
@@ -720,86 +724,84 @@ an ETL job ([case 2](reports/09_use_cases.md#r9-case-2)), a FastAPI endpoint
 integration design).
 
 (sec-tier-briefs)=
-## Per-tier briefs
+## Per-layer briefs
 
-A compact summary per package. Where a report or a GeoModels page covers a
-package, the brief is a link to it.
+A compact summary per package, by layer ([](#fig-tier-stack)). Where a
+report or a GeoModels page covers a package, the brief is a link to it.
 
 ::::{tab-set}
 
-:::{tab-item} Tier 0 · Substrate
-**georeader** (external, but central) owns `GeoTensor`, the raster carrier,
-and the reader infrastructure (`RasterioReader`, `AsyncGeoTIFFReader`).
-Everything raster-shaped builds on it.
+:::{tab-item} External
+**The JAX ecosystem**: JAX, Equinox, lineax, optax, diffrax, NumPyro and
+matfree.
 
-**The xarray ecosystem** (external): `DataArray`, `Dataset` and `DataTree`,
-plus rioxarray, xvec, cf-xarray, regionmask, xskillscore, dask and intake.
+**The xarray ecosystem**: `DataArray`, `Dataset` and `DataTree`, plus
+rioxarray, xvec, cf-xarray, regionmask, xskillscore, dask and intake.
 :::
 
-:::{tab-item} Tier 1 · Numerics
+:::{tab-item} GeoStack
+**georeader** (third-party, spaceml-org's; read-only here) owns
+`GeoTensor`, the raster carrier, and the reader infrastructure
+(`RasterioReader`, `AsyncGeoTIFFReader`). Everything raster-shaped builds
+on it.
+
+| Package | What it does | Read |
+|---|---|---|
+| `pipekit` | The operator framework: fourteen groups (A–N) | [Report 2](reports/02_pipekit_surface.md#r2-inventory), [Report 1](reports/01_toolz_primer.md) |
+| `pipekit-array` | Array-API operators | [Report 3](reports/03_sister_libraries.md#r3-array) |
+| `pipekit-jax` | A model wrapper and a diffrax forward model; the operator layer is proposed | [Report 5](reports/05_pipekit_jax.md) |
+| `pipekit-cycle` | Time stepping and DA cycles | [Report 10](reports/10_pipekit_cycle.md) |
+| `pipekit-train` | Training pipelines | [Report 11](reports/11_pipekit_train.md) |
+| `pipekit-experiment` | Model registry and tracking | [Report 12](reports/12_pipekit_experiment.md) |
+| `pipekit-evaluate` | The benchmark ladder | [Report 14](reports/14_pipekit_evaluate.md), [Report 15](reports/15_benchmarking.md), [Report 17](reports/17_cycle.md) |
+| `geotoolz` | GeoTensor operators for remote sensing | [Report 3](reports/03_sister_libraries.md#r3-geotoolz) |
+| `geocatalog` (ships as `geotoolz-catalog`) | Find, index, join and load files | [Report 6](reports/06_geocatalog.md) |
+| `geopatcher` (ships as `geotoolz-patcher`) | Split, process and stitch patches | [Report 7](reports/07_geopatcher.md) |
+| `geocatalog.states` (proposed state profile) | A catalog for model states | [Report 13](reports/13_state_catalog.md) |
+| `xrtoolz` | xarray operators for ocean, atmosphere and reanalysis | [Report 3](reports/03_sister_libraries.md#r3-xrtoolz) |
+
+geotoolz and xrtoolz share the same pipekit operator algebra; only the
+carrier differs.
+:::
+
+:::{tab-item} GeoNumerics
 | Package | What it does |
 |---|---|
 | `gaussx` | Structured linear algebra, Gaussian primitives, exponential family; wraps lineax and matfree |
-| `geonnax` | Basis functions, neural layers and coordinate transforms (`lonlat_to_cartesian3d`) |
-| `kernellib` | Covariance kernels and tapers |
 | `spectraldiffx` | Pseudospectral differentiation, filters, PDE solvers |
 | `finitevolx` | Arakawa C-grid finite-volume operators |
-| `optax_bayes` | The Bayesian learning rule as optax gradient transformations |
-| `eqx-trainer` | A minimal JAX / equinox training loop |
 
 Pure math with no domain knowledge: all `eqx.Module`-based, jittable and
 JAX-traceable. See the [gaussx example](#ex-gaussx).
 :::
 
-:::{tab-item} Tier 2 · Algorithms
+:::{tab-item} GeoML
 | Package | What it does |
 |---|---|
-| `pyrox` | GP and Bayesian deep-learning building blocks for NumPyro hierarchical models (a split into `nnox` + `pyrox` is planned) |
-| `filterax` | Differentiable ensemble Kalman methods |
+| `geonnax` | Basis functions, neural layers and coordinate transforms (`lonlat_to_cartesian3d`) |
+| `kernellib` | Covariance kernels and scalable kernel methods |
+| `pyrox` | GP and Bayesian deep-learning building blocks for NumPyro models |
 | `vardax` | Learnable variational DA (3D- and 4D-Var) |
+| `filterax` | Differentiable ensemble Kalman methods |
 | `gauss_flows` | Rotation-based Gaussianization and normalizing flows |
 | `xtremax` | Extreme-value and point-process models; computes the L5 extremes |
-| `fairkl` | Fairness-constrained kernel learning (Keras 3) |
-| `keras-nerf` | Neural fields for state estimation (Keras 3) |
-| `keras-flows` | Normalizing flows (Keras 3) |
+| `optax_bayes` | The Bayesian learning rule as optax gradient transformations |
 
-Keras 3 and Equinox are equal-status backends. Each algorithm's adapter
-(`*.adapters.pipekit`) makes it composable into pipekit pipelines. See the
+Each library's adapter (`*.adapters.pipekit`) makes it composable into
+pipekit pipelines; the core never imports pipekit. See the
 [filterax example](#ex-filterax).
 :::
 
-:::{tab-item} Tier 3 · Domain
+:::{tab-item} GeoModels
 | Package | What it does | Read |
 |---|---|---|
 | `somax` | Ocean and atmosphere model zoo | — |
 | `plumax` | Atmospheric plume transport | [plumax · 1](geomodels/plumax/01_emission_rate.md), [package boundaries](geomodels/package_boundaries.md) |
-| `radtrax` | Differentiable radiative transfer, formerly rtmx (proposed; does not exist yet) | [radtrax · 3](geomodels/radtrax/03_design.md) |
-| `methanex` | End-to-end methane remote sensing (planned; no repository yet) | — |
-| `geotoolz` | GeoTensor operators for remote sensing | [Report 3](reports/03_sister_libraries.md#r3-geotoolz) |
-| `xrtoolz` | xarray operators for ocean, atmosphere and reanalysis | [Report 3](reports/03_sister_libraries.md#r3-xrtoolz) |
+| `radtrax` | Differentiable radiative transfer (formerly rtmx) | [radtrax · 3](geomodels/radtrax/03_design.md) |
 
 The forward models each ship a thin `adapters/pipekit.py` that exposes the
 operator surface (`ForwardModel`, `ObservationOperator`, …) without touching
-the algorithmic core. geotoolz and xrtoolz share the same Tier 4 peers: the
-substrate differs, the operator algebra is identical.
-:::
-
-:::{tab-item} Tier 4 · Pipelines
-**pipekit**, the framework: fourteen groups (A–N), listed in
-[Report 2's inventory](reports/02_pipekit_surface.md#r2-inventory), with its
-lineage in [Report 1](reports/01_toolz_primer.md).
-
-| Package | Report |
-|---|---|
-| `pipekit-array` | [Report 3](reports/03_sister_libraries.md#r3-array) |
-| `pipekit-jax` | [Report 5](reports/05_pipekit_jax.md): 0.0.2 ships a model wrapper and a diffrax forward model; the operator layer is proposed |
-| `pipekit-cycle` | [Report 10](reports/10_pipekit_cycle.md) |
-| `pipekit-train` | [Report 11](reports/11_pipekit_train.md) |
-| `pipekit-experiment` | [Report 12](reports/12_pipekit_experiment.md) |
-| `pipekit-evaluate` | [Report 14](reports/14_pipekit_evaluate.md), [Report 15](reports/15_benchmarking.md), [Report 17](reports/17_cycle.md) |
-| `geocatalog` (ships as `geotoolz-catalog`) | [Report 6](reports/06_geocatalog.md) |
-| `geopatcher` (ships as `geotoolz-patcher`) | [Report 7](reports/07_geopatcher.md) |
-| `geocatalog.states` (proposed state profile) | [Report 13](reports/13_state_catalog.md) |
+the algorithmic core.
 :::
 ::::
 
