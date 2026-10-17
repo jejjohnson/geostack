@@ -502,17 +502,20 @@ never see which carrier they run on.
 (sec-dependencies)=
 ### The dependency graph
 
-[](#fig-dependency-graph) shows which reference packages import which.
+[](#fig-dependency-graph) shows which repositories import which.
 
 ```{figure} images/overview/dependency_graph.svg
 :label: fig-dependency-graph
-:alt: Three family panels. Every pipekit package depends on pipekit; xrtoolz builds on xrtoolz-core, which depends on pipekit; geotoolz depends on pipekit, and every geotoolz-family package depends on georeader. Dashed edges are optional extras.
+:alt: The 18 repositories in four layer bands: GeoModels on top, GeoML below, GeoNumerics and GeoStack side by side at the bottom. Edges point down from each repository to those it depends on or imports; dashed edges are optional extras; the geotoolz and pipekit cycle is drawn in red. georeader is marked third-party.
 :width: 100%
 
-**How the reference packages import each other.**
+**How the repositories import each other.**
 
-Drawn from the packages' own metadata. Solid edges are dependencies, dashed
-edges optional extras.
+Drawn from the generated graph on the
+[dependency-graph page](api/dependency_graph.md), which
+`tests/test_dependency_graph.py` keeps current; that page has the
+package-level detail and the table of known violations. Solid edges are
+dependencies or imports, dashed edges optional extras, and red edges a cycle.
 ```
 
 (sec-ownership)=

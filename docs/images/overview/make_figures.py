@@ -1400,155 +1400,145 @@ def tier4_map() -> Svg:
     return f
 
 
+DG_PAGE = OUT.parents[1] / "api" / "dependency_graph.md"
+# (layer, hue, x0 and x1 as fractions of the width, rows from the top tier down);
+# every row lists (repo, x as a fraction of the width)
+DG_LAYERS = [
+    (
+        "GeoModels",
+        STATE,
+        0.0,
+        1.0,
+        [[("plumax", 0.58)], [("radtrax", 0.22), ("somax", 0.66)]],
+    ),
+    (
+        "GeoML",
+        ML,
+        0.0,
+        1.0,
+        [
+            [("vardax", 0.84)],
+            [("pyrox", 0.2), ("filterax", 0.42)],
+            [("optax_bayes", 0.06), ("kernellib", 0.28), ("xtremax", 0.95)],
+            [("gauss_flows", 0.12), ("geonnax", 0.47)],
+        ],
+    ),
+    (
+        "GeoNumerics",
+        NUMERICS,
+        0.0,
+        0.49,
+        [[("finitevolX", 0.38)], [("spectraldiffx", 0.28)], [("gaussx", 0.16)]],
+    ),
+    (
+        "GeoStack",
+        OBS,
+        0.51,
+        1.0,
+        [
+            [],
+            [("xrtoolz", 0.6), ("geotoolz", 0.86)],
+            [("pipekit", 0.72), ("georeader", 0.94)],
+        ],
+    ),
+]
+
+
+def _dg_edges() -> list[tuple[str, str, bool]]:
+    """(source, target, solid) for every edge the generated page draws."""
+    text = DG_PAGE.read_text(encoding="utf-8")
+    block = text[text.index("```{mermaid}") :]
+    block = block[: block.index("\n```")]
+    out = []
+    for line in block.splitlines():
+        parts = line.split()
+        if len(parts) == 3 and parts[1] in ("-->", "-.->"):
+            out.append((parts[0], parts[2], parts[1] == "-->"))
+    return out
+
+
 def dependency_graph() -> Svg:
     f = Svg(
-        1320,
-        560,
-        "How the reference packages import each other: every"
-        " pipekit package depends on pipekit, xrtoolz builds on xrtoolz-core"
-        " and pipekit, and the geotoolz packages build on georeader;"
-        " dashed edges are optional extras.",
+        1200,
+        760,
+        "How the repositories import each other, by layer: imports point down,"
+        " GeoStack and GeoNumerics sit side by side at the bottom. Solid edges"
+        " are dependencies or imports, dashed edges optional extras; red edges"
+        " form a cycle, a known violation. Drawn from the generated graph on"
+        " the dependency-graph page.",
     )
-    bw, bh = 150, 38
+    W, nw, nh, rg = 1200 - 48, 112, 30, 62
     pos: dict[str, tuple[float, float]] = {}
+    y = 20
+    bottom_top = None
+    for name, hue, f0, f1, rows in DG_LAYERS:
+        if name == "GeoStack":
+            y = bottom_top  # beside GeoNumerics
+        if name == "GeoNumerics":
+            bottom_top = y
+        bh = 40 + len(rows) * rg
+        bx, bw = 24 + f0 * W, (f1 - f0) * W
+        f.rect(bx, y, bw, bh, stroke=hue[0], fill=hue[1], rx=12)
+        f.text(bx + 16, y + 24, name, size=13, color=hue[0], anchor="start", weight=700)
+        for r, row in enumerate(rows):
+            for repo, fx in row:
+                pos[repo] = (24 + fx * W, y + 38 + r * rg)
+        y += bh + 22
+    edges = _dg_edges()
+    missing = {r for e in edges for r in e[:2]} - set(pos)
+    if missing:
+        raise SystemExit(f"dependency_graph: place {sorted(missing)} in DG_LAYERS")
+    adj: dict[str, set[str]] = {}
+    for a, b, _ in edges:
+        adj.setdefault(a, set()).add(b)
 
-    def node(name: str, x: float, y: float, hue=(BORDER, CARD), dashed=False):
-        pos[name] = (x, y)
-        f.rect(
-            x - bw / 2, y - bh / 2, bw, bh, stroke=hue[0], fill=hue[1], dashed=dashed
+    def reaches(a: str, b: str) -> bool:
+        seen, todo = set(), [a]
+        while todo:
+            v = todo.pop()
+            if v == b:
+                return True
+            if v not in seen:
+                seen.add(v)
+                todo.extend(adj.get(v, ()))
+        return False
+
+    for a, b, solid in edges:
+        (ax, ay), (bx2, by2) = pos[a], pos[b]
+        red = reaches(b, a)
+        color = "#c62828" if red else LINE
+        if by2 > ay:  # downward: bottom of the source to the top of the target
+            x0, y0, x1, y1 = ax, ay + nh, bx2, by2 - 2
+            if red:
+                x0, x1 = x0 - 22, x1 + 22
+        else:  # upward (a cycle): the source's side up to the target's bottom
+            x0, y0, x1, y1 = ax + nw / 2, ay + nh / 2, bx2 + 22, by2 + nh + 2
+        dy = (y1 - y0) / 2
+        dash = "" if solid else ' stroke-dasharray="5 4"'
+        f.parts.append(
+            f'<path d="M{x0:.1f},{y0:.1f} C{x0:.1f},{y0 + dy:.1f} {x1:.1f},'
+            f'{y1 - dy:.1f} {x1:.1f},{y1:.1f}" fill="none" stroke="{color}"'
+            f' stroke-width="{2.2 if red else 1.3}"{dash}'
+            f' marker-end="url(#{f._marker(color)})"/>'
         )
-        f.text(x, y + 4.5, name, size=12.5, color=INK, weight=600)
-
-    def edge(a: str, b: str, *, dashed: bool = False) -> None:
-        (x0, y0), (x1, y1) = pos[a], pos[b]
-        if y0 == y1:
-            s = 1 if x1 > x0 else -1
-            pts = [(x0 + s * bw / 2, y0), (x1 - s * (bw / 2 + 2), y1)]
-        else:
-            pts = [(x0, y0 + bh / 2), (x1, y1 - bh / 2 - 2)]
-        f.arrow(pts, color=LINE, dashed=dashed, width=1.4)
-
-    for x, w, title, hue in [
-        (20, 480, "pipekit", ENG),
-        (520, 380, "xrtoolz", STATE),
-        (920, 380, "geotoolz", OBS),
-    ]:
-        f.rect(x, 20, w, 400, stroke=hue[0], fill=hue[1], rx=12)
-        f.text(
-            x + 16,
-            44,
-            title.upper() + "  FAMILY",
-            size=11.5,
-            color=hue[0],
-            anchor="start",
-            weight=700,
-        )
-
-    # pipekit family: every member depends on pipekit (one bus), plus these.
-    node("pipekit-jax", 100, 100)
-    node("pipekit-evaluate", 260, 100)
-    node("pipekit-train", 420, 100)
-    node("pipekit-array", 100, 210)
-    node("pipekit-cycle", 260, 210)
-    node("pipekit-experiment", 420, 210)
-    node("pipekit", 260, 370, hue=ENG)
-    f.arrow([(100, 119), (260, 191 - 2)], color=LINE, width=1.4)  # jax -> cycle
-    edge("pipekit-evaluate", "pipekit-cycle", dashed=True)
-    f.arrow([(420, 119), (260 + 20, 191 - 2)], color=LINE, dashed=True, width=1.4)
-    edge("pipekit-train", "pipekit-experiment", dashed=True)
-    edge("pipekit-cycle", "pipekit-array", dashed=True)
-    f.arrow([(60, 290), (460, 290)], color=ENG[0], head=False, width=1.6)
-    for x in (100, 260, 420):
-        f.arrow([(x, 229), (x, 290)], color=ENG[0], head=False, width=1.6)
-    f.arrow([(260, 290), (260, 370 - bh / 2 - 2)], color=ENG[0], width=1.6)
-    f.text(
-        272,
-        316,
-        "every pipekit-* package",
-        size=11.5,
-        color=ENG[0],
-        anchor="start",
-        weight=600,
-    )
-
-    # xrtoolz family.
-    node("xrtoolz", 710, 100, hue=STATE)
-    node("xrtoolz-einx", 615, 210)
-    node("xrtoolz-sklearn", 805, 210)
-    node("xrtoolz-core", 710, 310)
-    f.arrow([(690, 119), (615, 191 - 2)], color=LINE, width=1.4)
-    f.arrow([(730, 119), (805, 191 - 2)], color=LINE, width=1.4)
-    edge("xrtoolz", "xrtoolz-core")
-    f.arrow([(615, 229), (690, 291 - 2)], color=LINE, width=1.4)
-    f.arrow([(805, 229), (730, 291 - 2)], color=LINE, width=1.4)
-    f.text(
-        710, 372, "xrtoolz also → xrtoolz-grad, xrtoolz-reader", size=11.5, color=MUTED
-    )
-    f.arrow(
-        [(710 - bw / 2, 310), (560, 310), (560, 370), (260 + bw / 2 + 2, 370)],
-        color=STATE[0],
-        width=1.6,
-    )
-    f.text(
-        345,
-        362,
-        "xrtoolz-core → pipekit",
-        size=11.5,
-        color=STATE[0],
-        anchor="start",
-        weight=600,
-    )
-
-    # geotoolz family (all dashed edges are optional extras).
-    node("geotoolz", 1020, 100, hue=OBS)
-    node("geoproducts", 1200, 100)
-    node("geopatcher", 1020, 210)
-    node("geocloud", 1200, 210)
-    node("geocatalog", 1110, 310)
-    edge("geoproducts", "geotoolz", dashed=True)
-    edge("geotoolz", "geopatcher", dashed=True)
-    f.arrow([(1050, 119), (1170, 191 - 2)], color=LINE, dashed=True, width=1.4)
-    edge("geoproducts", "geocloud", dashed=True)
-    edge("geopatcher", "geocloud", dashed=True)
-    f.arrow([(1085, 291), (1035, 229 + 2)], color=LINE, dashed=True, width=1.4)
-    f.arrow([(1135, 291), (1185, 229 + 2)], color=LINE, dashed=True, width=1.4)
-    f.arrow(
+    for repo, (x, yy) in pos.items():
+        third = repo in READ_ONLY_PKGS
+        f.rect(x - nw / 2, yy, nw, nh, stroke=BORDER, fill=CARD, dashed=third)
+        f.text(x, yy + 21, repo, size=12.5, color=INK, weight=600)
+        if third:
+            f.text(x, yy + nh + 14, "third-party", size=10.5, color=MUTED)
+    ly = y + 4
+    for k, (label, color, dashed) in enumerate(
         [
-            (1020 - bw / 2, 100),
-            (910, 100),
-            (910, 450),
-            (230, 450),
-            (230, 370 + bh / 2 + 2),
-        ],
-        color=OBS[0],
-        width=1.6,
-    )
-    f.text(560, 442, "geotoolz → pipekit", size=11.5, color=OBS[0], weight=600)
-    node("georeader", 1110, 490, hue=EXT, dashed=True)
-    f.arrow([(1110, 420), (1110, 490 - bh / 2 - 2)], color=OBS[0], width=1.6)
-    f.text(
-        1124,
-        450,
-        "every geotoolz-family",
-        size=11.5,
-        color=OBS[0],
-        anchor="start",
-        weight=600,
-    )
-    f.text(
-        1124,
-        465,
-        "package → georeader",
-        size=11.5,
-        color=OBS[0],
-        anchor="start",
-        weight=600,
-    )
-
-    f.arrow([(40, 530), (80, 530)], color=LINE, width=1.4)
-    f.text(88, 534, "depends on", size=11.5, color=MUTED, anchor="start")
-    f.arrow([(190, 530), (230, 530)], color=LINE, dashed=True, width=1.4)
-    f.text(238, 534, "optional extra", size=11.5, color=MUTED, anchor="start")
+            ("depends on or imports", LINE, False),
+            ("optional extra", LINE, True),
+            ("cycle: a known violation", "#c62828", False),
+        ]
+    ):
+        lx = 40 + k * 250
+        f.arrow([(lx, ly), (lx + 40, ly)], color=color, dashed=dashed, width=1.4)
+        f.text(lx + 50, ly + 4, label, size=11.5, color=MUTED, anchor="start")
+    f.h = int(ly + 24)
     return f
 
 
