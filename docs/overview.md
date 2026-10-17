@@ -483,17 +483,20 @@ spaceml-org's, read here and never written.
 ```
 
 (sec-tier4)=
-### Tier 4, zoomed in
+### GeoStack, zoomed in
 
-Most current work happens in the framework and infrastructure tier
-([](#fig-tier4-map)).
+Most current work happens in the GeoStack layer ([](#fig-tier4-map)).
 
 ```{figure} images/overview/tier4_map.svg
 :label: fig-tier4-map
-:alt: Three groups: the pipekit framework packages, the ML-loop packages, and the infrastructure peers geocatalog, geopatcher and geocatalog's state profile, with georeader as an external substrate.
+:alt: The GeoStack layer. The pipekit core (pipekit, pipekit-array, pipekit-jax) at the bottom; above it two carrier columns, GeoTensor for observations and xarray for states, in rows by job: read (georeader, geoproducts; xrreader), index (geocatalog; the proposed geocatalog.states), transform (geotoolz; xrtoolz, xrcore, xrgrad, xreinx, xrsklearn), patch (geopatcher, either carrier) and store (geocloud, either carrier). The carrier-neutral ML loops (pipekit-cycle, -train, -experiment, -evaluate) on top.
 :width: 100%
 
-**The pipekit framework, the ML loops built on it, and the infrastructure peers.**
+**One pipekit core, two carriers, the same jobs on both.**
+
+Row by row, the GeoTensor side and the xarray side do the same job on a
+different carrier; patching and storage serve both. The ML loops on top
+never see which carrier they run on.
 ```
 
 (sec-dependencies)=

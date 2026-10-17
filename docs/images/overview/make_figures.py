@@ -1255,89 +1255,148 @@ def tier_stack() -> Svg:
     return f
 
 
+# GeoStack zoomed in: (job, what it does, GeoTensor side, xarray side); a None
+# xarray side means the GeoTensor-side packages serve both carriers.
+GEOSTACK_ROWS = [
+    (
+        "Read",
+        "files into a carrier",
+        ["georeader", "geoproducts"],
+        ["xrreader"],
+    ),
+    ("Index", "by space and time", ["geocatalog"], ["geocatalog.states"]),
+    (
+        "Transform",
+        "operators on the carrier",
+        ["geotoolz"],
+        ["xrtoolz", "xrcore", "xrgrad", "xreinx", "xrsklearn"],
+    ),
+    ("Patch", "split, process, stitch", ["geopatcher"], None),
+    ("Store", "COG, Zarr, NetCDF", ["geocloud"], None),
+]
+PROPOSED_PKGS = {"geocatalog.states"}
+
+
+def _pkg_chip(f: Svg, x: float, y: float, p: str) -> float:
+    label = p
+    if p in READ_ONLY_PKGS:
+        label = f"{p} · third-party, read-only"
+    elif p in PROPOSED_PKGS:
+        label = f"{p} · proposed"
+    dashed = p in READ_ONLY_PKGS or p in PROPOSED_PKGS
+    return f.chip(x, y, label, hue=(LINE, CARD), dashed=dashed, size=11.5, h=24, pad=9)
+
+
 def tier4_map() -> Svg:
     f = Svg(
         1100,
-        470,
-        "Tier 4 zoomed in: the pipekit framework packages, the ML"
-        " loop packages built on them, and the infrastructure peers that index"
-        " and patch data.",
+        578,
+        "GeoStack zoomed in: one pipekit core at the bottom; above it two"
+        " carriers side by side, GeoTensor for observations and xarray for"
+        " states, row by row by job (read, index, transform, patch, store);"
+        " carrier-neutral ML loops on top.",
     )
-    groups = [
-        (
-            "Framework",
-            ENG,
-            24,
-            [
-                ("pipekit", ["operators, Sequential,", "Graph; the core"]),
-                ("pipekit-array", ["Array API ops;", "NumPy · JAX · CuPy · Torch"]),
-                ("pipekit-jax", ["Equinox carrier;", "deferred"]),
-            ],
-        ),
-        (
-            "ML loops",
-            ML,
-            382,
-            [
-                ("pipekit-cycle", ["DA, time-stepping,", "iterative inference"]),
-                ("pipekit-train", ["training loops for", "emulators, amortized inf."]),
-                ("pipekit-experiment", ["model registry; MLflow,", "W&B adapters"]),
-                ("pipekit-evaluate", ["multidim. evaluation;", "benchmark contracts"]),
-            ],
-        ),
-        (
-            "Infrastructure peers",
-            OBS,
-            740,
-            [
-                ("geocatalog", ["observation index,", "GeoSlice, L0\u2013L2"]),
-                ("geopatcher", ["four-axis patcher;", "Field / Domain"]),
-                (
-                    "geocatalog.states",
-                    ["model-state profile,", "same index, L3\u2013L4"],
-                ),
-            ],
-        ),
-    ]
-    gw = 336
-    for title, hue, gx, items in groups:
-        f.rect(gx, 24, gw, 420, stroke=hue[0], fill=hue[1], rx=12)
-        f.text(
-            gx + 18,
-            52,
-            title.upper(),
-            size=11.5,
-            color=hue[0],
-            anchor="start",
-            weight=700,
+    x0, w = 24, 1052
+    lw = 200  # row-label gutter
+    # ML loops on top: carrier-neutral.
+    f.rect(x0, 20, w, 76, stroke=ML[0], fill=ML[1])
+    f.text(x0 + 18, 46, "ML loops", size=14, color=ML[0], anchor="start", weight=700)
+    f.text(x0 + 18, 66, "carrier-neutral", size=11.5, color=INK, anchor="start")
+    cx = x0 + lw
+    for p, what in [
+        ("pipekit-cycle", "DA, time stepping"),
+        ("pipekit-train", "training loops"),
+        ("pipekit-experiment", "registry, tracking"),
+        ("pipekit-evaluate", "benchmark ladder"),
+    ]:
+        cx += (
+            f.chip(cx, 46, f"{p} · {what}", hue=(LINE, CARD), size=11.5, h=24, pad=9)
+            + 8
         )
-        for k, (name, sub) in enumerate(items):
-            y = 70 + k * 92
-            f.rect(gx + 16, y, gw - 32, 78, stroke=BORDER, fill=CARD)
-            f.text(
-                gx + 32, y + 26, name, size=14, color=INK, anchor="start", weight=700
-            )
-            f.lines(
-                gx + 32, y + 46, sub, gap=15, size=11.5, color=MUTED, anchor="start"
-            )
-    f.rect(740 + 16, 70 + 3 * 92, gw - 32, 64, stroke=LINE, fill=PANEL, dashed=True)
+    # Two carrier columns.
+    gx, gw = x0 + lw, 420
+    xx, xw = gx + gw + 12, w - lw - gw - 12
+    y0, rh = 150, 58
+    for x, cw, hue, title, sub in [
+        (
+            gx,
+            gw,
+            OBS,
+            "GeoTensor",
+            "rasters with georeferencing · observations, L0\u2013L2",
+        ),
+        (xx, xw, STATE, "xarray", "labelled cubes · states, L3\u2013L5"),
+    ]:
+        f.rect(x, y0 - 30, cw, len(GEOSTACK_ROWS) * rh + 36, stroke=hue[0], fill=hue[1])
+        f.text(
+            x + 16, y0 - 10, title, size=13, color=hue[0], anchor="start", weight=700
+        )
+        f.text(
+            x + 16 + _width(title, 13) + 10,
+            y0 - 10,
+            sub,
+            size=11,
+            color=MUTED,
+            anchor="start",
+        )
+    for i, (job, what, geo, xr) in enumerate(GEOSTACK_ROWS):
+        y = y0 + i * rh
+        f.parts.append(
+            f'<line x1="{x0}" y1="{y + 2}" x2="{x0 + w}" y2="{y + 2}"'
+            f' stroke="{BORDER}" stroke-opacity="0.6"/>'
+        )
+        f.text(x0 + 18, y + 26, job, size=13, color=INK, anchor="start", weight=700)
+        f.text(x0 + 18, y + 44, what, size=11, color=MUTED, anchor="start")
+        if xr is None:  # one package serves both carriers: centre it on the seam
+            label = f"{geo[0]} · either carrier"
+            cw = _width(label, 11.5) + 18
+            f.chip(xx - 6 - cw / 2, y + 17, label, hue=ENG, size=11.5, h=24, pad=9)
+            continue
+        for x, pkgs in [(gx, geo), (xx, xr)]:
+            cx = x + 16
+            for p in pkgs:
+                cx += _pkg_chip(f, cx, y + 17, p) + 7
+    # pipekit core at the bottom.
+    by = y0 + len(GEOSTACK_ROWS) * rh + 26
+    f.rect(x0, by, w, 76, stroke=ENG[0], fill=ENG[1])
     f.text(
-        740 + 32,
-        70 + 3 * 92 + 26,
-        "georeader",
+        x0 + 18,
+        by + 26,
+        "pipekit core",
         size=14,
-        color=INK,
+        color=ENG[0],
         anchor="start",
         weight=700,
     )
     f.text(
-        740 + 32,
-        70 + 3 * 92 + 46,
-        "external substrate: GeoTensor, I/O",
+        x0 + 18,
+        by + 46,
+        "Operator, Sequential, Graph:",
         size=11.5,
-        color=MUTED,
+        color=INK,
         anchor="start",
     )
+    f.text(
+        x0 + 18,
+        by + 62,
+        "the algebra both sides share",
+        size=11.5,
+        color=INK,
+        anchor="start",
+    )
+    cx = x0 + lw
+    for p, what in [
+        ("pipekit", "operators and graphs"),
+        ("pipekit-array", "Array API operators"),
+        ("pipekit-jax", "JAX model wrapper, diffrax forward model"),
+    ]:
+        cx += (
+            f.chip(
+                cx, by + 26, f"{p} · {what}", hue=(LINE, CARD), size=11.5, h=24, pad=9
+            )
+            + 8
+        )
+    f.h = int(by + 96)
     return f
 
 
