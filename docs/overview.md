@@ -976,9 +976,9 @@ Each phase produces packages that are useful on their own ([](#tbl-phases)).
 
 | Phase | Scope | Status | Time |
 |---|---|---|---|
-| 1 | Numerical foundation: gaussx (v0.0.6), geonnax, kernellib, spectraldiffx, finitevolx, optax_bayes, eqx-trainer | gaussx done; the rest drafts | ongoing |
-| 2 | Algorithms: pyrox, filterax, vardax, gauss_flows, xtremax | in progress | each at its own pace |
-| 3 | Domain models: somax, plumax, radtrax and methanex (both planned) | some done | project-driven |
+| 1 | GeoNumerics: gaussx (v0.0.6), spectraldiffx, finitevolx | gaussx done; the rest drafts | ongoing |
+| 2 | GeoML: geonnax, kernellib, optax_bayes, pyrox, filterax, vardax, gauss_flows, xtremax | in progress | each at its own pace |
+| 3 | GeoModels: somax, plumax, radtrax | some done | project-driven |
 | 4 | Pipeline framework | **current focus** | ~3–4 months |
 | 5 | Evaluation, benchmarks and cycle discipline | next | ~2 months |
 | 6 | Deferred items, each with a trigger | when projects demand | — |
@@ -1087,13 +1087,14 @@ several reuse the walkthrough's closed-form stages as oracles
 
 ```{figure} images/overview/roadmap.svg
 :label: fig-roadmap
-:alt: Phases 4 and 5 as six monthly boxes from top to bottom, each followed by a diamond naming the gates that must pass before the next month starts. Phases 1 to 3 run alongside and feed adapters into month 3; phases 6 and 7 follow the last gate.
+:alt: Phases 4 and 5 as six monthly boxes from top to bottom, each with its status (shipped, in progress or planned) and followed by a diamond naming the gates, with their pass conditions, that close it. Phases 1 to 3, one per lower layer (GeoNumerics, GeoML, GeoModels), run alongside and feed the DA adapters in month 3 and the models trained in month 4; phases 6 and 7 follow the last gate.
 :width: 100%
 
 **The framework ships first; every month closes on its gates.**
 
-Phases 1–3 run alongside and meet the chain when the DA adapters land in
-month 3. Phases 6 and 7 wait for projects to pull them.
+Phases 1–3, one per lower layer, run alongside and meet the chain twice:
+the DA adapters land in month 3 and the GeoML models are trained in month 4.
+Phases 6 and 7 wait for projects to pull them.
 ```
 
 :::{table} Gates: what must pass before each month closes.

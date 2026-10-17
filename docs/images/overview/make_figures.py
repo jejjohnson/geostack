@@ -1742,137 +1742,195 @@ def methane_walkthrough() -> Svg:
     return f
 
 
-MONTHS = [  # (month, phase, name, lands, gates)
-    ("1", "4a", "Framework core", "pipekit · pipekit-array · workspace", "A1"),
+# (month, phase, name, lands, gates, status); status is shipped, in progress or
+# planned, as the month tabs on the overview page say
+MONTHS = [
+    (
+        "1",
+        "4a",
+        "Framework core",
+        "pipekit · pipekit-array · workspace",
+        "A1 config round-trip",
+        "shipped",
+    ),
     (
         "2",
         "4b",
         "Indexes and patchers",
         "geocatalog · geopatcher · carriers",
-        "B1 · C1",
+        "B1 backend parity · C1 patch identity",
+        "in progress",
     ),
     (
         "3",
         "4c",
         "States and cycles",
         "geocatalog.states · pipekit-cycle · DA adapters",
-        "B2 · D1 · D2",
+        "B2 state rows · D1 kriging oracle · D2 Kalman oracle",
+        "in progress",
     ),
-    ("4", "4d", "Training and registry", "pipekit-train · pipekit-experiment", "E1"),
-    ("5", "5a", "Evaluation", "pipekit-evaluate · splitters · baselines", "F1"),
-    ("6", "5b", "Benchmarks, first cycle", "contracts · methane cycle · SSH", "G1"),
+    (
+        "4",
+        "4d",
+        "Training and registry",
+        "pipekit-train · pipekit-experiment",
+        "E1 registry round-trip",
+        "in progress",
+    ),
+    (
+        "5",
+        "5a",
+        "Evaluation",
+        "pipekit-evaluate · splitters · baselines",
+        "F1 metric identities",
+        "in progress",
+    ),
+    (
+        "6",
+        "5b",
+        "Benchmarks, first cycle",
+        "contracts · methane cycle · SSH",
+        "G1 end to end",
+        "planned",
+    ),
+]
+STATUS = {
+    "shipped": ("#15803d", "#dcfce7", False),
+    "in progress": (ENG[0], ENG[1], False),
+    "planned": (LINE, CARD, True),
+}
+ALONGSIDE = [  # phases 1-3, one per lower layer
+    ("1", "GeoNumerics", NUMERICS, "gaussx · spectraldiffx · finitevolX"),
+    ("2", "GeoML", ML, "geonnax · kernellib · pyrox · vardax · filterax · …"),
+    ("3", "GeoModels", STATE, "somax · plumax · radtrax"),
 ]
 
 
 def roadmap() -> Svg:
     f = Svg(
         1100,
-        900,
-        "The roadmap: six monthly phases from top to bottom, each closed by a"
-        " gate diamond; phases 1 to 3 run alongside and feed month 3; phases 6"
-        " and 7 follow the last gate.",
+        820,
+        "The roadmap: phases 4 and 5 as six months from top to bottom, each with"
+        " its status and closed by its gates; phases 1 to 3, one per lower"
+        " layer, run alongside and feed the DA adapters in month 3 and the models"
+        " trained in month 4; phases 6 and 7 follow the last gate.",
     )
     x, w, bh, step = 24, 640, 64, 116
-    cx, y = x + w / 2, 24
-    for i, (month, phase, name, lands, gate) in enumerate(MONTHS):
-        hue = ENG if i == 0 else (STATE if i >= 4 else OBS)
-        f.rect(x, y, w, bh, stroke=hue[0], fill=hue[1], width=2 if i == 0 else 1.4)
+    ys = [24 + i * step for i in range(len(MONTHS))]
+    for i, (month, phase, name, lands, gate, status) in enumerate(MONTHS):
+        y = ys[i]
+        hue = STATE if i >= 4 else OBS
+        f.rect(x, y, w, bh, stroke=hue[0], fill=hue[1])
         f.text(
             x + 18,
-            y + 26,
+            y + 24,
             f"{phase} · MONTH {month}",
             size=10.5,
             color=MUTED,
             anchor="start",
             weight=700,
         )
-        f.text(x + 18, y + 47, name, size=14, color=INK, anchor="start", weight=700)
-        f.text(x + w - 18, y + 39, lands, size=12, color=MUTED, anchor="end")
-        gy = y + bh + 26  # centre of the gate diamond
-        f.arrow([(cx, y + bh), (cx, gy - 14)], color=LINE)
-        d = 14
+        f.text(x + 18, y + 46, name, size=14, color=INK, anchor="start", weight=700)
+        f.text(x + w - 18, y + 46, lands, size=11.5, color=MUTED, anchor="end")
+        sc, sf, sd = STATUS[status]
+        sw = _width(status, 10.5) + 16
+        f.rect(x + w - 18 - sw, y + 11, sw, 20, stroke=sc, fill=sf, rx=10, dashed=sd)
+        f.text(x + w - 18 - sw / 2, y + 25, status, size=10.5, color=INK, weight=600)
+        # the gate closes the month: a diamond on the arrow, named
+        gy = y + bh + (step - bh) / 2
+        f.arrow(
+            [(x + 60, y + bh + 2), (x + 60, ys[i] + step - 2 if i < 5 else gy + 26)],
+            color=LINE,
+        )
+        d = 9
         f.parts.append(
-            f'<polygon points="{cx},{gy - d} {cx + d},{gy} {cx},{gy + d} {cx - d},{gy}"'
-            f' fill="{ORACLE[1]}" stroke="{ORACLE[0]}" stroke-width="1.4"/>'
+            f'<path d="M{x + 60},{gy - d} L{x + 60 + d},{gy} L{x + 60},{gy + d}'
+            f' L{x + 60 - d},{gy} Z" fill="{ORACLE[1]}" stroke="{ORACLE[0]}"'
+            f' stroke-width="1.4"/>'
         )
         f.text(
-            cx + d + 10,
-            gy + 4.5,
+            x + 80,
+            gy + 4,
             f"gate {gate}",
-            size=12,
+            size=11.5,
             color=ORACLE[0],
             anchor="start",
             weight=600,
         )
-        f.arrow([(cx, gy + d), (cx, y + step - 2)], color=LINE)
-        y += step
-    # Phases 1-3 run alongside and meet the chain at month 3.
+    # Phases 1-3 alongside, one per lower layer.
     px, pw = 700, 376
-    f.rect(px, 24, pw, 300, stroke=BORDER, fill=PANEL)
     f.text(
-        px + 18,
-        50,
-        "PHASES 1\u20133 · ALONGSIDE",
+        px,
+        40,
+        "PHASES 1\u20133 · ALONGSIDE, PROJECT-DRIVEN",
         size=10.5,
         color=MUTED,
         anchor="start",
         weight=700,
     )
-    side = [
-        ("1 · GeoML foundations", "gaussx · geonnax · kernellib · optax_bayes"),
-        ("2 · GeoML inference", "pyrox · filterax · vardax · gauss_flows"),
-        ("3 · GeoModels", "spectraldiffx · finitevolx · somax · plumax"),
-    ]
-    for j, (title, pkgs) in enumerate(side):
-        by = 66 + j * 82
-        f.box(px + 16, by, pw - 32, 66, title, [pkgs], hue=ML)
-    m3 = 24 + 2 * step + bh / 2
-    f.arrow([(px, m3), (x + w + 2, m3)], color=ML[0], dashed=True)
-    f.text(
-        px + 18,
-        316,
-        "← adapters land in month 3",
-        size=11.5,
-        color=ML[0],
-        anchor="start",
-        weight=600,
-    )
-    # After the last gate: phases pulled by projects.
-    f.rect(x, y, 1052, 92, stroke=BORDER, fill=CARD, dashed=True)
+    py = 52
+    for n, layer, hue, pkgs in ALONGSIDE:
+        f.rect(px, py, pw, 58, stroke=hue[0], fill=hue[1])
+        f.text(
+            px + 16,
+            py + 24,
+            f"{n} · {layer}",
+            size=13.5,
+            color=hue[0],
+            anchor="start",
+            weight=700,
+        )
+        f.text(px + 16, py + 44, pkgs, size=11.5, color=INK, anchor="start")
+        py += 68
+    col_bot = py - 10
+    # They meet the chain twice: the DA adapters (month 3), the models (month 4).
+    for k, (sx, label) in enumerate(
+        [
+            (px + 24, "DA adapters: filterax, vardax, plumax"),
+            (px + pw - 24, "GeoML models to train"),
+        ]
+    ):
+        ty = ys[2 + k] + bh / 2
+        f.arrow(
+            [(sx, col_bot + 2), (sx, ty), (x + w + 4, ty)], color=ML[0], dashed=True
+        )
+        f.text(
+            sx + 12 if k == 0 else x + w + 16,
+            ty - 8,
+            label,
+            size=11.5,
+            color=ML[0],
+            anchor="start",
+            weight=600,
+        )
+    # Phases 6 and 7, after the last gate.
+    ay = ys[-1] + step + 6
+    f.rect(x, ay, 1052, 74, stroke=EXT[0], fill=EXT[1], dashed=True)
     f.text(
         x + 18,
-        y + 26,
+        ay + 22,
         "AFTER G1 · PULLED BY PROJECTS",
         size=10.5,
         color=MUTED,
         anchor="start",
         weight=700,
     )
-    f.box(
-        x + 16,
-        y + 36,
-        500,
-        46,
-        "6 · Deferred, each with a trigger",
-        ["pipekit-jax · deploy adapters · Slice refactor"],
-        hue=EXT,
-        dashed=True,
-        title_size=13,
-        sub_size=11,
-    )
-    f.box(
-        x + 536,
-        y + 36,
-        500,
-        46,
-        "7 · Polish and community",
-        ["docs site · research journal · benchmark adoption"],
-        hue=EXT,
-        dashed=True,
-        title_size=13,
-        sub_size=11,
-    )
-    f.h = int(y + 92 + 24)
+    for k, (title, sub) in enumerate(
+        [
+            (
+                "6 · Deferred, each with a trigger",
+                "pipekit-jax operator layer · deploy adapters · Slice refactor",
+            ),
+            (
+                "7 · Polish and community",
+                "docs site · research journal · benchmark adoption",
+            ),
+        ]
+    ):
+        bx = x + 18 + k * 516
+        f.text(bx, ay + 46, title, size=13, color=INK, anchor="start", weight=700)
+        f.text(bx, ay + 64, sub, size=11.5, color=MUTED, anchor="start")
+    f.h = int(ay + 94)
     return f
 
 
