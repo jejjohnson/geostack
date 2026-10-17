@@ -972,127 +972,158 @@ def six_steps() -> Svg:
     return f
 
 
-MATRIX_ROWS = [  # (transition, task, cells for steps 1-5)
+# (transition, step name, running example, hue, cells for steps 1-5), top row first;
+# each cell is (method, what it does on the running example)
+MATRIX_ROWS = [
     (
-        "L3 → L4",
-        "forecast",
+        "L4 → L5",
+        "derive",
+        "heatwave return levels",
+        DERIVED,
         [
-            "PDE forward",
-            "EnKF / 4D-Var",
-            "neural forward",
-            "fast DA",
-            "direct forecast",
+            ("extreme-value model", "distribution of yearly maxima"),
+            ("Bayesian sampling", "tail posterior per cell"),
+            ("return-level emulator", "trained on model draws"),
+            ("fast posterior", "every grid cell, seconds"),
+            ("amortized extremes", "series → tail posterior"),
         ],
     ),
     (
-        "L3 → L3",
-        "analysis",
+        "L3 → L4",
+        "model + assimilate",
+        "ocean state from sea-level maps",
+        STATE,
         [
-            "forward + prior",
-            "classical DA",
-            "neural forward",
-            "neural DA",
-            "direct analysis",
+            ("quasi-geostrophic model", "steps the sea-level field"),
+            ("variational / ensemble", "data assimilation"),
+            ("neural ocean model", "learned time step"),
+            ("assimilation on emulator", "same cost function, fast"),
+            ("direct analysis", "observations → state"),
         ],
     ),
     (
         "L2 → L3",
-        "gap-fill",
+        "grid + gap-fill",
+        "sea level from altimeter tracks",
+        STATE,
         [
-            "GP prior",
-            "kriging / DINEOF",
-            "neural map",
-            "fast gap-fill",
-            "neural posterior",
+            ("Gaussian-process prior", "covariance of sea level"),
+            ("optimal interpolation", "tracks → map + error"),
+            ("neural field", "fit to interpolated maps"),
+            ("fast interpolation", "emulated covariance"),
+            ("amortized gap-filler", "tracks → map posterior"),
         ],
     ),
     (
         "L1 → L2",
-        "retrieval",
+        "retrieve",
+        "methane from shortwave infrared",
+        OBS,
         [
-            "RT model",
-            "matched filter",
-            "neural RT",
-            "fast retrieval",
-            "direct retrieval",
+            ("radiative-transfer model", "radiance = F(methane) + noise"),
+            ("optimal estimation", "Gauss-Newton on F"),
+            ("radiative-transfer emulator", "F learned from runs"),
+            ("estimation on emulator", "same inversion, fast"),
+            ("amortized retrieval", "radiance → methane"),
         ],
     ),
     (
         "L0 → L1",
-        "calibration",
-        ["cal model", "classical cal", "neural cal", "fast cal", "direct cal"],
+        "read + calibrate",
+        "detector counts to radiance",
+        OBS,
+        [
+            ("instrument model", "gain, dark current, nonlinearity"),
+            ("vicarious calibration", "fit gains to targets"),
+            ("sensor emulator", "learned instrument"),
+            ("fast recalibration", "per orbit, on emulator"),
+            ("amortized calibration", "counts → radiance"),
+        ],
     ),
 ]
 
 
+def _cap(s: str) -> str:
+    """Sentence case: capitalise the first letter only."""
+    return s[:1].upper() + s[1:]
+
+
 def axes_matrix() -> Svg:
     f = Svg(
-        1060,
-        490,
-        "The axes as a matrix: each L0 to L4 transition (rows)"
-        " crossed with the six-step cycle (columns) is a concrete,"
-        " benchmarkable method; step 2 is the oracle column.",
+        1260,
+        640,
+        "The axes as a matrix: each lifecycle step from L0 to L5 (rows, each with"
+        " a running example) crossed with the six-step cycle (columns) is a"
+        " concrete, benchmarkable method. Step 2 is the oracle column; step 3 is"
+        " scored against step 1, and steps 4 and 5 against step 2.",
     )
-    x0, y0, cw, rh = 190, 96, 166, 56
+    x0, y0, cw, rh = 236, 196, 204, 70
     heads = ["Simple model", "Model-based", "Emulator", "Emulator-based", "Amortized"]
-    f.text(
-        x0 + 2.5 * cw,
-        30,
-        "six-step cycle  (production maturity)  →",
-        size=12.5,
-        color=INK,
-        weight=600,
-    )
-    for j, head in enumerate(heads):
-        x = x0 + j * cw
-        f.text(x + cw / 2, 62, f"STEP {j + 1}", size=10.5, color=MUTED, weight=700)
-        f.text(x + cw / 2, 80, head, size=12.5, color=INK, weight=600)
+    hues = [STATE, ORACLE, ML, ML, ML]
+    cx = [x0 + j * cw + cw / 2 for j in range(5)]
+    # The benchmark rule: each cell is scored against the earlier step that
+    # computes the same thing.
+    for j0, j1, top, label in [
+        (0, 2, 58, "Step 3 scored against step 1"),
+        (1, 3, 30, "Steps 4 and 5 scored against step 2"),
+    ]:
+        f.arrow(
+            [(cx[j0], 116), (cx[j0], top), (cx[j1], top), (cx[j1], 112)], color=MUTED
+        )
+        if j0 == 1:
+            f.arrow([(cx[j1], top), (cx[4], top), (cx[4], 112)], color=MUTED)
+        f.text(
+            cx[j0] + 10,
+            top - 7,
+            label,
+            size=11.5,
+            color=INK,
+            anchor="start",
+            weight=600,
+        )
+    for j, (head, math) in enumerate(zip(heads, SIX_MATH, strict=True)):
+        f.text(cx[j], 134, f"STEP {j + 1}", size=10.5, color=MUTED, weight=700)
+        f.text(cx[j], 153, head, size=13, color=INK, weight=700)
+        f.text(cx[j], 172, math, size=11.5, color=hues[j][0])
     f.rect(
         x0 + cw + 3, y0 - 4, cw - 6, rh * 5 + 8, stroke=ORACLE[0], fill=ORACLE[1], rx=10
     )
     f.text(
-        x0 + 1.5 * cw,
-        y0 + 5 * rh + 24,
-        "oracle column",
-        size=11.5,
-        color=ORACLE[0],
-        weight=600,
+        cx[1], y0 + 5 * rh + 24, "Oracle column", size=11.5, color=ORACLE[0], weight=600
     )
-    for i, (trans, task, cells) in enumerate(MATRIX_ROWS):
+    for i, (trans, task, example, hue, cells) in enumerate(MATRIX_ROWS):
         y = y0 + i * rh
-        hue = STATE if trans.startswith("L3") else OBS
         f.text(
-            x0 - 120,
-            y + rh / 2 - 2,
-            trans,
-            size=13,
-            color=hue[0],
-            anchor="start",
-            weight=700,
+            x0 - 196, y + 22, trans, size=13, color=hue[0], anchor="start", weight=700
         )
-        f.text(x0 - 120, y + rh / 2 + 14, task, size=11.5, color=MUTED, anchor="start")
-        for j, cell in enumerate(cells):
+        f.text(
+            x0 - 196, y + 40, _cap(task), size=12, color=INK, anchor="start", weight=600
+        )
+        f.text(
+            x0 - 196,
+            y + 56,
+            _cap(example),
+            size=11,
+            color=MUTED,
+            anchor="start",
+            italic=True,
+        )
+        for j, (method, what) in enumerate(cells):
             x = x0 + j * cw
-            f.rect(x + 8, y + 7, cw - 16, rh - 14, stroke=BORDER, fill=CARD, rx=6)
-            f.text(x + cw / 2, y + rh / 2 + 4.5, cell, size=12, color=INK)
-    f.arrow([(x0 - 150, y0 + 5 * rh), (x0 - 150, y0)], color=INK)
+            f.rect(x + 8, y + 6, cw - 16, rh - 12, stroke=BORDER, fill=CARD, rx=6)
+            f.text(x + cw / 2, y + 31, _cap(method), size=12.5, color=INK, weight=600)
+            f.text(x + cw / 2, y + 49, _cap(what), size=11, color=MUTED)
+    f.arrow([(24, y0 + 5 * rh), (24, y0)], color=INK)
     f.text(
-        x0 - 160,
-        y0 + 2.5 * rh,
-        "L0 → L4  (data maturity)",
-        size=12,
-        color=INK,
-        weight=600,
-        anchor="middle",
+        14, y0 + 2.5 * rh, "L0 → L5  (data maturity)", size=12, color=INK, weight=600
     )
     f.parts[-1] = f.parts[-1].replace(
-        "<text ", f'<text transform="rotate(-90 {x0 - 160} {y0 + 2.5 * rh})" ', 1
+        "<text ", f'<text transform="rotate(-90 14 {y0 + 2.5 * rh})" ', 1
     )
     f.text(
         x0 + 2.5 * cw,
-        y0 + 5 * rh + 56,
-        "the modeling cycle (axis 1) runs"
-        " through every cell: abstract, simulate, validate, refine",
+        y0 + 5 * rh + 60,
+        "The modeling cycle runs in every cell: simulate, compare, estimate, refine",
         size=12,
         color=MUTED,
         italic=True,

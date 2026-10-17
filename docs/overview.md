@@ -439,10 +439,15 @@ and somewhere on the six-step cycle (production maturity).
 
 ```{figure} images/overview/axes_matrix.svg
 :label: fig-axes-matrix
-:alt: A grid with lifecycle transitions as rows, from calibration to forecast, and steps 1 to 5 as columns. Each cell names a method; the step-2 column is highlighted as the oracle.
+:alt: A grid with the five lifecycle steps as rows, from read and calibrate (detector counts to radiance) to derive (heatwave return levels), each with a running example, and steps 1 to 5 as columns headed by their equations. Each cell names a method and what it does on the example; the step-2 column is highlighted as the oracle. Arrows above show step 3 scored against step 1, and steps 4 and 5 against step 2.
 :width: 100%
 
-**Every transition crossed with every step is a concrete method.**
+**Every lifecycle step crossed with every six-step stage is a concrete method.**
+
+Each row follows one running example from a simple model to an amortized
+map: radiance from detector counts, methane from shortwave infrared, sea
+level from altimeter tracks, the ocean state from sea-level maps, and
+heatwave return levels.
 ```
 
 **Every cell is a benchmarkable artifact,** scored against the earlier step
