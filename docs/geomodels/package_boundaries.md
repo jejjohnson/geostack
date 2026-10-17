@@ -31,7 +31,7 @@ clean. plumax's radiative-transfer group (radtran, hapi_lut, assimilation and
 matched_filter, 6,100 of its 18,880 lines) imports nothing else in plumax.
 geotoolz's `plume` and `matched_filter` are called by nothing else in
 geotoolz. The package graph after the moves has no cycle, and every edge
-between stacks points from GeoModels down to Numerics and GeoStack. It gets
+between stacks points from GeoModels down to GeoNumerics and GeoStack. It gets
 one cycle (geotoolz, plumax, radtrax) if geotoolz keeps re-exports of what
 moved, so it must not. **Three matched filters, two spectral-response
 implementations and two air-mass factors become one each.**
@@ -216,7 +216,7 @@ sccs(shim)                               # → [{geotoolz, plumax, radtrax}] use
 
 The graph is acyclic today and after the moves ([](#fig-pb-graph)). Its longest chain is
 plumax → radtrax → geotoolz → georeader. Every edge between stacks points
-from GeoModels to Numerics (gaussx, finitevolx, spectraldiffx) or to GeoStack (pipekit, geotoolz,
+from GeoModels to GeoNumerics (gaussx, finitevolx, spectraldiffx) or to GeoStack (pipekit, geotoolz,
 georeader), and none points back. The one way to break that is the usual
 way a move is softened: if geotoolz kept `geotoolz.plume` and
 `geotoolz.matched_filter` as re-exports behind extras, then geotoolz would
@@ -240,10 +240,10 @@ window dataset.
    pipekit, as plumax's are today.
 4. **Moved code imports only public geotoolz names.** The private helpers it
    needs become public in geotoolz before the move.
-5. **Edges between stacks point down.** Numerics (gaussx, spectraldiffx,
+5. **Edges between stacks point down.** GeoNumerics (gaussx, spectraldiffx,
    finitevolx, and external ones such as diffrax) are the foundational
    operators and import no GeoModels or GeoML package. GeoModels (plumax,
-   somax, radtrax) build on Numerics and GeoStack. Whether GeoModels and GeoML
+   somax, radtrax) build on GeoNumerics and GeoStack. Whether GeoModels and GeoML
    (geonnax and the learning libraries) may import each other is
    [open](#pb-open-questions).
 

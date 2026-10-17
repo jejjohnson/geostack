@@ -19,7 +19,7 @@ Read contract 5 ("Notebooks") in `AGENTS.md` first. Two kinds, both plain
 `01_exploration.py`) when the analysis belongs there. Reusable code a
 notebook needs goes upstream, in the lowest layer that may hold it (search
 the capability indexes, `docs/api/capabilities*.md`), not in a cell. A
-notebook that imports Numerics, GeoML or GeoModels libraries runs in that
+notebook that imports GeoNumerics, GeoML or GeoModels libraries runs in that
 layer's pixi environment (`pixi run -e geomodels python notebooks/…`).
 
 ## 2. A jupytext notebook

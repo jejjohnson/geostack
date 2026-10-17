@@ -57,7 +57,7 @@ geostack has no package of its own. It builds on eighteen libraries in four
 layers, pinned as git submodules under `references/<layer>/` and installed
 into pixi from there. GeoStack is in every environment; the other layers
 each have one (`pixi run -e numerics|geoml|geomodels …`). Edges between
-layers point down: GeoModels → GeoML → Numerics, and both upper layers may
+layers point down: GeoModels → GeoML → GeoNumerics, and both upper layers may
 use GeoStack.
 
 | Submodule | Repository | Provides |
@@ -83,7 +83,7 @@ use GeoStack.
 
 The capability indexes list their public API, one page per layer:
 [GeoStack](docs/api/capabilities.md),
-[Numerics](docs/api/capabilities_numerics.md),
+[GeoNumerics](docs/api/capabilities_numerics.md),
 [GeoML](docs/api/capabilities_geoml.md),
 [GeoModels](docs/api/capabilities_geomodels.md).
 To move a reference forward: `git submodule update --remote references/<layer>/<name>`,
@@ -114,7 +114,7 @@ flowchart TB
     gauss_flows["gauss_flows"]
     geonnax["geonnax"]
   end
-  subgraph numerics["Numerics"]
+  subgraph numerics["GeoNumerics"]
     direction LR
     finitevolX["finitevolX"]
     spectraldiffx["spectraldiffx"]
@@ -162,8 +162,8 @@ The rules that keep this graph free of cycles (each one is checked by
 `tests/test_dependency_graph.py`; the reasons, and where the graph breaks
 them today, are on the [dependency graph page](docs/api/dependency_graph.md)):
 
-1. **Layers point down.** GeoModels → GeoML → Numerics / GeoStack; GeoStack
-   and Numerics never import each other.
+1. **Layers point down.** GeoModels → GeoML → GeoNumerics / GeoStack; GeoStack
+   and GeoNumerics never import each other.
 2. **Within a layer, tiers point down.** A repository imports only lower
    tiers of its own layer; in GeoModels only plumax imports another (radtrax).
 3. **Every library edge counts:** base dependencies, extras and imports,

@@ -70,7 +70,7 @@ flowchart TB
     gauss_flows["gauss_flows"]
     geonnax["geonnax"]
   end
-  subgraph numerics["Numerics"]
+  subgraph numerics["GeoNumerics"]
     direction LR
     finitevolX["finitevolX"]
     spectraldiffx["spectraldiffx"]
@@ -116,10 +116,10 @@ flowchart TB
 
 What it shows:
 
-- **Every edge between layers points down.** GeoModels uses GeoML, Numerics
-  and GeoStack. GeoML uses Numerics and GeoStack. Numerics uses nothing above
+- **Every edge between layers points down.** GeoModels uses GeoML, GeoNumerics
+  and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoNumerics uses nothing above
   it.
-- **gaussx is the foundation.** Every repository in Numerics, GeoML and
+- **gaussx is the foundation.** Every repository in GeoNumerics, GeoML and
   GeoModels except geonnax reaches it. A breaking change in gaussx is a
   change to almost the whole stack.
 - **plumax is the one GeoModels repository that imports another.** It builds on radtrax: plume physics uses radiative transfer, never the reverse ([package boundaries](../geomodels/package_boundaries.md#pb-rules), rule 2). somax imports no one in its layer.
@@ -136,8 +136,8 @@ Each rule is a check in `scripts/dependency_graph.py`. The name in brackets
 is the rule's name in [](#tbl-dg-violations).
 
 1. **Layers point down** (`upward`). A repository may depend on its own layer
-   or a lower one: GeoStack and Numerics at the bottom, GeoML above them,
-   GeoModels on top. GeoStack and Numerics never import each other.
+   or a lower one: GeoStack and GeoNumerics at the bottom, GeoML above them,
+   GeoModels on top. GeoStack and GeoNumerics never import each other.
 2. **Within a layer, tiers point down** (`tier`). Each repository has a tier
    in its layer ([](#tbl-dg-tiers)) and imports only repositories of a lower
    tier. Two repositories of the same tier never import each other. In GeoModels, radtrax and somax share tier 0 and plumax sits above them in tier 1, because its plume-to-radiance coupling composes a plume model with radtrax's forward model.
@@ -189,9 +189,9 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoML | 2 | filterax, pyrox | ensemble filters and probabilistic models |
 | GeoML | 1 | kernellib, optax_bayes, xtremax | kernels, optimisers and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
-| Numerics | 2 | finitevolX | finite volume |
-| Numerics | 1 | spectraldiffx | spectral |
-| Numerics | 0 | gaussx | linear algebra and Gaussians |
+| GeoNumerics | 2 | finitevolX | finite volume |
+| GeoNumerics | 1 | spectraldiffx | spectral |
+| GeoNumerics | 0 | gaussx | linear algebra and Gaussians |
 | GeoStack | 1 | geotoolz, xrtoolz | operators on arrays and GeoTensors |
 | GeoStack | 0 | georeader, pipekit | pipelines and readers |
 <!-- tier-table:end -->
