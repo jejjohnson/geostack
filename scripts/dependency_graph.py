@@ -41,12 +41,12 @@ BEGIN, END = "<!-- dependency-graph:begin -->", "<!-- dependency-graph:end -->"
 
 #: layers from the bottom up
 LAYERS = ("geostack", "numerics", "geoml", "geomodels")
-#: an edge between layers points to a lower rank; GeoStack and Numerics share
+#: an edge between layers points to a lower rank; GeoStack and GeoNumerics share
 #: the bottom rank, so neither may import the other
 LAYER_RANK = {"geostack": 0, "numerics": 0, "geoml": 1, "geomodels": 2}
 TITLES = {
     "geostack": "GeoStack",
-    "numerics": "Numerics",
+    "numerics": "GeoNumerics",
     "geoml": "GeoML",
     "geomodels": "GeoModels",
 }

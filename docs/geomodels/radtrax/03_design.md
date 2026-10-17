@@ -341,7 +341,7 @@ JAXopt is no longer maintained, and optimistix's class is
 (rx3-deps)=
 ## Dependencies and boundaries
 
-**TL;DR.** radtrax depends on Numerics and nothing above it; geo carriers
+**TL;DR.** radtrax depends on GeoNumerics and nothing above it; geo carriers
 arrive through an extra; plumax imports radtrax.
 
 | Depends on | Why | How |
@@ -405,7 +405,7 @@ README, the papers against their publication records); the rest are the note's.
    Whether retrievals default to v2 once it exists is a cost question.
 3. **How general must the block-tridiagonal solve be?** A non-symmetric
    `BlockTriDiag` in gaussx serves discrete ordinates and any other
-   two-point boundary-value problem; it is the one Numerics addition v4
+   two-point boundary-value problem; it is the one GeoNumerics addition v4
    needs.
 4. **Which sensor first for v1?** EMIT has operational products to compare
    against; Sentinel-2 has the multi-pass family already written down.

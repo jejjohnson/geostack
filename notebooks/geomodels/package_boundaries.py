@@ -296,9 +296,9 @@ NODES = {  # distribution name → (label, stack)
     "georeader-spaceml": ("georeader", "GeoStack"),
     "geotoolz": ("geotoolz", "GeoStack"),
     "xrtoolz": ("xrtoolz", "GeoStack"),
-    "gaussx": ("gaussx", "Numerics"),
-    "spectraldiffx": ("spectraldiffx", "Numerics"),
-    "finitevolx": ("finitevolx", "Numerics"),
+    "gaussx": ("gaussx", "GeoNumerics"),
+    "spectraldiffx": ("spectraldiffx", "GeoNumerics"),
+    "finitevolx": ("finitevolx", "GeoNumerics"),
     "plumax": ("plumax", "GeoModels"),
     "radtrax": ("radtrax", "GeoModels"),
 }
@@ -414,8 +414,8 @@ assert stage4["layers_after"] == {
     "plumax": 3,
     "radtrax": 2,
 }
-# edges between stacks point from GeoModels down to Numerics and GeoStack only
-assert stage4["cross_stack"] == [("GeoModels", "GeoStack"), ("GeoModels", "Numerics")]
+# edges between stacks point from GeoModels down to GeoNumerics and GeoStack only
+assert stage4["cross_stack"] == [("GeoModels", "GeoStack"), ("GeoModels", "GeoNumerics")]
 
 # %% [markdown]
 # ## The figures
@@ -427,7 +427,7 @@ spec = importlib.util.spec_from_file_location(
 ov = importlib.util.module_from_spec(spec)
 sys.modules["overview_figures"] = ov
 spec.loader.exec_module(ov)
-HUE = {"GeoStack": ov.OBS, "Numerics": ov.ENG, "GeoModels": ov.STATE}
+HUE = {"GeoStack": ov.OBS, "GeoNumerics": ov.ENG, "GeoModels": ov.STATE}
 
 # (a) the package graph after the moves, by layer
 W, bw, bh = 760, 132, 46

@@ -8,7 +8,7 @@ helper in a script or a notebook ("Reuse before you write" in ``AGENTS.md``).
 
 The libraries sit in four layers (``LAYERS``), one submodule folder and one
 index page each: GeoStack in ``docs/api/capabilities.md`` (the hub page),
-Numerics, GeoML and GeoModels in ``docs/api/capabilities_<layer>.md``. Each
+GeoNumerics, GeoML and GeoModels in ``docs/api/capabilities_<layer>.md``. Each
 layer is installed by its own pixi environment, so each index is generated
 there.
 
@@ -101,7 +101,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "xrtoolz-grad": "Finite-difference calculus on labeled xarray grids.",
     "xrtoolz-reader": "Authenticated archive readers (CMEMS, CDS, AEMET).",
     "xrtoolz-sklearn": "scikit-learn to xarray bridge (XarrayEstimator, SklearnOp).",
-    # Numerics
+    # GeoNumerics
     "gaussx": "Structured linear algebra and Gaussian primitives on lineax.",
     "finitevolx": "Arakawa C-grid finite-volume operators.",
     "spectraldiffx": "Pseudospectral differentiation, filters and PDE solvers.",
@@ -219,12 +219,12 @@ GEOMODELS: dict[str, list[str]] = {
 
 # The four layers, bottom to top, as {layer: (title, libraries, index page,
 # layers it may import)}. Edges between layers point down: GeoModels may import
-# GeoML, Numerics and GeoStack; GeoML may import Numerics and GeoStack;
-# Numerics and GeoStack import neither of the others.
+# GeoML, GeoNumerics and GeoStack; GeoML may import GeoNumerics and GeoStack;
+# GeoNumerics and GeoStack import neither of the others.
 LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
     "geostack": ("GeoStack", UPSTREAM, INDEX, ()),
     "numerics": (
-        "Numerics",
+        "GeoNumerics",
         NUMERICS,
         ROOT / "docs" / "api" / "capabilities_numerics.md",
         (),
@@ -276,7 +276,7 @@ _KERNELS = "kernels in both kernellib and pyrox-gp"
 _LIKELIHOODS = "likelihoods in both gaussx and pyrox-gp"
 _NN_LAYERS = "layers in both geonnax and pyrox-nn"
 _SOMAX = "somax's own name for a different object"
-_NUMERICS = "the same solver or grid in several Numerics libraries"
+_NUMERICS = "the same solver or grid in several GeoNumerics libraries"
 _CALCULUS = "kernel operators in kernellib, finite differences in xrtoolz-grad"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
 _PLUME_PUFF = "the same name in plumax's plume and puff models"

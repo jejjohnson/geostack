@@ -10,7 +10,7 @@ The essentials, in case you only read this file:
 
 - geostack has no package of its own (no `src/`). Reusable code lives in
   the libraries it builds on, submodules under `references/<layer>/` in four
-  layers (GeoStack, Numerics, GeoML, GeoModels; edges point down), and goes
+  layers (GeoStack, GeoNumerics, GeoML, GeoModels; edges point down), and goes
   upstream there; `scripts/` are thin Hydra entry points and notebooks
   import from those libraries. Search the capability indexes, starting at
   [`docs/api/capabilities.md`](../docs/api/capabilities.md), before writing a
