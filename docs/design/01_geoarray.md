@@ -718,15 +718,28 @@ All five packages switch to `GeoArray` in one coordinated, breaking release; no 
 | geopatcher window helpers | `Grid.window`, `geoarray.crop` | no georeader internals |
 
 1. **Switch every package on one branch per repo.** geoops rewraps through `with_data` only, and its validity, grid and band helpers call geoarray.
-   geocatalog, geocloud and geoproducts return `GeoArray`, and geopatcher replaces its seven georeader import lines with `Grid.window` and `crop`.
+   geocatalog, geocloud and geoproducts return `GeoArray`, and geopatcher's fields read `GeoArray`s (§ D2 has the real size of that change).
    A NumPy `GeoArray` implements `__array__`, so `np.asarray(x)` inside each operator keeps working.
 2. **Reject `GeoTensor` at the door.** A `GeoTensor` is an `np.ndarray` subclass, so `np.asarray` would accept it silently as a plain array and the output would lose its georeferencing.
    Each operator therefore checks its carriers before `np.asarray` and raises a `TypeError` naming `from_georeader`; there is no warning period.
 3. **Drop georeader from the base dependencies.** It moves to extras in all five packages; import-linter enforces that base modules never import it.
+   *Deferred to phase 3b (§ D2): georeader is also the engine behind reprojection, mosaics, rasterize / vectorize and lazy rasterio reads, which geoarray does not replace.*
 4. **Release together.** The five packages and the umbrella publish in one release-please run, each with a `BREAKING CHANGE:` footer and a minor bump, and the umbrella pins the new set.
 
 Downstream, `radtrax.geo` and `plumax.geo` take `GeoTensor`s today (radtrax backlog RTX-30 and RTX-34).
 They pin geotoolz below the breaking release until they migrate; each migration is one PR that calls `from_georeader` at its own boundary.
+
+### D2. As built: the carrier switch first (17 Oct 2026)
+
+Surveying the five packages before the switch showed that georeader is more than the carrier.
+geopatcher has 24 georeader import lines in 11 modules, not seven: 12 import the `GeoTensor` type, 4 the `GeoData` protocols, and 8 functions, of which only 4 are window maths that `Grid.window` / `Grid.bounds_of` replace.
+Across the stack, georeader also reprojects, mosaics, rasterizes and vectorizes, reads lazily through rasterio, and computes solar geometry, none of which geoarray does.
+The switch was therefore split in two, as decided on 17 Oct 2026:
+
+- **Phase 3, the carrier switch (geotoolz #500–#506, one breaking release).** Every public API takes and returns `GeoArray`, and every lazy reader is a `geoarray.RasterSource` (new in #500, with `AsyncRasterSource`). A `GeoTensor` is refused everywhere with a `TypeError` naming `from_georeader` (gate GD1, also for second carriers). georeader stays a base dependency, used only as an internal engine behind one boundary per package: `geoops._src.engine`, and `geoarray.interop.georeader` elsewhere.
+- **Phase 3b, georeader out of the base (GD2).** Each engine call is replaced on its own, without changing a public API: windows by `Grid.window`, warps by the geoops.functional kernels of workstream E, and the rest by rasterio directly.
+
+Decisions A1–A4, B1 and B2 were confirmed as written.
 
 ## Workstream E: JAX kernels in geoops.functional
 
@@ -764,7 +777,7 @@ Gate IDs are "G", then the workstream letter, then a number.
 | GC2 georeader round trip | C | `from_georeader(to_georeader(g))` is identical to g, for all geoops fixtures |
 | GC3 Light base install | C | `pip install geotoolz-array` into a fresh environment installs none of jax, rasterio, georeader, xarray |
 | GD1 One carrier | D | the full suites of all five packages pass on `GeoArray` fixtures, and every geoops operator given a `GeoTensor` raises a `TypeError` naming `from_georeader` |
-| GD2 No georeader in base | D | import-linter: no base module of the five packages imports georeader |
+| GD2 No georeader in base | D | import-linter: no base module of the five packages imports georeader (phase 3b; § D2) |
 | GE1 Warp parity | E | JAX bilinear warp equals rasterio's bilinear reprojection to 1e-5 relative on interior pixels |
 | GE2 CRS kernels | E | each closed-form projection equals pyproj to 1 mm over its valid domain, in float64 |
 | GE3 Co-registration | E | Stage 4 recovers a known sub-pixel shift to 0.01 pixel on a synthetic scene (prototype: 0.0002 pixel) |
@@ -785,24 +798,31 @@ Milestone, in every repo: "geoarray: one NumPy/JAX carrier for geotoolz".
       slicing, crop,      ┃      to_jax, to_numpy,
       windows, valid_mask ┃      georeader adapter
        │
-       ◆ GB1–GB5 GC1–GC3   → geotoolz-array 0.1.0
+       ◆ GB1–GB5 GC1–GC3   → geotoolz-array 0.1.0     ✓ released
        │
-  3   one coordinated switch (D)
-      ops, catalog, cloud, products, patcher
-      on GeoArray only; georeader to extras
+  3   the carrier switch (D)
+      RasterSource (array 0.1.1); ops, cloud,
+      patcher, products, catalog on GeoArray
+      only; georeader an internal engine
        │
-       ◆ GD1 GD2           → one breaking release: ops 0.11, catalog 0.6,
-       │                     cloud 0.5, products 0.5, patcher 0.11,
-       │                     geotoolz 0.11
+       ◆ GD1               → one breaking release, a minor bump
+       │                     each (ops 0.12, patcher 0.12, catalog 0.7,
+       │                     cloud 0.6, products 0.6, geotoolz 0.12)
+  3b  georeader out of the base
+      engine calls replaced one by one;
+      no public API changes
+       │
+       ◆ GD2
   4a  JAX kernels         ┃  4b  radtrax[geo], plumax[geo]
       in geoops (E)       ┃      migrate (pinned until then)
        │
-       ◆ GE1 GE2 GE3       → ops 0.12
+       ◆ GE1 GE2 GE3
 ```
 
 Phase 1 is the only one that blocks everything else, and it is small: the prototype for this doc is under 200 lines.
 Phases 2a and 2b run in parallel, as do 4a and 4b.
-Phase 3 lands as one PR per repo, merged and released together.
+Phase 3 lands as one stacked PR per package (geotoolz #500–#506), merged and released together.
+Phase 3b can interleave with 4a: the JAX warp kernels of workstream E are what replace georeader's reprojection.
 
 ## Limitations
 
@@ -848,8 +868,8 @@ These come with the design; each has a workaround rather than a fix.
 
 ## Before opening the issues
 
-- [ ] Decisions A1–A4, B1 and B2 confirmed or flipped (C1 and D1 decided 17 Oct 2026).
-- [ ] Package name confirmed: `geotoolz-array`, import `geoarray`, with its own icon like the other subpackages.
+- [x] Decisions A1–A4, B1 and B2 confirmed (17 Oct 2026, with C1 and D1).
+- [x] Package name confirmed: `geotoolz-array`, import `geoarray`, with its own icon like the other subpackages.
 - [ ] geotoolz, georeader, radtrax and plumax checked for duplicate open issues.
 - [ ] Companion page [Labeled lane](./02_labeled_lane.md) reviewed, so the converters' extras exist when geoarray 0.1.0 ships.
 
