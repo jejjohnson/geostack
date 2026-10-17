@@ -582,29 +582,23 @@ IN_SITU = {
 
 def two_streams() -> Svg:
     f = Svg(
-        1040,
-        560,
-        "Two streams converge: the satellite chain runs L0 to L4;"
-        " in-situ networks in every domain join it by spatiotemporal matchup"
-        " between L2 and L3, and enter L4 through assimilation.",
+        1000,
+        612,
+        "Two streams converge: the satellite chain runs L0 to L5; in-situ"
+        " networks rise from below, join it by spatiotemporal matchup between"
+        " L2 and L3, and enter L4 directly through assimilation. Matchup also"
+        " yields the pairs that validate and bias-correct the satellite stream.",
     )
-    x, w, h = 60, 250, 58
-    ys = [70, 166, 262, 358, 470]
-    rows = [
-        ("L0", "Raw telemetry"),
-        ("L1", "Calibrated radiances"),
-        ("L2", "Geophysical variables"),
-        ("L3", "Gridded products"),
-        ("L4", "Analysed / fused fields"),
-    ]
-    f.text(x + w / 2, 44, "Satellite  (top-down)", size=13, color=OBS[0], weight=700)
-    for i, ((lvl, name), y) in enumerate(zip(rows, ys, strict=True)):
-        hue = OBS if i < 3 else STATE
-        f.rect(x, y, w, h, stroke=hue[0], fill=hue[1])
-        f.text(x + 14, y + 23, lvl, size=11, color=hue[0], anchor="start", weight=700)
-        f.text(x + 14, y + 42, name, size=13.5, color=INK, anchor="start", weight=600)
-    steps = ["cal + geoloc", "retrieval", "grid + composite", "DA + fusion"]
-    for i, step in enumerate(steps):
+    x, w, h = 40, 250, 56
+    ys = [80, 170, 260, 350, 440, 530]
+    f.text(x + w / 2, 40, "Satellite  (top-down)", size=13, color=OBS[0], weight=700)
+    f.text(x + w / 2, 58, "GeoTensor to L2, xarray from L3", size=11, color=MUTED)
+    for i, ((lvl, name, _), y) in enumerate(zip(LEVELS, ys, strict=True)):
+        hue = LC_HUES[i]
+        f.rect(x, y, w, h, stroke=hue[0], fill=hue[1], dashed=i == 5)
+        f.text(x + 14, y + 22, lvl, size=11, color=hue[0], anchor="start", weight=700)
+        f.text(x + 14, y + 41, name, size=13.5, color=INK, anchor="start", weight=600)
+    for i, step in enumerate(STEPS):
         y0, y1 = ys[i] + h, ys[i + 1]
         f.arrow(
             [(x + w / 2, y0 + 2), (x + w / 2, y1 - 2)],
@@ -614,16 +608,54 @@ def two_streams() -> Svg:
             label_anchor="start",
             label_color=INK,
         )
-    ix, iw, iy, ih = 650, 360, 214, 176
-    f.text(ix + iw / 2, 44, "In-situ  (bottom-up)", size=13, color=STATE[0], weight=700)
+    # The matchup node sits on the L2 -> L3 step.
+    mx, my = 450, (ys[2] + h + ys[3]) / 2
+    f.rect(mx - 82, my - 24, 164, 48, stroke=ENG[0], fill=ENG[1], rx=24)
+    f.text(mx, my - 3, "matchup", size=13.5, color=INK, weight=600)
+    f.text(mx, my + 13, "space + time window", size=11, color=MUTED)
+    f.arrow(
+        [(x + w, ys[2] + h / 2), (mx - 40, ys[2] + h / 2), (mx - 40, my - 26)],
+        color=ENG[0],
+    )
+    f.arrow(
+        [(mx - 40, my + 24), (mx - 40, ys[3] + h / 2), (x + w + 2, ys[3] + h / 2)],
+        color=ENG[0],
+    )
+    # Matchup pairs: validation and bias correction.
+    px, py, pw, ph = 590, 196, 370, 70
+    f.rect(px, py, pw, ph, stroke=ENG[0], fill=ENG[1])
+    f.text(
+        px + 18,
+        py + 27,
+        "Matchup pairs",
+        size=14,
+        color=INK,
+        anchor="start",
+        weight=700,
+    )
+    f.text(
+        px + 18,
+        py + 50,
+        "validation · bias correction → the misfits of the cycle",
+        size=11.5,
+        color=INK,
+        anchor="start",
+    )
+    f.arrow(
+        [(mx + 40, my - 24), (mx + 40, py + ph / 2), (px - 2, py + ph / 2)],
+        color=ENG[0],
+    )
+    # In-situ networks rise from below.
+    ix, iw, iy, ih = 590, 370, 400, 186
     f.text(
         ix + iw / 2,
-        (ys[0] + ys[1] + h) / 2 + 4,
-        "no L0 / L1 equivalent",
-        size=11.5,
-        color=MUTED,
-        italic=True,
+        iy - 30,
+        "In-situ  (bottom-up)",
+        size=13,
+        color=STATE[0],
+        weight=700,
     )
+    f.text(ix + iw / 2, iy - 12, "point tables, xarray", size=11, color=MUTED)
     f.rect(ix, iy, iw, ih, stroke=STATE[0], fill=STATE[1])
     f.text(
         ix + 18,
@@ -648,36 +680,27 @@ def two_streams() -> Svg:
         f.text(ix + 108, y, nets, size=12, color=INK, anchor="start")
     f.text(
         ix + 18,
-        iy + ih - 16,
-        "calibrated and sparse; often with a depth or height axis",
+        iy + ih - 32,
+        "calibrated and sparse at source: no L0 / L1",
         size=11,
         color=MUTED,
         anchor="start",
     )
-    # The matchup node sits on the L2 -> L3 step.
-    mx, my = 470, (ys[2] + h + ys[3]) / 2
-    f.rect(mx - 78, my - 24, 156, 48, stroke=ENG[0], fill=ENG[1], rx=24)
-    f.text(mx, my - 3, "matchup", size=13.5, color=INK, weight=600)
-    f.text(mx, my + 13, "space + time", size=11, color=MUTED)
-    f.arrow([(x + w, ys[2] + h / 2), (mx, ys[2] + h / 2), (mx, my - 26)], color=ENG[0])
-    f.arrow([(ix, my), (mx + 80, my)], color=ENG[0])
-    f.arrow(
-        [(mx, my + 24), (mx, ys[3] + h / 2), (x + w + 2, ys[3] + h / 2)],
-        color=ENG[0],
-        label="the convergence operation",
-        at=(mx + 10, ys[3] + h / 2 + 20),
-        label_anchor="start",
+    f.text(
+        ix + 18,
+        iy + ih - 14,
+        "often with a depth or height axis",
+        size=11,
+        color=MUTED,
+        anchor="start",
     )
+    f.arrow([(ix + 40, iy), (ix + 40, my), (mx + 84, my)], color=ENG[0])
     f.arrow(
-        [
-            (ix + iw / 2, iy + ih),
-            (ix + iw / 2, ys[4] + h / 2),
-            (x + w + 2, ys[4] + h / 2),
-        ],
+        [(ix, ys[4] + h / 2), (x + w + 2, ys[4] + h / 2)],
         color=STATE[0],
         dashed=True,
-        label="enters through assimilation",
-        at=(ix + iw / 2 - 12, ys[4] + h / 2 - 8),
+        label="assimilated directly (DA)",
+        at=(ix - 12, ys[4] + h / 2 - 8),
         label_anchor="end",
     )
     return f

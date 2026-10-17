@@ -294,14 +294,16 @@ in-situ stream converge between L2 and L3 ([](#fig-two-streams)).
 
 ```{figure} images/overview/two_streams.svg
 :label: fig-two-streams
-:alt: Satellite levels L0 to L4 on the left; in-situ networks for ocean, atmosphere, land and ice on the right. L2 and in-situ meet at a matchup node that feeds L3; in-situ also enters L4 through assimilation.
+:alt: The satellite chain L0 to L5 on the left; in-situ networks for ocean, atmosphere, land and ice at the bottom right. L2 and in-situ meet at a matchup node that feeds L3 and yields matchup pairs for validation and bias correction; in-situ also enters L4 directly through assimilation.
 :width: 100%
 
 **Satellite and in-situ observations converge through matchup.**
 
 In-situ networks in every domain join the satellite chain through
-spatiotemporal {term}`matchup` between L2 and L3, and enter L4 through
-assimilation. They have no L0 or L1 equivalent.
+spatiotemporal {term}`matchup` between L2 and L3, and enter L4 directly
+through assimilation. They have no L0 or L1 equivalent. Matchup also yields
+the pairs that validate and bias-correct the satellite stream: the misfits
+that drive the loops of [](#fig-modeling-cycle).
 ```
 
 The matchup pattern is canonical and deserves its own operator family
