@@ -890,7 +890,7 @@ decision.
   with its output carrier ([Report 16, workstream E](reports/16_geo_data_stack.md#r16-ws-e)).
 - **Which stack somax and spectraldiffx belong to.** Rule 5 of the
   [package boundaries](geomodels/package_boundaries.md#pb-rules) puts somax
-  in GeoModels and spectraldiffx and finitevolx in Numerics. methanex is
+  in GeoModels and spectraldiffx and finitevolx in GeoNumerics. methanex is
   still unplaced.
 :::
 
