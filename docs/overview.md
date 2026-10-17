@@ -318,10 +318,16 @@ data on its way into a model ([](#fig-three-layers)).
 
 ```{figure} images/overview/three_layers.svg
 :label: fig-three-layers
-:alt: Scientific data becomes ML-ready data through harmonisation and tensorisation, which becomes embeddings through compression and latent mapping. Each layer lists the packages that own it.
+:alt: Scientific data (observations as GeoTensors, states as xarray) becomes ML-ready tensors with provenance through harmonisation and patching (geopatcher), which geonnax encoders compress into latent embeddings; a dashed decode arrow maps latents back to fields. Each layer lists what it is, its array shape and the packages that own it.
 :width: 100%
 
 **Scientific data, ML-ready data, embeddings, and who owns each.**
+
+The first step is data engineering (GeoStack), the second representation
+learning (GeoML). The middle layer is the handoff that makes training
+reproducible: cached, CF-compliant tensors with content-addressed splits.
+Decoders run the chain backwards, which is what emulators and generative
+models do.
 ```
 
 (sec-six-steps)=

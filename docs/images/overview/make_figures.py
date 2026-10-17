@@ -708,69 +708,103 @@ def two_streams() -> Svg:
 
 def three_layers() -> Svg:
     f = Svg(
-        1100,
-        250,
-        "Three layers of transformation: scientific data is"
-        " harmonised into ML-ready datasets, which representation learning"
-        " compresses into embeddings.",
+        1140,
+        344,
+        "Three layers of transformation: scientific data (observations as"
+        " GeoTensors, states as xarray) is harmonised and patched into ML-ready"
+        " tensors with provenance, which encoders compress into latent"
+        " embeddings; decoders map latents back to fields.",
     )
-    w, h, y = 280, 150, 40
-    xs = [24, 410, 796]
+    w, h, y = 300, 200, 64
+    xs = [20, 420, 820]
+    # Brackets name the two halves: data engineering, then representation.
+    for (x0, x1), label, hue in [
+        ((xs[0] + w / 2, xs[1] + w / 2), "ML processing pipeline · GeoStack", ENG),
+        ((xs[1] + w / 2, xs[2] + w / 2), "representation learning · GeoML", ML),
+    ]:
+        f.parts.append(
+            f'<path d="M{x0 + 6:.1f},{y - 10} L{x0 + 6:.1f},{y - 18}'
+            f' L{x1 - 6:.1f},{y - 18} L{x1 - 6:.1f},{y - 10}" fill="none"'
+            f' stroke="{hue[0]}" stroke-width="1.4"/>'
+        )
+        f.text((x0 + x1) / 2, y - 26, label, size=12, color=hue[0], weight=700)
     layers = [
         (
             "Scientific data",
             "L0 → L4, both streams",
-            OBS,
-            ["georeader · geocatalog", "geotoolz / xrtoolz", "geocatalog.states"],
+            (LINE, CARD),
+            None,
+            "(C, H, W)  ·  (time, lat, lon)",
+            ["georeader · xrreader · geocatalog", "geotoolz · xrtoolz"],
         ),
         (
             "ML-ready",
             "tensors with provenance",
             ML,
-            [
-                "pipekit-train CachedDataset",
-                "CF-compliant datasets",
-                "content-addressed splits",
-            ],
+            "CF-compliant, content-addressed splits",
+            "(B, C, h, w)  + metadata",
+            ["pipekit-train CachedDataset"],
         ),
         (
             "Embedding",
             "latent representations",
             ML,
-            [
-                "pipekit-train · pipekit-cycle",
-                "encoder / decoder / latent",
-                "dynamics, in the registry",
-            ],
+            "encoder · decoder · latent dynamics",
+            "z : (B, d), one d-vector per sample",
+            ["geonnax · pyrox-nn", "pipekit-train, in the registry"],
         ),
     ]
-    for x, (name, sub, hue, owners) in zip(xs, layers, strict=True):
+    for x, (name, sub, hue, what, shape, pkgs) in zip(xs, layers, strict=True):
         f.rect(x, y, w, h, stroke=hue[0], fill=hue[1])
         f.text(x + 16, y + 28, name, size=15, color=INK, anchor="start", weight=700)
-        f.text(x + 16, y + 47, sub, size=11.5, color=hue[0], anchor="start", weight=600)
+        sub_color = MUTED if what is None else hue[0]
+        f.text(
+            x + 16, y + 47, sub, size=11.5, color=sub_color, anchor="start", weight=600
+        )
+        if what is None:
+            cx = x + 16
+            cx += f.chip(
+                cx, y + 62, "observations · GeoTensor", hue=OBS, size=10.5, h=22, pad=8
+            )
+            f.chip(cx + 6, y + 62, "states · xarray", hue=STATE, size=10.5, h=22, pad=8)
+        else:
+            f.text(x + 16, y + 78, what, size=12, color=INK, anchor="start")
+        f.text(
+            x + 16, y + 104, "shape", size=10.5, color=MUTED, anchor="start", weight=700
+        )
+        f.text(x + 16, y + 121, shape, size=12.5, color=INK, anchor="start")
         f.text(
             x + 16,
-            y + 74,
-            "owned by",
+            y + 148,
+            "packages",
             size=10.5,
             color=MUTED,
             anchor="start",
             weight=700,
         )
-        f.lines(x + 16, y + 92, owners, gap=17, size=12, color=INK, anchor="start")
-    for a, b, l1, l2 in [
-        (xs[0] + w, xs[1], "harmonise,", "tensorise"),
-        (xs[1] + w, xs[2], "compress,", "map to latents"),
+        f.lines(x + 16, y + 165, pkgs, gap=17, size=12, color=INK, anchor="start")
+    for a, b, l1, l2, tool in [
+        (xs[0] + w, xs[1], "harmonise,", "tensorise", "geopatcher"),
+        (xs[1] + w, xs[2], "compress,", "map to latents", "geonnax"),
     ]:
         f.arrow([(a + 2, y + h / 2), (b - 2, y + h / 2)], color=INK)
         f.text((a + b) / 2, y + h / 2 - 22, l1, size=11.5, color=INK)
         f.text((a + b) / 2, y + h / 2 - 8, l2, size=11.5, color=INK)
-    f.text(
-        550,
-        228,
-        "ML processing pipeline  →  representation learning",
-        size=11.5,
-        color=MUTED,
+        f.text((a + b) / 2, y + h / 2 + 18, tool, size=11, color=MUTED, italic=True)
+    # The way back: decoders map latents to fields (emulators, generative models).
+    by = y + h + 40
+    f.arrow(
+        [
+            (xs[2] + w / 2, y + h + 2),
+            (xs[2] + w / 2, by),
+            (xs[0] + w / 2, by),
+            (xs[0] + w / 2, y + h + 4),
+        ],
+        color=ML[0],
+        dashed=True,
+        label="decode: latents back to fields (emulators, generative models)",
+        at=(xs[1] + w / 2, by - 8),
+        label_color=ML[0],
     )
     return f
 
