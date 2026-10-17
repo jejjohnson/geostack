@@ -245,7 +245,7 @@ storms) or impact indicators. Which products belong in L5 is still open.
 
 ```{figure} images/overview/lifecycle_engineering.svg
 :label: fig-lifecycle-engineering
-:alt: The same six levels across the top. Below, a compute row names what performs the step into each level (radtrax at L2, GeoML at L3, GeoModels with data assimilation at L4, xtremax at L5), then rows for compose (pipekit, all levels), transform (geotoolz, xrtoolz), patch (geopatcher), carry (GeoTensor, xarray), read (georeader, xrreader), index (geocatalog, geocatalog.states) and store (geocloud, all levels), split by a dashed line where the carrier switches from GeoTensor to xarray.
+:alt: The same six levels across the top. Below, a compute row names what performs the step into each level (radtrax at L2, GeoML at L3, GeoModels with data assimilation at L4, xtremax at L5), then rows for compose (pipekit, all levels), transform (geoops, xrtoolz), patch (geopatcher), carry (GeoTensor, xarray), read (georeader, xrreader), index (geocatalog, geocatalog.states) and store (geocloud, all levels), split by a dashed line where the carrier switches from GeoTensor to xarray.
 :width: 100%
 
 **The data lifecycle, engineering axis.**
@@ -489,7 +489,7 @@ Most current work happens in the GeoStack layer ([](#fig-tier4-map)).
 
 ```{figure} images/overview/tier4_map.svg
 :label: fig-tier4-map
-:alt: The GeoStack layer. The pipekit core (pipekit, pipekit-array, pipekit-jax) at the bottom; above it two carrier columns, GeoTensor for observations and xarray for states, in rows by job: read (georeader, geoproducts; xrreader), index (geocatalog; the proposed geocatalog.states), transform (geotoolz; xrtoolz, xrcore, xrgrad, xreinx, xrsklearn), patch (geopatcher, either carrier) and store (geocloud, either carrier). The carrier-neutral ML loops (pipekit-cycle, -train, -experiment, -evaluate) on top.
+:alt: The GeoStack layer. The pipekit core (pipekit, pipekit-array, pipekit-jax) at the bottom; above it two carrier columns, GeoTensor for observations and xarray for states, in rows by job: read (georeader, geoproducts; xrreader), index (geocatalog; the proposed geocatalog.states), transform (geoops; xrtoolz, xrcore, xrgrad, xreinx, xrsklearn), patch (geopatcher, either carrier) and store (geocloud, either carrier). The carrier-neutral ML loops (pipekit-cycle, -train, -experiment, -evaluate) on top.
 :width: 100%
 
 **One pipekit core, two carriers, the same jobs on both.**

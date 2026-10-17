@@ -126,7 +126,7 @@ run on both:
   <img alt="The repositories in four layer bands, with edges pointing down from each repository to those it depends on or imports" src="docs/images/overview/dependency_graph.svg" width="100%">
 </p>
 
-18 repositories, 36 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out. Red arrows form a cycle.
+18 repositories, 37 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out. Red arrows form a cycle.
 
 <!-- dependency-graph:end -->
 
@@ -134,8 +134,8 @@ The rules that keep this graph free of cycles (each one is checked by
 `tests/test_dependency_graph.py`; the reasons, and where the graph breaks
 them today, are on the [dependency graph page](docs/api/dependency_graph.md)):
 
-1. **Layers point down.** GeoModels → GeoML → Numerics / GeoStack; GeoStack
-   and Numerics never import each other.
+1. **Layers point down.** GeoModels → GeoML → GeoNumerics / GeoStack; GeoStack
+   and GeoNumerics never import each other.
 2. **Within a layer, tiers point down.** A repository imports only lower
    tiers of its own layer; in GeoModels only plumax imports another (radtrax).
 3. **Every library edge counts:** base dependencies, extras and imports,

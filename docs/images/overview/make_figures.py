@@ -530,7 +530,7 @@ def lifecycle_engineering() -> Svg:
     split = cx[3] - gap / 2
     span = {  # role: [(first level, last level, label, hue)]
         "compose": [(0, 5, "pipekit  (operators, graphs, cycles, training)", ENG)],
-        "transform": [(1, 2, "geotoolz", OBS), (3, 5, "xrtoolz", STATE)],
+        "transform": [(1, 2, "geoops", OBS), (3, 5, "xrtoolz", STATE)],
         "patch": [(1, 4, "geopatcher  (carrier-neutral fields)", ENG)],
         "carry": [(0, 2, "GeoTensor", OBS), (3, 5, "xarray", STATE)],
         "read": [(0, 2, "georeader", OBS), (3, 5, "xrreader", STATE)],
@@ -736,7 +736,7 @@ def three_layers() -> Svg:
             (LINE, CARD),
             None,
             "(C, H, W)  ·  (time, lat, lon)",
-            ["georeader · xrreader · geocatalog", "geotoolz · xrtoolz"],
+            ["georeader · xrreader · geocatalog", "geoops · xrtoolz"],
         ),
         (
             "ML-ready",
@@ -1269,7 +1269,7 @@ GEOSTACK_ROWS = [
     (
         "Transform",
         "operators on the carrier",
-        ["geotoolz"],
+        ["geoops"],
         ["xrtoolz", "xrcore", "xrgrad", "xreinx", "xrsklearn"],
     ),
     ("Patch", "split, process, stitch", ["geopatcher"], None),
@@ -1558,7 +1558,7 @@ WALK = [
         "2",
         "Retrieve methane",
         "matched filter (fast); optimal estimation is its oracle",
-        ["georeader", "geotoolz", "radtrax"],
+        ["georeader", "geoops", "radtrax"],
         "L1 → L2",
         "learned retrieval, optional",
     ),

@@ -38,6 +38,7 @@ pipekit-experiment = { path = "references/geostack/pipekit/packages/pipekit-expe
 pipekit-jax = { path = "references/geostack/pipekit/packages/pipekit-jax", editable = true }
 pipekit-train = { path = "references/geostack/pipekit/packages/pipekit-train", editable = true }
 geotoolz = { path = "references/geostack/geotoolz/packages/geotoolz", editable = true }
+geotoolz-ops = { path = "references/geostack/geotoolz/packages/geotoolz-ops", editable = true }
 geotoolz-catalog = { path = "references/geostack/geotoolz/packages/geotoolz-catalog", editable = true }
 geotoolz-cloud = { path = "references/geostack/geotoolz/packages/geotoolz-cloud", editable = true }
 geotoolz-patcher = { path = "references/geostack/geotoolz/packages/geotoolz-patcher", editable = true }
@@ -62,6 +63,7 @@ pipekit-experiment = { path = "references/geostack/pipekit/packages/pipekit-expe
 pipekit-jax = { path = "references/geostack/pipekit/packages/pipekit-jax", editable = true }
 pipekit-train = { path = "references/geostack/pipekit/packages/pipekit-train", editable = true }
 geotoolz = { path = "references/geostack/geotoolz/packages/geotoolz", editable = true }
+geotoolz-ops = { path = "references/geostack/geotoolz/packages/geotoolz-ops", editable = true }
 geotoolz-catalog = { path = "references/geostack/geotoolz/packages/geotoolz-catalog", editable = true }
 geotoolz-cloud = { path = "references/geostack/geotoolz/packages/geotoolz-cloud", editable = true }
 geotoolz-patcher = { path = "references/geostack/geotoolz/packages/geotoolz-patcher", editable = true }
@@ -72,7 +74,7 @@ xrtoolz-einx = { path = "references/geostack/xrtoolz/packages/xrtoolz-einx", edi
 xrtoolz-grad = { path = "references/geostack/xrtoolz/packages/xrtoolz-grad", editable = true }
 xrtoolz-reader = { path = "references/geostack/xrtoolz/packages/xrtoolz-reader", editable = true }
 xrtoolz-sklearn = { path = "references/geostack/xrtoolz/packages/xrtoolz-sklearn", editable = true }
-# Numerics, GeoML and GeoModels: installed only in the environments below,
+# GeoNumerics, GeoML and GeoModels: installed only in the environments below,
 # each sibling pinned to its submodule (their own [tool.uv.sources] pin older
 # commits of one another; see .plans/submodules_by_stack.md).
 gaussx = { path = "references/numerics/gaussx", editable = true }
@@ -137,7 +139,7 @@ vegafusion = {version = ">=2", extras = ["embed"]}
 plotly = ">=5"
 
 # ── The layers above GeoStack ──────────────────────────────────────────────
-# Numerics ← GeoML ← GeoModels: each environment adds one layer on top of the
+# GeoNumerics ← GeoML ← GeoModels: each environment adds one layer on top of the
 # ones it may import. They share a solve group of their own, so the JAX stack
 # never touches the default (GeoStack) solve.
 

@@ -429,6 +429,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -839,6 +840,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -1290,6 +1292,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -1678,6 +1681,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -2161,6 +2165,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -2597,6 +2602,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -3099,6 +3105,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -3540,6 +3547,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -4131,6 +4139,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -4646,6 +4655,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -5161,6 +5171,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -5614,6 +5625,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -6089,6 +6101,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -6509,6 +6522,7 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-cloud
+      - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
@@ -19456,31 +19470,21 @@ packages:
 - pypi: ./references/geostack/geotoolz/packages/geotoolz
   name: geotoolz
   requires_dist:
-  - georeader-spaceml>=2.1
-  - numpy>=1.26
-  - jaxtyping>=0.2.36
-  - scipy>=1.11
-  - typing-extensions>=4.0
-  - rasterio>=1.3
-  - affine>=2.4
-  - pandas>=2.1
-  - pyproj>=3.6
-  - geopandas>=0.14
-  - shapely>=2.0
-  - scikit-image>=0.25
-  - pipekit @ git+https://github.com/jejjohnson/pipekit@ef3c17f85678dbcdd739f27ef75a0eaab6d5163f#subdirectory=packages/pipekit
-  - einx>=0.4
-  - matplotlib>=3.10.8 ; extra == 'viz'
-  - scikit-learn>=1.4 ; extra == 'learn'
-  - joblib>=1.3 ; extra == 'learn'
-  - hydra-zen>=0.14 ; extra == 'hydra'
-  - geotoolz-patcher[pipekit] @ ./references/geostack/geotoolz/packages/geotoolz-patcher ; extra == 'patch'
-  - xvec>=0.4 ; extra == 'vector-cube'
-  - geotoolz-cloud @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'cloud'
-  - geotoolz-cloud[hdf5] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'hdf5'
-  - geotoolz-cloud[hdf4] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'hdf4'
-  - geotoolz-cloud[netcdf] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'netcdf'
-  - zarr>=3 ; extra == 'zarr'
+  - geotoolz-ops @ ./references/geostack/geotoolz/packages/geotoolz-ops
+  - geotoolz-patcher @ ./references/geostack/geotoolz/packages/geotoolz-patcher
+  - geotoolz-catalog @ ./references/geostack/geotoolz/packages/geotoolz-catalog
+  - geotoolz-cloud @ ./references/geostack/geotoolz/packages/geotoolz-cloud
+  - geotoolz-products @ ./references/geostack/geotoolz/packages/geotoolz-products
+  - geotoolz-ops[viz] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'viz'
+  - geotoolz-ops[learn] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'learn'
+  - geotoolz-ops[hydra] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'hydra'
+  - geotoolz-ops[vector-cube] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'vector-cube'
+  - geotoolz-ops[zarr] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'zarr'
+  - geotoolz-ops[hdf5] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'hdf5'
+  - geotoolz-ops[hdf4] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'hdf4'
+  - geotoolz-ops[netcdf] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'netcdf'
+  - geotoolz-ops[patch] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'patch'
+  - geotoolz-products[operators] @ ./references/geostack/geotoolz/packages/geotoolz-products ; extra == 'operators'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/geotoolz/packages/geotoolz-catalog
   name: geotoolz-catalog
@@ -19527,6 +19531,35 @@ packages:
   - netcdf4>=1.6.5 ; extra == 'netcdf'
   - pyhdf>=0.11.4 ; extra == 'hdf4'
   requires_python: '>=3.12'
+- pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
+  name: geotoolz-ops
+  requires_dist:
+  - georeader-spaceml>=2.1
+  - numpy>=1.26
+  - jaxtyping>=0.2.36
+  - scipy>=1.11
+  - typing-extensions>=4.0
+  - rasterio>=1.3
+  - affine>=2.4
+  - pandas>=2.1
+  - pyproj>=3.6
+  - geopandas>=0.14
+  - shapely>=2.0
+  - scikit-image>=0.25
+  - pipekit @ git+https://github.com/jejjohnson/pipekit@ef3c17f85678dbcdd739f27ef75a0eaab6d5163f#subdirectory=packages/pipekit
+  - einx>=0.4
+  - matplotlib>=3.10.8 ; extra == 'viz'
+  - scikit-learn>=1.4 ; extra == 'learn'
+  - joblib>=1.3 ; extra == 'learn'
+  - hydra-zen>=0.14 ; extra == 'hydra'
+  - geotoolz-patcher[pipekit] @ ./references/geostack/geotoolz/packages/geotoolz-patcher ; extra == 'patch'
+  - xvec>=0.4 ; extra == 'vector-cube'
+  - geotoolz-cloud @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'cloud'
+  - geotoolz-cloud[hdf5] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'hdf5'
+  - geotoolz-cloud[hdf4] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'hdf4'
+  - geotoolz-cloud[netcdf] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'netcdf'
+  - zarr>=3 ; extra == 'zarr'
+  requires_python: '>=3.12'
 - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
   name: geotoolz-patcher
   requires_dist:
@@ -19557,6 +19590,9 @@ packages:
   - jax>=0.4.23 ; extra == 'patch-full'
   - geotoolz-cloud[cog] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'patch-full'
   - pipekit @ git+https://github.com/jejjohnson/pipekit@ef3c17f85678dbcdd739f27ef75a0eaab6d5163f#subdirectory=packages/pipekit ; extra == 'pipekit'
+  - pipekit-train[equinox] @ git+https://github.com/jejjohnson/pipekit@ef3c17f85678dbcdd739f27ef75a0eaab6d5163f#subdirectory=packages/pipekit-train ; extra == 'train'
+  - xarray>=2024.1 ; extra == 'train'
+  - zarr>=3.0 ; extra == 'train'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
   name: geotoolz-products
@@ -19566,7 +19602,7 @@ packages:
   - typing-extensions>=4.0
   - rasterio>=1.3
   - affine>=2.4
-  - geotoolz @ ./references/geostack/geotoolz/packages/geotoolz ; extra == 'operators'
+  - geotoolz-ops @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'operators'
   - geotoolz-cloud[hdf5] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'goes'
   - geotoolz-cloud[hdf5] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'himawari'
   - requests>=2 ; extra == 'carbonmapper'

@@ -23,6 +23,10 @@ project:
         - title: plumax
           children:
             - file: docs/geomodels/plumax/01_emission_rate.md
+    - title: Design
+      children:
+        - file: docs/design/01_geoarray.md
+        - file: docs/design/02_labeled_lane.md
     - title: Reports
       children:
         - title: Across the stack

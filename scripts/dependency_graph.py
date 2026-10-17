@@ -41,12 +41,12 @@ BEGIN, END = "<!-- dependency-graph:begin -->", "<!-- dependency-graph:end -->"
 
 #: layers from the bottom up
 LAYERS = ("geostack", "numerics", "geoml", "geomodels")
-#: an edge between layers points to a lower rank; GeoStack and Numerics share
+#: an edge between layers points to a lower rank; GeoStack and GeoNumerics share
 #: the bottom rank, so neither may import the other
 LAYER_RANK = {"geostack": 0, "numerics": 0, "geoml": 1, "geomodels": 2}
 TITLES = {
     "geostack": "GeoStack",
-    "numerics": "Numerics",
+    "numerics": "GeoNumerics",
     "geoml": "GeoML",
     "geomodels": "GeoModels",
 }
@@ -86,6 +86,12 @@ TIER_ROLES = {
 #: Rules between packages name the two packages, and ``undeclared`` names the
 #: importing file, so a new edge or a new import is a new entry
 KNOWN: dict[tuple[str, str, str], str] = {
+    ("package-cycle", "geotoolz-patcher", "pipekit-train"): (
+        "geotoolz#486 added geopatcher.integrations.train, which imports"
+        " pipekit_train, while the pinned pipekit-train still imports"
+        " geopatcher; clears when the pipekit pin moves past the train"
+        " dataset's move (Report 16 D2)"
+    ),
     ("cycle", "geotoolz", "pipekit"): (
         "pipekit-train's _xreader and xarray_window import geopatcher.time (which"
         " no longer exists); Report 16 D2 moves the dataset to"
@@ -744,7 +750,7 @@ def render(page: Path, g: Graph) -> str:
 #: where each repository's guard test goes, relative to its root
 GUARD_PATHS = {
     "pipekit": "packages/pipekit/tests/test_dependency_rules.py",
-    "geotoolz": "packages/geotoolz/tests/test_dependency_rules.py",
+    "geotoolz": "packages/geotoolz-ops/tests/test_dependency_rules.py",
     "xrtoolz": "packages/xrtoolz-core/tests/test_dependency_rules.py",
     "pyrox": "packages/pyrox/tests/test_dependency_rules.py",
 }

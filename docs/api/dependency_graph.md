@@ -24,7 +24,7 @@ lazy, `try`-guarded and type-checking-only imports). It then states eight
 rules that keep the graph free of cycles.
 
 <!-- violation-summary:begin -->
-Today it has **one cycle between repositories (geotoolz ⇄ pipekit)**, **one edge that does not point down a tier** and **four imports their package does not declare**. [](#tbl-dg-violations) lists each one with its fix.
+Today it has **one cycle between repositories (geotoolz ⇄ pipekit)**, **one cycle between packages**, **one edge that does not point down a tier** and **four imports their package does not declare**. [](#tbl-dg-violations) lists each one with its fix.
 <!-- violation-summary:end -->
 
 +++
@@ -77,7 +77,7 @@ flowchart TB
     gauss_flows["gauss_flows"]
     geonnax["geonnax"]
   end
-  subgraph numerics["Numerics"]
+  subgraph numerics["GeoNumerics"]
     direction LR
     finitevolX["finitevolX"]
     spectraldiffx["spectraldiffx"]
@@ -118,16 +118,16 @@ flowchart TB
 ```
 :::
 
-18 repositories, 36 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out. Red arrows form a cycle.
+18 repositories, 37 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out. Red arrows form a cycle.
 
 <!-- dependency-graph:end -->
 
 What it shows:
 
-- **Every edge between layers points down.** GeoModels uses GeoML, Numerics
-  and GeoStack. GeoML uses Numerics and GeoStack. Numerics uses nothing above
+- **Every edge between layers points down.** GeoModels uses GeoML, GeoNumerics
+  and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoNumerics uses nothing above
   it.
-- **gaussx is the foundation.** Every repository in Numerics, GeoML and
+- **gaussx is the foundation.** Every repository in GeoNumerics, GeoML and
   GeoModels except geonnax reaches it. A breaking change in gaussx is a
   change to almost the whole stack.
 - **plumax is the one GeoModels repository that imports another.** It builds on radtrax: plume physics uses radiative transfer, never the reverse ([package boundaries](../geomodels/package_boundaries.md#pb-rules), rule 2). somax imports no one in its layer.
@@ -144,8 +144,8 @@ Each rule is a check in `scripts/dependency_graph.py`. The name in brackets
 is the rule's name in [](#tbl-dg-violations).
 
 1. **Layers point down** (`upward`). A repository may depend on its own layer
-   or a lower one: GeoStack and Numerics at the bottom, GeoML above them,
-   GeoModels on top. GeoStack and Numerics never import each other.
+   or a lower one: GeoStack and GeoNumerics at the bottom, GeoML above them,
+   GeoModels on top. GeoStack and GeoNumerics never import each other.
 2. **Within a layer, tiers point down** (`tier`). Each repository has a tier
    in its layer ([](#tbl-dg-tiers)) and imports only repositories of a lower
    tier. Two repositories of the same tier never import each other. In GeoModels, radtrax and somax share tier 0 and plumax sits above them in tier 1, because its plume-to-radiance coupling composes a plume model with radtrax's forward model.
@@ -197,9 +197,9 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoML | 2 | filterax, pyrox | ensemble filters and probabilistic models |
 | GeoML | 1 | kernellib, optax_bayes, xtremax | kernels, optimisers and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
-| Numerics | 2 | finitevolX | finite volume |
-| Numerics | 1 | spectraldiffx | spectral |
-| Numerics | 0 | gaussx | linear algebra and Gaussians |
+| GeoNumerics | 2 | finitevolX | finite volume |
+| GeoNumerics | 1 | spectraldiffx | spectral |
+| GeoNumerics | 0 | gaussx | linear algebra and Gaussians |
 | GeoStack | 1 | geotoolz, xrtoolz | operators on arrays and GeoTensors |
 | GeoStack | 0 | georeader, pipekit | pipelines and readers |
 <!-- tier-table:end -->
@@ -227,6 +227,7 @@ the shared vocabulary belongs in filterax, and vardax reuses it
 | Rule | From | To | Where | Why, and the fix |
 |---|---|---|---|---|
 | cycle | geotoolz | pipekit | `geotoolz ⇄ pipekit` | pipekit-train's _xreader and xarray_window import geopatcher.time (which no longer exists); Report 16 D2 moves the dataset to geopatcher.integrations.train |
+| package-cycle | geotoolz-patcher | pipekit-train | `geotoolz-patcher ⇄ pipekit-train` | geotoolz#486 added geopatcher.integrations.train, which imports pipekit_train, while the pinned pipekit-train still imports geopatcher; clears when the pipekit pin moves past the train dataset's move (Report 16 D2) |
 | tier | pipekit-train | geotoolz-patcher | `import, src/pipekit_train/xarray_window.py (guarded)` | the same imports |
 | undeclared | pipekit-train:src/pipekit_train/_xreader.py | geotoolz-patcher | `lazy` | the same imports |
 | undeclared | pipekit-train:src/pipekit_train/xarray_window.py | geotoolz-patcher | `guarded` | the same imports |
@@ -315,8 +316,8 @@ cannot import, so most of its tests could no longer be collected.
 | finitevolX | gaussx | base | `finitevolx → gaussx` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
-| geotoolz | georeader | base | `geotoolz → georeader-spaceml` |
-| geotoolz | pipekit | base | `geotoolz → pipekit` |
+| geotoolz | georeader | base | `geotoolz-catalog → georeader-spaceml` |
+| geotoolz | pipekit | base | `geotoolz-ops → pipekit` |
 | pipekit | geotoolz | import | `pipekit-train → geotoolz-patcher` |
 | xrtoolz | pipekit | base | `xrtoolz → pipekit` |
 <!-- edge-table:end -->
