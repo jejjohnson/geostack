@@ -69,3 +69,7 @@ project:
 site:
   template: book-theme
   title: GeoStack
+  options:
+    logo: docs/assets/logo-light.svg
+    logo_dark: docs/assets/logo-dark.svg
+    favicon: docs/assets/icon.svg

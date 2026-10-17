@@ -2,7 +2,7 @@
 title: GeoStack overview
 subtitle: A JAX-native research stack for geophysical modeling, inference and data assimilation
 short_title: Overview
-description: The entry point to GeoStack. Three organising axes, the seven-tier stack, an end-to-end methane walkthrough, the open questions and a plan.
+description: The entry point to GeoStack. Three organising axes, the four-layer stack, an end-to-end methane walkthrough, the open questions and a plan.
 keywords:
   - geophysics
   - data assimilation
@@ -163,7 +163,7 @@ every operation sits somewhere on all three.
 | Axis | Orders | Figure |
 |---|---|---|
 | 1 · Modeling cycle | the research loop: model, observe, compare, refine | {numref}`fig-modeling-cycle` |
-| 2 · Data lifecycle | data maturity, from raw telemetry (L0) to derived products (L5) | {numref}`fig-lifecycle` |
+| 2 · Data lifecycle | data maturity, from raw telemetry (L0) to derived products (L5) | {numref}`fig-lifecycle`, {numref}`fig-lifecycle-engineering` |
 | 3 · Six-step cycle | the journey from a simple model to amortized inference | {numref}`fig-six-steps` |
 :::
 
@@ -172,15 +172,21 @@ every operation sits somewhere on all three.
 
 ```{figure} images/overview/modeling_cycle.svg
 :label: fig-modeling-cycle
-:alt: The real-world system feeds two tracks. Modeling runs abstract, equations and code, predictions. Observing runs sensor, measurements, observations. Both meet at compare; refine loops back to abstract.
-:width: 100%
+:alt: The real-world system feeds two tracks. Modeling runs conceptual model, equations and code, predictions. Observing runs sensor, measurements, observations. Both meet at compare. A random misfit goes to estimate (state by data assimilation, parameters by calibration), whose inner loop updates the predictions; a systematic misfit goes to refine the model, whose outer loop returns to the conceptual model and, dashed, to the sensor.
+:width: 70%
 
-**The modeling cycle runs on two parallel tracks.**
+**The modeling cycle runs on two parallel tracks and two loops.**
 
-The modeling track abstracts the real-world system into equations and code
-that make predictions. The observing track measures the same system with
-sensors and turns measurements into observations. The tracks meet where
-predictions are compared with observations, and the model is refined.
+The modeling track turns a conceptual model of the real-world system into
+equations and code that make predictions. The observing track measures the
+same system with sensors and turns measurements into observations. The
+tracks meet where predictions are compared with observations, and the misfit
+decides which loop runs. A random misfit, one the error model explains, runs
+the fast inner loop: **state estimation** (data assimilation) updates the
+state $x$, **parameter estimation** (calibration) updates the parameters
+$\theta$, and the same model runs again. A systematic misfit runs the slow
+outer loop: the model's structure changes, or the observing system does
+(more or better data, better processing).
 ```
 
 :::{important} Start simple
@@ -192,18 +198,17 @@ composable.
 (sec-lifecycle)=
 ### The L0–L5 data lifecycle (axis 2)
 
-```{figure} images/overview/lifecycle.svg
+```{figure} images/overview/lifecycle_science.svg
 :label: fig-lifecycle
-:alt: Six maturity levels, L0 to L5, across the top. Below, the science axis fans radiances out into ocean, atmosphere, land and ice lanes; further below, the engineering axis shows which GeoStack tool transforms, patches, carries, reads, indexes and stores each level.
+:alt: Six maturity levels, L0 to L5, across the top, each step named on its arrow. Below, telemetry becomes one stream of radiances, which retrieval fans out into ocean, atmosphere, land and ice lanes that run through analysis and reanalysis to dashed derived products.
 :width: 100%
 
-**The data lifecycle on two perpendicular axes.**
+**The data lifecycle, science axis.**
 
-The science axis fans one stream of radiances out into ocean, atmosphere,
-land and ice at retrieval, and ends in derived products such as extremes
-(L5, dashed: examples still to be defined). The engineering axis maps every
-level to the tool that handles it, switching carrier from GeoTensor to
-xarray between L2 and L3.
+One stream of radiances fans out into ocean, atmosphere, land and ice at
+retrieval, and ends in derived products such as extremes (L5, dashed:
+examples still to be defined). {numref}`fig-lifecycle-engineering` maps the
+same levels to the tools that handle them.
 ```
 
 :::{table} The six levels of the data lifecycle.
@@ -238,19 +243,41 @@ carries its own analysis and reanalysis or forecast. L5 holds the products
 derived from those states, such as extremes (marine heatwaves, droughts,
 storms) or impact indicators. Which products belong in L5 is still open.
 
-**The engineering axis** runs top to bottom, from transforming data down to
-storing it, and maps every level to the GeoStack tool that handles it. It
-splits where the {term}`carrier` changes:
+```{figure} images/overview/lifecycle_engineering.svg
+:label: fig-lifecycle-engineering
+:alt: The same six levels across the top. Below, a compute row names what performs the step into each level (radtrax at L2, GeoML at L3, GeoModels with data assimilation at L4, xtremax at L5), then rows for compose (pipekit, all levels), transform (geoops, xrtoolz), patch (geopatcher), carry (GeoTensor, xarray), read (georeader, xrreader), index (geocatalog, geocatalog.states) and store (geocloud, all levels), split by a dashed line where the carrier switches from GeoTensor to xarray.
+:width: 100%
+
+**The data lifecycle, engineering axis.**
+
+The top row names what performs each step; the rows below map every level
+to the tool that composes, transforms, patches, carries, reads, indexes and
+stores it, switching carrier from GeoTensor to xarray between L2 and L3.
+```
+
+**The engineering axis** runs top to bottom, from computing a level down to
+storing it, and maps every level to the GeoStack tool that handles it.
+
+- **Compute:** what performs the step into each level. radtrax retrieves
+  (L1 → L2); GeoML grids and gap-fills (L2 → L3: pyrox, kernellib, vardax's
+  optimal interpolation); GeoModels with data assimilation model and
+  assimilate (L3 → L4: somax and plumax with filterax and vardax), the inner
+  loop of {numref}`fig-modeling-cycle`; xtremax derives extremes (L4 → L5).
+- **Compose:** `pipekit` wires every level into operator graphs, cycles and
+  training loops, whatever the carrier.
+
+The rows below split where the {term}`carrier` changes:
 
 - **Observations (L0–L2):** `georeader` reads them into a {term}`GeoTensor`,
-  `geocatalog` indexes them as {term}`GeoSlice`s, `geotoolz` transforms
-  them and `geocloud` stores them as COG on object storage.
+  `geocatalog` indexes them as {term}`GeoSlice`s and `geotoolz` transforms
+  them.
 - **Model states and derived products (L3–L5):** `xrreader` reads them into
   xarray, `geocatalog.states` indexes them in the same catalogs as state
-  rows (its {term}`state profile`), `xrtoolz` transforms and verifies them,
-  and they live as Zarr or NetCDF on object storage.
-- **Derived products (L5):** `xtremax` computes extremes from L4 states.
-- **Both carriers:** `geopatcher` patches fields whatever the carrier.
+  rows (its {term}`state profile`), and `xrtoolz` transforms and verifies
+  them.
+- **Both carriers:** `geopatcher` patches fields whatever the carrier, and
+  `geocloud` stores both on object storage: COG for observations, Zarr or
+  NetCDF for states.
 
 :::{aside}
 `xrreader` exists today as the `xrtoolz-reader` package (it imports as
@@ -267,14 +294,16 @@ in-situ stream converge between L2 and L3 ([](#fig-two-streams)).
 
 ```{figure} images/overview/two_streams.svg
 :label: fig-two-streams
-:alt: Satellite levels L0 to L4 on the left; in-situ networks for ocean, atmosphere, land and ice on the right. L2 and in-situ meet at a matchup node that feeds L3; in-situ also enters L4 through assimilation.
+:alt: The satellite chain L0 to L5 on the left; in-situ networks for ocean, atmosphere, land and ice at the bottom right. L2 and in-situ meet at a matchup node that feeds L3 and yields matchup pairs for validation and bias correction; in-situ also enters L4 directly through assimilation.
 :width: 100%
 
 **Satellite and in-situ observations converge through matchup.**
 
 In-situ networks in every domain join the satellite chain through
-spatiotemporal {term}`matchup` between L2 and L3, and enter L4 through
-assimilation. They have no L0 or L1 equivalent.
+spatiotemporal {term}`matchup` between L2 and L3, and enter L4 directly
+through assimilation. They have no L0 or L1 equivalent. Matchup also yields
+the pairs that validate and bias-correct the satellite stream: the misfits
+that drive the loops of [](#fig-modeling-cycle).
 ```
 
 The matchup pattern is canonical and deserves its own operator family
@@ -289,10 +318,16 @@ data on its way into a model ([](#fig-three-layers)).
 
 ```{figure} images/overview/three_layers.svg
 :label: fig-three-layers
-:alt: Scientific data becomes ML-ready data through harmonisation and tensorisation, which becomes embeddings through compression and latent mapping. Each layer lists the packages that own it.
+:alt: Scientific data (observations as GeoTensors, states as xarray) becomes ML-ready tensors with provenance through harmonisation and patching (geopatcher), which geonnax encoders compress into latent embeddings; a dashed decode arrow maps latents back to fields. Each layer lists what it is, its array shape and the packages that own it.
 :width: 100%
 
 **Scientific data, ML-ready data, embeddings, and who owns each.**
+
+The first step is data engineering (GeoStack), the second representation
+learning (GeoML). The middle layer is the handoff that makes training
+reproducible: cached, CF-compliant tensors with content-addressed splits.
+Decoders run the chain backwards, which is what emulators and generative
+models do.
 ```
 
 (sec-six-steps)=
@@ -304,14 +339,18 @@ composable.
 
 ```{figure} images/overview/six_steps.svg
 :label: fig-six-steps
-:alt: Five steps in a row, from simple model to amortized inference. Step 2 validates steps 3 to 5. A shared improve step sits under steps 2 to 5 with two-way links.
+:alt: Five steps in a row, from simple model to amortized inference, each with its defining equation. Step 1 simulates (θ, y) pairs that train steps 3 and 5; step 2 validates steps 3 to 5. A shared improve step under steps 2 to 5 lists each step's ground truth, the step before it. An axis below shows the cost per query falling from hours to milliseconds.
 :width: 100%
 
 **From a simple model to amortized inference, with one shared improve step.**
 
 Step 2, the classical method, is the {term}`oracle` that validates steps
-3–5. Step 6 is shared: any of steps 2–5 can be improved, using the previous
-step as ground truth.
+3–5; it is the inner loop of [](#fig-modeling-cycle). Step 1 also
+simulates the (θ, y) pairs that train the emulator and the amortized map.
+Step 6 is shared: any of steps 2–5 can be improved, using the previous step
+as ground truth, and changing the structure is the outer loop. Moving right,
+the cost of each query falls from hours to milliseconds because the training
+cost is paid once, up front.
 ```
 
 In symbols: let θ be the quantity we want (an emission rate, a model
@@ -382,7 +421,7 @@ contract.
 
 | Step | Lives in |
 |---|---|
-| 1 · Simple model | Tier 3 domain libraries (`somax`, `plumax`) |
+| 1 · Simple model | GeoModels (`somax`, `plumax`, `radtrax`) |
 | 2 · Model-based inference | `pipekit-cycle.DACycle` with classical analysis steps |
 | 3 · Emulator | `pipekit-train.SimulationDataset`, registered in `pipekit-experiment.ModelRegistry` |
 | 4 · Emulator-based inference | `pipekit-cycle.DACycle` with `NeuralForward` |
@@ -400,10 +439,15 @@ and somewhere on the six-step cycle (production maturity).
 
 ```{figure} images/overview/axes_matrix.svg
 :label: fig-axes-matrix
-:alt: A grid with lifecycle transitions as rows, from calibration to forecast, and steps 1 to 5 as columns. Each cell names a method; the step-2 column is highlighted as the oracle.
+:alt: A grid with the five lifecycle steps as rows, from read and calibrate (detector counts to radiance) to derive (heatwave return levels), each with a running example, and steps 1 to 5 as columns headed by their equations. Each cell names a method and what it does on the example; the step-2 column is highlighted as the oracle. Arrows above show step 3 scored against step 1, and steps 4 and 5 against step 2.
 :width: 100%
 
-**Every transition crossed with every step is a concrete method.**
+**Every lifecycle step crossed with every six-step stage is a concrete method.**
+
+Each row follows one running example from a simple model to an amortized
+map: radiance from detector counts, methane from shortwave infrared, sea
+level from altimeter tracks, the ocean state from sea-level maps, and
+heatwave return levels.
 ```
 
 **Every cell is a benchmarkable artifact,** scored against the earlier step
@@ -418,61 +462,71 @@ lineage is content-addressed, and nothing is opaque.
 (sec-stack)=
 ## The big picture stack
 
-Two zoom levels: the tiers first, then the packages inside Tier 4.
+Two zoom levels: the layers first, then the packages inside GeoStack.
 
 (sec-tiers)=
-### Seven tiers
+### Four layers
 
 ```{figure} images/overview/tier_stack.svg
 :label: fig-tier-stack
-:alt: Seven stacked tiers, from the external ecosystem at the bottom through owned numerical, algorithm, domain and pipeline tiers to external orchestration and serving at the top.
+:alt: Four owned layers between external foundations at the bottom and external orchestration and serving at the top. GeoStack (data) and GeoNumerics (numerics) sit side by side at the bottom, GeoML (learning and inference) on both, GeoModels (physics) on top; imports point down. georeader is marked third-party and read-only.
 :width: 100%
 
-**The stack in seven tiers.**
+**The stack in four layers.**
 
-Solid tiers are owned; dashed tiers are external. `georeader` sits in Tier 0
-as the GeoTensor substrate.
+Each layer has one job: GeoStack moves data in and out, GeoNumerics does
+structured numerics, GeoML learns and infers, GeoModels simulates physics.
+Imports point down, and GeoStack and GeoNumerics never import each other
+([](#fig-dependency-graph) and `tests/test_dependency_graph.py` check it).
+Dashed rows are external; `georeader` belongs to GeoStack but is
+spaceml-org's, read here and never written.
 ```
 
 (sec-tier4)=
-### Tier 4, zoomed in
+### GeoStack, zoomed in
 
-Most current work happens in the framework and infrastructure tier
-([](#fig-tier4-map)).
+Most current work happens in the GeoStack layer ([](#fig-tier4-map)).
 
 ```{figure} images/overview/tier4_map.svg
 :label: fig-tier4-map
-:alt: Three groups: the pipekit framework packages, the ML-loop packages, and the infrastructure peers geocatalog, geopatcher and geocatalog's state profile, with georeader as an external substrate.
+:alt: The GeoStack layer. The pipekit core (pipekit, pipekit-array, pipekit-jax) at the bottom; above it two carrier columns, GeoTensor for observations and xarray for states, in rows by job: read (georeader, geoproducts; xrreader), index (geocatalog; the proposed geocatalog.states), transform (geoops; xrtoolz, xrcore, xrgrad, xreinx, xrsklearn), patch (geopatcher, either carrier) and store (geocloud, either carrier). The carrier-neutral ML loops (pipekit-cycle, -train, -experiment, -evaluate) on top.
 :width: 100%
 
-**The pipekit framework, the ML loops built on it, and the infrastructure peers.**
+**One pipekit core, two carriers, the same jobs on both.**
+
+Row by row, the GeoTensor side and the xarray side do the same job on a
+different carrier; patching and storage serve both. The ML loops on top
+never see which carrier they run on.
 ```
 
 (sec-dependencies)=
 ### The dependency graph
 
-[](#fig-dependency-graph) shows which reference packages import which.
+[](#fig-dependency-graph) shows which repositories import which.
 
 ```{figure} images/overview/dependency_graph.svg
 :label: fig-dependency-graph
-:alt: Three family panels. Every pipekit package depends on pipekit; xrtoolz builds on xrtoolz-core, which depends on pipekit; geotoolz depends on pipekit, and every geotoolz-family package depends on georeader. Dashed edges are optional extras.
+:alt: The 18 repositories in four layer bands: GeoModels on top, GeoML below, GeoNumerics and GeoStack side by side at the bottom. Edges point down from each repository to those it depends on or imports; dashed edges are optional extras; the geotoolz and pipekit cycle is drawn in red. georeader is marked third-party.
 :width: 100%
 
-**How the reference packages import each other.**
+**How the repositories import each other.**
 
-Drawn from the packages' own metadata. Solid edges are dependencies, dashed
-edges optional extras.
+Drawn from the generated graph on the
+[dependency-graph page](api/dependency_graph.md), which
+`tests/test_dependency_graph.py` keeps current; that page has the
+package-level detail and the table of known violations. Solid edges are
+dependencies or imports, dashed edges optional extras, and red edges a cycle.
 ```
 
 (sec-ownership)=
 ### Ownership rules
 
-A package imports only from tiers below it, so there are no circular
+A package imports only from layers below it, so there are no circular
 dependencies; geotoolz and xrtoolz re-export the common framework symbols,
 so user code usually imports a single package. The three stacks of [the decision](#sec-decision) each have
 their rules: GeoStack's (pipekit and its packages, geocatalog, geopatcher,
 geotoolz and xrtoolz) are [Report 16's](reports/16_geo_data_stack.md#r16-ownership),
-and GeoModels' (somax, plumax, radtrax, on top of the Numerics layer) are on
+and GeoModels' (somax, plumax, radtrax, on top of the GeoNumerics layer) are on
 [the package boundaries page](geomodels/package_boundaries.md#pb-rules).
 GeoML's rules are stated only here: the JAX libraries touch pipekit only
 through an optional adapter module, never in their core.
@@ -505,10 +559,14 @@ emission estimates, with ML at several stages.
 
 ```{figure} images/overview/methane_walkthrough.svg
 :label: fig-methane-walkthrough
-:alt: Eight steps: catalog, read and retrieve, match with in-situ, grid and gap-fill, assimilate, index, evaluate, register and serve; each linked to the package that handles it.
+:alt: Five science steps down the left, grouped into stages 1 to 4: catalog the scenes, retrieve methane (L1 to L2), match with in-situ, grid and gap-fill (L2 to L3), assimilate hourly (L3 to L4). Each arrow names the data that flows, with its level, carrier and shape; each step names its packages and where ML enters. EMIT scenes, TCCON columns and CAMS and aircraft references come in from the right. Along the bottom, stage 5's engineering steps: index outputs, evaluate, register and serve; evaluation feeds the misfit back to assimilation.
 :width: 100%
 
 **Eight steps from cataloguing scenes to serving estimates.**
+
+Stages 1–4 are the science, stage 5 the engineering around it. Each arrow
+names what flows to the next step; the dashed arrow is the inner loop of
+[](#fig-modeling-cycle), the misfit that updates the state and parameters.
 ```
 
 :::{seealso}
@@ -544,11 +602,13 @@ least-squares amplitude of t in the whitened residual:
 \hat\alpha_i = \frac{(x_i - \mu)^\top \Sigma^{-1} t}{t^\top \Sigma^{-1} t}
 ```
 
-The classical filter {eq}`eq-matched-filter` is step 2 of the
-[six-step cycle](#sec-six-steps) for the L1→L2 cell; its derivation is in
-[radtrax · 1](geomodels/radtrax/01_column_retrieval.md#rx1-stage-5). A
-learned retrieval takes the same slot in the pipeline, and the filter stays
-as its oracle.
+The matched filter {eq}`eq-matched-filter` is the fast classical
+enhancement estimate; its derivation is in
+[radtrax · 1](geomodels/radtrax/01_column_retrieval.md#rx1-stage-5). The
+full-physics retrieval, optimal estimation on a radiative-transfer model, is
+step 2 of the [six-step cycle](#sec-six-steps) for the L1→L2 cell
+([](#fig-axes-matrix)). A learned retrieval takes the same slot in the
+pipeline, and optimal estimation stays as its oracle.
 
 (sec-stage-matchup)=
 ### Stage 2 · Match with in-situ (step 3: geocatalog matchup)
@@ -676,86 +736,84 @@ an ETL job ([case 2](reports/09_use_cases.md#r9-case-2)), a FastAPI endpoint
 integration design).
 
 (sec-tier-briefs)=
-## Per-tier briefs
+## Per-layer briefs
 
-A compact summary per package. Where a report or a GeoModels page covers a
-package, the brief is a link to it.
+A compact summary per package, by layer ([](#fig-tier-stack)). Where a
+report or a GeoModels page covers a package, the brief is a link to it.
 
 ::::{tab-set}
 
-:::{tab-item} Tier 0 · Substrate
-**georeader** (external, but central) owns `GeoTensor`, the raster carrier,
-and the reader infrastructure (`RasterioReader`, `AsyncGeoTIFFReader`).
-Everything raster-shaped builds on it.
+:::{tab-item} External
+**The JAX ecosystem**: JAX, Equinox, lineax, optax, diffrax, NumPyro and
+matfree.
 
-**The xarray ecosystem** (external): `DataArray`, `Dataset` and `DataTree`,
-plus rioxarray, xvec, cf-xarray, regionmask, xskillscore, dask and intake.
+**The xarray ecosystem**: `DataArray`, `Dataset` and `DataTree`, plus
+rioxarray, xvec, cf-xarray, regionmask, xskillscore, dask and intake.
 :::
 
-:::{tab-item} Tier 1 · Numerics
+:::{tab-item} GeoStack
+**georeader** (third-party, spaceml-org's; read-only here) owns
+`GeoTensor`, the raster carrier, and the reader infrastructure
+(`RasterioReader`, `AsyncGeoTIFFReader`). Everything raster-shaped builds
+on it.
+
+| Package | What it does | Read |
+|---|---|---|
+| `pipekit` | The operator framework: fourteen groups (A–N) | [Report 2](reports/02_pipekit_surface.md#r2-inventory), [Report 1](reports/01_toolz_primer.md) |
+| `pipekit-array` | Array-API operators | [Report 3](reports/03_sister_libraries.md#r3-array) |
+| `pipekit-jax` | A model wrapper and a diffrax forward model; the operator layer is proposed | [Report 5](reports/05_pipekit_jax.md) |
+| `pipekit-cycle` | Time stepping and DA cycles | [Report 10](reports/10_pipekit_cycle.md) |
+| `pipekit-train` | Training pipelines | [Report 11](reports/11_pipekit_train.md) |
+| `pipekit-experiment` | Model registry and tracking | [Report 12](reports/12_pipekit_experiment.md) |
+| `pipekit-evaluate` | The benchmark ladder | [Report 14](reports/14_pipekit_evaluate.md), [Report 15](reports/15_benchmarking.md), [Report 17](reports/17_cycle.md) |
+| `geotoolz` | GeoTensor operators for remote sensing | [Report 3](reports/03_sister_libraries.md#r3-geotoolz) |
+| `geocatalog` (ships as `geotoolz-catalog`) | Find, index, join and load files | [Report 6](reports/06_geocatalog.md) |
+| `geopatcher` (ships as `geotoolz-patcher`) | Split, process and stitch patches | [Report 7](reports/07_geopatcher.md) |
+| `geocatalog.states` (proposed state profile) | A catalog for model states | [Report 13](reports/13_state_catalog.md) |
+| `xrtoolz` | xarray operators for ocean, atmosphere and reanalysis | [Report 3](reports/03_sister_libraries.md#r3-xrtoolz) |
+
+geotoolz and xrtoolz share the same pipekit operator algebra; only the
+carrier differs.
+:::
+
+:::{tab-item} GeoNumerics
 | Package | What it does |
 |---|---|
 | `gaussx` | Structured linear algebra, Gaussian primitives, exponential family; wraps lineax and matfree |
-| `geonnax` | Basis functions, neural layers and coordinate transforms (`lonlat_to_cartesian3d`) |
-| `kernellib` | Covariance kernels and tapers |
 | `spectraldiffx` | Pseudospectral differentiation, filters, PDE solvers |
 | `finitevolx` | Arakawa C-grid finite-volume operators |
-| `optax_bayes` | The Bayesian learning rule as optax gradient transformations |
-| `eqx-trainer` | A minimal JAX / equinox training loop |
 
 Pure math with no domain knowledge: all `eqx.Module`-based, jittable and
 JAX-traceable. See the [gaussx example](#ex-gaussx).
 :::
 
-:::{tab-item} Tier 2 · Algorithms
+:::{tab-item} GeoML
 | Package | What it does |
 |---|---|
-| `pyrox` | GP and Bayesian deep-learning building blocks for NumPyro hierarchical models (a split into `nnox` + `pyrox` is planned) |
-| `filterax` | Differentiable ensemble Kalman methods |
+| `geonnax` | Basis functions, neural layers and coordinate transforms (`lonlat_to_cartesian3d`) |
+| `kernellib` | Covariance kernels and scalable kernel methods |
+| `pyrox` | GP and Bayesian deep-learning building blocks for NumPyro models |
 | `vardax` | Learnable variational DA (3D- and 4D-Var) |
+| `filterax` | Differentiable ensemble Kalman methods |
 | `gauss_flows` | Rotation-based Gaussianization and normalizing flows |
 | `xtremax` | Extreme-value and point-process models; computes the L5 extremes |
-| `fairkl` | Fairness-constrained kernel learning (Keras 3) |
-| `keras-nerf` | Neural fields for state estimation (Keras 3) |
-| `keras-flows` | Normalizing flows (Keras 3) |
+| `optax_bayes` | The Bayesian learning rule as optax gradient transformations |
 
-Keras 3 and Equinox are equal-status backends. Each algorithm's adapter
-(`*.adapters.pipekit`) makes it composable into pipekit pipelines. See the
+Each library's adapter (`*.adapters.pipekit`) makes it composable into
+pipekit pipelines; the core never imports pipekit. See the
 [filterax example](#ex-filterax).
 :::
 
-:::{tab-item} Tier 3 · Domain
+:::{tab-item} GeoModels
 | Package | What it does | Read |
 |---|---|---|
 | `somax` | Ocean and atmosphere model zoo | — |
 | `plumax` | Atmospheric plume transport | [plumax · 1](geomodels/plumax/01_emission_rate.md), [package boundaries](geomodels/package_boundaries.md) |
-| `radtrax` | Differentiable radiative transfer, formerly rtmx (proposed; does not exist yet) | [radtrax · 3](geomodels/radtrax/03_design.md) |
-| `methanex` | End-to-end methane remote sensing (planned; no repository yet) | — |
-| `geotoolz` | GeoTensor operators for remote sensing | [Report 3](reports/03_sister_libraries.md#r3-geotoolz) |
-| `xrtoolz` | xarray operators for ocean, atmosphere and reanalysis | [Report 3](reports/03_sister_libraries.md#r3-xrtoolz) |
+| `radtrax` | Differentiable radiative transfer (formerly rtmx) | [radtrax · 3](geomodels/radtrax/03_design.md) |
 
 The forward models each ship a thin `adapters/pipekit.py` that exposes the
 operator surface (`ForwardModel`, `ObservationOperator`, …) without touching
-the algorithmic core. geotoolz and xrtoolz share the same Tier 4 peers: the
-substrate differs, the operator algebra is identical.
-:::
-
-:::{tab-item} Tier 4 · Pipelines
-**pipekit**, the framework: fourteen groups (A–N), listed in
-[Report 2's inventory](reports/02_pipekit_surface.md#r2-inventory), with its
-lineage in [Report 1](reports/01_toolz_primer.md).
-
-| Package | Report |
-|---|---|
-| `pipekit-array` | [Report 3](reports/03_sister_libraries.md#r3-array) |
-| `pipekit-jax` | [Report 5](reports/05_pipekit_jax.md): 0.0.2 ships a model wrapper and a diffrax forward model; the operator layer is proposed |
-| `pipekit-cycle` | [Report 10](reports/10_pipekit_cycle.md) |
-| `pipekit-train` | [Report 11](reports/11_pipekit_train.md) |
-| `pipekit-experiment` | [Report 12](reports/12_pipekit_experiment.md) |
-| `pipekit-evaluate` | [Report 14](reports/14_pipekit_evaluate.md), [Report 15](reports/15_benchmarking.md), [Report 17](reports/17_cycle.md) |
-| `geocatalog` (ships as `geotoolz-catalog`) | [Report 6](reports/06_geocatalog.md) |
-| `geopatcher` (ships as `geotoolz-patcher`) | [Report 7](reports/07_geopatcher.md) |
-| `geocatalog.states` (proposed state profile) | [Report 13](reports/13_state_catalog.md) |
+the algorithmic core.
 :::
 ::::
 
@@ -844,7 +902,7 @@ decision.
   with its output carrier ([Report 16, workstream E](reports/16_geo_data_stack.md#r16-ws-e)).
 - **Which stack somax and spectraldiffx belong to.** Rule 5 of the
   [package boundaries](geomodels/package_boundaries.md#pb-rules) puts somax
-  in GeoModels and spectraldiffx and finitevolx in Numerics. methanex is
+  in GeoModels and spectraldiffx and finitevolx in GeoNumerics. methanex is
   still unplaced.
 :::
 
@@ -918,9 +976,9 @@ Each phase produces packages that are useful on their own ([](#tbl-phases)).
 
 | Phase | Scope | Status | Time |
 |---|---|---|---|
-| 1 | Numerical foundation: gaussx (v0.0.6), geonnax, kernellib, spectraldiffx, finitevolx, optax_bayes, eqx-trainer | gaussx done; the rest drafts | ongoing |
-| 2 | Algorithms: pyrox, filterax, vardax, gauss_flows, xtremax | in progress | each at its own pace |
-| 3 | Domain models: somax, plumax, radtrax and methanex (both planned) | some done | project-driven |
+| 1 | GeoNumerics: gaussx (v0.0.6), spectraldiffx, finitevolx | gaussx done; the rest drafts | ongoing |
+| 2 | GeoML: geonnax, kernellib, optax_bayes, pyrox, filterax, vardax, gauss_flows, xtremax | in progress | each at its own pace |
+| 3 | GeoModels: somax, plumax, radtrax | some done | project-driven |
 | 4 | Pipeline framework | **current focus** | ~3–4 months |
 | 5 | Evaluation, benchmarks and cycle discipline | next | ~2 months |
 | 6 | Deferred items, each with a trigger | when projects demand | — |
@@ -1029,13 +1087,14 @@ several reuse the walkthrough's closed-form stages as oracles
 
 ```{figure} images/overview/roadmap.svg
 :label: fig-roadmap
-:alt: Phases 4 and 5 as six monthly boxes from top to bottom, each followed by a diamond naming the gates that must pass before the next month starts. Phases 1 to 3 run alongside and feed adapters into month 3; phases 6 and 7 follow the last gate.
+:alt: Phases 4 and 5 as six monthly boxes from top to bottom, each with its status (shipped, in progress or planned) and followed by a diamond naming the gates, with their pass conditions, that close it. Phases 1 to 3, one per lower layer (GeoNumerics, GeoML, GeoModels), run alongside and feed the DA adapters in month 3 and the models trained in month 4; phases 6 and 7 follow the last gate.
 :width: 100%
 
 **The framework ships first; every month closes on its gates.**
 
-Phases 1–3 run alongside and meet the chain when the DA adapters land in
-month 3. Phases 6 and 7 wait for projects to pull them.
+Phases 1–3, one per lower layer, run alongside and meet the chain twice:
+the DA adapters land in month 3 and the GeoML models are trained in month 4.
+Phases 6 and 7 wait for projects to pull them.
 ```
 
 :::{table} Gates: what must pass before each month closes.

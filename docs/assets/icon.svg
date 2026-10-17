@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="GeoStack">
+<title>GeoStack</title>
+<defs><linearGradient id="ic" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1D4ED8"/><stop offset="1" stop-color="#0D9488"/></linearGradient></defs><g transform="translate(0 0) scale(1)"><rect x="4" y="4" width="120" height="120" rx="26" fill="url(#ic)"/><rect x="26" y="32.0" width="76" height="16" rx="4" fill="#FFFFFF" fill-opacity="1.0"/><rect x="26" y="56.0" width="76" height="16" rx="4" fill="#FFFFFF" fill-opacity="0.8"/><rect x="26" y="80.0" width="34.0" height="16" rx="4" fill="#FFFFFF" fill-opacity="0.6"/><rect x="68.0" y="80.0" width="34.0" height="16" rx="4" fill="#FFFFFF" fill-opacity="0.6"/></g>
+</svg>

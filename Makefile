@@ -169,8 +169,9 @@ capabilities: ## Regenerate the capability indexes, one per layer (docs/api/capa
 	pixi run -e geoml python scripts/capabilities.py --layer geoml
 	pixi run -e geomodels python scripts/capabilities.py --layer geomodels
 
-dependency-graph: ## Regenerate the dependency graph in README.md and docs/api/dependency_graph.md
+dependency-graph: ## Regenerate the dependency graph in README.md, docs/api/dependency_graph.md and its figure
 	uv run python scripts/dependency_graph.py
+	uv run --no-project python docs/images/overview/make_figures.py
 
 docs-deploy: ## Deploy documentation to GitHub Pages
 	BASE_URL=/geostack uv run --group docs myst build --html
