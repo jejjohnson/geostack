@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from html import escape
+from itertools import pairwise
 from pathlib import Path
 
 
@@ -1542,46 +1543,202 @@ def dependency_graph() -> Svg:
     return f
 
 
-WALK = [  # (step, name, level, packages)
-    ("1", "Catalog the scenes", "", "geocatalog"),
-    ("2", "Read + retrieve", "L1 → L2", "georeader + geotoolz"),
-    ("3", "Match with in-situ", "", "geocatalog.matchup"),
-    ("4", "Grid + gap-fill", "L2 → L3", "pyrox via pipekit"),
+# (step, title, method, packages, level, ML role); a package in PROPOSED_PKGS
+# is drawn dashed
+WALK = [
+    (
+        "1",
+        "Catalog the scenes",
+        "find EMIT scenes over the area; mask clouds",
+        ["geocatalog"],
+        None,
+        None,
+    ),
+    (
+        "2",
+        "Retrieve methane",
+        "matched filter (fast); optimal estimation is its oracle",
+        ["georeader", "geotoolz", "radtrax"],
+        "L1 → L2",
+        "learned retrieval, optional",
+    ),
+    (
+        "3",
+        "Match with in-situ",
+        "nearest retrieval within 3 h and 25 km",
+        ["geocatalog"],
+        "L2 + in-situ",
+        None,
+    ),
+    (
+        "4",
+        "Grid + gap-fill",
+        "Gaussian-process prior on the methane field",
+        ["pyrox", "pipekit"],
+        "L2 → L3",
+        "Gaussian process",
+    ),
     (
         "5",
-        "Data assimilation",
+        "Assimilate hourly",
+        "ensemble Kalman filter, plume forward model",
+        ["pipekit-cycle", "plumax", "filterax"],
         "L3 → L4",
-        "pipekit-cycle.EnsembleDACycle + filterax, plumax",
+        "emulator, optional",
     ),
-    ("6", "Index outputs", "", "geocatalog.states"),
-    ("7", "Evaluate", "multi-track", "pipekit-evaluate  (vs CAMS, vs aircraft)"),
-    ("8", "Register + serve", "", "pipekit-experiment + FastAPI / LitServe"),
 ]
+WALK_ENG = [
+    ("6", "Index outputs", "states by space and time", ["geocatalog.states"]),
+    ("7", "Evaluate", "against CAMS, aircraft, held-out TCCON", ["pipekit-evaluate"]),
+    (
+        "8",
+        "Register + serve",
+        "content-addressed model, an API",
+        ["pipekit-experiment", "FastAPI"],
+    ),
+]
+# what flows down the science column, between steps k and k + 1
+WALK_DATA = [
+    "scene list: paths + footprints",
+    "enhancement map: L2 · GeoTensor (H, W)",
+    "matchup pairs · M rows",
+    "gridded field: L3 · xarray (T, N)",
+    "analysis: L4 ensemble · (Nₑ, T, N)",
+]
+
+
+def _walk_box(f, x, y, w, h, n, title, method, pkgs, hue, level=None, ml=None):
+    f.rect(x, y, w, h, stroke=hue[0], fill=hue[1])
+    f.text(x + 16, y + 26, n, size=14, color=hue[0], anchor="start", weight=700)
+    f.text(x + 38, y + 26, title, size=14, color=INK, anchor="start", weight=700)
+    if level:
+        f.text(
+            x + w - 14, y + 26, level, size=11, color=hue[0], anchor="end", weight=700
+        )
+    f.text(x + 38, y + 45, method, size=11.5, color=MUTED, anchor="start")
+    cx = x + 38
+    for p in pkgs:
+        label = f"{p} · proposed" if p in PROPOSED_PKGS else p
+        cx += (
+            f.chip(
+                cx,
+                y + 54,
+                label,
+                hue=(LINE, CARD),
+                dashed=p in PROPOSED_PKGS,
+                size=10.5,
+                h=20,
+                pad=7,
+            )
+            + 6
+        )
+    if ml:
+        label = f"ML · {ml}"
+        f.chip(
+            x + w - 14 - _width(label, 10.5) - 14,
+            y + 54,
+            label,
+            hue=ML,
+            size=10.5,
+            h=20,
+            pad=7,
+        )
 
 
 def methane_walkthrough() -> Svg:
     f = Svg(
-        1000,
-        560,
-        "The methane attribution walkthrough: eight steps from"
-        " cataloguing scenes to serving estimates, each handled by one"
-        " package, crossing L1 to L4.",
+        1200,
+        930,
+        "The methane walkthrough: five science steps down the left (catalog,"
+        " retrieve, match with in-situ, gap-fill, assimilate), each labelled with"
+        " the data that flows to the next, its level, its packages and where ML"
+        " enters; three engineering steps along the bottom (index, evaluate,"
+        " register and serve). Evaluation feeds the misfit back to assimilation.",
     )
-    y0, rh = 30, 64
-    for i, (n, name, lvl, pkg) in enumerate(WALK):
-        y = y0 + i * rh
-        hue = STATE if lvl in ("L3 → L4",) or i >= 5 else OBS
-        f.rect(24, y, 300, 46, stroke=hue[0], fill=hue[1])
-        f.text(44, y + 29, n, size=15, color=hue[0], anchor="start", weight=700)
-        f.text(70, y + 29, name, size=13.5, color=INK, anchor="start", weight=600)
-        if lvl:
-            f.chip(342, y + 10, lvl, hue=(BORDER, PANEL), size=11.5, h=24, pad=9)
-        f.arrow([(464, y + 23), (522, y + 23)], color=LINE, dashed=True)
-        f.rect(526, y, 450, 46, stroke=BORDER, fill=CARD)
-        f.text(544, y + 28, pkg, size=13, color=INK, anchor="start")
-        if i < len(WALK) - 1:
-            f.arrow([(174, y + 46 + 1), (174, y + rh - 1)], color=INK)
-    f.h = y0 + len(WALK) * rh + 6
+    x, w, h, gap = 230, 500, 80, 60
+    ys = [60 + k * (h + gap) for k in range(len(WALK))]
+    for (n, title, method, pkgs, level, ml), y in zip(WALK, ys, strict=True):
+        hue = OBS if n in "123" else STATE
+        _walk_box(f, x, y, w, h, n, title, method, pkgs, hue, level, ml)
+    for k, label in enumerate(WALK_DATA[:-1]):
+        y0, y1 = ys[k] + h, ys[k + 1]
+        f.arrow([(x + 60, y0 + 2), (x + 60, y1 - 2)], color=INK)
+        f.text(x + 74, (y0 + y1) / 2 + 4, label, size=11.5, color=INK, anchor="start")
+    # Stages, as brackets on the left.
+    for label, sub, k0, k1 in [
+        ("Stage 1", "retrieve", 0, 1),
+        ("Stage 2", "match", 2, 2),
+        ("Stage 3", "gap-fill", 3, 3),
+        ("Stage 4", "assimilate", 4, 4),
+    ]:
+        top, bot = ys[k0] + 4, ys[k1] + h - 4
+        f.parts.append(
+            f'<path d="M{x - 14},{top} L{x - 22},{top} L{x - 22},{bot} L{x - 14},{bot}"'
+            f' fill="none" stroke="{MUTED}" stroke-width="1.4"/>'
+        )
+        mid = (top + bot) / 2
+        f.text(x - 34, mid - 2, label, size=12, color=INK, anchor="end", weight=700)
+        f.text(x - 34, mid + 14, sub, size=11.5, color=MUTED, anchor="end")
+    # Inputs from the right.
+    ix = 800
+    for k, label in [
+        (0, "EMIT scenes · L1 radiances (B, H, W)"),
+        (2, "TCCON columns · training / held-out sites"),
+    ]:
+        cy = ys[k] + h / 2
+        f.chip(ix, cy - 13, label, hue=(LINE, CARD), size=11.5, h=26, pad=10)
+        f.arrow([(ix - 2, cy), (x + w + 2, cy)], color=MUTED)
+    # Engineering lane along the bottom.
+    ey, ew, eh = ys[-1] + h + 80, 300, 80
+    exs = [x - 10, x - 10 + ew + 20, x - 10 + 2 * (ew + 20)]
+    f.arrow([(x + 60, ys[-1] + h + 2), (x + 60, ey - 2)], color=INK)
+    f.text(x + 74, ys[-1] + h + 44, WALK_DATA[-1], size=11.5, color=INK, anchor="start")
+    for (n, title, method, pkgs), ex in zip(WALK_ENG, exs, strict=True):
+        _walk_box(f, ex, ey, ew, eh, n, title, method, pkgs, ENG)
+    for a, b in pairwise(exs):
+        f.arrow([(a + ew + 2, ey + eh / 2), (b - 2, ey + eh / 2)], color=INK)
+    f.parts.append(
+        f'<path d="M{exs[0]},{ey - 12} L{exs[0]},{ey - 20} L{exs[2] + ew},{ey - 20}'
+        f' L{exs[2] + ew},{ey - 12}" fill="none" stroke="{ENG[0]}" stroke-width="1.4"/>'
+    )
+    f.text(
+        exs[2] + ew,
+        ey - 28,
+        "Stage 5 · index, evaluate, register: engineering",
+        size=12,
+        color=ENG[0],
+        anchor="end",
+        weight=700,
+    )
+    # References for evaluation.
+    rx, ry = x + w + 40, ys[-1] + 4
+    f.chip(
+        rx,
+        ry,
+        "CAMS reanalysis · aircraft campaigns",
+        hue=(LINE, CARD),
+        size=11.5,
+        h=26,
+        pad=10,
+    )
+    f.arrow([(exs[1] + ew - 20, ry + 28), (exs[1] + ew - 20, ey - 2)], color=MUTED)
+    # The inner loop: evaluation feeds the misfit back to assimilation.
+    lx = x + w + 22
+    f.arrow(
+        [(lx, ey - 2), (lx, ys[-1] + h / 2), (x + w + 2, ys[-1] + h / 2)],
+        color=STATE[0],
+        dashed=True,
+    )
+    f.text(
+        lx - 8,
+        ys[-1] + h + 30,
+        "misfit: inner loop, update x and θ",
+        size=11.5,
+        color=STATE[0],
+        anchor="end",
+        weight=600,
+    )
+    f.h = int(ey + eh + 24)
     return f
 
 

@@ -559,10 +559,14 @@ emission estimates, with ML at several stages.
 
 ```{figure} images/overview/methane_walkthrough.svg
 :label: fig-methane-walkthrough
-:alt: Eight steps: catalog, read and retrieve, match with in-situ, grid and gap-fill, assimilate, index, evaluate, register and serve; each linked to the package that handles it.
+:alt: Five science steps down the left, grouped into stages 1 to 4: catalog the scenes, retrieve methane (L1 to L2), match with in-situ, grid and gap-fill (L2 to L3), assimilate hourly (L3 to L4). Each arrow names the data that flows, with its level, carrier and shape; each step names its packages and where ML enters. EMIT scenes, TCCON columns and CAMS and aircraft references come in from the right. Along the bottom, stage 5's engineering steps: index outputs, evaluate, register and serve; evaluation feeds the misfit back to assimilation.
 :width: 100%
 
 **Eight steps from cataloguing scenes to serving estimates.**
+
+Stages 1–4 are the science, stage 5 the engineering around it. Each arrow
+names what flows to the next step; the dashed arrow is the inner loop of
+[](#fig-modeling-cycle), the misfit that updates the state and parameters.
 ```
 
 :::{seealso}
@@ -598,11 +602,13 @@ least-squares amplitude of t in the whitened residual:
 \hat\alpha_i = \frac{(x_i - \mu)^\top \Sigma^{-1} t}{t^\top \Sigma^{-1} t}
 ```
 
-The classical filter {eq}`eq-matched-filter` is step 2 of the
-[six-step cycle](#sec-six-steps) for the L1→L2 cell; its derivation is in
-[radtrax · 1](geomodels/radtrax/01_column_retrieval.md#rx1-stage-5). A
-learned retrieval takes the same slot in the pipeline, and the filter stays
-as its oracle.
+The matched filter {eq}`eq-matched-filter` is the fast classical
+enhancement estimate; its derivation is in
+[radtrax · 1](geomodels/radtrax/01_column_retrieval.md#rx1-stage-5). The
+full-physics retrieval, optimal estimation on a radiative-transfer model, is
+step 2 of the [six-step cycle](#sec-six-steps) for the L1→L2 cell
+([](#fig-axes-matrix)). A learned retrieval takes the same slot in the
+pipeline, and optimal estimation stays as its oracle.
 
 (sec-stage-matchup)=
 ### Stage 2 · Match with in-situ (step 3: geocatalog matchup)
