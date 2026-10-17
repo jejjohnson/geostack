@@ -219,55 +219,112 @@ def _width(s: str, size: float) -> float:
 
 def modeling_cycle() -> Svg:
     f = Svg(
-        1120,
-        380,
-        "The modeling cycle: the real-world system is both modelled"
-        " (abstract, then equations and code, then predictions) and observed"
-        " (sensor, measurements, observations); the two tracks meet where"
-        " predictions are compared with observations, and the model is refined.",
+        680,
+        710,
+        "The modeling cycle: the real-world system is both modelled (a"
+        " conceptual model, written as equations and code, makes predictions)"
+        " and observed (a sensor records measurements, processed into"
+        " observations). The tracks meet where predictions are compared with"
+        " observations. A random misfit feeds the inner loop, which estimates"
+        " the state and parameters and runs the model again; a systematic"
+        " misfit feeds the outer loop, which changes the model's structure or"
+        " the observing system.",
     )
-    f.box(24, 185, 150, 80, "Real-world", ["system"])
-    f.text(214, 176, "MODELING", size=11, color=ML[0], anchor="start", weight=700)
-    f.text(214, 366, "OBSERVING", size=11, color=OBS[0], anchor="start", weight=700)
-    f.box(214, 102, 120, 56, "Abstract")
-    f.box(380, 60, 150, 48, "Equations", ["analysis"], hue=ML)
-    f.box(380, 152, 150, 48, "Code", ["simulation"], hue=ML)
-    f.box(580, 102, 140, 56, "Predictions", hue=ML)
-    f.box(214, 292, 120, 56, "Sensor", hue=OBS)
-    f.box(380, 292, 150, 56, "Measurements", hue=OBS)
-    f.box(580, 292, 140, 56, "Observations", hue=OBS)
-    f.box(790, 197, 170, 56, "Compare", ["predictions vs observations"], hue=ENG)
-    f.box(1000, 197, 96, 56, "Refine", ["the model"])
-    f.arrow([(174, 210), (194, 210), (194, 130), (212, 130)])
-    f.arrow([(174, 240), (194, 240), (194, 320), (212, 320)])
-    f.arrow([(334, 120), (357, 120), (357, 84), (378, 84)])
-    f.arrow([(334, 140), (357, 140), (357, 176), (378, 176)])
-    f.arrow(
-        [(530, 84), (555, 84), (555, 120), (578, 120)],
-        label="derive",
-        at=(560, 76),
-        label_anchor="start",
-    )
-    f.arrow(
-        [(530, 176), (555, 176), (555, 140), (578, 140)],
-        label="simulate",
-        at=(560, 194),
-        label_anchor="start",
-    )
-    f.arrow([(334, 320), (378, 320)], label="record", at=(356, 312))
-    f.arrow([(530, 320), (578, 320)], label="process", at=(554, 312))
-    f.arrow([(720, 130), (875, 130), (875, 195)], color=ML[0])
-    f.arrow([(720, 320), (875, 320), (875, 255)], color=OBS[0])
-    f.arrow([(960, 225), (998, 225)])
-    f.arrow([(1048, 197), (1048, 34), (274, 34), (274, 100)], color=INK)
+    t = 20  # everything below the outer loop's label
+    left, right = 168, 476  # column centres: modeling, observing
+    # the outer loop's label, above everything it encloses
     f.text(
-        661,
-        26,
-        "iterate: add complexity only when validation demands it",
+        28,
+        34,
+        "outer loop · slow: change the structure only when validation demands it",
         size=12,
         color=INK,
         weight=500,
+        anchor="start",
     )
+    f.box(247, 30 + t, 150, 52, "Real-world", ["system"])
+    f.arrow([(247, 56 + t), (left, 56 + t), (left, 124 + t)])
+    f.arrow([(397, 56 + t), (right, 56 + t), (right, 124 + t)])
+    f.text(44, 112 + t, "MODELING", size=11, color=ML[0], anchor="start", weight=700)
+    f.text(561, 112 + t, "OBSERVING", size=11, color=OBS[0], anchor="end", weight=700)
+    # row 1: what is modelled and what observes it
+    f.box(78, 126 + t, 180, 52, "Conceptual model")
+    f.box(391, 126 + t, 170, 52, "Sensor", hue=OBS)
+    # row 2; every step label sits just right of its arrow
+    f.box(44, 226 + t, 118, 50, "Equations", ["analysis"], hue=ML)
+    f.box(174, 226 + t, 118, 50, "Code", ["simulation"], hue=ML)
+    f.box(391, 226 + t, 170, 50, "Measurements", hue=OBS)
+    f.arrow([(left, 178 + t), (left, 196 + t), (103, 196 + t), (103, 224 + t)])
+    f.arrow([(left, 196 + t), (233, 196 + t), (233, 224 + t)])
+    f.text(109, 214 + t, "formulate", size=11.5, color=MUTED, anchor="start")
+    f.text(239, 214 + t, "implement", size=11.5, color=MUTED, anchor="start")
+    f.arrow([(right, 178 + t), (right, 224 + t)])
+    f.text(right + 6, 206 + t, "record", size=11.5, color=MUTED, anchor="start")
+    # row 3: the two things compared
+    f.box(78, 324 + t, 180, 50, "Predictions", hue=ML)
+    f.box(391, 324 + t, 170, 50, "Observations", hue=OBS)
+    f.arrow([(103, 276 + t), (103, 300 + t), (160, 300 + t), (160, 322 + t)])
+    f.arrow([(233, 276 + t), (233, 300 + t), (176, 300 + t), (176, 322 + t)])
+    f.text(109, 293 + t, "derive", size=11.5, color=MUTED, anchor="start")
+    f.text(239, 293 + t, "simulate", size=11.5, color=MUTED, anchor="start")
+    f.arrow([(right, 276 + t), (right, 322 + t)])
+    f.text(right + 6, 304 + t, "process", size=11.5, color=MUTED, anchor="start")
+    # compare
+    f.box(232, 420 + t, 180, 56, "Compare", ["predictions vs observations"], hue=ENG)
+    f.arrow([(left, 374 + t), (left, 448 + t), (230, 448 + t)], color=ML[0])
+    f.arrow([(right, 374 + t), (right, 448 + t), (414, 448 + t)], color=OBS[0])
+    # the misfit decides the loop
+    f.box(
+        44,
+        536 + t,
+        250,
+        72,
+        "Estimate",
+        ["state x: data assimilation", "parameters θ: calibration"],
+        hue=STATE,
+    )
+    f.box(
+        372,
+        536 + t,
+        210,
+        72,
+        "Refine the model",
+        ["equations, code,", "sensors, processing"],
+    )
+    f.arrow([(300, 476 + t), (300, 500 + t), (169, 500 + t), (169, 534 + t)])
+    f.arrow([(344, 476 + t), (344, 500 + t), (477, 500 + t), (477, 534 + t)])
+    f.text(234, 494 + t, "random misfit", size=11.5, color=MUTED)
+    f.text(410, 494 + t, "systematic misfit", size=11.5, color=MUTED)
+    # inner loop: same model, new state and parameters, run again
+    f.arrow(
+        [(44, 572 + t), (24, 572 + t), (24, 349 + t), (76, 349 + t)],
+        color=STATE[0],
+    )
+    f.text(
+        44,
+        634 + t,
+        "inner loop · fast: update x and θ, run the same model again",
+        size=12,
+        color=STATE[0],
+        weight=500,
+        anchor="start",
+    )
+    # outer loop: round the whole figure, back to the conceptual model
+    f.arrow(
+        [
+            (582, 572 + t),
+            (664, 572 + t),
+            (664, 14),
+            (10, 14),
+            (10, 152 + t),
+            (76, 152 + t),
+        ],
+        color=INK,
+    )
+    # ...and, dashed, to the observing system
+    f.arrow([(664, 152 + t), (563, 152 + t)], color=INK, dashed=True)
+    f.text(612, 124 + t, "more or", size=11.5, color=MUTED)
+    f.text(612, 138 + t, "better data", size=11.5, color=MUTED)
     return f
 
 

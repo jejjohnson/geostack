@@ -172,15 +172,21 @@ every operation sits somewhere on all three.
 
 ```{figure} images/overview/modeling_cycle.svg
 :label: fig-modeling-cycle
-:alt: The real-world system feeds two tracks. Modeling runs abstract, equations and code, predictions. Observing runs sensor, measurements, observations. Both meet at compare; refine loops back to abstract.
-:width: 100%
+:alt: The real-world system feeds two tracks. Modeling runs conceptual model, equations and code, predictions. Observing runs sensor, measurements, observations. Both meet at compare. A random misfit goes to estimate (state by data assimilation, parameters by calibration), whose inner loop updates the predictions; a systematic misfit goes to refine the model, whose outer loop returns to the conceptual model and, dashed, to the sensor.
+:width: 70%
 
-**The modeling cycle runs on two parallel tracks.**
+**The modeling cycle runs on two parallel tracks and two loops.**
 
-The modeling track abstracts the real-world system into equations and code
-that make predictions. The observing track measures the same system with
-sensors and turns measurements into observations. The tracks meet where
-predictions are compared with observations, and the model is refined.
+The modeling track turns a conceptual model of the real-world system into
+equations and code that make predictions. The observing track measures the
+same system with sensors and turns measurements into observations. The
+tracks meet where predictions are compared with observations, and the misfit
+decides which loop runs. A random misfit, one the error model explains, runs
+the fast inner loop: **state estimation** (data assimilation) updates the
+state $x$, **parameter estimation** (calibration) updates the parameters
+$\theta$, and the same model runs again. A systematic misfit runs the slow
+outer loop: the model's structure changes, or the observing system does
+(more or better data, better processing).
 ```
 
 :::{important} Start simple
