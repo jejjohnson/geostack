@@ -34,9 +34,10 @@ The labeled lane (xarray and coordax) stays outside the type and gets its own co
 - **B. Geometry primitives.** Window maths, slicing and crops live partly in `GeoTensor` and partly in georeader internals that geopatcher imports.
   geoarray owns every operation that re-indexes or re-describes pixels without changing their values, written once for both backends.
 - **C. Backends and interop.** Code has to cross between NumPy, JAX and georeader without guessing.
-  `to_jax`, `to_numpy` and a georeader adapter are explicit, and nothing converts implicitly.
+  `to_jax`, `to_numpy` and a georeader adapter are explicit.
+  NumPy functions also accept JAX carriers eagerly, and inside `jit`, `grad` or `vmap` a geoarray error replaces JAX's.
 - **D. Carrier migration.** Five packages import `GeoTensor` directly.
-  geoops learns both carriers first, then readers return `GeoArray`, then georeader leaves the base dependencies.
+  All five switch to `GeoArray` in one breaking release, with no period in which an operator accepts both carriers.
 - **E. JAX kernels.** Value-changing kernels (warp, resample, CRS maths) get a JAX implementation in `geoops.functional`, next to the NumPy one.
   geoarray never holds them.
 
@@ -88,8 +89,8 @@ Each is recommended with its alternative; flip any before the issues open.
 | A4 | Default fill value | `None` (no fill), set explicitly by readers | Keep georeader's `0` for parity |
 | B1 | Arithmetic | `g.map(f)` and `geoarray.combine(f, *gs)`; no dunders | Dunders with an eager grid check that skips under `jit` |
 | B2 | Per-band attrs on band selection | geoarray slices `band_names`, `wavelengths` and the other per-band keys | Leave it to geoops's `wrap_like`, as today |
-| C1 | Implicit NumPy interop for JAX data | `np.asarray(g)` on a JAX `GeoArray` raises | Allow it with a host transfer, as `jax.Array.__array__` does |
-| D1 | Migration style | Dual carrier in geoops for one release, then readers switch | Big-bang switch in one release |
+| C1 | NumPy interop for JAX data | **Decided 17 Oct 2026:** allow it eagerly with a host copy, raise a geoarray error inside `jit`, `grad` or `vmap`, and promote mixed inputs to JAX | `np.asarray(g)` on a JAX carrier always raises |
+| D1 | Migration style | **Decided 17 Oct 2026:** one coordinated breaking release; `GeoTensor` is never accepted next to `GeoArray` | A dual-carrier release in geoops first: two code paths in every operator |
 
 ## Running example: one methane plume, two sensors
 
@@ -638,7 +639,7 @@ Every move between backends or libraries is an explicit call, and each one is a 
 | `g.to_jax(device=None)` | NumPy → JAX | `jax.device_put` for data and transform; raises if x64 is off (A2) |
 | `g.to_numpy()` | JAX → NumPy | host copy of data and transform |
 | `np.asarray(g)` | NumPy carrier → `np.ndarray` | the data, so geoops's `np.asarray(x)` keeps working |
-| `np.asarray(g)` on a JAX carrier | — | raises, naming `to_numpy` (decision C1) |
+| `np.asarray(g)` on a JAX carrier | JAX → `np.ndarray` | eager: a host copy; inside `jit`, `grad` or `vmap`: raises `GeoArrayTraceError` (C1) |
 | `from_georeader(gt)`, `to_georeader(g)` | `GeoTensor` ↔ `GeoArray` | `geoarray[georeader]`; NumPy only; values, transform, CRS, fill and attrs carried over |
 | `Grid.affine`, `Grid.from_affine` | `affine.Affine` ↔ `Grid` | `affine` is a small BSD-licensed base dependency, already used by geoops |
 | `to_xarray`, `to_coordax` and their inverses | labeled lane | [Labeled lane](./02_labeled_lane.md) |
@@ -650,7 +651,7 @@ from geoarray.interop.georeader import from_georeader, to_georeader
 # proposed (C): GeoTensor → GeoArray, zero-copy for the data
 g: ga.GeoArray = from_georeader(gt)
 
-# proposed (C): explicit device move; no implicit conversion anywhere
+# proposed (C): explicit device move
 g_jax = g.to_jax()
 
 # proposed (C): back to a GeoTensor for code that still needs one
@@ -659,7 +660,37 @@ gt_back = to_georeader(g_jax.to_numpy())
 
 `g.xp` returns the array namespace through `array_api_compat`, so a function written against `xp` runs on both backends.
 `g.backend` returns `"numpy"` or `"jax"` for dispatch tables.
-Mixing backends in one call (`combine` of a NumPy and a JAX carrier) raises, following the Array API rule against mixing namespaces.
+
+### C1. NumPy and JAX interoperate eagerly
+
+JAX and NumPy already convert to each other outside a transform: `jnp` functions accept NumPy arrays, and `np.asarray` copies a JAX array to the host.
+Inside `jit`, `grad` or `vmap` the data are tracers, which NumPy cannot read, so one check on the data catches all three transforms.
+The check for this doc confirmed it: an eager `np.asarray` on JAX data returned a NumPy array, and the same call inside each transform raised the custom error instead of JAX's `TracerArrayConversionError`.
+
+```python
+import sys
+
+import numpy as np
+
+
+# proposed (C): eager → host copy; traced → a geoarray error
+def __array__(self, dtype=None, copy=None) -> np.ndarray:
+    # tracers exist only if JAX is loaded, so NumPy-only installs never import it
+    jax_loaded = "jax" in sys.modules
+    if jax_loaded and _is_tracer(self.data):
+        raise GeoArrayTraceError(
+            "a NumPy function received GeoArray data inside jit/grad/vmap; "
+            "use the geoops.functional JAX kernel, or call it outside the transform"
+        )
+    return np.asarray(self.data, dtype=dtype)
+```
+
+Four rules make it predictable:
+
+1. **Mixed inputs promote to JAX.** `combine` of a NumPy and a JAX carrier returns a JAX carrier, as `jnp` does.
+2. **Output stays where the computation ran.** A NumPy-only operator given a JAX carrier returns a NumPy carrier; converting back would cost a second copy and hide where the data now live.
+3. **Host copies can be made visible.** `geoarray.set_options(warn_on_transfer=True)` warns once per operator that copies device data to the host, which finds the operators that need a JAX kernel.
+4. **x64 still applies.** Promotion moves a float64 transform into JAX, so the A2 check runs there too.
 
 What runs where, for geoarray's own functions:
 
@@ -675,29 +706,27 @@ What runs where, for geoarray's own functions:
 
 ## Workstream D: carrier migration
 
-geoops learns both carriers first, then each reader switches, so no package breaks in between.
+All five packages switch to `GeoArray` in one coordinated, breaking release; no operator ever accepts both carriers.
 
 | Symbol | Destination | Reason |
 | --- | --- | --- |
-| `geoops._src.wrap.wrap_like` | dispatch on `GeoArray.with_data`, then on `array_as_geotensor` | one rewrap call for both carriers |
+| `geoops._src.wrap.wrap_like` | `GeoArray.with_data` only; the `array_as_geotensor` path is removed | one carrier, one rewrap |
 | `geoops._src.valid.*` | wrappers over `GeoArray.valid_mask` | one nodata rule |
 | `geoops._src.geo.require_grid_match`, `grid_matches` | `Grid.__eq__` | exact equality, as today |
 | `geoops._src.bands.PER_BAND_KEYS` | `geoarray._src.attrs` | slicing needs it (B2) |
 | geocatalog, geocloud, geoproducts readers | return `GeoArray` | native grid, NumPy data |
 | geopatcher window helpers | `Grid.window`, `geoarray.crop` | no georeader internals |
 
-1. **Teach geoops both carriers.** `wrap_like` tries `with_data` first, so every operator accepts `GeoArray` without edits.
+1. **Switch every package on one branch per repo.** geoops rewraps through `with_data` only, and its validity, grid and band helpers call geoarray.
+   geocatalog, geocloud and geoproducts return `GeoArray`, and geopatcher replaces its seven georeader import lines with `Grid.window` and `crop`.
    A NumPy `GeoArray` implements `__array__`, so `np.asarray(x)` inside each operator keeps working.
-   Parametrise geoops's test fixtures over both carriers.
-2. **Switch the readers.** geocatalog, geocloud and geoproducts return `GeoArray`.
-   Callers that need a `GeoTensor` call `to_georeader`.
-3. **Switch geopatcher.** Replace its seven georeader import lines with `Grid.window` and `crop`.
-   Its `RasterField` adapter takes either carrier.
-4. **Deprecate `GeoTensor` input.** geoops warns once per operator when handed a `GeoTensor`, naming `from_georeader`.
-5. **Drop georeader from the base dependencies.** It moves to extras in all five packages; import-linter enforces that base modules never import it.
+2. **Reject `GeoTensor` at the door.** A `GeoTensor` is an `np.ndarray` subclass, so `np.asarray` would accept it silently as a plain array and the output would lose its georeferencing.
+   Each operator therefore checks its carriers before `np.asarray` and raises a `TypeError` naming `from_georeader`; there is no warning period.
+3. **Drop georeader from the base dependencies.** It moves to extras in all five packages; import-linter enforces that base modules never import it.
+4. **Release together.** The five packages and the umbrella publish in one release-please run, each with a `BREAKING CHANGE:` footer and a minor bump, and the umbrella pins the new set.
 
 Downstream, `radtrax.geo` and `plumax.geo` take `GeoTensor`s today (radtrax backlog RTX-30 and RTX-34).
-They follow after step 4, using the adapter until then.
+They pin geotoolz below the breaking release until they migrate; each migration is one PR that calls `from_georeader` at its own boundary.
 
 ## Workstream E: JAX kernels in geoops.functional
 
@@ -731,10 +760,10 @@ Gate IDs are "G", then the workstream letter, then a number.
 | GB3 Window round trip | B | `Grid.bounds_of(Grid.window(b)) == b` exactly for grid-aligned b, and contains b otherwise |
 | GB4 NaN nodata | B | `valid_mask` equals `geoops._src.valid.valid_pixels` on every geoops fixture, including NaN fills, where naive `!=` fails (prototype: 15 valid of 16, versus 16) |
 | GB5 Per-band attrs | B | after any band selection, every per-band key has one entry per band |
-| GC1 Backend parity | C | every geoarray function gives equal results on NumPy and JAX: exactly for indexing, to 1e-12 in float64 for `pixel_coords` |
+| GC1 Backend parity | C | every geoarray function gives equal results on NumPy and JAX: exactly for indexing, to 1e-12 in float64 for `pixel_coords`; eager `np.asarray(g)` equals `g.to_numpy().data`, and the same call raises `GeoArrayTraceError` under `jit`, `grad` and `vmap` |
 | GC2 georeader round trip | C | `from_georeader(to_georeader(g))` is identical to g, for all geoops fixtures |
 | GC3 Light base install | C | `pip install geotoolz-array` into a fresh environment installs none of jax, rasterio, georeader, xarray |
-| GD1 Dual carrier | D | geoops's full suite passes with fixtures parametrised over `GeoTensor` and `GeoArray` |
+| GD1 One carrier | D | the full suites of all five packages pass on `GeoArray` fixtures, and every geoops operator given a `GeoTensor` raises a `TypeError` naming `from_georeader` |
 | GD2 No georeader in base | D | import-linter: no base module of the five packages imports georeader |
 | GE1 Warp parity | E | JAX bilinear warp equals rasterio's bilinear reprojection to 1e-5 relative on interior pixels |
 | GE2 CRS kernels | E | each closed-form projection equals pyproj to 1 mm over its valid domain, in float64 |
@@ -758,22 +787,22 @@ Milestone, in every repo: "geoarray: one NumPy/JAX carrier for geotoolz".
        │
        ◆ GB1–GB5 GC1–GC3   → geotoolz-array 0.1.0
        │
-  3   geoops dual carrier (D, step 1)
+  3   one coordinated switch (D)
+      ops, catalog, cloud, products, patcher
+      on GeoArray only; georeader to extras
        │
-       ◆ GD1               → geotoolz-ops 0.11.0
+       ◆ GD1 GD2           → one breaking release: ops 0.11, catalog 0.6,
+       │                     cloud 0.5, products 0.5, patcher 0.11,
+       │                     geotoolz 0.11
+  4a  JAX kernels         ┃  4b  radtrax[geo], plumax[geo]
+      in geoops (E)       ┃      migrate (pinned until then)
        │
-  4a  readers return      ┃  4b  geopatcher on    ┃  4c  JAX kernels
-      GeoArray (D, 2)     ┃      geoarray (D, 3)  ┃      in geoops (E)
-       │
-       ◆ GE1 GE2 GE3       → catalog 0.6, cloud 0.5, products 0.5,
-       │                     patcher 0.11, ops 0.12
-  5   deprecate GeoTensor input, drop georeader (D, 4–5)
-       │
-       ◆ GD2               → geotoolz 0.11.0; radtrax[geo], plumax[geo] follow
+       ◆ GE1 GE2 GE3       → ops 0.12
 ```
 
 Phase 1 is the only one that blocks everything else, and it is small: the prototype for this doc is under 200 lines.
-Phases 2a and 2b run in parallel, as do 4a, 4b and 4c.
+Phases 2a and 2b run in parallel, as do 4a and 4b.
+Phase 3 lands as one PR per repo, merged and released together.
 
 ## Limitations
 
@@ -797,12 +826,16 @@ These come with the design; each has a workaround rather than a fix.
 - **L9. JAX's CRS coverage is a subset.** Six closed-form projections run inside `jit`; any other CRS works only on NumPy data, through pyproj.
 - **L10. No in-place writes.** `write_window` returns a new carrier, as JAX requires.
   NumPy code that relied on `write_from_window` mutating a mosaic buffer must assign the result.
+- **L11. Eager interop copies silently.** A chain of NumPy-only operators on GPU data copies device to host at every step (C1).
+  The result is slow, not wrong, and `warn_on_transfer` finds the operators that need a JAX kernel.
 
 ## Risks
 
-- **Two carriers for longer than planned.** The dual-carrier phase could stretch while downstream repos catch up.
-  Fallback: the georeader adapter is zero-copy, so `GeoTensor` users can stay on it indefinitely without blocking geotoolz releases.
-- **Per-band attrs disagree between geoarray and `wrap_like`.** Slicing (B2) and rewrapping could apply different rules during phase 3.
+- **The coordinated release breaks a downstream user.** radtrax, plumax or a notebook still passes `GeoTensor`s on the day it lands.
+  Fallback: they pin geotoolz below the breaking release, and the zero-copy `from_georeader` at their boundary makes each migration a few lines.
+- **A `GeoTensor` slips through as a plain array.** Because it is an ndarray, an operator that skips the carrier check would accept it and drop its georeferencing without an error.
+  Fallback: the check lives in the one rewrap path every operator uses, and gate GD1 sends a `GeoTensor` to every operator.
+- **Per-band attrs disagree between geoarray and `wrap_like`.** Slicing (B2) and rewrapping could apply different rules while the switch is in progress.
   Fallback: both import one `PER_BAND_KEYS` from geoarray, and gate GB5 runs inside geoops's suite too.
 - **x64 rejected by users.** Downstream training code may refuse a global float64 switch.
   Fallback: implement the A2 alternative behind the same `GeoArray` API, since only `to_jax` and the transform update functions change.
@@ -815,7 +848,7 @@ These come with the design; each has a workaround rather than a fix.
 
 ## Before opening the issues
 
-- [ ] Decisions A1–A4, B1, B2, C1 and D1 confirmed or flipped.
+- [ ] Decisions A1–A4, B1 and B2 confirmed or flipped (C1 and D1 decided 17 Oct 2026).
 - [ ] Package name confirmed: `geotoolz-array`, import `geoarray`, with its own icon like the other subpackages.
 - [ ] geotoolz, georeader, radtrax and plumax checked for duplicate open issues.
 - [ ] Companion page [Labeled lane](./02_labeled_lane.md) reviewed, so the converters' extras exist when geoarray 0.1.0 ships.
