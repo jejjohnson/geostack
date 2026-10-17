@@ -53,8 +53,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import rasterio.transform  # noqa: E402
 from georeader.geotensor import GeoTensor  # noqa: E402
-from geotoolz.plume import CrossSectionalFlux, IMEEstimate  # noqa: E402
-from geotoolz.plume._src.array import plume_length  # noqa: E402
+from geoops.plume import CrossSectionalFlux, IMEEstimate  # noqa: E402
+from geoops.plume._src.array import plume_length  # noqa: E402
 from plumax.gauss_plume import get_dispersion_params, plume_concentration  # noqa: E402
 from plumax.gauss_puff.puff import puff_concentration  # noqa: E402
 from scipy import integrate  # noqa: E402

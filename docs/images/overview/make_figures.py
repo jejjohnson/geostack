@@ -440,7 +440,7 @@ def lifecycle() -> Svg:
     )
     span = {  # role: [(first level, last level, label, hue, dashed)]
         "transform": [
-            (1, 2, "geotoolz", OBS, False),
+            (1, 2, "geoops", OBS, False),
             (3, 4, "xrtoolz", STATE, False),
             (5, 5, "xtremax", DERIVED, False),
         ],
@@ -596,7 +596,7 @@ def three_layers() -> Svg:
             "Scientific data",
             "L0 → L4, both streams",
             OBS,
-            ["georeader · geocatalog", "geotoolz / xrtoolz", "geocatalog.states"],
+            ["georeader · geocatalog", "geoops / xrtoolz", "geocatalog.states"],
         ),
         (
             "ML-ready",
@@ -1197,13 +1197,13 @@ def dependency_graph() -> Svg:
     )
 
     # geotoolz family (all dashed edges are optional extras).
-    node("geotoolz", 1020, 100, hue=OBS)
+    node("geoops", 1020, 100, hue=OBS)
     node("geoproducts", 1200, 100)
     node("geopatcher", 1020, 210)
     node("geocloud", 1200, 210)
     node("geocatalog", 1110, 310)
-    edge("geoproducts", "geotoolz", dashed=True)
-    edge("geotoolz", "geopatcher", dashed=True)
+    edge("geoproducts", "geoops", dashed=True)
+    edge("geoops", "geopatcher", dashed=True)
     f.arrow([(1050, 119), (1170, 191 - 2)], color=LINE, dashed=True, width=1.4)
     edge("geoproducts", "geocloud", dashed=True)
     edge("geopatcher", "geocloud", dashed=True)
@@ -1220,7 +1220,7 @@ def dependency_graph() -> Svg:
         color=OBS[0],
         width=1.6,
     )
-    f.text(560, 442, "geotoolz → pipekit", size=11.5, color=OBS[0], weight=600)
+    f.text(560, 442, "geotoolz-ops → pipekit", size=11.5, color=OBS[0], weight=600)
     node("georeader", 1110, 490, hue=EXT, dashed=True)
     f.arrow([(1110, 420), (1110, 490 - bh / 2 - 2)], color=OBS[0], width=1.6)
     f.text(
@@ -1251,7 +1251,7 @@ def dependency_graph() -> Svg:
 
 WALK = [  # (step, name, level, packages)
     ("1", "Catalog the scenes", "", "geocatalog"),
-    ("2", "Read + retrieve", "L1 → L2", "georeader + geotoolz"),
+    ("2", "Read + retrieve", "L1 → L2", "georeader + geoops"),
     ("3", "Match with in-situ", "", "geocatalog.matchup"),
     ("4", "Grid + gap-fill", "L2 → L3", "pyrox via pipekit"),
     (

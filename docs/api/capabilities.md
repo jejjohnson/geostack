@@ -17,7 +17,7 @@ This page is the GeoStack layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at pipekit 0.0.2, pipekit-array 0.0.2, pipekit-cycle 0.0.2, pipekit-evaluate 0.0.2, pipekit-experiment 0.0.2, pipekit-jax 0.0.2, pipekit-train 0.0.2, georeader-spaceml 2.4.1, geotoolz 0.10.2, geotoolz-catalog 0.5.1, geotoolz-cloud 0.4.1, geotoolz-patcher 0.10.2, geotoolz-products 0.4.2, xrtoolz 0.0.5, xrtoolz-core 0.0.2, xrtoolz-einx 0.0.1, xrtoolz-grad 0.0.3, xrtoolz-reader 0.0.4, xrtoolz-sklearn 0.0.2.
+Listed at pipekit 0.0.2, pipekit-array 0.0.2, pipekit-cycle 0.0.2, pipekit-evaluate 0.0.2, pipekit-experiment 0.0.2, pipekit-jax 0.0.2, pipekit-train 0.0.2, georeader-spaceml 2.4.1, geotoolz-ops 0.10.3, geotoolz-catalog 0.5.1, geotoolz-cloud 0.4.1, geotoolz-patcher 0.10.2, geotoolz-products 0.4.2, xrtoolz 0.0.5, xrtoolz-core 0.0.2, xrtoolz-einx 0.0.1, xrtoolz-grad 0.0.3, xrtoolz-reader 0.0.4, xrtoolz-sklearn 0.0.2.
 
 ## Upstream: `pipekit`
 
@@ -279,11 +279,11 @@ Raster reading and the GeoTensor carrier.
 |---|---|---|
 | `spatial_mosaic` | function | Create a spatial mosaic by filling gaps with data from overlapping rasters. |
 
-## Upstream: `geotoolz`
+## Upstream: `geotoolz-ops`
 
 Composable remote-sensing operators on GeoTensor.
 
-### `geotoolz`
+### `geoops`
 
 | Name | Kind | What it does |
 |---|---|---|

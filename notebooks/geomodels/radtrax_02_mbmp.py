@@ -52,7 +52,7 @@ matplotlib.rcParams["svg.hashsalt"] = "radtrax_02"  # stable SVG ids across reru
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import xarray as xr  # noqa: E402
-from geotoolz.plume import SBMP  # noqa: E402
+from geoops.plume import SBMP  # noqa: E402
 from plumax.radtran.nb_lut import NBLookup, build_nb_lut, inject_plume  # noqa: E402
 from plumax.radtran.srf import SpectralResponseFunction  # noqa: E402
 from scipy.ndimage import gaussian_filter  # noqa: E402
