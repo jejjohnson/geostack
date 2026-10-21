@@ -284,7 +284,7 @@ alpha_map = score(scene)
 alpha_cube = score(cube)
 
 # and under jit on a JAX carrier; mu, Σ⁻¹ and t become leaves (next section)
-alpha_jax = eqx.filter_jit(score.to_jax())(jscene)
+alpha_jax = eqx.filter_jit(pipekit_jax.to_jax(score))(jscene)
 ```
 
 In the matched filter, x is a pixel spectrum, μ the background mean, Σ the background covariance and t the CH₄ target; C is the number of bands.
@@ -292,7 +292,8 @@ In the matched filter, x is a pixel spectrum, μ the background mean, Σ the bac
 ## Fitted operators and JAX
 
 A `KernelOp` whose parameters are plain config (an `eps`, a dim name) is a plain `Operator`; inside `jit` its parameters are constants.
-One that holds arrays (a background mean, a covariance, learned weights) needs those arrays as pytree leaves under `jit` and `grad`. pipekit-jax already solves that with `JaxOperator`, so the JAX shell is generated, not written:
+One that holds arrays (a background mean, a covariance, learned weights) needs those arrays as pytree leaves under `jit` and `grad`. pipekit-jax already solves that with `JaxOperator`, so the JAX shell is generated, not written.
+The conversion lives in pipekit-jax, not on `KernelOp`: pipekit-jax already depends on pipekit-array (through pipekit-cycle's `[array]` extra), so an edge from pipekit-array to pipekit-jax, even behind an extra, would be a workspace cycle.
 
 ```python
 # NumPy and xarray: a plain Operator
@@ -300,7 +301,7 @@ score = KernelOp(matched_filter_score, "(c)->()", core={"c": "band"}, mu=mu, sig
 
 # JAX: the same kernel and spec as a JaxOperator (an eqx.Module);
 # array parameters are leaves, spec and dim names are static
-jscore = score.to_jax()
+jscore = pipekit_jax.to_jax(score)
 
 # compile with Equinox's filter, since the module holds arrays
 alpha = eqx.filter_jit(jscore)(jscene)
@@ -322,15 +323,15 @@ alpha_map = fitted(scene)
 | Operator holds | Base | Compile with |
 | --- | --- | --- |
 | config only | `KernelOp` (`Operator`) | `jax.jit` on a function that calls it |
-| arrays (fitted or learned) | `KernelOp.to_jax()` → `JaxOperator` under `pipekit-array[jax]` | `eqx.filter_jit`; learnable fields use `converter=jnp.asarray` |
+| arrays (fitted or learned) | `pipekit_jax.to_jax(op)` → `JaxOperator`, in pipekit-jax | `eqx.filter_jit`; learnable fields use `converter=jnp.asarray` |
 
 ## Migration
 
 | Package | Change |
 | --- | --- |
 | pipekit | `Signature.matches`, `Signature.from_pattern`; the adapter interface (`NamedArrayAdapter`) and its registry, so `compute_output_signature` finds an adapter without importing pipekit-array |
-| pipekit-array | registers its adapters in pipekit's registry; `Named`, the dim-level functions and operators, `KernelSpec`, `KernelOp`; `[xarray]` adapter; `[jax]` extra for `KernelOp.to_jax()` (pulls pipekit-jax) |
-| pipekit-jax | none; `JaxOperator` is reused as is |
+| pipekit-array | registers its adapters in pipekit's registry; `Named`, the dim-level functions and operators, `KernelSpec`, `KernelOp`; `[xarray]` adapter; no JAX extra and no edge to pipekit-jax |
+| pipekit-jax | `to_jax(op)`, which builds a `JaxOperator` from a `KernelOp`; an `[array]` extra declares the pipekit-array edge it already has through pipekit-cycle |
 | xrtoolz | `xrcore.Signature` becomes a re-export of `pipekit.Signature` for one release, then goes |
 | geoarray | registers its adapter (grid checks, georeference-preserving `rewrap`, `map_over` over transform rows); stops opting out of `Signature` |
 | geoops | the 106 `axis=-3` kernels become `KernelOp`s with a core-dim mapping; geometry operators stay hand-written |
@@ -361,4 +362,4 @@ pipekit-array ships a test kit so every carrier library proves the same things:
 | P3 | Core dim names in the spec | abstract letters plus a `core=` mapping, so the same kernel serves `dim="band"` and `dim="variable"` | carrier dim names written in the spec |
 | P4 | Home of the xarray adapter | pipekit-array `[xarray]`, shared by geoarray and xrtoolz | xrcore |
 | P5 | `Dataset` and `DataTree` | `DataArray` only at first; `Dataset` and `DataTree` dispatch stays in xrops (today's xrcore DataTree dispatch) | adapters for both in pipekit-array |
-| P6 | `to_jax()` dependency | `pipekit-array[jax]` pulls pipekit-jax and equinox | `to_jax` lives in pipekit-jax instead |
+| P6 | `to_jax()` dependency | **Forced by the dependency rules (review of #60):** `pipekit_jax.to_jax` lives in pipekit-jax, because pipekit-jax → pipekit-cycle → pipekit-array already exists and the reverse edge would close a cycle | — |
