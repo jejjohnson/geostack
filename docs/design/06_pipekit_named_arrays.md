@@ -356,7 +356,7 @@ pipekit-array ships a test kit so every carrier library proves the same things:
 
 | ID | Question | Recommended | Alternative |
 | --- | --- | --- | --- |
-| P1 | Registry location | **Decided (review of #60):** the interface and registry in pipekit core, the adapters and the dim-level functions in pipekit-array, which registers them. pipekit-array already depends on pipekit, so a lookup from core into pipekit-array, lazy or not, would be a workspace cycle | — |
+| P1 | Registry location | **Forced by the dependency rules (review of #60):** the interface and registry in pipekit core, the adapters and the dim-level functions in pipekit-array, which registers them. pipekit-array already depends on pipekit, so a lookup from core into pipekit-array, lazy or not, would be a workspace cycle | — |
 | P2 | Where a kernel's spec is declared | at the operator layer (`KernelOp(kernel, "(c)->()", …)`), so L1 packages need no pipekit import | a `@kernel("(c)->()")` decorator on the L1 function |
 | P3 | Core dim names in the spec | abstract letters plus a `core=` mapping, so the same kernel serves `dim="band"` and `dim="variable"` | carrier dim names written in the spec |
 | P4 | Home of the xarray adapter | pipekit-array `[xarray]`, shared by geoarray and xrtoolz | xrcore |
