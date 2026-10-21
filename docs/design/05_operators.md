@@ -234,15 +234,17 @@ A profile that never crosses the threshold (a well-mixed column, or one too shal
 ### Geometry written once at L1, wrapped per column
 
 A gradient needs grid spacing, which is geometry.
-The finite-difference kernel lives at L1 (finitevolx or finitediffx) and takes spacings as arrays; each column only derives the spacings:
+The finite-difference kernel takes spacings as arrays; each column only derives the spacings:
 
-| Column | Operator | Spacing from |
+| Column | Wrapper | Spacing from |
 | --- | --- | --- |
-| geoarray | `geoops.geom.Gradient` | the transform (`a`, `e`), or geodesic distances for a geographic CRS |
-| xarray | `xrops.Gradient` | coordinate values, with spherical metrics on lat/lon |
+| geoarray | `Gradient` on geoarray carriers | the transform (`a`, `e`), or geodesic distances for a geographic CRS |
+| xarray | `Gradient` on xarray carriers | coordinate values, with spherical metrics on lat/lon |
 
 Two thin wrappers, one kernel.
-Today's `xrtoolz-grad` (`xrgrad`) becomes the xarray wrapper.
+Where they live is constrained by the layers: GeoStack never imports GeoNumerics, so geoops and xrops cannot wrap a finitevolX kernel.
+If the kernel is finitevolX's, finitevolX owns it and both wrappers, behind `finitevolx[geo]` and `finitevolx[xarray]` (GeoNumerics may import GeoStack), as radtrax owns `model_xch4`.
+Whether today's `xrtoolz-grad` (`xrgrad`) moves there or keeps a GeoStack kernel of its own is O7.
 
 ### Families
 
@@ -296,3 +298,4 @@ Each step is a 0.X.0 bump. geoops and xrops can move in parallel once pipekit-ar
 | O4 | Lifting geometry over cubes | `geoops.lift` behind `geoops[xarray]`, so xrops never imports geoops | `xrops.ApplyGeoOp`, breaking the dependency rule |
 | O5 | How operators use `KernelOp` | by composition: an operator keeps its own config and calls a `KernelOp` inside (as `NDVI` does) | every kernel operator subclasses `KernelOp` |
 | O6 | The `backends` vocabulary | `"numpy"`, `"jax"`, `"xarray"` | backends and carrier families declared separately |
+| O7 | Where grid calculus lives | finitevolX owns the finite-difference kernels and the carrier wrappers behind `[geo]` and `[xarray]`; `xrgrad` moves there, and geoops and xrops ship no gradient | `xrops.grad` keeps a small central-difference kernel inside GeoStack for xarray users, and finitevolX stays raw arrays only; a second kernel to keep in step |

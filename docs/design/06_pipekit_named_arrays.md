@@ -94,8 +94,14 @@ class NamedArrayAdapter(Protocol):
     # static labels of one dim, or None (band names, level values)
     def labels(self, x: Any, dim: str) -> Any | None: ...
 
-    # a carrier of the same type around new data: untouched dims keep their
-    # metadata, dropped dims lose it, new dims get none
+    # select by position on named dims: the adapter slices data and every
+    # coordinate, label and geometry leaf on those dims together (band labels,
+    # point positions, transform origins, per-patch transform rows)
+    def isel(self, x: Any, indexers: dict[str, int | slice | Any]) -> Any: ...
+
+    # a carrier of the same type around new data whose kept dims are unchanged
+    # in length and order: untouched dims keep their metadata, dropped dims lose
+    # it, new dims get none; never used for selection
     def rewrap(self, x: Any, data: Any, dims: tuple[str, ...]) -> Any: ...
 
     # raise if a and b cannot be combined element by element
@@ -107,7 +113,7 @@ class NamedArrayAdapter(Protocol):
 
 
 # registration, looked up along the carrier's MRO
-pipekit_array.register_adapter(xr.DataArray, XarrayAdapter())
+pipekit.register_adapter(xr.DataArray, XarrayAdapter())
 ```
 
 | Carrier | Adapter lives in | Notes |
@@ -159,7 +165,7 @@ pipekit-array implements each of these once, over the adapter, as a function and
 
 | Function | Operator | Does | Uses from the adapter |
 | --- | --- | --- | --- |
-| `isel` | `ISel(dim=..., index=...)` | position lookup by dim name | `dims`, `data`, `rewrap` |
+| `isel` | `ISel(dim=..., index=...)` | position lookup by dim name | `isel` (only the adapter knows which coordinates and geometry to slice) |
 | `sel` | `Sel(dim=..., label=...)` | exact label lookup; no ranges, no nearest | `labels` |
 | `transpose` | `Transpose(order=...)` | reorder dims by name | `dims`, `rewrap` |
 | `reduce` | `Reduce(fn, dim=...)` | reduce over a named dim | `dims`, `rewrap` |
@@ -322,8 +328,8 @@ alpha_map = fitted(scene)
 
 | Package | Change |
 | --- | --- |
-| pipekit | `Signature.matches`, `Signature.from_pattern`; `compute_output_signature` default looks up a pipekit-array adapter lazily when pipekit-array is installed |
-| pipekit-array | adapter registry, `Named`, the dim-level functions and operators, `KernelSpec`, `KernelOp`; `[xarray]` adapter; `[jax]` extra for `KernelOp.to_jax()` (pulls pipekit-jax) |
+| pipekit | `Signature.matches`, `Signature.from_pattern`; the adapter interface (`NamedArrayAdapter`) and its registry, so `compute_output_signature` finds an adapter without importing pipekit-array |
+| pipekit-array | registers its adapters in pipekit's registry; `Named`, the dim-level functions and operators, `KernelSpec`, `KernelOp`; `[xarray]` adapter; `[jax]` extra for `KernelOp.to_jax()` (pulls pipekit-jax) |
 | pipekit-jax | none; `JaxOperator` is reused as is |
 | xrtoolz | `xrcore.Signature` becomes a re-export of `pipekit.Signature` for one release, then goes |
 | geoarray | registers its adapter (grid checks, georeference-preserving `rewrap`, `map_over` over transform rows); stops opting out of `Signature` |
@@ -350,7 +356,7 @@ pipekit-array ships a test kit so every carrier library proves the same things:
 
 | ID | Question | Recommended | Alternative |
 | --- | --- | --- | --- |
-| P1 | Registry location | pipekit-array, with a lazy lookup from pipekit core for summaries | the registry in pipekit core, functions in pipekit-array |
+| P1 | Registry location | **Decided (review of #60):** the interface and registry in pipekit core, the adapters and the dim-level functions in pipekit-array, which registers them. pipekit-array already depends on pipekit, so a lookup from core into pipekit-array, lazy or not, would be a workspace cycle | — |
 | P2 | Where a kernel's spec is declared | at the operator layer (`KernelOp(kernel, "(c)->()", …)`), so L1 packages need no pipekit import | a `@kernel("(c)->()")` decorator on the L1 function |
 | P3 | Core dim names in the spec | abstract letters plus a `core=` mapping, so the same kernel serves `dim="band"` and `dim="variable"` | carrier dim names written in the spec |
 | P4 | Home of the xarray adapter | pipekit-array `[xarray]`, shared by geoarray and xrtoolz | xrcore |

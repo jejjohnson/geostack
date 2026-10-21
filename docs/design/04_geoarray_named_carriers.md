@@ -132,7 +132,7 @@ The full op surface is not shared: the backends differ in four behaviours, not o
 | Piece | Where it lives |
 | --- | --- |
 | `isel`, `sel` (exact), `transpose`, `reduce`, `argreduce`, `take_along`, `map_over`, `stack`, `concat`, `combine` | pipekit-array, re-exported by geoarray |
-| the geoarray adapter: dims, data, labels, a `rewrap` that keeps the georeference, a `check_compatible` that compares grids and raises `GridMismatchError`, `map_over` over data and transform rows together | geoarray |
+| the geoarray adapter: dims, data, labels, an `isel` that slices coordinates and moves the transform origin, a `rewrap` that keeps the georeference, a `check_compatible` that compares grids and raises `GridMismatchError`, `map_over` over data and transform rows together | geoarray |
 | geometry functions: `sample` (H(x)), windows that move the transform, `to_rows` / `from_rows` for pixels as rows, `to_pixel` | geoarray |
 | type names and `check_dims`, built on `pipekit.Signature` patterns | geoarray (names), pipekit (rule) |
 
@@ -158,7 +158,7 @@ A new class exists only when the georeferencing changes; everything else is a na
 | --- | --- | --- | --- |
 | `GeoArray` | transform `(…, 6)` | `y x` | Sentinel-2 scenes, gridded SLA maps, a model grid |
 | `GeoSwath` | lat, lon `(…, row, col)` | `row col` | EMIT, TROPOMI, AVIRIS in sensor geometry |
-| `GeoPoints` | xy `(obs, 2)`, optional z `(obs,)` | `obs` | Argo cycles, along-track SSH, stations, plume sources |
+| `GeoPoints` | xy `(obs, 2)`, optional z `(obs,)`, optional valid `(obs,)` for padding | `obs` | Argo cycles, along-track SSH, stations, plume sources |
 
 Other dims come before the spatial ones.
 With coordax underneath, any name works; these are the conventions geoops and the converters expect:
@@ -427,12 +427,13 @@ l is the retrieval layer (L = 12), A the column averaging kernel, x the model su
 ### 8. Points against a state: a data-assimilation cost
 
 ```python
-# along-track SLA: values on obs; xy and time are leaves
+# along-track SLA, padded to a fixed N: values on obs; xy, time and valid are leaves
 obs: GeoTracks = GeoPoints(
     sla,
     dims=("obs",),
     xy=lonlat,
     time=t_obs,
+    valid=is_real,
     crs="EPSG:4326",
 )
 
@@ -441,9 +442,11 @@ obs: GeoTracks = GeoPoints(
 def cost(ssh: GeoMap, obs: GeoTracks, sigma: float) -> Float[Array, ""]:
     # H(x): bilinear sample of the state at each observation
     predicted: GeoTracks = geoarray.sample(ssh, obs)
-    # d = y − H(x)
-    d: Float[Array, "N"] = obs.data - predicted.data
-    # J(x) = ½ dᵀ R⁻¹ d, with R = σ² I
+    # m ∈ {0, 1}: 1 for a real observation, 0 for a padded slot
+    m: Bool[Array, "N"] = obs.valid
+    # d = m ⊙ (y − H(x)); padded slots give 0, never NaN, so ∇ₓJ stays finite
+    d: Float[Array, "N"] = jnp.where(m, obs.data - predicted.data, 0.0)
+    # J(x) = ½ dᵀ R⁻¹ d, with R = σ² I, over real observations only
     return 0.5 * jnp.sum(d**2) / sigma**2
 
 
@@ -452,7 +455,8 @@ grad: GeoMap = jax.grad(cost)(ssh, obs, 0.03)
 ```
 
 y is the observed SLA, H the sampling operator, R the observation-error covariance, σ the along-track noise in m.
-Positions change daily but are a leaf, so no recompile; pad each day to a fixed N with a mask.
+Positions change daily but are a leaf, so no recompile; pad each day to a fixed N, with `valid` (a boolean leaf, `False` on padding) as the mask.
+The mask goes through `jnp.where`, not a multiply: a NaN-filled pad times 0 is still NaN, and would poison both J and ∇ₓJ.
 
 ### 9. Stations with several variables
 
@@ -598,7 +602,7 @@ One 0.X.0 bump of geotoolz-array, like the GeoTensor migration.
 | --- | --- | --- |
 | G1 One trace, many scenes | a jitted kernel on 10 same-shape scenes with different transforms compiles once | the transform is not a leaf; fix first |
 | G2 Patches | 64 patches with different transforms run in one trace via `map_over`, and the stitch matches today's within float tolerance | keep patches as raw arrays inside the model, carriers outside |
-| G3 DA gradient | `jax.grad(cost)` with respect to the state works with observations padded to a fixed N | sample returns raw arrays; the carrier stops at the boundary |
+| G3 DA gradient | `jax.grad(cost)` with respect to the state works with observations padded to a fixed N, and J and ∇ₓJ are unchanged by the pad length and finite with NaN-filled padding | sample returns raw arrays; the carrier stops at the boundary |
 | G4 No JAX on I/O | geocatalog, geocloud and geoproducts import and read with JAX not installed | move the import behind `[jax]` |
 | G5 Shared functions agree | each shared function gives identical results on NumPy, JAX and xarray (dask-backed included) | drop it from the shared set |
 | G6 No silent alignment | `combine` and `stack` raise on a 10⁻⁷ m offset on every backend | the xarray path is not shared |
