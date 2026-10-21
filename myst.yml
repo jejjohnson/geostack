@@ -27,6 +27,10 @@ project:
       children:
         - file: docs/design/01_geoarray.md
         - file: docs/design/02_labeled_lane.md
+        - file: docs/design/03_package_alignment.md
+        - file: docs/design/04_geoarray_named_carriers.md
+        - file: docs/design/05_operators.md
+        - file: docs/design/06_pipekit_named_arrays.md
     - title: Reports
       children:
         - title: Across the stack
