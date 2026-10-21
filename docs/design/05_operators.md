@@ -214,7 +214,9 @@ def mixed_layer_depth(
     below = delta > threshold
     first = xp.argmax(below, axis=-1)
     # MLD = z at that level
-    return xp.take_along_axis(depth, first[..., None], axis=-1)[..., 0]
+    mld = xp.take_along_axis(depth, first[..., None], axis=-1)[..., 0]
+    # argmax of an all-False row is 0: no crossing means no MLD, so NaN
+    return xp.where(xp.any(below, axis=-1), mld, xp.nan)
 
 
 mld = KernelOp(mixed_layer_depth, "(l),(l)->()", core={"l": "level"}, threshold=0.03)
@@ -227,6 +229,7 @@ mld_map: GeoMap = mld(sigma0_volume, depth_volume)
 ```
 
 σ₀ is potential density anomaly (kg m⁻³), z depth (m), and the threshold 0.03 kg m⁻³ a common MLD criterion.
+A profile that never crosses the threshold (a well-mixed column, or one too shallow) returns NaN rather than the shallowest depth; a caller that wants the bottom depth as a fallback fills the NaNs explicitly.
 
 ### Geometry written once at L1, wrapped per column
 

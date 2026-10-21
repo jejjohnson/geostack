@@ -47,9 +47,10 @@ The shared machinery (the named-array adapter, the single `Signature`, the dim-l
 
 In one line: layers are rows (L1 shapes, L2 dim names, L3 geometry), carrier families are columns (geoarray, xarray), and an L1 kernel wrapped as a `KernelOp` runs in both columns.
 
-### Measured costs
+### Indicative costs (not yet reproducible)
 
-One run on a CPU sandbox, a 4-op normalized difference and a window, thin NumPy carrier versus `xr.DataArray`:
+One exploratory run on a CPU sandbox, a 4-op normalized difference and a window, a mock thin NumPy carrier versus `xr.DataArray`.
+No script or output from that run is committed, so these numbers motivate the design but are not results: gate G9 replaces them with a committed benchmark and its output, and the claims below stand or fall with it.
 
 | Shape | ND op, carrier | ND op, xarray | Window, carrier | Window, xarray |
 | --- | --- | --- | --- | --- |
@@ -57,7 +58,7 @@ One run on a CPU sandbox, a 4-op normalized difference and a window, thin NumPy 
 | 2 × 256 × 256 | 275 µs | 2,779 µs | 1.0 µs | 63 µs |
 | 2 × 2000 × 2000 | 48 ms | 52 ms | 2.4 µs | 96 µs |
 
-- On a full scene the difference is noise; on patches xarray is 10–200× slower per op.
+- In that run, on a full scene the difference was noise; on patches xarray was 10–200× slower per op (to be confirmed by G9).
 - Two grids whose x coordinates differ by 10⁻⁷ m, added in xarray, gave shape `(1, 4, 0)`: every pixel dropped, no error.
 - `import xarray` took about 0.57 s, against 0.11 s for NumPy.
 
@@ -124,7 +125,7 @@ The full op surface is not shared: the backends differ in four behaviours, not o
 | two inputs on different grids | refuses | refuses | inner-joins silently in plain arithmetic |
 | laziness | eager | traced under `jit` | often dask-lazy; `.data` can trigger a full compute |
 | compiles | no | yes | no |
-| per-op overhead (measured) | \~1–10 µs | \~1–10 µs eager | \~60–2,000 µs |
+| per-op overhead (indicative, G9) | \~1–10 µs | \~1–10 µs eager | \~60–2,000 µs |
 
 ### What geoarray contributes
 
@@ -406,7 +407,9 @@ def apply_column_kernel(
     return x_prior + correction
 
 
-# L3, in geotoolz: geometry in, geometry out
+# L3, in radtrax's optional [geo] extra: geometry in, geometry out.
+# GeoModels may import GeoStack, never the reverse, so a wrapper that
+# calls a radtrax kernel lives in radtrax, not in geotoolz.
 def model_xch4(ak: GeoSwathProfile, model: GeoSwathProfile, prior: GeoSwathProfile, x_prior: GeoSwathImage) -> GeoSwathImage:
     # level first, pixels flattened: (L, N)
     ak_rows: Float[Array, "L N"] = geoarray.to_rows(ak, dim="level")
@@ -545,7 +548,7 @@ Some ops sit on both sides.
 
 | Repo or package | Row (layer) | Column (carriers) | What changes |
 | --- | --- | --- | --- |
-| gaussx, finitevolx, spectraldiffx, somax, radtrax, plumax, geonnax | L1 | none: raw arrays | nothing imports geotoolz; jaxtyping signatures are the contract; consumed axes last, so kernels lift through `KernelOp` |
+| gaussx, finitevolx, spectraldiffx, somax, radtrax, plumax, geonnax | L1 core; L3 wrappers behind a `[geo]` extra | raw arrays in the core; geoarray carriers in `[geo]` | the core never imports geotoolz; carrier wrappers that call their own kernels (e.g. radtrax's `model_xch4`) sit behind `[geo]`, since GeoModels may import GeoStack but not the reverse; jaxtyping signatures are the contract; consumed axes last, so kernels lift through `KernelOp` |
 | pipekit, pipekit-array | L2 machinery | every registered carrier | the adapter, one `Signature`, the dim-level functions, `KernelSpec` / `KernelOp` ([pipekit page](./06_pipekit_named_arrays.md)) |
 | geoarray | L3 types, adapter, geometry functions | geoarray carriers | stored dims, standard coordinates, readable types, `GeoSwath`, `GeoPoints`, its adapter, lossless xarray converters |
 | geocatalog, geocloud, geoproducts | produce carriers | both: acquisitions as geoarray carriers, cubes as xarray carriers | readers name their dims; stay JAX-free and xarray-optional |
@@ -601,6 +604,7 @@ One 0.X.0 bump of geotoolz-array, like the GeoTensor migration.
 | G6 No silent alignment | `combine` and `stack` raise on a 10⁻⁷ m offset on every backend | the xarray path is not shared |
 | G7 Lossless round trip | `from_xarray(to_xarray(g))` returns the same transform, dims and coordinates for random windows and rotated grids; the #463 and #464 regression cases pass | conventions are fixed before release |
 | G8 Patch overhead | 10k patches through a 5-op chain cost no more than today's carrier plus a budget you set | profile and cut before release |
+| G9 Reproducible costs | a committed benchmark script times the normalized difference and the window on the carrier and on xarray at the three shapes above, writes its output to a tracked file, and those numbers replace the indicative table | drop the per-op cost argument from this page |
 
 ## Plan
 
@@ -631,7 +635,7 @@ P5 JAX-first kernels in GeoModels
 
 | Phase | Scope | Gate |
 | --- | --- | --- |
-| P0 Spike | the carrier with stored dims for a matched-filter kernel, a 64-patch `map_over` and the DA cost; the shared functions on NumPy, JAX and xarray | G1–G8 |
+| P0 Spike | the carrier with stored dims for a matched-filter kernel, a 64-patch `map_over` and the DA cost; the shared functions on NumPy, JAX and xarray; the cost benchmark | G1–G9 |
 | P1 geoarray 0.2.0 | carrier, `geoarray.coords`, `geoarray.types`, `check_dims`, shared functions, `combine` / `stack`, `GeoSwath`, `GeoPoints`, `to_xarray` / `from_xarray`; `ndim` inference deprecated | the 0.1.x suite passes with only the deprecation warning |
 | P2 I/O | readers name dims; swath readers return `GeoSwath` | G4 |
 | P3 geopatcher | `batch_split` returns `GeoPatches`; stitch reads transform rows | G2 |
