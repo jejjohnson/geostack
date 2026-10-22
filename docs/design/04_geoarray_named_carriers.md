@@ -21,6 +21,16 @@ numbering:
   code: true
 ---
 
+**Later work.**
+The proposal to put xrops one tier above geoops was decided on 22 Oct 2026 and now lives in the [operators doc](./05_operators.md) (pipekit-array → geoops → xrops, geoops base slimmed first); the geoops and xrops rows below follow it.
+The [GeoStack vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh) (findings F1–F17) are still open.
+
+:::{note} How this page relates to the earlier design pages
+It builds on [](./01_geoarray.md) (the GeoTensor → GeoArray design) and supersedes its positional `DIMS[-ndim:]` convention with stored, named dims.
+It also changes one decision in [](./02_labeled_lane.md): coordax is an optional converter only, not the foundation of the JAX lane, so that page's coordax `AffineGrid` workstream is superseded (static coordinates would recompile per scene).
+Its CF `spatial_ref` + `GeoTransform` encoding still stands, and is the recommended answer to Q2 here.
+:::
+
 ## Decision
 
 geoarray is the geometry vocabulary of the stack: one family of thin carriers for NumPy and JAX, standard coordinates, readable type names, and a short list of dim-level functions that also work on xarray carriers.
@@ -47,6 +57,27 @@ The shared machinery (the named-array adapter, the single `Signature`, the dim-l
 
 In one line: layers are rows (L1 shapes, L2 dim names, L3 geometry), carrier families are columns (geoarray, xarray), and an L1 kernel wrapped as a `KernelOp` runs in both columns.
 
+### Primitives, operators, algorithms
+
+Every package writes its numerics as primitives on arrays, operators on carriers above them, and algorithms on readable geo types at the top.
+Worked out in the [proposal](https://claude.ai/artifact/1hckwsJhWZTAzEhWJZpe3u); adopted here.
+
+| Level | Takes | Never takes | Under `jit` |
+| --- | --- | --- | --- |
+| L1 primitive | arrays, or an array-only bundle (a NamedTuple or `eqx.Module` of arrays), plus derived numeric geometry: space, time and viewing geometry (Δx, Δt, sun and view angles) | a CRS, a transform object, a carrier | yes; geometry arrays are traced inputs, so a new grid never recompiles |
+| L2 operator | a carrier; it derives the geometry and calls the primitive | — | at the boundary |
+| L3 algorithm | readable geo types; it crosses the carrier boundary once | — | its inner loop calls L1 directly |
+
+- **Generated, not hand-written.**
+  When the only geometry is a dim name (NDVI, a matched filter), `KernelOp` is the L2 operator.
+- **Not every op has a primitive.**
+  GDAL rasterizing and shapely predicates work on their own objects; they are eager-only geometry operators.
+  Reprojection splits: pyproj in the operator computes source pixel coordinates, the primitive is `map_coordinates(data, rows, cols)`.
+- **Primitives check shapes, not meaning.**
+  Units, CRS and grid compatibility are checked at L2 and L3.
+- **Enforced by a test (G10).**
+  No `*/_src/array.py` imports geoarray, xarray, pyproj, rasterio, geopandas or shapely.
+
 ### Indicative costs (not yet reproducible)
 
 One exploratory run on a CPU sandbox, a 4-op normalized difference and a window, a mock thin NumPy carrier versus `xr.DataArray`.
@@ -63,12 +94,6 @@ No script or output from that run is committed, so these numbers motivate the de
 - `import xarray` took about 0.57 s, against 0.11 s for NumPy.
 
 The carrier earns its place by what it refuses (mismatched grids, a transform drifting from its coordinates, ambiguous pixel edges) and by compiling, not by speed on large scenes.
-
-:::{note} How this page relates to the earlier design pages
-It builds on [](./01_geoarray.md) (the GeoTensor → GeoArray design) and supersedes its positional `DIMS[-ndim:]` convention with stored, named dims.
-It also changes one decision in [](./02_labeled_lane.md): coordax is an optional converter only, not the foundation of the JAX lane, so that page's coordax `AffineGrid` workstream is superseded (static coordinates would recompile per scene).
-Its CF `spatial_ref` + `GeoTransform` encoding still stands, and is the recommended answer to Q2 here.
-:::
 
 ## The carrier
 
@@ -222,17 +247,16 @@ Each coordinate is a frozen, hashable dataclass with `dims` and `shape`, static 
 ```python
 from geoarray.coords import PixelGrid, SpectralAxis, TimeAxis
 
-# Sentinel-2 SWIR: names and centre wavelengths
-swir = SpectralAxis(names=("B11", "B12"), wavelength_nm=(1610.0, 2190.0))
-
+# Sentinel-2 SWIR: names and centre wavelengths, nm
+swir: SpectralAxis = SpectralAxis(names=("B11", "B12"), wavelength_nm=(1610.0, 2190.0))
 # a 600 × 600 grid in UTM 13N, area-convention pixels
-grid = PixelGrid(shape=(600, 600), crs="EPSG:32613")
-
+grid: PixelGrid = PixelGrid(shape=(600, 600), crs="EPSG:32613")
 # 12 acquisition dates
-dates = TimeAxis(stamps=acquired)
-
-# a carrier from coordinates, data and the transform leaf
-stack: GeoImageSeries = GeoArray.from_coords(data, dates, swir, grid, transform=T)
+dates: TimeAxis = TimeAxis(stamps=acquired)
+# raw values: 12 dates, 2 bands, 600 × 600
+data: Float[Array, "T C H W"] = swir_values
+# a carrier from coordinates, data and the transform leaf T = (a, b, c, d, e, f); a GeoImageSeries
+stack: GeoArray["time band y x"] = GeoArray.from_coords(data, dates, swir, grid, transform=T)
 ```
 
 ### Readable types (`geoarray.types`)
@@ -268,14 +292,15 @@ from geoarray.types import GeoImage, GeoImageSeries, GeoMap
 
 @check_dims
 def ndvi(scene: GeoImage) -> GeoMap:
-    nir: GeoMap = scene.sel(band="B8")
-    red: GeoMap = scene.sel(band="B4")
+    # ρ_NIR and ρ_red, selected by band name
+    nir: GeoArray["y x"] = scene.sel(band="B8")
+    red: GeoArray["y x"] = scene.sel(band="B4")
+    # NDVI = (ρ_NIR − ρ_red) / (ρ_NIR + ρ_red); grids checked, never aligned
     return combine(_normalized_difference, nir, red)
 
 
-# one date of a series is an image, with no conversion
-first: GeoImage = stack.isel(time=0)
-
+# one date of a series is an image, with no conversion; a GeoImage
+first: GeoArray["band y x"] = stack.isel(time=0)
 # map over time: a series of maps
 series: GeoArray["time y x"] = geoarray.map_over(ndvi, stack, dim="time")
 ```
@@ -292,16 +317,15 @@ Running example: Sentinel-2 and EMIT for methane, TROPOMI for a level axis, alon
 
 ```python
 # 12 monthly frames of one band, 600 × 600
-data = np.zeros((12, 600, 600), dtype=np.float32)
+data: Float[Array, "T H W"] = np.zeros((12, 600, 600), dtype=np.float32)
 
 # today a 3-D array is always (band, y, x)
-monthly = GeoArray(data, transform, "EPSG:32613")
-
-monthly.dims
+monthly: GeoArray = GeoArray(data, transform, "EPSG:32613")
+dims: tuple[str, ...] = monthly.dims
 # ('band', 'y', 'x'): 12 "bands", not 12 months
 
 # so ops take a position, and every caller must know the layout
-mf = geoops.matched_filter.MatchedFilter(target=ch4_target, axis=-3)
+mf: MatchedFilter = geoops.matched_filter.MatchedFilter(target=ch4_target, axis=-3)
 ```
 
 ### 2. The carrier with stored dims (L3 type)
@@ -310,22 +334,27 @@ mf = geoops.matched_filter.MatchedFilter(target=ch4_target, axis=-3)
 from geoarray.coords import SpectralAxis
 from geoarray.types import GeoImage, GeoMap
 
-# Sentinel-2 SWIR
-swir = SpectralAxis(names=("B11", "B12"), wavelength_nm=(1610.0, 2190.0))
+# Sentinel-2 SWIR, nm
+swir: SpectralAxis = SpectralAxis(names=("B11", "B12"), wavelength_nm=(1610.0, 2190.0))
+# T = (a, b, c, d, e, f): 20 m pixels, origin at (600 000, 3 550 000) m
+transform: tuple[float, ...] = (20.0, 0.0, 600000.0, 0.0, -20.0, 3550000.0)
 
-scene: GeoImage = GeoArray(
+# a GeoImage
+scene: GeoArray["band y x"] = GeoArray(
     swir_data,
-    transform=(20.0, 0.0, 600000.0, 0.0, -20.0, 3550000.0),
+    transform=transform,
     dims=("band", "y", "x"),
     coords=(swir,),
     crs="EPSG:32613",
 )
 
 # exact label lookup; the band dim is dropped
-b12: GeoMap = scene.sel(band="B12")
+b12: GeoArray["y x"] = scene.sel(band="B12")
 
 # a window: the data is sliced and the transform's origin moves with it
-chip: GeoImage = scene.isel(y=slice(0, 256), x=slice(0, 256))
+rows: slice = slice(0, 256)
+cols: slice = slice(0, 256)
+chip: GeoArray["band y x"] = scene.isel(y=rows, x=cols)
 ```
 
 Window georeference, from T = (a, b, c, d, e, f) and a window corner at row r₀, column c₀:
@@ -340,15 +369,16 @@ f′ = f + d·c₀ + e·r₀
 ```python
 import geoarray
 
-# eager, in memory: a carrier series from the catalog
-stack: GeoImageSeries = geocatalog.load_raster_timeseries(catalog, window)
+# eager, in memory: a carrier series from the catalog (a GeoImageSeries)
+stack: GeoArray["time band y x"] = geocatalog.load_raster_timeseries(catalog, window)
 
 # lazy, chunked: the same type name on an xarray cube
-cube: GeoImageSeries = xr.open_zarr(store)["reflectance"]
+store_ds: xr.Dataset = xr.open_zarr(store)
+cube: DataArray["time band y x"] = store_ds["reflectance"]
 
 # m̃(band, y, x) = median over t of s(t, band, y, x)
-median: GeoImage = geoarray.reduce(stack, np.nanmedian, dim="time")
-median_lazy: GeoImage = geoarray.reduce(cube, np.nanmedian, dim="time")
+median: GeoArray["band y x"] = geoarray.reduce(stack, np.nanmedian, dim="time")
+median_lazy: DataArray["band y x"] = geoarray.reduce(cube, np.nanmedian, dim="time")
 ```
 
 ### 4. A max-NDVI composite: argreduce + take_along
@@ -361,17 +391,17 @@ ndvi_series: GeoArray["time y x"] = geoarray.map_over(ndvi, stack, dim="time")
 best: GeoArray["y x"] = geoarray.argreduce(ndvi_series, np.argmax, dim="time")
 
 # c(band, y, x) = s(t*(y, x), band, y, x)
-composite: GeoImage = geoarray.take_along(stack, best, dim="time")
+composite: GeoArray["band y x"] = geoarray.take_along(stack, best, dim="time")
 ```
 
 ### 5. Two inputs are checked, never aligned
 
 ```python
 # same grid: works on a carrier and on xarray
-diff: GeoImage = geoarray.combine(np.subtract, median, reference)
+diff: GeoArray["band y x"] = geoarray.combine(np.subtract, median, reference)
 
-# reference shifted by 10⁻⁷ m
-geoarray.combine(np.subtract, median_lazy, shifted)
+# shifted: the reference moved by 10⁻⁷ m
+bad: DataArray["band y x"] = geoarray.combine(np.subtract, median_lazy, shifted)
 # GridMismatchError: x coordinates differ by up to 1e-07 m; regrid first.
 # (plain xarray would return shape (1, 4, 0) here)
 ```
@@ -379,11 +409,11 @@ geoarray.combine(np.subtract, median_lazy, shifted)
 ### 6. Patches under jit: one trace, many transforms
 
 ```python
-# 64 chips of 256 × 256, each with its own transform: GeoPatches
-patches: GeoPatches = geopatcher.batch_split(scene, sampler, batch_size=64)
+# 64 chips of 256 × 256, each with its own transform (GeoPatches)
+patches: GeoArray["patch band y x"] = geopatcher.batch_split(scene, sampler, batch_size=64)
 
-# patches.transform.shape == (64, 6); cross the boundary once
-jpatches: GeoPatches = patches.to_jax()
+# patches.transform: (64, 6); cross the boundary once
+jpatches: GeoArray["patch band y x"] = patches.to_jax()
 
 # vmap over the patch dim and the transform rows together
 scores: GeoArray["patch y x"] = geoarray.map_over(detect_fn, jpatches, dim="patch")
@@ -400,9 +430,9 @@ def apply_column_kernel(
     x_prior: Float[Array, "N"],
 ) -> Float[Array, "N"]:
     # xₗ − xₐ,ₗ
-    departure = model - prior
+    departure: Float[Array, "L N"] = model - prior
     # ∑ₗ Aₗ (xₗ − xₐ,ₗ)
-    correction = (ak * departure).sum(axis=0)
+    correction: Float[Array, "N"] = einx.dot("l n, l n -> n", ak, departure)
     # Xₘ = Xₐ + ∑ₗ Aₗ (xₗ − xₐ,ₗ)
     return x_prior + correction
 
@@ -410,7 +440,13 @@ def apply_column_kernel(
 # L3, in radtrax's optional [geo] extra: geometry in, geometry out.
 # GeoModels may import GeoStack, never the reverse, so a wrapper that
 # calls a radtrax kernel lives in radtrax, not in geotoolz.
-def model_xch4(ak: GeoSwathProfile, model: GeoSwathProfile, prior: GeoSwathProfile, x_prior: GeoSwathImage) -> GeoSwathImage:
+# GeoSwathProfile ≡ GeoSwath["level row col"]; GeoSwathImage ≡ GeoSwath["row col"]
+def model_xch4(
+    ak: GeoSwathProfile,
+    model: GeoSwathProfile,
+    prior: GeoSwathProfile,
+    x_prior: GeoSwathImage,
+) -> GeoSwathImage:
     # level first, pixels flattened: (L, N)
     ak_rows: Float[Array, "L N"] = geoarray.to_rows(ak, dim="level")
     model_rows: Float[Array, "L N"] = geoarray.to_rows(model, dim="level")
@@ -419,7 +455,8 @@ def model_xch4(ak: GeoSwathProfile, model: GeoSwathProfile, prior: GeoSwathProfi
     # the L1 call
     xm: Float[Array, "N"] = apply_column_kernel(ak_rows, model_rows, prior_rows, x_prior_rows)
     # back onto the swath: same lat, lon
-    return x_prior.with_rows(xm)
+    xm_swath: GeoSwath["row col"] = x_prior.with_rows(xm)
+    return xm_swath
 ```
 
 l is the retrieval layer (L = 12), A the column averaging kernel, x the model sub-column, xₐ the prior sub-column, Xₐ the prior XCH₄.
@@ -427,8 +464,8 @@ l is the retrieval layer (L = 12), A the column averaging kernel, x the model su
 ### 8. Points against a state: a data-assimilation cost
 
 ```python
-# along-track SLA, padded to a fixed N: values on obs; xy, time and valid are leaves
-obs: GeoTracks = GeoPoints(
+# along-track SLA, padded to a fixed N: values on obs; xy, time and valid are leaves (a GeoTracks)
+obs: GeoPoints["obs"] = GeoPoints(
     sla,
     dims=("obs",),
     xy=lonlat,
@@ -441,58 +478,67 @@ obs: GeoTracks = GeoPoints(
 @jax.jit
 def cost(ssh: GeoMap, obs: GeoTracks, sigma: float) -> Float[Array, ""]:
     # H(x): bilinear sample of the state at each observation
-    predicted: GeoTracks = geoarray.sample(ssh, obs)
+    predicted: GeoPoints["obs"] = geoarray.sample(ssh, obs)
+    # y − H(x)
+    innovation: Float[Array, "N"] = obs.data - predicted.data
     # m ∈ {0, 1}: 1 for a real observation, 0 for a padded slot
     m: Bool[Array, "N"] = obs.valid
     # d = m ⊙ (y − H(x)); padded slots give 0, never NaN, so ∇ₓJ stays finite
-    d: Float[Array, "N"] = jnp.where(m, obs.data - predicted.data, 0.0)
+    d: Float[Array, "N"] = jnp.where(m, innovation, 0.0)
+    # dᵀd
+    dd: Float[Array, ""] = einx.dot("n, n ->", d, d)
     # J(x) = ½ dᵀ R⁻¹ d, with R = σ² I, over real observations only
-    return 0.5 * jnp.sum(d**2) / sigma**2
+    return 0.5 * dd / sigma**2
 
 
 # ∇ₓJ, the gradient a 4D-Var minimizer needs
-grad: GeoMap = jax.grad(cost)(ssh, obs, 0.03)
+grad_cost: Callable = jax.grad(cost)
+grad: GeoArray["y x"] = grad_cost(ssh, obs, 0.03)
 ```
 
 y is the observed SLA, H the sampling operator, R the observation-error covariance, σ the along-track noise in m.
-Positions change daily but are a leaf, so no recompile; pad each day to a fixed N, with `valid` (a boolean leaf, `False` on padding) as the mask.
-The mask goes through `jnp.where`, not a multiply: a NaN-filled pad times 0 is still NaN, and would poison both J and ∇ₓJ.
+Positions change daily but are a leaf, so no recompile; pad each day to a fixed N, with valid (a boolean leaf, False on padding) as the mask.
+The mask goes through jnp.where, not a multiply: a NaN-filled pad times 0 is still NaN, and would poison both J and ∇ₓJ.
 
 ### 9. Stations with several variables
 
 ```python
 from geoarray.coords import TimeAxis, VariableAxis
 
-met = VariableAxis(names=("t2m", "psfc", "wind"), units=("K", "hPa", "m s-1"))
+# three variables with their units
+met: VariableAxis = VariableAxis(names=("t2m", "psfc", "wind"), units=("K", "hPa", "m s-1"))
+# 24 hourly stamps
+hours_axis: TimeAxis = TimeAxis(stamps=hours)
 
-# 40 AEMET stations, hourly for a day: (time, variable, obs)
-stations: GeoTimeSeries = GeoPoints(
+# 40 AEMET stations, hourly for a day: (time, variable, obs) = (24, 3, 40); a GeoTimeSeries
+stations: GeoPoints["time variable obs"] = GeoPoints(
     values,
     dims=("time", "variable", "obs"),
-    coords=(TimeAxis(stamps=hours), met),
+    coords=(hours_axis, met),
     xy=station_lonlat,
     crs="EPSG:4326",
 )
 
-# a daily mean per station and variable, on either backend
+# x̄(v, s) = (1/T) ∑ₜ x(t, v, s), a daily mean per station and variable, on either backend
 daily: GeoPoints["variable obs"] = geoarray.reduce(stations, np.nanmean, dim="time")
 ```
 
 ### 10. Many items: an L3 op lifted over a cube
 
 ```python
-# every pass over the facility, lazy: (time, band, y, x)
-cube: GeoImageSeries = site_cube
+# every pass over the facility, lazy: (time, band, y, x); a GeoImageSeries
+cube: DataArray["time band y x"] = site_cube
 
 # run the geoops detector per date, per chunk; written once in geoops
-per_date = geoops.lift(detect_plumes, dim="time")
-masks: xr.DataArray = per_date(cube)
+per_date: Operator = xrops.lift(detect_plumes, dim="time")
+masks: DataArray["time y x"] = per_date(cube)
 
 # by value: the 2026 dry season
-dry: xr.DataArray = masks.sel(time=slice("2026-06-01", "2026-09-30"))
+dry_season: slice = slice("2026-06-01", "2026-09-30")
+dry: DataArray["time y x"] = masks.sel(time=dry_season)
 
 # f(y, x) = (1 / T) ∑ₜ 𝟙[mask(t, y, x)], the detection frequency
-frequency: xr.DataArray = dry.mean("time")
+frequency: DataArray["y x"] = dry.mean("time")
 ```
 
 T is the number of passes in the window.
@@ -552,13 +598,13 @@ Some ops sit on both sides.
 
 | Repo or package | Row (layer) | Column (carriers) | What changes |
 | --- | --- | --- | --- |
-| gaussx, finitevolx, spectraldiffx, somax, radtrax, plumax, geonnax | L1 core; L3 wrappers behind a `[geo]` extra | raw arrays in the core; geoarray carriers in `[geo]` | the core never imports geotoolz; carrier wrappers that call their own kernels (e.g. radtrax's `model_xch4`) sit behind `[geo]`, since GeoModels may import GeoStack but not the reverse; jaxtyping signatures are the contract; consumed axes last, so kernels lift through `KernelOp` |
+| gaussx, finitevolx, spectraldiffx, somax, radtrax, plumax, geonnax | L1 core; L3 wrappers behind a `[geo]` extra | raw arrays in the core; geoarray carriers in `[geo]` | the core never imports geotoolz; carrier wrappers that call their own kernels (e.g. radtrax's `model_xch4`) sit behind `[geo]`, since GeoModels may import GeoStack but not the reverse (GeoNumerics imports neither, so finitevolX's carrier wrappers live in the GeoML or GeoModels package that uses them); jaxtyping signatures are the contract; consumed axes last, so kernels lift through `KernelOp` |
 | pipekit, pipekit-array | L2 machinery | every registered carrier | the adapter, one `Signature`, the dim-level functions, `KernelSpec` / `KernelOp` ([pipekit page](./06_pipekit_named_arrays.md)) |
 | geoarray | L3 types, adapter, geometry functions | geoarray carriers | stored dims, standard coordinates, readable types, `GeoSwath`, `GeoPoints`, its adapter, lossless xarray converters |
 | geocatalog, geocloud, geoproducts | produce carriers | both: acquisitions as geoarray carriers, cubes as xarray carriers | readers name their dims; stay JAX-free and xarray-optional |
 | geopatcher | L3 | geoarray carriers | the batch is a `GeoPatches` carrier with a `(patch, 6)` transform; split and stitch stay NumPy; the silent `jnp = np` fallback goes |
-| geoops | L2 kernel operators, L3 geometry | kernel operators in both; geometry on geoarray carriers, on cubes via `geoops.lift` | `dim=` replaces `axis=`; each op declares `backends` ([operators page](./05_operators.md)) |
-| xrops | L2 kernel operators and value analysis, L3 cube geometry | xarray carriers; its kernel operators in both | built on native xarray operations; never imports geoops ([operators page](./05_operators.md)) |
+| geoops | L2 kernel operators, L3 geometry | every kernel operator, written once, runs on both; geometry on geoarray carriers; no xarray in the base install and no `[xarray]` extra | `dim=` replaces `axis=`; each op declares `backends` ([operators page](./05_operators.md)) |
+| xrops | L2 state-physics kernels (MLD, budgets) and value analysis, L3 cube geometry | xarray carriers; `xrops.lift` runs geoops operators over cubes | built on native xarray operations; imports geoops, one tier above it ([operators page](./05_operators.md)) |
 | coordax | none | optional converter | for model code that wants `cmap`; no geotoolz package depends on it |
 
 **Which geoops ops run on JAX.**
@@ -609,13 +655,14 @@ One 0.X.0 bump of geotoolz-array, like the GeoTensor migration.
 | G7 Lossless round trip | `from_xarray(to_xarray(g))` returns the same transform, dims and coordinates for random windows and rotated grids; the #463 and #464 regression cases pass | conventions are fixed before release |
 | G8 Patch overhead | 10k patches through a 5-op chain cost no more than today's carrier plus a budget you set | profile and cut before release |
 | G9 Reproducible costs | a committed benchmark script times the normalized difference and the window on the carrier and on xarray at the three shapes above, writes its output to a tracked file, and those numbers replace the indicative table | drop the per-op cost argument from this page |
+| G10 Primitives stay pure | a test in geostack's dependency-graph suite finds no import of geoarray, xarray, pyproj, rasterio, geopandas or shapely in any `*/_src/array.py` | move the offending code up into the operator |
 
 ## Plan
 
 ```text
 P0 spike: carrier with stored dims, 3 kernels,
    shared functions on 3 backends
-   gate: G1–G8
+   gate: G1–G9
         │
         ▼
 P1 geoarray 0.2.0: carrier, coords, types,
@@ -629,8 +676,8 @@ name dims  GeoPatches
    │         │
    └────┬────┘
         ▼
-P4 geoops: dim=, backends, KernelOps, lift
-   xrops: KernelOps, on pipekit-array
+P4 geoops: dim=, backends, KernelOps
+   xrops: lift, state physics, imports geoops
         │
         ▼
 P5 JAX-first kernels in GeoModels
@@ -643,7 +690,7 @@ P5 JAX-first kernels in GeoModels
 | P1 geoarray 0.2.0 | carrier, `geoarray.coords`, `geoarray.types`, `check_dims`, shared functions, `combine` / `stack`, `GeoSwath`, `GeoPoints`, `to_xarray` / `from_xarray`; `ndim` inference deprecated | the 0.1.x suite passes with only the deprecation warning |
 | P2 I/O | readers name dims; swath readers return `GeoSwath` | G4 |
 | P3 geopatcher | `batch_split` returns `GeoPatches`; stitch reads transform rows | G2 |
-| P4 geoops and xrops | `dim=`, `backends`, kernel operators and `geoops.lift` ([operators page](./05_operators.md)); P4 waits for the pipekit-array release ([pipekit page](./06_pipekit_named_arrays.md)) | the contract test passes on both backends |
+| P4 geoops and xrops | `dim=`, `backends`, kernel operators in geoops; `xrops.lift` and state physics in xrops ([operators page](./05_operators.md)); P4 waits for the pipekit-array release ([pipekit page](./06_pipekit_named_arrays.md)) | the contract test passes on both backends |
 | P5 GeoModels | JAX-first matched filter and plume ops; `to_coordax()` only if somax or vardax ask | G1 and G3 rerun there |
 
 ## Open questions
@@ -656,7 +703,7 @@ Settle these before the geotoolz issues (#511–#534) are rewritten.
 | Q2 | How is the georeference written into xarray? | CF `grid_mapping` plus a `GeoTransform` attribute, written by geoarray and readable by rioxarray, with no rioxarray dependency | Depend on rioxarray (pulls in rasterio and GDAL) |
 | Q3 | Where do the shared functions live? | **Decided, 21 Oct 2026:** pipekit-array, over a named-array adapter; geoarray registers its adapter and re-exports them | — |
 | Q4 | What happens to geoops `compositing`? | Keep named operators as thin, serializable wrappers over `stack`, `reduce`, `argreduce`, `take_along` | Remove them; users compose the shared functions |
-| Q5 | Do geoops operators accept a DataArray? | Kernel operators: yes, lazily through `apply_ufunc`. Geometry operators: no, they raise and name `geoops.lift` | Convert every operator at entry and back at exit |
+| Q5 | Do geoops operators accept a DataArray? | Kernel operators: yes, lazily through `apply_ufunc`. Geometry operators: no, they raise and name `xrops.lift` | Convert every operator at entry and back at exit |
 | Q6 | `map_over` on xarray | Allowed via `apply_ufunc`, documented as per-item Python cost unless dask-parallelized | Not shared on xarray |
 | Q7 | Dim names: closed vocabulary or conventions? | Free names; geoops and the converters rely on the conventions (`time`, `member`, `level`, `band`, `variable`, `patch`); `check_dims` enforces each signature | A closed list, validated at construction |
 | Q8 | Curvilinear carrier name | `GeoSwath`, also used for fixed model grids | `GeoCurvilinear`, with `GeoSwath` an alias |

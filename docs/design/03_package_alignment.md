@@ -39,14 +39,12 @@ xrtoolz adopts geotoolz's split: distributions by job, modules inside the ops pa
 - **E. Readers named as products.**
   `xrreader` (CMEMS, CDS, AEMET) is the xarray twin of `geoproducts` and becomes `xrtoolz-products` (import `xrproducts`).
 
-End state: each repo has a code-free umbrella and the same job-shaped distributions; `geoops` and `xrops` share family names; a reader can predict where a function lives in one lane from where it lives in the other.
+End state: each repo has a code-free umbrella and the same job-shaped distributions; `geoops` and `xrops` share family names where the job is the same.
+The lanes are not symmetric: xrops sits one tier above geoops and builds on it (decided 22 Oct 2026, [operators doc](./05_operators.md)), so every kernel lives in geoops or below and xrops adds what needs xarray.
 
-:::{note} Read with the later pages
-This page set the package split first.
-Two of its points were refined by the pages that followed:
-the observations-versus-states line drawn at the L3 carrier is superseded by the workload rule in [](./04_geoarray_named_carriers.md) (one item or a fixed batch is a geoarray carrier; many items selected by value is xarray),
-and the operator machinery it mentions is specified in [](./05_operators.md) and [](./06_pipekit_named_arrays.md).
-:::
+> **Read with the later docs.** This page set the package split first. Two of its points were refined by the docs that followed: the observations-versus-states line drawn at the L3 carrier is superseded by the workload rule in [geoarray: one carrier per geometry](./04_geoarray_named_carriers.md) (one item or a fixed batch is a geoarray carrier; many items selected by value is xarray), and the operator machinery it mentions is specified in [GeoStack operators](./05_operators.md) and [pipekit: named arrays](./06_pipekit_named_arrays.md).
+
+> **Decided 22 Oct 2026.** xrops sits one tier above geoops (pipekit-array → geoops → xrops), with geoops's base install slimmed first; the decision lives in the [operators doc](./05_operators.md) and changed rule 3 and the end-state line here. The [vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh) stay open.
 
 ## Ownership rules
 
@@ -65,13 +63,17 @@ The shared row already serves both lanes.
 
 1. **geotoolz** and **xrtoolz** hold no code.
    Each depends on its lane's distributions and documents the import table.
-2. **geoops** and **xrops** own every operator in their lane.
-   Family names match where the job matches; a family that exists in one lane only says why in its docstring.
-3. **xrops** never imports geoops or geoarray, and geoops never imports xarray in its base install.
+2. **geoops** and **xrops** share the operators: every kernel operator is written once, in geoops or below, and runs on both carrier families; xrops owns native-xarray work (by value, many files, Dataset/DataTree, lifting geoops over cubes) and state physics.
+   Family names match where the job matches.
+3. **xrops** may import geoops and geoarray; geoops never imports xrops or xarray in its base install, and has no \[xarray\] extra.
    Crossing lanes goes through geoarray's converters ([labeled lane](./02_labeled_lane.md)).
 4. **Domain physics** acts on model states in `xrops` (atm, ocn, budgets); on observations it belongs to GeoModels (plumax, radtrax), never to geoops.
 5. **geoproducts** and **xrproducts** read provider data into their lane's carrier and never transform it.
 6. **Heavy backends** (JAX, einx, scikit-learn) are extras of the ops package, never base dependencies.
+7. **Primitives, operators, algorithms, in every package.**
+   Numerics are L1 primitives on arrays plus derived numeric geometry (spacings, areas, Δt, angles; never a CRS), in `_src/array.py` modules that import none of geoarray, xarray, pyproj, rasterio, geopandas or shapely; a test checks it.
+   Operators on carriers sit above them.
+   Carrier code lives in the package that may import the carrier (radtrax\[geo\], somax\[geo\]), never in GeoNumerics or another lower layer: GeoStack and GeoNumerics never import each other, and xrtoolz sits one tier above geotoolz.
 
 ## Current-state audit
 
@@ -288,8 +290,8 @@ Hand-offs:
 
 1. **xarray to geoarray at the `jit` boundary.**
    Select by value in xarray, then `GeoArray.from_xarray(cube.sel(time=...))`.
-2. **A geoops op over a time stack** runs through `geoops.lift(op, dim="time")`, behind `geoops[xarray]`: each slice becomes a geoarray carrier, the op runs, the result is restacked.
-   It lives in geoops, not xrops, so xrops never imports geoops ([operators page](./05_operators.md), O4).
+2. **A geoops op over a time stack** runs through `xrops.lift(op, dim="time")`: each slice becomes a geoarray carrier, the op runs, the result is restacked.
+   It lives in xrops, which may import geoops; geoops has no xarray extra ([operators page](./05_operators.md), O4).
 3. **Observations meet states** in DA as `GeoPoints` against the model state, sliced into a carrier; `geoarray.sample` is the bridge for `H(x)`.
 
 Recommended: this three-way split, with a thin geoarray carrier and coordax only as an optional converter ([geoarray page](./04_geoarray_named_carriers.md)).

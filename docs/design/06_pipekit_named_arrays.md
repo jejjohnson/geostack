@@ -20,6 +20,9 @@ numbering:
   code: true
 ---
 
+**Later work.** xrops now sits one tier above geoops (decided 22 Oct 2026, [operators doc](./05_operators.md)): pipekit-array keeps no domain kernels, and every kernel lives in geoops or below.
+The [GeoStack vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh) list findings F1–F17, still open; F1 would make readable types dim signatures checked with `Signature.matches` on any carrier.
+
 ## Decision
 
 pipekit gains the pieces every array-shaped library in the stack keeps reimplementing: a named-array protocol and the dim-level functions over it (in pipekit-array), one `Signature` for dims, and a way to write a shapes-only kernel once and run it on raw arrays, geoarray carriers and xarray carriers alike.
@@ -32,7 +35,7 @@ pipekit (core)
         ▼
 pipekit-array
   array_namespace          (exists)
-  NamedArray protocol      new: dims, data, rewrap
+  NamedArray protocol      new: dims, data, isel, rewrap
   dim-level functions      new: isel, reduce, stack, map_over, …
   KernelSpec · KernelOp    new: one kernel, every carrier
   adapters: raw arrays, xarray ([xarray] extra)
@@ -112,8 +115,9 @@ class NamedArrayAdapter(Protocol):
     def signature(self, x: Any) -> Signature: ...
 
 
-# registration, looked up along the carrier's MRO
-pipekit.register_adapter(xr.DataArray, XarrayAdapter())
+# registration in pipekit core's registry, looked up along the carrier's MRO
+xarray_adapter: NamedArrayAdapter = XarrayAdapter()
+pipekit.register_adapter(xr.DataArray, xarray_adapter)
 ```
 
 | Carrier | Adapter lives in | Notes |
@@ -205,6 +209,19 @@ KernelOp(kernel, "(c)->()", core={"c": "band"})
                              dask="parallelized"), exact join
 ```
 
+**What a kernel may take (decided).**
+A kernel is an L1 primitive: arrays, or an array-only bundle such as `CGrid(dx_u, dy_v, area_t, mask_t)`, plus derived numeric geometry (spacings, time steps, viewing angles, unit vectors on the sphere).
+It never receives a CRS, a transform object or a pyproj handle.
+`KernelOp` is the L2 operator generated around it: when the only geometry is a dim name it needs nothing more; when the kernel needs derived geometry, `geometry={name: fn(carrier) -> arrays}` computes it per call.
+The full rule is in the [operators page](./05_operators.md).
+
+| Level | Takes | Lives in |
+| --- | --- | --- |
+| L1 kernel | arrays, array-only bundles, derived numeric geometry | `*/_src/array.py` of the package that owns the numerics |
+| L2 `KernelOp` | a carrier, through its adapter | any package that may import that carrier |
+
+Primitive modules import none of geoarray, xarray, pyproj, rasterio, geopandas or shapely; a test in geostack's dependency-graph suite checks it.
+
 ### The spec
 
 ```python
@@ -230,19 +247,33 @@ Kernel conventions, which make this work:
 
 ```python
 class KernelOp(Operator):
-    def __init__(self, kernel, spec: KernelSpec | str, core: dict[str, str], **params) -> None:
+    def __init__(
+        self,
+        kernel: Callable[..., Array],
+        spec: KernelSpec | str,
+        core: dict[str, str],
+        geometry: dict[str, Callable[[Any], Array]] | None = None,
+        **params: Any,
+    ) -> None:
         # the L1 function
-        self.kernel = kernel
+        self.kernel: Callable[..., Array] = kernel
         # the gufunc signature and backends
-        self.spec = spec if isinstance(spec, KernelSpec) else KernelSpec(spec)
+        self.spec: KernelSpec = spec if isinstance(spec, KernelSpec) else KernelSpec(spec)
         # abstract core dim → carrier dim, e.g. {"c": "band"}
-        self.core = core
+        self.core: dict[str, str] = core
+        # derived geometry: kernel argument → function of the carrier returning arrays,
+        # e.g. {"grid": cgrid_from_carrier}; empty when the only geometry is a dim name
+        self.geometry: dict[str, Callable[[Any], Array]] = geometry or {}
         # keyword parameters passed to every call
-        self.params = params
+        self.params: dict[str, Any] = params
 
-    def _apply(self, *carriers):
+    def _apply(self, *carriers: Any) -> Any:
+        # derived geometry from the first carrier, as arrays
+        derived: dict[str, Array] = {name: fn(carriers[0]) for name, fn in self.geometry.items()}
+        # every keyword input to the kernel
+        kwargs: dict[str, Any] = self.params | derived
         # one dispatch for every carrier family, through its adapter
-        return run_kernel(self.kernel, self.spec, self.core, carriers, self.params)
+        return run_kernel(self.kernel, self.spec, self.core, carriers, kwargs)
 
     def compute_output_signature(self, sig: Signature) -> Signature:
         # input dims minus consumed core dims, plus produced core dims; no execution
@@ -254,37 +285,46 @@ class KernelOp(Operator):
 ```python
 # L1: element-wise, "(),()->()"
 def normalized_difference(a: Float[Array, "*s"], b: Float[Array, "*s"], eps: float) -> Float[Array, "*s"]:
-    # (a − b) / (a + b + ε)
-    return (a - b) / (a + b + eps)
+    # a − b and a + b + ε
+    num: Float[Array, "*s"] = a - b
+    den: Float[Array, "*s"] = a + b + eps
+    # ND = (a − b) / (a + b + ε)
+    return num / den
 
 
 # L1: consumes the band axis, "(c)->()"
 def matched_filter_score(
     x: Float[Array, "... C"],
     mu: Float[Array, "C"],
-    sigma_inv: Float[Array, "C C"],
+    sigma: Float[Array, "C C"],
     t: Float[Array, "C"],
 ) -> Float[Array, "..."]:
-    # x − μ
-    r = x - mu
-    # Σ⁻¹ t
-    w = sigma_inv @ t
-    # α = (x − μ)ᵀ Σ⁻¹ t / (tᵀ Σ⁻¹ t)
-    return (r @ w) / (t @ w)
+    # r = x − μ
+    r: Float[Array, "... C"] = einx.subtract("... c, c", x, mu)
+    # w = Σ⁻¹t, solved, never inverted
+    cov: lx.MatrixLinearOperator = lx.MatrixLinearOperator(sigma, lx.positive_semidefinite_tag)
+    w: Float[Array, "C"] = lx.linear_solve(cov, t).value
+    # rᵀw per pixel, and tᵀw
+    num: Float[Array, "..."] = einx.dot("... c, c -> ...", r, w)
+    norm: Float[Array, ""] = einx.dot("c, c ->", t, w)
+    # α = (x − μ)ᵀΣ⁻¹t / (tᵀΣ⁻¹t)
+    return num / norm
 
 
 # wrapped once
-nd = KernelOp(normalized_difference, "(),()->()", core={}, eps=1e-10)
-score = KernelOp(matched_filter_score, "(c)->()", core={"c": "band"}, mu=mu, sigma_inv=sigma_inv, t=t)
+nd: KernelOp = KernelOp(normalized_difference, "(),()->()", core={}, eps=1e-10)
+score: KernelOp = KernelOp(matched_filter_score, "(c)->()", core={"c": "band"}, mu=mu, sigma=sigma, t=t)
 
-# a geoarray carrier, eager: GeoImage (band, y, x) → GeoMap (y, x)
-alpha_map = score(scene)
+# a geoarray carrier, eager; scene: GeoArray["band y x"]
+alpha_map: GeoArray["y x"] = score(scene)
 
-# the same op on a lazy xarray cube (time, band, y, x) → (time, y, x), one task per chunk
-alpha_cube = score(cube)
+# a lazy xarray cube, one task per chunk; cube: DataArray["time band y x"]
+alpha_cube: DataArray["time y x"] = score(cube)
 
-# and under jit on a JAX carrier; mu, Σ⁻¹ and t become leaves (next section)
-alpha_jax = eqx.filter_jit(pipekit_jax.to_jax(score))(jscene)
+# under jit on a JAX carrier; μ, Σ and t become leaves (next section)
+jscore: JaxOperator = pipekit_jax.to_jax(score)
+score_jit: Callable = eqx.filter_jit(jscore)
+alpha_jax: GeoArray["y x"] = score_jit(jscene)
 ```
 
 In the matched filter, x is a pixel spectrum, μ the background mean, Σ the background covariance and t the CH₄ target; C is the number of bands.
@@ -292,32 +332,36 @@ In the matched filter, x is a pixel spectrum, μ the background mean, Σ the bac
 ## Fitted operators and JAX
 
 A `KernelOp` whose parameters are plain config (an `eps`, a dim name) is a plain `Operator`; inside `jit` its parameters are constants.
-One that holds arrays (a background mean, a covariance, learned weights) needs those arrays as pytree leaves under `jit` and `grad`. pipekit-jax already solves that with `JaxOperator`, so the JAX shell is generated, not written.
-The conversion lives in pipekit-jax, not on `KernelOp`: pipekit-jax already depends on pipekit-array (through pipekit-cycle's `[array]` extra), so an edge from pipekit-array to pipekit-jax, even behind an extra, would be a workspace cycle.
+One that holds arrays (a background mean, a covariance, learned weights) needs those arrays as pytree leaves under `jit` and `grad`. pipekit-jax already solves that with `JaxOperator`, so the JAX shell is generated, not written:
+
+The conversion lives in pipekit-jax, as `pipekit_jax.to_jax(op)`, not on `KernelOp`: pipekit-jax already depends on pipekit-array (through pipekit-cycle's `[array]` extra), so an edge from pipekit-array to pipekit-jax, even behind an extra, would be a workspace cycle.
 
 ```python
 # NumPy and xarray: a plain Operator
-score = KernelOp(matched_filter_score, "(c)->()", core={"c": "band"}, mu=mu, sigma_inv=sigma_inv, t=t)
+score: KernelOp = KernelOp(matched_filter_score, "(c)->()", core={"c": "band"}, mu=mu, sigma=sigma, t=t)
 
 # JAX: the same kernel and spec as a JaxOperator (an eqx.Module);
 # array parameters are leaves, spec and dim names are static
-jscore = pipekit_jax.to_jax(score)
+jscore: JaxOperator = pipekit_jax.to_jax(score)
 
-# compile with Equinox's filter, since the module holds arrays
-alpha = eqx.filter_jit(jscore)(jscene)
+# compile with Equinox's filter, since the module holds arrays; jscene: GeoArray["band y x"]
+score_jit: Callable = eqx.filter_jit(jscore)
+alpha: GeoArray["y x"] = score_jit(jscene)
 
-# gradients flow to the parameters, e.g. a learned target signature
-dalpha_dt = eqx.filter_grad(loss)(jscore, jscene)
+# gradients flow to the parameters, e.g. a learned target signature: ∂ℒ/∂t
+loss_grad: Callable = eqx.filter_grad(loss)
+dloss: JaxOperator = loss_grad(jscore, jscene)
 ```
 
 Fitting uses pipekit's existing `FittableTransformer` protocol: `fit` returns a new, immutable operator with its arrays filled; `transform` is the `KernelOp` call.
 
 ```python
 # estimate μ and Σ from the scene's background pixels, eagerly, in pre-processing
-fitted = MatchedFilter(target=t, dim="band").fit(scene)
+mf: MatchedFilter = MatchedFilter(target=t, dim="band")
+fitted: MatchedFilter = mf.fit(scene)                   # scene: GeoArray["band y x"]
 
 # apply: a KernelOp underneath, any carrier
-alpha_map = fitted(scene)
+alpha_map: GeoArray["y x"] = fitted(scene)
 ```
 
 | Operator holds | Base | Compile with |
@@ -329,11 +373,11 @@ alpha_map = fitted(scene)
 
 | Package | Change |
 | --- | --- |
-| pipekit | `Signature.matches`, `Signature.from_pattern`; the adapter interface (`NamedArrayAdapter`) and its registry, so `compute_output_signature` finds an adapter without importing pipekit-array |
+| pipekit | `Signature.matches`, `Signature.from_pattern`; the adapter interface (`NamedArrayAdapter`) and its registry (`pipekit.register_adapter`), so `compute_output_signature` finds an adapter without importing pipekit-array |
 | pipekit-array | registers its adapters in pipekit's registry; `Named`, the dim-level functions and operators, `KernelSpec`, `KernelOp`; `[xarray]` adapter; no JAX extra and no edge to pipekit-jax |
 | pipekit-jax | `to_jax(op)`, which builds a `JaxOperator` from a `KernelOp`; an `[array]` extra declares the pipekit-array edge it already has through pipekit-cycle |
 | xrtoolz | `xrcore.Signature` becomes a re-export of `pipekit.Signature` for one release, then goes |
-| geoarray | registers its adapter (grid checks, georeference-preserving `rewrap`, `map_over` over transform rows); stops opting out of `Signature` |
+| geoarray | registers its adapter (grid checks, an `isel` that slices coordinates and moves the transform origin, georeference-preserving `rewrap`, `map_over` over transform rows); stops opting out of `Signature` |
 | geoops | the 106 `axis=-3` kernels become `KernelOp`s with a core-dim mapping; geometry operators stay hand-written |
 
 Every change is a 0.X.0 bump.
