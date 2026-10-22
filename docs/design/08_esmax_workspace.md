@@ -2,7 +2,7 @@
 title: "From somax to an Earth-system workspace: plan and names"
 subtitle: "Design · esmax: a core, one package per component, and a coupler"
 short_title: esmax workspace
-description: "Plans somax's growth into an Earth-system workspace for data assimilation, not climate simulation (core, ocean, atmosphere, land, ice, coupler), the names checked on PyPI, where each somax module goes, and phases with gates."
+description: "Plans somax's growth into an Earth-system workspace for short-window data assimilation (core, ocean, atmosphere, land, ice, coupler), the names checked on PyPI, where each somax module goes, and phases with gates."
 date: 2026-10-22
 keywords:
   - somax
@@ -21,11 +21,19 @@ numbering:
   code: true
 ---
 
-## Motivation: models for data assimilation, not climate simulation
+## Motivation: models for short-window data assimilation
 
 esmax is for data assimilation.
 Its models are the forward models inside an assimilation window, a forecast step or an emulator's training loop, run over a fixed horizon of hours to weeks (a season at most).
-They are not climate models: nothing here has to run stably for 100 years, so the requirements that come with long simulations do not apply.
+Each window stays within the predictability time of the scales the model resolves, so nothing here has to run stably for 100 years, and the requirements that come with long simulations do not apply.
+
+**Why short windows.**
+Data assimilation itself is not limited to short horizons.
+Reanalyses (ERA5, ORAS5) cycle over decades; ECCO fits the MITgcm by strong-constraint 4D-Var over a single multi-decade window starting in 1992; paleoclimate reanalyses assimilate annual-mean proxies into climate-model ensembles.
+What limits a window is predictability.
+Past the predictability time of the resolved scales (hours for convection, weeks to months for ocean eddies), the trajectory depends chaotically on the initial state and the 4D-Var cost becomes too non-convex to minimise.
+So long-horizon state estimation works at coarse scales on slow variables, or on time means, while fine scales are assimilated in many short windows, cycled. esmax targets the second case, at the horizons of the problems it serves: hours for methane plumes, days to weeks for sea-surface-height mapping, weeks for the land surface.
+Long-horizon state estimation of the ECCO kind is out of scope by choice, not because data assimilation cannot do it.
 
 **The model is a prior.**
 In data assimilation the forward model supplies the prior: the background state, the forecast that carries information from one window to the next, and the structure (balance, propagation) that spreads sparse observations through space and time.
@@ -45,6 +53,13 @@ What esmax is after is **good, cheap priors**:
 
 This sets the priority for what goes in the package.
 Anything that makes the prior cheaper or better calibrated comes before anything that makes a long run more faithful: reduced and simple models, tangent-linear and adjoint models (from JAX), model-error terms, learned corrections.
+
+**Good is relative.**
+Over a short window a simple dynamical prior competes with purely statistical ones: optimal interpolation, Gaussian processes, and operational products such as DUACS for sea-surface height.
+Its advantage is propagation: it carries information along Rossby waves and advection to where the observations do not reach.
+BFN-QG improving on DUACS in sea-surface-height mapping is the kind of evidence that justifies a component.
+So every component has to pass the same test: with the same observations, it beats the best statistical prior.
+Without that test, “cheap” may only mean “worse than OI”.
 
 That narrows the scope:
 
@@ -78,6 +93,7 @@ What follows for the package:
   A model needs to be stable and accurate over the horizon it is assimilated over, plus a margin.
   Cycled assimilation still chains many windows, so the bar is “stable across a cycle of windows”, not “stable for 100 years”.
   Gates use window-length runs, not years.
+  Short windows do not excuse bias: in cycled assimilation a biased model shows up as systematic analysis increments, which the model-error term and learned corrections have to absorb.
 - **Short horizons still need closed budgets.**
   Spurious drift inside a window biases the analysis, so conservation stays a test; it is measured over the window.
 
@@ -268,7 +284,9 @@ Each phase ships on its own and merges only when its gate passes.
 | P3 First coupling | `esmax-couple`: atmosphere over a slab ocean | exchanged energy is conserved to round-off over a 30-day assimilation window, and the coupled model stays stable over a cycle of windows |
 | P4 Land, then ice | when there is real code for them | each component runs and tests alone |
 
-P0 and P1 change no science; P2 onwards adds it. geostack's `scripts/dependency_graph.py` gets the new packages and their tiers in P0.
+P0 and P1 change no science; P2 onwards adds it.
+Every component's gate also includes the benchmark test: with the same observations, it beats the best statistical prior.
+For the ocean component that is a QG model against DUACS on a sea-surface-height mapping benchmark, run as a baseline in P0 and kept as a regression test. geostack's `scripts/dependency_graph.py` gets the new packages and their tiers in P0.
 
 ## Open questions
 
