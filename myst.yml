@@ -31,6 +31,8 @@ project:
         - file: docs/design/04_geoarray_named_carriers.md
         - file: docs/design/05_operators.md
         - file: docs/design/06_pipekit_named_arrays.md
+        - file: docs/design/07_stack_levels.md
+        - file: docs/design/08_esmax_workspace.md
     - title: Reports
       children:
         - title: Across the stack
