@@ -27,6 +27,25 @@ esmax is for data assimilation.
 Its models are the forward models inside an assimilation window, a forecast step or an emulator's training loop, run over a fixed horizon of hours to weeks (a season at most).
 They are not climate models: nothing here has to run stably for 100 years, so the requirements that come with long simulations do not apply.
 
+**The model is a prior.**
+In data assimilation the forward model supplies the prior: the background state, the forecast that carries information from one window to the next, and the structure (balance, propagation) that spreads sparse observations through space and time.
+The same models serve learning as a physics prior for emulators and learned corrections.
+What esmax is after is **good, cheap priors**:
+
+- **Cheap.**
+  A step costs little enough to run ensembles of tens to hundreds of members, and to take gradients through a whole window many times during optimisation or training.
+- **Good where the observations look.**
+  The dominant balance and propagation (geostrophy, Rossby waves, advection) are right; processes that do not shape the observed fields can be missing.
+- **Honest about their error.**
+  A cheap model is wrong, so it comes with a model-error term: weak-constraint 4D-Var with a model-error covariance Q, or stochastic forcing in an ensemble.
+  Without one, the posterior is overconfident.
+  What the error term shows to be systematic is what a learned closure should absorb.
+- **Learnable.**
+  Parameters, closures and forcings are differentiable and carry priors, so data can correct the prior instead of a person retuning it.
+
+This sets the priority for what goes in the package.
+Anything that makes the prior cheaper or better calibrated comes before anything that makes a long run more faithful: reduced and simple models, tangent-linear and adjoint models (from JAX), model-error terms, learned corrections.
+
 That narrows the scope:
 
 |  | In scope | Out of scope |
