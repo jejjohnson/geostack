@@ -2,7 +2,7 @@
 title: "From somax to an Earth-system workspace: plan and names"
 subtitle: "Design · esmax: a core, one package per component, and a coupler"
 short_title: esmax workspace
-description: "Plans somax's growth into an Earth-system workspace (core, ocean, atmosphere, land, ice, coupler), the names checked on PyPI, where each somax module goes, and phases with gates."
+description: "Plans somax's growth into an Earth-system workspace for data assimilation, not climate simulation (core, ocean, atmosphere, land, ice, coupler), the names checked on PyPI, where each somax module goes, and phases with gates."
 date: 2026-10-22
 keywords:
   - somax
@@ -20,6 +20,47 @@ numbering:
   table: true
   code: true
 ---
+
+## Motivation: models for data assimilation, not climate simulation
+
+esmax is for data assimilation.
+Its models are the forward models inside an assimilation window, a forecast step or an emulator's training loop, run over a fixed horizon of hours to weeks (a season at most).
+They are not climate models: nothing here has to run stably for 100 years, so the requirements that come with long simulations do not apply.
+
+That narrows the scope:
+
+|  | In scope | Out of scope |
+| --- | --- | --- |
+| Horizon | a window of hours to weeks, and the forecast after it | multi-decade and centennial runs, spin-up to equilibrium |
+| Conservation | budgets closed within the window, to the tolerance the cost function needs | drift-free energy and water over centuries |
+| Physics | simple dynamics that are good enough over the window: shallow water, QG, slab and bucket models | full parameterisation suites, CMIP-style coupling |
+| Learned parts | learned closures, corrections and forcings, each with a prior | — |
+| Speed that matters | gradients through the window (4D-Var), ensembles (EnKF, `vmap`), batched training | throughput of one long trajectory |
+
+In a 4D-Var window the controls are the initial state x₀, the learned parameters θ and the forcing f, each with a prior (background x_b, θ_b, f_b; covariances B, Σ_θ, Σ_f).
+With observations yₖ, observation operators Hₖ, observation-error covariances Rₖ, and xₖ the model state at step k of K:
+
+```{math}
+:label: esmax-4dvar-cost
+J(x_0, \theta, f) = \tfrac12 \lVert x_0 - x_b \rVert^2_{B^{-1}}
+  + \tfrac12 \lVert \theta - \theta_b \rVert^2_{\Sigma_\theta^{-1}}
+  + \tfrac12 \lVert f - f_b \rVert^2_{\Sigma_f^{-1}}
+  + \tfrac12 \sum_{k=0}^{K} \lVert y_k - H_k(x_k) \rVert^2_{R_k^{-1}}
+```
+
+What follows for the package:
+
+- **Differentiability and batching come first.**
+  Every L1 step is a pure function of state, parameters and forcing that `jax.grad` and `vmap` go through over the whole window.
+- **Learned components and learned forcings are first-class.**
+  In data assimilation the model is often part physics, part learned: a learned closure for unresolved terms, or a forcing (wind stress, heat flux) estimated with a prior instead of read from a file.
+  `esmax-core` gives both a typed slot that carries its prior, so either can be a control variable in vardax or an augmented state in filterax.
+- **Stability is judged over the window.**
+  A model needs to be stable and accurate over the horizon it is assimilated over, plus a margin.
+  Cycled assimilation still chains many windows, so the bar is “stable across a cycle of windows”, not “stable for 100 years”.
+  Gates use window-length runs, not years.
+- **Short horizons still need closed budgets.**
+  Spurious drift inside a window biases the analysis, so conservation stays a test; it is measured over the window.
 
 ## Decision
 
@@ -56,7 +97,7 @@ The names under option A:
 
 | Distribution | Import | Holds | Tier in the workspace |
 | --- | --- | --- | --- |
-| `esmax-core` | `esmax_core` | `State`, `Params`, term algebra, domains, steppers, DA adapters, monitors, xarray I/O | 0 |
+| `esmax-core` | `esmax_core` | `State`, `Params`, term algebra, domains, steppers, DA adapters, slots for learned closures and forcings with their priors, monitors, xarray I/O | 0 |
 | `esmax-ocean` | `esmax_ocean` | today's somax ocean models: shallow water, QG, Burgers toy | 1 |
 | `esmax-atmos` | `esmax_atmos` | simple atmosphere models | 1 |
 | `esmax-land` | `esmax_land` | bucket hydrology, surface energy balance (when there is code) | 1 |
@@ -205,7 +246,7 @@ Each phase ships on its own and merges only when its gate passes.
 | P0 Rename and split | repo `somax` → `esmax`; workspace with `esmax-core` and `esmax-ocean`; the module moves above; vardax bases and observation operators imported, not copied | every somax 0.0.15 test passes under `esmax-ocean` with only import changes; `esmax-core` imports no component |
 | P1 Levels | `_src/array.py` per component; `Step` and `simulate` behind `[geo]`; I/O behind `[xarray]` | the import check passes (primitive modules import no carrier); `simulate` exposes `model.l1` |
 | P2 Atmosphere | `esmax-atmos` from somax's atmosphere models, or a 2-layer QG to start | runs and tests alone, with only `esmax-core` installed beside it |
-| P3 First coupling | `esmax-couple`: atmosphere over a slab ocean | exchanged energy is conserved to round-off over a 1-year run |
+| P3 First coupling | `esmax-couple`: atmosphere over a slab ocean | exchanged energy is conserved to round-off over a 30-day assimilation window, and the coupled model stays stable over a cycle of windows |
 | P4 Land, then ice | when there is real code for them | each component runs and tests alone |
 
 P0 and P1 change no science; P2 onwards adds it. geostack's `scripts/dependency_graph.py` gets the new packages and their tiers in P0.
