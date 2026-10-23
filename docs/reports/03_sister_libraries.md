@@ -18,6 +18,11 @@ numbering:
   code: true
 ---
 
+```{note} Superseded by the design pages
+The carrier and operator decisions this report fed now live in [geoarray](../design/geoarray.md), [pipekit kernels](../design/pipekit_kernels.md), [operators](../design/operators.md) and [package layout](../design/package_layout.md).
+This report stays as the record of what was proposed and what shipped at the time.
+```
+
 +++ {"part": "abstract"}
 
 pipekit is carrier-agnostic, so the real work happens in libraries that pick

@@ -20,6 +20,11 @@ numbering:
   code: true
 ---
 
+```{note} Superseded by the design pages
+The package split this report planned is now decided in [package layout](../design/package_layout.md) and [operators](../design/operators.md) (the pipekit-array → geoops → xrops tiers), with the carriers in [geoarray](../design/geoarray.md).
+This report stays as the record of the audit and the plan at the time.
+```
+
 +++ {"part": "abstract"}
 
 Three repositories ship 18 distributions: pipekit (7), xrtoolz (6) and
