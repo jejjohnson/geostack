@@ -126,7 +126,6 @@ pipekit.register_adapter(xr.DataArray, xarray_adapter)
 | `DimArray` | pipekit-array | the reference adapter; `check_compatible` compares dims, sizes and labels; what a geo carrier becomes when a kernel consumes its spatial dims |
 | `xr.DataArray` | pipekit-array `[xarray]` extra | `check_compatible` compares coordinates exactly; `rewrap` keeps coords and attrs of surviving dims |
 | `GeoArray`, `GeoSwath`, `GeoPoints` | geoarray | `check_compatible` compares grids, transforms, swath lat/lon or point positions and raises `GridMismatchError`; `rewrap` keeps the georeference while the spatial dims survive, and returns a `DimArray` when a kernel consumes one (below) |
-| `pipekit_array.Named` | pipekit-array | a two-field record (`data`, `dims`) for tests and for libraries with no carrier of their own |
 | raw `np.ndarray`, `jax.Array` | none | not named; L1 kernels take them directly |
 
 Why an adapter rather than a `typing.Protocol` on the carrier: it covers `DataArray` without an accessor, it lets geoarray carriers stay plain pytrees, and a new carrier (a coordax `Field`, if a model ever wants one) is one registration, not a change to pipekit.
@@ -427,7 +426,7 @@ alpha_map: GeoArray["y x"] = fitted(scene)
 | Package | Change |
 | --- | --- |
 | pipekit | `Signature.matches`, `Signature.from_pattern`; the adapter interface (`NamedArrayAdapter`) and its registry (`pipekit.register_adapter`), so `compute_output_signature` finds an adapter without importing pipekit-array |
-| pipekit-array | registers its adapters in pipekit's registry; `Named`, the dim-level functions and operators, `KernelSpec`, `KernelOp`; `[xarray]` adapter; no JAX extra and no edge to pipekit-jax |
+| pipekit-array | registers its adapters in pipekit's registry; `DimArray` (also the plain carrier for tests and for libraries with none of their own), the dim-level functions and operators, `KernelSpec`, `KernelOp`; `[xarray]` adapter; no JAX extra and no edge to pipekit-jax |
 | pipekit-jax | `to_jax(op)`, which builds a `JaxOperator` from a `KernelOp`; an `[array]` extra declares the pipekit-array edge it already has through pipekit-cycle |
 | xrtoolz | `xrcore.Signature` becomes a re-export of `pipekit.Signature` for one release, then goes |
 | geoarray | registers its adapter (grid checks, an `isel` that slices coordinates and moves the transform origin, georeference-preserving `rewrap`, `map_over` over transform rows); stops opting out of `Signature` |
