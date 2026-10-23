@@ -1091,7 +1091,7 @@ Settle these before the geotoolz issues #511–#534 are rewritten.
 | ID | Question | Recommended | Alternative |
 | --- | --- | --- | --- |
 | GA-Q1 | What do somax (esmax) and vardax take at their boundary? | Shaped arrays plus a grid object (L1); the carrier stops in the wrapper behind `[geo]`, so `sample` and H(x) live in geotoolz | models take carriers directly, which makes `to_coordax()` or carrier-aware models necessary |
-| GA-Q2 | How is the georeference written into xarray? | CF `grid_mapping` plus a `GeoTransform` attribute, written by geoarray and readable by rioxarray, with no rioxarray dependency ([labeled lane](./labeled_lane.md), where it is LL-F1) | depend on rioxarray (pulls in rasterio and GDAL) |
+| GA-Q2 | How is the georeference written into xarray? | **Decided 23 Oct 2026 (geostack #77):** CF `grid_mapping` plus a `GeoTransform` attribute, written by geoarray and readable by rioxarray, with no rioxarray dependency; the CF grid-mapping attributes come from pyproj's `CRS.to_cf()` ([labeled lane](./labeled_lane.md), where it is LL-F1) | depend on rioxarray (pulls in rasterio and GDAL) |
 | GA-Q3 | Where do the shared functions live? | **Decided 21 Oct 2026:** pipekit-array, over a named-array adapter; geoarray registers its adapter and re-exports them | — |
 | GA-Q4 | What happens to geoops `compositing`? | keep named operators as thin, serializable wrappers over `stack`, `reduce`, `argreduce`, `take_along` | remove them; users compose the shared functions |
 | GA-Q5 | Do geoops operators accept a `DataArray`? | kernel operators: yes, lazily through `apply_ufunc`; geometry operators: no, they raise and name `xrops.lift` ([operators](./operators.md)) | convert every operator at entry and back at exit |

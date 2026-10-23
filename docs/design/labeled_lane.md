@@ -74,7 +74,7 @@ The two lanes meet only at geoarray's converters and at `xrops.lift`.
 
 | ID | Question | Recommended | Alternative | Status |
 | --- | --- | --- | --- | --- |
-| LL-F1 | CRS on the xarray side | A scalar `spatial_ref` coordinate with `crs_wkt` and GDAL `GeoTransform` attributes, written without importing rioxarray | georeader's `attrs["crs"]`, which no other package reads | recommended, open (the same question as GA-Q2) |
+| LL-F1 | CRS on the xarray side | A scalar `spatial_ref` coordinate with `crs_wkt`, the CF grid-mapping attributes from `CRS.to_cf()` and GDAL `GeoTransform`, written without importing rioxarray | depend on rioxarray (pulls in rasterio and GDAL); georeader's `attrs["crs"]`, which no other package reads | decided 23 Oct 2026 (with GA-Q2, geostack #77) |
 | LL-F2 | Per-band metadata on the xarray side | `band` holds the names; `wavelength` (and FWHM) are non-index coordinates on `band` with their own index, so `sel(wavelength=…)` works; other keys go to `.attrs` | Wavelengths as the `band` values (the 17 Oct proposal), or everything into `.attrs` as georeader does | open; changed 23 Oct to match `SpectralAxis` on the geoarray page |
 | LL-F3 | Multi-resolution products | `to_datatree({"r10m": g10, "r20m": g20, …})`, one node per grid, each with its own `spatial_ref` | A `Dataset` per resolution, joined by the caller | open |
 | LL-G1 | Where a coordax grid coordinate lives | `geoarray.interop.coordax`, built only when somax or vardax ask for it | Upstream in coordax, which ties our release to theirs | deferred |
@@ -264,14 +264,15 @@ What crosses, in each direction:
 | `GeoArray` transform | `spatial_ref.attrs["GeoTransform"]`, plus x and y centre coordinates when axis-aligned | exact, to float64 round-off |
 | `GeoSwath` lat, lon | 2-D auxiliary coordinates on `(row, col)`, CF `coordinates` attribute | exact |
 | `GeoPoints` xy, z, time | a CF Discrete Sampling Geometry `Dataset` on one `obs` dim | exact |
-| CRS | `spatial_ref.attrs["crs_wkt"]` | equal `pyproj.CRS` |
+| CRS | `spatial_ref.attrs["crs_wkt"]`, plus the `CRS.to_cf()` attributes | equal `pyproj.CRS`, read from `crs_wkt` |
 | `fill_value` | `_FillValue` encoding and `attrs["fill_value"]` | exact, including NaN |
 | `SpectralAxis`, `VariableAxis`, `VerticalAxis`, `TimeAxis` | CF coordinates and attributes (`wavelength`, `units`, `positive`) | equal coordinates |
 | other attrs | `.attrs` | hashable values only; others raise on the way back |
 
 1. **Write `spatial_ref` by hand.**
    A scalar coordinate with `crs_wkt`, `spatial_ref` (the same WKT) and `GeoTransform` attributes, plus `grid_mapping="spatial_ref"` in each variable's encoding.
-   No rioxarray import is needed.
+   It also carries the CF grid-mapping attributes from pyproj's `CRS.to_cf()` (`grid_mapping_name` and the projection parameters), so CF readers that do not parse WKT still get the projection, as rioxarray writes them.
+   No rioxarray import is needed: pyproj is already a base dependency of geoarray.
 2. **Read in order of trust.**
    `GeoTransform` first, then the centre coordinates, then georeader's `attrs["crs"]` with a deprecation warning.
 3. **Check the coordinates against the transform.**
