@@ -64,3 +64,13 @@ jobs:
           status=${PIPESTATUS[0]}
           grep -E '^(FAILED|ERROR|E  )' pytest.log | head -30 | cut -c1-500 | sed 's/^/::error::/'
           exit $status
+      - name: Cross-library bases (spectraldiffx ↔ geonnax)
+        # the one environment that installs both: they may not import each
+        # other, so their shared Legendre tables are checked here (#63)
+        if: matrix.layer == 'geoml'
+        run: |
+          set +e
+          pixi run -e geoml pytest tests/test_cross_library_bases.py -o addopts= -v 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          grep -E '^(FAILED|ERROR|E  )' pytest.log | head -30 | cut -c1-500 | sed 's/^/::error::/'
+          exit $status
