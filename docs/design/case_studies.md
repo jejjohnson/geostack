@@ -456,10 +456,11 @@ def mf_amf(
     return num / (amf * norm)
 
 
-# L2: consumes rows and bands, maps over columns; GeoSwath["band row col"] → GeoSwath["row col"]
+# L2: consumes rows and bands, vectorized over columns (mf_amf takes one column);
+# GeoSwath["band row col"] → GeoSwath["row col"]
 kernel_op: KernelOp = KernelOp(
     mf_amf,
-    "(r,c),(c),(r)->(r)",
+    KernelSpec("(r,c),(c),(r)->(r)", vectorize=True),
     core={"r": "row", "c": "band"},
     geometry={
         "amf": geoarray.air_mass_factor

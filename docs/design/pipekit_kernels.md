@@ -341,6 +341,7 @@ def _call_xarray(
     kernel: Callable,
     spec: KernelSpec,
     core: dict[str, str],
+    kwargs: dict[str, Any],  # KernelOp's params | derived geometry, from _apply
     *xs: DataArray["..."],
 ) -> DataArray["..."]:
     # "(c)->()" with core = {"c": "band"}: band moves last and is consumed
@@ -348,12 +349,15 @@ def _call_xarray(
     out_dims: list[list[str]] = [[core[d] for d in s] for s in spec.outputs]  # [[]]
     # coordinates must be equal; never inner-joined
     adapter.check_compatible(*xs)
-    # apply_ufunc unwraps .data, calls the kernel per chunk, rewraps coords and attrs
+    # apply_ufunc unwraps .data, calls kernel(*blocks, **kwargs) per chunk, and
+    # rewraps coords and attrs; kwargs (eps; μ, Σ, t; a grid) are passed unmapped
     return xr.apply_ufunc(
         kernel,
         *xs,
         input_core_dims=in_dims,
         output_core_dims=out_dims,
+        kwargs=kwargs,
+        vectorize=spec.vectorize,
         dask="parallelized",
         join="exact",
     )

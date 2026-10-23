@@ -204,10 +204,11 @@ class SwathToGrid(Operator):
 # radtrax/geo/operators.py — behind radtrax[geo]; a fitted operator built from KernelOps
 class MatchedFilter(FittableOperator):
     def fit(self, swath: GeoSwath["band row col"]) -> "MatchedFilter":
-        # μ(col) and Σ(col) over the rows of each column: "(r,c)->(c),(c,d)", Σ on (band, band2)
+        # μ(col) and Σ(col) over the rows of each column: "(r,c)->(c),(c,d)", Σ on
+        # (band, band2); the kernel takes one column, so it is vectorized over col
         stats: KernelOp = KernelOp(
             background_stats,
-            "(r,c)->(c),(c,d)",
+            KernelSpec("(r,c)->(c),(c,d)", vectorize=True),
             core={"r": "row", "c": "band", "d": "band2"},
         )
         mu: GeoArray["col band"]
@@ -216,14 +217,16 @@ class MatchedFilter(FittableOperator):
         return self.with_fitted(mu=mu, sigma=sigma)
 
     def __call__(self, swath: GeoSwath["band row col"]) -> GeoSwath["row col"]:
-        # one column at a time: consumes rows and bands, maps over col; Σ's second
-        # axis is band2, and the kernel's "C C" hint checks |band| = |band2| at L1
+        # one column at a time: consumes rows and bands, vectorized over col; Σ's
+        # second axis is band2, and the kernel's "C C" hint checks |band| = |band2|;
+        # t is the same for every column, so it is a parameter, not mapped
         score: KernelOp = KernelOp(
             matched_filter_score,
-            "(r,c),(c),(c,d),(c)->(r)",
+            KernelSpec("(r,c),(c),(c,d)->(r)", vectorize=True),
             core={"r": "row", "c": "band", "d": "band2"},
+            t=self.target,
         )
-        return score(swath, self.mu, self.sigma, self.target)
+        return score(swath, self.mu, self.sigma)
 
 
 # plumax/geo/detector.py — behind plumax[geo]; geonnax's network, carrier handling here
@@ -280,10 +283,20 @@ def matched_filter_score(
 def gather_bilinear(
     s: Float[Array, "R C"], rows: Float[Array, "H W"], cols: Float[Array, "H W"]
 ) -> Float[Array, "H W"]:
-    # r₀ = ⌊r⌋, c₀ = ⌊c⌋; δr = r − r₀, δc = c − c₀
     xp: ModuleType = array_namespace(s)  # numpy or jax.numpy
-    r0: Int[Array, "H W"] = xp.floor(rows).astype(int)
-    c0: Int[Array, "H W"] = xp.floor(cols).astype(int)
+    n_rows: int = s.shape[0]
+    n_cols: int = s.shape[1]
+    # inside the source: 0 ≤ r ≤ R − 1 and 0 ≤ c ≤ C − 1; outside gives NaN, never an index error
+    inside_r: Bool[Array, "H W"] = (rows >= 0) & (rows <= n_rows - 1)
+    inside_c: Bool[Array, "H W"] = (cols >= 0) & (cols <= n_cols - 1)
+    inside: Bool[Array, "H W"] = inside_r & inside_c
+    # r₀ = ⌊r⌋ clipped to [0, R − 2], c₀ likewise, so r₀ + 1 and c₀ + 1 are in range;
+    # a point on the last row gets r₀ = R − 2, δr = 1, and exactly the last row's value
+    r_floor: Float[Array, "H W"] = xp.floor(rows)
+    c_floor: Float[Array, "H W"] = xp.floor(cols)
+    r0: Int[Array, "H W"] = xp.clip(r_floor, 0, n_rows - 2).astype(int)
+    c0: Int[Array, "H W"] = xp.clip(c_floor, 0, n_cols - 2).astype(int)
+    # δr = r − r₀, δc = c − c₀
     dr: Float[Array, "H W"] = rows - r0
     dc: Float[Array, "H W"] = cols - c0
     # the four neighbours s₀₀, s₀₁, s₁₀, s₁₁
@@ -294,7 +307,8 @@ def gather_bilinear(
     # q = (1−δr)(1−δc) s₀₀ + (1−δr)δc s₀₁ + δr(1−δc) s₁₀ + δrδc s₁₁
     top: Float[Array, "H W"] = (1 - dc) * s00 + dc * s01
     bottom: Float[Array, "H W"] = (1 - dc) * s10 + dc * s11
-    return (1 - dr) * top + dr * bottom
+    q: Float[Array, "H W"] = (1 - dr) * top + dr * bottom
+    return xp.where(inside, q, xp.nan)
 
 
 # geonnax — the network is itself an L1 function of arrays
@@ -412,7 +426,7 @@ pipe_mine: pipekit.Graph = pipe.replace("matched_filter", mine)
 
 # an operator exposes its primitive and spec
 kernel: Callable[..., Float[Array, "R"]] = stage.kernel  # matched_filter_score
-spec: KernelSpec = stage.spec  # "(r,c),(c),(c,d),(c)->(r)"
+spec: KernelSpec = stage.spec  # "(r,c),(c),(c,d)->(r)", vectorized over col
 
 # and runs it yourself on one column's raw arrays
 alpha_col: Float[Array, "R"] = kernel(
