@@ -133,7 +133,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | PK-P4 | The xarray adapter lives in pipekit-array `[xarray]` | open |
 | PK-P5 | `DataArray` only at first; `Dataset` and `DataTree` dispatch stays in xrops | open |
 | PK-P6 | `pipekit_jax.to_jax` lives in pipekit-jax | forced |
-| PK-P7 | The carrier for outputs that drop a spatial dim: `pipekit_array.DimArray` | open |
+| PK-P7 | The carrier for outputs that drop a spatial dim: `pipekit_array.DimArray` (data, dims, labels; no georeference, alignment or arithmetic) | decided 23 Oct 2026 |
 
 ## Operators (OP)
 

@@ -36,6 +36,7 @@ pipekit (core)
 pipekit-array
   array_namespace          (exists)
   NamedArray protocol      new: dims, data, isel, rewrap
+  DimArray                 new: the plain named carrier (no georeference)
   dim-level functions      new: isel, reduce, stack, map_over, …
   KernelSpec · KernelOp    new: one kernel, every carrier
   adapters: raw arrays, xarray ([xarray] extra)
@@ -122,6 +123,7 @@ pipekit.register_adapter(xr.DataArray, xarray_adapter)
 
 | Carrier | Adapter lives in | Notes |
 | --- | --- | --- |
+| `DimArray` | pipekit-array | the reference adapter; `check_compatible` compares dims, sizes and labels; what a geo carrier becomes when a kernel consumes its spatial dims |
 | `xr.DataArray` | pipekit-array `[xarray]` extra | `check_compatible` compares coordinates exactly; `rewrap` keeps coords and attrs of surviving dims |
 | `GeoArray`, `GeoSwath`, `GeoPoints` | geoarray | `check_compatible` compares grids, transforms, swath lat/lon or point positions and raises `GridMismatchError`; `rewrap` keeps the georeference while the spatial dims survive, and returns a `DimArray` when a kernel consumes one (below) |
 | `pipekit_array.Named` | pipekit-array | a two-field record (`data`, `dims`) for tests and for libraries with no carrier of their own |
@@ -221,7 +223,11 @@ A geo carrier's dims must end in its spatial dims (`y x`, `row col`, `obs`).
 Per-column statistics consume `row` and keep `col`, so the result, `(col, band)`, is no longer a `GeoSwath`.
 In that case the adapter's `rewrap` returns a `DimArray` from pipekit-array: dims, data and the labels of the surviving dims, registered as a JAX pytree, with no georeference.
 `KernelOp` combines carriers of different kinds by dim name and size (a `GeoSwath["band row col"]` with a `DimArray["col band"]` maps both over `col`); grid checks apply only between carriers of the same kind.
-Where `DimArray` lives and what it carries is open (PK-P7).
+`DimArray` lives in pipekit-array (decided 23 Oct 2026, PK-P7) and stays deliberately small:
+
+- **It holds** a raw array (NumPy, JAX or dask), its dims and the static labels of each dim; it is a JAX pytree whose only leaf is the data, and its adapter is the reference one every other adapter is tested against.
+- **It does not hold** a georeference, coordinates beyond labels, or attrs.
+- **It does not do** alignment, arithmetic dunders or selection by value; those stay xarray's, and a `DimArray` crosses to xarray with `to_xarray()` when an analysis needs them.
 
 ### The spec
 
@@ -453,5 +459,5 @@ pipekit-array ships a test kit so every carrier library proves the same things:
 | PK-P3 | Core dim names in the spec | abstract letters plus a `core=` mapping, so the same kernel serves `dim="band"` and `dim="variable"` | carrier dim names written in the spec |
 | PK-P4 | Home of the xarray adapter | pipekit-array `[xarray]`, shared by geoarray and xrtoolz | xrcore |
 | PK-P5 | `Dataset` and `DataTree` | `DataArray` only at first; `Dataset` and `DataTree` dispatch stays in xrops (today's xrcore DataTree dispatch) | adapters for both in pipekit-array |
-| PK-P7 | The carrier for outputs that drop a spatial dim (fitted per-column statistics) | `pipekit_array.DimArray`: dims, data, labels of the surviving dims, a pytree, no georeference | xarray for every such output, which forces the `[xarray]` extra and leaves JAX |
+| PK-P7 | The carrier for outputs that drop a spatial dim (fitted per-column statistics) | **Decided 23 Oct 2026:** `pipekit_array.DimArray`: dims, data, labels of the surviving dims, a pytree, no georeference | — |
 | PK-P6 | `to_jax()` dependency | **Forced by the dependency rules (review of #60):** `pipekit_jax.to_jax` lives in pipekit-jax, because pipekit-jax → pipekit-cycle → pipekit-array already exists and the reverse edge would close a cycle | — |
