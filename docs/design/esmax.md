@@ -32,7 +32,8 @@ Data assimilation itself is not limited to short horizons.
 Reanalyses (ERA5, ORAS5) cycle over decades; ECCO fits the MITgcm by strong-constraint 4D-Var over a single multi-decade window starting in 1992; paleoclimate reanalyses assimilate annual-mean proxies into climate-model ensembles.
 What limits a window is predictability.
 Past the predictability time of the resolved scales (hours for convection, weeks to months for ocean eddies), the trajectory depends chaotically on the initial state and the 4D-Var cost becomes too non-convex to minimise.
-So long-horizon state estimation works at coarse scales on slow variables, or on time means, while fine scales are assimilated in many short windows, cycled. esmax targets the second case, at the horizons of the problems it serves: hours for methane plumes, days to weeks for sea-surface-height mapping, weeks for the land surface.
+So long-horizon state estimation works at coarse scales on slow variables, or on time means, while fine scales are assimilated in many short windows, cycled.
+esmax targets the second case, at the horizons of the problems it serves: hours for methane plumes, days to weeks for sea-surface-height mapping, weeks for the land surface.
 Long-horizon state estimation of the ECCO kind is out of scope by choice, not because data assimilation cannot do it.
 
 **The model is a prior.**
@@ -112,7 +113,7 @@ Why now:
   Coupling is a package's worth of work on its own, and land (column physics) and sea ice (rheology plus thermodynamics) share the core but little else with the ocean.
   Separate packages can ship and be tested alone, as the pyrox workspace does.
 
-The workspace keeps the levels rule from the [levels doc](./stack_levels.md): every component has L1 dynamics on arrays, L2 operators on carriers behind a `[geo]` extra, and an L3 `simulate` that takes readable types.
+The workspace keeps [the three levels](#design-levels), as [stack levels](./stack_levels.md) applies them: every component has L1 dynamics on arrays, L2 operators on carriers behind a `[geo]` extra, and an L3 `simulate` that takes readable types.
 
 ## Names
 
@@ -286,16 +287,17 @@ Each phase ships on its own and merges only when its gate passes.
 
 P0 and P1 change no science; P2 onwards adds it.
 Every component's gate also includes the benchmark test: with the same observations, it beats the best statistical prior.
-For the ocean component that is a QG model against DUACS on a sea-surface-height mapping benchmark, run as a baseline in P0 and kept as a regression test. geostack's `scripts/dependency_graph.py` gets the new packages and their tiers in P0.
+For the ocean component that is a QG model against DUACS on a sea-surface-height mapping benchmark, run as a baseline in P0 and kept as a regression test.
+geostack's `scripts/dependency_graph.py` gets the new packages and their tiers in P0.
 
 ## Open questions
 
 | ID | Question | Recommended | Alternative |
 | --- | --- | --- | --- |
-| N1 | Umbrella name | `esmax` | `fluidx` (free, but land is not a fluid) |
-| N2 | One distribution per component, or one distribution with subpackages | one per component, like pyrox | one `esmax` distribution with `esmax.ocean` etc.: simpler releases, but every user installs every component |
-| N3 | When land and ice start | when there is real code (P4) | stubs now, which xrtoolz's empty `ice` module shows go stale |
-| N4 | plumax's atmospheric transport (`les_fvm`) | stays in plumax; it may later run on `esmax-atmos` winds | moves into `esmax-atmos` as its tracer component |
-| N5 | Synthetic climates (`xtremax.simulations`) | not in esmax: a statistical weather generator is not a fluid model (see the levels doc) | a stochastic component in esmax |
+| ES-N1 | Umbrella name | `esmax` | `fluidx` (free, but land is not a fluid) |
+| ES-N2 | One distribution per component, or one distribution with subpackages | one per component, like pyrox | one `esmax` distribution with `esmax.ocean` etc.: simpler releases, but every user installs every component |
+| ES-N3 | When land and ice start | when there is real code (P4) | stubs now, which xrtoolz's empty `ice` module shows go stale |
+| ES-N4 | plumax's atmospheric transport (`les_fvm`) | stays in plumax; it may later run on `esmax-atmos` winds | moves into `esmax-atmos` as its tracer component |
+| ES-N5 | Synthetic climates (`xtremax.simulations`) | not in esmax: a statistical weather generator is not a fluid model (see [stack levels](./stack_levels.md), SL-O6) | a stochastic component in esmax |
 
 Evidence: somax's modules come from the GeoModels capability index (somax 0.0.15); the name checks are PyPI lookups on 22 Oct 2026.

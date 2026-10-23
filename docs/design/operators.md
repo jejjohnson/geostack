@@ -1,9 +1,9 @@
 ---
 title: "GeoStack operators: geoops and xrops on one kernel model"
-subtitle: "Design · layers × carrier families, kernels written once"
+subtitle: "Design · needs × carrier families, kernels written once, package tiers"
 short_title: Operators
-description: "How geoops and xrops are organised on a grid of layers (L1 shapes, L2 dim names, L3 geometry) and carrier families (geoarray, xarray), with L1 kernels wrapped once as KernelOps that run in both."
-date: 2026-10-21
+description: "How geoops and xrops are organised by what an operation needs (shapes, dim names, geometry) and by carrier family (geoarray, xarray), with L1 kernels wrapped once as KernelOps that run in both, and the package tiers pipekit-array → geoops → xrops."
+date: 2026-10-23
 keywords:
   - geoops
   - xrops
@@ -25,28 +25,24 @@ numbering:
 This page decides how operations are organised across geoops (geotoolz-ops) and xrops (xrtoolz-ops): what each package writes, what it reuses, and where every kind of operation lives, so nothing is written twice.
 It sits between two others:
 
-- [geoarray: one carrier per geometry](./geoarray.md) defines the data: geoarray carriers, coordinates, readable types, static versus leaf.
-- [pipekit: named arrays, one Signature, kernels written once](./pipekit_kernels.md) defines the machinery this page reuses: the named-array adapter, the single `Signature`, the dim-level functions, `KernelSpec` and `KernelOp`, `JaxOperator`.
+- [geoarray](./geoarray.md) defines the data: geoarray carriers, coordinates, readable types, static versus leaf.
+- [pipekit kernels](./pipekit_kernels.md) defines the machinery this page reuses: the named-array adapter, the single `Signature`, the dim-level functions, `KernelSpec` and `KernelOp`, `JaxOperator`.
 
 This page adds no machinery of its own; where it needs some, the need goes to pipekit.
 
-**Decided 22 Oct 2026, merged here:** xrops sits one tier above geoops (Package tiers, below); this settles O1, O4 and O7.
-The [proposal](https://claude.ai/artifact/1hckwsJhWZTAzEhWJZpe3u) where it was worked out is superseded by this doc.
-Still open: the [vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh), findings F1–F17.
-
-:::{note} How this page relates to the earlier design pages
-It replaces the `geoops.functional` wording in [](./geoarray.md) with the kernel model below: L1 kernels wrapped as `KernelOp`s, defined in [](./pipekit_kernels.md).
-:::
+**Decided 22 Oct 2026:** xrops sits one tier above geoops ([package tiers](#design-tiers)); this settles OP-O1, OP-O4 and OP-O7.
+The levels (L1 primitive, L2 operator, L3 algorithm) are defined once, in [the three levels](#design-levels); this page places operations within them.
+Still open: the [case studies](./case_studies.md) findings CS-F1 to CS-F17.
 
 ## The grid
 
-Two independent questions place every operation: what it needs to know (the layer, a row) and how much data it runs on (the carrier family, a column).
+Two independent questions place every operation: what it needs to know (a row) and how much data it runs on (the carrier family, a column).
 
 | Needs | geoarray carriers (one item, eager or `jit`) | xarray carriers (many items, by value, lazy) |
 | --- | --- | --- |
-| **L3 geometry** | geoops: reproject, rasterize, sample H(x), plume detection, patch/stitch | xrops: regrid a cube, mosaic many files |
-| **L2 dim names** | pipekit-array dim-level functions; `KernelOp`s over a named dim | the same functions and `KernelOp`s; native value operations (`resample`, `groupby`, ranges); xrops analysis |
-| **L1 shapes** | kernels on `.data` | kernels via `apply_ufunc` |
+| **geometry** | geoops: reproject, rasterize, sample H(x), plume detection, patch/stitch | xrops: regrid a cube, mosaic many files |
+| **dim names** | pipekit-array dim-level functions; `KernelOp`s over a named dim | the same functions and `KernelOp`s; native value operations (`resample`, `groupby`, ranges); xrops analysis |
+| **shapes only** | kernels on `.data` | kernels via `apply_ufunc` |
 
 The two carrier families:
 
@@ -65,10 +61,11 @@ The five kinds of operation and their owners:
 | geometry operators | geoops (per item), xrops (per cube) | their column |
 | native xarray operations | xarray | xarray carriers |
 
-**The consequence that matters most:** an L2 operation built as a `KernelOp` is not column-specific.
+**The consequence that matters most:** an operation that needs only dim names, built as a [KernelOp](#design-kernelop), is not column-specific.
 `NDVI(dim="band")` runs on a `GeoImage` eagerly, on a JAX carrier under `jit`, and on a lazy cube through `apply_ufunc`, from one definition.
-Only L3 geometry and xarray's value operations stay tied to a column.
+Only geometry operators and xarray's value operations stay tied to a column.
 
+(design-tiers)=
 ## Package tiers: xrops above geoops (decided)
 
 Decided 22 Oct 2026: pipekit-array (tier 0) → geoops (tier 1) → xrops (tier 2).
@@ -139,8 +136,8 @@ Tiering won on where code lives; its costs are install weight (removed by the sl
 
 |  | Chosen: tiered | Not taken: two lanes, same tier |
 | --- | --- | --- |
-| lifting geoops over cubes (O4) | `xrops.lift`, in the package that knows xarray | `geoops.lift` behind `geoops[xarray]` |
-| gradient (O7) | kernel and carrier wrapper in geoops, xarray wrapper in xrops | kernel in pipekit-array, which stops being domain-free |
+| lifting geoops over cubes (OP-O4) | `xrops.lift`, in the package that knows xarray | `geoops.lift` behind `geoops[xarray]` |
+| gradient (OP-O7) | kernel and carrier wrapper in geoops, xarray wrapper in xrops | kernel in pipekit-array, which stops being domain-free |
 | xrops reusing geoops operators | imports them and can type-check them as arguments | only by composing in a pipekit pipeline |
 | installing xrops alone | adds geoops's slim base | xarray stack only |
 | state physics (MLD, budgets) on a geoarray carrier | lives in xrops, so xarray must be installed | same |
@@ -150,51 +147,9 @@ Tiering won on where code lives; its costs are install weight (removed by the sl
 
 ### Demo API
 
-Three cases here; lifting over a cube and the gradient have their own sections below.
-
-**One kernel, every carrier.**
-`NDVI` (defined in the geoops section) is written once in geoops; no `xrops.NDVI` exists.
-The xarray call works because pipekit-array's `[xarray]` adapter is registered, not because xrops is installed.
-
-```python
-ndvi: Operator = geoops.NDVI()
-
-# eager NumPy: scene is GeoArray["band y x"] → (y, x)
-m: GeoArray["y x"] = ndvi(scene)
-
-# the same op under jit on a JAX carrier
-ndvi_jit: Callable = jax.jit(ndvi)
-jscene: GeoArray["band y x"] = scene.to_jax()
-m_jax: GeoArray["y x"] = ndvi_jit(jscene)
-
-# lazy: cube is DataArray["time band y x"] → (time, y, x), one task per chunk
-m_cube: DataArray["time y x"] = ndvi(cube)
-```
-
-**What "unwrap and rewrap" means for xarray.**
-
-```python
-# inside KernelOp, for xarray inputs (pipekit-array[xarray])
-def _call_xarray(
-    kernel: Callable, spec: KernelSpec, core: dict[str, str], *xs: DataArray["..."],
-) -> DataArray["..."]:
-    # "(c)->()" with core = {"c": "band"}: band moves last and is consumed
-    in_dims: list[list[str]] = [[core[d] for d in s] for s in spec.inputs]     # [["band"]]
-    out_dims: list[list[str]] = [[core[d] for d in s] for s in spec.outputs]   # [[]]
-    # coordinates must be equal; never inner-joined
-    adapter.check_compatible(*xs)
-    # apply_ufunc unwraps .data, calls the kernel per chunk, rewraps coords and attrs
-    return xr.apply_ufunc(
-        kernel,
-        *xs,
-        input_core_dims=in_dims,
-        output_core_dims=out_dims,
-        dask="parallelized",
-        join="exact",
-    )
-```
-
-This is what scikit-learn's `set_output` does not do: dask stays lazy, and a 10⁻⁷ m coordinate offset raises instead of returning shape `(1, 4, 0)`.
+How one kernel runs on every carrier, eagerly, under `jit` and lazily through `apply_ufunc`, is shown once, in [KernelOp](#design-kernelop).
+`NDVI` (defined in the geoops section) is written once in geoops; no `xrops.NDVI` exists, and the xarray call works because pipekit-array's `[xarray]` adapter is registered, not because xrops is installed.
+What tiering adds is xrops composing geoops; lifting over a cube and the gradient have their own sections below.
 
 **xrops composing geoops.**
 
@@ -213,44 +168,25 @@ clim_2: DataArray["month y x"] = pipe(cube)
 
 The pipeline form worked under the two-lane design too; tiering adds the first, where an xrops operator takes a geoops operator as an argument and type-checks it.
 
-## Primitives, operators, algorithms
+## The levels in practice
 
-Every package that computes (geotoolz, finitevolX, somax, plumax, radtrax, vardax) writes its numerics as primitives on arrays, operators on carriers above them, and algorithms on readable geo types at the top.
-
-| Level | Takes | Returns | Lives in |
-| --- | --- | --- | --- |
-| L1 primitive | arrays, or an array-only bundle (a NamedTuple or `eqx.Module` of arrays), plus derived numeric geometry | arrays | the lowest package that owns the numerics, in `_src/array.py` |
-| L2 operator | a carrier (`GeoArray`, `DataArray`) | the same carrier family | any package that may import that carrier |
-| L3 algorithm | readable geo types (`GeoMap`, `GeoTracks`, `GeoImageSeries`) | readable geo types | the package that runs it (somax, vardax, plumax) |
-
-- **Derived numeric geometry, never the georeference.**
-  Space, time and viewing geometry as arrays: Δx, Δy, cell areas, Δt, sun and view angles.
-  A primitive never receives a CRS, a transform object or a pyproj handle.
-- **Operators derive it.**
-  `KernelOp` generates the operator when the only geometry is a dim name (NDVI, the matched filter); an operator is hand-written when it must derive geometry from the carrier.
-- **Algorithms cross the carrier boundary once.**
-  They unwrap at entry, call L1 primitives directly inside their loops, and rewrap at exit; they never call L2 operators per step.
-- **Exceptions.**
-  Geometry operators whose engine is not array code (GDAL rasterize, shapely predicates) have no primitive and are eager only.
-  Reprojection splits: the operator computes source pixel coordinates with pyproj; the primitive is `map_coordinates`.
-- **Primitives check shapes, not meaning.**
-  Units, CRS and grid compatibility are checked at L2 and L3.
-- **Enforced by a test** in geostack's dependency-graph suite: `*/_src/array.py` imports none of geoarray, xarray, pyproj, rasterio, geopandas or shapely.
+Every package that computes writes its numerics as L1 primitives on arrays, L2 operators on carriers above them, and L3 algorithms on readable geo types at the top; the rules are in [the three levels](#design-levels).
+Three examples, one per level, from the GeoNumerics and GeoModels side of the stack.
 
 ### L1: a primitive (finitevolX)
 
 ```python
 # finitevolx/_src/array.py — arrays in, arrays out, no carrier, no CRS
 class CGrid(eqx.Module):
-    dx_u: Float[Array, "H W"]      # zonal spacing at u points, m
-    dy_v: Float[Array, "H W"]      # meridional spacing at v points, m
-    area_t: Float[Array, "H W"]    # cell area at T points, m²
-    mask_t: Bool[Array, "H W"]     # ocean = True
+    dx_u: Float[Array, "H W"]  # zonal spacing at u points, m
+    dy_v: Float[Array, "H W"]  # meridional spacing at v points, m
+    area_t: Float[Array, "H W"]  # cell area at T points, m²
+    mask_t: Bool[Array, "H W"]  # ocean = True
 
 
 def divergence(
-    u: Float[Array, "... H W"],    # zonal velocity on u points
-    v: Float[Array, "... H W"],    # meridional velocity on v points
+    u: Float[Array, "... H W"],  # zonal velocity on u points
+    v: Float[Array, "... H W"],  # meridional velocity on v points
     grid: CGrid,
 ) -> Float[Array, "... H W"]:
     # ∇·𝐮 ≈ [δₓ(u Δy) + δᵧ(v Δx)] / A, zero on land
@@ -262,7 +198,9 @@ def divergence(
 ```python
 # somax/geo/operators.py — behind somax[geo]; GeoModels may import GeoStack and GeoNumerics
 class Divergence(Operator):
-    def __call__(self, u: GeoArray["... y x"], v: GeoArray["... y x"]) -> GeoArray["... y x"]:
+    def __call__(
+        self, u: GeoArray["... y x"], v: GeoArray["... y x"]
+    ) -> GeoArray["... y x"]:
         # derived geometry, once per call: transform + CRS → spacings and areas (pyproj lives here)
         grid: CGrid = cgrid_from_transform(u.transform, u.crs, mask=u.valid)
         # the L1 call on raw arrays
@@ -276,19 +214,25 @@ class Divergence(Operator):
 ```python
 # somax/geo/simulate.py — linear shallow water, η the SSH anomaly
 def simulate(
-    eta0: GeoMap,                  # GeoArray["y x"], initial state
-    times: Int[Array, "T"],        # output times, s after eta0's time
-    depth: float,                  # H, m
-    dt: float,                     # Δt, s
-) -> GeoImageSeries:               # GeoArray["time y x"]
+    eta0: GeoMap,  # GeoArray["y x"], initial state
+    times: Int[Array, "T"],  # output times, s after eta0's time
+    depth: float,  # H, m
+    dt: float,  # Δt, s
+) -> GeoImageSeries:  # GeoArray["time y x"]
     # entry: carrier → arrays and derived geometry, once
     grid: CGrid = cgrid_from_transform(eta0.transform, eta0.crs, mask=eta0.valid)
     eta_init: Float[Array, "H W"] = eta0.data
     zeros: Float[Array, "H W"] = jnp.zeros_like(eta_init)
     # (η, u, v), each (H, W)
-    state0: tuple[Float[Array, "H W"], Float[Array, "H W"], Float[Array, "H W"]] = (eta_init, zeros, zeros)
+    state0: tuple[Float[Array, "H W"], Float[Array, "H W"], Float[Array, "H W"]] = (
+        eta_init,
+        zeros,
+        zeros,
+    )
 
-    def step(state: tuple[Float[Array, "H W"], ...], _: None) -> tuple[tuple[Float[Array, "H W"], ...], Float[Array, "H W"]]:
+    def step(
+        state: tuple[Float[Array, "H W"], ...], _: None
+    ) -> tuple[tuple[Float[Array, "H W"], ...], Float[Array, "H W"]]:
         eta, u, v = state
         # ∂η/∂t = −H ∇·𝐮
         div: Float[Array, "H W"] = divergence(u, v, grid)
@@ -313,11 +257,11 @@ def simulate(
 
 # vardax/geo/assimilate.py — 4D-Var over a window of along-track SLA
 def assimilate(
-    background: GeoMap,            # xᵇ, GeoArray["y x"]
-    obs: GeoTracks,                # y, GeoPoints["obs"] padded to N, with a valid mask
+    background: GeoMap,  # xᵇ, GeoArray["y x"]
+    obs: GeoTracks,  # y, GeoPoints["obs"] padded to N, with a valid mask
     times: Int[Array, "T"],
-    sigma_b: float,                # background error std, m
-    sigma_o: float,                # observation error std, m
+    sigma_b: float,  # background error std, m
+    sigma_o: float,  # observation error std, m
 ) -> GeoImageSeries:
 
     def cost(x0: Float[Array, "H W"]) -> Float[Array, ""]:
@@ -345,7 +289,7 @@ def assimilate(
 ```
 
 Inside `cost` the series is built and unwrapped once per evaluation.
-Whether that is cheap enough under `grad`, or `cost` should call the L1 loop directly, is open (O8 in the open questions).
+Whether that is cheap enough under `grad`, or `cost` should call the L1 loop directly, is open (OP-O8 in the open questions).
 
 ## Where each operation is written, once
 
@@ -411,13 +355,15 @@ Today it has 218 operator classes; 61 store a positional `self.axis`, and 106 ke
 
 | Shape | Base | Backends | Example |
 | --- | --- | --- | --- |
-| kernel operator (L2) | `KernelOp` | numpy, jax; xarray through the adapter | `NDVI(dim="band")` |
-| geometry operator, array math (L3) | `Operator`, derives geometry from the georeference, then calls a primitive | numpy, jax | `Sample`, `Window`, `ShiftOrigin`, `Reproject` (pyproj in the operator, `map_coordinates` primitive) |
-| geometry operator, engine-bound (L3) | `Operator`, calls GDAL or shapely; no primitive | numpy | `Rasterize`, `Vectorize` |
+| kernel operator | `KernelOp` | numpy, jax; xarray through the adapter | `NDVI(dim="band")` |
+| geometry operator, array math | `Operator`, derives geometry from the georeference, then calls a primitive | numpy, jax | `Sample`, `Window`, `ShiftOrigin`, `Reproject` (pyproj in the operator, `map_coordinates` primitive) |
+| geometry operator, engine-bound | `Operator`, calls GDAL or shapely; no primitive | numpy | `Rasterize`, `Vectorize` |
 
 ```python
 # L1 kernel in geoops/indices/_src/array.py: "(),()->()"
-def normalized_difference(a: Float[Array, "*s"], b: Float[Array, "*s"], eps: float) -> Float[Array, "*s"]:
+def normalized_difference(
+    a: Float[Array, "*s"], b: Float[Array, "*s"], eps: float
+) -> Float[Array, "*s"]:
     # ND = (a − b) / (a + b + ε)
     return (a - b) / (a + b + eps)
 
@@ -426,7 +372,9 @@ def normalized_difference(a: Float[Array, "*s"], b: Float[Array, "*s"], eps: flo
 class NDVI(Operator):
     backends: tuple[str, ...] = ("numpy", "jax", "xarray")
 
-    def __init__(self, nir: str = "B8", red: str = "B4", dim: str = "band", eps: float = 1e-10) -> None:
+    def __init__(
+        self, nir: str = "B8", red: str = "B4", dim: str = "band", eps: float = 1e-10
+    ) -> None:
         self.nir: str = nir
         self.red: str = red
         self.dim: str = dim
@@ -439,13 +387,15 @@ class NDVI(Operator):
         nir: GeoArray["y x"] = pipekit_array.sel(scene, **nir_sel)
         red: GeoArray["y x"] = pipekit_array.sel(scene, **red_sel)
         # the kernel, element-wise, through KernelOp
-        nd: KernelOp = KernelOp(normalized_difference, "(),()->()", core={}, eps=self.eps)
+        nd: KernelOp = KernelOp(
+            normalized_difference, "(),()->()", core={}, eps=self.eps
+        )
         # NDVI = (ρ_NIR − ρ_red) / (ρ_NIR + ρ_red + ε)
         return nd(nir, red)
 ```
 
 ```python
-# L3 geometry operator, array math: pyproj in the operator, a primitive for the resampling
+# L2 geometry operator, array math: pyproj in the operator, a primitive for the resampling
 class Reproject(Operator):
     backends: tuple[str, ...] = ("numpy", "jax")
 
@@ -455,7 +405,9 @@ class Reproject(Operator):
 
     def _apply(self, scene: GeoArray["band y x"]) -> GeoArray["band y x"]:
         # the target grid: transform and shape in the new CRS
-        target: GridSpec = geoarray.target_grid(scene, crs=self.crs, resolution=self.resolution)
+        target: GridSpec = geoarray.target_grid(
+            scene, crs=self.crs, resolution=self.resolution
+        )
         # derived geometry: source pixel coordinates (r, c) of every target pixel, by pyproj
         rows: Float[Array, "H W"]
         cols: Float[Array, "H W"]
@@ -473,7 +425,7 @@ class Reproject(Operator):
 | `indices`, `qa` | kernel operators | numpy, jax, xarray |
 | `normalize` | kernel operators; skimage-backed ones engine-bound | numpy, jax, xarray / numpy |
 | `compositing` | thin named operators over `stack`, `reduce`, `argreduce`, `take_along` | numpy, jax, xarray |
-| `einx` | kernel operators over einx patterns (see O2) | numpy, jax, xarray |
+| `einx` | kernel operators over einx patterns (see OP-O2) | numpy, jax, xarray |
 | `augment` | kernel operators for flips, crops, noise (PRNG key under JAX); scipy warps engine-bound | numpy, jax / numpy |
 | `spectral` | kernel operators backed by scipy | numpy, xarray |
 | `learn` | scikit-learn wrappers | numpy |
@@ -492,7 +444,7 @@ class Reproject(Operator):
 ## xrops
 
 xrops is the xarray column: value analysis built on native xarray operations, many-item geometry, and the physical- and state-domain `KernelOp`s, which also run on geoarray carriers.
-It is the code of today's `xrtoolz` distribution, renamed per the [alignment page](./package_layout.md), with `xrcore`'s operator base folded into `xrops._src`.
+It is the code of today's `xrtoolz` distribution, renamed per the [package layout page](./package_layout.md), with `xrcore`'s operator base folded into `xrops._src`.
 It sits one tier above geoops: it imports geoops for every kernel and geometry operator it does not own, and never re-implements one.
 
 ### What it writes and what it reuses
@@ -509,9 +461,9 @@ It sits one tier above geoops: it imports geoops for every kernel and geometry o
 ```python
 # L1 kernel in xrops/ocn/_src/array.py: consumes the level axis, "(l),(l)->()"
 def mixed_layer_depth(
-    sigma0: Float[Array, "... L"],     # σ₀, kg m⁻³, L levels last
-    depth: Float[Array, "... L"],      # z, m
-    threshold: float,                  # kg m⁻³
+    sigma0: Float[Array, "... L"],  # σ₀, kg m⁻³, L levels last
+    depth: Float[Array, "... L"],  # z, m
+    threshold: float,  # kg m⁻³
 ) -> Float[Array, "..."]:
     # numpy or jax.numpy, chosen by the input
     xp: ModuleType = array_namespace(sigma0)
@@ -533,7 +485,9 @@ def mixed_layer_depth(
 
 
 # L2: the level dim named, the threshold bound
-mld_op: KernelOp = KernelOp(mixed_layer_depth, "(l),(l)->()", core={"l": "level"}, threshold=0.03)
+mld_op: KernelOp = KernelOp(
+    mixed_layer_depth, "(l),(l)->()", core={"l": "level"}, threshold=0.03
+)
 
 # a GLORYS-like cube, lazy: (time, level, y, x) → (time, y, x)
 mld_cube: DataArray["time y x"] = mld_op(sigma0_cube, depth_cube)
@@ -549,7 +503,7 @@ A profile that never crosses the threshold (a well-mixed column, or one too shal
 ### Geometry written once at L1, wrapped per column
 
 A gradient needs grid spacing, which is geometry.
-Decided 22 Oct 2026 (O7): the diagnostic kernel lives in geoops and takes spacings as arrays; each column only derives the spacings.
+Decided 22 Oct 2026 (OP-O7): the diagnostic kernel lives in geoops and takes spacings as arrays; each column only derives the spacings.
 
 ```python
 # geoops/geom/_src/array.py — L1, spacings as arrays
@@ -575,11 +529,13 @@ def central_gradient(
 
 # geoops: spacing from the transform (a, e), or geodesic distances for a geographic CRS
 grad_op: Operator = geoops.geom.Gradient()
-grad_map: GeoArray["component y x"] = grad_op(ssh_map)              # ssh_map: GeoArray["y x"]
+grad_map: GeoArray["component y x"] = grad_op(ssh_map)  # ssh_map: GeoArray["y x"]
 
 # xrops: spacing from coordinate values, spherical metrics on lat/lon; the same geoops kernel
 grad_xr: Operator = xrops.Gradient(dims=("lat", "lon"))
-grad_cube: DataArray["component time lat lon"] = grad_xr(ssh)     # ssh: DataArray["time lat lon"]
+grad_cube: DataArray["component time lat lon"] = grad_xr(
+    ssh
+)  # ssh: DataArray["time lat lon"]
 ```
 
 Edges are elided here (`roll` wraps); the real kernel handles them.
@@ -606,7 +562,7 @@ GeoStack and GeoNumerics still never import each other, which fixes where model-
 | `transforms` (Fourier, wavelet, DCT) | kernel operators over named dims |
 | `interpolate` | native `interp` plus many-item geometry |
 | `geo` | split: geometry (crs, mosaic, rasterize, footprint) → many-item geometry; analysis (detrend, extremes, regimes) → value analysis |
-| `einx` (`xreinx`), `sklearn` (`xrsklearn`) | see O2 and O3 |
+| `einx` (`xreinx`), `sklearn` (`xrsklearn`) | see OP-O2 and OP-O3 |
 | `rs`, `ice` | removed (empty stubs; observation indices live in geoops and run on cubes as they are) |
 
 ## Testing
@@ -628,7 +584,7 @@ GeoStack and GeoNumerics still never import each other, which fixes where model-
 1 pipekit, pipekit-array: adapter, Signature, functions, KernelOp
         │
         ▼
-2 geoarray: adapter (geoarray epic, theme A)
+2 geoarray: adapter (geoarray page)
         │
         ▼
 3 geoops: slim base install (blocks 5)
@@ -639,7 +595,7 @@ GeoStack and GeoNumerics still never import each other, which fixes where model-
 4 dependency graph: xrtoolz to tier 2
         │
         ▼
-5 xrops (alignment doc A–E): rename, fold xrcore,
+5 xrops (package layout page): rename, fold xrcore,
   Signature re-export, import geoops kernels,
   xrops.lift, xrops.Gradient, state-physics KernelOps
 ```
@@ -650,11 +606,11 @@ Each step is a 0.X.0 bump. xrops now follows geoops instead of moving in paralle
 
 | ID | Question | Recommended | Alternative |
 | --- | --- | --- | --- |
-| O1 | Where kernel operators live | **Decided 22 Oct 2026:** observation and sensor kernels in geoops; state-domain kernels (MLD, budgets) in xrops; xrops imports geoops kernels and never re-implements one | a third, neutral package of kernel operators |
-| O2 | Two einx bridges (`geoops.einx`, `xreinx`) | one named-dims einx bridge in pipekit-array (`[einx]` extra); geoops keeps only its spatial-survival rule | keep both |
-| O3 | Two scikit-learn bridges (`geoops.learn`, `xrsklearn`) | `to_rows` / `from_rows` as dim-level functions in pipekit-array, one estimator wrapper on pipekit's `FittableTransformer` | keep both |
-| O4 | Lifting geometry over cubes | **Decided 22 Oct 2026:** `xrops.lift(op, dim=...)` in xrops; geoops has no `[xarray]` extra | `geoops.lift` behind `geoops[xarray]` (not taken) |
-| O5 | How operators use `KernelOp` | by composition: an operator keeps its own config and calls a `KernelOp` inside (as `NDVI` does) | every kernel operator subclasses `KernelOp` |
-| O6 | The `backends` vocabulary | `"numpy"`, `"jax"`, `"xarray"` | backends and carrier families declared separately |
-| O7 | Where grid calculus lives | **Decided 22 Oct 2026:** the diagnostic gradient kernel in geoops (`geoops/geom/_src/array.py`), wrapped by `geoops.geom.Gradient` and `xrops.Gradient` (today's `xrgrad`); pipekit-array keeps no domain kernels; model-grade calculus in finitevolX, wrapped by the GeoML or GeoModels package that uses it | kernel in pipekit-array (not taken) |
-| O8 | Does an L3 algorithm call L3 algorithms inside a differentiated cost (the assimilator calling `simulate`)? | yes, while wrap and unwrap stay cheap under `grad`; measured in the spike | the cost calls the L1 loop directly, and only the outer call returns a `GeoImageSeries` |
+| OP-O1 | Where kernel operators live | **Decided 22 Oct 2026:** observation and sensor kernels in geoops; state-domain kernels (MLD, budgets) in xrops; xrops imports geoops kernels and never re-implements one | a third, neutral package of kernel operators |
+| OP-O2 | Two einx bridges (`geoops.einx`, `xreinx`) | one named-dims einx bridge in pipekit-array (`[einx]` extra); geoops keeps only its spatial-survival rule | keep both |
+| OP-O3 | Two scikit-learn bridges (`geoops.learn`, `xrsklearn`) | `to_rows` / `from_rows` as dim-level functions in pipekit-array, one estimator wrapper on pipekit's `FittableTransformer` | keep both |
+| OP-O4 | Lifting geometry over cubes | **Decided 22 Oct 2026:** `xrops.lift(op, dim=...)` in xrops; geoops has no `[xarray]` extra | `geoops.lift` behind `geoops[xarray]` (not taken) |
+| OP-O5 | How operators use `KernelOp` | by composition: an operator keeps its own config and calls a `KernelOp` inside (as `NDVI` does) | every kernel operator subclasses `KernelOp` |
+| OP-O6 | The `backends` vocabulary | `"numpy"`, `"jax"`, `"xarray"` | backends and carrier families declared separately |
+| OP-O7 | Where grid calculus lives | **Decided 22 Oct 2026:** the diagnostic gradient kernel in geoops (`geoops/geom/_src/array.py`), wrapped by `geoops.geom.Gradient` and `xrops.Gradient` (today's `xrgrad`); pipekit-array keeps no domain kernels; model-grade calculus in finitevolX, wrapped by the GeoML or GeoModels package that uses it | kernel in pipekit-array (not taken) |
+| OP-O8 | Does an L3 algorithm call L3 algorithms inside a differentiated cost (the assimilator calling `simulate`)? | yes, while wrap and unwrap stay cheap under `grad`; measured in the spike | the cost calls the L1 loop directly, and only the outer call returns a `GeoImageSeries` |

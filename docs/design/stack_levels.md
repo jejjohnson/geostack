@@ -21,7 +21,7 @@ numbering:
   code: true
 ---
 
-How the L1 / L2 / L3 rule from the [operators doc](./operators.md) lands in every package above GeoStack: which levels each package holds today, which it should hold, and what moves.
+How [the three levels](#design-levels) land in every package above GeoStack: which levels each package holds today, which it should hold, and what moves.
 
 ## At a glance
 
@@ -101,7 +101,7 @@ What changes:
   - `peaks_over_threshold(x, u)`: exceedances x − u and their indices where x > u;
   - `decluster_runs(idx, run)`: keeps one peak per cluster, clusters separated by more than `run` steps;
   - quantile thresholds: a fitted operator (fit u(s) by quantile regression once, then apply as a kernel), like the matched filter.
-- **`xtremax.simulations` waits on its purpose** (O6 below): a test fixture for the EVT methods goes to GeoBench or `xtremax.testing`; a stochastic weather generator for scenarios becomes a GeoModels package.
+- **`xtremax.simulations` waits on its purpose** (SL-O6 below): a test fixture for the EVT methods goes to GeoBench or `xtremax.testing`; a stochastic weather generator for scenarios becomes a GeoModels package.
 - **vardax keeps its L3** (cycles, 4DVarNet training) but they take readable types at their boundary (`GeoMap`, `GeoTracks`), as `vardax.geo.assimilate` does in the case studies.
   The Lorenz plotting moves out of the main namespace.
 - **filterax and optax_bayes** are missing from the index (their import probably fails during generation); fixing that comes before classifying them properly.
@@ -141,7 +141,7 @@ The problem is not that it spans levels but that some modules mix them.
 
 **somax 0.0.15** is mostly L1 by module count, with thin L2 and L3 on top; your guess of “L2, L3, maybe L1” is the other way round today.
 It is also about to become a workspace of Earth-system components (ocean, atmosphere, land, ice, coupler) under a new name, because `somax` is taken on PyPI: see [From somax to an Earth-system workspace](./esmax.md).
-The table below is today's somax; the plan doc says where each module goes.
+The table below is today's somax; the [esmax page](./esmax.md) says where each module goes.
 
 | Module | Holds | Level today | Target |
 | --- | --- | --- | --- |
@@ -151,7 +151,7 @@ The table below is today's somax; the plan doc says where each module goes.
 | `da` | adapters to filterax/vardax, `SubsampleObs`, `make_ensemble` | L1 adapters (flat vectors) | L1; `SubsampleObs` folds into vardax's obs operators |
 | `operators` | `SomaxModelOp`, `Burgers2DOp` | L2 (pipekit Operators) | L2 under `somax[geo]`: model steps on `GeoArray` states |
 | `io` | `State` ↔ xarray `Dataset`, Zarr | L2 | L2 under `somax[xarray]` |
-| `monitor`, `models` | run-loop monitors; model run loops | L3 | L3: `simulate(GeoMap) -> GeoImageSeries`, exposing its L1 loop (case study F16) |
+| `monitor`, `models` | run-loop monitors; model run loops | L3 | L3: `simulate(GeoMap) -> GeoImageSeries`, exposing its L1 loop (case study CS-F16) |
 
 **plumax 0.1.2** mixes levels inside modules: `matched_filter` has array scores next to `apply_image_xarray` and file reading; `hapi_lut` has cross-section kernels next to xarray writers and a LUT-building pipeline; `gauss_plume`, `gauss_puff`, `les_fvm` and `population` pair forward models with NUTS or 4D-Var runs.
 Each splits into `_src/array.py` (L1), an operator module (L2, behind `plumax[geo]`) and a runs module (L3).
@@ -227,7 +227,7 @@ Move only what depends on a model's discretisation or on one product.
 
 |  | What moves | Cost |
 | --- | --- | --- |
-| A. Keep in xrops (X2 as decided) | nothing; restyle into L1 primitives (`xrops/ocn/_src/array.py`) and L2 xarray operators | none new |
+| A. Keep in xrops (OP-O1 as decided) | nothing; restyle into L1 primitives (`xrops/ocn/_src/array.py`) and L2 xarray operators | none new |
 | B. Move to somax | L1 into somax, L2 under `somax[xarray]` | computing MLD on GLORYS needs JAX, equinox and diffrax; GeoStack cannot import somax, so all ocean analysis leaves GeoStack and somax becomes an analysis library |
 | C. Move L1 to finitevolX | collocated kernels next to its C-grid diagnostics, xarray wrappers in somax | same user cost as B; GeoNumerics gains collocated-grid code |
 | **D. Split by discretisation** (recommended) | A, plus: model-consistent budget closure → somax.eval (via finitevolX C-grid stencils); WRF reader and SSH product composition → xrproducts; CH₄ column physics → radtrax | small; each piece goes to the package that owns its reason to change |
@@ -266,7 +266,7 @@ residual: Float[Array, "Ny Nx"] = somax.eval.heat_budget_residual(
 # WRF: one reader in xrproducts; plumax and xrops both consume it
 wrf: Dataset["time level y x"] = xrproducts.wrf.open("wrfout_d01_2026-07-14_00:00:00")
 
-# CH₄ columns: L1 in radtrax (O3 decides where the xarray version lives)
+# CH₄ columns: L1 in radtrax (SL-O3 decides where the xarray version lives)
 delta_vmr: Float[Array, "H W"] = radtrax.column_mass_to_delta_vmr(
     column_mass, dry_air_column
 )
@@ -280,7 +280,7 @@ Each row is a duplicate found in the capability indexes (or, for xrtoolz, its so
 | --- | --- | --- | --- |
 | matched filter | `plumax.radtran.matched_filter_*`, `plumax.matched_filter`, `geoops.MatchedFilter*` | radtrax: L1 `matched_filter_score`, L2 `radtrax.geo.MatchedFilter` | retire both plumax copies (plumax#131) and the geoops one (RTX-30) |
 | radiative transfer | `plumax.radtran` + `plumax.hapi_lut` vs radtrax (about 25 names) | radtrax | plumax re-exports nothing; it imports radtrax (plumax#133) |
-| CH₄ column physics | `plumax.coupled.column_mass_to_delta_vmr`, `xrtoolz.atm.gas.ch4.*` | radtrax L1 | open: xrops cannot import radtrax, so the xarray versions need a home (O3 below) |
+| CH₄ column physics | `plumax.coupled.column_mass_to_delta_vmr`, `xrtoolz.atm.gas.ch4.*` | radtrax L1 | open: xrops cannot import radtrax, so the xarray versions need a home (SL-O3 below) |
 | WRF reading | `plumax.met.load_wrf`, `xrtoolz.atm.open_wrfout` | xrproducts | both callers read through xrproducts |
 | 3D-/4D-Var | `plumax.assimilation`, `plumax.les_fvm.solve_4dvar` vs vardax (inferred) | vardax | plumax supplies the forward model and cost terms only |
 | linear Gaussian inversion | `plumax.lagrangian.linear_gaussian_inversion` vs `vardax.OptimalInterpolation` (inferred) | vardax | — |
@@ -297,13 +297,13 @@ None of these moves crosses the layer rule: every “keep” is at or below ever
 
 | ID | Question | Recommended | Alternative |
 | --- | --- | --- | --- |
-| O1 | Ocean and atmosphere diagnostics | D: stay in xrops as L1 + L2; model-consistent closure to somax; products to xrproducts | B: move all to somax, at the cost of a JAX install for every reanalysis user |
-| O2 | Where somax's carrier code lives | `somax[geo]` (GeoArray steps, `simulate`) and `somax[xarray]` (`io`) extras; in the workspace plan, `esmax-core[geo]` and `[xarray]` | in the base install |
-| O3 | CH₄ column physics on xarray | L1 in radtrax; xarray operators behind `radtrax[xarray]` | keep an xrops copy for analysts, accepting one duplicate across layers |
-| O4 | L3 runs in plumax (NUTS, 4D-Var, scenario grids) | a `plumax.runs` module per model, taking readable types | leave them next to the forward models |
-| O5 | filterax and optax_bayes missing from the index | fix the import failure in `scripts/capabilities.py` before classifying them | classify from source |
-| O6 | What `xtremax.simulations` is for | if it tests EVT methods with known return levels: GeoBench or `xtremax.testing`; if it generates scenarios: a GeoModels package, once it is more than one module | leave it in xtremax as is |
-| O7 | somax's future | the Earth-system workspace in the [plan doc](./esmax.md) (`esmax`, one package per component, a coupler on top) | keep one ocean-only package under a new name |
+| SL-O1 | Ocean and atmosphere diagnostics | D: stay in xrops as L1 + L2; model-consistent closure to somax; products to xrproducts | B: move all to somax, at the cost of a JAX install for every reanalysis user |
+| SL-O2 | Where somax's carrier code lives | `somax[geo]` (GeoArray steps, `simulate`) and `somax[xarray]` (`io`) extras; in the workspace plan, `esmax-core[geo]` and `[xarray]` | in the base install |
+| SL-O3 | CH₄ column physics on xarray | L1 in radtrax; xarray operators behind `radtrax[xarray]` | keep an xrops copy for analysts, accepting one duplicate across layers |
+| SL-O4 | L3 runs in plumax (NUTS, 4D-Var, scenario grids) | a `plumax.runs` module per model, taking readable types | leave them next to the forward models |
+| SL-O5 | filterax and optax_bayes missing from the index | fix the import failure in `scripts/capabilities.py` before classifying them | classify from source |
+| SL-O6 | What `xtremax.simulations` is for | if it tests EVT methods with known return levels: GeoBench or `xtremax.testing`; if it generates scenarios: a GeoModels package, once it is more than one module | leave it in xtremax as is |
+| SL-O7 | somax's future | the Earth-system workspace on the [esmax page](./esmax.md) (`esmax`, one package per component, a coupler on top) | keep one ocean-only package under a new name |
 
 Evidence: the three capability indexes, `KNOWN_CLASHES` in `scripts/capabilities.py`, and a read of xrtoolz main for its ocean and atmosphere modules.
 The library sources under `references/` were not checked out, so module internals marked “inferred” were not read.
