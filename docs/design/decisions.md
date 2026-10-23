@@ -32,6 +32,7 @@ When a status changes, change it on the page first, then here.
 | PL | [Package layout](./package_layout.md) |
 | SL | [Levels across the stack](./stack_levels.md) |
 | ES | [esmax](./esmax.md) |
+| NF | [Neural fields](./neural_fields.md) |
 
 Statuses: **decided** (with the date), **forced** (follows from the dependency rules, no real choice), **open** (not yet decided; the page gives the recommendation and the alternative), **superseded** (replaced; the page says by what), **deferred**.
 Testing gates are not listed here; each page keeps its own.
@@ -183,3 +184,16 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | ES-N3 | Land and ice start only with real code (phase P4) | open |
 | ES-N4 | `les_fvm` stays in plumax | open |
 | ES-N5 | Synthetic climates are not in esmax | open |
+
+## Neural fields (NF)
+
+| ID | Decision or question | Status |
+| --- | --- | --- |
+| NF-D1 | Deterministic neural-field parts in geonnax, probabilistic in pyrox-nn, assimilation in vardax; case 9, case 11 and methane stage 3 are the acceptance tests | open (proposed; Wave 6) |
+| NF-O1 | Averaging kernels: field on pressure levels or one collapsed weight per pixel | open |
+| NF-O2 | pyrox `Parameterized` registry under `eqx.tree_at` rebuilds | open |
+| NF-O3 | geonnax field names pyrox-nn swaps are added to, never renamed | open |
+| NF-O4 | Error bars for neural-field 4D-Var: ensemble spread from the start | open |
+| NF-O5 | SWOT wave-correlated noise in case 9 | open |
+| NF-O6 | Ownership of field derivatives (`geonnax.diffops` vs `xrgrad` vs spectraldiffx) | open |
+| NF-O7 | Whether compression is worth building | open (research, geostack#86) |

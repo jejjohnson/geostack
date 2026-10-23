@@ -34,6 +34,7 @@ project:
         - file: docs/design/package_layout.md
         - file: docs/design/stack_levels.md
         - file: docs/design/esmax.md
+        - file: docs/design/neural_fields.md
         - file: docs/design/decisions.md
     - title: Reports
       children:
@@ -60,6 +61,9 @@ project:
           children:
             - file: docs/reports/15_benchmarking.md
             - file: docs/reports/17_cycle.md
+        - title: Neural fields
+          children:
+            - file: docs/reports/18_neural_fields.md
     - title: Notes
       children:
         - file: docs/notes/background.md
