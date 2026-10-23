@@ -194,7 +194,7 @@ Every component has the same three-level shape, so a user who knows one knows th
 
 | Component | L1 (arrays) | L2 (`[geo]`, carriers) | L3 (readable types) |
 | --- | --- | --- | --- |
-| ocean | shallow water, QG, tracer advection on a C-grid | `Step` on `GeoArray["y x"]` states | `simulate(GeoMap) -> GeoImageSeries` |
+| ocean | shallow water, QG, tracer advection on a C-grid | `Step` on `GeoArray["y x"]` states | `simulate(GeoMap) -> GeoMapSeries` |
 | atmosphere | 2-layer QG, shallow water on the sphere | same | same |
 | land | bucket hydrology, surface energy balance per column | `Step` on `GeoArray["y x"]` soil-moisture maps | same |
 | ice | zero-layer thermodynamic slab ice, then EVP rheology | `Step` on ice-thickness maps | same |

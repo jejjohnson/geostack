@@ -129,7 +129,7 @@ to_annual_max: Operator = xtremax.xarray.BlockMaxima(
 annual_max_cube: DataArray["year lat lon"] = to_annual_max(tmax_cube)
 
 # L3, vardax: readable types at the boundary, raw arrays inside;
-# the forward model M: GeoMap × times → GeoImageSeries comes from the caller (GeoML never imports GeoModels)
+# the forward model M: GeoMap × times → GeoMapSeries comes from the caller (GeoML never imports GeoModels)
 series: GeoArray["time y x"] = vardax.geo.assimilate(
     background, obs, times, forward, sigma_b=0.05, sigma_o=0.03
 )
@@ -152,7 +152,7 @@ The table below is today's somax; the [esmax page](./esmax.md) says where each m
 | `da` | adapters to filterax/vardax, `SubsampleObs`, `make_ensemble` | L1 adapters (flat vectors) | L1; `SubsampleObs` folds into vardax's obs operators |
 | `operators` | `SomaxModelOp`, `Burgers2DOp` | L2 (pipekit Operators) | L2 under `somax[geo]`: model steps on `GeoArray` states |
 | `io` | `State` ↔ xarray `Dataset`, Zarr | L2 | L2 under `somax[xarray]` |
-| `monitor`, `models` | run-loop monitors; model run loops | L3 | L3: `simulate(GeoMap) -> GeoImageSeries`, exposing its L1 loop (case study CS-F16) |
+| `monitor`, `models` | run-loop monitors; model run loops | L3 | L3: `simulate(GeoMap) -> GeoMapSeries`, exposing its L1 loop (case study CS-F16) |
 
 **plumax 0.1.2** mixes levels inside modules: `matched_filter` has array scores next to `apply_image_xarray` and file reading; `hapi_lut` has cross-section kernels next to xarray writers and a LUT-building pipeline; `gauss_plume`, `gauss_puff`, `les_fvm` and `population` pair forward models with NUTS or 4D-Var runs.
 Each splits into `_src/array.py` (L1), an operator module (L2, behind `plumax[geo]`) and a runs module (L3).

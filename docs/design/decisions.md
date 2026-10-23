@@ -42,7 +42,7 @@ These change a principle or block other work.
 
 | ID | Question | Why first |
 | --- | --- | --- |
-| [CS-F1](./case_studies.md) | A readable type becomes a dim signature that any carrier can match | changes vision principle 5 and what `GeoImageSeries` means |
+| [CS-F1](./case_studies.md) | A readable type becomes a dim signature that any carrier can match | **decided 23 Oct 2026** (geostack #74): principle 5 changed; `GeoImageSeries` is `time band y x`, `GeoMapSeries` is `time y x` |
 | [CS-F2](./case_studies.md) | One L3 algorithm may take carriers from two families | changes vision principle 4 |
 | [CS-F11](./case_studies.md) | Packaged pipelines are versioned and record provenance | a new principle; most of the missing pipelines page |
 | [OP-O8](./operators.md) | May an L3 algorithm call another L3 algorithm inside a differentiated cost | decides how esmax and vardax compose |
@@ -65,7 +65,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 
 | ID | Finding | Status |
 | --- | --- | --- |
-| CS-F1 | Readable types stop at `GeoArray`, so lazy inputs have none | open (decide first) |
+| CS-F1 | Readable types stop at `GeoArray`, so lazy inputs have none | decided 23 Oct 2026: a readable type is a name, a dims pattern and a kind that any carrier matches (GA-T5) |
 | CS-F2 | One L3 algorithm takes carriers from two families | open (decide first) |
 | CS-F3 | Fixed shapes before `jit`: padding is part of the named crossing (`to_jax(pad_to=...)`) | open |
 | CS-F4 | The runner fans out I/O and carries state between cycles | open; for the pipelines page |
@@ -100,6 +100,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | GA-T2 | `band` and `variable` are separate dims | decided 21 Oct 2026 |
 | GA-T3 | `level` is allowed on observations | decided 21 Oct 2026 |
 | GA-T4 | coordax is an optional converter, not the JAX lane's foundation | decided 21 Oct 2026 |
+| GA-T5 | Readable types are dims signatures any carrier matches; a `DataArray`'s horizontal dims read as `y x`; `GeoMapSeries` is `time y x` beside `GeoImageSeries` (`time band y x`) | decided 23 Oct 2026 (CS-F1) |
 | GA-Q1 | What esmax and vardax take at their boundary | open |
 | GA-Q2 | The georeference in xarray: CF `grid_mapping` plus `GeoTransform` (same as LL-F1) | open (decide first) |
 | GA-Q3 | Shared dim-level functions live in pipekit-array | decided 21 Oct 2026 |

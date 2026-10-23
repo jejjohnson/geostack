@@ -39,8 +39,8 @@ Each line that depends on a finding is tagged `# ← CS-F3`, so the gap under ea
 | `Float[Array, "P C H W"]` | a raw array (jaxtyping); letters are sizes | `logits: Float[Array, "P H W"]` |
 | `GeoArray["patch band y x"]` | a geoarray carrier; the string names its dims, jaxtyping-style | `alpha: GeoArray["patch y x"]` |
 | `GeoSwath["band row col"]`, `GeoPoints["time variable obs"]` | the swath and point carriers, same style | `stations: GeoPoints["time variable obs"]` |
-| `DataArray["time depth lat lon"]`, `Dataset["time lat lon"]` | xarray carriers, same style; checkable once CS-F1 lands | `mld: DataArray["time lat lon"]` |
-| `GeoImage`, `GeoTracks`, `GeoImageSeries`, `Detections` | readable aliases, used in L3 signatures | `GeoImageSeries` ≡ `GeoArray["time y x"]` on any carrier (CS-F1) |
+| `DataArray["time depth lat lon"]`, `Dataset["time lat lon"]` | xarray carriers, same style; checkable against readable types through their adapter (CS-F1) | `mld: DataArray["time lat lon"]` |
+| `GeoImage`, `GeoTracks`, `GeoMapSeries`, `Detections` | readable types, used in L3 signatures | `GeoMapSeries`: kind grid, dims `time y x`, on any carrier (CS-F1) |
 
 Math comments use ∑, ∇, δ and friends; every symbol is defined where it first appears.
 Reductions and contractions on arrays are written with einx (`einx.dot`, `einx.mean`, `einx.rearrange`); linear solves use lineax.
@@ -76,13 +76,13 @@ Positions are qualitative: right means the user calls built-in operators or algo
 | --- | --- | --- | --- | --- | --- |
 | 1 Plume detector training | top right | L3 ETL, L2 features, L1 in the loss | eager, compiled | `GeoImage`, `GeoPatches` | concurrent I/O has no owner (CS-F4) |
 | 2 Emission rate | bottom right | L3 algorithm over L1 | eager, lazy | `GeoSwathImage`, `GeoPoints` | two carrier families in one call (CS-F2); records (CS-F6) |
-| 3 SLA 4D-Var | bottom right | L3 algorithm, hand-written cycle | lazy, eager, compiled | `GeoMap`, `GeoTracks`, `GeoImageSeries` | padding is a crossing (CS-F3); cycling (CS-F4) |
+| 3 SLA 4D-Var | bottom right | L3 algorithm, hand-written cycle | lazy, eager, compiled | `GeoMap`, `GeoTracks`, `GeoMapSeries` | padding is a crossing (CS-F3); cycling (CS-F4) |
 | 4 MLD climatology | bottom right | L2 kernels, native xarray | lazy | none available | readable types stop at `GeoArray` (CS-F1) |
 | 5 New retrieval method | top left | L3 → L1 → L3 | eager | `GeoSwathImage` | angles are derived geometry (CS-F5); fitted slots (CS-F9) |
 | 6 AEMET validation | bottom right | L2, short custom graph | lazy, eager | `GeoTimeSeries` | samplers agree; tables (CS-F10) |
 | 7 Daily alert pipeline | top right, far | L3 only | eager, concurrent | `Detections` | versions, provenance, idempotent runs (CS-F11) |
 | 8 WENO5 scheme | bottom left, far | L1 only | compiled | none, by choice | carrier-free geometry helpers; the way up (CS-F12) |
-| 9 GeoBench submission | top left | packaged runner, user model at any level | compiled | `GeoTracks`, `GeoImageSeries` as the contract | types must be checkable (CS-F1); runners own splits (CS-F13) |
+| 9 GeoBench submission | top left | packaged runner, user model at any level | compiled | `GeoTracks`, `GeoMapSeries` as the contract | types must be checkable (CS-F1); runners own splits (CS-F13) |
 | 10 Flaring graph | centre | L1 kernel, `KernelOp`, custom graph | eager | `GeoImage`, `Detections` | promotion from graph to pipeline (CS-F14) |
 | 11 GP interpolation of SST | bottom left | own model at L1, own loop | compiled | `GeoPoints`, `GeoArray["moment y x"]` | a convention for uncertainty (CS-F15) |
 | 12 Ensemble forecast | top centre | packaged runner over a model | compiled, lazy | `GeoMap`, member cube | algorithms expose their L1 core; runners own seeds (CS-F16) |
@@ -366,7 +366,7 @@ to_mld: Operator = xrops.ocn.MixedLayerDepth(threshold=0.03, dim="depth")
 mld: DataArray["time lat lon"] = to_mld(sigma0)
 
 # the readable type matches a lazy carrier too ← CS-F1
-assert geoarray.types.matches(mld, GeoImageSeries)
+assert geoarray.types.matches(mld, GeoMapSeries)
 
 # clim(m, lat, lon) = (1 / |Tₘ|) ∑_{t ∈ Tₘ} MLD(t, lat, lon), Tₘ the days in month m
 # native groupby underneath, a named operator on top ← CS-F7
@@ -387,8 +387,9 @@ graph: pipekit.Graph = pipekit.Graph(
 **What it stresses.**
 
 - **Gap: readable types stop at the carrier boundary.**
-  `mld` is a series of maps, but because it is a `DataArray` the vision gives it no readable type: `GeoImageSeries` is an alias of `GeoArray`.
-  A pipeline that takes "a series of maps" cannot say so for its lazy input.
+  `mld` is a series of maps, but because it is a `DataArray` the vision gave it no readable type: readable types were aliases of `GeoArray`.
+  A pipeline that takes "a series of maps" could not say so for its lazy input.
+  **Decided 23 Oct 2026 (CS-F1):** a readable type is a dims signature any carrier can match, and the xarray adapter reads `lat lon` as the grid dims, so `mld` is a `GeoMapSeries` ([readable types](./geoarray.md)).
 - **Gap: native operations are not pipeline stages.**
   `groupby(...).mean()` is the right call, but the vision says every stage is a named operator.
   Either xrops wraps the handful of native operations pipelines need (`Climatology`, `Anomaly`) or a stage may be a named native call.
@@ -736,7 +737,7 @@ def evaluate(model: SSHMapper, runner: Runner) -> Scores:
         obs: GeoPoints["obs"] = window.obs
         pred: GeoArray["time y x"] = fitted.predict(obs, task.grid)
         # contract check before scoring: dims, grid and time stamps ← CS-F1
-        geoarray.types.check(pred, GeoImageSeries, grid=task.grid, time=window.times)
+        geoarray.types.check(pred, GeoMapSeries, grid=task.grid, time=window.times)
         # RMSE = √(𝔼[(η̂ − η)²]); λₓ = wavelength where the PSD score crosses 0.5
         score: Score = task.metrics(pred, window.truth)
         scores.append(score)
@@ -748,14 +749,14 @@ What the submission writes:
 
 ```python
 # the contract, in readable types:
-# GeoTracks ≡ GeoPoints["obs"] + a time leaf; GeoMap ≡ GeoArray["y x"]; GeoImageSeries ≡ GeoArray["time y x"]
+# GeoTracks ≡ GeoPoints["obs"] + a time leaf; GeoMap ≡ GeoArray["y x"]; GeoMapSeries ≡ GeoArray["time y x"]
 class SSHMapper(Protocol):
-    def fit(self, train: Sequence[tuple[GeoTracks, GeoImageSeries]]) -> "SSHMapper": ...
-    def predict(self, obs: GeoTracks, grid: GeoMap) -> GeoImageSeries: ...
+    def fit(self, train: Sequence[tuple[GeoTracks, GeoMapSeries]]) -> "SSHMapper": ...
+    def predict(self, obs: GeoTracks, grid: GeoMap) -> GeoMapSeries: ...
 
 
 class MyMapper:
-    def predict(self, obs: GeoTracks, grid: GeoMap) -> GeoImageSeries:
+    def predict(self, obs: GeoTracks, grid: GeoMap) -> GeoMapSeries:
         # crossing with padding ← CS-F3
         jobs: GeoPoints["obs"] = obs.to_jax(pad_to=20_000)
         times: Int[Array, "T"] = obs.window.times
@@ -775,7 +776,7 @@ scores: Scores = task.evaluate(MyMapper(), runner=runner)
 **What it stresses.**
 
 - **Holds, and is the strongest use of readable types:** the submission contract is written in them.
-  `GeoTracks` in, `GeoImageSeries` out is a precise, checkable interface that a shape-only contract cannot express.
+  `GeoTracks` in, `GeoMapSeries` out is a precise, checkable interface that a shape-only contract cannot express.
 - **Gap: the contract needs checking, not just annotating.**
   The benchmark must refuse a submission whose output has the wrong dims, grid or time stamps before scoring, which is CS-F1's "type as a checkable signature" again.
 - **Gap: leakage is the runner's job.**
@@ -962,7 +963,7 @@ summary: DataArray["stat time lat lon"] = stats(cube)
 **What it stresses.**
 
 - **Gap: models need a named L1 entry point.**
-  The runner calls `model.l1` to vmap the raw loop; an algorithm that only exposes its L3 signature (`simulate(GeoMap) -> GeoImageSeries`) cannot be vmapped without rewrapping per member.
+  The runner calls `model.l1` to vmap the raw loop; an algorithm that only exposes its L3 signature (`simulate(GeoMap) -> GeoMapSeries`) cannot be vmapped without rewrapping per member.
   L3 algorithms should expose their L1 core.
 - **Gap: seeds belong to the runner.**
   One key per member, derived from the run's seed; the vision should say randomness is passed down, never drawn inside operators.
@@ -1024,7 +1025,7 @@ Three findings change a principle (CS-F1, CS-F2, CS-F11); the rest add requireme
 
 | ID | Finding | Cases | Proposed edit |
 | --- | --- | --- | --- |
-| CS-F1 | Readable types stop at `GeoArray`, so lazy inputs have none, and contracts cannot be checked on them | 4, 9 | **Principle 5 changes:** a readable type is a dim signature (`GeoImageSeries` = `time y x` on a grid) that any registered carrier can match, checked with `Signature.matches`; "one object" becomes "one type name on any carrier" |
+| CS-F1 | Readable types stop at `GeoArray`, so lazy inputs have none, and contracts cannot be checked on them | 4, 9 | **Decided 23 Oct 2026, principle 5 changed:** a readable type is a dim signature (`GeoMapSeries` = `time y x` on a grid) that any registered carrier can match, checked with `Signature.matches`; "one object" became "one type name on any carrier" |
 | CS-F2 | One L3 algorithm takes carriers from two families | 2, 3 | **Principle 4 gains a clause:** inside an L3 algorithm, several families may meet; the algorithm does its own crossings, by value in xarray first |
 | CS-F3 | Fixed shapes before `jit`, for points and images | 3, 11, 13 | padding is part of the named crossing: `to_jax(pad_to=...)` sets the `valid` leaf |
 | CS-F4 | The runner has jobs: fan out I/O, carry state between cycles and runs | 1, 3, 7 | the pipelines page specifies concurrent I/O stages with a join, and stateful cycling with warm start and append-to-Zarr |
@@ -1042,5 +1043,5 @@ Three findings change a principle (CS-F1, CS-F2, CS-F11); the rest add requireme
 | CS-F16 | Runners need the L1 core of an algorithm, and own randomness | 12 | every L3 algorithm exposes its L1 loop; seeds are passed down from the run, never drawn inside operators |
 | CS-F17 | Latency: imports and first compile | 13 | ahead-of-time compile for fixed shapes; the slim geoops base (decided on the [operators page](./operators.md)) is required, not optional, for apps |
 
-Three to decide first: CS-F1 changes what a readable type is; CS-F2 and CS-F11 change principles.
+Three to decide first: CS-F1 changes what a readable type is (decided 23 Oct 2026); CS-F2 and CS-F11 change principles.
 CS-F4, CS-F11, CS-F13, CS-F14 and CS-F16 together are most of the missing pipelines page.

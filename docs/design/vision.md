@@ -71,7 +71,7 @@ This is the one definition the other design pages link to.
 | --- | --- | --- | --- |
 | L1 primitive | arrays, or an array-only bundle (a NamedTuple or `eqx.Module` of arrays), plus derived numeric geometry | arrays | the lowest package that owns the numerics, in `_src/array.py` |
 | L2 operator | a carrier (`GeoArray`, `DataArray`) | the same carrier family | any package that may import that carrier |
-| L3 algorithm or packaged pipeline | readable geo types (`GeoMap`, `GeoTracks`, `GeoImageSeries`) | readable geo types | the package that runs it (esmax, vardax, plumax) |
+| L3 algorithm or packaged pipeline | readable geo types (`GeoMap`, `GeoTracks`, `GeoMapSeries`) | readable geo types | the package that runs it (esmax, vardax, plumax) |
 
 - **Derived numeric geometry, never the georeference.**
   Space, time and viewing geometry as arrays: Δx, Δy, cell areas, Δt, sun and view angles, unit vectors on the sphere.
@@ -388,7 +388,8 @@ Keras chooses one backend for a whole program (`KERAS_BACKEND`); GeoStack choose
 ## Typing: one object, checked in different places
 
 Strict for pipelines and loose for exploration is a question of where the check runs, not of different classes.
-Readable types are aliases of `GeoArray`, `GeoSwath` and `GeoPoints` with named dims, so an exploration result enters a pipeline with no conversion.
+A readable type is a name, a dims pattern and a geometry kind, which any registered carrier can match ([readable types](./geoarray.md), CS-F1 decided 23 Oct 2026).
+An exploration result enters a pipeline with no conversion, and a lazy `DataArray` cube is checked by the same type as an eager carrier.
 
 | Level | What is checked | When | Failure |
 | --- | --- | --- | --- |
@@ -447,8 +448,8 @@ The rule this needs: no pipeline stage is a closure or a private function; each 
    No hidden stage; any stage can be pulled out or replaced.
 4. **The carrier chooses the run mode.**
    No global backend; crossings are explicit calls.
-5. **One object at every level.**
-   Readable types are aliases; strictness is where the check runs.
+5. **One type name on any carrier.**
+   A readable type is a dims signature that eager, compiled and lazy carriers all match; strictness is where the check runs.
 6. **Never align silently.**
    Two inputs on different grids refuse; xarray's inner join is never the default.
 7. **Dependencies point down.**
@@ -466,7 +467,7 @@ The rule this needs: no pipeline stage is a closure or a private function; each 
 - **Not accessors.**
   No `.geo` on `DataArray`; operators are functions or `Operator`s you import.
 - **Not `GeoSeries`.**
-  That is geopandas' column of shapes; the series types are `GeoImageSeries` and `GeoTimeSeries`.
+  That is geopandas' column of shapes; the series types are `GeoImageSeries`, `GeoMapSeries` and `GeoTimeSeries`.
 
 ## How the design pages fit
 
