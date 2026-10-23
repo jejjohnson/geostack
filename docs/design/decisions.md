@@ -46,7 +46,7 @@ These change a principle or block other work.
 | [CS-F2](./case_studies.md) | One L3 algorithm may take carriers from two families | changes vision principle 4 |
 | [CS-F11](./case_studies.md) | Packaged pipelines are versioned and record provenance | a new principle; most of the missing pipelines page |
 | [OP-O8](./operators.md) | May an L3 algorithm call another L3 algorithm inside a differentiated cost | decides how esmax and vardax compose |
-| [GA-Q2](./geoarray.md) / [LL-F1](./labeled_lane.md) | The CRS encoding on the xarray side | every converter writes it |
+| [GA-Q2](./geoarray.md) / [LL-F1](./labeled_lane.md) | The CRS encoding on the xarray side | **decided 23 Oct 2026** (geostack #77): a hand-written CF `spatial_ref` with `crs_wkt`, `CRS.to_cf()` attributes and `GeoTransform`; no rioxarray |
 | [GA-Q5](./geoarray.md) | Do geoops kernel operators accept a `DataArray` directly | the lane rule LL-H1 waits on it |
 
 ## Vision (VI)
@@ -101,7 +101,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | GA-T3 | `level` is allowed on observations | decided 21 Oct 2026 |
 | GA-T4 | coordax is an optional converter, not the JAX lane's foundation | decided 21 Oct 2026 |
 | GA-Q1 | What esmax and vardax take at their boundary | open |
-| GA-Q2 | The georeference in xarray: CF `grid_mapping` plus `GeoTransform` (same as LL-F1) | open (decide first) |
+| GA-Q2 | The georeference in xarray: CF `grid_mapping` plus `GeoTransform` (same as LL-F1) | decided 23 Oct 2026 |
 | GA-Q3 | Shared dim-level functions live in pipekit-array | decided 21 Oct 2026 |
 | GA-Q4 | What happens to geoops compositing | open |
 | GA-Q5 | Do geoops operators accept a `DataArray` | open (decide first) |
@@ -115,7 +115,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 
 | ID | Decision or question | Status |
 | --- | --- | --- |
-| LL-F1 | CRS as a `spatial_ref` coordinate with `crs_wkt` and `GeoTransform` | open (same question as GA-Q2) |
+| LL-F1 | CRS as a `spatial_ref` coordinate with `crs_wkt`, `CRS.to_cf()` attributes and `GeoTransform` | decided 23 Oct 2026 (with GA-Q2) |
 | LL-F2 | Per-band metadata: `band` holds names; `wavelength` and FWHM are non-index coordinates | open |
 | LL-F3 | Multi-resolution products as a `DataTree`, one node per grid | open |
 | LL-G1 | Where a coordax grid coordinate lives | deferred until esmax or vardax asks |
