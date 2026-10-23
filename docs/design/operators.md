@@ -262,8 +262,10 @@ def simulate(
     traj: Float[Array, "S+1 H W"] = jnp.concatenate([first, etas])
     # the frames at the requested times: (T, H, W)
     frames: Float[Array, "T H W"] = traj[n_out]
-    # exit: arrays → a series on eta0's grid, stamped with the requested times
-    stamps: Int[np.ndarray, "T"] = eta0.time + times
+    # exit: arrays → a series on eta0's grid, stamped with the requested times;
+    # TimeAxis stamps are int64 nanoseconds, so offsets in s become ns first
+    offsets_ns: Int[np.ndarray, "T"] = times.astype(np.int64) * 1_000_000_000
+    stamps: Int[np.ndarray, "T"] = eta0.time + offsets_ns
     return GeoImageSeries.from_frames(frames, like=eta0, time=stamps)
 
 

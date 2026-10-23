@@ -123,7 +123,7 @@ pipekit.register_adapter(xr.DataArray, xarray_adapter)
 | Carrier | Adapter lives in | Notes |
 | --- | --- | --- |
 | `xr.DataArray` | pipekit-array `[xarray]` extra | `check_compatible` compares coordinates exactly; `rewrap` keeps coords and attrs of surviving dims |
-| `GeoArray`, `GeoSwath`, `GeoPoints` | geoarray | `check_compatible` compares grids, transforms, swath lat/lon or point positions and raises `GridMismatchError`; `rewrap` keeps the georeference |
+| `GeoArray`, `GeoSwath`, `GeoPoints` | geoarray | `check_compatible` compares grids, transforms, swath lat/lon or point positions and raises `GridMismatchError`; `rewrap` keeps the georeference while the spatial dims survive, and returns a `DimArray` when a kernel consumes one (below) |
 | `pipekit_array.Named` | pipekit-array | a two-field record (`data`, `dims`) for tests and for libraries with no carrier of their own |
 | raw `np.ndarray`, `jax.Array` | none | not named; L1 kernels take them directly |
 
@@ -213,6 +213,15 @@ KernelOp(kernel, "(c)->()", core={"c": "band"})
 **What a kernel may take.**
 A kernel is an L1 primitive and `KernelOp` the L2 operator generated around it ([the three levels](#design-levels)).
 When the only geometry is a dim name, `KernelOp` needs nothing more; when the kernel needs derived geometry, `geometry={name: fn(carrier) -> arrays}` computes it per call.
+Those keyword arrays are passed whole, never mapped, so they suit geometry with no carrier dims (a grid bundle, a time step).
+Geometry that varies per pixel (view angles, an air-mass factor) has the carrier's dims and must be mapped with it, so it is computed as a carrier and passed as a positional input with its own core dims.
+
+**When a kernel consumes a spatial dim.**
+A geo carrier's dims must end in its spatial dims (`y x`, `row col`, `obs`).
+Per-column statistics consume `row` and keep `col`, so the result, `(col, band)`, is no longer a `GeoSwath`.
+In that case the adapter's `rewrap` returns a `DimArray` from pipekit-array: dims, data and the labels of the surviving dims, registered as a JAX pytree, with no georeference.
+`KernelOp` combines carriers of different kinds by dim name and size (a `GeoSwath["band row col"]` with a `DimArray["col band"]` maps both over `col`); grid checks apply only between carriers of the same kind.
+Where `DimArray` lives and what it carries is open (PK-P7).
 
 ### The spec
 
@@ -444,4 +453,5 @@ pipekit-array ships a test kit so every carrier library proves the same things:
 | PK-P3 | Core dim names in the spec | abstract letters plus a `core=` mapping, so the same kernel serves `dim="band"` and `dim="variable"` | carrier dim names written in the spec |
 | PK-P4 | Home of the xarray adapter | pipekit-array `[xarray]`, shared by geoarray and xrtoolz | xrcore |
 | PK-P5 | `Dataset` and `DataTree` | `DataArray` only at first; `Dataset` and `DataTree` dispatch stays in xrops (today's xrcore DataTree dispatch) | adapters for both in pipekit-array |
+| PK-P7 | The carrier for outputs that drop a spatial dim (fitted per-column statistics) | `pipekit_array.DimArray`: dims, data, labels of the surviving dims, a pytree, no georeference | xarray for every such output, which forces the `[xarray]` extra and leaves JAX |
 | PK-P6 | `to_jax()` dependency | **Forced by the dependency rules (review of #60):** `pipekit_jax.to_jax` lives in pipekit-jax, because pipekit-jax → pipekit-cycle → pipekit-array already exists and the reverse edge would close a cycle | — |

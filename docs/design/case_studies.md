@@ -436,7 +436,7 @@ baseline: GeoSwath["row col"] = pipe.run()  # ΔXCH₄, ppb
 
 # L1: statistics over the R rows of one column, C bands
 def mf_amf(
-    x: Float[Array, "R C"], t: Float[Array, "C"], amf: Float[Array, "R"]
+    x: Float[Array, "R C"], amf: Float[Array, "R"], *, t: Float[Array, "C"]
 ) -> Float[Array, "R"]:
     # μ = (1/R) ∑ᵣ xᵣ
     mu: Float[Array, "C"] = einx.mean("[r] c", x)
@@ -456,19 +456,30 @@ def mf_amf(
     return num / (amf * norm)
 
 
-# L2: consumes rows and bands, vectorized over columns (mf_amf takes one column);
-# GeoSwath["band row col"] → GeoSwath["row col"]
-kernel_op: KernelOp = KernelOp(
-    mf_amf,
-    KernelSpec("(r,c),(c),(r)->(r)", vectorize=True),
-    core={"r": "row", "c": "band"},
-    geometry={
-        "amf": geoarray.air_mass_factor
-    },  # AMF = 1/cos θ_sun + 1/cos θ_view, from the carrier ← CS-F5
-    fitted=False,  # fits μ, Σ inside; replace() checks the slot ← CS-F9
-)
+# L2: the stage; GeoSwath["band row col"] → GeoSwath["row col"]
+class MatchedFilterAMF(Operator):
+    # fits μ, Σ inside; replace() checks the slot ← CS-F9
+    fitted: bool = False
+
+    def __init__(self, t: Float[Array, "C"]) -> None:
+        # consumes rows and bands, vectorized over columns (mf_amf takes one column);
+        # the swath and the AMF are both mapped; t is shared, so it is a keyword
+        self.kernel_op: KernelOp = KernelOp(
+            mf_amf,
+            KernelSpec("(r,c),(r)->(r)", vectorize=True),
+            core={"r": "row", "c": "band"},
+            t=t,
+        )
+
+    def __call__(self, swath: GeoSwath["band row col"]) -> GeoSwath["row col"]:
+        # AMF = 1/cos θ_sun + 1/cos θ_view per pixel, from the swath's angle leaves;
+        # per-pixel geometry has the swath's dims, so it is a mapped input ← CS-F5
+        amf: GeoSwath["row col"] = geoarray.air_mass_factor(swath)
+        return self.kernel_op(swath, amf)
+
+
 target: Float[Array, "C"] = plumes.ch4_unit_spectrum()
-new_stage: KernelOp = kernel_op.bind(t=target)
+new_stage: Operator = MatchedFilterAMF(t=target)
 
 # the same pipeline with one stage replaced
 candidate_pipe: pipekit.Graph = pipe.replace("matched_filter", new_stage)
@@ -486,6 +497,7 @@ report: Comparison = pipekit.evaluate.compare(
 - **Gap: derived geometry is more than spacing.**
   Here it is the sun and view zenith angles; in Case 3 it is the time step.
   The rule should say derived numeric geometry covers space, time and viewing geometry.
+  Geometry that varies per pixel, like this AMF, is a mapped input with the swath's dims, not an unmapped keyword.
 - **Gap: the replaced stage was fitted.**
   The packaged matched filter fits μ and Σ per scene; the new kernel fits them inside.
   `replace` must accept either a fitted operator or a stateless one, and say which the slot expects.

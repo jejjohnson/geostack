@@ -211,8 +211,9 @@ class MatchedFilter(FittableOperator):
             KernelSpec("(r,c)->(c),(c,d)", vectorize=True),
             core={"r": "row", "c": "band", "d": "band2"},
         )
-        mu: GeoArray["col band"]
-        sigma: GeoArray["col band band2"]
+        # row is consumed, so the outputs are no longer swaths: plain named arrays
+        mu: DimArray["col band"]
+        sigma: DimArray["col band band2"]
         mu, sigma = stats(swath)
         return self.with_fitted(mu=mu, sigma=sigma)
 
