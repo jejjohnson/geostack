@@ -25,14 +25,16 @@ project:
             - file: docs/geomodels/plumax/01_emission_rate.md
     - title: Design
       children:
-        - file: docs/design/01_geoarray.md
-        - file: docs/design/02_labeled_lane.md
-        - file: docs/design/03_package_alignment.md
-        - file: docs/design/04_geoarray_named_carriers.md
-        - file: docs/design/05_operators.md
-        - file: docs/design/06_pipekit_named_arrays.md
-        - file: docs/design/07_stack_levels.md
-        - file: docs/design/08_esmax_workspace.md
+        - file: docs/design/vision.md
+        - file: docs/design/case_studies.md
+        - file: docs/design/geoarray.md
+        - file: docs/design/labeled_lane.md
+        - file: docs/design/pipekit_kernels.md
+        - file: docs/design/operators.md
+        - file: docs/design/package_layout.md
+        - file: docs/design/stack_levels.md
+        - file: docs/design/esmax.md
+        - file: docs/design/decisions.md
     - title: Reports
       children:
         - title: Across the stack

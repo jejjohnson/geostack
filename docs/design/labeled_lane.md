@@ -79,7 +79,7 @@ The two lanes meet only at geoarray's converters.
 
 ## Running example: the same plume, with its labels
 
-The data are the same as in [the geoarray design](./01_geoarray.md): EMIT's 285-band radiance and a Sentinel-2 L1C tile over a Delaware Basin well pad.
+The data are the same as in [the geoarray design](./geoarray.md): EMIT's 285-band radiance and a Sentinel-2 L1C tile over a Delaware Basin well pad.
 What changes is what the data carry.
 EMIT's bands have wavelengths λ₁ … λ₂₈₅ from 381 to 2,493 nm that analysis code wants to select by value.
 Sentinel-2 has three native resolutions, 10, 20 and 60 m, that belong in one object.
@@ -345,7 +345,7 @@ The xarray converters ship first, because the file format is what other tools se
 
 ## References
 
-- geoarray design: [geoarray](./01_geoarray.md).
+- geoarray design: [geoarray](./geoarray.md).
 - CF conventions, grid mappings: [CF 1.11, section 5.6](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#grid-mappings-and-projections).
 - rioxarray reads CRS, transform and nodata from the standard CF and GDAL locations: [Getting started](https://corteva.github.io/rioxarray/stable/getting_started/getting_started.html).
 - coordax: [documentation](https://coordax.readthedocs.io/), checked against 0.2.9.

@@ -21,7 +21,7 @@ numbering:
   code: true
 ---
 
-How the L1 / L2 / L3 rule from the [operators doc](./05_operators.md) lands in every package above GeoStack: which levels each package holds today, which it should hold, and what moves.
+How the L1 / L2 / L3 rule from the [operators doc](./operators.md) lands in every package above GeoStack: which levels each package holds today, which it should hold, and what moves.
 
 ## At a glance
 
@@ -140,7 +140,7 @@ GeoModels is the only layer that legitimately holds L1, L2 and L3: it may import
 The problem is not that it spans levels but that some modules mix them.
 
 **somax 0.0.15** is mostly L1 by module count, with thin L2 and L3 on top; your guess of “L2, L3, maybe L1” is the other way round today.
-It is also about to become a workspace of Earth-system components (ocean, atmosphere, land, ice, coupler) under a new name, because `somax` is taken on PyPI: see [From somax to an Earth-system workspace](./08_esmax_workspace.md).
+It is also about to become a workspace of Earth-system components (ocean, atmosphere, land, ice, coupler) under a new name, because `somax` is taken on PyPI: see [From somax to an Earth-system workspace](./esmax.md).
 The table below is today's somax; the plan doc says where each module goes.
 
 | Module | Holds | Level today | Target |
@@ -303,7 +303,7 @@ None of these moves crosses the layer rule: every “keep” is at or below ever
 | O4 | L3 runs in plumax (NUTS, 4D-Var, scenario grids) | a `plumax.runs` module per model, taking readable types | leave them next to the forward models |
 | O5 | filterax and optax_bayes missing from the index | fix the import failure in `scripts/capabilities.py` before classifying them | classify from source |
 | O6 | What `xtremax.simulations` is for | if it tests EVT methods with known return levels: GeoBench or `xtremax.testing`; if it generates scenarios: a GeoModels package, once it is more than one module | leave it in xtremax as is |
-| O7 | somax's future | the Earth-system workspace in the [plan doc](./08_esmax_workspace.md) (`esmax`, one package per component, a coupler on top) | keep one ocean-only package under a new name |
+| O7 | somax's future | the Earth-system workspace in the [plan doc](./esmax.md) (`esmax`, one package per component, a coupler on top) | keep one ocean-only package under a new name |
 
 Evidence: the three capability indexes, `KNOWN_CLASHES` in `scripts/capabilities.py`, and a read of xrtoolz main for its ocean and atmosphere modules.
 The library sources under `references/` were not checked out, so module internals marked “inferred” were not read.

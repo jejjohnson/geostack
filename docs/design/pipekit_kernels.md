@@ -20,7 +20,7 @@ numbering:
   code: true
 ---
 
-**Later work.** xrops now sits one tier above geoops (decided 22 Oct 2026, [operators doc](./05_operators.md)): pipekit-array keeps no domain kernels, and every kernel lives in geoops or below.
+**Later work.** xrops now sits one tier above geoops (decided 22 Oct 2026, [operators doc](./operators.md)): pipekit-array keeps no domain kernels, and every kernel lives in geoops or below.
 The [GeoStack vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh) list findings F1–F17, still open; F1 would make readable types dim signatures checked with `Signature.matches` on any carrier.
 
 ## Decision
@@ -213,7 +213,7 @@ KernelOp(kernel, "(c)->()", core={"c": "band"})
 A kernel is an L1 primitive: arrays, or an array-only bundle such as `CGrid(dx_u, dy_v, area_t, mask_t)`, plus derived numeric geometry (spacings, time steps, viewing angles, unit vectors on the sphere).
 It never receives a CRS, a transform object or a pyproj handle.
 `KernelOp` is the L2 operator generated around it: when the only geometry is a dim name it needs nothing more; when the kernel needs derived geometry, `geometry={name: fn(carrier) -> arrays}` computes it per call.
-The full rule is in the [operators page](./05_operators.md).
+The full rule is in the [operators page](./operators.md).
 
 | Level | Takes | Lives in |
 | --- | --- | --- |

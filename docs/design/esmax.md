@@ -112,7 +112,7 @@ Why now:
   Coupling is a package's worth of work on its own, and land (column physics) and sea ice (rheology plus thermodynamics) share the core but little else with the ocean.
   Separate packages can ship and be tested alone, as the pyrox workspace does.
 
-The workspace keeps the levels rule from the [levels doc](./07_stack_levels.md): every component has L1 dynamics on arrays, L2 operators on carriers behind a `[geo]` extra, and an L3 `simulate` that takes readable types.
+The workspace keeps the levels rule from the [levels doc](./stack_levels.md): every component has L1 dynamics on arrays, L2 operators on carriers behind a `[geo]` extra, and an L3 `simulate` that takes readable types.
 
 ## Names
 

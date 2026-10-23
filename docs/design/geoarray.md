@@ -27,7 +27,7 @@ It replaces `georeader.GeoTensor` as the type that flows between every geotoolz 
 Three things do not change.
 pipekit's `Operator` contract stays as it is.
 The carrier rules in geotoolz's `AGENTS.md` keep their meaning: dims, band axis −3, fresh `attrs`, NaN-aware nodata and exact grid matching.
-The labeled lane (xarray and coordax) stays outside the type and gets its own companion page, [Labeled lane](./02_labeled_lane.md).
+The labeled lane (xarray and coordax) stays outside the type and gets its own companion page, [Labeled lane](./labeled_lane.md).
 
 - **A. The type.** `GeoTensor` is an `np.ndarray` subclass, and JAX arrays cannot be subclassed that way.
   `GeoArray` is a frozen dataclass that holds its data, registered as a JAX pytree whose leaves are the data and a float64 transform.
@@ -378,7 +378,7 @@ Smaller findings:
   Outputs get a fresh `attrs` whose per-band keys match the band count, and `wrap_like` rewraps through a duck-typed `array_as_geotensor` check.
 - **georeader's default fill is 0.** A float raster read without a fill therefore treats real zeros as nodata.
 - **The xarray bridge stores CRS differently.** georeader's `toDataArray` writes `attrs["crs"]`, while xrtoolz uses rioxarray's `spatial_ref` coordinate.
-  The [labeled-lane page](./02_labeled_lane.md) settles this.
+  The [labeled-lane page](./labeled_lane.md) settles this.
 
 ## Workstream A: the GeoArray type
 
@@ -642,7 +642,7 @@ Every move between backends or libraries is an explicit call, and each one is a 
 | `np.asarray(g)` on a JAX carrier | JAX → `np.ndarray` | eager: a host copy; inside `jit`, `grad` or `vmap`: raises `GeoArrayTraceError` (C1) |
 | `from_georeader(gt)`, `to_georeader(g)` | `GeoTensor` ↔ `GeoArray` | `geoarray[georeader]`; NumPy only; values, transform, CRS, fill and attrs carried over |
 | `Grid.affine`, `Grid.from_affine` | `affine.Affine` ↔ `Grid` | `affine` is a small BSD-licensed base dependency, already used by geoops |
-| `to_xarray`, `to_coordax` and their inverses | labeled lane | [Labeled lane](./02_labeled_lane.md) |
+| `to_xarray`, `to_coordax` and their inverses | labeled lane | [Labeled lane](./labeled_lane.md) |
 
 ```python
 import geoarray as ga
@@ -840,7 +840,7 @@ These come with the design; each has a workaround rather than a fix.
 - **x64 rejected by users.** Downstream training code may refuse a global float64 switch.
   Fallback: implement the A2 alternative behind the same `GeoArray` API, since only `to_jax` and the transform update functions change.
 - **coordax or Array API churn.** `array_api_compat` and coordax are young.
-  Fallback: geoarray depends only on `array_namespace`, and coordax sits behind an extra on [the labeled-lane page](./02_labeled_lane.md).
+  Fallback: geoarray depends only on `array_namespace`, and coordax sits behind an extra on [the labeled-lane page](./labeled_lane.md).
 - **License contamination.** Copying georeader code into geoarray would bring LGPL terms into an MIT package.
   Fallback: write geoarray from the behaviour and the tests in this doc, and use georeader only as an oracle in tests.
 - **Patch extraction clamps silently.** `lax.dynamic_slice` shifts an out-of-range offset back inside the array, which would misplace a patch without an error.
@@ -851,7 +851,7 @@ These come with the design; each has a workaround rather than a fix.
 - [ ] Decisions A1–A4, B1 and B2 confirmed or flipped (C1 and D1 decided 17 Oct 2026).
 - [ ] Package name confirmed: `geotoolz-array`, import `geoarray`, with its own icon like the other subpackages.
 - [ ] geotoolz, georeader, radtrax and plumax checked for duplicate open issues.
-- [ ] Companion page [Labeled lane](./02_labeled_lane.md) reviewed, so the converters' extras exist when geoarray 0.1.0 ships.
+- [ ] Companion page [Labeled lane](./labeled_lane.md) reviewed, so the converters' extras exist when geoarray 0.1.0 ships.
 
 ## References
 
@@ -861,4 +861,4 @@ These come with the design; each has a workaround rather than a fix.
 - JAX pytrees and custom nodes: [Pytrees, "Custom pytree nodes"](https://docs.jax.dev/en/latest/101/pytrees.html).
 - coordax `Coordinate` as a static pytree node: [coordax](https://coordax.readthedocs.io/), checked against 0.2.9.
 - JAX 64-bit mode: [Double (64-bit) precision](https://docs.jax.dev/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
-- Companion page: [Labeled lane](./02_labeled_lane.md).
+- Companion page: [Labeled lane](./labeled_lane.md).

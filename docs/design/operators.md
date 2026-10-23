@@ -25,8 +25,8 @@ numbering:
 This page decides how operations are organised across geoops (geotoolz-ops) and xrops (xrtoolz-ops): what each package writes, what it reuses, and where every kind of operation lives, so nothing is written twice.
 It sits between two others:
 
-- [geoarray: one carrier per geometry](./04_geoarray_named_carriers.md) defines the data: geoarray carriers, coordinates, readable types, static versus leaf.
-- [pipekit: named arrays, one Signature, kernels written once](./06_pipekit_named_arrays.md) defines the machinery this page reuses: the named-array adapter, the single `Signature`, the dim-level functions, `KernelSpec` and `KernelOp`, `JaxOperator`.
+- [geoarray: one carrier per geometry](./geoarray.md) defines the data: geoarray carriers, coordinates, readable types, static versus leaf.
+- [pipekit: named arrays, one Signature, kernels written once](./pipekit_kernels.md) defines the machinery this page reuses: the named-array adapter, the single `Signature`, the dim-level functions, `KernelSpec` and `KernelOp`, `JaxOperator`.
 
 This page adds no machinery of its own; where it needs some, the need goes to pipekit.
 
@@ -35,7 +35,7 @@ The [proposal](https://claude.ai/artifact/1hckwsJhWZTAzEhWJZpe3u) where it was w
 Still open: the [vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh), findings F1–F17.
 
 :::{note} How this page relates to the earlier design pages
-It replaces the `geoops.functional` wording in [](./01_geoarray.md) with the kernel model below: L1 kernels wrapped as `KernelOp`s, defined in [](./06_pipekit_named_arrays.md).
+It replaces the `geoops.functional` wording in [](./geoarray.md) with the kernel model below: L1 kernels wrapped as `KernelOp`s, defined in [](./pipekit_kernels.md).
 :::
 
 ## The grid
@@ -492,7 +492,7 @@ class Reproject(Operator):
 ## xrops
 
 xrops is the xarray column: value analysis built on native xarray operations, many-item geometry, and the physical- and state-domain `KernelOp`s, which also run on geoarray carriers.
-It is the code of today's `xrtoolz` distribution, renamed per the [alignment page](./03_package_alignment.md), with `xrcore`'s operator base folded into `xrops._src`.
+It is the code of today's `xrtoolz` distribution, renamed per the [alignment page](./package_layout.md), with `xrcore`'s operator base folded into `xrops._src`.
 It sits one tier above geoops: it imports geoops for every kernel and geometry operator it does not own, and never re-implements one.
 
 ### What it writes and what it reuses

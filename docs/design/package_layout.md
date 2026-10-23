@@ -40,11 +40,11 @@ xrtoolz adopts geotoolz's split: distributions by job, modules inside the ops pa
   `xrreader` (CMEMS, CDS, AEMET) is the xarray twin of `geoproducts` and becomes `xrtoolz-products` (import `xrproducts`).
 
 End state: each repo has a code-free umbrella and the same job-shaped distributions; `geoops` and `xrops` share family names where the job is the same.
-The lanes are not symmetric: xrops sits one tier above geoops and builds on it (decided 22 Oct 2026, [operators doc](./05_operators.md)), so every kernel lives in geoops or below and xrops adds what needs xarray.
+The lanes are not symmetric: xrops sits one tier above geoops and builds on it (decided 22 Oct 2026, [operators doc](./operators.md)), so every kernel lives in geoops or below and xrops adds what needs xarray.
 
-> **Read with the later docs.** This page set the package split first. Two of its points were refined by the docs that followed: the observations-versus-states line drawn at the L3 carrier is superseded by the workload rule in [geoarray: one carrier per geometry](./04_geoarray_named_carriers.md) (one item or a fixed batch is a geoarray carrier; many items selected by value is xarray), and the operator machinery it mentions is specified in [GeoStack operators](./05_operators.md) and [pipekit: named arrays](./06_pipekit_named_arrays.md).
+> **Read with the later docs.** This page set the package split first. Two of its points were refined by the docs that followed: the observations-versus-states line drawn at the L3 carrier is superseded by the workload rule in [geoarray: one carrier per geometry](./geoarray.md) (one item or a fixed batch is a geoarray carrier; many items selected by value is xarray), and the operator machinery it mentions is specified in [GeoStack operators](./operators.md) and [pipekit: named arrays](./pipekit_kernels.md).
 
-> **Decided 22 Oct 2026.** xrops sits one tier above geoops (pipekit-array → geoops → xrops), with geoops's base install slimmed first; the decision lives in the [operators doc](./05_operators.md) and changed rule 3 and the end-state line here. The [vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh) stay open.
+> **Decided 22 Oct 2026.** xrops sits one tier above geoops (pipekit-array → geoops → xrops), with geoops's base install slimmed first; the decision lives in the [operators doc](./operators.md) and changed rule 3 and the end-state line here. The [vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh) stay open.
 
 ## Ownership rules
 
@@ -66,7 +66,7 @@ The shared row already serves both lanes.
 2. **geoops** and **xrops** share the operators: every kernel operator is written once, in geoops or below, and runs on both carrier families; xrops owns native-xarray work (by value, many files, Dataset/DataTree, lifting geoops over cubes) and state physics.
    Family names match where the job matches.
 3. **xrops** may import geoops and geoarray; geoops never imports xrops or xarray in its base install, and has no \[xarray\] extra.
-   Crossing lanes goes through geoarray's converters ([labeled lane](./02_labeled_lane.md)).
+   Crossing lanes goes through geoarray's converters ([labeled lane](./labeled_lane.md)).
 4. **Domain physics** acts on model states in `xrops` (atm, ocn, budgets); on observations it belongs to GeoModels (plumax, radtrax), never to geoops.
 5. **geoproducts** and **xrproducts** read provider data into their lane's carrier and never transform it.
 6. **Heavy backends** (JAX, einx, scikit-learn) are extras of the ops package, never base dependencies.
@@ -249,7 +249,7 @@ Alternatives:
 - **xvec for points too.**
   One vector story, but one shapely object per point at scale.
 
-The two points left open here, L2 swaths and timestamps on `GeoArray`, are settled in [geoarray: one carrier per geometry](./04_geoarray_named_carriers.md) (`GeoArray`, `GeoSwath`, `GeoPoints`), with named dims instead of positional ones.
+The two points left open here, L2 swaths and timestamps on `GeoArray`, are settled in [geoarray: one carrier per geometry](./geoarray.md) (`GeoArray`, `GeoSwath`, `GeoPoints`), with named dims instead of positional ones.
 
 ## The crossover: when to leave geoarray
 
@@ -291,10 +291,10 @@ Hand-offs:
 1. **xarray to geoarray at the `jit` boundary.**
    Select by value in xarray, then `GeoArray.from_xarray(cube.sel(time=...))`.
 2. **A geoops op over a time stack** runs through `xrops.lift(op, dim="time")`: each slice becomes a geoarray carrier, the op runs, the result is restacked.
-   It lives in xrops, which may import geoops; geoops has no xarray extra ([operators page](./05_operators.md), O4).
+   It lives in xrops, which may import geoops; geoops has no xarray extra ([operators page](./operators.md), O4).
 3. **Observations meet states** in DA as `GeoPoints` against the model state, sliced into a carrier; `geoarray.sample` is the bridge for `H(x)`.
 
-Recommended: this three-way split, with a thin geoarray carrier and coordax only as an optional converter ([geoarray page](./04_geoarray_named_carriers.md)).
+Recommended: this three-way split, with a thin geoarray carrier and coordax only as an optional converter ([geoarray page](./geoarray.md)).
 Alternative: xarray as the only NumPy-side container, with geometry checks rebuilt in an accessor.
 
 ## Open questions

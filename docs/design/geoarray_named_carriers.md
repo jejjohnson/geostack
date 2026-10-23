@@ -22,12 +22,12 @@ numbering:
 ---
 
 **Later work.**
-The proposal to put xrops one tier above geoops was decided on 22 Oct 2026 and now lives in the [operators doc](./05_operators.md) (pipekit-array → geoops → xrops, geoops base slimmed first); the geoops and xrops rows below follow it.
+The proposal to put xrops one tier above geoops was decided on 22 Oct 2026 and now lives in the [operators doc](./operators.md) (pipekit-array → geoops → xrops, geoops base slimmed first); the geoops and xrops rows below follow it.
 The [GeoStack vision](https://claude.ai/artifact/8CuJf9Gwexb1frcKHwBvU9) and its [case studies](https://claude.ai/artifact/CpTnArZGrZYHpASxTr8vrh) (findings F1–F17) are still open.
 
 :::{note} How this page relates to the earlier design pages
-It builds on [](./01_geoarray.md) (the GeoTensor → GeoArray design) and supersedes its positional `DIMS[-ndim:]` convention with stored, named dims.
-It also changes one decision in [](./02_labeled_lane.md): coordax is an optional converter only, not the foundation of the JAX lane, so that page's coordax `AffineGrid` workstream is superseded (static coordinates would recompile per scene).
+It builds on [](./geoarray.md) (the GeoTensor → GeoArray design) and supersedes its positional `DIMS[-ndim:]` convention with stored, named dims.
+It also changes one decision in [](./labeled_lane.md): coordax is an optional converter only, not the foundation of the JAX lane, so that page's coordax `AffineGrid` workstream is superseded (static coordinates would recompile per scene).
 Its CF `spatial_ref` + `GeoTransform` encoding still stands, and is the recommended answer to Q2 here.
 :::
 
@@ -52,8 +52,8 @@ Collections of differently shaped variables are xarray's job.
 ### Operations live in their own docs
 
 This page covers the data.
-How operations are organised (the grid of layers × carrier families, what geoops and xrops each write, kernels written once) is in [GeoStack operators: geoops and xrops on one kernel model](./05_operators.md).
-The shared machinery (the named-array adapter, the single `Signature`, the dim-level functions, `KernelSpec` and `KernelOp`) is in [pipekit: named arrays, one Signature, kernels written once](./06_pipekit_named_arrays.md).
+How operations are organised (the grid of layers × carrier families, what geoops and xrops each write, kernels written once) is in [GeoStack operators: geoops and xrops on one kernel model](./operators.md).
+The shared machinery (the named-array adapter, the single `Signature`, the dim-level functions, `KernelSpec` and `KernelOp`) is in [pipekit: named arrays, one Signature, kernels written once](./pipekit_kernels.md).
 
 In one line: layers are rows (L1 shapes, L2 dim names, L3 geometry), carrier families are columns (geoarray, xarray), and an L1 kernel wrapped as a `KernelOp` runs in both columns.
 
@@ -162,7 +162,7 @@ The full op surface is not shared: the backends differ in four behaviours, not o
 | type names and `check_dims`, built on `pipekit.Signature` patterns | geoarray (names), pipekit (rule) |
 
 On xarray, `combine` and `stack` use the xarray adapter's exact comparison, so the silent-alignment trap does not apply to them; the alignment difference is one explicit check per carrier family instead of a hidden default.
-The rule for adding a shared function is in the [pipekit page](./06_pipekit_named_arrays.md): it never reads coordinate values or geometry and behaves identically on every carrier.
+The rule for adding a shared function is in the [pipekit page](./pipekit_kernels.md): it never reads coordinate values or geometry and behaves identically on every carrier.
 
 ### Composites are two ops
 
@@ -599,12 +599,12 @@ Some ops sit on both sides.
 | Repo or package | Row (layer) | Column (carriers) | What changes |
 | --- | --- | --- | --- |
 | gaussx, finitevolx, spectraldiffx, somax, radtrax, plumax, geonnax | L1 core; L3 wrappers behind a `[geo]` extra | raw arrays in the core; geoarray carriers in `[geo]` | the core never imports geotoolz; carrier wrappers that call their own kernels (e.g. radtrax's `model_xch4`) sit behind `[geo]`, since GeoModels may import GeoStack but not the reverse (GeoNumerics imports neither, so finitevolX's carrier wrappers live in the GeoML or GeoModels package that uses them); jaxtyping signatures are the contract; consumed axes last, so kernels lift through `KernelOp` |
-| pipekit, pipekit-array | L2 machinery | every registered carrier | the adapter, one `Signature`, the dim-level functions, `KernelSpec` / `KernelOp` ([pipekit page](./06_pipekit_named_arrays.md)) |
+| pipekit, pipekit-array | L2 machinery | every registered carrier | the adapter, one `Signature`, the dim-level functions, `KernelSpec` / `KernelOp` ([pipekit page](./pipekit_kernels.md)) |
 | geoarray | L3 types, adapter, geometry functions | geoarray carriers | stored dims, standard coordinates, readable types, `GeoSwath`, `GeoPoints`, its adapter, lossless xarray converters |
 | geocatalog, geocloud, geoproducts | produce carriers | both: acquisitions as geoarray carriers, cubes as xarray carriers | readers name their dims; stay JAX-free and xarray-optional |
 | geopatcher | L3 | geoarray carriers | the batch is a `GeoPatches` carrier with a `(patch, 6)` transform; split and stitch stay NumPy; the silent `jnp = np` fallback goes |
-| geoops | L2 kernel operators, L3 geometry | every kernel operator, written once, runs on both; geometry on geoarray carriers; no xarray in the base install and no `[xarray]` extra | `dim=` replaces `axis=`; each op declares `backends` ([operators page](./05_operators.md)) |
-| xrops | L2 state-physics kernels (MLD, budgets) and value analysis, L3 cube geometry | xarray carriers; `xrops.lift` runs geoops operators over cubes | built on native xarray operations; imports geoops, one tier above it ([operators page](./05_operators.md)) |
+| geoops | L2 kernel operators, L3 geometry | every kernel operator, written once, runs on both; geometry on geoarray carriers; no xarray in the base install and no `[xarray]` extra | `dim=` replaces `axis=`; each op declares `backends` ([operators page](./operators.md)) |
+| xrops | L2 state-physics kernels (MLD, budgets) and value analysis, L3 cube geometry | xarray carriers; `xrops.lift` runs geoops operators over cubes | built on native xarray operations; imports geoops, one tier above it ([operators page](./operators.md)) |
 | coordax | none | optional converter | for model code that wants `cmap`; no geotoolz package depends on it |
 
 **Which geoops ops run on JAX.**
@@ -690,7 +690,7 @@ P5 JAX-first kernels in GeoModels
 | P1 geoarray 0.2.0 | carrier, `geoarray.coords`, `geoarray.types`, `check_dims`, shared functions, `combine` / `stack`, `GeoSwath`, `GeoPoints`, `to_xarray` / `from_xarray`; `ndim` inference deprecated | the 0.1.x suite passes with only the deprecation warning |
 | P2 I/O | readers name dims; swath readers return `GeoSwath` | G4 |
 | P3 geopatcher | `batch_split` returns `GeoPatches`; stitch reads transform rows | G2 |
-| P4 geoops and xrops | `dim=`, `backends`, kernel operators in geoops; `xrops.lift` and state physics in xrops ([operators page](./05_operators.md)); P4 waits for the pipekit-array release ([pipekit page](./06_pipekit_named_arrays.md)) | the contract test passes on both backends |
+| P4 geoops and xrops | `dim=`, `backends`, kernel operators in geoops; `xrops.lift` and state physics in xrops ([operators page](./operators.md)); P4 waits for the pipekit-array release ([pipekit page](./pipekit_kernels.md)) | the contract test passes on both backends |
 | P5 GeoModels | JAX-first matched filter and plume ops; `to_coordax()` only if somax or vardax ask | G1 and G3 rerun there |
 
 ## Open questions
