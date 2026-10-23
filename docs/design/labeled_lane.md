@@ -79,7 +79,7 @@ The two lanes meet only at geoarray's converters and at `xrops.lift`.
 | LL-F3 | Multi-resolution products | `to_datatree({"r10m": g10, "r20m": g20, …})`, one node per grid, each with its own `spatial_ref` | A `Dataset` per resolution, joined by the caller | open |
 | LL-G1 | Where a coordax grid coordinate lives | `geoarray.interop.coordax`, built only when somax or vardax ask for it | Upstream in coordax, which ties our release to theirs | deferred |
 | LL-G2 | Static grid in coordax | Accept it: one compile per grid; batching and gradients use geoarray carriers | A leaf-transform wrapper around `Field`, which breaks coordax's rule that coordinates are static | decided; coordax is a converter, not a foundation |
-| LL-H1 | Operators on labeled data | Kernel operators directly on `DataArray` (GA-Q5); geometry operators through `xrops.lift(op, dim=…)` (OP-O4); xarray-native work in xrops | geoops accepts every labeled type; or a coordax `lift` helper (the 17 Oct proposal) | lifting through `xrops.lift` decided 22 Oct 2026 (OP-O4); kernel operators on `DataArray` open (GA-Q5) |
+| LL-H1 | Operators on labeled data | Kernel operators directly on `DataArray` (GA-Q5); geometry operators through `xrops.lift(op, dim=…)` (OP-O4); xarray-native work in xrops | geoops accepts every labeled type; or a coordax `lift` helper (the 17 Oct proposal) | decided: lifting through `xrops.lift` 22 Oct 2026 (OP-O4); kernel operators on `DataArray` 23 Oct 2026 (GA-Q5) |
 | LL-H2 | Who owns the converters | geoarray, behind extras | xrtoolz, which would then depend on geoarray | decided |
 
 (design-crossover)=
@@ -294,6 +294,7 @@ The 17 Oct proposal of a coordax `lift` helper for geoops kernels is dropped: Ke
   The per-band coordinate list lives in geoarray and both directions read it, so a key that is per-band on one side is per-band on the other.
 - **Kernels everywhere, geometry per item.**
   A kernel operator (only dim names as geometry) runs on carriers and on `DataArray`; a geometry operator runs on one carrier and reaches a cube only through `xrops.lift`.
+  A kernel operator given a `DataArray` when pipekit-array's xarray adapter is not installed raises and names `pipekit-array[xarray]`; geoops itself never imports xarray.
 - **xarray for files, dask and analysis.**
   Out-of-core reductions and CF output stay on xarray; the carrier lane is dense and in memory.
 - **Never align silently.**
