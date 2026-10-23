@@ -21,7 +21,7 @@ numbering:
 ---
 
 This page defines the machinery; the [package tiers](#design-tiers) say where kernels live (pipekit-array keeps no domain kernels) and [the three levels](#design-levels) say what a kernel may take.
-Still open from the [case studies](./case_studies.md): CS-F1 would make readable types dim signatures checked with `Signature.matches` on any carrier.
+From the [case studies](./case_studies.md), decided 23 Oct 2026: readable types are dim signatures checked with `Signature.matches` on any carrier (CS-F1); the geometry kind they also check is geoarray's, not pipekit's.
 
 ## Decision
 
@@ -160,7 +160,7 @@ What it is used for:
 | --- | --- |
 | `Sequential.summary` on any named carrier | `Operator.compute_output_signature` defaults to the adapter's `signature(x)` for registered carriers, instead of returning `None` |
 | dims checks at call time | `check_dims` (pipekit-array) compares `adapter.signature(x).matches(pattern)` against the function's annotations |
-| readable types | geoarray's `GeoImage` is a carrier type plus `Signature.from_pattern("band y x")`; the type name is geoarray's, the dims rule is pipekit's |
+| readable types | geoarray's `GeoImage` is a name, the kind `grid` and `Signature.from_pattern("band y x")`, matched on any carrier whose adapter reports a fitting signature; the type name and the kind are geoarray's, the dims rule is pipekit's |
 | kernel output dims | `KernelOp` computes its output signature from its `KernelSpec` without running |
 
 The pattern syntax is the one already used in geoarray's types (`"time band y x"`) and close to jaxtyping's, so one string means the same thing in a type annotation, a check and a summary.

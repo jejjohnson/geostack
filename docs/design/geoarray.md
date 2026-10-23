@@ -368,13 +368,15 @@ stack: GeoArray["time band y x"] = GeoArray.from_coords(
 
 ### Readable types (`geoarray.types`)
 
-The names are aliases for a carrier plus its dims, not subclasses.
-Slicing a `GeoImageSeries` at one date simply is a `GeoImage`, and `check_dims` verifies the dims at the call, on `pipekit.Signature` patterns.
+A readable type is a name, a dims pattern and a geometry kind, not a subclass (GA-T5, decided 23 Oct 2026).
+Any carrier with a registered adapter matches it when the adapter reports that kind and a `pipekit.Signature` that fits the pattern: a `GeoArray`, or a lazy `DataArray` cube.
+Slicing a `GeoImageSeries` at one date simply is a `GeoImage`, and `check_dims` verifies the dims at the call.
 
-| Type | Carrier and dims | Typical data |
+| Type | Kind and dims (the geoarray carrier) | Typical data |
 | --- | --- | --- |
 | `GeoMap` | `GeoArray["y x"]` | one band: a matched-filter score, a mask, an XCH₄ map |
 | `GeoImage` | `GeoArray["band y x"]` | one multispectral scene |
+| `GeoMapSeries` | `GeoArray["time y x"]` | maps over time: a model trajectory, an SLA analysis, a daily MLD cube |
 | `GeoImageSeries` | `GeoArray["time band y x"]` | frames over time, like a video: a Sentinel-2 stack |
 | `GeoVolume` | `GeoArray["level y x"]` | gridded profiles on shared levels (EN4) |
 | `GeoPatches` | `GeoArray["patch band y x"]` | a geopatcher batch |
@@ -404,12 +406,36 @@ def ndvi(scene: GeoImage) -> GeoMap:
 
 # one date of a series is an image, with no conversion; a GeoImage
 first: GeoArray["band y x"] = stack.isel(time=0)
-# map over time: a series of maps
+# map over time: a series of maps; a GeoMapSeries
 series: GeoArray["time y x"] = geoarray.map_over(ndvi, stack, dim="time")
 ```
 
 `GeoArray` was generic over its array type (`GeoArray[np.ndarray]`).
 The dims-string subscript replaces that use, since the backend now comes from the field.
+
+**Matching other carriers.**
+`geoarray.types.matches(x, T)` reads the signature from the pipekit adapter registered for `type(x)`, and the geometry kind and grid dims from geoarray's kind reader for `type(x)`.
+Kind is a geo idea, so it stays out of pipekit: geoarray keeps one kind reader per carrier class, and the `DataArray` reader ships with `geoarray[xarray]` beside the converters (LL-H2).
+The type matches when the kind is `T`'s kind and the signature fits `T`'s pattern with the grid dims read as `y x`.
+Nothing is renamed or copied: the check reads the carrier, it does not change it.
+
+| Carrier | Kind read | Grid dims read |
+| --- | --- | --- |
+| `GeoArray`, `GeoSwath`, `GeoPoints` | grid, swath or points, from the class | `y x`, `row col`, or none |
+| `DataArray` (`geoarray[xarray]`) | grid when the two horizontal dims carry 1-D coordinates; swath when `lat` and `lon` are 2-D coordinates; points when they are 1-D on one dim | the dims whose coordinates have CF `axis` `Y` and `X`, else the names `y x`, `lat lon` or `latitude longitude`, in that order |
+| `DimArray` | none: it has no georeference | none, so it matches no readable type |
+
+```python
+# a lazy cube from GLORYS: daily MLD on a lat/lon grid, dask-backed
+mld: DataArray["time lat lon"] = to_mld(sigma0)
+# the kind reader finds kind "grid" and grid dims (lat, lon), read as (y, x)
+ok: bool = geoarray.types.matches(mld, GeoMapSeries)  # True
+# a curvilinear model grid has 2-D lat/lon coordinates: kind "swath", not a GeoMapSeries
+ok_nemo: bool = geoarray.types.matches(sst_orca, GeoMapSeries)  # False
+```
+
+Dim names are never normalised: the converters carry the carrier's own dims across ([labeled lane](./labeled_lane.md)), and a CF file opened with xarray keeps `lat lon`.
+The match rule is what lets both satisfy one readable type.
 
 ## Geometry geoarray owns
 
@@ -1083,6 +1109,7 @@ Decisions from the GeoTensor design (17 Oct 2026) that the stored-dims design (2
 | GA-T2 | Spectral bands and variables | decided 21 Oct | `band` and `variable` are separate dims | one dim for both |
 | GA-T3 | Levels on observations | decided 21 Oct | `level` is allowed on observations (TROPOMI layers) | levels on gridded data only |
 | GA-T4 | coordax | decided 21 Oct | an optional converter, not the foundation of the JAX lane: its static coordinates would recompile per scene ([labeled lane](./labeled_lane.md)) | coordax `Field` as the JAX carrier |
+| GA-T5 | What a readable type is (CS-F1, geostack #74) | decided 23 Oct | a name, a dims pattern and a geometry kind; any carrier matches when its pipekit adapter reports a fitting `Signature` and geoarray reads it as the type's kind, with a `DataArray`'s horizontal dims read as `y x`; `GeoImageSeries` is `time band y x` and `GeoMapSeries` is `time y x` | aliases of geoarray carriers only, so lazy inputs have no readable type |
 
 ### Open questions
 

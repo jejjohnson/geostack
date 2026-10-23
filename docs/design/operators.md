@@ -219,7 +219,7 @@ def simulate(
     depth: float,  # H, m
     dt: float,  # Δt, s
     mask: Bool[Array, "H W"] | None = None,  # ocean cells; None means eta0.valid
-) -> GeoImageSeries:  # GeoArray["time y x"], one frame per requested time
+) -> GeoMapSeries:  # GeoArray["time y x"], one frame per requested time
     # entry, before tracing: output k is reached after nₖ = tₖ / Δt steps; n = 0 is η₀
     n_out: Int[np.ndarray, "T"] = np.rint(times / dt).astype(int)
     off_grid: bool = bool(np.any(n_out * dt != times))
@@ -269,14 +269,14 @@ def simulate(
     # TimeAxis stamps are int64 nanoseconds, so offsets in s become ns first
     offsets_ns: Int[np.ndarray, "T"] = times.astype(np.int64) * 1_000_000_000
     stamps: Int[np.ndarray, "T"] = eta0.time + offsets_ns
-    return GeoImageSeries.from_frames(frames, like=eta0, time=stamps)
+    return GeoMapSeries.from_frames(frames, like=eta0, time=stamps)
 
 
 # vardax/geo/assimilate.py — 4D-Var over a window of along-track SLA.
 # vardax is GeoML and may not import GeoModels, so the forward model M is an argument.
 # M: an initial map, output times and the ocean mask → the trajectory at those times
 ForwardModel = Callable[
-    [GeoMap, Int[np.ndarray, "T"], Bool[Array, "H W"]], GeoImageSeries
+    [GeoMap, Int[np.ndarray, "T"], Bool[Array, "H W"]], GeoMapSeries
 ]
 
 
@@ -287,7 +287,7 @@ def assimilate(
     forward: ForwardModel,  # M, from the caller
     sigma_b: float,  # background error std, m
     sigma_o: float,  # observation error std, m
-) -> GeoImageSeries:
+) -> GeoMapSeries:
 
     # m_b = 1 where xᵇ is valid (ocean); land and nodata hold 0 and never enter J
     valid_b: Bool[Array, "H W"] = background.valid
@@ -298,7 +298,7 @@ def assimilate(
         x0_ocean: Float[Array, "H W"] = jnp.where(valid_b, x0, 0.0)
         # M(x₀) on the background's domain: the mask is passed, not re-derived from data
         x0_map: GeoMap = background.with_data(x0_ocean)
-        traj: GeoImageSeries = forward(x0_map, times, valid_b)
+        traj: GeoMapSeries = forward(x0_map, times, valid_b)
         # H(M(x₀)): sampled at the observations in space and time
         predicted: GeoTracks = geoarray.sample(traj, obs)
         # d = m ⊙ (y − H(M(x₀))); padded slots give 0, never NaN
@@ -317,7 +317,7 @@ def assimilate(
     x_a: Float[Array, "H W"] = minimize(cost_jit, xb)
     # the analysis trajectory, as a readable series
     analysis_map: GeoMap = background.with_data(x_a)
-    traj_a: GeoImageSeries = forward(analysis_map, times, valid_b)
+    traj_a: GeoMapSeries = forward(analysis_map, times, valid_b)
 
     # land back to NaN in the output (broadcast over time), so its validity matches xᵇ
     def restore_land(frames: Float[Array, "T H W"]) -> Float[Array, "T H W"]:
@@ -330,7 +330,7 @@ def assimilate(
 forward: ForwardModel = functools.partial(somax.geo.simulate, depth=4_000.0, dt=600.0)
 # daily output over a 7-day window, t = 0 included: (8,)
 times: Int[np.ndarray, "T"] = np.arange(0, 8 * 86_400, 86_400)
-series: GeoImageSeries = vardax.geo.assimilate(
+series: GeoMapSeries = vardax.geo.assimilate(
     background, obs, times, forward, sigma_b=0.05, sigma_o=0.03
 )
 ```
@@ -662,4 +662,4 @@ Each step is a 0.X.0 bump. xrops now follows geoops instead of moving in paralle
 | OP-O5 | How operators use `KernelOp` | by composition: an operator keeps its own config and calls a `KernelOp` inside (as `NDVI` does) | every kernel operator subclasses `KernelOp` |
 | OP-O6 | The `backends` vocabulary | `"numpy"`, `"jax"`, `"xarray"` | backends and carrier families declared separately |
 | OP-O7 | Where grid calculus lives | **Decided 22 Oct 2026:** the diagnostic gradient kernel in geoops (`geoops/geom/_src/array.py`), wrapped by `geoops.geom.Gradient` and `xrops.Gradient` (today's `xrgrad`); pipekit-array keeps no domain kernels; model-grade calculus in finitevolX, wrapped by the GeoML or GeoModels package that uses it | kernel in pipekit-array (not taken) |
-| OP-O8 | Does an L3 algorithm call L3 algorithms inside a differentiated cost (the assimilator calling `simulate`)? | yes, while wrap and unwrap stay cheap under `grad`; measured in the spike | the cost calls the L1 loop directly, and only the outer call returns a `GeoImageSeries` |
+| OP-O8 | Does an L3 algorithm call L3 algorithms inside a differentiated cost (the assimilator calling `simulate`)? | yes, while wrap and unwrap stay cheap under `grad`; measured in the spike | the cost calls the L1 loop directly, and only the outer call returns a `GeoMapSeries` |
