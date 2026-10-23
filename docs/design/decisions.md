@@ -47,7 +47,7 @@ These change a principle or block other work.
 | [CS-F11](./case_studies.md) | Packaged pipelines are versioned and record provenance | a new principle; most of the missing pipelines page |
 | [OP-O8](./operators.md) | May an L3 algorithm call another L3 algorithm inside a differentiated cost | decides how esmax and vardax compose |
 | [GA-Q2](./geoarray.md) / [LL-F1](./labeled_lane.md) | The CRS encoding on the xarray side | **decided 23 Oct 2026** (geostack #77): a hand-written CF `spatial_ref` with `crs_wkt`, `CRS.to_cf()` attributes and `GeoTransform`; no rioxarray |
-| [GA-Q5](./geoarray.md) | Do geoops kernel operators accept a `DataArray` directly | the lane rule LL-H1 waits on it |
+| [GA-Q5](./geoarray.md) | Do geoops kernel operators accept a `DataArray` directly | **decided 23 Oct 2026** (geostack #78): yes, lazily through `apply_ufunc`; geometry operators raise and name `xrops.lift` |
 
 ## Vision (VI)
 
@@ -104,7 +104,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | GA-Q2 | The georeference in xarray: CF `grid_mapping` plus `GeoTransform` (same as LL-F1) | decided 23 Oct 2026 |
 | GA-Q3 | Shared dim-level functions live in pipekit-array | decided 21 Oct 2026 |
 | GA-Q4 | What happens to geoops compositing | open |
-| GA-Q5 | Do geoops operators accept a `DataArray` | open (decide first) |
+| GA-Q5 | Do geoops operators accept a `DataArray` | decided 23 Oct 2026: kernel operators yes, lazily; geometry operators no |
 | GA-Q6 | `map_over` on xarray | open |
 | GA-Q7 | Dim-name conventions | open |
 | GA-Q8 | The name of the curvilinear carrier | open |
@@ -120,7 +120,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | LL-F3 | Multi-resolution products as a `DataTree`, one node per grid | open |
 | LL-G1 | Where a coordax grid coordinate lives | deferred until esmax or vardax asks |
 | LL-G2 | Accept coordax's static grid; batching and gradients stay on carriers | decided 21 Oct 2026 (with GA-T4) |
-| LL-H1 | Operators on labeled data: geometry operators through `xrops.lift`; kernel operators on `DataArray` | lifting decided 22 Oct 2026 (OP-O4); the rest waits on GA-Q5 |
+| LL-H1 | Operators on labeled data: geometry operators through `xrops.lift`; kernel operators on `DataArray` | decided: lifting 22 Oct 2026 (OP-O4), kernel operators 23 Oct 2026 (GA-Q5) |
 | LL-H2 | geoarray owns the converters, behind extras | decided |
 
 ## pipekit kernels (PK)
