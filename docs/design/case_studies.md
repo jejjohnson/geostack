@@ -200,7 +200,7 @@ def loss(
 
 - **Holds:** one crossing (`to_jax()`); I/O never under JAX; the fitted matched filter becomes a `JaxOperator` with μ and Σ⁻¹ as leaves.
 - **Gap:** "read concurrently" has no owner yet.
-  The pipeline needs a runner that fans out I/O stages and joins before patching: the missing pipelines page (vision V4).
+  The pipeline needs a runner that fans out I/O stages and joins before patching: the missing pipelines page (vision, VI-V4).
 - **Gap:** labels arrive as polygons (GeoParquet); rasterizing them is a geometry operator with no primitive (GDAL), so this stage can never run under JAX.
   That is fine, but the vision should say which operators are eager-only.
 
@@ -334,7 +334,7 @@ The 0.05 m and 0.03 m are illustrative σ_b and σ_o; `exclude="j3"` keeps the h
   `to_jax()` is not enough for observations; they need a fixed N with a validity mask.
   Make it part of the named crossing: `obs.to_jax(pad_to=N)`.
 - **Gap: cycling needs a stateful runner.**
-  Operational cycling warm-starts each window from the last analysis, which this loop does not do yet; the hand-written `for` loop here is exactly what a packaged runner should own (vision V4), with the state carried between windows and each window's output appended to Zarr.
+  Operational cycling warm-starts each window from the last analysis, which this loop does not do yet; the hand-written `for` loop here is exactly what a packaged runner should own (vision, VI-V4), with the state carried between windows and each window's output appended to Zarr.
 - **Holds:** the L3 assimilator never sees xarray; the cube is only touched by value, before and after.
 
 ## Case 4: MLD climatology and anomalies from GLORYS
@@ -344,7 +344,7 @@ A physical oceanographer computes the mixed-layer depth from 30 years of daily G
 
 **Where it sits.**
 Lazy throughout, larger than memory.
-L2 kernel operators (state physics, so xrops per X2) followed by native xarray operations.
+L2 kernel operators (state physics, so xrops per OP-O1) followed by native xarray operations.
 Nothing compiles and nothing is a `GeoArray`.
 
 ```python
@@ -986,7 +986,7 @@ async def detect_at(lon: float, lat: float) -> GeoJSON:
 
 - **Gap: latency budgets.**
   Import time (xarray alone was about 0.57 s in one exploratory run) and the first `jit` compile land on the first request.
-  The app needs ahead-of-time compilation and a slim import path: the slim geoops base (X1) matters here more than anywhere.
+  The app needs ahead-of-time compilation and a slim import path: the slim geoops base ([decided with the tiers](#design-tiers)) matters here more than anywhere.
 - **Holds:** async stays at the I/O edge, as the vision says; the operators are plain functions the handler calls.
 - **Gap: padding also for images.**
   `pad_to` on a raster, so every scene fits the one compiled shape, generalises CS-F3 beyond points.

@@ -74,12 +74,12 @@ The two lanes meet only at geoarray's converters and at `xrops.lift`.
 
 | ID | Question | Recommended | Alternative | Status |
 | --- | --- | --- | --- | --- |
-| LL-F1 | CRS on the xarray side | A scalar `spatial_ref` coordinate with `crs_wkt` and GDAL `GeoTransform` attributes, written without importing rioxarray | georeader's `attrs["crs"]`, which no other package reads | decided (GA-Q2) |
+| LL-F1 | CRS on the xarray side | A scalar `spatial_ref` coordinate with `crs_wkt` and GDAL `GeoTransform` attributes, written without importing rioxarray | georeader's `attrs["crs"]`, which no other package reads | recommended, open (the same question as GA-Q2) |
 | LL-F2 | Per-band metadata on the xarray side | `band` holds the names; `wavelength` (and FWHM) are non-index coordinates on `band` with their own index, so `sel(wavelength=…)` works; other keys go to `.attrs` | Wavelengths as the `band` values (the 17 Oct proposal), or everything into `.attrs` as georeader does | open; changed 23 Oct to match `SpectralAxis` on the geoarray page |
 | LL-F3 | Multi-resolution products | `to_datatree({"r10m": g10, "r20m": g20, …})`, one node per grid, each with its own `spatial_ref` | A `Dataset` per resolution, joined by the caller | open |
 | LL-G1 | Where a coordax grid coordinate lives | `geoarray.interop.coordax`, built only when somax or vardax ask for it | Upstream in coordax, which ties our release to theirs | deferred |
 | LL-G2 | Static grid in coordax | Accept it: one compile per grid; batching and gradients use geoarray carriers | A leaf-transform wrapper around `Field`, which breaks coordax's rule that coordinates are static | decided; coordax is a converter, not a foundation |
-| LL-H1 | Operators on labeled data | Kernel operators directly on `DataArray` (GA-Q5); geometry operators through `xrops.lift(op, dim=…)` (OP-O4); xarray-native work in xrops | geoops accepts every labeled type; or a coordax `lift` helper (the 17 Oct proposal) | decided 22 Oct 2026 |
+| LL-H1 | Operators on labeled data | Kernel operators directly on `DataArray` (GA-Q5); geometry operators through `xrops.lift(op, dim=…)` (OP-O4); xarray-native work in xrops | geoops accepts every labeled type; or a coordax `lift` helper (the 17 Oct proposal) | lifting through `xrops.lift` decided 22 Oct 2026 (OP-O4); kernel operators on `DataArray` open (GA-Q5) |
 | LL-H2 | Who owns the converters | geoarray, behind extras | xrtoolz, which would then depend on geoarray | decided |
 
 (design-crossover)=
