@@ -128,9 +128,10 @@ to_annual_max: Operator = xtremax.xarray.BlockMaxima(
 )  # behind xtremax[xarray]
 annual_max_cube: DataArray["year lat lon"] = to_annual_max(tmax_cube)
 
-# L3, vardax: readable types at the boundary, raw arrays inside
+# L3, vardax: readable types at the boundary, raw arrays inside;
+# the forward model M: GeoMap × times → GeoImageSeries comes from the caller (GeoML never imports GeoModels)
 series: GeoArray["time y x"] = vardax.geo.assimilate(
-    background, obs, times, sigma_b=0.05, sigma_o=0.03
+    background, obs, times, forward, sigma_b=0.05, sigma_o=0.03
 )
 ```
 

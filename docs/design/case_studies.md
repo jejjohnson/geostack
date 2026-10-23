@@ -288,6 +288,10 @@ tracks: Dataset["obs"] = xrproducts.cmems.open(
 )
 
 
+# M: the forward model, bound once; vardax (GeoML) takes it as an argument, never imports somax
+forward: Callable = functools.partial(somax.geo.simulate, depth=4_000.0, dt=600.0)
+
+
 def cycle(
     state: GeoArray["y x"] | None, window: Window
 ) -> tuple[GeoArray["y x"], GeoArray["time y x"]]:
@@ -305,7 +309,7 @@ def cycle(
     jx_b: GeoArray["y x"] = x_b.to_jax()
     # xₐ = argmin J(x₀), J = ½‖x₀ − x_b‖²/σ_b² + ½‖m ⊙ (y − H(M(x₀)))‖²/σ_o²
     series: GeoArray["time y x"] = vardax.geo.assimilate(
-        jx_b, jobs, window.times, sigma_b=0.05, sigma_o=0.03
+        jx_b, jobs, window.times, forward, sigma_b=0.05, sigma_o=0.03
     )
     # back to NumPy; the next state is the analysis at the window's last time
     series_np: GeoArray["time y x"] = series.to_numpy()
@@ -896,16 +900,20 @@ def run_ensemble(
     perturb_many: Callable = jax.vmap(perturb, in_axes=(None, 0))
 
     for start in range(0, members, chunk):
-        # one key per member in this chunk
+        # members left for this chunk; the last one may be short
+        n_keep: int = min(chunk, members - start)
+        # one key per member in this chunk; every batch keeps the compiled size
         chunk_key: PRNGKeyArray = jax.random.fold_in(key, start)
         keys: PRNGKeyArray = jax.random.split(chunk_key, chunk)
         # x₀⁽ᵐ⁾ = x₀ + δ⁽ᵐ⁾, δ⁽ᵐ⁾ a random field per member m
         x0s: Float[Array, "M H W"] = perturb_many(x0.data, keys)
-        # trajectories: (M, T, H, W)
+        # trajectories: (M, T, H, W), M = chunk
         traj: Float[Array, "M T H W"] = run_chunk(x0s, times)
+        # drop the padding members of a short last chunk: (n_keep, T, H, W)
+        kept: Float[Array, "K T H W"] = traj[:n_keep]
         # crossing: rewrap once per chunk, append on the member dim
         block: GeoArray["member time y x"] = GeoArray.from_frames(
-            traj, like=x0, dims=("member", "time", "y", "x")
+            kept, like=x0, dims=("member", "time", "y", "x")
         )
         out.append(block.to_xarray(), dim="member")
 ```

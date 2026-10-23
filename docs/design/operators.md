@@ -215,10 +215,18 @@ class Divergence(Operator):
 # somax/geo/simulate.py — linear shallow water, η the SSH anomaly
 def simulate(
     eta0: GeoMap,  # GeoArray["y x"], initial state
-    times: Int[Array, "T"],  # output times, s after eta0's time
+    times: Int[np.ndarray, "T"],  # output times tₖ, s after eta0's time; concrete
     depth: float,  # H, m
     dt: float,  # Δt, s
-) -> GeoImageSeries:  # GeoArray["time y x"]
+) -> GeoImageSeries:  # GeoArray["time y x"], one frame per requested time
+    # entry, before tracing: output k is reached after nₖ = tₖ / Δt steps; n = 0 is η₀
+    n_out: Int[np.ndarray, "T"] = np.rint(times / dt).astype(int)
+    off_grid: bool = bool(np.any(n_out * dt != times))
+    gaps: Int[np.ndarray, "T-1"] = np.diff(n_out)
+    unsorted: bool = bool(np.any(gaps < 0))
+    if off_grid or unsorted or n_out[0] < 0:
+        raise ValueError("times must be sorted, non-negative multiples of dt")
+    n_total: int = int(n_out[-1])
     # entry: carrier → arrays and derived geometry, once
     grid: CGrid = cgrid_from_transform(eta0.transform, eta0.crs, mask=eta0.valid)
     eta_init: Float[Array, "H W"] = eta0.data
@@ -246,20 +254,30 @@ def simulate(
         v_next: Float[Array, "H W"] = v - dt * G * gy
         return (eta_next, u_next, v_next), eta_next
 
-    # one trace, no carrier inside the loop: (T, H, W)
-    n_steps: int = times.shape[0]
-    etas: Float[Array, "T H W"]
-    _, etas = jax.lax.scan(step, state0, None, length=n_steps)
-    # exit: arrays → a series on eta0's grid
-    stamps: Int[Array, "T"] = eta0.time + times
-    return GeoImageSeries.from_frames(etas, like=eta0, time=stamps)
+    # one trace, no carrier inside the loop: η after each of the S = n_total steps, (S, H, W)
+    etas: Float[Array, "S H W"]
+    _, etas = jax.lax.scan(step, state0, None, length=n_total)
+    # index n is the state after n steps, so η₀ goes first: (S + 1, H, W)
+    first: Float[Array, "1 H W"] = eta_init[None]
+    traj: Float[Array, "S+1 H W"] = jnp.concatenate([first, etas])
+    # the frames at the requested times: (T, H, W)
+    frames: Float[Array, "T H W"] = traj[n_out]
+    # exit: arrays → a series on eta0's grid, stamped with the requested times
+    stamps: Int[np.ndarray, "T"] = eta0.time + times
+    return GeoImageSeries.from_frames(frames, like=eta0, time=stamps)
 
 
-# vardax/geo/assimilate.py — 4D-Var over a window of along-track SLA
+# vardax/geo/assimilate.py — 4D-Var over a window of along-track SLA.
+# vardax is GeoML and may not import GeoModels, so the forward model M is an argument.
+# M: an initial map and output times → the trajectory at those times
+ForwardModel = Callable[[GeoMap, Int[np.ndarray, "T"]], GeoImageSeries]
+
+
 def assimilate(
     background: GeoMap,  # xᵇ, GeoArray["y x"]
     obs: GeoTracks,  # y, GeoPoints["obs"] padded to N, with a valid mask
-    times: Int[Array, "T"],
+    times: Int[np.ndarray, "T"],  # the window's output times, s after xᵇ's time
+    forward: ForwardModel,  # M, from the caller
     sigma_b: float,  # background error std, m
     sigma_o: float,  # observation error std, m
 ) -> GeoImageSeries:
@@ -267,7 +285,7 @@ def assimilate(
     def cost(x0: Float[Array, "H W"]) -> Float[Array, ""]:
         # M(x₀): the model trajectory from x₀
         x0_map: GeoMap = background.with_data(x0)
-        traj: GeoImageSeries = simulate(x0_map, times, DEPTH, DT)
+        traj: GeoImageSeries = forward(x0_map, times)
         # H(M(x₀)): sampled at the observations in space and time
         predicted: GeoTracks = geoarray.sample(traj, obs)
         # d = m ⊙ (y − H(M(x₀))); padded slots give 0, never NaN
@@ -285,9 +303,20 @@ def assimilate(
     x_a: Float[Array, "H W"] = minimize(cost_jit, background.data)
     # the analysis trajectory, as a readable series
     analysis_map: GeoMap = background.with_data(x_a)
-    return simulate(analysis_map, times, DEPTH, DT)
+    return forward(analysis_map, times)
+
+
+# the caller binds the model, in GeoModels or a script: M(x₀) = simulate(x₀, times; H, Δt)
+forward: ForwardModel = functools.partial(somax.geo.simulate, depth=4_000.0, dt=600.0)
+# daily output over a 7-day window, t = 0 included: (8,)
+times: Int[np.ndarray, "T"] = np.arange(0, 8 * 86_400, 86_400)
+series: GeoImageSeries = vardax.geo.assimilate(
+    background, obs, times, forward, sigma_b=0.05, sigma_o=0.03
+)
 ```
 
+vardax only knows M through `forward`, so the same assimilator runs any model the caller binds, and the dependency points down.
+`simulate` turns requested output times into step counts before tracing, so a daily output with a 600 s step takes 144 steps per frame, and t = 0 returns the initial state.
 Inside `cost` the series is built and unwrapped once per evaluation.
 Whether that is cheap enough under `grad`, or `cost` should call the L1 loop directly, is open (OP-O8 in the open questions).
 
