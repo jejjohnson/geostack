@@ -218,6 +218,7 @@ def simulate(
     times: Int[np.ndarray, "T"],  # output times tₖ, s after eta0's time; concrete
     depth: float,  # H, m
     dt: float,  # Δt, s
+    mask: Bool[Array, "H W"] | None = None,  # ocean cells; None means eta0.valid
 ) -> GeoImageSeries:  # GeoArray["time y x"], one frame per requested time
     # entry, before tracing: output k is reached after nₖ = tₖ / Δt steps; n = 0 is η₀
     n_out: Int[np.ndarray, "T"] = np.rint(times / dt).astype(int)
@@ -227,8 +228,10 @@ def simulate(
     if off_grid or unsorted or n_out[0] < 0:
         raise ValueError("times must be sorted, non-negative multiples of dt")
     n_total: int = int(n_out[-1])
-    # entry: carrier → arrays and derived geometry, once
-    grid: CGrid = cgrid_from_transform(eta0.transform, eta0.crs, mask=eta0.valid)
+    # entry: carrier → arrays and derived geometry, once; the domain is the mask the
+    # caller passes, so finite placeholders on land never turn land into ocean
+    ocean: Bool[Array, "H W"] = eta0.valid if mask is None else mask
+    grid: CGrid = cgrid_from_transform(eta0.transform, eta0.crs, mask=ocean)
     eta_init: Float[Array, "H W"] = eta0.data
     zeros: Float[Array, "H W"] = jnp.zeros_like(eta_init)
     # (η, u, v), each (H, W)
@@ -271,8 +274,10 @@ def simulate(
 
 # vardax/geo/assimilate.py — 4D-Var over a window of along-track SLA.
 # vardax is GeoML and may not import GeoModels, so the forward model M is an argument.
-# M: an initial map and output times → the trajectory at those times
-ForwardModel = Callable[[GeoMap, Int[np.ndarray, "T"]], GeoImageSeries]
+# M: an initial map, output times and the ocean mask → the trajectory at those times
+ForwardModel = Callable[
+    [GeoMap, Int[np.ndarray, "T"], Bool[Array, "H W"]], GeoImageSeries
+]
 
 
 def assimilate(
@@ -289,16 +294,18 @@ def assimilate(
     xb: Float[Array, "H W"] = jnp.where(valid_b, background.data, 0.0)
 
     def cost(x0: Float[Array, "H W"]) -> Float[Array, ""]:
-        # M(x₀): the model trajectory from x₀
-        x0_map: GeoMap = background.with_data(x0)
-        traj: GeoImageSeries = forward(x0_map, times)
+        # m_b ⊙ x₀: land cells are held at 0, so their gradient is 0 and they never move
+        x0_ocean: Float[Array, "H W"] = jnp.where(valid_b, x0, 0.0)
+        # M(x₀) on the background's domain: the mask is passed, not re-derived from data
+        x0_map: GeoMap = background.with_data(x0_ocean)
+        traj: GeoImageSeries = forward(x0_map, times, valid_b)
         # H(M(x₀)): sampled at the observations in space and time
         predicted: GeoTracks = geoarray.sample(traj, obs)
         # d = m ⊙ (y − H(M(x₀))); padded slots give 0, never NaN
         resid: Float[Array, "N"] = obs.data - predicted.data
         d: Float[Array, "N"] = jnp.where(obs.valid, resid, 0.0)
         # m_b ⊙ (x₀ − xᵇ): finite everywhere, zero off the valid cells
-        dx_raw: Float[Array, "H W"] = x0 - xb
+        dx_raw: Float[Array, "H W"] = x0_ocean - xb
         dx: Float[Array, "H W"] = jnp.where(valid_b, dx_raw, 0.0)
         # J = ½‖m_b ⊙ (x₀ − xᵇ)‖²/σ_b² + ½‖d‖²/σ_o²
         jb: Float[Array, ""] = 0.5 * einx.dot("h w, h w ->", dx, dx) / sigma_b**2
@@ -310,7 +317,13 @@ def assimilate(
     x_a: Float[Array, "H W"] = minimize(cost_jit, xb)
     # the analysis trajectory, as a readable series
     analysis_map: GeoMap = background.with_data(x_a)
-    return forward(analysis_map, times)
+    traj_a: GeoImageSeries = forward(analysis_map, times, valid_b)
+
+    # land back to NaN in the output (broadcast over time), so its validity matches xᵇ
+    def restore_land(frames: Float[Array, "T H W"]) -> Float[Array, "T H W"]:
+        return jnp.where(valid_b, frames, jnp.nan)
+
+    return traj_a.map(restore_land)
 
 
 # the caller binds the model, in GeoModels or a script: M(x₀) = simulate(x₀, times; H, Δt)
