@@ -881,16 +881,17 @@ Top centre: a packaged runner over a built-in model (somax), compiled inside, la
 What the runner does inside:
 
 ```python
-# pipekit.runners.Ensemble — sketch of its internals
+# pipekit.runners.Ensemble — sketch of its internals. pipekit sits below geoarray,
+# so the runner sees raw arrays only; the caller's sink rewraps and writes.
 def run_ensemble(
     model: Algorithm,
-    x0: GeoArray["y x"],
+    x0: Float[Array, "H W"],
     perturb: Perturbation,
     members: int,
     chunk: int,
     times: Int[Array, "T"],
     seed: int,
-    out: Zarr,
+    sink: Callable[[Float[Array, "K T H W"], int], None],  # (block, first member)
 ) -> None:
     # one seed per run ← CS-F16
     key: PRNGKeyArray = jax.random.key(seed)
@@ -906,16 +907,13 @@ def run_ensemble(
         chunk_key: PRNGKeyArray = jax.random.fold_in(key, start)
         keys: PRNGKeyArray = jax.random.split(chunk_key, chunk)
         # x₀⁽ᵐ⁾ = x₀ + δ⁽ᵐ⁾, δ⁽ᵐ⁾ a random field per member m
-        x0s: Float[Array, "M H W"] = perturb_many(x0.data, keys)
+        x0s: Float[Array, "M H W"] = perturb_many(x0, keys)
         # trajectories: (M, T, H, W), M = chunk
         traj: Float[Array, "M T H W"] = run_chunk(x0s, times)
         # drop the padding members of a short last chunk: (n_keep, T, H, W)
         kept: Float[Array, "K T H W"] = traj[:n_keep]
-        # crossing: rewrap once per chunk, append on the member dim
-        block: GeoArray["member time y x"] = GeoArray.from_frames(
-            kept, like=x0, dims=("member", "time", "y", "x")
-        )
-        out.append(block.to_xarray(), dim="member")
+        # hand the raw block to the caller, who rewraps and appends on the member dim
+        sink(kept, start)
 ```
 
 What the user writes:
@@ -929,15 +927,20 @@ perturb: Perturbation = somax.perturb.gaussian_random_field(
     sigma=0.02, length_scale=50e3
 )
 out: Zarr = Zarr("ssh_ens_20261022.zarr")
+# the crossing, owned by a package above pipekit: each raw block is rewrapped on
+# analysis_today's grid as GeoArray["member time y x"] and appended on member
+sink: Sink = geoarray.sinks.append_members(
+    out, like=analysis_today, dims=("member", "time", "y", "x")
+)
 
 # 32 members in chunks of 8, one seed for the run
 runner: Runner = pipekit.runners.Ensemble(members=32, chunk=8, seed=20261022)
 ens: EnsembleRun = runner.run(
-    model, x0=analysis_today, perturb=perturb, times=forecast_times, out=out
+    model, x0=analysis_today.data, perturb=perturb, times=forecast_times, sink=sink
 )
 
 # the ensemble cube, lazy
-cube: DataArray["member time lat lon"] = xr.open_zarr(ens.out).ssh
+cube: DataArray["member time lat lon"] = xr.open_zarr(out.path).ssh
 # η̄ and spread = √(1/(M−1) ∑ₘ (η⁽ᵐ⁾ − η̄)²), on the stat dim ← CS-F15
 stats: Operator = xrops.EnsembleStats(stats=("mean", "std"))
 summary: DataArray["stat time lat lon"] = stats(cube)
@@ -946,11 +949,12 @@ summary: DataArray["stat time lat lon"] = stats(cube)
 **What it stresses.**
 
 - **Gap: models need a named L1 entry point.**
-  The runner calls `model.l1_loop` to vmap the raw loop; an algorithm that only exposes its L3 signature (`simulate(GeoMap) -> GeoImageSeries`) cannot be vmapped without rewrapping per member.
+  The runner calls `model.l1` to vmap the raw loop; an algorithm that only exposes its L3 signature (`simulate(GeoMap) -> GeoImageSeries`) cannot be vmapped without rewrapping per member.
   L3 algorithms should expose their L1 core.
 - **Gap: seeds belong to the runner.**
   One key per member, derived from the run's seed; the vision should say randomness is passed down, never drawn inside operators.
 - **Holds:** the `member` dim, `vmap` over it, and lazy writing on `append_dim` all fit the existing conventions.
+- **Holds, with a rule:** a pipekit runner never builds a carrier, since pipekit sits below geoarray; it takes raw arrays and a sink, and the crossing lives in the package that owns the carrier.
 
 ## Case 13: a labelling app serving detections on demand
 

@@ -282,6 +282,10 @@ def assimilate(
     sigma_o: float,  # observation error std, m
 ) -> GeoImageSeries:
 
+    # m_b = 1 where xᵇ is valid (ocean); land and nodata hold 0 and never enter J
+    valid_b: Bool[Array, "H W"] = background.valid
+    xb: Float[Array, "H W"] = jnp.where(valid_b, background.data, 0.0)
+
     def cost(x0: Float[Array, "H W"]) -> Float[Array, ""]:
         # M(x₀): the model trajectory from x₀
         x0_map: GeoMap = background.with_data(x0)
@@ -291,16 +295,17 @@ def assimilate(
         # d = m ⊙ (y − H(M(x₀))); padded slots give 0, never NaN
         resid: Float[Array, "N"] = obs.data - predicted.data
         d: Float[Array, "N"] = jnp.where(obs.valid, resid, 0.0)
-        # x₀ − xᵇ
-        dx: Float[Array, "H W"] = x0 - background.data
-        # J = ½‖x₀ − xᵇ‖²/σ_b² + ½‖d‖²/σ_o²
+        # m_b ⊙ (x₀ − xᵇ): finite everywhere, zero off the valid cells
+        dx_raw: Float[Array, "H W"] = x0 - xb
+        dx: Float[Array, "H W"] = jnp.where(valid_b, dx_raw, 0.0)
+        # J = ½‖m_b ⊙ (x₀ − xᵇ)‖²/σ_b² + ½‖d‖²/σ_o²
         jb: Float[Array, ""] = 0.5 * einx.dot("h w, h w ->", dx, dx) / sigma_b**2
         jo: Float[Array, ""] = 0.5 * einx.dot("n, n ->", d, d) / sigma_o**2
         return jb + jo
 
     # xₐ = argmin J, by gradient descent on ∇J
     cost_jit: Callable = jax.jit(cost)
-    x_a: Float[Array, "H W"] = minimize(cost_jit, background.data)
+    x_a: Float[Array, "H W"] = minimize(cost_jit, xb)
     # the analysis trajectory, as a readable series
     analysis_map: GeoMap = background.with_data(x_a)
     return forward(analysis_map, times)

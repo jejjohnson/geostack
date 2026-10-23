@@ -27,43 +27,27 @@ Keras made that choice for training on one backend at a time; GeoStack makes it 
 
 A user starts with a packaged pipeline and steps down only as far as the work needs, as in Keras; each stop is built from the one below it.
 
-```text
-1  packaged pipeline           L3
-│    plumax.pipelines.emit_plumes.v1.run(scene_id=...)
-│    you hold readable geo types; checked on entry and exit
-▼
-2  graph of operators          L2 + pipekit
-│    pipekit.Graph(read=..., matched_filter=..., ortho=...)
-│    you hold named stages; reorder, add or replace them
-▼
-3  operators                   L2
-│    SwathToGrid(crs="utm", resolution=60.0)(swath)
-│    you hold a carrier with named dims
-▼
-4  primitives                  L1
-     matched_filter_score(x, mu, sigma, t)
-     you hold arrays and derived geometry, in your own loop
+```{figure} ../images/vision/geo_workflows.svg
+:label: fig-geo-workflows
+:alt: A horizontal spectrum with four stops. L3, a packaged pipeline with built-in operators, gives standard workflows, fast and easy (emit_plumes.v1.run). L2 plus pipekit, a pipekit graph of built-in operators, gives new workflows from existing components. L2 with your own KernelOps and operators gives new components (SwathToGrid, Detector). L1, primitives on arrays in your own loop, gives anything you want (vmap of matched_filter_score).
+:width: 100%
+
+**Four stops, from packaged to arbitrarily flexible.**
+Each stop is built from the one to its right and hands it back.
 ```
 
 The stops come from two independent axes: what each step computes (built-in operators down to primitives) and how steps are put together and run (packaged runners down to your own loop).
 
-```text
-orchestration: packaged runner
-│
-├─ built-in computation      stop 1, packaged pipeline
-├─ your own computation      your model inside a packaged runner
-│
-orchestration: a graph you build
-│
-├─ built-in computation      stop 2, graph of built-in operators
-│
-orchestration: your own loop
-│
-├─ built-in computation      stop 3, built-in operators in your loop
-└─ your own computation      stop 4, primitives in your loop
+```{figure} ../images/vision/computation_orchestration.svg
+:label: fig-computation-orchestration
+:alt: Two crossing axes inside an ellipse. Horizontal, computation, from low-level primitives on arrays plus derived geometry to high-level built-in operators. Vertical, orchestration, from your own loop (lax.scan, async I/O) to high-level built-in runners (ETL, train, assimilate) and packaged pipelines. The top right is easy to use; the bottom left is fully flexible. Custom pipekit graphs, KernelOp around your kernel and operator chains such as Mask then NDVI sit in between.
+:width: 100%
+
+**Computation and orchestration each go from packaged to hand-written.**
+The four stops are points on these two axes.
 ```
 
-Run mode (eager NumPy, compiled JAX, lazy xarray) is a third axis, orthogonal to both: any point on this list runs in any mode the carrier allows (next section).
+Run mode (eager NumPy, compiled JAX, lazy xarray) is a third axis, orthogonal to both: any point on this picture runs in any mode the carrier allows (next section).
 
 ## Two axes
 
@@ -109,7 +93,7 @@ Where each level sits in every package above GeoStack is on [Levels across the s
 ## Control: four stops, one plume pipeline
 
 A user picks how much control to take, as in Keras's progressive disclosure (Sequential → functional → subclassing).
-The four stops are the ones in the list above.
+The four stops are the ones in [](#fig-geo-workflows).
 
 | Stop | You call | You hold | Typing | Who |
 | --- | --- | --- | --- | --- |
@@ -220,9 +204,11 @@ class SwathToGrid(Operator):
 # radtrax/geo/operators.py — behind radtrax[geo]; a fitted operator built from KernelOps
 class MatchedFilter(FittableOperator):
     def fit(self, swath: GeoSwath["band row col"]) -> "MatchedFilter":
-        # μ(col) and Σ(col) over the rows of each column: "(r,c)->(c),(c,c)"
+        # μ(col) and Σ(col) over the rows of each column: "(r,c)->(c),(c,d)", Σ on (band, band2)
         stats: KernelOp = KernelOp(
-            background_stats, "(r,c)->(c),(c,c)", core={"r": "row", "c": "band"}
+            background_stats,
+            "(r,c)->(c),(c,d)",
+            core={"r": "row", "c": "band", "d": "band2"},
         )
         mu: GeoArray["col band"]
         sigma: GeoArray["col band band2"]
@@ -230,11 +216,12 @@ class MatchedFilter(FittableOperator):
         return self.with_fitted(mu=mu, sigma=sigma)
 
     def __call__(self, swath: GeoSwath["band row col"]) -> GeoSwath["row col"]:
-        # one column at a time: consumes rows and bands, maps over col
+        # one column at a time: consumes rows and bands, maps over col; Σ's second
+        # axis is band2, and the kernel's "C C" hint checks |band| = |band2| at L1
         score: KernelOp = KernelOp(
             matched_filter_score,
-            "(r,c),(c),(c,c),(c)->(r)",
-            core={"r": "row", "c": "band"},
+            "(r,c),(c),(c,d),(c)->(r)",
+            core={"r": "row", "c": "band", "d": "band2"},
         )
         return score(swath, self.mu, self.sigma, self.target)
 
@@ -425,7 +412,7 @@ pipe_mine: pipekit.Graph = pipe.replace("matched_filter", mine)
 
 # an operator exposes its primitive and spec
 kernel: Callable[..., Float[Array, "R"]] = stage.kernel  # matched_filter_score
-spec: KernelSpec = stage.spec  # "(r,c),(c),(c,c),(c)->(r)"
+spec: KernelSpec = stage.spec  # "(r,c),(c),(c,d),(c)->(r)"
 
 # and runs it yourself on one column's raw arrays
 alpha_col: Float[Array, "R"] = kernel(
