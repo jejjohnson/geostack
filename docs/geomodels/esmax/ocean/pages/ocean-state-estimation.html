@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The traditional formulation of estimating the ocean state from sea-level maps, written once, then read box by box. Steps 1 and 2 are the classical problem. Steps 3 to 6 are what that problem turns into when parts of it are learned.">
+<title>Ocean State Estimation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none' },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one reading column; a vertical six-box chart up top whose boxes link down to the derivation. Hydrographic palette: sea ink on cool chart paper, amber marks the oracle. */
+:root {
+  --paper: #F1F5F6;
+  --panel: #E4ECEF;
+  --ink: #0E1E28;
+  --muted: #4E616C;
+  --rule: #C6D3D9;
+  --sea: #0A6B68;
+  --sea-soft: #D3E7E5;
+  --oracle: #985710;
+  --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; display: grid; gap: 0; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible, .box:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+
+/* six-box chart */
+.chart { margin-top: 2rem; display: grid; gap: 0; }
+.box {
+  display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.9rem; text-decoration: none; color: inherit;
+  border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem;
+}
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--sea); line-height: 1; padding-top: 0.15rem; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .ocean { color: var(--muted); font-size: 0.95rem; }
+.box .eq { grid-column: 2; min-width: 0; overflow-x: auto; font-size: 0.95rem; }
+.box.oracle { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.oracle .num { color: var(--oracle); }
+.link { display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; letter-spacing: 0.02em; }
+.loop { margin-top: 0.9rem; font-size: 0.92rem; color: var(--muted); }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note p:last-child { margin-bottom: 0; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def p:last-child { margin-bottom: 0; }
+
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+.stepsec { scroll-margin-top: 1rem; }
+.stephead { display: flex; align-items: baseline; gap: 0.7rem; margin-top: 3.2rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.stephead h2 { margin: 0; }
+.stephead .pill { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.stephead .pill.or { background: var(--oracle-soft); color: var(--oracle); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 0; }
+footer { margin-top: 2.5rem; font-size: 0.88rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+
+/* operator signatures */
+.tldr { margin-top: 2rem; border-top: 2px solid var(--ink); padding-top: 1rem; }
+.tldr h2 { margin-top: 0; }
+.tldr ul { margin: 0 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+svg.g { width: 1.45rem; height: 1.45rem; color: var(--sea); flex: none; }
+.box .sig { grid-column: 2; display: grid; gap: 0.2rem; margin-top: 0.45rem; font-size: 0.85rem; min-width: 0; }
+.box .sig div { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); width: 2.1rem; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); }
+.box .sig svg.g { width: 1.1rem; height: 1.1rem; }
+.sigfam { display: inline-block; font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); margin-left: 0.4rem; vertical-align: 0.1em; }
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op + .op { margin-top: -0.6rem; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) auto; gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io code { white-space: nowrap; font-size: 0.8rem; padding-top: 0.15rem; font-variant-numeric: tabular-nums; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+
+/* v4: aligned signature rows and legend */
+.box { grid-template-columns: 2.4rem minmax(0, 1fr); }
+.link { grid-template-columns: 2.4rem 1fr; }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { width: auto; }
+.box .sig .gap { margin-top: 0.35rem; }
+.box .sig .d.gap + svg, .box .sig .d.gap + svg + .n, .box .sig .d.gap + svg + .n + code { margin-top: 0.35rem; }
+.box .sig .n { white-space: nowrap; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.box .sig svg.g { width: 1.15rem; height: 1.15rem; }
+.io { grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); }
+.io code { white-space: normal; text-align: right; }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io code { grid-column: 2; text-align: left; padding-top: 0; color: var(--muted); }
+}
+
+/* legend as a table */
+.legend-wrap { overflow-x: auto; margin: 1rem 0 0.6rem; }
+table.legend { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.legend th, table.legend td { border-bottom: 1px solid var(--rule); padding: 0.45rem 0.8rem 0.45rem 0; vertical-align: middle; text-align: left; }
+table.legend td.gl { width: 1.6rem; padding-right: 0.5rem; }
+table.legend td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+table.legend td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+table.legend td code { font-size: 0.8rem; white-space: nowrap; }
+table.legend td.ex { color: var(--muted); }
+@media (max-width: 560px) { table.legend td.ex, table.legend th.ex { display: none; } }
+</style>
+
+
+<style>
+.series-nav { max-width: 46rem; margin: 0 auto; padding: 0.9rem 0 0;
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline;
+  justify-content: space-between; font: 500 0.82rem/1.4 var(--display, system-ui, sans-serif);
+  color: var(--muted, #666); }
+.series-nav.bottom { padding: 1.2rem 0 2.5rem; border-top: 1px solid var(--rule, #ddd); }
+.series-nav a { color: var(--sea, #0b6e6e); text-decoration: none; }
+.series-nav a:hover { text-decoration: underline; }
+.series-nav .crumbs { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.series-nav .pn { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+main > * { min-width: 0; }
+mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+<body>
+<nav class="series-nav top" aria-label="Series navigation"><span class="crumbs"><a href="../">GeoStack</a><span>›</span><a href="../esmax-ocean">esmax · ocean</a><span>›</span><span>2 of 8</span></span><span class="pn"><a href="../six-step-cycle">← Six-step cycle</a><a href="../strong-4dvar">4D-Var →</a></span></nav>
+<main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-scalar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+    <symbol id="g-vector" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="15" y="9" width="6" height="6"/></g></symbol>
+    <symbol id="g-field" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16"/><path d="M4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16" stroke-width="0.8"/></g></symbol>
+    <symbol id="g-mask" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 4h8v8H4zM12 12h8v8h-8z" fill="currentColor" opacity="0.55"/></symbol>
+    <symbol id="g-cube" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="2" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" fill="var(--paper)"/><rect x="3" y="9" width="13" height="13" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-ensemble" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.3"><rect x="5" y="2" width="8" height="8"/><rect x="3" y="4" width="8" height="8" fill="var(--paper)"/><rect x="14" y="2" width="8" height="8"/><rect x="12" y="4" width="8" height="8" fill="var(--paper)"/><rect x="5" y="13" width="8" height="8"/><rect x="3" y="15" width="8" height="8" fill="var(--paper)"/><rect x="14" y="13" width="8" height="8"/><rect x="12" y="15" width="8" height="8" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-dataset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" stroke-width="1"/></g></symbol>
+    <symbol id="g-weights" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1"><path d="M5 6l7 6M5 18l7-6M5 6l7-1M5 18l7 1M12 5l7 7M12 12l7 0M12 19l7-7M5 6l7 13M5 18l7-13" fill="none"/></g><g fill="currentColor"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="12" r="2"/></g></symbol>
+    <symbol id="g-op" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M13 9l3 3-3 3"/></g></symbol>
+    <symbol id="g-decision" viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  </defs>
+</svg>
+
+  <div class="eyebrow">GeoStack · six-step cycle · L3 → L4 row</div>
+  <h1>Ocean state estimation, from the generative story to each box</h1>
+  <p class="lede">The traditional formulation of estimating the ocean state from sea-level maps, written once, then read box by box. Steps 1 and 2 are the classical problem. Steps 3 to 6 are what that problem turns into when parts of it are learned.</p>
+
+  <section class="tldr" id="tldr">
+    <div class="eyebrow">TL;DR</div>
+    <h2>Every box is an operator</h2>
+    <p>Before any equation, fix what goes in and what comes out. For this problem the answer is short:</p>
+    <ul>
+      <li><strong>Forward boxes (1, 3)</strong> map a sea-level <em>field</em> and two physical parameters to the next field. Box 1 chains that map into a <em>cube</em> of states and a cube of synthetic maps.</li>
+      <li><strong>Inverse boxes (2, 4, 5)</strong> all have one signature: a cube of daily SSH maps with their masks and errors in, a cube of states plus the parameters and an uncertainty out. They differ only in what is inside and in what each query costs.</li>
+      <li><strong>Box 6</strong> takes many windows of those outputs and returns diagnostics and one decision: rerun the inner loop, or change the model.</li>
+    </ul>
+    <p>So the task picks the signature, and the box picks the implementation. Swapping box 2 for box 5 changes no wiring around it.</p>
+    <div class="legend-wrap"><table class="legend" aria-label="Kinds of data and their dimensions"><thead><tr><th></th><th>Kind</th><th>Dimensions</th><th class="ex">Example</th></tr></thead><tbody><tr><td class="gl"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg></td><td class="k">scalar</td><td><code>()</code></td><td class="ex">a cost, a score</td></tr><tr><td class="gl"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg></td><td class="k">vector</td><td><code>(param,)</code></td><td class="ex">θ = (L_d, ν); α uses (hyper,)</td></tr><tr><td class="gl"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg></td><td class="k">field</td><td><code>(height, width)</code></td><td class="ex">one SSH snapshot</td></tr><tr><td class="gl"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg></td><td class="k">mask</td><td><code>(time, height, width)</code></td><td class="ex">observed pixels, boolean</td></tr><tr><td class="gl"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg></td><td class="k">cube</td><td><code>(time, height, width)</code></td><td class="ex">a window of maps or states</td></tr><tr><td class="gl"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg></td><td class="k">ensemble</td><td><code>(member, time, height, width)</code></td><td class="ex">EnKS members, posterior samples</td></tr><tr><td class="gl"><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg></td><td class="k">dataset</td><td><code>(sim, time, height, width)</code></td><td class="ex">simulated windows; real ones use window</td></tr><tr><td class="gl"><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg></td><td class="k">weights</td><td><code>—</code></td><td class="ex">network parameters φ, ψ</td></tr></tbody></table></div>
+    <p class="loop">Dimension names: <code>time</code> is days in the window (states include day 0, so they have one more), <code>height</code> and <code>width</code> are the grid rows and columns, <code>variable</code> stacks several fields, <code>member</code> is an ensemble member, <code>sim</code> a simulated window, <code>window</code> a real one, <code>param</code> and <code>hyper</code> index θ and α.</p>
+  </section>
+
+  <nav class="chart" aria-label="The six boxes as operators">
+    <a class="box" href="#step1">
+      <div class="num">1</div>
+      <div><div class="name">Simple model <span class="sigfam">forward</span></div><div class="ocean">Quasi-geostrophic model steps the sea-level field</div></div>
+      <div class="sig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z₀</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">u</span><code>(time, height, width)</code><span class="d" class="gap">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">states</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">maps</span><code>(time, height, width)</code></div>
+    </a>
+    <div class="link"><span></span><span>simulate many windows: a dataset of (z, y) pairs</span></div>
+    <a class="box oracle" href="#step2">
+      <div class="num">2</div>
+      <div><div class="name">Model-based inference · oracle <span class="sigfam">inverse</span></div><div class="ocean">4D-Var or EnKF: data assimilation</div></div>
+      <div class="sig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">maps</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><span class="n">masks</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d" class="gap">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">states</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">spread</span><code>(member, time, height, width)</code></div>
+    </a>
+    <div class="link"><span></span><span>replace 𝓕 with a trained network</span></div>
+    <a class="box" href="#step3">
+      <div class="num">3</div>
+      <div><div class="name">Emulator <span class="sigfam">forward</span></div><div class="ocean">Neural ocean model: a learned time step</div></div>
+      <div class="sig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d" class="gap">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(height, width)</code></div>
+    </a>
+    <div class="link"><span></span><span>rerun step 2 with the emulator</span></div>
+    <a class="box" href="#step4">
+      <div class="num">4</div>
+      <div><div class="name">Emulator-based inference <span class="sigfam">inverse</span></div><div class="ocean">Same cost function, fast</div></div>
+      <div class="sig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">maps</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><span class="n">masks</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>weights</code><span class="d" class="gap">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">states</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code></div>
+    </a>
+    <div class="link"><span></span><span>skip the inversion entirely</span></div>
+    <a class="box" href="#step5">
+      <div class="num">5</div>
+      <div><div class="name">Amortized inference <span class="sigfam">inverse</span></div><div class="ocean">Direct analysis: observations → state</div></div>
+      <div class="sig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">maps</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><span class="n">masks</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">ψ</span><code>weights</code><span class="d" class="gap">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">states</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time, height, width)</code></div>
+    </a>
+    <div class="link"><span></span><span>diagnose the misfit</span></div>
+    <a class="box" href="#step6">
+      <div class="num">6</div>
+      <div><div class="name">Improve <span class="sigfam">diagnose</span></div><div class="ocean">Innovation statistics decide which loop runs</div></div>
+      <div class="sig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">innovations</span><code>(window, time, height, width)</code><span class="d" class="gap">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">bias map</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">2𝒥*/p</span><code>(window,)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-decision"/></svg><span class="n">loop</span><code>inner or outer</code></div>
+    </a>
+    <p class="loop">Inner loop (step 2): change z and θ, keep the model. Outer loop (step 6): change the model structure (𝓕, H) or the hyperparameters α.</p>
+  </nav>
+
+
+  <!-- ============ PROBLEM ============ -->
+  <h2 id="problem">The problem and the data</h2>
+  <p>Take a box in the Gulf Stream extension, about 1000 km on a side, centred near 40°N. Satellite altimetry has already been gridded into daily maps of sea surface height: that was the L2 → L3 step, optimal interpolation from along-track data to a map with an error estimate. What we want is the L4 product: the full dynamical ocean state over a window of days, consistent with the physics and with the maps. Run forward in real time, this is an analysis and forecast. Run backward over a whole window, it is a reanalysis.</p>
+  <p>The difference from L2 → L3 is the model. An optimal-interpolation map uses only a covariance. A state estimate uses a dynamical model that carries information between days, so a feature seen on Monday constrains the field on Thursday.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Running example</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Domain, grid</td><td class="num">1024 km × 1024 km, 128 × 128, Δx = 8 km</td></tr>
+      <tr><td>Coriolis at 40°N, its gradient</td><td class="num">f₀ ≈ 9.4 × 10⁻⁵ s⁻¹, β ≈ 1.75 × 10⁻¹¹ m⁻¹ s⁻¹</td></tr>
+      <tr><td>Rossby deformation radius</td><td class="num">L_d ≈ 30 km</td></tr>
+      <tr><td>Model time step, observation interval</td><td class="num">Δt = 30 min, one SSH map per day (48 steps)</td></tr>
+      <tr><td>Assimilation window</td><td class="num">10 days: K = 10 maps, 480 model steps</td></tr>
+      <tr><td>State dimension</td><td class="num">N = 128² = 16 384</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- ============ OBJECTS ============ -->
+
+  <h2 id="notation">Notation</h2>
+  <p>One letter per role, used the same way in every box.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Symbol</th><th>Role</th><th>In the running example</th><th>Kind, shape</th></tr></thead>
+    <tbody>
+      <tr><td>\(\mathbf z_k\)</td><td>latent state, what we estimate</td><td>SSH η on the grid at day k</td><td>field (height, width); cube (time, height, width) over the window</td></tr>
+      <tr><td>\(\mathbf x\)</td><td>covariates: known, read by the model, never estimated</td><td>planetary vorticity βy, grid coordinates</td><td>(variable, height, width)</td></tr>
+      <tr><td>\(\mathbf u_k\)</td><td>controls: external forcing</td><td>daily wind-stress curl</td><td>cube (time, height, width)</td></tr>
+      <tr><td>\(\mathbf y_k\)</td><td>observations</td><td>daily L3 SSH map</td><td>cube (time, height, width)</td></tr>
+      <tr><td>\(\mathbf m_k\)</td><td>mask: which pixels of \(\mathbf y_k\) are observed</td><td>coverage of each map</td><td>boolean cube (time, height, width)</td></tr>
+      <tr><td>\(\theta\)</td><td>parameters of the physics</td><td>\((L_d, \nu)\)</td><td>vector (param,)</td></tr>
+      <tr><td>\(\alpha\)</td><td>hyperparameters of the probability model</td><td>B's scale and length \((\sigma_b,\ell_b)\), θ's prior \((\theta_b,\boldsymbol\Sigma_\theta)\), R and Q scales, localisation radius, inflation</td><td>vector (hyper,)</td></tr>
+      <tr><td>\(\phi\)</td><td>emulator weights</td><td>box 3's network</td><td>weights</td></tr>
+      <tr><td>\(\psi\)</td><td>variational parameters</td><td>box 5's conditional density \(q_\psi\)</td><td>weights</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><span class="tag">Two clashes with DA vocabulary</span>
+    <p>DA papers call the variable 4D-Var optimises the "control vector". Here that is \((\mathbf z_0,\theta)\), not \(\mathbf u\); \(\mathbf u\) is forcing we are given. And DA papers write the state as \(\mathbf x\); here \(\mathbf x\) is reserved for covariates.</p>
+  </div>
+
+  <h2 id="objects">The mathematical objects</h2>
+  <p>Every symbol below is used in the rest of the page. Index \(k = 0,1,\dots,K\) counts observation times \(t_k\), one per day.</p>
+
+  <h3>State</h3>
+  <p>The state \(\mathbf z_k \in \mathbb R^{N}\) is sea surface height \(\eta\) on the grid at time \(t_k\), flattened to a vector. In the quasi-geostrophic (QG) model the streamfunction and potential vorticity are diagnosed from it, so \(\eta\) alone is a complete state.</p>
+
+  <h3>Dynamics: the 1.5-layer QG model</h3>
+  <p>Let \(g\) be gravity, \(\psi\) the streamfunction, \(q\) the potential vorticity, \(\nabla^2\) the horizontal Laplacian, \(J(a,b) = \partial_x a\,\partial_y b - \partial_y a\,\partial_x b\) the Jacobian (advection of \(b\) by the flow of \(a\)), and \(\nu\) a biharmonic viscosity. Then</p>
+  \[
+  \psi = \frac{g}{f_0}\,\eta, \qquad
+  q = \nabla^2\psi - \frac{\psi}{L_d^2} + \beta y, \qquad
+  \partial_t q + J(\psi, q) = -\nu\,\nabla^6\psi + u .
+  \]
+  <p>One time step advects \(q\) (Arakawa Jacobian), then inverts the Helmholtz operator \(\nabla^2 - L_d^{-2}\) to recover \(\psi\), hence \(\eta\). The forcing \(u = \nabla\times\boldsymbol\tau/(\rho_0 H)\) is the wind-stress curl from an atmospheric reanalysis, with \(\rho_0\) the reference density and \(H\) the layer depth; it is a control \(\mathbf u_k\), given for each day. The planetary vorticity \(\beta y\) and the grid coordinates are covariates \(\mathbf x\). Collect the physical parameters in \(\theta = (L_d, \nu)\). Integrating 48 steps from \(t_{k-1}\) to \(t_k\) defines the <em>model operator</em> \(\mathcal F_\theta : \mathbb R^N \to \mathbb R^N\) and its composition \(\mathcal F^{(k)}_\theta\) from \(t_0\) to \(t_k\):</p>
+  \[
+  \mathbf z_k = \mathcal F_\theta(\mathbf z_{k-1};\,\mathbf x,\mathbf u_k) + \mathbf w_k,
+  \qquad
+  \mathcal F^{(k)}_\theta = \underbrace{\mathcal F_\theta\circ\cdots\circ\mathcal F_\theta}_{k\ \text{times}} .
+  \]
+  <p>Here \(\mathbf w_k \sim \mathcal N(\mathbf 0, \mathbf Q)\) is model error, with covariance \(\mathbf Q \in \mathbb R^{N\times N}\). Its Jacobian \(\mathbf F_k = \partial \mathcal F_\theta / \partial \mathbf z\,|_{\mathbf z_{k-1}}\) is the <em>tangent-linear model</em>; \(\mathbf F_k^\top\) is the <em>adjoint</em>.</p>
+
+  <h3>Observations</h3>
+  <p>The map on day \(k\) has \(p_k \le N\) usable pixels (land, ice and high-error pixels are removed). Write \(\mathbf y_k \in \mathbb R^{p_k}\) for those pixels and \(\mathbf H_k \in \{0,1\}^{p_k\times N}\) for the selection matrix that picks them out of the state:</p>
+  \[
+  \mathbf y_k = \mathbf H_k \mathbf z_k + \boldsymbol\varepsilon_k, \qquad \boldsymbol\varepsilon_k \sim \mathcal N(\mathbf 0, \mathbf R_k).
+  \]
+  <p>\(\mathbf R_k \in \mathbb R^{p_k\times p_k}\) is the observation-error covariance. For a gridded map it is the mapping error from the L2 → L3 optimal interpolation, plus representation error (the QG model has no tides, no steric seasonal cycle).</p>
+  <div class="note"><span class="tag">Watch out</span><p>Assimilating maps instead of tracks is convenient but not innocent. The map's errors are spatially correlated, so a diagonal \(\mathbf R_k\) overweights the data, and the map already contains a prior from the L2 → L3 step that is counted again here. The cleaner traditional choice is to assimilate the L2 along-track heights directly, with \(\mathbf H_k\) an interpolation from the grid to the track points. The algebra below is identical in both cases.</p></div>
+
+  <h3>Prior</h3>
+  <p>The background \(\mathbf z_b\) is our best guess of \(\mathbf z_0\) before seeing this window, typically the previous window's analysis. Its error covariance \(\mathbf B \in \mathbb R^{N\times N}\) is usually a stationary kernel, for example Matérn with a standard deviation of 10 cm and a length scale of 100 km. The parameters get their own prior \(\theta \sim \mathcal N(\theta_b, \boldsymbol\Sigma_\theta)\). Everything that shapes these distributions but is not itself estimated in a window (\(\sigma_b, \ell_b, \theta_b, \boldsymbol\Sigma_\theta\), the scales of \(\mathbf R\) and \(\mathbf Q\)) is a hyperparameter, collected in \(\alpha\).</p>
+  \[
+  \mathbf z_0 \sim \mathcal N(\mathbf z_b, \mathbf B), \qquad \theta \sim \mathcal N(\theta_b, \boldsymbol\Sigma_\theta).
+  \]
+
+  <div class="def">
+    <p><strong>Dictionary to the figure.</strong> The figure writes the generic problem as \(y = H(f(\theta)) + \varepsilon\), where \(\theta\) is "the quantity we want". For ocean state estimation that quantity is the unknown initial state and parameters, the pair \((\mathbf z_0, \theta)\). The figure's \(f\) is the trajectory map \((\mathbf z_0,\theta) \mapsto (\mathcal F^{(1)}_\theta(\mathbf z_0),\dots,\mathcal F^{(K)}_\theta(\mathbf z_0))\), and its \(H\) is the stack of the \(\mathbf H_k\). The figure's θ is therefore our \((\mathbf z_0, \theta)\), and its "inner loop: x, θ" means our \(\mathbf z\) and \(\theta\). The covariates \(\mathbf x\) and controls \(\mathbf u\) are inside \(f\): known inputs, not unknowns.</p>
+  </div>
+
+  <!-- ============ STEP 1 ============ -->
+  <section class="stepsec" id="step1">
+    <div class="stephead"><span class="pill">Step 1</span><h2>Simple model: the generative story</h2></div>
+    <div class="op"><div class="op-h"><span class="tag">Operator</span><span class="opname">simulate_window</span><span class="when">box 1 · one call per synthetic window</span></div><div class="io-group"><div class="io-l">Inputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\theta\) physics<small>deformation radius, viscosity</small></div><code>(param,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\mathbf z_0\) initial SSH<small>drawn from the prior, or given</small></div><code>(height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\mathbf x\) covariates<small>βy and coordinates</small></div><code>(variable, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf u_{1:K}\) controls<small>daily wind-stress curl</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(\mathbf m_{1:K}\) observing masks<small>which pixels each real map covers</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\boldsymbol\sigma_{1:K}\) observation error<small>per-pixel standard deviation (diagonal R)</small></div><code>(time, height, width)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(\mathbf z_k = \mathcal F_\theta(\mathbf z_{k-1};\mathbf x,\mathbf u_k)\) ten times, then \(\mathbf y_k = \mathbf m_k\odot(\mathbf z_k + \boldsymbol\sigma_k\odot\mathbf z_k)\), with \(\mathbf z_k\sim\mathcal N(\mathbf 0,\mathbf I)\)</div></div><div class="io-group"><div class="io-l">Outputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf z_{0:K}\) true states<small>the nature run, known exactly</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf y_{1:K}\) synthetic maps<small>masked like the real ones</small></div><code>(time, height, width)</code></div></div><div class="op-foot">Inside it: <code>step_day</code> 𝓕_θ, (state field, covariate field, control field, θ) → state field (48 QG steps). Called S times it builds the OSSE dataset that boxes 3 and 5 train on: states (sim, time, height, width), maps and masks (sim, time, height, width), controls (sim, time, height, width), θ (sim, param).</div></div>
+    <p>The objects above define a <em>state-space model</em>, a hidden Markov chain with Gaussian noise. Read top to bottom, it is a recipe for simulating an ocean and the satellite data it would produce:</p>
+    \[
+    \begin{aligned}
+    \theta &amp;\sim \mathcal N(\theta_b, \boldsymbol\Sigma_\theta) &amp;&amp;\text{draw the physics}\\
+    \mathbf z_0 &amp;\sim \mathcal N(\mathbf z_b, \mathbf B) &amp;&amp;\text{draw an initial sea level}\\
+    \mathbf z_k &amp;= \mathcal F_\theta(\mathbf z_{k-1};\,\mathbf x,\mathbf u_k) + \mathbf w_k, &amp;&amp; k = 1,\dots,K \quad\text{run the QG model}\\
+    \mathbf y_k &amp;= \mathbf H_k \mathbf z_k + \boldsymbol\varepsilon_k, &amp;&amp; k = 1,\dots,K \quad\text{observe it}
+    \end{aligned}
+    \]
+    <p>The recipe is equivalent to a joint density, which is everything step 2 needs:</p>
+    \[
+    p(\mathbf z_{0:K}, \theta, \mathbf y_{1:K})
+    = p(\theta)\,p(\mathbf z_0)\prod_{k=1}^{K} \underbrace{p(\mathbf z_k \mid \mathbf z_{k-1}, \theta)}_{\mathcal N(\mathcal F_\theta(\mathbf z_{k-1}),\,\mathbf Q)}\;\underbrace{p(\mathbf y_k \mid \mathbf z_k)}_{\mathcal N(\mathbf H_k\mathbf z_k,\,\mathbf R_k)} .
+    \]
+    <p>The arrow from step 1 to steps 3 and 5 in the figure is this recipe run many times. In DA vocabulary that is an <strong>observing system simulation experiment</strong> (OSSE): a "nature run" \(\mathbf z^{\text{true}}_{0:K}\) plus synthetic maps \(\mathbf y_{1:K}\) made with the real \(\mathbf H_k\) and \(\mathbf R_k\). Each OSSE gives a pair \((\mathbf z_{0:K}, \mathbf y_{1:K})\) whose answer is known exactly.</p>
+  </section>
+
+  <!-- ============ STEP 2 ============ -->
+  <section class="stepsec" id="step2">
+    <div class="stephead"><span class="pill or">Step 2 · oracle</span><h2>Model-based inference: the classical ways</h2></div>
+    <div class="op"><div class="op-h"><span class="tag">Operator</span><span class="opname">assimilate_window</span><span class="when">box 2 · one call per real 10-day window</span></div><div class="io-group"><div class="io-l">Inputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf y_{1:K}\) SSH maps<small>real L3 maps, one per day</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(\mathbf m_{1:K}\) masks<small>observed pixels; this is H</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\boldsymbol\sigma_{1:K}\) map error<small>per-pixel, from L2 → L3; this is R</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\mathbf z_b\) background<small>previous window's analysis</small></div><code>(height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\mathbf x\) covariates<small>βy and coordinates</small></div><code>(variable, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf u_{1:K}\) controls<small>daily wind-stress curl</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\alpha\) hyperparameters<small>B's (σ_b, ℓ_b), θ's prior, R and Q scales, localisation, inflation</small></div><code>(hyper,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>minimise \(\mathcal J(\mathbf z_0,\theta)\) through 𝓕 and its adjoint (4D-Var), or forecast and update an ensemble (EnKF/EnKS)</div></div><div class="io-group"><div class="io-l">Outputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf z^a_{0:K}\) analysed states<small>the reanalysis of this window</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\theta^a\) estimated physics<small>only if θ is in the control vector</small></div><code>(param,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">uncertainty<small>EnKS members, or for 4D-Var r Hessian eigenvectors (rank, height, width) + eigenvalues (rank,)</small></div><code>(member, time, height, width)</code></div></div><div class="op-foot">Streaming variant (filter): field in per day, field out per day, carrying the state between calls. Internally, 𝒥 maps field + vector → scalar and ∇𝒥 maps it back to field + vector.</div></div>
+    <p>Bayes' rule turns the joint density into the target. Everything in classical DA is a way of computing, approximating or summarising one of two posteriors:</p>
+    \[
+    p(\mathbf z_{0:K}, \theta \mid \mathbf y_{1:K}) \;\propto\; p(\theta)\,p(\mathbf z_0)\prod_{k=1}^{K} p(\mathbf z_k\mid \mathbf z_{k-1},\theta)\,p(\mathbf y_k\mid \mathbf z_k).
+    \]
+    <div class="tbl"><table>
+      <thead><tr><th>Posterior</th><th>Name in DA</th><th>Product</th></tr></thead>
+      <tbody>
+        <tr><td>\(p(\mathbf z_k \mid \mathbf y_{1:k})\)</td><td>filtering</td><td>real-time analysis, initial conditions for a forecast</td></tr>
+        <tr><td>\(p(\mathbf z_{0:K} \mid \mathbf y_{1:K})\)</td><td>smoothing</td><td>reanalysis: every day uses past and future maps</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>The exact case: the Kalman filter</h3>
+    <p>If \(\mathcal F_\theta\) were linear, \(\mathcal F_\theta(\mathbf z) = \mathbf F\mathbf z\), every density above would stay Gaussian and the filter would be exact. Write \(\mathbf z^f_k, \mathbf P^f_k\) for the forecast mean and covariance and \(\mathbf z^a_k, \mathbf P^a_k\) for the analysis:</p>
+    \[
+    \begin{aligned}
+    \text{forecast:}\quad &amp; \mathbf z^f_k = \mathbf F\mathbf z^a_{k-1}, &amp;&amp; \mathbf P^f_k = \mathbf F\mathbf P^a_{k-1}\mathbf F^\top + \mathbf Q,\\
+    \text{gain:}\quad &amp; \mathbf K_k = \mathbf P^f_k\mathbf H_k^\top\big(\mathbf H_k\mathbf P^f_k\mathbf H_k^\top + \mathbf R_k\big)^{-1}, &amp;&amp;\\
+    \text{analysis:}\quad &amp; \mathbf z^a_k = \mathbf z^f_k + \mathbf K_k\big(\mathbf y_k - \mathbf H_k\mathbf z^f_k\big), &amp;&amp; \mathbf P^a_k = (\mathbf I - \mathbf K_k\mathbf H_k)\mathbf P^f_k .
+    \end{aligned}
+    \]
+    <p>Two facts kill it for the ocean. QG advection \(J(\psi,q)\) is quadratic, so \(\mathcal F_\theta\) is nonlinear. And \(\mathbf P^f_k\) has \(N^2 \approx 2.7\times 10^8\) entries (about 1 GB in float32) and propagating it costs \(N\) tangent-linear runs per day. Every practical method below drops one of these two ingredients: 4D-Var drops the covariance, the EnKF drops the full rank.</p>
+
+    <h3>3D-Var: one analysis as an optimisation</h3>
+    <p>For a single time, the Kalman analysis mean is also the minimiser of a quadratic cost. Write \(\|\mathbf v\|^2_{\mathbf A} = \mathbf v^\top\mathbf A\mathbf v\):</p>
+    \[
+    \mathcal J_{\text{3D}}(\mathbf z) = \tfrac12\|\mathbf z - \mathbf z_b\|^2_{\mathbf B^{-1}} + \tfrac12\|\mathbf y - \mathbf H\mathbf z\|^2_{\mathbf R^{-1}} .
+    \]
+    <p>This is \(-\log\) of prior times likelihood, so its minimiser is the MAP estimate. With \(\mathbf z_b = \mathbf z^f\) and \(\mathbf B = \mathbf P^f\) it equals \(\mathbf z^a\) exactly. 3D-Var ignores time: it is the L2 → L3 optimal interpolation written as a cost function.</p>
+
+    <h3>Strong-constraint 4D-Var: the whole window through the model</h3>
+    <p>Assume the model is perfect, \(\mathbf Q = \mathbf 0\). Then the trajectory is fixed by \(\mathbf z_0\) and \(\theta\), and the negative log posterior is a function of those alone:</p>
+    \[
+    \mathcal J(\mathbf z_0,\theta) =
+    \underbrace{\tfrac12\|\mathbf z_0 - \mathbf z_b\|^2_{\mathbf B^{-1}}}_{\text{background}}
+    + \underbrace{\tfrac12\|\theta - \theta_b\|^2_{\boldsymbol\Sigma_\theta^{-1}}}_{\text{parameters}}
+    + \underbrace{\tfrac12\sum_{k=1}^{K}\big\|\mathbf y_k - \mathbf H_k\mathcal F^{(k)}_\theta(\mathbf z_0)\big\|^2_{\mathbf R_k^{-1}}}_{\text{misfit to 10 maps}} .
+    \]
+    <p>The minimiser \((\mathbf z_0^\star,\theta^\star)\) is the MAP estimate, and running the model from it gives the analysed trajectory. The minimisation needs \(\nabla_{\mathbf z_0}\mathcal J\). Let \(\mathbf d_k = \mathbf R_k^{-1}\big(\mathbf y_k - \mathbf H_k\mathbf z_k\big)\) be the weighted misfit on day \(k\). Run the <em>adjoint</em> backwards, starting from \(\boldsymbol\lambda_{K+1} = \mathbf 0\):</p>
+    \[
+    \boldsymbol\lambda_k = \mathbf H_k^\top\mathbf d_k + \mathbf F_{k+1}^\top\boldsymbol\lambda_{k+1},\quad k = K,\dots,1,
+    \qquad
+    \nabla_{\mathbf z_0}\mathcal J = \mathbf B^{-1}(\mathbf z_0 - \mathbf z_b) - \mathbf F_1^\top\boldsymbol\lambda_1 .
+    \]
+    <p>The backward recursion is reverse-mode automatic differentiation of the model. In JAX it is <code>jax.grad</code> of \(\mathcal J\); in a Fortran ocean model it is a separately maintained adjoint code. One gradient costs about one forward run plus one adjoint run, two to three forward runs in total. Adding \(\theta\) to the control vector, as above, is parameter estimation by the same machinery.</p>
+    <p>In practice the optimisation variable is changed to \(\mathbf z_0 = \mathbf z_b + \mathbf B^{1/2}\boldsymbol\xi\), so the background term becomes \(\tfrac12\|\boldsymbol\xi\|^2\) and the problem is well conditioned. Applying \(\mathbf B^{1/2}\) matrix-free (a Kronecker or spectral factor of the Matérn kernel) is a linear-algebra job, which is where gaussx sits.</p>
+
+    <pre>import einx
+import equinox as eqx
+import finitevolx as fvx
+import gaussx as gx
+import jax
+import jax.numpy as jnp
+import lineax as lx
+import optimistix as optx
+from jaxtyping import Array, Bool, Float
+
+<span class="c"># Shapes: T = 10 daily maps (time); H, W = 130 × 130 grid with ghost ring</span>
+<span class="c">#         (height, width); N = H·W = 16,900 cells (cell); V covariates</span>
+<span class="c">#         (variable); P = 2 parameters L_d, ν (param)</span>
+
+Op = lx.AbstractLinearOperator
+
+
+class Window(eqx.Module):
+    """One 10-day window: maps y, masks m, errors σ², background z_b, priors."""
+
+    maps: Float[Array, "time height width"]
+    masks: Bool[Array, "time height width"]
+    obs_var: Float[Array, "time height width"]
+    background: Float[Array, "cell"]
+    covariates: Float[Array, "variable height width"]
+    forcing: Float[Array, "time height width"]
+    prior_cov: Op
+    param_mean: Float[Array, "param"]
+    param_cov: Op
+    grid: fvx.CartesianGrid2D
+
+
+def strong_4dvar_cost(
+    control: tuple[Float[Array, "cell"], Float[Array, "param"]],
+    window: Window,
+) -&gt; Float[Array, ""]:
+    whitened, params = control
+    height = window.maps.shape[1]
+<span class="c">    # user (taxonomy page)</span>
+    qg_params = QGParams(deformation_radius=params[0], viscosity=params[1])
+
+<span class="c">    # --- background ---</span>
+<span class="c">    # today* (gaussx)</span>
+<span class="c">    # B^{1/2}</span>
+    prior_sqrt = gx.sqrt(window.prior_cov)<span class="c">            # (N, N) PSD op</span>
+<span class="c">    # z₀ − z_b = B^{1/2} ξ</span>
+    increment = prior_sqrt.mv(whitened)<span class="c">               # (N,) → (N,)</span>
+<span class="c">    # z₀ = z_b + B^{1/2} ξ</span>
+    initial_flat = window.background + increment<span class="c">      # (N,) → (N,)</span>
+    initial_state = einx.rearrange(<span class="c">                   # (N,) → (H, W)</span>
+        "(height width) -&gt; height width", initial_flat, height=height
+    )
+<span class="c">    # ‖ξ‖²</span>
+    whitened_norm = einx.dot("cell, cell -&gt;", whitened, whitened)<span class="c">  # → ()</span>
+<span class="c">    # J_b = ½‖ξ‖²</span>
+    background_cost = 0.5 * whitened_norm<span class="c">             # → ()</span>
+
+<span class="c">    # --- parameters ---</span>
+<span class="c">    # θ − θ_b</span>
+    param_departure = params - window.param_mean<span class="c">      # (P,) → (P,)</span>
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # (θ − θ_b)ᵀ Σ_θ⁻¹ (θ − θ_b)</span>
+    param_quad = gx.quadratic_form(window.param_cov, param_departure)<span class="c">  # → ()</span>
+<span class="c">    # J_θ = ½‖θ − θ_b‖²_{Σ_θ⁻¹}</span>
+    param_cost = 0.5 * param_quad<span class="c">                     # → ()</span>
+
+<span class="c">    # --- observations, one day per scan step ---</span>
+    def assimilate_day(state, day):
+        observed_map, mask, obs_var, daily_forcing = day
+<span class="c">        # user (qg_day, taxonomy page)</span>
+<span class="c">        # z_k = 𝓕_θ(z_{k−1}; x, u_k), 48 RK4 steps</span>
+        state = qg_day(<span class="c">                               # (H, W) → (H, W)</span>
+            state, window.covariates, daily_forcing, qg_params, window.grid
+        )
+<span class="c">        # y_k − z_k</span>
+        misfit = observed_map - state<span class="c">                 # (H, W)</span>
+<span class="c">        # r_k = m_k ⊙ (y_k − z_k)</span>
+        residual = jnp.where(mask, misfit, 0.0)<span class="c">       # (H, W)</span>
+<span class="c">        # r_k²</span>
+        squared = residual**2<span class="c">                         # (H, W)</span>
+<span class="c">        # r_k² / σ_k²</span>
+        weighted = squared / obs_var<span class="c">                  # (H, W)</span>
+<span class="c">        # ½ ∑ r_k² / σ_k²</span>
+        day_sum = einx.sum("height width -&gt;", weighted)<span class="c">  # → ()</span>
+        day_cost = 0.5 * day_sum<span class="c">                      # → ()</span>
+        return state, day_cost
+
+    days = (window.maps, window.masks, window.obs_var, window.forcing)
+<span class="c">    # J_o = ∑_k ½‖m_k ⊙ (y_k − z_k)‖²_{R_k⁻¹}</span>
+    _, day_costs = jax.lax.scan(assimilate_day, initial_state, days)<span class="c">  # → (T,)</span>
+    obs_cost = einx.sum("time -&gt;", day_costs)<span class="c">         # (T,) → ()</span>
+
+<span class="c">    # 𝒥 = J_b + J_θ + J_o</span>
+    total_cost = background_cost + param_cost + obs_cost<span class="c">  # → ()</span>
+    return total_cost
+
+
+<span class="c"># not pinned (optimistix)</span>
+<span class="c"># (ξ*, θ*) = argmin 𝒥(ξ, θ); ∇𝒥 by reverse mode is the adjoint recursion</span>
+solution = optx.minimise(<span class="c">                             # → ((N,), (P,))</span>
+    strong_4dvar_cost,
+    optx.BFGS(rtol=1e-6, atol=1e-6),
+    (whitened_init, params_init),
+    args=window,
+)
+whitened_star, params_star = solution.value</pre>
+  <p class="loop">Markers: <code>today</code> ships on <code>main</code> (checked 24 Oct 2026: finitevolX 831c69f, gaussx eeda235, somax 9cb19b3); <code>today*</code> ships, arguments sketched; <code>user</code> is defined on these pages; <code>not pinned</code> is a library whose API was not checked. Shape column letters are defined in the header.</p>
+  <p>vardax ships a strong-constraint 4D-Var (<code>StrongFourDVar</code>) but no B<sup>1/2</sup> change of variables, so the sketch builds that step with gaussx.</p>
+    <p>Writing \(\mathbf H_k\) as the mask \(\mathbf m_k\) applied to the full grid keeps every day the same shape, (height, width), so the scan needs no padding. The hyperparameters \(\alpha\) live inside <code>prior_cov</code>, <code>obs_var</code> and <code>param_cov</code>: fixed here, tuned in step 6.</p>
+
+    <h3>Weak-constraint 4D-Var: admitting the model is wrong</h3>
+    <p>With \(\mathbf Q \neq \mathbf 0\) the whole trajectory becomes the control variable, and the cost is exactly the negative log of the smoothing posterior:</p>
+    \[
+    \mathcal J(\mathbf z_{0:K}) = \tfrac12\|\mathbf z_0 - \mathbf z_b\|^2_{\mathbf B^{-1}}
+    + \tfrac12\sum_{k=1}^{K}\big\|\mathbf z_k - \mathcal F_\theta(\mathbf z_{k-1})\big\|^2_{\mathbf Q^{-1}}
+    + \tfrac12\sum_{k=1}^{K}\big\|\mathbf y_k - \mathbf H_k\mathbf z_k\big\|^2_{\mathbf R_k^{-1}} .
+    \]
+    <p>Strong-constraint 4D-Var is the limit \(\mathbf Q \to \mathbf 0\). The control vector grows from \(N\) to \((K+1)N\), but the terms decouple in time, so the days can be evaluated in parallel.</p>
+
+    <h3>Uncertainty from 4D-Var</h3>
+    <p>4D-Var returns a mode, not a distribution. The Laplace approximation recovers a Gaussian around it, with the Gauss–Newton Hessian. Let \(\mathbf G_k = \partial\mathbf z_k / \partial\mathbf z_0 = \mathbf F_k\cdots\mathbf F_1\):</p>
+    \[
+    \operatorname{Cov}(\mathbf z_0 \mid \mathbf y_{1:K}) \approx \Big(\mathbf B^{-1} + \sum_{k=1}^{K}\mathbf G_k^\top\mathbf H_k^\top\mathbf R_k^{-1}\mathbf H_k\mathbf G_k\Big)^{-1}.
+    \]
+    <p>It is never formed. Each Hessian–vector product is one tangent-linear plus one adjoint run, and Lanczos extracts its leading eigenpairs: the directions the ten maps actually constrain.</p>
+
+    <h3>The ensemble Kalman filter: sampling the covariance</h3>
+    <p>The EnKF keeps the Kalman equations and replaces \(\mathbf P^f_k\) with a sample. Run \(N_e\) members \(\mathbf z^{(i)}_k\), say \(N_e = 32\), each through the full nonlinear model. Stack the scaled anomalies into \(\mathbf X'_k \in \mathbb R^{N\times N_e}\):</p>
+    \[
+    \mathbf X'_k = \frac{1}{\sqrt{N_e-1}}\big[\mathbf z^{(1)}_k - \bar{\mathbf z}_k,\;\dots,\;\mathbf z^{(N_e)}_k - \bar{\mathbf z}_k\big],
+    \qquad
+    \mathbf P^f_k \approx \mathbf X'_k\mathbf X'^{\top}_k .
+    \]
+    <p>The gain becomes \(\mathbf K_k = \mathbf X'_k(\mathbf H_k\mathbf X'_k)^\top\big(\mathbf H_k\mathbf X'_k(\mathbf H_k\mathbf X'_k)^\top + \mathbf R_k\big)^{-1}\), and each member is updated with it. The matrix to invert is \(p_k\times p_k\), or \(N_e\times N_e\) in the ensemble-transform form. The sample covariance has rank at most \(N_e - 1 = 31\) against \(N = 16\,384\), so two fixes are always needed. <strong>Localisation</strong> multiplies the covariance elementwise by a compact taper \(\boldsymbol\rho\) (for example 150 km), \(\mathbf P^f \approx \boldsymbol\rho\circ\mathbf X'\mathbf X'^\top\), which removes spurious long-range correlations. <strong>Inflation</strong> scales the anomalies by \(\alpha \gtrsim 1\) to stop the spread collapsing. Parameters are estimated by appending \(\theta\) to each member's state. The ensemble smoother (EnKS) gives the reanalysis.</p>
+
+    <h3>Cost of the oracle</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Method</th><th>Model work per 10-day window</th><th>What you get</th></tr></thead>
+      <tbody>
+        <tr><td>4D-Var</td><td class="num">n_iter × (forward + adjoint) × 480 steps</td><td>MAP trajectory, Hessian for error bars</td></tr>
+        <tr><td>EnKF / EnKS</td><td class="num">N_e × 480 steps + K analyses</td><td>ensemble mean and spread</td></tr>
+      </tbody>
+    </table></div>
+    <p>With 50 iterations, 4D-Var costs about 50 × 3 × 480 ≈ 7 × 10⁴ QG steps. At 128² that is seconds to minutes on one GPU. The "hours" on the figure describe a realistic primitive-equation model at 1/12°, where one model day can take minutes on hundreds of cores. For this example, step 2 is cheap enough to be the oracle for everything to its right.</p>
+  </section>
+
+  <!-- ============ STEP 3 ============ -->
+  <section class="stepsec" id="step3">
+    <div class="stephead"><span class="pill">Step 3</span><h2>Emulator: replace 𝓕 by a network</h2></div>
+    <div class="op"><div class="op-h"><span class="tag">Operator</span><span class="opname">train_emulator</span><span class="when">box 3 · once, offline</span></div><div class="io-group"><div class="io-l">Inputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><div class="nm">trajectories \(\mathbf z_{0:K}\)<small>from box 1</small></div><code>(sim, time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><div class="nm">parameters \(\theta\), controls \(\mathbf u\)<small>one set per trajectory</small></div><code>(sim, param), (sim, time, height, width)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>minimise the rollout loss over \(\phi\)</div></div><div class="io-group"><div class="io-l">Outputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><div class="nm">\(\phi\)<small>network weights</small></div><code>—</code></div></div></div><div class="op"><div class="op-h"><span class="tag">Operator</span><span class="opname">emulate_day</span><span class="when">box 3 · called inside boxes 1 or 4</span></div><div class="io-group"><div class="io-l">Inputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\mathbf z_k\)<small>today's SSH</small></div><code>(height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\mathbf x\), \(\mathbf u_k\)<small>covariates, today's forcing</small></div><code>(height, width) each</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\theta\)<small>physics</small></div><code>(param,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><div class="nm">\(\phi\)<small>trained weights</small></div><code>—</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(\widehat{\mathcal F}_\phi(\mathbf z_k;\mathbf x,\mathbf u_k,\theta)\), one network evaluation</div></div><div class="io-group"><div class="io-l">Outputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\mathbf z_{k+1}\)<small>tomorrow's SSH</small></div><code>(height, width)</code></div></div><div class="op-foot">Same signature as <code>step_day</code> in box 1, plus weights. That is what makes it a drop-in replacement for 𝓕.</div></div>
+    <p>Look at where the cost of step 2 lives: in \(\mathcal F_\theta\), evaluated hundreds of times per iteration, and in its adjoint. Step 3 replaces that one object. A network \(\widehat{\mathcal F}_\phi\) with weights \(\phi\) learns the one-day map from the step-1 nature runs:</p>
+    \[
+    \phi^\star = \arg\min_\phi\; \mathbb E_{\theta,\,\mathbf z_0\sim p}\sum_{k=1}^{K}\big\|\mathbf z_k - \widehat{\mathcal F}^{(k)}_\phi(\mathbf z_0;\theta)\big\|^2,
+    \qquad \mathbf z_k = \mathcal F^{(k)}_\theta(\mathbf z_0).
+    \]
+    <p>With \(K = 1\) this is one-step training; with \(K > 1\) it is a rollout loss (somax's <code>rollout_loss</code> on a scanned cycle). Its reference is step 1: the emulator is scored against the simulator it replaces, not against data.</p>
+    <p>The figure's "skip if cheap" applies here. One emulator call replaces 48 QG steps, but 48 QG steps at 128² already take milliseconds in JAX, and the QG model is already differentiable. For this running example the emulator buys little. It pays off when \(\mathcal F\) is a large ocean model with no adjoint.</p>
+    <div class="note"><span class="tag">What the formulation demands of the emulator</span><p>4D-Var uses the adjoint \(\mathbf F_k^\top\), not only \(\mathcal F\). A network that matches the forward map can still have the wrong Jacobian, and then the gradients in step 4 point the wrong way. The objective above only constrains values. If the emulator is meant for step 4, add a Jacobian term with random directions \(\mathbf v\): \(\big\|\mathbf F_k\mathbf v - \widehat{\mathbf F}_k\mathbf v\big\|^2\), two JVPs per sample. An ensemble method in step 4 needs forward fidelity only.</p></div>
+  </section>
+
+  <!-- ============ STEP 4 ============ -->
+  <section class="stepsec" id="step4">
+    <div class="stephead"><span class="pill">Step 4</span><h2>Emulator-based inference: same cost, new model</h2></div>
+    <div class="op"><div class="op-h"><span class="tag">Operator</span><span class="opname">assimilate_window</span><span class="when">box 4 · same signature as box 2</span></div><div class="io-group"><div class="io-l">Inputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf y_{1:K}\), \(\mathbf m_{1:K}\), \(\boldsymbol\sigma_{1:K}\)<small>maps, masks, errors</small></div><code>3 × (time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\mathbf z_b\), \(\mathbf x\), \(\mathbf u_{1:K}\)<small>background, covariates, controls</small></div><code>(height, width), …</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\alpha\) hyperparameters<small>the same prior and error scales as box 2</small></div><code>(hyper,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><div class="nm">\(\phi\)<small>the emulator from box 3</small></div><code>—</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>minimise \(\widehat{\mathcal J}_\phi\): box 2 with \(\widehat{\mathcal F}_\phi\) in place of \(\mathcal F_\theta\)</div></div><div class="io-group"><div class="io-l">Outputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\hat{\mathbf z}^\phi_{0:K}\) analysed states<small>compared with box 2's on the same window</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\hat\theta^\phi\)<small>if estimated</small></div><code>(param,)</code></div></div></div>
+    <p>Step 4 is step 2 with one substitution, \(\mathcal F_\theta \to \widehat{\mathcal F}_\phi\). Nothing else changes: same \(\mathbf B\), \(\mathbf R_k\), \(\mathbf H_k\), same optimiser or ensemble.</p>
+    \[
+    \widehat{\mathcal J}_\phi(\mathbf z_0,\theta) = \tfrac12\|\mathbf z_0 - \mathbf z_b\|^2_{\mathbf B^{-1}} + \tfrac12\|\theta - \theta_b\|^2_{\boldsymbol\Sigma_\theta^{-1}} + \tfrac12\sum_{k=1}^{K}\big\|\mathbf y_k - \mathbf H_k\widehat{\mathcal F}^{(k)}_\phi(\mathbf z_0;\theta)\big\|^2_{\mathbf R_k^{-1}} .
+    \]
+    <p>Its reference is step 2: the emulator-based analysis \(\hat{\mathbf z}^\phi_{0:K}\) is compared with the classical analysis \(\hat{\mathbf z}_{0:K}\) on the same windows and the same maps, and in an OSSE both are compared with \(\mathbf z^{\text{true}}\). Each query still solves an optimisation, so step 4 still needs the observations, the prior and a solver at run time. That is the difference from step 5.</p>
+  </section>
+
+  <!-- ============ STEP 5 ============ -->
+  <section class="stepsec" id="step5">
+    <div class="stephead"><span class="pill">Step 5</span><h2>Amortized inference: learn the inverse</h2></div>
+    <div class="op"><div class="op-h"><span class="tag">Operator</span><span class="opname">train_inverse</span><span class="when">box 5 · once, offline</span></div><div class="io-group"><div class="io-l">Inputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><div class="nm">maps, masks, errors<small>synthetic, from box 1</small></div><code>(sim, time, height, width) × 3</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><div class="nm">true states \(\mathbf z_{0:K}\)<small>the targets</small></div><code>(sim, time, height, width)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>minimise \(\mathbb E[-\log q_\psi(\mathbf z\mid\mathbf y)]\) over \(\psi\)</div></div><div class="io-group"><div class="io-l">Outputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><div class="nm">\(\psi\)<small>network weights</small></div><code>—</code></div></div></div><div class="op"><div class="op-h"><span class="tag">Operator</span><span class="opname">analyse_window</span><span class="when">box 5 · one forward pass per real window</span></div><div class="io-group"><div class="io-l">Inputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf y_{1:K}\), \(\mathbf m_{1:K}\), \(\boldsymbol\sigma_{1:K}\)<small>maps, masks, errors</small></div><code>3 × (time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\mathbf x\), \(\mathbf u_{1:K}\)<small>covariates and forcing, if the network conditions on them</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><div class="nm">\(\psi\)<small>variational parameters</small></div><code>—</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(q_\psi(\cdot\mid\mathbf y)\): its mean \(g_\psi(\mathbf y)\), or samples</div></div><div class="io-group"><div class="io-l">Outputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\hat{\mathbf z}_{0:K}\) posterior mean<small>the direct analysis</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">posterior samples<small>only if q is a full density (a flow)</small></div><code>(member, time, height, width)</code></div></div><div class="op-foot">Same outputs as box 2, but no z_b and no α among the inputs: the prior is learned from the training set, not passed in.</div></div>
+    <p>Steps 2 and 4 solve a new optimisation for every window. Step 5 learns the answer as a function of the data. A conditional density \(q_\psi\) with weights \(\psi\) is trained on step-1 OSSE pairs:</p>
+    \[
+    \psi^\star = \arg\min_\psi\; \mathbb E_{(\mathbf z_{0:K},\,\mathbf y_{1:K})\sim p}\big[-\log q_\psi(\mathbf z_{0:K}\mid \mathbf y_{1:K})\big],
+    \qquad q_{\psi^\star}(\mathbf z_{0:K}\mid\mathbf y_{1:K}) \approx p(\mathbf z_{0:K}\mid\mathbf y_{1:K}).
+    \]
+    <p>Minimising this expectation minimises \(\mathbb E_{\mathbf y}\big[\mathrm{KL}\big(p(\cdot\mid\mathbf y)\,\|\,q_\psi(\cdot\mid\mathbf y)\big)\big]\), so a flexible \(q_\psi\) converges to the true posterior. The simplest case is a Gaussian with fixed variance and learned mean \(g_\psi(\mathbf y)\). The loss becomes mean squared error, whose minimiser is the posterior mean:</p>
+    \[
+    \min_\psi\; \mathbb E\,\big\|\mathbf z_{0:K} - g_\psi(\mathbf y_{1:K})\big\|^2
+    \quad\Longrightarrow\quad
+    g_{\psi^\star}(\mathbf y_{1:K}) = \mathbb E\big[\mathbf z_{0:K}\mid\mathbf y_{1:K}\big].
+    \]
+    <p>That is the "direct analysis": a network from ten SSH maps to the state, at the cost of one forward pass.</p>
+    <div class="note"><span class="tag">Three consequences of the formulation</span>
+      <p><strong>Mean versus mode.</strong> An MSE-trained network estimates the posterior mean, while 4D-Var returns the posterior mode. They coincide only in the linear-Gaussian case. Compare step 5 with the step-2 ensemble mean, or with 4D-Var's mode only after checking the posterior is close to Gaussian.</p>
+      <p><strong>The prior is implicit.</strong> Steps 2 and 4 state \(\mathbf B\) and \(p(\theta)\) explicitly. Step 5 learns its prior from the distribution of nature runs. If those runs do not look like the real Gulf Stream, the amortized posterior is wrong in a way no single-window check reveals.</p>
+      <p><strong>The observing system is part of the input.</strong> \(\mathbf H_k\) and \(\mathbf R_k\) change every day (clouds do not matter for altimetry, but coverage, land masks and pixel errors do). The network must see the mask and error map as inputs, \(q_\psi(\mathbf z\mid \mathbf y,\mathbf H,\mathbf R)\), and training must sample them, or it will fail on the first unusual day.</p>
+    </div>
+  </section>
+
+  <!-- ============ STEP 6 ============ -->
+  <section class="stepsec" id="step6">
+    <div class="stephead"><span class="pill">Step 6</span><h2>Improve: the misfit decides which loop runs</h2></div>
+    <div class="op"><div class="op-h"><span class="tag">Operator</span><span class="opname">diagnose</span><span class="when">box 6 · over W windows of any inverse box</span></div><div class="io-group"><div class="io-l">Inputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><div class="nm">innovations \(\mathbf d\)<small>maps minus forecast, at observed pixels</small></div><code>(window, time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><div class="nm">analyses from boxes 2, 4, 5<small>plus their references</small></div><code>(window, time, height, width) each</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><div class="nm">\(\mathbf z^{\text{true}}\)<small>only in an OSSE</small></div><code>(window, time, height, width)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>innovation mean and covariance, \(2\mathcal J^\star/p\), errors of each box against its reference</div></div><div class="io-group"><div class="io-l">Outputs</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">mean innovation \(\bar{\mathbf d}\)<small>a bias map: structure here means a structural error</small></div><code>(height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(2\mathcal J^\star/p\) per window<small>should hover near 1</small></div><code>(window,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">scores per box<small>e.g. RMSE against the reference, per day</small></div><code>(box, time)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-decision"/></svg><div class="nm">which loop<small>inner (z, θ) or outer (𝓕, H, α)</small></div><code>1 of 2</code></div></div></div>
+    <p>The formulation contains its own test. If steps 1 and 2 are right, the innovations, \(\mathbf d_k = \mathbf y_k - \mathbf H_k\mathbf z^f_k\), must be zero-mean with a known covariance, because they are the sum of two independent Gaussian errors:</p>
+    \[
+    \mathbb E[\mathbf d_k] = \mathbf 0,
+    \qquad
+    \mathbb E\big[\mathbf d_k\mathbf d_k^\top\big] = \mathbf H_k\mathbf P^f_k\mathbf H_k^\top + \mathbf R_k .
+    \]
+    <p>Two scalar checks follow. With \(p = \sum_k p_k\) observations, the minimum of a correctly specified cost satisfies \(\mathbb E\big[2\,\mathcal J(\mathbf z^\star)\big]\approx p\), so \(2\mathcal J^\star/p\) should be near 1. These checks are how the hyperparameters \(\alpha\) get tuned. The Desroziers identity checks \(\mathbf R\) on its own: \(\mathbb E\big[(\mathbf y - \mathbf H\mathbf z^a)(\mathbf y - \mathbf H\mathbf z^f)^\top\big]\approx\mathbf R\).</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Misfit</th><th>Signature</th><th>Loop</th><th>What changes</th></tr></thead>
+      <tbody>
+        <tr><td>Random</td><td>\(\bar{\mathbf d}\approx\mathbf 0\), \(2\mathcal J^\star/p\approx 1\)</td><td>inner</td><td>\(\mathbf z\) and \(\theta\) only: rerun step 2</td></tr>
+        <tr><td>Systematic</td><td>mean innovation with spatial structure, \(2\mathcal J^\star/p\gg 1\)</td><td>outer</td><td>structure: \(\mathcal F\) (1.5 → 2 layers, wind forcing, topography), \(\mathbf H\) (mean dynamic topography), the forms of \(\mathbf R\) and \(\mathbf B\) (correlations), or just \(\alpha\)</td></tr>
+      </tbody>
+    </table></div>
+    <p>Each box downstream is improved against its reference. The formulation fixes those references precisely, because each step approximates one object defined earlier:</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Improve</th><th>It approximates</th><th>Reference</th></tr></thead>
+      <tbody>
+        <tr><td>Step 2</td><td>\(p(\mathbf z\mid\mathbf y)\) under the step-1 model</td><td>step 1: \(\mathbf z^{\text{true}}\) in an OSSE</td></tr>
+        <tr><td>Step 3</td><td>\(\mathcal F_\theta\)</td><td>step 1: the simulator</td></tr>
+        <tr><td>Step 4</td><td>step 2's posterior, with \(\widehat{\mathcal F}_\phi\)</td><td>step 2</td></tr>
+        <tr><td>Step 5</td><td>step 2's posterior, without an inversion</td><td>step 2 (step 4 as a cheaper stand-in)</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note"><span class="tag">A mismatch in the figure</span><p>The six-step figure's bottom row lists the ground truth for step 3 as step 2, and for steps 4 and 5 as the step before each. The formulation says step 3's reference is step 1 (an emulator approximates \(\mathcal F\), not a posterior), and steps 4 and 5 are both scored against the step-2 posterior. The axes-matrix figure in the same overview already says this ("step 3 scored against step 1; steps 4 and 5 scored against step 2"). The bottom row of <code>six_steps.svg</code> should match it.</p></div>
+  </section>
+
+  <hr>
+  <h2 id="summary">The six boxes, read from the formulation</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Box</th><th>Mathematical object</th><th>For the Gulf Stream example</th><th>In the stack</th></tr></thead>
+    <tbody>
+      <tr><td>1 Simple model</td><td>\(p(\theta)p(\mathbf z_0)\prod_k p(\mathbf z_k\mid\mathbf z_{k-1},\theta)\,p(\mathbf y_k\mid\mathbf z_k)\)</td><td>1.5-layer QG, daily SSH maps, OSSEs</td><td>somax (QG), finitevolX (Arakawa Jacobian, Helmholtz)</td></tr>
+      <tr><td>2 Model-based inference</td><td>\(p(\mathbf z_{0:K},\theta\mid\mathbf y_{1:K})\) via \(\arg\min\mathcal J\) or EnKF</td><td>10-day 4D-Var or EnKS reanalysis</td><td>DA cycle with classical analysis, gaussx for \(\mathbf B^{1/2}\)</td></tr>
+      <tr><td>3 Emulator</td><td>\(\widehat{\mathcal F}_\phi\approx\mathcal F_\theta\)</td><td>learned one-day step</td><td>training on simulated trajectories</td></tr>
+      <tr><td>4 Emulator-based inference</td><td>\(\arg\min\widehat{\mathcal J}_\phi\)</td><td>same 4D-Var, emulator inside</td><td>DA cycle with a neural forward model</td></tr>
+      <tr><td>5 Amortized inference</td><td>\(q_\psi(\mathbf z\mid\mathbf y)\approx p(\mathbf z\mid\mathbf y)\)</td><td>maps → state in one pass</td><td>conditional flows or a Gaussian head</td></tr>
+      <tr><td>6 Improve</td><td>\(\mathbb E[\mathbf d\mathbf d^\top]\) vs \(\mathbf H\mathbf P^f\mathbf H^\top + \mathbf R\)</td><td>innovation and \(\chi^2\) diagnostics</td><td>benchmarks rerun against their references</td></tr>
+    </tbody>
+  </table></div>
+  <p>Moving right, the work moves from query time to training time. Step 2 pays the model and its adjoint on every window. Step 4 pays a cheaper model on every window. Step 5 pays once, during training, and then each window costs one network evaluation.</p>
+
+  <footer>Figure source: GeoStack <code>docs/images/overview/six_steps.svg</code> and the L3 → L4 row of <code>axes_matrix.svg</code>. Running-example numbers are illustrative.</footer>
+</main>
+
+<nav class="series-nav bottom" aria-label="Series navigation"><span class="crumbs"><a href="../esmax-ocean">All ocean pages</a></span><span class="pn"><a href="../six-step-cycle">← Six-step cycle</a><a href="../strong-4dvar">4D-Var →</a></span></nav>
+</body>
+</html>

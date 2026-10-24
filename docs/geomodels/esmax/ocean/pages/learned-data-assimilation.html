@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The taxonomy page took the model apart. This page takes the assimilation apart: the objective, its gradient, the solver, the output, and whether the answer is computed per window or learned across windows. Eleven ways to learn one of those pieces, on the same Gulf Stream QG example and the same 10-day window of SSH maps.">
+<title>Learned Data Assimilation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none' },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one reading column; a vertical six-box chart up top whose boxes link down to the derivation. Hydrographic palette: sea ink on cool chart paper, amber marks the oracle. */
+:root {
+  --paper: #F1F5F6;
+  --panel: #E4ECEF;
+  --ink: #0E1E28;
+  --muted: #4E616C;
+  --rule: #C6D3D9;
+  --sea: #0A6B68;
+  --sea-soft: #D3E7E5;
+  --oracle: #985710;
+  --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; display: grid; gap: 0; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible, .box:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+
+/* six-box chart */
+.chart { margin-top: 2rem; display: grid; gap: 0; }
+.box {
+  display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.9rem; text-decoration: none; color: inherit;
+  border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem;
+}
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--sea); line-height: 1; padding-top: 0.15rem; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .ocean { color: var(--muted); font-size: 0.95rem; }
+.box .eq { grid-column: 2; min-width: 0; overflow-x: auto; font-size: 0.95rem; }
+.box.oracle { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.oracle .num { color: var(--oracle); }
+.link { display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; letter-spacing: 0.02em; }
+.loop { margin-top: 0.9rem; font-size: 0.92rem; color: var(--muted); }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note p:last-child { margin-bottom: 0; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def p:last-child { margin-bottom: 0; }
+
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+.stepsec { scroll-margin-top: 1rem; }
+.stephead { display: flex; align-items: baseline; gap: 0.7rem; margin-top: 3.2rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.stephead h2 { margin: 0; }
+.stephead .pill { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.stephead .pill.or { background: var(--oracle-soft); color: var(--oracle); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 0; }
+footer { margin-top: 2.5rem; font-size: 0.88rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+
+/* operator signatures */
+.tldr { margin-top: 2rem; border-top: 2px solid var(--ink); padding-top: 1rem; }
+.tldr h2 { margin-top: 0; }
+.tldr ul { margin: 0 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+svg.g { width: 1.45rem; height: 1.45rem; color: var(--sea); flex: none; }
+.box .sig { grid-column: 2; display: grid; gap: 0.2rem; margin-top: 0.45rem; font-size: 0.85rem; min-width: 0; }
+.box .sig div { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); width: 2.1rem; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); }
+.box .sig svg.g { width: 1.1rem; height: 1.1rem; }
+.sigfam { display: inline-block; font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); margin-left: 0.4rem; vertical-align: 0.1em; }
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op + .op { margin-top: -0.6rem; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) auto; gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io code { white-space: nowrap; font-size: 0.8rem; padding-top: 0.15rem; font-variant-numeric: tabular-nums; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+
+/* v4: aligned signature rows and legend */
+.box { grid-template-columns: 2.4rem minmax(0, 1fr); }
+.link { grid-template-columns: 2.4rem 1fr; }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { width: auto; }
+.box .sig .gap { margin-top: 0.35rem; }
+.box .sig .d.gap + svg, .box .sig .d.gap + svg + .n, .box .sig .d.gap + svg + .n + code { margin-top: 0.35rem; }
+.box .sig .n { white-space: nowrap; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.box .sig svg.g { width: 1.15rem; height: 1.15rem; }
+.io { grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); }
+.io code { white-space: normal; text-align: right; }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io code { grid-column: 2; text-align: left; padding-top: 0; color: var(--muted); }
+}
+
+/* legend as a table */
+.legend-wrap { overflow-x: auto; margin: 1rem 0 0.6rem; }
+table.legend { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.legend th, table.legend td { border-bottom: 1px solid var(--rule); padding: 0.45rem 0.8rem 0.45rem 0; vertical-align: middle; text-align: left; }
+table.legend td.gl { width: 1.6rem; padding-right: 0.5rem; }
+table.legend td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+table.legend td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+table.legend td code { font-size: 0.8rem; white-space: nowrap; }
+table.legend td.ex { color: var(--muted); }
+@media (max-width: 560px) { table.legend td.ex, table.legend th.ex { display: none; } }
+</style>
+
+<style>
+/* taxonomy page additions */
+.stack { display: grid; gap: 0; margin: 1.6rem 0 0.6rem; }
+.layer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.3rem 1rem; align-items: start; border: 1px solid var(--rule); border-radius: 6px; padding: 0.7rem 0.9rem; background: var(--paper); }
+.layer .ln { font-family: var(--display); font-weight: 600; }
+.layer .lo { font-size: 0.92rem; color: var(--muted); min-width: 0; overflow-x: auto; }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: flex-end; }
+.layer.io { background: var(--panel); border-style: dashed; }
+.stack .link { grid-template-columns: 2rem 1fr; }
+.tchip { font-family: var(--display); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); text-decoration: none; white-space: nowrap; }
+.tchip:hover { outline: 1px solid var(--sea); }
+.tchip.cor { background: var(--oracle-soft); color: var(--oracle); }
+@media (max-width: 560px) { .layer { grid-template-columns: 1fr; } .layer .chips { justify-content: flex-start; } }
+
+.tcard { border: 1px solid var(--rule); border-radius: 6px; margin: 1.2rem 0 1.8rem; scroll-margin-top: 1rem; overflow: hidden; }
+.tcard > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.7rem; padding: 0.75rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.tcard > header .tn { font-family: var(--display); font-weight: 700; font-size: 1.35rem; color: var(--sea); line-height: 1; }
+.tcard > header h3 { margin: 0; font-size: 1.08rem; }
+.tcard > header .where { font-size: 0.86rem; color: var(--muted); }
+.tbody { padding: 0.4rem 1rem 0.9rem; }
+.tbody p { margin: 0.6rem 0; }
+.tsig { display: grid; grid-template-columns: 3.2rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.25rem; align-items: center; font-size: 0.88rem; padding: 0.6rem 0; border-block: 1px dashed var(--rule); margin: 0.6rem 0; }
+.tsig .d { font-family: var(--display); font-weight: 600; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tsig .d.learn { color: var(--oracle); }
+.tsig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; min-width: 0; }
+.tsig svg.g { width: 1.15rem; height: 1.15rem; }
+.tsig .n { white-space: nowrap; }
+@media (max-width: 560px) { .tsig { grid-template-columns: 3.4rem 1.15rem minmax(0, 1fr); } .tsig code { grid-column: 3; margin-top: -0.15rem; margin-bottom: 0.15rem; } }
+.attrs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.3rem 1rem; margin: 0.7rem 0 0.4rem; font-size: 0.92rem; }
+.attrs dt { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding-top: 0.2rem; }
+.attrs dd { margin: 0; min-width: 0; }
+.tgt { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.08rem 0.45rem; border-radius: 4px; margin-right: 0.3rem; }
+.tgt.em { background: var(--sea-soft); color: var(--sea); }
+.tgt.co { background: var(--oracle-soft); color: var(--oracle); }
+.crit { font-size: 0.93rem; color: var(--muted); border-left: 2px solid var(--rule); padding-left: 0.8rem; margin-top: 0.7rem; }
+
+table.matrix td, table.matrix th { text-align: center; padding-right: 0.5rem; }
+table.matrix td:first-child, table.matrix th:first-child { text-align: left; white-space: nowrap; }
+.mk { font-family: var(--display); font-weight: 700; }
+.mk.y { color: var(--sea); }
+.mk.p { color: var(--oracle); }
+.mk.n { color: var(--muted); font-weight: 500; }
+table.two td, table.two th { vertical-align: top; }
+table.two td.h { font-family: var(--display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.cell { display: grid; gap: 0.15rem; }
+.cell small { color: var(--muted); }
+
+.tsig .d.train { color: var(--sea); }
+.tchip.lo { background: var(--sea-soft); color: var(--sea); }
+.tchip.si { background: var(--oracle-soft); color: var(--oracle); }
+.fail { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.08rem 0.45rem; border-radius: 4px; }
+.fail.lo { background: var(--sea-soft); color: var(--sea); }
+.fail.si { background: var(--oracle-soft); color: var(--oracle); }
+.tcard.side { border-style: dashed; }
+</style>
+
+<style>
+.series-nav { max-width: 46rem; margin: 0 auto; padding: 0.9rem 0 0;
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline;
+  justify-content: space-between; font: 500 0.82rem/1.4 var(--display, system-ui, sans-serif);
+  color: var(--muted, #666); }
+.series-nav.bottom { padding: 1.2rem 0 2.5rem; border-top: 1px solid var(--rule, #ddd); }
+.series-nav a { color: var(--sea, #0b6e6e); text-decoration: none; }
+.series-nav a:hover { text-decoration: underline; }
+.series-nav .crumbs { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.series-nav .pn { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+main > * { min-width: 0; }
+mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+<body>
+<nav class="series-nav top" aria-label="Series navigation"><span class="crumbs"><a href="../">GeoStack</a><span>›</span><a href="../esmax-ocean">esmax · ocean</a><span>›</span><span>6 of 8</span></span><span class="pn"><a href="../hybrid-model-taxonomy">← Hybrid model taxonomy</a><a href="../advection-c-grid">Advection on the C-grid →</a></span></nav>
+<main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-scalar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+    <symbol id="g-vector" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="15" y="9" width="6" height="6"/></g></symbol>
+    <symbol id="g-field" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16"/><path d="M4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16" stroke-width="0.8"/></g></symbol>
+    <symbol id="g-mask" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 4h8v8H4zM12 12h8v8h-8z" fill="currentColor" opacity="0.55"/></symbol>
+    <symbol id="g-cube" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="2" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" fill="var(--paper)"/><rect x="3" y="9" width="13" height="13" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-ensemble" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.3"><rect x="5" y="2" width="8" height="8"/><rect x="3" y="4" width="8" height="8" fill="var(--paper)"/><rect x="14" y="2" width="8" height="8"/><rect x="12" y="4" width="8" height="8" fill="var(--paper)"/><rect x="5" y="13" width="8" height="8"/><rect x="3" y="15" width="8" height="8" fill="var(--paper)"/><rect x="14" y="13" width="8" height="8"/><rect x="12" y="15" width="8" height="8" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-dataset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" stroke-width="1"/></g></symbol>
+    <symbol id="g-weights" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1"><path d="M5 6l7 6M5 18l7-6M5 6l7-1M5 18l7 1M12 5l7 7M12 12l7 0M12 19l7-7M5 6l7 13M5 18l7-13" fill="none"/></g><g fill="currentColor"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="12" r="2"/></g></symbol>
+    <symbol id="g-op" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M13 9l3 3-3 3"/></g></symbol>
+    <symbol id="g-decision" viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  </defs>
+</svg>
+  <div class="eyebrow">GeoStack · box 2, 4 and 5 of the six-step cycle</div>
+  <h1>Learned data assimilation: what can be learned in the analysis</h1>
+  <p class="lede">The taxonomy page took the model apart. This page takes the assimilation apart: the objective, its gradient, the solver, the output, and whether the answer is computed per window or learned across windows. Eleven ways to learn one of those pieces, on the same Gulf Stream QG example and the same 10-day window of SSH maps.</p>
+
+  <section class="tldr" id="tldr">
+    <div class="eyebrow">TL;DR</div>
+    <h2>One analysis operator, eleven insides</h2>
+    <ul>
+      <li><strong>Every type is box 2's operator:</strong> maps, masks, errors, background, covariates and forcing in; a state window and its uncertainty out. What changes is the inside, the training data it needs, and whether the output is a point, an ensemble or a density.</li>
+      <li><strong>The training signal matters more than the network.</strong> Simulated truth (OSSE) learns the QG model's ocean; the ELBO and held-out observations learn the real one but never see unobserved scales.</li>
+      <li><strong>Mean, mode or sample.</strong> 4D-Var returns a mode, an MSE-trained network a mean, VI a density. Benchmarks must compare the same statistic.</li>
+      <li><strong>Teal types fail loudly</strong>: the classical cost or solver is still there to check the answer. <strong>Amber types fail silently</strong>: an unusual window gets a confident wrong field. Scoring any output with the classical 𝒥 and its innovations turns most silent failures into loud ones.</li>
+    </ul>
+
+    <nav class="stack" aria-label="Pieces of the analysis and the types that learn each one">
+      <div class="layer io"><div><div class="ln">Inputs</div><div class="lo">\(\mathbf y, \mathbf m, \boldsymbol\sigma\) · <code>(time, height, width)</code>; \(\mathbf z_b\), \(\mathbf x\), \(\mathbf u\)</div></div><div class="chips"></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Hyperparameters</div><div class="lo">\(\alpha\): scales of B, Q, R; localisation; inflation</div></div><div class="chips"><a class="tchip lo" href="#a1">A1</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Objective</div><div class="lo">likelihood + prior + dynamics, \(\mathcal J(\mathbf z)\)</div></div><div class="chips"><a class="tchip lo" href="#a2">A2</a><a class="tchip si" href="#a11">A11</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Gradient</div><div class="lo">\(\nabla\mathcal J\) by the adjoint</div></div><div class="chips"><a class="tchip si" href="#a3">A3</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Solver</div><div class="lo">update rule, initial guess, preconditioner</div></div><div class="chips"><a class="tchip si" href="#a4">A4</a><a class="tchip lo" href="#a5">A5</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Output</div><div class="lo">point, ensemble or density, per window</div></div><div class="chips"><a class="tchip lo" href="#a8">A8</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Amortisation</div><div class="lo">one network across all windows</div></div><div class="chips"><a class="tchip si" href="#a6">A6</a><a class="tchip si" href="#a7">A7</a><a class="tchip lo" href="#a9">A9</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer io"><div><div class="ln">Analysis out</div><div class="lo">\(\hat{\mathbf z}_{0:K}\) · <code>(time+1, height, width)</code>, plus uncertainty</div></div><div class="chips"></div></div>
+    </nav>
+    <p class="loop">Sidebar: the sequential (EnKF) route, <a class="tchip lo" href="#a10">A10</a>. Teal chips fail loudly, amber chips silently.</p>
+  </section>
+
+  <h2 id="notation">Notation</h2>
+  <p>As on the other two pages. On this page \(\psi\) is again the variational parameters; the QG streamfunction does not appear.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Symbol</th><th>Meaning</th><th>Kind, shape</th></tr></thead>
+    <tbody>
+      <tr><td>\(\mathbf z_{0:K}\)</td><td>latent state over the window</td><td>(time+1, height, width)</td></tr>
+      <tr><td>\(\mathbf y_k\), \(\mathbf m_k\), \(\boldsymbol\sigma_k\)</td><td>SSH map, its mask, its error (diagonal of \(\mathbf R_k\))</td><td>(time, height, width) each</td></tr>
+      <tr><td>\(\mathbf z_b\), \(\mathbf x\), \(\mathbf u_k\)</td><td>background, covariates, controls</td><td>(height, width), (variable, height, width), (time, height, width)</td></tr>
+      <tr><td>\(\mathcal F\)</td><td>one-day model: physical or any type T1–T10 of the taxonomy page</td><td>field → field</td></tr>
+      <tr><td>\(\theta\), \(\alpha\)</td><td>physical parameters, hyperparameters</td><td>(param,), (hyper,)</td></tr>
+      <tr><td>\(\mathcal J\), \(\nabla\mathcal J\)</td><td>cost, its gradient</td><td>scalar, (time+1, height, width)</td></tr>
+      <tr><td>\(i\), \(N\)</td><td>solver iteration, number of iterations</td><td>—</td></tr>
+      <tr><td>\(\phi\)</td><td>weights of a learned piece: prior, solver, gradient, initialiser, model</td><td>weights</td></tr>
+      <tr><td>\(\psi\), \(q_\psi\)</td><td>variational parameters, variational density</td><td>weights or (rank+2, time+1, height, width)</td></tr>
+      <tr><td>\(w\)</td><td>a window index, over many windows</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="master">The master equation</h2>
+  <p>Weak-constraint 4D-Var over one window. With \(p(\mathbf z\mid\mathbf y)\propto e^{-\mathcal J(\mathbf z)}\), every type on this page edits this cost, its gradient, its solver, or replaces all three:</p>
+  \[
+  \mathcal J(\mathbf z_{0:K}) =
+  \underbrace{\tfrac12\|\mathbf z_0 - \mathbf z_b\|^2_{\mathbf B^{-1}}}_{\text{background}}
+  + \underbrace{\tfrac12\sum_{k=1}^{K}\big\|\mathbf z_k - \mathcal F_\theta(\mathbf z_{k-1};\mathbf x,\mathbf u_k)\big\|^2_{\mathbf Q^{-1}}}_{\text{dynamics}}
+  + \underbrace{\tfrac12\sum_{k=1}^{K}\big\|\mathbf m_k\odot(\mathbf y_k - \mathbf z_k)\big\|^2_{\mathbf R_k^{-1}}}_{\text{observations}} .
+  \]
+  <p>The classical solver iterates \(\mathbf z^{(i+1)} = \mathbf z^{(i)} - \eta\,\mathbf P\,\nabla\mathcal J(\mathbf z^{(i)})\) from \(\mathbf z^{(0)}\), with \(N \approx 50\)–\(100\) and \(\mathbf P\) built from \(\mathbf B^{1/2}\). In code, the cost, the solver and the variational objective are three short functions. <code>qg_day</code> and <code>QGParams</code> are the ones defined on the taxonomy page:</p>
+  <pre>import einx
+import equinox as eqx
+import finitevolx as fvx
+import gaussx as gx
+import jax
+import jax.numpy as jnp
+import lineax as lx
+from jaxtyping import Array, Bool, Float, PRNGKeyArray
+
+<span class="c"># Shapes: T = 10 maps (time); Z = T + 1 = 11 states z₀ … z₁₀ (day);</span>
+<span class="c">#         H, W = 130 × 130 grid with ghost ring (height, width);</span>
+<span class="c">#         N = H·W (cell); F = Z·N (flat); K = 16 (rank); S = 8 samples (member)</span>
+
+Op = lx.AbstractLinearOperator
+
+
+class Window(eqx.Module):
+    """One window: maps y, masks m, errors σ², background z_b, B, diagonal Q."""
+
+    maps: Float[Array, "time height width"]
+    masks: Bool[Array, "time height width"]
+    obs_var: Float[Array, "time height width"]
+    model_err_var: Float[Array, "time height width"]
+    background: Float[Array, "height width"]
+    covariates: Float[Array, "variable height width"]
+    forcing: Float[Array, "time height width"]
+    prior_cov: Op
+    grid: fvx.CartesianGrid2D
+
+
+def weak_4dvar_cost(
+    states: Float[Array, "day height width"],
+    window: Window,
+    params: QGParams,
+) -&gt; Float[Array, ""]:
+<span class="c">    # --- background ---</span>
+<span class="c">    # δ₀ = z₀ − z_b</span>
+    initial_departure = states[0] - window.background<span class="c">  # (H, W)</span>
+    departure_flat = einx.rearrange(<span class="c">                  # (H, W) → (N,)</span>
+        "height width -&gt; (height width)", initial_departure
+    )
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # δ₀ᵀ B⁻¹ δ₀</span>
+    background_quad = gx.quadratic_form(window.prior_cov, departure_flat)<span class="c">  # → ()</span>
+<span class="c">    # J_b = ½ δ₀ᵀ B⁻¹ δ₀</span>
+    background_cost = 0.5 * background_quad<span class="c">           # → ()</span>
+
+<span class="c">    # --- dynamics, all days at once ---</span>
+    previous = states[:-1]<span class="c">                            # (Z, Z) → (T, H, W)</span>
+    current = states[1:]<span class="c">                              # (Z, Z) → (T, H, W)</span>
+    batched_day = jax.vmap(qg_day, in_axes=(0, None, 0, None, None))
+<span class="c">    # user (qg_day, taxonomy page)</span>
+<span class="c">    # 𝓕_θ(z_{k−1}; x, u_k) for every k, in parallel</span>
+    forecasts = batched_day(<span class="c">                          # (T, H, W) → (T, H, W)</span>
+        previous, window.covariates, window.forcing, params, window.grid
+    )
+<span class="c">    # w_k = z_k − 𝓕_θ(z_{k−1})</span>
+    model_error = current - forecasts<span class="c">                 # (T, H, W)</span>
+<span class="c">    # w_k²</span>
+    squared_error = model_error**2<span class="c">                    # (T, H, W)</span>
+<span class="c">    # w_k² / q²  (diagonal Q)</span>
+    weighted_error = squared_error / window.model_err_var<span class="c">  # (T, H, W)</span>
+<span class="c">    # ∑_k w_kᵀ Q⁻¹ w_k</span>
+    model_sum = einx.sum("time height width -&gt;", weighted_error)<span class="c">  # → ()</span>
+<span class="c">    # J_q = ½ ∑_k ‖w_k‖²_{Q⁻¹}</span>
+    model_cost = 0.5 * model_sum<span class="c">                      # → ()</span>
+
+<span class="c">    # --- observations ---</span>
+<span class="c">    # y_k − z_k</span>
+    misfit = window.maps - current<span class="c">                    # (T, H, W)</span>
+<span class="c">    # r_k = m_k ⊙ (y_k − z_k)</span>
+    residual = jnp.where(window.masks, misfit, 0.0)<span class="c">   # (T, H, W)</span>
+<span class="c">    # r_k²</span>
+    squared_residual = residual**2<span class="c">                    # (T, H, W)</span>
+<span class="c">    # r_k² / σ_k²</span>
+    weighted_residual = squared_residual / window.obs_var<span class="c">  # (T, H, W)</span>
+<span class="c">    # ∑_k r_kᵀ R_k⁻¹ r_k</span>
+    obs_sum = einx.sum("time height width -&gt;", weighted_residual)<span class="c">  # → ()</span>
+<span class="c">    # J_o = ½ ∑_k ‖m_k ⊙ (y_k − z_k)‖²_{R_k⁻¹}</span>
+    obs_cost = 0.5 * obs_sum<span class="c">                          # → ()</span>
+
+<span class="c">    # 𝒥 = J_b + J_q + J_o</span>
+    total_cost = background_cost + model_cost + obs_cost<span class="c">  # → ()</span>
+    return total_cost
+
+
+def analyse(
+    window: Window,
+    params: QGParams,
+    initial_states: Float[Array, "day height width"],
+    *,
+    step_size: float = 0.1,
+    n_iterations: int = 100,
+) -&gt; Float[Array, "day height width"]:
+    cost_gradient = jax.grad(weak_4dvar_cost)
+
+    def iterate(states, _):
+<span class="c">        # g⁽ⁱ⁾ = ∇𝒥(z⁽ⁱ⁾), by reverse mode</span>
+        gradient = cost_gradient(states, window, params)<span class="c">  # → (Z, H, W)</span>
+<span class="c">        # user</span>
+<span class="c">        # d⁽ⁱ⁾ = P g⁽ⁱ⁾</span>
+        direction = precondition(gradient, window)<span class="c">    # (Z, H, W)</span>
+<span class="c">        # η d⁽ⁱ⁾</span>
+        update = step_size * direction<span class="c">                # (Z, H, W)</span>
+<span class="c">        # z⁽ⁱ⁺¹⁾ = z⁽ⁱ⁾ − η P ∇𝒥(z⁽ⁱ⁾)</span>
+        states = states - update<span class="c">                      # (Z, H, W)</span>
+        return states, None
+
+    analysis, _ = jax.lax.scan(<span class="c">                       # (Z, H, W) → (Z, H, W)</span>
+        iterate, initial_states, None, length=n_iterations
+    )
+    return analysis
+
+
+class LowRankGaussian(eqx.Module):
+    """q(z) = 𝒩(μ, L Lᵀ + D) over a whole window, flattened."""
+
+    mean: Float[Array, "flat"]
+    factor: Float[Array, "flat rank"]
+    log_diag: Float[Array, "flat"]
+
+
+def neg_elbo(
+    posterior: LowRankGaussian,
+    window: Window,
+    params: QGParams,
+    *,
+    n_samples: int = 8,
+    key: PRNGKeyArray,
+) -&gt; Float[Array, ""]:
+    height, width = window.background.shape
+
+<span class="c">    # --- variational density ---</span>
+<span class="c">    # D = diag(exp(log d))</span>
+    diag = jnp.exp(posterior.log_diag)<span class="c">                # (F,) → (F,)</span>
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # Σ_q = L Lᵀ + D</span>
+    covariance = gx.low_rank_plus_diag(diag, posterior.factor)<span class="c">  # (F, F) PSD op</span>
+
+<span class="c">    # --- samples ---</span>
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # z⁽ˢ⁾ = μ + Σ_q^{1/2} ε,  ε ~ 𝒩(0, I)</span>
+    samples_flat = gx.sample_mvn(<span class="c">                     # → (S, F)</span>
+        posterior.mean, covariance, key=key, num_samples=n_samples
+    )
+    samples = einx.rearrange(<span class="c">                         # (S, F) → (S, Z, H, W)</span>
+        "member (day height width) -&gt; member day height width",
+        samples_flat,
+        height=height,
+        width=width,
+    )
+
+<span class="c">    # --- expected cost and entropy ---</span>
+    batched_cost = jax.vmap(weak_4dvar_cost, in_axes=(0, None, None))
+<span class="c">    # 𝒥(z⁽ˢ⁾) for each sample</span>
+    sample_costs = batched_cost(samples, window, params)<span class="c">  # → (S,)</span>
+<span class="c">    # 𝔼_q[𝒥] ≈ (1/S) ∑_s 𝒥(z⁽ˢ⁾)</span>
+    expected_cost = einx.mean("member -&gt;", sample_costs)<span class="c">  # (S,) → ()</span>
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # ℍ[q] = ½ (N (1 + log 2π) + log|Σ_q|)</span>
+    entropy = gx.gaussian_entropy(covariance)<span class="c">         # → ()</span>
+
+<span class="c">    # −ELBO = 𝔼_q[𝒥(z)] − ℍ[q],  since p(z | y) ∝ exp(−𝒥(z))</span>
+    loss = expected_cost - entropy<span class="c">                    # → ()</span>
+    return loss</pre>
+  <p class="loop">Markers: <code>today</code> ships on <code>main</code> (checked 24 Oct 2026: finitevolX 831c69f, gaussx eeda235, somax 9cb19b3); <code>today*</code> ships, arguments sketched; <code>user</code> is defined on these pages; <code>not pinned</code> is a library whose API was not checked. Shape column letters are defined in the header.</p>
+  <p>No Gaussian variational family ships in gaussx or vardax, so <code>LowRankGaussian</code> is page-defined; gaussx supplies its covariance, samples and entropy.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Type</th><th>The edit</th></tr></thead>
+    <tbody>
+      <tr><td>A1</td><td>an outer loop differentiates the evidence of many <code>analyse</code> calls with respect to the scales inside <code>prior_cov</code>, <code>obs_var</code> and <code>model_err_var</code></td></tr>
+      <tr><td>A2</td><td><code>background_cost</code> (and <code>model_cost</code>) → <code>prior_net(phi, states)</code>, or <code>qg_day</code> → a hybrid model</td></tr>
+      <tr><td>A3</td><td><code>jax.grad(weak_4dvar_cost)</code> → an emulator's gradient, an ensemble estimate, or <code>gradient_net(phi, states, window)</code></td></tr>
+      <tr><td>A4</td><td><code>iterate</code> body → <code>states - solver_net(phi, gradient, memory)</code>; <code>n_iterations=10</code>; train through the scan</td></tr>
+      <tr><td>A5</td><td><code>initial_states = init_net(phi, window)</code>, or <code>precondition</code> → a learned positive-definite map</td></tr>
+      <tr><td>A6</td><td><code>analyse</code> → <code>analysis_net(psi, window)</code></td></tr>
+      <tr><td>A7</td><td><code>posterior = amortised_net(psi, window)</code>; minimise <code>neg_elbo</code> over many windows, or forward KL on OSSEs</td></tr>
+      <tr><td>A8</td><td>minimise <code>neg_elbo</code> over <code>posterior</code> for this window only</td></tr>
+      <tr><td>A9</td><td>start A8 from <code>amortised_net</code>, run a few steps</td></tr>
+      <tr><td>A10</td><td>replace <code>analyse</code> by an EnKF cycle with learned localisation and inflation</td></tr>
+      <tr><td>A11</td><td>alternate <code>analyse</code> per window with a gradient step on the weights inside <code>qg_day</code> through <code>model_cost</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="signals">Training signals</h2>
+  <p>What a type can learn from decides where it can be used. Five signals, with what each needs and which statistic it returns:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Signal</th><th>Loss</th><th>Needs</th><th>Returns</th></tr></thead>
+    <tbody>
+      <tr><td>MSE on OSSEs</td><td>\(\mathbb E\,\|\mathbf z - \hat{\mathbf z}(\mathbf y)\|^2\)</td><td>simulated truth</td><td>posterior mean</td></tr>
+      <tr><td>Forward KL</td><td>\(\mathbb E_{p(\mathbf z,\mathbf y)}[-\log q_\psi(\mathbf z\mid\mathbf y)]\)</td><td>simulated truth</td><td>a density, mass-covering</td></tr>
+      <tr><td>ELBO</td><td>\(-\mathbb E_q[\mathcal J(\mathbf z)] + \mathbb H[q]\)</td><td>likelihood and a model-based prior; no truth</td><td>a density, mode-seeking</td></tr>
+      <tr><td>Held-out observations</td><td>\(\mathbb E\,\|\mathbf m^{\text{out}}\odot(\mathbf y - \hat{\mathbf z}(\mathbf m^{\text{in}}\odot\mathbf y))\|^2_{\mathbf R^{-1}}\)</td><td>observations only, split \(\mathbf m = \mathbf m^{\text{in}} + \mathbf m^{\text{out}}\)</td><td>the observable part of the mean</td></tr>
+      <tr><td>Evidence</td><td>\(\log p(\mathbf y\mid\alpha)\)</td><td>the model and observations</td><td>hyperparameters</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><span class="tag">The simulation gap and the resolution gap</span><p>OSSE-trained types learn the climate of the QG model: its eddy sizes, its energy, its errors. Observation-trained types learn the real ocean, but gridded SSH maps resolve little below roughly 100 km, so held-out-pixel losses cannot teach anything finer. The practical combination is to pretrain on OSSEs for the small scales and fine-tune with the ELBO or held-out observations for the large ones.</p></div>
+
+  <h2 id="types">The eleven types</h2>
+  <p>Each card gives the equation, the operator signature with what is learned and what it trains on, and attribute rows. The training signal is a row, as on the taxonomy page.</p>
+
+  <article class="tcard" id="a1">
+    <header><span class="tn">A1</span><h3>Learned hyperparameters</h3><span class="where">replaces: hand-tuned α</span></header>
+    <div class="tbody">
+      <p>Keep everything, and fit the numbers that shape \(\mathbf B\), \(\mathbf Q\), \(\mathbf R\), localisation and inflation by maximising the evidence over many real windows \(w\):</p>
+  \[ \alpha^\star = \arg\max_\alpha \sum_{w} \log p\big(\mathbf y^{(w)}\mid\alpha\big), \qquad
+  \log p(\mathbf y\mid\alpha) \approx -\mathcal J_\alpha(\hat{\mathbf z}) - \tfrac12\log\det\big(\nabla^2\mathcal J_\alpha(\hat{\mathbf z})\big) + \text{const}. \]
+  <p>The right-hand side is the Laplace approximation at the analysis \(\hat{\mathbf z}\). The cheaper alternative is to match the innovation statistics of the state-estimation page.</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>manual tuning of B, Q, R scales, localisation radius, inflation</dd><dt>Signal</dt><dd>marginal likelihood, or innovation consistency; observations only</dd><dt>Output</dt><dd>the classical analysis with better weights</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> a bad α shows up in 2𝒥*/p and the innovations</dd><dt>Cost</dt><dd>an outer loop over many classical analyses</dd></dl>
+      <p class="crit">The DA counterpart of T1. Always worth doing first: every later type inherits α, and a learned piece trained with a wrong R learns to compensate for it.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a2">
+    <header><span class="tn">A2</span><h3>Learned prior</h3><span class="where">replaces: the background and dynamics terms</span></header>
+    <div class="tbody">
+      <p>The observation term stays; the regulariser becomes learned. Three forms, from least to most physical:</p>
+  \[ \mathcal J_\phi(\mathbf z) = \tfrac12\sum_k\big\|\mathbf m_k\odot(\mathbf y_k - \mathbf z_k)\big\|^2_{\mathbf R_k^{-1}} + \lambda\,\mathcal R_\phi(\mathbf z), \]
+  \[ \mathcal R_\phi(\mathbf z) \in \Big\{\, -\log p_\phi(\mathbf z),\quad \big\|\mathbf z - \Phi_\phi(\mathbf z)\big\|^2,\quad \tfrac12\sum_k\big\|\mathbf z_k - \mathcal F_\phi(\mathbf z_{k-1})\big\|^2_{\mathbf Q^{-1}} \,\Big\}. \]
+  <p>The first is a density (a flow or an energy model on windows). The second is a projection: \(\Phi_\phi\) maps a window to the nearest plausible one, as in 4DVarNet. The third is weak-constraint 4D-Var with any hybrid model from the taxonomy page as \(\mathcal F_\phi\).</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>prior network</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">plausible windows</span><code>(sim, time+1, height, width)</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>½‖z₀ − z_b‖²_{B⁻¹} and the dynamics term</dd><dt>Signal</dt><dd>density fitting on simulated or reanalysis windows (no observations needed), or end to end with A4</dd><dt>Output</dt><dd>the minimiser of the new cost: a MAP under the learned prior</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> the cost is explicit and its value is checkable</dd><dt>Cost</dt><dd>as 4D-Var, plus the prior's gradient</dd></dl>
+      <p class="crit">The dynamical form is the important one: it keeps physics in the prior and makes every model on the taxonomy page a candidate. The projection form is expressive but carries no physics, and it is not a normalised density, so it cannot be sampled.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a3">
+    <header><span class="tn">A3</span><h3>Approximate gradient</h3><span class="where">replaces: the adjoint</span></header>
+    <div class="tbody">
+      <p>Keep the cost and the solver; compute \(\nabla\mathcal J\) more cheaply. With \(\mathbf F_k\) the tangent-linear model and \(\mathbf Z'\) ensemble anomalies:</p>
+  \[ \underbrace{\mathbf F_k^\top \to \widehat{\mathbf F}_k^\top}_{\text{emulator adjoint}}, \qquad
+  \underbrace{\mathbf z_0 = \mathbf z_b + \mathbf Z'_0\mathbf w,\;\; \mathbf G_k\mathbf Z'_0 \approx \mathbf Z'_k}_{\text{ensemble-variational, no adjoint}}, \qquad
+  \underbrace{\nabla\mathcal J \approx \hat g_\phi(\mathbf z,\mathbf y)}_{\text{learned gradient}} . \]
+  <p>Here \(\mathbf w\) has one entry per ensemble member and \(\mathbf G_k\) maps an initial perturbation to day \(k\).</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>emulator or gradient net</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">Z′</span><code>(member, time+1, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>the adjoint run in each iteration</dd><dt>Signal</dt><dd>emulator: step-1 trajectories with a Jacobian term; ensemble: none</dd><dt>Output</dt><dd>a point estimate, near the 4D-Var MAP if the gradient is right</dd><dt>Failure</dt><dd><span class="fail si">silent</span> a biased gradient converges to the wrong point and the iterations still look healthy</dd><dt>Cost</dt><dd>forward runs only (ensemble), or one network evaluation per iteration</dd></dl>
+      <p class="crit">The test for any approximate gradient: at the true minimiser it must vanish. Check it by evaluating the exact gradient once at the end; that single adjoint run turns a silent failure into a loud one.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a4">
+    <header><span class="tn">A4</span><h3>Learned solver (unrolled)</h3><span class="where">replaces: the optimiser</span></header>
+    <div class="tbody">
+      <p>A network decides each update from the gradient and an internal memory \(\mathbf h\). The loop is unrolled for a fixed \(N\approx 10\) iterations and trained end to end, usually together with a learned prior (A2):</p>
+  \[ \begin{aligned}
+  \mathbf z^{(i+1)} &amp;= \mathbf z^{(i)} - \mathcal S_\phi\big(\nabla\mathcal J_\phi(\mathbf z^{(i)}),\, \mathbf h^{(i)}\big), \qquad \mathbf h^{(i+1)} = \mathcal U_\phi\big(\nabla\mathcal J_\phi(\mathbf z^{(i)}),\, \mathbf h^{(i)}\big),\\
+  \phi^\star &amp;= \arg\min_\phi\; \mathbb E_{(\mathbf z,\mathbf y)}\,\big\|\mathbf z - \mathbf z^{(N)}_\phi(\mathbf y)\big\|^2 .
+  \end{aligned} \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>solver 𝒮, memory 𝒰, prior</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">h</span><code>(channel, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>L-BFGS or Gauss–Newton, and usually the prior too</dd><dt>Signal</dt><dd>MSE against simulated truth; or held-out observations on real data</dd><dt>Output</dt><dd>after end-to-end MSE training, an estimate of the posterior mean, not the minimiser of 𝒥_φ</dd><dt>Failure</dt><dd><span class="fail si">silent</span> the cost is no longer what is minimised, so its value does not certify the output</dd><dt>Cost</dt><dd>N ≈ 10 gradient evaluations, versus 50–100 classically</dd></dl>
+      <p class="crit">4DVarNet's core. The variational cost becomes an architecture: a good inductive bias for the network, not a probability model. Treat its output as a mean, and do not read its cost as a posterior.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a5">
+    <header><span class="tn">A5</span><h3>Warm start or learned preconditioner</h3><span class="where">replaces: the initial guess and the metric</span></header>
+    <div class="tbody">
+      <p>The classical solver still decides the answer. The network only proposes where to start, or reshapes the space so fewer iterations are needed:</p>
+  \[ \mathbf z^{(0)} = g_\phi(\mathbf y,\mathbf m,\boldsymbol\sigma,\mathbf z_b), \qquad
+  \mathbf z^{(i+1)} = \mathbf z^{(i)} - \eta\,\mathbf P_\phi\,\nabla\mathcal J(\mathbf z^{(i)}), \qquad \mathbf P_\phi \succ 0 . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>initialiser or preconditioner</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">4D-Var analyses</span><code>(window, time+1, height, width)</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>z⁽⁰⁾ = z_b and the plain B^{1/2} change of variables</dd><dt>Signal</dt><dd>the analyses of box 2 itself, or the iteration count</dd><dt>Output</dt><dd>the classical MAP, unchanged</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> a bad guess only costs iterations</dd><dt>Cost</dt><dd>fewer iterations; never more wrong</dd></dl>
+      <p class="crit">The safest learned DA. Its training targets are box 2 outputs, so no truth and no OSSE are needed, and its worst case is plain 4D-Var. The speed-up is bounded by how far the classical solve has to travel.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a6">
+    <header><span class="tn">A6</span><h3>Amortised point analysis</h3><span class="where">replaces: the whole solve</span></header>
+    <div class="tbody">
+      <p>One forward pass from observations to state, trained across windows:</p>
+  \[ \hat{\mathbf z}_{0:K} = g_\psi(\mathbf y_{1:K},\mathbf m_{1:K},\boldsymbol\sigma_{1:K},\mathbf z_b,\mathbf x,\mathbf u_{1:K}), \qquad
+  \psi^\star = \arg\min_\psi \mathbb E\,\big\|\mathbf z_{0:K} - \hat{\mathbf z}_{0:K}\big\|^2 \;\Rightarrow\; \hat{\mathbf z} = \mathbb E[\mathbf z\mid\mathbf y] . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">ψ</span><code>network</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>objective, gradient and solver</dd><dt>Signal</dt><dd>MSE on OSSEs; or held-out observations on real windows</dd><dt>Output</dt><dd>posterior mean, no uncertainty</dd><dt>Failure</dt><dd><span class="fail si">silent</span> an unusual window gets a confident, smooth, wrong field</dd><dt>Cost</dt><dd>one forward pass</dd></dl>
+      <p class="crit">The direct analysis of the state-estimation page. Its output can still be scored for free: evaluate the classical 𝒥 and the innovations on ẑ. That check costs one model run and catches most silent failures.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a7">
+    <header><span class="tn">A7</span><h3>Amortised variational inference</h3><span class="where">replaces: the whole solve, with a density</span></header>
+    <div class="tbody">
+      <p>A conditional density over the window, trained either on simulated truth (forward KL) or on real observations (ELBO):</p>
+  \[ \text{forward KL:}\quad \min_\psi\; \mathbb E_{p(\mathbf z,\mathbf y)}\big[-\log q_\psi(\mathbf z\mid\mathbf y)\big] \]
+  \[ \text{ELBO:}\quad \max_\psi\; \mathbb E_{\mathbf y}\,\mathbb E_{q_\psi}\big[\log p(\mathbf y\mid\mathbf z) + \log p(\mathbf z) - \log q_\psi(\mathbf z\mid\mathbf y)\big] \]
+  <p>The family of \(q_\psi\) sets what uncertainty it can express:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Family</th><th>Form</th><th>Parameters per window</th></tr></thead>
+    <tbody>
+      <tr><td>Mean-field</td><td>\(\mathcal N(\boldsymbol\mu_\psi, \operatorname{diag}\boldsymbol\sigma^2_\psi)\)</td><td>(2, time+1, height, width)</td></tr>
+      <tr><td>Low rank + diagonal</td><td>\(\mathcal N(\boldsymbol\mu_\psi, \mathbf L_\psi\mathbf L_\psi^\top + \mathbf D_\psi)\)</td><td>(rank+2, time+1, height, width)</td></tr>
+      <tr><td>Markov</td><td>\(q(\mathbf z_0\mid\mathbf y)\prod_k q(\mathbf z_k\mid\mathbf z_{k-1},\mathbf y)\)</td><td>one transition network</td></tr>
+      <tr><td>Flow or diffusion</td><td>\(\mathbf z = T_\psi(\boldsymbol\epsilon;\mathbf y)\)</td><td>a conditional generator</td></tr>
+    </tbody>
+  </table></div>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_0:K</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">ψ</span><code>variational parameters</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code><span class="d train"></span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>the whole solve, and the ensemble</dd><dt>Signal</dt><dd>forward KL on OSSEs (needs truth) or ELBO on real observations (needs the likelihood and a model-based prior, no truth)</dd><dt>Output</dt><dd>a density: mean and samples</dd><dt>Failure</dt><dd><span class="fail si">silent</span> forward KL tends to be well spread; ELBO tends to be under-dispersed</dd><dt>Cost</dt><dd>one forward pass per sample</dd></dl>
+      <p class="crit">The ELBO route is the one that trains on the real ocean without truth, because the model enters through log p(z). The Markov family is the natural choice here: it respects time and is a learned smoother.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a8">
+    <header><span class="tn">A8</span><h3>Per-window variational inference</h3><span class="where">replaces: the point estimate</span></header>
+    <div class="tbody">
+      <p>Fit a Gaussian to each window's posterior directly. With \(\boldsymbol\epsilon\sim\mathcal N(\mathbf 0,\mathbf I)\), samples are reparameterised, and the ELBO uses the classical cost because \(p(\mathbf z\mid\mathbf y)\propto e^{-\mathcal J(\mathbf z)}\):</p>
+  \[ \mathbf z = \boldsymbol\mu + \mathbf L\boldsymbol\epsilon_1 + \mathbf D^{1/2}\boldsymbol\epsilon_2, \qquad
+  \max_{\boldsymbol\mu,\mathbf L,\mathbf D}\; -\mathbb E_{q}\big[\mathcal J(\mathbf z)\big] + \mathbb H[q]. \]
+  <p>As the rank grows, \(\boldsymbol\mu\) approaches the posterior mean and \(\mathbf L\mathbf L^\top + \mathbf D\) the posterior covariance. With one sample at \(\boldsymbol\epsilon = \mathbf 0\), it collapses to 4D-Var.</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_0:K</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">μ, L, D</span><code>(rank+2, time+1, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">none</span><code>—</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>4D-Var's point estimate and its Laplace covariance</dd><dt>Signal</dt><dd>this window's ELBO; no training set</dd><dt>Output</dt><dd>a Gaussian posterior for the window</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> the ELBO value is a direct check</dd><dt>Cost</dt><dd>4D-Var × samples per iteration</dd></dl>
+      <p class="crit">The honest reference for A7, and box 2 extended to give a density. With gaussx for the low-rank algebra and the somax adjoint, it is mostly a change of loss in code you already have.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a9">
+    <header><span class="tn">A9</span><h3>Semi-amortised inference</h3><span class="where">amortised proposal, per-window refinement</span></header>
+    <div class="tbody">
+      <p>Start from an amortised answer, then take a few classical or variational steps on the actual window:</p>
+  \[ \psi^{(0)}_w = a_\phi(\mathbf y^{(w)}), \qquad \psi^{(t+1)}_w = \psi^{(t)}_w + \eta\,\nabla_\psi\,\mathrm{ELBO}_w(\psi^{(t)}_w), \quad t = 0,\dots,T-1 . \]
+  <p>A related route is <em>guided diffusion</em>: learn the prior score \(s_\phi(\mathbf z,\tau) \approx \nabla_{\mathbf z}\log p_\tau(\mathbf z)\) from states alone, and at inference add \(\nabla_{\mathbf z}\log p(\mathbf y\mid\mathbf z)\) with this window's masks to every denoising step.</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_0:K</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>proposal or prior score</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>the cold start of A8, or the fixed answer of A7</dd><dt>Signal</dt><dd>proposal trained as A7; refinement uses each window's ELBO</dd><dt>Output</dt><dd>a density refined on the window</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> refinement steps that move far flag an out-of-distribution window</dd><dt>Cost</dt><dd>one pass plus T ≪ N iterations</dd></dl>
+      <p class="crit">Closes the amortisation gap, and the size of the refinement is a built-in novelty detector. Guided diffusion has the same advantage for the observing system: masks change at inference without retraining.</p>
+    </div>
+  </article>
+
+  <article class="tcard side" id="a10">
+    <header><span class="tn">A10</span><h3>Learned filter pieces</h3><span class="where">sidebar: the sequential route</span></header>
+    <div class="tbody">
+      <p>For the EnKF, keep the forecast–analysis cycle and learn its fragile parts: localisation \(\boldsymbol\rho_\phi\), inflation \(\alpha_\phi\), or the gain itself, and run the forecast with an emulator. Trained end to end through the cycle on a rollout loss:</p>
+  \[ \mathbf K_k = \big(\boldsymbol\rho_\phi\circ\mathbf X'_k(\mathbf H_k\mathbf X'_k)^\top\big)\big(\mathbf H_k\mathbf X'_k(\mathbf H_k\mathbf X'_k)^\top + \mathbf R_k\big)^{-1}, \qquad \mathbf X'_k \leftarrow \alpha_\phi\,\mathbf X'_k . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">y_k, m_k</span><code>(height, width) per day</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">members</span><code>(member, height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">analysis members</span><code>(member, height, width) per day</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>ρ, α, or gain net</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>hand-tuned localisation and inflation; the forecast model</dd><dt>Signal</dt><dd>rollout error of the filter on OSSEs</dd><dt>Output</dt><dd>an ensemble per day, streaming</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> innovations and spread–error ratio are monitored every cycle</dd><dt>Cost</dt><dd>members × forward runs; no adjoint anywhere</dd></dl>
+      <p class="crit">Only forward runs, so step-map emulators (T6–T8) fit here without the Jacobian problem. Kept short on this page; the window route is the focus.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="a11">
+    <header><span class="tn">A11</span><h3>Joint model and state learning</h3><span class="where">learning a hybrid from observations alone</span></header>
+    <div class="tbody">
+      <p>To learn a model from data you need the states, and to get the states you need the model. Alternate, with any A-type as the E-step:</p>
+  \[ \begin{aligned}
+  \text{E-step:}\quad &amp; q^{(w)}(\mathbf z) \approx p\big(\mathbf z\mid\mathbf y^{(w)};\phi\big) \quad\text{for each window } w,\\
+  \text{M-step:}\quad &amp; \phi \leftarrow \arg\min_\phi \sum_w \mathbb E_{q^{(w)}}\Big[\tfrac12\sum_k\big\|\mathbf z_k - \mathcal F_\phi(\mathbf z_{k-1})\big\|^2_{\mathbf Q^{-1}}\Big].
+  \end{aligned} \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>a model from the taxonomy page</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>the need for a richer reference model</dd><dt>Signal</dt><dd>observations only; variational EM puts both steps in one ELBO</dd><dt>Output</dt><dd>a corrected model 𝓕_φ and analysed states</dd><dt>Failure</dt><dd><span class="fail si">silent</span> model and states can co-adapt: the model learns the analysis's errors</dd><dt>Cost</dt><dd>an analysis per window per EM iteration</dd></dl>
+      <p class="crit">The bridge between the two pages: it is how a correction-type hybrid (T1–T4, T7) is trained when no high-resolution truth exists. Fix Q and α before starting, or the M-step can explain everything as model error.</p>
+    </div>
+  </article>
+
+  <h2 id="grid">Model type × assimilation type</h2>
+  <p>Any model from the taxonomy page can sit inside any type that uses a model. A6 and A7 use a model only to make training data (OSSEs) or, for the ELBO, inside \(\log p(\mathbf z)\).</p>
+  <p><span class="mk y">●</span> natural &nbsp; <span class="mk p">◐</span> works, with a caveat &nbsp; <span class="mk n">○</span> does not fit</p>
+  <div class="tbl"><table class="matrix">
+    <thead><tr><th>Assimilation</th><th>Physical 𝓕</th><th>T1–T5 (classical integrator)</th><th>T6–T8 (step maps)</th><th>T9 rollout</th><th>T10 embedding</th></tr></thead>
+    <tbody><tr><td>A1 hyperparameters</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A2 dynamical prior</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A3 approx. gradient</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A4 learned solver</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A5 warm start</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td></tr><tr><td>A8 per-window VI</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A9 semi-amortised</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A10 learned filter</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A11 joint learning</td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr></tbody>
+  </table></div>
+  <p>The caveats: T6–T8 need a trustworthy Jacobian wherever a gradient flows through them (A2–A4, A8, A9); T9 has no one-day step, so it cannot enter a weak-constraint dynamics term or cycle in a filter; T10 moves the whole problem into the embedding, with observations entering through the decoder. A11 with the physical model only calibrates θ, which is A1's job done the hard way.</p>
+
+  <h2 id="critique">What the structure implies</h2>
+  <div class="note"><span class="tag">Score every output with the classical cost</span><p>Whatever produced \(\hat{\mathbf z}\), computing \(\mathcal J(\hat{\mathbf z})\), \(2\mathcal J^\star/p\) and the innovations costs one model run. It is the cheapest guard against silent failure, and it makes the box-2 diagnostics of the state-estimation page apply to every learned type.</p></div>
+  <div class="note"><span class="tag">A learned cost is not a posterior</span><p>Once a cost is trained end to end for MSE (A2 with A4), its minimiser is no longer the point of interest and \(e^{-\mathcal J_\phi}\) is not a calibrated density. Uncertainty then has to come from somewhere else: an ensemble of solvers, a VI head, or A8 run around the output.</p></div>
+  <div class="note"><span class="tag">The safe ladder</span><p>A1 → A5 → A8 → A9 keeps the classical machinery in charge at every step and adds learning only where it pays: tuning, speed, uncertainty, then amortisation with refinement. A4, A6 and A7 jump straight to amortisation and give up the checks; they are worth it when per-window cost is the binding constraint and the training distribution covers the windows you will see.</p></div>
+  <div class="note"><span class="tag">Learning the model needs the analysis</span><p>A11 is the only way to train a correction-type hybrid from observations alone. It inherits every weakness of its E-step, and it can let the model absorb analysis errors. Fix α first (A1), and keep the model's learned part structural (T1, T2, T4) so it cannot explain everything.</p></div>
+
+  <h2 id="stack">Where each type lives</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Type</th><th>Hook in the stack</th></tr></thead>
+    <tbody>
+      <tr><td>A1, A5, A8</td><td>the 4D-Var path (vardax) on a somax model, with gaussx for \(\mathbf B^{1/2}\), low-rank covariances and log-determinants</td></tr>
+      <tr><td>A2</td><td>the dynamics term takes any somax model; a learned density from the flow and probabilistic libraries</td></tr>
+      <tr><td>A3, A10</td><td>ensemble machinery (filterax); emulators from the taxonomy page as forecast or gradient</td></tr>
+      <tr><td>A4, A6, A7, A9</td><td>a training loop over windows in pipekit, with the DA cycle supplying OSSE pairs</td></tr>
+      <tr><td>A11</td><td>an outer loop alternating the DA cycle with <code>rollout_loss</code>-style updates of the model's weights</td></tr>
+    </tbody>
+  </table></div>
+  <footer>Third page in the series, after the ocean state estimation page and the hybrid model taxonomy. Structural only: methods are named for what they do, with 4DVarNet the one named family.</footer>
+</main>
+
+<nav class="series-nav bottom" aria-label="Series navigation"><span class="crumbs"><a href="../esmax-ocean">All ocean pages</a></span><span class="pn"><a href="../hybrid-model-taxonomy">← Hybrid model taxonomy</a><a href="../advection-c-grid">Advection on the C-grid →</a></span></nav>
+</body>
+</html>

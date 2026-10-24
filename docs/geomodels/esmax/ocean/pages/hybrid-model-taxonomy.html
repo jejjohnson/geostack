@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The physical model is not one object. It is a stack of pieces: parameters, discretisation, terms, a tendency, an integrator, a step map, a rollout. Every hybrid or emulator learns one of those pieces and glues it back in one of a few ways. This page lists the ten that matter, on the same Gulf Stream QG example as the state-estimation page.">
+<title>Hybrid Model Taxonomy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none' },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one reading column; a vertical six-box chart up top whose boxes link down to the derivation. Hydrographic palette: sea ink on cool chart paper, amber marks the oracle. */
+:root {
+  --paper: #F1F5F6;
+  --panel: #E4ECEF;
+  --ink: #0E1E28;
+  --muted: #4E616C;
+  --rule: #C6D3D9;
+  --sea: #0A6B68;
+  --sea-soft: #D3E7E5;
+  --oracle: #985710;
+  --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; display: grid; gap: 0; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible, .box:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+
+/* six-box chart */
+.chart { margin-top: 2rem; display: grid; gap: 0; }
+.box {
+  display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.9rem; text-decoration: none; color: inherit;
+  border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem;
+}
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--sea); line-height: 1; padding-top: 0.15rem; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .ocean { color: var(--muted); font-size: 0.95rem; }
+.box .eq { grid-column: 2; min-width: 0; overflow-x: auto; font-size: 0.95rem; }
+.box.oracle { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.oracle .num { color: var(--oracle); }
+.link { display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; letter-spacing: 0.02em; }
+.loop { margin-top: 0.9rem; font-size: 0.92rem; color: var(--muted); }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note p:last-child { margin-bottom: 0; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def p:last-child { margin-bottom: 0; }
+
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+.stepsec { scroll-margin-top: 1rem; }
+.stephead { display: flex; align-items: baseline; gap: 0.7rem; margin-top: 3.2rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.stephead h2 { margin: 0; }
+.stephead .pill { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.stephead .pill.or { background: var(--oracle-soft); color: var(--oracle); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 0; }
+footer { margin-top: 2.5rem; font-size: 0.88rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+
+/* operator signatures */
+.tldr { margin-top: 2rem; border-top: 2px solid var(--ink); padding-top: 1rem; }
+.tldr h2 { margin-top: 0; }
+.tldr ul { margin: 0 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+svg.g { width: 1.45rem; height: 1.45rem; color: var(--sea); flex: none; }
+.box .sig { grid-column: 2; display: grid; gap: 0.2rem; margin-top: 0.45rem; font-size: 0.85rem; min-width: 0; }
+.box .sig div { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); width: 2.1rem; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); }
+.box .sig svg.g { width: 1.1rem; height: 1.1rem; }
+.sigfam { display: inline-block; font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); margin-left: 0.4rem; vertical-align: 0.1em; }
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op + .op { margin-top: -0.6rem; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) auto; gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io code { white-space: nowrap; font-size: 0.8rem; padding-top: 0.15rem; font-variant-numeric: tabular-nums; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+
+/* v4: aligned signature rows and legend */
+.box { grid-template-columns: 2.4rem minmax(0, 1fr); }
+.link { grid-template-columns: 2.4rem 1fr; }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { width: auto; }
+.box .sig .gap { margin-top: 0.35rem; }
+.box .sig .d.gap + svg, .box .sig .d.gap + svg + .n, .box .sig .d.gap + svg + .n + code { margin-top: 0.35rem; }
+.box .sig .n { white-space: nowrap; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.box .sig svg.g { width: 1.15rem; height: 1.15rem; }
+.io { grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); }
+.io code { white-space: normal; text-align: right; }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io code { grid-column: 2; text-align: left; padding-top: 0; color: var(--muted); }
+}
+
+/* legend as a table */
+.legend-wrap { overflow-x: auto; margin: 1rem 0 0.6rem; }
+table.legend { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.legend th, table.legend td { border-bottom: 1px solid var(--rule); padding: 0.45rem 0.8rem 0.45rem 0; vertical-align: middle; text-align: left; }
+table.legend td.gl { width: 1.6rem; padding-right: 0.5rem; }
+table.legend td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+table.legend td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+table.legend td code { font-size: 0.8rem; white-space: nowrap; }
+table.legend td.ex { color: var(--muted); }
+@media (max-width: 560px) { table.legend td.ex, table.legend th.ex { display: none; } }
+</style>
+
+
+<style>
+/* taxonomy page additions */
+.stack { display: grid; gap: 0; margin: 1.6rem 0 0.6rem; }
+.layer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.3rem 1rem; align-items: start; border: 1px solid var(--rule); border-radius: 6px; padding: 0.7rem 0.9rem; background: var(--paper); }
+.layer .ln { font-family: var(--display); font-weight: 600; }
+.layer .lo { font-size: 0.92rem; color: var(--muted); min-width: 0; overflow-x: auto; }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: flex-end; }
+.layer.io { background: var(--panel); border-style: dashed; }
+.stack .link { grid-template-columns: 2rem 1fr; }
+.tchip { font-family: var(--display); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); text-decoration: none; white-space: nowrap; }
+.tchip:hover { outline: 1px solid var(--sea); }
+.tchip.cor { background: var(--oracle-soft); color: var(--oracle); }
+@media (max-width: 560px) { .layer { grid-template-columns: 1fr; } .layer .chips { justify-content: flex-start; } }
+
+.tcard { border: 1px solid var(--rule); border-radius: 6px; margin: 1.2rem 0 1.8rem; scroll-margin-top: 1rem; overflow: hidden; }
+.tcard > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.7rem; padding: 0.75rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.tcard > header .tn { font-family: var(--display); font-weight: 700; font-size: 1.35rem; color: var(--sea); line-height: 1; }
+.tcard > header h3 { margin: 0; font-size: 1.08rem; }
+.tcard > header .where { font-size: 0.86rem; color: var(--muted); }
+.tbody { padding: 0.4rem 1rem 0.9rem; }
+.tbody p { margin: 0.6rem 0; }
+.tsig { display: grid; grid-template-columns: 3.2rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.25rem; align-items: center; font-size: 0.88rem; padding: 0.6rem 0; border-block: 1px dashed var(--rule); margin: 0.6rem 0; }
+.tsig .d { font-family: var(--display); font-weight: 600; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tsig .d.learn { color: var(--oracle); }
+.tsig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; min-width: 0; }
+.tsig svg.g { width: 1.15rem; height: 1.15rem; }
+.tsig .n { white-space: nowrap; }
+@media (max-width: 560px) { .tsig { grid-template-columns: 3.4rem 1.15rem minmax(0, 1fr); } .tsig code { grid-column: 3; margin-top: -0.15rem; margin-bottom: 0.15rem; } }
+.attrs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.3rem 1rem; margin: 0.7rem 0 0.4rem; font-size: 0.92rem; }
+.attrs dt { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding-top: 0.2rem; }
+.attrs dd { margin: 0; min-width: 0; }
+.tgt { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.08rem 0.45rem; border-radius: 4px; margin-right: 0.3rem; }
+.tgt.em { background: var(--sea-soft); color: var(--sea); }
+.tgt.co { background: var(--oracle-soft); color: var(--oracle); }
+.crit { font-size: 0.93rem; color: var(--muted); border-left: 2px solid var(--rule); padding-left: 0.8rem; margin-top: 0.7rem; }
+
+table.matrix td, table.matrix th { text-align: center; padding-right: 0.5rem; }
+table.matrix td:first-child, table.matrix th:first-child { text-align: left; white-space: nowrap; }
+.mk { font-family: var(--display); font-weight: 700; }
+.mk.y { color: var(--sea); }
+.mk.p { color: var(--oracle); }
+.mk.n { color: var(--muted); font-weight: 500; }
+table.two td, table.two th { vertical-align: top; }
+table.two td.h { font-family: var(--display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.cell { display: grid; gap: 0.15rem; }
+.cell small { color: var(--muted); }
+</style>
+
+
+<style>
+.series-nav { max-width: 46rem; margin: 0 auto; padding: 0.9rem 0 0;
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline;
+  justify-content: space-between; font: 500 0.82rem/1.4 var(--display, system-ui, sans-serif);
+  color: var(--muted, #666); }
+.series-nav.bottom { padding: 1.2rem 0 2.5rem; border-top: 1px solid var(--rule, #ddd); }
+.series-nav a { color: var(--sea, #0b6e6e); text-decoration: none; }
+.series-nav a:hover { text-decoration: underline; }
+.series-nav .crumbs { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.series-nav .pn { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+main > * { min-width: 0; }
+mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+<body>
+<nav class="series-nav top" aria-label="Series navigation"><span class="crumbs"><a href="../">GeoStack</a><span>›</span><a href="../esmax-ocean">esmax · ocean</a><span>›</span><span>5 of 8</span></span><span class="pn"><a href="../weak-4dvar">← Weak-constraint 4D-Var</a><a href="../learned-data-assimilation">Learned data assimilation →</a></span></nav>
+<main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-scalar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+    <symbol id="g-vector" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="15" y="9" width="6" height="6"/></g></symbol>
+    <symbol id="g-field" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16"/><path d="M4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16" stroke-width="0.8"/></g></symbol>
+    <symbol id="g-mask" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 4h8v8H4zM12 12h8v8h-8z" fill="currentColor" opacity="0.55"/></symbol>
+    <symbol id="g-cube" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="2" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" fill="var(--paper)"/><rect x="3" y="9" width="13" height="13" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-ensemble" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.3"><rect x="5" y="2" width="8" height="8"/><rect x="3" y="4" width="8" height="8" fill="var(--paper)"/><rect x="14" y="2" width="8" height="8"/><rect x="12" y="4" width="8" height="8" fill="var(--paper)"/><rect x="5" y="13" width="8" height="8"/><rect x="3" y="15" width="8" height="8" fill="var(--paper)"/><rect x="14" y="13" width="8" height="8"/><rect x="12" y="15" width="8" height="8" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-dataset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" stroke-width="1"/></g></symbol>
+    <symbol id="g-weights" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1"><path d="M5 6l7 6M5 18l7-6M5 6l7-1M5 18l7 1M12 5l7 7M12 12l7 0M12 19l7-7M5 6l7 13M5 18l7-13" fill="none"/></g><g fill="currentColor"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="12" r="2"/></g></symbol>
+    <symbol id="g-op" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M13 9l3 3-3 3"/></g></symbol>
+    <symbol id="g-decision" viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  </defs>
+</svg>
+  <div class="eyebrow">GeoStack · somax · box 3 and box 6 of the six-step cycle</div>
+  <h1>Hybrid model taxonomy: what can be learned in an ocean model</h1>
+  <p class="lede">The physical model is not one object. It is a stack of pieces: parameters, discretisation, terms, a tendency, an integrator, a step map, a rollout. Every hybrid or emulator learns one of those pieces and glues it back in one of a few ways. This page lists the ten that matter, on the same Gulf Stream QG example as the state-estimation page.</p>
+
+  <section class="tldr" id="tldr">
+    <div class="eyebrow">TL;DR</div>
+    <h2>One signature, ten insides</h2>
+    <ul>
+      <li><strong>Every type T1–T8 is the same operator:</strong> today's state, covariates, forcing and parameters in, tomorrow's state out. Any of them drops into the cycles, the DA and the rollouts of the last page unchanged. T9 and T10 change the signature.</li>
+      <li><strong>Types differ in which layer is learned</strong> (the diagram below) and in how the learned piece is glued back: added, used as a coefficient, built into a conserving form, or substituted.</li>
+      <li><strong>The training target splits them into two jobs.</strong> <span class="tgt em">emulation</span> reproduces the physical model faster (box 3, ground truth step 1). <span class="tgt co">correction</span> makes the model closer to the real ocean (box 6, ground truth a richer model or data).</li>
+      <li><strong>The lower the learned layer, the more physics survives:</strong> conservation, freedom in Δt, a trustworthy adjoint. The higher, the more speed and the less structure.</li>
+    </ul>
+
+    <nav class="stack" aria-label="Layers of the model and the types that learn each one">
+      <div class="layer io"><div><div class="ln">State in</div><div class="lo">\(\mathbf z_k\), with \(\mathbf x\), \(\mathbf u_k\) · <code>(variable, height, width)</code></div></div><div class="chips"></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Representation</div><div class="lo">grid, spectral, or a learned embedding</div></div><div class="chips"><a class="tchip" href="#t10">T10</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Parameters</div><div class="lo">\(\theta = (L_d,\nu)\), constants or fields</div></div><div class="chips"><a class="tchip cor" href="#t1">T1</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Discretisation</div><div class="lo">stencils and face fluxes on the C-grid</div></div><div class="chips"><a class="tchip cor" href="#t2">T2</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Terms</div><div class="lo">advection, dissipation, forcing, closures</div></div><div class="chips"><a class="tchip cor" href="#t3">T3</a><a class="tchip cor" href="#t4">T4</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Tendency</div><div class="lo">\(f = \sum_i \text{term}_i\)</div></div><div class="chips"><a class="tchip" href="#t5">T5</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Integrator</div><div class="lo">\(\Phi_{\Delta t}[f]\), RK4, 48 steps a day</div></div><div class="chips"><a class="tchip" href="#t6">T6</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Step map</div><div class="lo">\(\mathcal F = \Phi_{\Delta t}[f]^{48}\), one day</div></div><div class="chips"><a class="tchip cor" href="#t7">T7</a><a class="tchip" href="#t8">T8</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Rollout</div><div class="lo">\(\mathcal G = \mathcal F\circ\cdots\circ\mathcal F\), a window</div></div><div class="chips"><a class="tchip" href="#t9">T9</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer io"><div><div class="ln">State out</div><div class="lo">\(\mathbf z_{k+1}\) · <code>(variable, height, width)</code>, or a cube for T9</div></div><div class="chips"></div></div>
+    </nav>
+    <p class="loop">Chip colour gives each type's usual job: <span class="tchip">teal</span> mostly emulation, <span class="tchip cor">amber</span> mostly correction. Several types do either; the card says which target each one takes.</p>
+
+    <h3>Your 2 × 2, as a slice of the list</h3>
+    <div class="tbl"><table class="two">
+      <thead><tr><th></th><th>Classical integrator</th><th>Learned integrator</th></tr></thead>
+      <tbody>
+        <tr><td class="h">Physical tendency</td><td><div class="cell">the physical model<small>no learning</small></div></td><td><div class="cell">T6 solver in the loop<small>big step + learned error</small></div></td></tr>
+        <tr><td class="h">Hybrid tendency</td><td><div class="cell">T3, T4 closures<small>physics + learned term or field</small></div></td><td><div class="cell">T3 or T4 inside T6<small>both at once</small></div></td></tr>
+        <tr><td class="h">Learned tendency</td><td><div class="cell">T5 neural ODE<small>network RHS, RK4</small></div></td><td><div class="cell">T8 pure step map<small>no tendency at all</small></div></td></tr>
+      </tbody>
+    </table></div>
+    <p>The 2 × 2 misses three things: learning <em>below</em> the tendency (T1 parameters, T2 discretisation), correcting <em>after</em> the step (T7), and learning <em>above</em> it (T9 rollouts, T10 representations).</p>
+  </section>
+
+  <h2 id="notation">Notation</h2>
+  <p>As on the state-estimation page, plus the pieces of the model.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Symbol</th><th>Meaning</th><th>Kind, shape</th></tr></thead>
+    <tbody>
+      <tr><td>\(\mathbf z_k\)</td><td>latent state at day k; here the model's prognostic PV \(q\) (SSH \(\eta = f_0\psi/g\) is a linear diagnostic of it)</td><td>(variable, height, width)</td></tr>
+      <tr><td>\(\mathbf x\), \(\mathbf u_k\)</td><td>covariates (βy, coordinates) and controls (wind-stress curl)</td><td>(variable, height, width), (height, width)</td></tr>
+      <tr><td>\(\theta\), \(\alpha\)</td><td>physical parameters \((L_d,\nu)\), hyperparameters</td><td>(param,), (hyper,)</td></tr>
+      <tr><td>\(f\)</td><td>tendency, \(\partial_t \mathbf z = f(\mathbf z;\mathbf x,\mathbf u,\theta)\)</td><td>(variable, height, width)</td></tr>
+      <tr><td>\(\Phi_{\Delta t}[f]\)</td><td>one integrator step of size Δt applied to tendency f</td><td>operator</td></tr>
+      <tr><td>\(\mathcal F\)</td><td>step map: one day, \(\Phi_{\Delta t}[f]^{48}\)</td><td>field → field</td></tr>
+      <tr><td>\(\mathcal G\)</td><td>rollout over a window</td><td>field → cube</td></tr>
+      <tr><td>\(\phi\)</td><td>weights of whatever is learned; \(\psi\) stays reserved for variational parameters</td><td>weights</td></tr>
+      <tr><td>\(\mathcal C\)</td><td>coarse-graining from a finer grid to ours</td><td>(height_hr, width_hr) → (height, width)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Note the clash: \(\psi\) in the equations below is the streamfunction, as is standard in QG. The variational parameters of the last page never appear on this page.</p>
+
+  <h2 id="model">The physical model, taken apart</h2>
+  <p>The 1.5-layer QG model of the last page, written layer by layer. Let \(\mathcal L = \nabla^2 - L_d^{-2}\) be the Helmholtz operator and \(J(a,b) = \partial_x a\,\partial_y b - \partial_y a\,\partial_x b\) the Jacobian.</p>
+  \[
+  \begin{aligned}
+  \text{diagnostic solve:}\quad &amp; \psi = \mathcal L^{-1}(q - \beta y)\\
+  \text{terms:}\quad &amp; f(q) = \underbrace{-J(\psi, q)}_{\text{advection}} \;\underbrace{-\,\nu\nabla^6\psi}_{\text{dissipation}} \;+\; \underbrace{u}_{\text{wind forcing}}\\
+  \text{integrator:}\quad &amp; q \leftarrow \Phi_{\Delta t}[f](q) = q + \tfrac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4)\\
+  \text{step map:}\quad &amp; \mathbf z_{k+1} = \mathcal F_\theta(\mathbf z_k;\mathbf x,\mathbf u_k) = \Phi_{\Delta t}[f]^{48}(\mathbf z_k)\\
+  \text{rollout:}\quad &amp; \mathbf z_{1:K} = \mathcal G_\theta(\mathbf z_0,\mathbf u_{1:K};\mathbf x)
+  \end{aligned}
+  \]
+  <p>Below the terms sits the discretisation: \(J\) is the Arakawa stencil and \(\nabla^2\) the five-point stencil on the C-grid, and \(\mathcal L^{-1}\) is a spectral or sine-transform solve. Each layer is a function with a signature, and each can be swapped.</p>
+  <p>The sketch below is the model in code. Every type in this page is an edit to one or two of its lines.</p>
+  <pre>import equinox as eqx
+import finitevolx as fvx
+import jax
+from jaxtyping import Array, Float
+
+<span class="c"># Shapes: T = 10 days (time); H, W = 130 × 130 grid with ghost ring</span>
+<span class="c">#         (height, width); V covariates, βy first (variable);</span>
+<span class="c">#         48 RK4 substeps per day</span>
+
+
+class QGParams(eqx.Module):
+    """Physical parameters θ = (L_d, ν) of the 1.5-layer QG model."""
+
+    deformation_radius: Float[Array, ""]
+    viscosity: Float[Array, ""]
+
+
+def qg_tendency(
+    pv: Float[Array, "height width"],
+    covariates: Float[Array, "variable height width"],
+    forcing: Float[Array, "height width"],
+    params: QGParams,
+    grid: fvx.CartesianGrid2D,
+) -&gt; Float[Array, "height width"]:
+<span class="c">    # today (finitevolx)</span>
+    difference = fvx.Difference2D(grid)
+<span class="c">    # today (finitevolx)</span>
+    jacobian = fvx.ArakawaJacobian2D(grid)
+    beta_y = covariates[0]<span class="c">                            # (H, W)</span>
+
+<span class="c">    # --- diagnostic solve ---</span>
+<span class="c">    # q − βy</span>
+    relative_pv = pv - beta_y<span class="c">                         # (H, W) → (H, W)</span>
+<span class="c">    # L_d²</span>
+    radius_squared = params.deformation_radius**2<span class="c">     # → ()</span>
+<span class="c">    # L_d⁻²</span>
+    helmholtz_shift = 1.0 / radius_squared<span class="c">            # → ()</span>
+<span class="c">    # today* (finitevolx)</span>
+<span class="c">    # ψ = 𝓛⁻¹(q − βy),  𝓛 = ∇² − L_d⁻²</span>
+    streamfunction = fvx.pv_inversion(<span class="c">                # (H, W) → (H, W)</span>
+        relative_pv, grid.dx, grid.dy, lambda_=helmholtz_shift, bc="dst"
+    )
+
+<span class="c">    # --- terms ---</span>
+<span class="c">    # today (finitevolx)</span>
+<span class="c">    # J(ψ, q)</span>
+    jacobian_term = jacobian(streamfunction, pv)<span class="c">      # (H, W)</span>
+<span class="c">    # A = −J(ψ, q)</span>
+    advection = -jacobian_term<span class="c">                        # (H, W)</span>
+<span class="c">    # today (finitevolx)</span>
+<span class="c">    # ∇²ψ</span>
+    laplacian_1 = difference.laplacian(streamfunction)<span class="c">  # (H, W)</span>
+<span class="c">    # today (finitevolx)</span>
+<span class="c">    # ∇⁴ψ = ∇²(∇²ψ)</span>
+    laplacian_2 = difference.laplacian(laplacian_1)<span class="c">   # (H, W)</span>
+<span class="c">    # today (finitevolx)</span>
+<span class="c">    # ∇⁶ψ = ∇²(∇⁴ψ)</span>
+    laplacian_3 = difference.laplacian(laplacian_2)<span class="c">   # (H, W)</span>
+<span class="c">    # D = −ν ∇⁶ψ</span>
+    dissipation = -params.viscosity * laplacian_3<span class="c">     # (H, W)</span>
+
+<span class="c">    # f = −J(ψ, q) − ν∇⁶ψ + u</span>
+    tendency = advection + dissipation + forcing<span class="c">      # (H, W)</span>
+    return tendency
+
+
+def qg_day(
+    pv: Float[Array, "height width"],
+    covariates: Float[Array, "variable height width"],
+    forcing: Float[Array, "height width"],
+    params: QGParams,
+    grid: fvx.CartesianGrid2D,
+    *,
+    dt: float = 1800.0,
+    n_substeps: int = 48,
+) -&gt; Float[Array, "height width"]:
+    def rhs(state):
+<span class="c">        # user</span>
+<span class="c">        # f(q; x, u, θ)</span>
+        return qg_tendency(state, covariates, forcing, params, grid)
+
+    def substep(state, _):
+<span class="c">        # today (finitevolx)</span>
+<span class="c">        # q ← Φ_Δt[f](q), classic RK4</span>
+        state = fvx.rk4_step(state, rhs, dt)<span class="c">          # (H, W) → (H, W)</span>
+        return state, None
+
+<span class="c">    # 𝓕_θ(z_k) = Φ_Δt[f]⁴⁸(z_k)</span>
+    next_pv, _ = jax.lax.scan(<span class="c">                        # (H, W) → (H, W)</span>
+        substep, pv, None, length=n_substeps
+    )
+    return next_pv
+
+
+def qg_rollout(
+    initial_pv: Float[Array, "height width"],
+    covariates: Float[Array, "variable height width"],
+    forcing: Float[Array, "time height width"],
+    params: QGParams,
+    grid: fvx.CartesianGrid2D,
+) -&gt; Float[Array, "time height width"]:
+    def day(state, daily_forcing):
+<span class="c">        # user</span>
+<span class="c">        # z_k = 𝓕_θ(z_{k−1}; x, u_k)</span>
+        state = qg_day(<span class="c">                               # (H, W) → (H, W)</span>
+            state, covariates, daily_forcing, params, grid
+        )
+        return state, state
+
+<span class="c">    # 𝓖_θ(z₀, u₁:K) = (z₁, …, z_K)</span>
+    _, trajectory = jax.lax.scan(<span class="c">                     # (H, W) → (T, H, W)</span>
+        day, initial_pv, forcing
+    )
+    return trajectory</pre>
+  <p class="loop">Markers: <code>today</code> ships on <code>main</code> (checked 24 Oct 2026: finitevolX 831c69f, gaussx eeda235, somax 9cb19b3); <code>today*</code> ships, arguments sketched; <code>user</code> is defined on these pages; <code>not pinned</code> is a library whose API was not checked. Shape column letters are defined in the header.</p>
+  <p>somax ships barotropic and baroclinic QG models but no 1.5-layer one, so the tendency here is page-defined. <code>BaroclinicQG.create(n_layers=1)</code> may be the shipped route, but it is untested.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Type</th><th>The edit</th></tr></thead>
+    <tbody>
+      <tr><td>T1</td><td><code>params.viscosity</code> → <code>viscosity_net(phi, covariates)</code></td></tr>
+      <tr><td>T2</td><td><code>jacobian</code> and <code>difference.laplacian</code> use learned stencil weights</td></tr>
+      <tr><td>T3</td><td><code>tendency = … - div(flux_net(phi, pv, streamfunction))</code></td></tr>
+      <tr><td>T4</td><td>add <code>div(kappa_net(phi, pv, streamfunction) * grad(pv))</code>, with <code>kappa ≥ 0</code></td></tr>
+      <tr><td>T5</td><td><code>qg_tendency</code> body → <code>tendency_net(phi, pv, covariates, forcing, params)</code></td></tr>
+      <tr><td>T6</td><td><code>qg_day</code>: 6 substeps of <code>8 * dt</code>, each followed by <code>+ correction_net(phi, state)</code></td></tr>
+      <tr><td>T7</td><td><code>qg_day</code> returns <code>next_pv + residual_net(phi, pv, covariates, forcing)</code></td></tr>
+      <tr><td>T8</td><td><code>qg_day</code> body → <code>step_net(phi, pv, covariates, forcing, params)</code></td></tr>
+      <tr><td>T9</td><td><code>qg_rollout</code> body → <code>rollout_net(phi, initial_pv, forcing, covariates, params)</code></td></tr>
+      <tr><td>T10</td><td>wrap <code>qg_day</code> in <code>encoder</code> and <code>decoder</code>, run it on the embedding</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="axes">Three axes</h2>
+  <h3>Which layer is learned</h3>
+  <p>The diagram above. Lower layers (T1, T2) keep the most physics and fix the least; upper layers (T8, T9) keep the least and are fastest.</p>
+  <h3>How the learned piece is glued in</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Glue</th><th>Form</th><th>Guarantee</th><th>Types</th></tr></thead>
+    <tbody>
+      <tr><td>Additive</td><td>\(f_{\text{phys}} + g_\phi\), \(\;\mathcal F + r_\phi\)</td><td>none; the network can undo the physics</td><td>T3, T7</td></tr>
+      <tr><td>Parametric</td><td>the network outputs a coefficient the physics uses: \(\nu_\phi(\mathbf x)\), \(\kappa_\phi\)</td><td>the operator bounds what it can do</td><td>T1, T4</td></tr>
+      <tr><td>Structural</td><td>output forced into a form: \(-\nabla\cdot\mathbf S_\phi\), \(\kappa_\phi \ge 0\), flux-form stencils</td><td>conservation or dissipation by construction</td><td>T2, T3 (flux), T4</td></tr>
+      <tr><td>Splitting</td><td>physics step, then correction step</td><td>physics untouched; error tied to the step size</td><td>T6</td></tr>
+      <tr><td>Replacement</td><td>the network is the piece</td><td>only the signature</td><td>T5, T8, T9</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>What it is trained against</h3>
+  <p>Two jobs, three sources of reference, four loss levels. Let \(\mathbf z^{\text{ref}}\) be the reference trajectory and \(f^{\text{ref}}\) its tendency.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Job</th><th>Reference</th><th>Ground truth box</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tgt em">emulation</span></td><td>\(\mathbf z^{\text{ref}}\) from the physical model itself</td><td>step 1</td></tr>
+      <tr><td><span class="tgt co">correction</span></td><td>\(\mathbf z^{\text{ref}} = \mathcal C(\mathbf z^{\text{hr}})\), a finer or richer run coarse-grained to our grid</td><td>a better step 1</td></tr>
+      <tr><td><span class="tgt co">correction</span></td><td>observations \(\mathbf y_{1:K}\) through \(\mathbf H_k\)</td><td>the ocean</td></tr>
+    </tbody>
+  </table></div>
+  <p>The loss can sit at four levels, from cheapest to most faithful to how the model will be used:</p>
+  \[
+  \begin{aligned}
+  \text{tendency:}\quad &amp; \mathbb E\,\big\|f^{\text{ref}}(\mathbf z) - f_\phi(\mathbf z)\big\|^2\\
+  \text{one step:}\quad &amp; \mathbb E\,\big\|\mathbf z^{\text{ref}}_{k+1} - \mathcal F_\phi(\mathbf z^{\text{ref}}_k)\big\|^2\\
+  \text{rollout:}\quad &amp; \mathbb E\sum_{k=1}^{K}\big\|\mathbf z^{\text{ref}}_k - \mathcal F_\phi^{(k)}(\mathbf z^{\text{ref}}_0)\big\|^2\\
+  \text{observations:}\quad &amp; \mathbb E\sum_{k=1}^{K}\big\|\mathbf y_k - \mathbf H_k\mathcal F_\phi^{(k)}(\mathbf z_0)\big\|^2_{\mathbf R_k^{-1}}
+  \end{aligned}
+  \]
+  <p>For correction against a finer run, the tendency target is the <em>subgrid forcing</em>: what the coarse physics misses when applied to the coarse-grained state,</p>
+  \[ \mathbf s = \mathcal C\big(f_{\text{hr}}(\mathbf z^{\text{hr}})\big) - f_{\text{phys}}\big(\mathcal C(\mathbf z^{\text{hr}})\big). \]
+  <p>The tendency and one-step losses are <em>a priori</em>: cheap, but the model never sees its own errors, so long rollouts often go unstable. The rollout and observation losses are <em>a posteriori</em>: they differentiate through the solver, which is what a JAX model makes affordable. The observation loss also needs each window's \(\mathbf z_0\), so learning from data is 4D-Var with \(\phi\) added to the control vector.</p>
+
+  <h2 id="types">The ten types</h2>
+  <p>Each card gives the equation, the operator signature with what is learned, and the training target as a column. Shapes use the named dimensions of the last page.</p>
+
+  <article class="tcard" id="t1">
+    <header><span class="tn">T1</span><h3>Learned parameters</h3><span class="where">layer: parameters</span></header>
+    <div class="tbody">
+      <p>The equations are fixed. Constants become leaves, or a network maps the covariates to a parameter <em>field</em>:</p>
+  \[ \theta \;\to\; \theta_\phi(\mathbf x) = \mathrm{NN}_\phi(\mathbf x), \qquad f = -J(\psi,q) - \nu_\phi(\mathbf x)\,\nabla^6\psi + u . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">θ_φ(x)</span><code>(param, height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>constants, or a parameter field from a small network on x</dd><dt>Glue</dt><dd>parametric: the physics consumes the learned numbers</dd><dt>Target</dt><dd><span class="tgt co">correction</span>data or a richer model; <span class="tgt em">emulation</span>step 1 only to test identifiability</dd><dt>Regime</dt><dd>a posteriori, through the rollout (the parameters have no local target)</dd><dt>Keeps</dt><dd>everything: conservation, Δt freedom, a correct adjoint</dd><dt>Six-step</dt><dd>box 2's inner loop when θ is constant, box 6 when it becomes a field</dd></dl>
+      <p class="crit">The cheapest hybrid and the most honest one. It can only fix errors the equations already have room for: a missing process stays missing.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t2">
+    <header><span class="tn">T2</span><h3>Learned discretisation</h3><span class="where">layer: discretisation</span></header>
+    <div class="tbody">
+      <p>The PDE is fixed; the stencil weights are learned. With offsets \((p,s)\in\mathcal S\) and weights \(w\), a derivative or face value is a weighted sum of shifted copies. In flux form the update telescopes, so the domain integral of \(q\) is conserved whatever the weights are:</p>
+  \[ (\mathcal D q)_{j,i} = \sum_{(p,s)\in\mathcal S} w^{\phi}_{ps}(q)\; q_{j+p,\,i+s},
+  \qquad f = -\nabla_h\!\cdot \mathbf F_\phi, \quad \mathbf F_\phi = \mathbf v\, q^{\text{face}}_\phi . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">w</span><code>(offset,)</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">w_φ(q)</span><code>(offset, height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>stencil coefficients, constant or predicted per point from the local state</dd><dt>Glue</dt><dd>structural: the learned numbers sit inside the stencil, the PDE is untouched</dd><dt>Target</dt><dd><span class="tgt co">correction</span>a finer-grid run coarse-grained to this grid (numerics error, not physics error)</dd><dt>Regime</dt><dd>a posteriori; a priori on face values is possible but drifts</dd><dt>Keeps</dt><dd>conservation (flux form), Δt freedom, the C-grid staggering</dd><dt>Six-step</dt><dd>box 6: it changes how box 1 is computed</dd></dl>
+      <p class="crit">Lets a coarse grid behave like a finer one. With constant weights it still compiles to one slice fusion, and its Fourier symbol is inspectable, so you can see what it learned.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t3">
+    <header><span class="tn">T3</span><h3>Physics plus a learned term</h3><span class="where">layer: terms (additive)</span></header>
+    <div class="tbody">
+      <p>A network adds the missing term. In flux form the term moves PV around without creating it:</p>
+  \[ f = \underbrace{-J(\psi,q) - \nu\nabla^6\psi + u}_{f_{\text{phys}}} \;+\; g_\phi(q,\psi;\mathbf x,u),
+  \qquad g_\phi = -\nabla_h\!\cdot \mathbf S_\phi . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">S_φ</span><code>(2, height, width) flux</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>one tendency term: a subgrid PV flux, a missing forcing</dd><dt>Glue</dt><dd>additive, or structural when written as a flux divergence</dd><dt>Target</dt><dd><span class="tgt co">correction</span>subgrid forcing from a coarse-grained high-resolution run, or observations</dd><dt>Regime</dt><dd>a priori on the subgrid forcing, then a posteriori; a priori alone is often unstable</dd><dt>Keeps</dt><dd>Δt freedom; conservation only in flux form; an adjoint as good as g_φ's Jacobian</dd><dt>Six-step</dt><dd>box 6: a structural change to box 1</dd></dl>
+      <p class="crit">The workhorse of hybrid modelling. Its danger is identifiability: trained jointly with θ, an additive term can absorb part of the physics.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t4">
+    <header><span class="tn">T4</span><h3>Learned fields in a known form</h3><span class="where">layer: terms (parametric)</span></header>
+    <div class="tbody">
+      <p>The network never writes a tendency. It supplies a field that a physics operator then uses. An eddy diffusivity kept non-negative is dissipative by construction:</p>
+  \[ f = -J(\psi,q) + \nabla_h\!\cdot\!\big(\kappa_\phi(q,\psi;\mathbf x)\,\nabla_h q\big) - \nu\nabla^6\psi + u,
+  \qquad \kappa_\phi = \operatorname{softplus}(\mathrm{NN}_\phi) \ge 0 . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">κ_φ</span><code>(height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>a coefficient field that depends on the state: diffusivity, an advecting velocity, a source</dd><dt>Glue</dt><dd>parametric and structural: the operator fixes what the field can do</dd><dt>Target</dt><dd><span class="tgt co">correction</span>coarse-grained high-resolution run, or observations</dd><dt>Regime</dt><dd>a posteriori</dd><dt>Keeps</dt><dd>the sign of energy or enstrophy change, conservation, Δt freedom</dd><dt>Six-step</dt><dd>box 6</dd></dl>
+      <p class="crit">Sits between T1 and T3. Less expressive than a free term, much harder to break, and the learned field is a physical quantity you can map and inspect.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t5">
+    <header><span class="tn">T5</span><h3>Neural tendency, classical integrator</h3><span class="where">layer: tendency</span></header>
+    <div class="tbody">
+      <p>The whole right-hand side is a network; the time stepping stays classical:</p>
+  \[ \partial_t z = g_\phi(z;\mathbf x,u,\theta), \qquad \mathbf z_{k+1} = \Phi_{\Delta t}[g_\phi]^{48}(\mathbf z_k) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">g_φ(z)</span><code>(variable, height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the tendency</dd><dt>Glue</dt><dd>replacement</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>tendencies of step 1, exact and free; <span class="tgt co">correction</span>a richer model or data</dd><dt>Regime</dt><dd>a priori on tendencies, then a posteriori</dd><dt>Keeps</dt><dd>Δt freedom and the integrator's stability region; loses conservation</dd><dt>Six-step</dt><dd>box 3 when emulating, box 6 when correcting</dd></dl>
+      <p class="crit">For QG this is no faster than the physics it replaces, because the network is called 192 times a day (48 steps × 4 RK4 stages). It earns its place when the true tendency is unknown, not when it is expensive.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t6">
+    <header><span class="tn">T6</span><h3>Physical tendency, learned integrator</h3><span class="where">layer: integrator</span></header>
+    <div class="tbody">
+      <p>Take a large step \(\Delta T = 8\,\Delta t\) that the classical integrator gets wrong, and learn the time-discretisation error. Six corrected big steps replace 48 small ones:</p>
+  \[ \mathbf z \leftarrow \Phi_{\Delta T}[f_{\text{phys}}](\mathbf z) + c_\phi(\mathbf z), \quad\text{repeated } 6 \text{ times per day.} \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">c_φ(z)</span><code>(variable, height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the error of a large time step</dd><dt>Glue</dt><dd>splitting: physics step, then correction</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>the same physics at the small Δt (step 1)</dd><dt>Regime</dt><dd>a posteriori through the solver</dd><dt>Keeps</dt><dd>the physical tendency; loses Δt freedom (ΔT is baked in)</dd><dt>Six-step</dt><dd>box 3</dd></dl>
+      <p class="crit">Speed with the physics still visible. The correction is trained for one ΔT and one grid; change either and it must be retrained.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t7">
+    <header><span class="tn">T7</span><h3>Residual on the step map</h3><span class="where">layer: step map (additive)</span></header>
+    <div class="tbody">
+      <p>Run the physical model for a day, then add a learned correction:</p>
+  \[ \mathbf z_{k+1} = \mathcal F_\theta(\mathbf z_k;\mathbf x,\mathbf u_k) + r_\phi(\mathbf z_k;\mathbf x,\mathbf u_k) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">r_φ(z)</span><code>(variable, height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the one-day error of the physical model</dd><dt>Glue</dt><dd>additive, after the step</dd><dt>Target</dt><dd><span class="tgt co">correction</span>reanalysis states or a richer model sampled daily</dd><dt>Regime</dt><dd>one-step, then rollout</dd><dt>Keeps</dt><dd>nothing beyond what 𝓕_θ gives; loses Δt freedom</dd><dt>Six-step</dt><dd>box 6</dd></dl>
+      <p class="crit">Easy to bolt onto an existing model, and r_φ itself is a map of where the model is wrong. It mixes physics error and numerics error, so it does not tell you which one to fix.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t8">
+    <header><span class="tn">T8</span><h3>Pure step map</h3><span class="where">layer: step map (replacement)</span></header>
+    <div class="tbody">
+      <p>One network evaluation replaces the whole day:</p>
+  \[ \mathbf z_{k+1} = \widehat{\mathcal F}_\phi(\mathbf z_k;\mathbf x,\mathbf u_k,\theta) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the one-day map</dd><dt>Glue</dt><dd>replacement</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>step 1 trajectories; <span class="tgt co">correction</span>reanalysis</dd><dt>Regime</dt><dd>one-step, then rollout fine-tuning for stability</dd><dt>Keeps</dt><dd>nothing by construction; same signature as 𝓕, so it drops into any cycle</dd><dt>Six-step</dt><dd>box 3 (the emulator of the last page)</dd></dl>
+      <p class="crit">The largest speed-up per day, and the one whose Jacobian is least trustworthy for 4D-Var. Long rollouts drift toward smooth or unstable states unless trained on them.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t9">
+    <header><span class="tn">T9</span><h3>Rollout operator</h3><span class="where">layer: rollout</span></header>
+    <div class="tbody">
+      <p>The network maps an initial state and a forcing sequence to a whole window at once:</p>
+  \[ \mathbf z_{1:K} = \mathcal G_\phi(\mathbf z_0, \mathbf u_{1:K};\mathbf x,\theta) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_0</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">u_1:K</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">z_1:K</span><code>(time, variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the trajectory</dd><dt>Glue</dt><dd>replacement</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>step 1 windows; <span class="tgt co">correction</span>reanalysis windows</dd><dt>Regime</dt><dd>trajectory loss</dd><dt>Keeps</dt><dd>nothing; the horizon K is fixed</dd><dt>Six-step</dt><dd>box 3</dd></dl>
+      <p class="crit">The signature changes from field → field to field → cube, so it cannot be stepped, cycled or restarted mid-window. It fits a fixed 10-day 4D-Var window and little else.</p>
+    </div>
+  </article>
+
+  <article class="tcard" id="t10">
+    <header><span class="tn">T10</span><h3>Learned representation</h3><span class="where">layer: representation (orthogonal)</span></header>
+    <div class="tbody">
+      <p>An encoder maps the state to an embedding \(\mathbf h\), any of T5, T8 or T9 runs there, and a decoder maps back. The embedding is called \(\mathbf h\) because \(\mathbf z\) is already the latent state of the probabilistic model:</p>
+  \[ \mathbf h_k = E_\phi(\mathbf z_k), \qquad \mathbf h_{k+1} = \widetilde{\mathcal F}_\phi(\mathbf h_k;\mathbf u_k), \qquad \hat{\mathbf z}_{k+1} = D_\phi(\mathbf h_{k+1}) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>E, D and dynamics</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">h_k</span><code>(channel, height′, width′)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the space the dynamics run in, plus the dynamics</dd><dt>Glue</dt><dd>composition E → dynamics → D</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>or <span class="tgt co">correction</span>, plus reconstruction ‖z − D(E(z))‖²</dd><dt>Regime</dt><dd>reconstruction and latent rollout, jointly or in stages</dd><dt>Keeps</dt><dd>whatever the inner type keeps, in the embedding only</dd><dt>Six-step</dt><dd>box 3</dd></dl>
+      <p class="crit">Cheap dynamics in a small space. For assimilation, the observation operator becomes H_k D_φ, so every 4D-Var gradient goes through the decoder, and the decoder's errors become observation errors no R accounts for.</p>
+    </div>
+  </article>
+
+  <h2 id="matrix">Selection matrix</h2>
+  <p><span class="mk y">●</span> yes &nbsp; <span class="mk p">◐</span> partly or with care &nbsp; <span class="mk n">○</span> no</p>
+  <div class="tbl"><table class="matrix">
+    <thead><tr><th>Type</th><th>Faster than 𝓕</th><th>Can fix model error</th><th>Free Δt</th><th>Usable adjoint</th><th>Conserves by construction</th><th>Inspectable</th></tr></thead>
+    <tbody>
+      <tr><td>T1 parameters</td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td></tr>
+      <tr><td>T2 discretisation</td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td></tr>
+      <tr><td>T3 learned term</td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr>
+      <tr><td>T4 learned field</td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td></tr>
+      <tr><td>T5 neural tendency</td><td><span class="mk n">○</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td></tr>
+      <tr><td>T6 learned integrator</td><td><span class="mk y">●</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td></tr>
+      <tr><td>T7 step residual</td><td><span class="mk n">○</span></td><td><span class="mk y">●</span></td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td></tr>
+      <tr><td>T8 step map</td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td></tr>
+      <tr><td>T9 rollout</td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td></tr>
+      <tr><td>T10 representation</td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk n">○</span></td><td><span class="mk n">○</span></td></tr>
+    </tbody>
+  </table></div>
+  <p>"Faster" is for this QG model, where the physics is already cheap. T2 is faster because a learned stencil lets a coarser grid match a finer one, not because a stencil is quicker. "Can fix model error ◐" for T8–T10 means only when trained on reanalysis or data instead of step 1.</p>
+
+  <h2 id="critique">What the structure implies</h2>
+  <div class="note"><span class="tag">Emulation and correction are different boxes</span><p>An emulator answers "same model, faster" and is scored against step 1. A correction answers "better model" and is scored against a richer model or the ocean. Benchmarking a closure against the QG model, or an emulator against observations, measures the wrong thing. For this QG example emulation buys little; correction is where the value is.</p></div>
+  <div class="note"><span class="tag">Additive terms are not identifiable</span><p>Fit θ and an additive \(g_\phi\) together and the network can learn part of \(\nu\nabla^6\psi\) or of βy, leaving θ meaningless. The fixes, in order of preference: a parametric or structural form (T4, flux-form T3); fit θ first and freeze it; penalise \(\|g_\phi\|^2\).</p></div>
+  <div class="note"><span class="tag">For 4D-Var, learn low in the stack</span><p>T1–T5 keep a classical integrator, so stability, Δt and the meaning of the adjoint come from the physics. T6–T9 trade that for speed, and a step map that matches values can still have the wrong Jacobian. If a type above T5 is meant for step 4, its training should include Jacobian–vector products, not only values.</p></div>
+  <div class="note"><span class="tag">A priori training is a trap for T3–T5</span><p>A term that fits the subgrid forcing perfectly on reference states meets its own errors in a rollout and can blow up within days. Use the a priori loss to initialise, then train a posteriori through the solver.</p></div>
+
+  <h2 id="stack">Where each type lives</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Type</th><th>Hook in the stack</th></tr></thead>
+    <tbody>
+      <tr><td>T1</td><td>differentiable constants in somax term kernels; a <code>JaxOperator</code> for the parameter field</td></tr>
+      <tr><td>T2</td><td>the stencil-as-data layer in finitevolX, with a learnable stencil module in somax</td></tr>
+      <tr><td>T3, T4</td><td><code>OperatorTerm</code> wrapping a network, added to the somax term tree</td></tr>
+      <tr><td>T5</td><td>a term tree with one <code>OperatorTerm</code> and no physics terms</td></tr>
+      <tr><td>T6, T7, T8</td><td>a <code>JaxOperator</code> with the step-map signature, used as the cycle's step</td></tr>
+      <tr><td>T9, T10</td><td>a <code>JaxOperator</code> outside the step interface; T10 also changes the DA observation operator</td></tr>
+      <tr><td>all, a posteriori</td><td><code>rollout_loss</code> on a scanned cycle with checkpointing</td></tr>
+    </tbody>
+  </table></div>
+  <footer>Companion to the ocean state estimation page. Structural only: no method is tied to a specific paper here.</footer>
+</main>
+
+<nav class="series-nav bottom" aria-label="Series navigation"><span class="crumbs"><a href="../esmax-ocean">All ocean pages</a></span><span class="pn"><a href="../weak-4dvar">← Weak-constraint 4D-Var</a><a href="../learned-data-assimilation">Learned data assimilation →</a></span></nav>
+</body>
+</html>
