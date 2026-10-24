@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.1](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.0...geostack-v0.2.1) (2026-10-24)
+
+
+### Documentation
+
+* add named-carrier, operators and pipekit design pages ([#60](https://github.com/jejjohnson/geostack/issues/60)) ([52ffe2e](https://github.com/jejjohnson/geostack/commit/52ffe2e8d12a8ea87404a6f89d310c4f108f37f7))
+* add report 18 (neural fields literature) and the neural-fields design page ([#87](https://github.com/jejjohnson/geostack/issues/87)) ([b22d3ed](https://github.com/jejjohnson/geostack/commit/b22d3edf45fc5cd5d367648329a53ac4adb08b98))
+* add stack levels and esmax workspace design pages ([#61](https://github.com/jejjohnson/geostack/issues/61)) ([25fd629](https://github.com/jejjohnson/geostack/commit/25fd629e69d93ed2098eae650b91300451330f7c))
+* add the stack's dependency graph and the rules that keep it acyclic ([#49](https://github.com/jejjohnson/geostack/issues/49)) ([289d63f](https://github.com/jejjohnson/geostack/commit/289d63fbf3f770773432f391f6e4957d45ea84b9))
+* **design:** add geoarray and labeled-lane design pages ([#56](https://github.com/jejjohnson/geostack/issues/56)) ([85d29c1](https://github.com/jejjohnson/geostack/commit/85d29c17aa73198349a6b7f0316fe8ef8f2ba904))
+* **design:** decide C1 and D1 in the geoarray design ([#57](https://github.com/jejjohnson/geostack/issues/57)) ([3ffe5bf](https://github.com/jejjohnson/geostack/commit/3ffe5bfc10c8d0f5a734e3e4508acbcae9603511))
+* **design:** decide CS-F1, readable types as dim signatures on any carrier ([#88](https://github.com/jejjohnson/geostack/issues/88)) ([3c2a67c](https://github.com/jejjohnson/geostack/commit/3c2a67c6cc5a122855ba306c2bdbde31a7d3229b)), closes [#74](https://github.com/jejjohnson/geostack/issues/74)
+* **design:** decide GA-B3-B5 and the GA-C1 migration; the geoarray / geoops boundary ([#95](https://github.com/jejjohnson/geostack/issues/95)) ([08ad1d2](https://github.com/jejjohnson/geostack/commit/08ad1d2b7421b3333b06f53e804b76476f99cc36))
+* **design:** decide GA-Q2 / LL-F1, the CRS encoding on xarray ([#89](https://github.com/jejjohnson/geostack/issues/89)) ([89b4f56](https://github.com/jejjohnson/geostack/commit/89b4f5676454b0f351a5beacb05ef7af272981ac)), closes [#77](https://github.com/jejjohnson/geostack/issues/77)
+* **design:** decide GA-Q5, geoops kernel operators accept a DataArray ([#90](https://github.com/jejjohnson/geostack/issues/90)) ([be9f053](https://github.com/jejjohnson/geostack/commit/be9f053107753450c2201cef5b6c09f5948af7f6)), closes [#78](https://github.com/jejjohnson/geostack/issues/78)
+* fold pipekit_array.Named into DimArray ([#92](https://github.com/jejjohnson/geostack/issues/92)) ([bc2ba0c](https://github.com/jejjohnson/geostack/commit/bc2ba0c6d89bad9fa2673d84f1596d0a271cf772))
+* improve the overview diagrams ([#54](https://github.com/jejjohnson/geostack/issues/54)) ([b71fc6c](https://github.com/jejjohnson/geostack/commit/b71fc6c55f71f5b106013ffa01b33a11a219d986))
+* name the numerics layer GeoNumerics ([#55](https://github.com/jejjohnson/geostack/issues/55)) ([f114652](https://github.com/jejjohnson/geostack/commit/f114652732e4884e5d6abc7c8e4f1bbbbd2103a2))
+* put plumax one tier above radtrax in GeoModels ([#51](https://github.com/jejjohnson/geostack/issues/51)) ([3934cd8](https://github.com/jejjohnson/geostack/commit/3934cd833a6ad9bebfcf8a0c9c2d339e7341abb3))
+* **reports:** point reports 1, 2 and 9 to pipekit's own docs ([#52](https://github.com/jejjohnson/geostack/issues/52)) ([b75559d](https://github.com/jejjohnson/geostack/commit/b75559d2b030560c4a1ef787803d34d9e8c09749))
+
 ## [0.2.0](https://github.com/jejjohnson/geostack/compare/geostack-v0.1.0...geostack-v0.2.0) (2026-10-14)
 
 
