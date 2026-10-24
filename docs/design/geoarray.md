@@ -48,7 +48,7 @@ There are two families, and xarray's data structures are carriers just as much a
 
 | Family | Carriers | Holds | Good at |
 | --- | --- | --- | --- |
-| geoarray | `GeoArray`, `GeoSwath`, `GeoPoints` | NumPy or JAX data, dims, static coordinates, a geometry leaf (transform, lat/lon, xy), CRS | one item or a fixed batch: strict grids, compiles under `jit`, about 1–10 µs per op |
+| geoarray | `GeoArray`, `GeoSwath`, `GeoPoints` | NumPy or JAX data, dims, static coordinates, a geometry leaf (transform, lat/lon, xy), CRS | one item or a fixed batch: strict grids, compiles under `jit`, about 35–250 µs per op on a patch, under 10 µs per patch batched ([measured](#design-measured-costs)) |
 | xarray | `DataArray`, `Dataset`, `DataTree` | NumPy or dask data, dims, coordinate values, attributes; `Dataset` groups variables on shared dims, `DataTree` nests groups | many items: selection by value, laziness, out-of-core, variables with different dims |
 
 geoarray has no `Dataset` or `DataTree` equivalent on purpose: a carrier holds one stack of values (several bands or variables share one `band` or `variable` dim).
@@ -98,20 +98,23 @@ What the other packages change, in one table:
 | geopatcher | geoarray carriers | the batch is a `GeoPatches` carrier with a `(patch, 6)` transform; split and stitch stay NumPy; the silent `jnp = np` fallback goes |
 | geoops | both families | `dim=` replaces `axis=`; each operator declares `backends`; no xarray in its base install ([operators](./operators.md)) |
 
-### Indicative costs (not yet reproducible)
+(design-measured-costs)=
+### Measured costs (GA-G22)
 
-One exploratory run on a CPU sandbox compared a 4-op normalized difference and a window on a mock thin NumPy carrier and on `xr.DataArray`.
-No script or output from that run is committed, so these numbers motivate the design but are not results: gate GA-G22 replaces them with a committed benchmark and its output, and the claims below stand or fall with it.
+A committed benchmark times a 4-op normalized difference and a 32 × 32 window on today's carrier (geotoolz-array 0.2.0) and on `xr.DataArray`: `packages/geotoolz-array/benchmarks/carrier_vs_xarray.py` in geotoolz, with its output in `benchmarks/results/` (geotoolz #543).
+Each number is the median over 7 repeats of the per-call mean, after a warm-up, on a 2-core Linux CPU with NumPy 2.4.5 and xarray 2026.4.0.
 
 | Shape | ND op, carrier | ND op, xarray | Window, carrier | Window, xarray |
 | --- | --- | --- | --- | --- |
-| 2 × 64 × 64 | 12 µs | 2,257 µs | 1.4 µs | 80 µs |
-| 2 × 256 × 256 | 275 µs | 2,779 µs | 1.0 µs | 63 µs |
-| 2 × 2000 × 2000 | 48 ms | 52 ms | 2.4 µs | 96 µs |
+| 2 × 64 × 64 | 131 µs | 1,524 µs | 35 µs | 53 µs |
+| 2 × 256 × 256 | 241 µs | 1,724 µs | 35 µs | 55 µs |
+| 2 × 2000 × 2000 | 24.8 ms | 26.8 ms | 34 µs | 57 µs |
 
-- In that run, on a full scene the difference was noise; on patches xarray was 10–200× slower per op (to be confirmed by GA-G22).
-- Two grids whose x coordinates differ by 10⁻⁷ m, added in xarray, gave shape `(1, 4, 0)`: every pixel dropped, no error.
-- `import xarray` took about 0.57 s, against 0.11 s for NumPy.
+- On patches the carrier is 7–12× faster per op for arithmetic, and only 1.6× for a window; on a full scene the difference is noise.
+- This corrects the earlier indicative table, which came from one uncommitted run on a mock carrier and put the carrier at 1–12 µs per op: the real carrier costs about 35 µs per call before any arithmetic, most of it in building the moved transform (`shift_scale_transform`) and in repeated tracer checks.
+- Batched, the per-patch cost drops below 10 µs: the stored-dims spike ran a 5-op chain over 10,000 patches through `map_over` under `jit` at 6.5–8.2 µs per patch (gate GA-G21, geotoolz #540).
+- Two grids whose x coordinates differ by 10⁻⁷ m, added in xarray, give shape `(1, 4, 0)`: every pixel dropped, no error; the carrier raises `GridMismatchError`.
+- A cold `import xarray` takes 0.46 s, against 0.07 s for NumPy.
 
 The carrier earns its place by what it refuses (mismatched grids, a transform drifting from its coordinates, ambiguous pixel edges) and by compiling, not by speed on large scenes.
 
@@ -554,7 +557,7 @@ The full operator surface is not shared, because the backends differ in four beh
 | two inputs on different grids | refuses | refuses | inner-joins silently in plain arithmetic |
 | laziness | eager | traced under `jit` | often dask-lazy; `.data` can trigger a full compute |
 | compiles | no | yes | no |
-| per-op overhead (indicative, GA-G22) | about 1–10 µs | about 1–10 µs eager | about 60–2,000 µs |
+| per-op overhead on a patch (GA-G22) | about 35–250 µs | under 10 µs per patch, batched under `jit` (GA-G21) | about 50–1,700 µs |
 
 On xarray, `combine` and `stack` use the xarray adapter's exact comparison, so the silent-alignment trap does not apply to them; the alignment difference is one explicit check per carrier family instead of a hidden default.
 
@@ -1096,7 +1099,7 @@ The "Was" column gives the gate's ID on the two pages this one merges.
 | GA-G19 No silent alignment | G6 | `combine` and `stack` raise on a 10⁻⁷ m offset on every backend; if not: the xarray path is not shared |
 | GA-G20 Lossless round trip | G7 | `from_xarray(to_xarray(g))` returns the same transform, dims and coordinates for random windows and rotated grids; the geotoolz #463 and #464 regression cases pass; if not: conventions are fixed before release |
 | GA-G21 Patch overhead | G8 | 10k patches through a 5-op chain cost no more than today's carrier plus a budget you set; if not: profile and cut before release |
-| GA-G22 Reproducible costs | G9 | a committed benchmark script times the normalized difference and the window on the carrier and on xarray at the three shapes above, writes its output to a tracked file, and those numbers replace the indicative table; if not: drop the per-op cost argument from this page |
+| GA-G22 Reproducible costs | G9 | a committed benchmark script times the normalized difference and the window on the carrier and on xarray at the three shapes above, writes its output to a tracked file, and those numbers replace the indicative table; if not: drop the per-op cost argument from this page; **passed 24 Oct 2026** (geotoolz #543) |
 | GA-G23 Primitives stay pure | G10 | a test in geostack's dependency-graph suite finds no import of geoarray, xarray, pyproj, rasterio, geopandas or shapely in any `*/_src/array.py`; if not: move the offending code up into the operator |
 | GA-G24 Warp parity (geoops) | GE1 | JAX bilinear warp equals rasterio's bilinear reprojection to 1e-5 relative on interior pixels |
 | GA-G25 CRS kernels (geoops) | GE2 | each closed-form projection equals pyproj to 1 mm over its valid domain, in float64; if not: the CRS stays NumPy-only |
