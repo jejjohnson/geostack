@@ -300,7 +300,7 @@ def assimilate(
         x0_map: GeoMap = background.with_data(x0_ocean)
         traj: GeoMapSeries = forward(x0_map, times, valid_b)
         # H(M(x₀)): sampled at the observations in space and time
-        predicted: GeoTracks = geoarray.sample(traj, obs)
+        predicted: GeoTracks = geoarray.interp_at(traj, obs)
         # d = m ⊙ (y − H(M(x₀))); padded slots give 0, never NaN
         resid: Float[Array, "N"] = obs.data - predicted.data
         d: Float[Array, "N"] = jnp.where(obs.valid, resid, 0.0)

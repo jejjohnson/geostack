@@ -548,7 +548,7 @@ table: pd.DataFrame = bias.to_dataframe()
 **What it stresses.**
 
 - **Gap: two samplers must agree.**
-  `xr.interp` and `geoarray.sample` both put a grid onto points.
+  `xr.interp` and `geoarray.interp_at` both put a grid onto points.
   If their bilinear weights or edge handling differ, the two ways give different biases.
   A contract test should hold them equal, or one should be defined as the other.
 - **Gap: analysts want tables.**
@@ -1034,7 +1034,7 @@ Three findings change a principle (CS-F1, CS-F2, CS-F11); the rest add requireme
 | CS-F7 | Native xarray operations are not pipeline stages | 4 | xrops wraps the few that pipelines need (`Climatology`, `Anomaly`, `Resample`) as named operators |
 | CS-F8 | Some operators can never compile (GDAL rasterize, vectorize) | 1, 10, 13 | operators declare `backends`; the docs list eager-only ones (operators page, [OP-O6](./operators.md)) |
 | CS-F9 | A replaced stage may have been fitted | 5 | each pipeline slot says whether it expects a fitted or a stateless operator; `replace` checks |
-| CS-F10 | Two ways to sample a grid at points; analysts want tables | 6 | a contract test holds `geoarray.sample` equal to `xr.interp`; `GeoPoints.to_dataframe()` / `from_dataframe()` |
+| CS-F10 | Two ways to sample a grid at points; analysts want tables | 6 | a contract test holds `geoarray.interp_at` equal to `xr.interp`; `GeoPoints.to_dataframe()` / `from_dataframe()` |
 | CS-F11 | Production runs need versions, provenance and idempotence | 7 | **a new principle:** a packaged pipeline is versioned; every output records pipeline version, operator versions and input checksums; re-running a key gives the same output |
 | CS-F12 | Pure-L1 users must be left alone, and given a way up | 8 | geometry helpers have carrier-free constructors; the docs show L1 → `KernelOp` → pipeline as one path |
 | CS-F13 | Splits and leakage belong to the runner | 9 | runners own splits and hold back truth; a submission or stage never sees test data |
