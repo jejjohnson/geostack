@@ -338,7 +338,7 @@ series: GeoMapSeries = vardax.geo.assimilate(
 vardax only knows M through `forward`, so the same assimilator runs any model the caller binds, and the dependency points down.
 `simulate` turns requested output times into step counts before tracing, so a daily output with a 600 s step takes 144 steps per frame, and t = 0 returns the initial state.
 Inside `cost` the series is built and unwrapped once per evaluation.
-Whether that is cheap enough under `grad`, or `cost` should call the L1 loop directly, is open (OP-O8 in the open questions).
+That is cheap enough under `grad` (OP-O8, decided 24 Oct 2026): in the spike's 4D-Var cost (256 × 256 state, 8 frames, 20,000 padded observations) this form traced once and cost the same per gradient as calling the L1 loop on raw frames, a paired ratio of 1.007 (geotoolz #516).
 
 ## Where each operation is written, once
 
@@ -662,4 +662,4 @@ Each step is a 0.X.0 bump. xrops now follows geoops instead of moving in paralle
 | OP-O5 | How operators use `KernelOp` | by composition: an operator keeps its own config and calls a `KernelOp` inside (as `NDVI` does) | every kernel operator subclasses `KernelOp` |
 | OP-O6 | The `backends` vocabulary | `"numpy"`, `"jax"`, `"xarray"` | backends and carrier families declared separately |
 | OP-O7 | Where grid calculus lives | **Decided 22 Oct 2026:** the diagnostic gradient kernel in geoops (`geoops/geom/_src/array.py`), wrapped by `geoops.geom.Gradient` and `xrops.Gradient` (today's `xrgrad`); pipekit-array keeps no domain kernels; model-grade calculus in finitevolX, wrapped by the GeoML or GeoModels package that uses it | kernel in pipekit-array (not taken) |
-| OP-O8 | Does an L3 algorithm call L3 algorithms inside a differentiated cost (the assimilator calling `simulate`)? | yes, while wrap and unwrap stay cheap under `grad`; measured in the spike | the cost calls the L1 loop directly, and only the outer call returns a `GeoMapSeries` |
+| OP-O8 | Does an L3 algorithm call L3 algorithms inside a differentiated cost (the assimilator calling `simulate`)? | **Decided 24 Oct 2026 (geostack #79):** yes; the spike measured one trace and a paired per-call ratio of 1.007 against the L1 loop (geotoolz #516) | the cost calls the L1 loop directly, and only the outer call returns a `GeoMapSeries` |

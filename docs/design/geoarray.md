@@ -1021,7 +1021,8 @@ Step 1  GeoTensor → GeoArray
           ▼
 P0      spike: stored dims, 3 kernels,
         shared functions on 3 backends
-        gates GA-G2, GA-G15 to GA-G22
+        gates GA-G2, GA-G15 to GA-G22: passed 24 Oct 2026
+        (geotoolz #516, amendments F1–F5)
           │
           ▼
 P1      geoarray 0.2.0: stored dims, coords, types,
@@ -1058,7 +1059,7 @@ The "Was" column gives the gate's ID on the two pages this one merges.
 | Gate | Was | Passes when |
 | --- | --- | --- |
 | GA-G1 Pytree round trip | GA1 | `unflatten(flatten(g))` is identical to g, and `jit(lambda g: g)(g)` returns equal data and transform bit for bit; if not: fix before anything else |
-| GA-G2 One trace, many scenes | GA2, G1 | one trace across 100 random transforms of the same shape, dims, CRS, fill and attrs; a new CRS or shape adds exactly one trace; if not: the transform is not a leaf; fix first |
+| GA-G2 One trace, many scenes | GA2, G1 | one trace across 100 random transforms of the same shape, dims, CRS, fill and attrs; a new CRS or shape adds exactly one trace; if not: the transform is not a leaf; fix first; **passed in the spike, 24 Oct 2026 (geotoolz #516)** |
 | GA-G3 Attrs are hashable | GA3 | equal attrs hash equal; lists become tuples; a dict value raises `TypeError` |
 | GA-G4 x64 guard | GA4 | `to_jax` raises with x64 off, and the transform is float64 with it on |
 | GA-G5 Slice parity | GB1 | for 1,000 random slices with steps 1 to 3, the transform equals `GeoTensor.isel`'s to 1e-9 in map units |
@@ -1071,13 +1072,13 @@ The "Was" column gives the gate's ID on the two pages this one merges.
 | GA-G12 Light base install | GC3 | `pip install geotoolz-array` into a fresh environment installs none of jax, rasterio, georeader, xarray; if not: move the import behind its extra |
 | GA-G13 One carrier | GD1 | the full suites of all five packages pass on `GeoArray` fixtures, and every geoops operator given a `GeoTensor` raises a `TypeError` naming `from_georeader` |
 | GA-G14 No georeader in base | GD2 | import-linter: no base module of the five packages imports georeader |
-| GA-G15 Patches | G2 | 64 patches with different transforms run in one trace via `map_over`, and the stitch matches today's within float tolerance; if not: keep patches as raw arrays inside the model, carriers outside |
-| GA-G16 DA gradient | G3 | `jax.grad(cost)` with respect to the state works with observations padded to a fixed N, and J and ∇ₓJ are unchanged by the pad length and finite with NaN-filled padding; if not: `sample` returns raw arrays; the carrier stops at the boundary |
-| GA-G17 No JAX on I/O | G4 | geocatalog, geocloud and geoproducts import and read with JAX not installed; if not: move the import behind `[jax]` |
-| GA-G18 Shared functions agree | G5 | each shared function gives identical results on NumPy, JAX and xarray (dask-backed included); if not: drop it from the shared set |
-| GA-G19 No silent alignment | G6 | `combine` and `stack` raise on a 10⁻⁷ m offset on every backend; if not: the xarray path is not shared |
-| GA-G20 Lossless round trip | G7 | `from_xarray(to_xarray(g))` returns the same transform, dims and coordinates for random windows and rotated grids; the geotoolz #463 and #464 regression cases pass; if not: conventions are fixed before release |
-| GA-G21 Patch overhead | G8 | 10k patches through a 5-op chain cost no more than today's carrier plus a budget you set; if not: profile and cut before release |
+| GA-G15 Patches | G2 | 64 patches with different transforms run in one trace via `map_over`, and the stitch matches today's within float tolerance; if not: keep patches as raw arrays inside the model, carriers outside; **passed in the spike, 24 Oct 2026 (geotoolz #516)** |
+| GA-G16 DA gradient | G3 | `jax.grad(cost)` with respect to the state works with observations padded to a fixed N, and J and ∇ₓJ are unchanged by the pad length and finite with NaN-filled padding; if not: `sample` returns raw arrays; the carrier stops at the boundary; **passed in the spike, 24 Oct 2026 (geotoolz #516)** |
+| GA-G17 No JAX on I/O | G4 | geocatalog, geocloud and geoproducts import and read with JAX not installed; if not: move the import behind `[jax]`; **passed in the spike, 24 Oct 2026 (geotoolz #516)** |
+| GA-G18 Shared functions agree | G5 | each shared function gives identical results on NumPy, JAX and xarray (dask-backed included); if not: drop it from the shared set; **passed in the spike for `combine`, `stack`, `isel`, `map_over`, `reduce` and `KernelOp`, 24 Oct 2026 (geotoolz #516)** |
+| GA-G19 No silent alignment | G6 | `combine` and `stack` raise on a 10⁻⁷ m offset on every backend; if not: the xarray path is not shared; **passed in the spike, 24 Oct 2026 (geotoolz #516); the check under `jit` is on 0.2.0 too since geotoolz #542** |
+| GA-G20 Lossless round trip | G7 | `from_xarray(to_xarray(g))` returns the same transform, dims and coordinates for random windows and rotated grids; the geotoolz #463 and #464 regression cases pass; if not: conventions are fixed before release; **passed in the spike, 24 Oct 2026 (geotoolz #516)** |
+| GA-G21 Patch overhead | G8 | 10k patches through a 5-op chain cost no more than today's carrier plus a budget you set; if not: profile and cut before release; **passed in the spike with a budget of today + 25 µs per op, 24 Oct 2026 (geotoolz #516)** |
 | GA-G22 Reproducible costs | G9 | a committed benchmark script times the normalized difference and the window on the carrier and on xarray at the three shapes above, writes its output to a tracked file, and those numbers replace the indicative table; if not: drop the per-op cost argument from this page |
 | GA-G23 Primitives stay pure | G10 | a test in geostack's dependency-graph suite finds no import of geoarray, xarray, pyproj, rasterio, geopandas or shapely in any `*/_src/array.py`; if not: move the offending code up into the operator |
 | GA-G24 Warp parity (geoops) | GE1 | JAX bilinear warp equals rasterio's bilinear reprojection to 1e-5 relative on interior pixels |

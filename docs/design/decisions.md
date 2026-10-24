@@ -46,7 +46,7 @@ These change a principle or block other work.
 | [CS-F1](./case_studies.md) | A readable type becomes a dim signature that any carrier can match | **decided 23 Oct 2026** (geostack #74): principle 5 changed; `GeoImageSeries` is `time band y x`, `GeoMapSeries` is `time y x` |
 | [CS-F2](./case_studies.md) | One L3 algorithm may take carriers from two families | changes vision principle 4 |
 | [CS-F11](./case_studies.md) | Packaged pipelines are versioned and record provenance | a new principle; most of the missing pipelines page |
-| [OP-O8](./operators.md) | May an L3 algorithm call another L3 algorithm inside a differentiated cost | decides how esmax and vardax compose |
+| [OP-O8](./operators.md) | May an L3 algorithm call another L3 algorithm inside a differentiated cost | **decided 24 Oct 2026** (geostack #79): yes; the `ForwardModel` contract stays L3 |
 | [GA-Q2](./geoarray.md) / [LL-F1](./labeled_lane.md) | The CRS encoding on the xarray side | **decided 23 Oct 2026** (geostack #77): a hand-written CF `spatial_ref` with `crs_wkt`, `CRS.to_cf()` attributes and `GeoTransform`; no rioxarray |
 | [GA-Q5](./geoarray.md) | Do geoops kernel operators accept a `DataArray` directly | **decided 23 Oct 2026** (geostack #78): yes, lazily through `apply_ufunc`; geometry operators raise and name `xrops.lift` |
 
@@ -148,7 +148,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | OP-O5 | Operators use `KernelOp` by composition, not subclassing | open |
 | OP-O6 | The `backends` vocabulary: `"numpy"`, `"jax"`, `"xarray"` | open |
 | OP-O7 | The diagnostic gradient kernel lives in geoops; model-grade calculus stays in finitevolX | decided 22 Oct 2026 |
-| OP-O8 | Whether an L3 algorithm calls another L3 algorithm inside a differentiated cost | open (decide first) |
+| OP-O8 | Whether an L3 algorithm calls another L3 algorithm inside a differentiated cost | decided 24 Oct 2026: yes, measured in the spike |
 
 ## Package layout (PL)
 
