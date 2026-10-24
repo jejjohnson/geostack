@@ -20,6 +20,19 @@ project:
             - file: docs/geomodels/radtrax/01_column_retrieval.md
             - file: docs/geomodels/radtrax/02_mbmp.md
             - file: docs/geomodels/radtrax/03_design.md
+        - title: esmax
+          children:
+            - title: ocean
+              children:
+                - file: docs/geomodels/esmax/ocean/00_esmax_ocean.md
+                - file: docs/geomodels/esmax/ocean/01_six_step_cycle.md
+                - file: docs/geomodels/esmax/ocean/02_ocean_state_estimation.md
+                - file: docs/geomodels/esmax/ocean/03_strong_4dvar.md
+                - file: docs/geomodels/esmax/ocean/04_weak_4dvar.md
+                - file: docs/geomodels/esmax/ocean/05_hybrid_model_taxonomy.md
+                - file: docs/geomodels/esmax/ocean/06_learned_data_assimilation.md
+                - file: docs/geomodels/esmax/ocean/07_advection_c_grid.md
+                - file: docs/geomodels/esmax/ocean/08_learned_weno.md
         - title: plumax
           children:
             - file: docs/geomodels/plumax/01_emission_rate.md
