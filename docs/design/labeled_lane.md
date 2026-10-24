@@ -124,7 +124,7 @@ Hand-offs:
 1. **xarray to a carrier at the `jit` boundary.**
    Select by value in xarray, then `GeoArray.from_xarray(cube.sel(time=…))`.
 2. **A per-item geometry operator over a stack** runs through `xrops.lift(op, dim="time")`: each slice becomes a carrier, the operator runs, and the result is restacked.
-3. **Observations meet states** in data assimilation as `GeoPoints` against a carrier slice of the model state; `geoarray.sample` is the bridge for H(x).
+3. **Observations meet states** in data assimilation as `GeoPoints` against a carrier slice of the model state; `geoarray.interp_at` is the bridge for H(x).
 
 Recommended: this three-way split, with a thin carrier that stores dims but never selects by value, so it does not grow into a second xarray.
 Alternative: xarray as the only NumPy-side container, with geometry checks rebuilt in an accessor.

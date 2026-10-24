@@ -75,7 +75,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | CS-F7 | xrops wraps the native xarray operations pipelines need (`Climatology`, `Anomaly`, `Resample`) | open |
 | CS-F8 | Operators declare `backends`; eager-only ones are listed | open (see OP-O6) |
 | CS-F9 | A pipeline slot says whether it expects a fitted operator; `replace` checks | open |
-| CS-F10 | `geoarray.sample` held equal to `xr.interp`; `GeoPoints` to and from data frames | open |
+| CS-F10 | `geoarray.interp_at` held equal to `xr.interp`; `GeoPoints` to and from data frames | open |
 | CS-F11 | Packaged pipelines are versioned, record provenance and re-run idempotently | open (decide first) |
 | CS-F12 | Carrier-free geometry helpers, and one documented path L1 → `KernelOp` → pipeline | open |
 | CS-F13 | Runners own splits and hold back truth | open; for the pipelines page |
@@ -94,7 +94,10 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | GA-A4 | No fill value by default | open |
 | GA-B1 | `map` and `combine` instead of arithmetic dunders | open |
 | GA-B2 | Per-band attrs follow a band selection | superseded 21 Oct 2026 by coordinates |
-| GA-C1 | Eager `np.asarray` copies to host and raises under transforms; mixed NumPy and JAX inputs refuse | decided 17 Oct 2026, partly superseded 21 Oct 2026 |
+| GA-B3 | geoarray reads only the georeference (re-index, join, re-describe, read at); everything that computes is geoops; H(x) is `interp_at` | decided 24 Oct 2026 |
+| GA-B4 | The positional band guard stays until geoops takes `dim=` (geotoolz #531); removed in geotoolz-array 0.4 | decided 24 Oct 2026 |
+| GA-B5 | `geoarray.stack` is a 0.3 deprecation shim; `pipekit_array.stack` from 0.4 | decided 24 Oct 2026 |
+| GA-C1 | Eager `np.asarray` copies to host and raises under transforms; mixed NumPy and JAX inputs refuse (0.3 warns, 0.4 raises) | decided 17 Oct 2026, partly superseded 21 Oct 2026; migration decided 24 Oct 2026 |
 | GA-D1 | One coordinated breaking release from `GeoTensor` to `GeoArray` | decided 17 Oct 2026 |
 | GA-E1 | JAX kernels in `geoops.functional` | superseded 22 Oct 2026 by the kernel model on [operators](./operators.md) |
 | GA-T1 | `GeoImageSeries` and `GeoTimeSeries` as the series names | decided 21 Oct 2026 |
