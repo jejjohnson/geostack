@@ -22,7 +22,7 @@ keywords:
 
 +++
 
-{button}`Open the full page <./pages/variational-da-programs.html>`
+{button}`Open the full page <./pages/variational-programs.html>`
 
 **Where it sits.** A companion to pages 3 and 4: the same estimators as probabilistic programs, with structured covariances and their Laplace spread. The full page is a self-contained document with operator boxes (inputs, outputs, shapes and units), figures and code sketches; it opens on its own and links back here.
 
