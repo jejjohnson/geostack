@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="3D-Var, strong-constraint 4D-Var and weak-constraint 4D-Var, each in a full and a reduced form, are one idea at six sizes, and incremental 4D-Var solves the strong-constraint pair a second way: a Gaussian prior on whatever is uncertain, a model that maps it to observations, and the most probable value given the data. This page writes each as a numpyro model whose covariances are gaussx operators (circulant, Kronecker, low-rank) built from kernellib kernels, with reduced bases from kernellib feature maps and geonnax eigenfunctions. The cost function is then derived, not hand-written; the analysis is the model&#x27;s MAP; the Laplace approximation is its uncertainty.">
+<title>Variational DA as Programs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none' },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one reading column; a vertical six-box chart up top whose boxes link down to the derivation. Hydrographic palette: sea ink on cool chart paper, amber marks the oracle. */
+:root {
+  --paper: #F1F5F6;
+  --panel: #E4ECEF;
+  --ink: #0E1E28;
+  --muted: #4E616C;
+  --rule: #C6D3D9;
+  --sea: #0A6B68;
+  --sea-soft: #D3E7E5;
+  --oracle: #985710;
+  --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; display: grid; gap: 0; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible, .box:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+
+/* six-box chart */
+.chart { margin-top: 2rem; display: grid; gap: 0; }
+.box {
+  display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.9rem; text-decoration: none; color: inherit;
+  border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem;
+}
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--sea); line-height: 1; padding-top: 0.15rem; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .ocean { color: var(--muted); font-size: 0.95rem; }
+.box .eq { grid-column: 2; min-width: 0; overflow-x: auto; font-size: 0.95rem; }
+.box.oracle { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.oracle .num { color: var(--oracle); }
+.link { display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; letter-spacing: 0.02em; }
+.loop { margin-top: 0.9rem; font-size: 0.92rem; color: var(--muted); }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note p:last-child { margin-bottom: 0; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def p:last-child { margin-bottom: 0; }
+
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+.stepsec { scroll-margin-top: 1rem; }
+.stephead { display: flex; align-items: baseline; gap: 0.7rem; margin-top: 3.2rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.stephead h2 { margin: 0; }
+.stephead .pill { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.stephead .pill.or { background: var(--oracle-soft); color: var(--oracle); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 0; }
+footer { margin-top: 2.5rem; font-size: 0.88rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+
+/* operator signatures */
+.tldr { margin-top: 2rem; border-top: 2px solid var(--ink); padding-top: 1rem; }
+.tldr h2 { margin-top: 0; }
+.tldr ul { margin: 0 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+svg.g { width: 1.45rem; height: 1.45rem; color: var(--sea); flex: none; }
+.box .sig { grid-column: 2; display: grid; gap: 0.2rem; margin-top: 0.45rem; font-size: 0.85rem; min-width: 0; }
+.box .sig div { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); width: 2.1rem; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); }
+.box .sig svg.g { width: 1.1rem; height: 1.1rem; }
+.sigfam { display: inline-block; font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); margin-left: 0.4rem; vertical-align: 0.1em; }
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op + .op { margin-top: -0.6rem; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) auto; gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io code { white-space: nowrap; font-size: 0.8rem; padding-top: 0.15rem; font-variant-numeric: tabular-nums; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+
+/* v4: aligned signature rows and legend */
+.box { grid-template-columns: 2.4rem minmax(0, 1fr); }
+.link { grid-template-columns: 2.4rem 1fr; }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { width: auto; }
+.box .sig .gap { margin-top: 0.35rem; }
+.box .sig .d.gap + svg, .box .sig .d.gap + svg + .n, .box .sig .d.gap + svg + .n + code { margin-top: 0.35rem; }
+.box .sig .n { white-space: nowrap; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.box .sig svg.g { width: 1.15rem; height: 1.15rem; }
+.io { grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); }
+.io code { white-space: normal; text-align: right; }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io code { grid-column: 2; text-align: left; padding-top: 0; color: var(--muted); }
+}
+
+/* legend as a table */
+.legend-wrap { overflow-x: auto; margin: 1rem 0 0.6rem; }
+table.legend { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.legend th, table.legend td { border-bottom: 1px solid var(--rule); padding: 0.45rem 0.8rem 0.45rem 0; vertical-align: middle; text-align: left; }
+table.legend td.gl { width: 1.6rem; padding-right: 0.5rem; }
+table.legend td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+table.legend td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+table.legend td code { font-size: 0.8rem; white-space: nowrap; }
+table.legend td.ex { color: var(--muted); }
+@media (max-width: 560px) { table.legend td.ex, table.legend th.ex { display: none; } }
+</style>
+
+
+
+<style>
+/* taxonomy page additions */
+.stack { display: grid; gap: 0; margin: 1.6rem 0 0.6rem; }
+.layer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.3rem 1rem; align-items: start; border: 1px solid var(--rule); border-radius: 6px; padding: 0.7rem 0.9rem; background: var(--paper); }
+.layer .ln { font-family: var(--display); font-weight: 600; }
+.layer .lo { font-size: 0.92rem; color: var(--muted); min-width: 0; overflow-x: auto; }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: flex-end; }
+.layer.io { background: var(--panel); border-style: dashed; }
+.stack .link { grid-template-columns: 2rem 1fr; }
+.tchip { font-family: var(--display); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); text-decoration: none; white-space: nowrap; }
+.tchip:hover { outline: 1px solid var(--sea); }
+.tchip.cor { background: var(--oracle-soft); color: var(--oracle); }
+@media (max-width: 560px) { .layer { grid-template-columns: 1fr; } .layer .chips { justify-content: flex-start; } }
+
+.tcard { border: 1px solid var(--rule); border-radius: 6px; margin: 1.2rem 0 1.8rem; scroll-margin-top: 1rem; overflow: hidden; }
+.tcard > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.7rem; padding: 0.75rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.tcard > header .tn { font-family: var(--display); font-weight: 700; font-size: 1.35rem; color: var(--sea); line-height: 1; }
+.tcard > header h3 { margin: 0; font-size: 1.08rem; }
+.tcard > header .where { font-size: 0.86rem; color: var(--muted); }
+.tbody { padding: 0.4rem 1rem 0.9rem; }
+.tbody p { margin: 0.6rem 0; }
+.tsig { display: grid; grid-template-columns: 3.2rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.25rem; align-items: center; font-size: 0.88rem; padding: 0.6rem 0; border-block: 1px dashed var(--rule); margin: 0.6rem 0; }
+.tsig .d { font-family: var(--display); font-weight: 600; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tsig .d.learn { color: var(--oracle); }
+.tsig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; min-width: 0; }
+.tsig svg.g { width: 1.15rem; height: 1.15rem; }
+.tsig .n { white-space: nowrap; }
+@media (max-width: 560px) { .tsig { grid-template-columns: 3.4rem 1.15rem minmax(0, 1fr); } .tsig code { grid-column: 3; margin-top: -0.15rem; margin-bottom: 0.15rem; } }
+.attrs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.3rem 1rem; margin: 0.7rem 0 0.4rem; font-size: 0.92rem; }
+.attrs dt { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding-top: 0.2rem; }
+.attrs dd { margin: 0; min-width: 0; }
+.tgt { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.08rem 0.45rem; border-radius: 4px; margin-right: 0.3rem; }
+.tgt.em { background: var(--sea-soft); color: var(--sea); }
+.tgt.co { background: var(--oracle-soft); color: var(--oracle); }
+.crit { font-size: 0.93rem; color: var(--muted); border-left: 2px solid var(--rule); padding-left: 0.8rem; margin-top: 0.7rem; }
+
+table.matrix td, table.matrix th { text-align: center; padding-right: 0.5rem; }
+table.matrix td:first-child, table.matrix th:first-child { text-align: left; white-space: nowrap; }
+.mk { font-family: var(--display); font-weight: 700; }
+.mk.y { color: var(--sea); }
+.mk.p { color: var(--oracle); }
+.mk.n { color: var(--muted); font-weight: 500; }
+table.two td, table.two th { vertical-align: top; }
+table.two td.h { font-family: var(--display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.cell { display: grid; gap: 0.15rem; }
+.cell small { color: var(--muted); }
+
+:root { --cand1: #5B4FA0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --cand1: #A99BE6; } }
+:root[data-theme="dark"] { --cand1: #A99BE6; }
+main > section, main > * { min-width: 0; }
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 1rem 0 1.4rem; overflow: hidden; }
+.op + .op { margin-top: -0.4rem; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.phase { font-family: var(--display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.1rem 0.5rem; border-radius: 999px; }
+.phase.train { background: var(--oracle-soft); color: var(--oracle); }
+.phase.use { background: var(--sea-soft); color: var(--sea); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.op .io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.op .io .nm { min-width: 0; }
+.op .io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.op .io code { font-size: 0.78rem; padding-top: 0.15rem; text-align: right; overflow-wrap: anywhere; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op.train .op-arrow { background: var(--oracle-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+svg.g { width: 1.35rem; height: 1.35rem; color: var(--sea); }
+@media (max-width: 560px) { .op .io { grid-template-columns: 1.6rem minmax(0, 1fr); } .op .io code { grid-column: 2; text-align: left; padding-top: 0; color: var(--muted); } }
+pre.diagram { line-height: 1.3; }
+.flow { display: grid; gap: 0.5rem; margin: 1.2rem 0 1.4rem; }
+.band { font-family: var(--display); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 0.25rem; margin-top: 0.6rem; }
+.frow { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0.5rem; }
+.fbox { border: 1px solid var(--rule); border-radius: 6px; padding: 0.6rem 0.8rem; background: var(--paper); min-width: 0; display: grid; gap: 0.3rem; }
+.fbox.train { border-color: var(--oracle); background: var(--oracle-soft); }
+.fbox.oracle { border-color: var(--oracle); }
+.fbox.use { border-color: var(--sea); background: var(--sea-soft); }
+.fh { font-family: var(--display); font-weight: 600; display: flex; gap: 0.5rem; align-items: baseline; }
+.fn { font-family: var(--display); font-weight: 700; color: var(--sea); min-width: 1.4rem; }
+.fbox.train .fn { color: var(--oracle); }
+.fm { font-size: 0.9rem; min-width: 0; overflow-x: auto; }
+.fio { font-size: 0.85rem; color: var(--muted); display: flex; gap: 0.4rem; align-items: center; }
+.fio svg.g { width: 1.1rem; height: 1.1rem; flex: none; }
+.farrow { font-family: var(--display); font-size: 0.85rem; color: var(--muted); padding-left: 0.9rem; }
+
+.figrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1rem; margin: 1rem 0; }
+.figbox { margin: 1rem 0; min-width: 0; }
+.figrow .figbox { margin: 0; }
+.figbox figcaption { font-size: 0.88rem; color: var(--muted); margin-top: 0.4rem; }
+svg.fig { width: 100%; max-width: 460px; height: auto; display: block; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; }
+.fg-t { fill: var(--ink); font-family: var(--display); font-size: 10.5px; font-weight: 600; }
+.fg-l { fill: var(--muted); font-family: var(--mono); font-size: 9.5px; }
+.fg-ax { stroke: var(--muted); stroke-width: 1; }
+.fg-grid { stroke: var(--rule); stroke-width: 0.8; stroke-dasharray: 2 3; }
+.fg-line { fill: none; stroke-width: 1.8; }
+.fg-line.dash { stroke-dasharray: 4 3; }
+.fg-line.c1 { stroke: var(--cand1); } .fg-line.c2 { stroke: var(--sea); stroke-width: 2.4; }
+.fg-line.c3 { stroke: var(--oracle); } .fg-line.c4 { stroke: var(--ink); stroke-dasharray: 1 2.5; stroke-width: 2.2; stroke-linecap: round; }
+text.c1 { fill: var(--cand1); } text.c2 { fill: var(--sea); } text.c3 { fill: var(--oracle); } text.c4 { fill: var(--ink); }
+.case { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 0.8rem; margin: 1rem 0 1.4rem; }
+.case > div { border: 1px solid var(--rule); border-radius: 6px; padding: 0.7rem 0.9rem; min-width: 0; font-size: 0.95rem; }
+.case > div > .tag { display: block; margin-bottom: 0.3rem; }
+.case .lin .tag { color: var(--sea); } .case .non .tag { color: var(--oracle); }
+.case mjx-container[display="true"] { font-size: 0.92em; }
+
+.fg-win { fill: var(--sea-soft); stroke: none; }
+.fg-obs { fill: var(--oracle); stroke: var(--paper); stroke-width: 1; }
+.variant { border-left: 3px solid var(--sea); padding-left: 0.9rem; margin: 2.2rem 0 0; }
+.variant h2 { margin-top: 0; }
+.cost-pill { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.08rem 0.45rem; border-radius: 4px; background: var(--panel); color: var(--muted); margin-right: 0.3rem; }
+
+.ladder { display: grid; gap: 0.5rem; margin: 1.2rem 0 1.4rem; }
+.rung { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 0 0.8rem; border: 1px solid var(--rule); border-radius: 6px; padding: 0.65rem 0.9rem; }
+.rung .rn { font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: var(--sea); line-height: 1.1; }
+.rung .rt { font-family: var(--display); font-weight: 600; }
+.rung .rd { font-size: 0.93rem; color: var(--muted); }
+.rung .rm { grid-column: 2; font-size: 0.9rem; min-width: 0; overflow-x: auto; }
+.bar-l { fill: var(--ink); font-family: var(--display); font-size: 10.5px; }
+.bar-v { fill: var(--muted); font-family: var(--mono); font-size: 9.5px; }
+.bar { fill: var(--sea); }
+.bar.bg { fill: var(--rule); }
+.bar.or { fill: var(--oracle); }
+.op-arrow .where { margin-top: 0.55rem; padding-top: 0.45rem; border-top: 1px dashed var(--rule); font-size: 0.84rem; color: var(--muted); display: grid; gap: 0.2rem; }
+.op-arrow .where .wl { font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.op-arrow .where .ws { color: var(--ink); }
+</style>
+
+
+<style>
+.series-nav { max-width: 46rem; margin: 0 auto; padding: 0.9rem 0 0;
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline;
+  justify-content: space-between; font: 500 0.82rem/1.4 var(--display, system-ui, sans-serif);
+  color: var(--muted, #666); }
+.series-nav.bottom { padding: 1.2rem 0 2.5rem; border-top: 1px solid var(--rule, #ddd); }
+.series-nav a { color: var(--sea, #0b6e6e); text-decoration: none; }
+.series-nav a:hover { text-decoration: underline; }
+.series-nav .crumbs { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.series-nav .pn { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+main > * { min-width: 0; }
+mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+<body>
+<nav class="series-nav top" aria-label="Series navigation"><span class="crumbs"><a href="../">GeoStack</a><span>›</span><a href="../esmax-ocean">esmax · ocean</a><span>›</span><span>9 of 9</span></span><span class="pn"><a href="../learned-weno">← Learned WENO</a></span></nav>
+<main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-scalar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+    <symbol id="g-vector" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="15" y="9" width="6" height="6"/></g></symbol>
+    <symbol id="g-field" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16"/><path d="M4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16" stroke-width="0.8"/></g></symbol>
+    <symbol id="g-mask" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 4h8v8H4zM12 12h8v8h-8z" fill="currentColor" opacity="0.55"/></symbol>
+    <symbol id="g-cube" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="2" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" fill="var(--paper)"/><rect x="3" y="9" width="13" height="13" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-ensemble" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.3"><rect x="5" y="2" width="8" height="8"/><rect x="3" y="4" width="8" height="8" fill="var(--paper)"/><rect x="14" y="2" width="8" height="8"/><rect x="12" y="4" width="8" height="8" fill="var(--paper)"/><rect x="5" y="13" width="8" height="8"/><rect x="3" y="15" width="8" height="8" fill="var(--paper)"/><rect x="14" y="13" width="8" height="8"/><rect x="12" y="15" width="8" height="8" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-dataset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" stroke-width="1"/></g></symbol>
+    <symbol id="g-weights" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1"><path d="M5 6l7 6M5 18l7-6M5 6l7-1M5 18l7 1M12 5l7 7M12 12l7 0M12 19l7-7M5 6l7 13M5 18l7-13" fill="none"/></g><g fill="currentColor"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="12" r="2"/></g></symbol>
+    <symbol id="g-op" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M13 9l3 3-3 3"/></g></symbol>
+    <symbol id="g-decision" viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  </defs>
+</svg>
+  <div class="eyebrow">GeoStack · gaussx · kernellib · geonnax · numpyro</div>
+  <h1>Variational data assimilation, written as probabilistic programs</h1>
+  <p class="lede">3D-Var, strong-constraint 4D-Var and weak-constraint 4D-Var, each in a full and a reduced form, are one idea at six sizes, and incremental 4D-Var solves the strong-constraint pair a second way: a Gaussian prior on whatever is uncertain, a model that maps it to observations, and the most probable value given the data. This page writes each as a numpyro model whose covariances are gaussx operators (circulant, Kronecker, low-rank) built from kernellib kernels, with reduced bases from kernellib feature maps and geonnax eigenfunctions. The cost function is then derived, not hand-written; the analysis is the model's MAP; the Laplace approximation is its uncertainty.</p>
+
+  <section class="tldr" id="tldr">
+    <div class="eyebrow">TL;DR</div>
+    <h2>Six priors, one likelihood, two ways to solve</h2>
+    <ul>
+      <li><strong>A variational method is a choice of control and prior.</strong> 3D-Var: one state. Strong 4D-Var: the initial state. Weak: the initial state and every model error. Each has a reduced form that keeps only a few coefficients of the correction (of the state, of the initial state, or of the model error).</li>
+      <li><strong>Each is a short numpyro model.</strong> Latent sites are the controls; the rollout is a deterministic site; the observations are one masked Gaussian site. numpyro's potential energy is the 4D-Var cost plus a constant.</li>
+      <li><strong>The covariances are structured gaussx operators</strong>, and their square roots keep the structure: <code>gx.circulant</code> for a stationary \(\mathbf B\) (FFT), <code>gx.Kronecker</code> for a space–time \(\mathbf Q\), <code>gx.low_rank_plus_diag</code> for a reduced \(\mathbf B\) (Woodbury).</li>
+      <li><strong>Sample whitened, not in physical units.</strong> The control-variable transform is a reparameterisation: on 3D-Var it cuts the optimiser from 1,952 to 27 iterations per analysis, for the same analysis (they differ by at most 0.0014).</li>
+      <li><strong>On Lorenz-96 with a biased model</strong> the window error goes from 0.64 (strong) to 0.27 (weak) to 0.12 (one bias coefficient, recovered as 1.00 ± 0.04; truth 1.0). Long windows have many minima: solve them quasi-statically.</li>
+    </ul>
+    <nav class="stack" aria-label="The pieces">
+      <div class="layer io"><div><div class="ln">Priors</div><div class="lo">\(\mathbf B\), \(\mathbf Q\), features and bases as kernellib, gaussx and geonnax objects</div></div><div class="chips"><a class="tchip" href="#machinery">§ machinery</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">Model</div><div class="lo">one numpyro program per method</div></div><div class="chips"><a class="tchip" href="#m1">3D</a><a class="tchip" href="#m2">r3D</a><a class="tchip" href="#m3">SC</a><a class="tchip" href="#m4">rSC</a><a class="tchip" href="#m5">inc</a><a class="tchip" href="#m6">r-inc</a><a class="tchip" href="#m7">WC</a><a class="tchip" href="#m8">rWC</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer"><div><div class="ln">MAP</div><div class="lo">minimise numpyro's potential with L-BFGS; quasi-static for long windows</div></div><div class="chips"><a class="tchip" href="#inference">§ inference</a></div></div>
+      <div class="link"><span></span><span></span></div>
+      <div class="layer io"><div><div class="ln">Laplace</div><div class="lo">\(\mathcal N(v^\star, \mathbf A^{-1})\) as a gaussx <code>MultivariateNormalPrecision</code></div></div><div class="chips"><a class="tchip" href="#compare">§ results</a></div></div>
+    </nav>
+  </section>
+
+  <h2 id="intuition">Intuition: one ladder</h2>
+  <p>The six priors come in three pairs, each a full and a reduced version: 3D-Var, strong-constraint 4D-Var and weak-constraint 4D-Var. Incremental 4D-Var (rungs 5 and 6) adds no new prior: it solves the strong-constraint pair by Gauss–Newton. Every one answers the same question: <em>which unknowns, a priori how large, best explain the observations?</em> They differ only in what is unknown. Going down the ladder, the model is trusted less and the data are asked to explain more.</p>
+  <div class="ladder">
+    <div class="rung"><div class="rn">1</div><div><div class="rt">3D-Var</div><div class="rd">One state at one time. The model only carries the analysis to the next time.</div></div><div class="rm">\(\xi\), \(N\) values</div></div>
+    <div class="rung"><div class="rn">2</div><div><div class="rt">Reduced 3D-Var</div><div class="rd">A few coefficients of that state's increment, in smooth patterns.</div></div><div class="rm">\(u\), \(R \ll N\) values</div></div>
+    <div class="rung"><div class="rn">3</div><div><div class="rt">Strong-constraint 4D-Var</div><div class="rd">The initial state; the model is exact, so it fixes the whole trajectory.</div></div><div class="rm">\(\xi\), \(N\) values</div></div>
+    <div class="rung"><div class="rn">4</div><div><div class="rt">Reduced strong-constraint 4D-Var</div><div class="rd">A few coefficients of the initial increment, in smooth patterns.</div></div><div class="rm">\(u\), \(R \ll N\) values</div></div>
+    <div class="rung"><div class="rn">5</div><div><div class="rt">Incremental 4D-Var</div><div class="rd">Same control and MAP as 3, solved by Gauss–Newton: linearise, solve a linear-Gaussian program, repeat.</div></div><div class="rm">\(\xi\), \(N\) values</div></div>
+    <div class="rung"><div class="rn">6</div><div><div class="rt">Reduced incremental 4D-Var</div><div class="rd">Same control and MAP as 4, solved the same way.</div></div><div class="rm">\(u\), \(R \ll N\) values</div></div>
+    <div class="rung"><div class="rn">7</div><div><div class="rt">Weak-constraint 4D-Var</div><div class="rd">The initial state and a model error after every interval.</div></div><div class="rm">\((\xi, w)\), \(N(T+1)\) values</div></div>
+    <div class="rung"><div class="rn">8</div><div><div class="rt">Reduced weak-constraint 4D-Var</div><div class="rd">The initial state and a few coefficients of a model-error pattern.</div></div><div class="rm">\((\xi, \omega)\), \(N + CP\) values</div></div>
+  </div>
+  <p>Written as a probabilistic program, the change from one rung to the next is a change of a few lines: which variables are <code>numpyro.sample</code> sites, and which covariance object their prior uses. Everything downstream (the cost, its gradient, the minimiser, the uncertainty) is shared.</p>
+  <p>The running example is the weak-constraint page's: Lorenz-96 with \(N = 40\) sites, truth forcing \(F = 8\), model forcing \(F = 7\) (a biased model), \(T = 20\) observation times of 10 RK4 steps, every second site observed with \(\sigma_o = 0.5\), and a Gaussian-correlated background error (\(\sigma_b = 1\), length 2 sites).</p>
+
+  <h2 id="probability">The program behind every method</h2>
+  <p>Collect a method's controls, whitened, in \(v\). Each method is a joint density</p>
+  \[ p(v, y) = \underbrace{p(v)}_{\text{prior: }\mathbf B,\ \mathbf Q,\ \text{bases}}\ \prod_{k=1}^{T}\prod_{i=1}^{M}\ \underbrace{\mathcal N\big(y_{ki};\ (\mathbf H z_k(v))_i,\ \sigma_o^2\big)^{m_{ki}}}_{\text{likelihood, masked}}, \]
+  <p>where \(m_{ki}\in\{0, 1\}\) switches observation \(i\) at time \(k\) on or off, and \(z_k(v)\) is whatever the method's dynamics make of the controls: the model run from \(z_0\), with or without kicks \(\eta_k\). numpyro evaluates \(U(v) = -\log p(v, y)\), its <em>potential energy</em>. For Gaussian priors and likelihoods, \(U = \mathcal J + \text{const}\): the variational cost appears without being written. The analysis is the MAP, \(v^\star = \arg\min U\). The Laplace approximation \(\mathcal N(v^\star, \mathbf A^{-1})\), with \(\mathbf A\) the Hessian of \(U\) at \(v^\star\) (or its Gauss–Newton part), is the posterior spread.</p>
+  <p>Every prior here is Gaussian, and in the main models every one is sampled <strong>whitened</strong> (the readable 3D-Var, the low-rank model and the state formulation are kept in physical units for comparison): a standard-normal site \(\xi\) mapped through a square root, \(z_0 = z_b + \mathbf B^{1/2}\xi\). This is the control-variable transform of operational 4D-Var, written as a numpyro reparameterisation. The posterior is unchanged; the optimiser sees an identity-conditioned prior instead of \(\mathbf B^{-1}\), whose condition number here is about \(10^{7}\).</p>
+  <h3>Notation</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Symbol</th><th>Meaning</th><th>Shape</th><th>Units (ocean)</th></tr></thead>
+    <tbody>
+      <tr><td>\(z_k\)</td><td>state at observation time \(k\)</td><td>(state,)</td><td>m (SSH) or s⁻¹ (PV)</td></tr>
+      <tr><td>\(y_k\), \(m_k\)</td><td>observations and their mask</td><td>(obs,)</td><td>m; —</td></tr>
+      <tr><td>\(\mathbf H\), \(\sigma_o\)</td><td>observation operator (here: pick every second site), observation error</td><td>(state,) → (obs,); ()</td><td>—; m</td></tr>
+      <tr><td>\(z_b\), \(\mathbf B\)</td><td>background and its covariance</td><td>(state,), (state, state)</td><td>m, m²</td></tr>
+      <tr><td>\(v\)</td><td>all of a method's controls, whitened and flattened</td><td>(latent,)</td><td>dimensionless</td></tr>
+      <tr><td>\(\xi\), \(u\), \(w\), \(\omega\)</td><td>its parts: initial state, reduced coefficients, model errors, model-error coefficients; each standard normal</td><td>(state,), (basis,), (time·state,), (temporal·basis,)</td><td>dimensionless</td></tr>
+      <tr><td>\(\eta_k\), \(\mathbf Q = \mathbf Q_t\otimes\mathbf Q_s\)</td><td>model error over interval \(k\); covariance of \(\operatorname{vec}_r\eta_{1:T}\), the errors stacked time-major</td><td>(state,), (time·state, time·state)</td><td>m per interval, (m per interval)²</td></tr>
+      <tr><td>\(G\), \(K\), \(R\)</td><td>features of \(\mathbf B\) (\(\mathbf B\approx GG^\top\)), harmonics, \(R = 2K + 1\) features</td><td>(state, basis), (), ()</td><td>m, —, —</td></tr>
+      <tr><td>\(\ell_p\)</td><td>periodic-kernel lengthscale, \(2\pi\ell/N\) for a correlation length \(\ell\) in sites</td><td>()</td><td>radians</td></tr>
+      <tr><td>\(\chi\), \(\Phi\), \(W\), \(\Lambda_t\otimes\Lambda_s\)</td><td>temporal and spatial basis matrices (columns \(\chi_c\), \(\varphi_j\)), model-error coefficients, prior covariance of \(\operatorname{vec}_r W\)</td><td>(time, temporal), (state, basis), (temporal, basis), —</td><td>—, m per interval, —</td></tr>
+      <tr><td>\(\mathcal M_k\), \(\mathcal M_{k\leftarrow0}\)</td><td>model over one interval; over the first \(k\) intervals</td><td>(state,) → (state,)</td><td>—</td></tr>
+      <tr><td>\(\mathbf A\), \(\mathbf J_r\)</td><td>posterior precision (Hessian of \(U\) at the analysis); Jacobian of the whitened residuals</td><td>(latent, latent); (time·obs, latent)</td><td>dimensionless</td></tr>
+      <tr><td>\(U\), \(\mathcal J\)</td><td>potential energy \(-\log p(v, y)\); the variational cost</td><td>()</td><td>dimensionless</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="machinery">The machinery: priors as structured objects</h2>
+  <p>Three structures cover all eight methods. A <strong>stationary covariance on a periodic grid is circulant</strong>: the FFT diagonalises it, so its solve, log-determinant and square root are elementwise in Fourier space. A <strong>space–time covariance that separates is a Kronecker product</strong>: its square root is the Kronecker product of the factors' square roots, never a \(TN\times TN\) matrix. And a <strong>stationary covariance has a Mercer expansion</strong>: a few weighted Fourier modes reproduce most of it, which gives a reduced control and its prior in one step.</p>
+  <p>kernellib supplies the kernels. \(\mathbf B\) uses its periodic kernel with \(\ell_p = 2\pi\ell/N\), the ring version of a Gaussian correlation of \(\ell = 2\) sites; its first column, put into <code>gx.circulant</code>, is the whole operator. The reduced methods use <code>kl.PeriodicFeatures</code>, the exact truncated Fourier series of that kernel: \(K\) harmonics give \(R = 2K + 1\) features \(G\), already weighted so that \(\mathbf B\approx GG^\top\).</p>
+  <pre>from collections.abc import Callable
+
+import einx
+import gaussx as gx
+import jax
+import jax.numpy as jnp
+import kernellib as kl
+import lineax as lx
+import numpyro
+import numpyro.distributions as dist
+from geonnax.basis import (
+    fourier_basis_1d,
+    fourier_eigenvalues_1d,
+    legendre_polynomials,
+)
+from jaxtyping import Array, Bool, Float, Int
+from numpyro.contrib.control_flow import scan
+
+<span class="c"># Shapes: N = 40 sites (state); T = 20 observation times (time);</span>
+<span class="c">#         K harmonics, R = 2K + 1 features (basis)</span>
+
+<span class="c"># --- B: a stationary covariance on the ring is circulant</span>
+<span class="c"># x_n = n, the site positions as kernel inputs</span>
+site_inputs = einx.id("n -&gt; n 1", sites)<span class="c">                    # (N,) → (N, 1)</span>
+<span class="c"># today (kernellib)</span>
+<span class="c"># k(x, x′) = σ_b² exp(−2 sin²(π(x − x′)/N) / ℓ_p²), periodic with period N</span>
+prior_kernel = kl.Periodic(
+    variance=prior_var, lengthscale=prior_length, period=num_sites
+)
+<span class="c"># c_n = k(x_n, x_0) (+ ε at n = 0), the first column of B</span>
+first_column = prior_kernel(site_inputs, site_inputs[:1])[:, 0]<span class="c">  # (N, 1) → (N,)</span>
+first_column = first_column.at[0].add(jitter)<span class="c">               # (N,)</span>
+<span class="c"># today (gaussx)</span>
+<span class="c"># B = F⁻¹ diag(F c) F, diagonalised by the FFT</span>
+prior_cov = gx.circulant(<span class="c">                                   # (N, N) PSD op</span>
+    first_column, symmetric=True, tags=lx.positive_semidefinite_tag
+)
+<span class="c"># today (gaussx)</span>
+<span class="c"># B^{1/2} = F⁻¹ diag((F c)^{1/2}) F, still an FFT</span>
+prior_sqrt = gx.sqrt(prior_cov)<span class="c">                             # (N, N) op</span>
+
+<span class="c"># --- the same B in R features: exact truncated Fourier series of k</span>
+<span class="c"># today (kernellib)</span>
+<span class="c"># G = [√a₀, √a_j cos(2πjx/N), √a_j sin(2πjx/N)]_{j ≤ K}, so B ≈ G Gᵀ</span>
+feature_map = kl.PeriodicFeatures(num_harmonics).fit(prior_kernel, site_inputs)
+prior_features = feature_map(site_inputs)<span class="c">                   # (N, 1) → (N, R)</span>
+
+<span class="c"># --- Q: model error correlated in time and in space</span>
+<span class="c"># |t − t′|</span>
+time_lag = jnp.abs(einx.subtract("s, t -&gt; s t", times, times))<span class="c">  # (T, T)</span>
+<span class="c"># today (lineax)</span>
+<span class="c"># Q_t[s, t] = exp(−|t − s| / τ)</span>
+time_cov = lx.MatrixLinearOperator(<span class="c">                         # (T, T) PSD op</span>
+    jnp.exp(-time_lag / error_time_scale), lx.positive_semidefinite_tag
+)
+<span class="c"># today (kernellib)</span>
+<span class="c"># Q_s: q² × a periodic kernel of length ℓ_q</span>
+error_kernel = kl.Periodic(
+    variance=error_std**2, lengthscale=error_length, period=num_sites
+)
+error_column = error_kernel(site_inputs, site_inputs[:1])[:, 0]<span class="c">  # (N,)</span>
+<span class="c"># today (gaussx)</span>
+space_cov = gx.circulant(<span class="c">                                   # (N, N) PSD op</span>
+    error_column, symmetric=True, tags=lx.positive_semidefinite_tag
+)
+<span class="c"># today (gaussx)</span>
+<span class="c"># Q = Q_t ⊗ Q_s over the stacked errors (η₁, …, η_T)</span>
+error_cov = gx.Kronecker(time_cov, space_cov)<span class="c">               # (T·N, T·N) PSD op</span>
+<span class="c"># today (gaussx)</span>
+<span class="c"># Q^{1/2} = Q_t^{1/2} ⊗ Q_s^{1/2}: never formed as a T·N square matrix</span>
+error_sqrt = gx.sqrt(error_cov)<span class="c">                             # (T·N, T·N) op</span></pre>
+  <p>With \(K = 4\) harmonics (9 features) \(GG^\top\) holds 85% of \(\mathbf B\)'s variance; with \(K = 8\) (17 features), 99%. For a domain without a closed-form series (a box, a sphere, a mesh), the same idea is a basis of Laplacian eigenfunctions weighted by the kernel's spectral density: geonnax evaluates the basis and kernellib the density, as the reduced weak-constraint model below does; kernellib also packages it as <code>LaplaceEigenfunctionFeatures</code>, and pyrox as the numpyro layer <code>pyrox_nn.HSGPFeatures</code>.</p>
+
+  <section class="variant" id="m1">
+  <h2>1 · 3D-Var</h2>
+  <p><strong>Intuition.</strong> At each observation time, correct one state: pull the forecast toward the observations, by an amount set by \(\mathbf B\) against \(\sigma_o^2\), and spread the correction to unobserved sites through \(\mathbf B\)'s correlations. The model only carries the analysis forward; it plays no part in the fit.</p>
+  \[ \begin{aligned}
+  \mathcal J(z) &= \tfrac12\|z - z_f\|^2_{\mathbf B^{-1}} + \tfrac12\|y_k - \mathbf H z\|^2_{\sigma_o^{-2}} \\
+  z &= z_f + \mathbf B^{1/2}\xi \\
+  \mathcal J(\xi) &= \tfrac12\|\xi\|^2 + \tfrac12\|y_k - \mathbf H(z_f + \mathbf B^{1/2}\xi)\|^2_{\sigma_o^{-2}}
+  \end{aligned} \]
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">three_dvar</span><span class="when">one time, one state</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_k\)<small>observations at one time; observation units</small></div><code>(obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_f\) forecast<small>the previous analysis run forward; state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf B^{1/2}\)<small>square root of the background covariance (gaussx circulant); state units</small></div><code>(state, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf H\) observation operator<small>picks the observed sites (obs_index)</small></div><code>(state,) → (obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\sigma_o\) observation error<small>standard deviation; observation units</small></div><code>()</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(\xi\sim\mathcal N(0, \mathbf I)\)<br>\(z = z_f + \mathbf B^{1/2}\xi\)<br>\(y_k\sim\mathcal N(\mathbf H z, \sigma_o^2\mathbf I)\)<div class="where"><div class="wl">where</div><div><span class="ws">\(\xi\)</span> whitened control, standard normal; (state,), dimensionless</div><div><span class="ws">\(z\)</span> the state being analysed; (state,), state units</div><div><span class="ws">\(\mathcal N(m, \mathbf C)\)</span> Gaussian with mean \(m\) and covariance \(\mathbf C\); \(\mathbf I\) is the identity</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z^\star\) analysis<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v = \xi\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div><div class="op-foot">Linear and Gaussian: the Laplace posterior is the exact posterior, and Gauss–Newton converges in one step.</div></div>
+  <pre><span class="c"># Shapes: N = 40 sites (state); M = 20 observed sites (obs)</span>
+
+
+def three_dvar_readable(
+    forecast: Float[Array, "state"],
+    prior_cov: lx.AbstractLinearOperator,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "obs"] | None = None,
+    obs_mask: Bool[Array, "obs"] | bool = True,
+):
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # z ~ 𝒩(z_f, B)</span>
+    state = numpyro.sample(                                 # event (N,)
+        "state", gx.MultivariateNormal(forecast, prior_cov)
+    )
+<span class="c">    # y ~ 𝒩(H z, σ_o² I), masked where m = 0</span>
+    likelihood = dist.Normal(state[obs_index], obs_std)     # batch (M,)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)
+
+
+def three_dvar(
+    forecast: Float[Array, "state"],
+    prior_sqrt: lx.AbstractLinearOperator,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "obs"] | None = None,
+    obs_mask: Bool[Array, "obs"] | bool = True,
+):
+<span class="c">    # ξ ~ 𝒩(0, I)</span>
+    whitened = numpyro.sample(                              # event (N,)
+        "whitened", dist.Normal(0.0, 1.0).expand(forecast.shape).to_event(1)
+    )
+<span class="c">    # z = z_f + B^{1/2} ξ, the control-variable transform</span>
+    state = numpyro.deterministic("state", forecast + prior_sqrt.mv(whitened))<span class="c">  # (N,)</span>
+<span class="c">    # y ~ 𝒩(H z, σ_o² I)</span>
+    likelihood = dist.Normal(state[obs_index], obs_std)     # batch (M,)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)</pre>
+  <p>Both functions define the same posterior; on the first analysis they differ by at most 0.0014 at any site. The readable one, a gaussx <code>MultivariateNormal</code> site in physical units, took 1,952 L-BFGS iterations per analysis; the whitened one took 27. Cycled over the window, 3D-Var reaches a window error of 1.80 (background: 3.50).</p>
+  </section>
+
+  <section class="variant" id="m2">
+  <h2>2 · Reduced 3D-Var</h2>
+  <p><strong>Intuition.</strong> Correct the forecast only in a few smooth patterns. The same reduction as reduced 4D-Var, applied to one time: the increment is \(G u\), with \(R\) coefficients instead of \(N\) values. It is cheap and well conditioned, but whatever the features cannot express is never corrected, and in a cycled system those uncorrected scales keep growing from one analysis to the next.</p>
+  \[ \begin{aligned}
+  z &= z_f + G u \\
+  u &\sim \mathcal N(0, \mathbf I_R) \\
+  \mathcal J(u) &= \tfrac12\|u\|^2 + \tfrac12\|y_k - \mathbf H(z_f + G u)\|^2_{\sigma_o^{-2}}
+  \end{aligned} \]
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">reduced_three_dvar</span><span class="when">one time, a few features</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_k\)<small>observations at one time; observation units</small></div><code>(obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_f\) forecast<small>the previous analysis run forward; state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(G\) features<small>truncated Fourier features of the background kernel (kernellib PeriodicFeatures); state units</small></div><code>(state, basis)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf H\) observation operator<small>picks the observed sites (obs_index)</small></div><code>(state,) → (obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\sigma_o\) observation error<small>standard deviation; observation units</small></div><code>()</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(u\sim\mathcal N(0, \mathbf I_R)\)<br>\(z = z_f + G u\)<br>\(y_k\sim\mathcal N(\mathbf H z, \sigma_o^2\mathbf I)\)<div class="where"><div class="wl">where</div><div><span class="ws">\(u\)</span> whitened coefficients, standard normal; (basis,), dimensionless</div><div><span class="ws">\(R\)</span> number of features, \(2K + 1\) for \(K\) harmonics; \(\mathbf I_R\) is the \(R\times R\) identity</div><div><span class="ws">\(G u\)</span> the increment: Gaussian with covariance \(G G^\top\approx\mathbf B\)</div><div><span class="ws">\(z\)</span> the state being analysed; (state,), state units</div><div><span class="ws">\(\mathcal N(m, \mathbf C)\)</span> Gaussian with mean \(m\) and covariance \(\mathbf C\); \(\mathbf I\) is the identity</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z^\star\) analysis<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v = u\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div><div class="op-foot">R controls per analysis. Also linear and Gaussian, so the Laplace posterior is exact, but only within the span of the features.</div></div>
+  <pre><span class="c"># Shapes: N = 40 sites (state); M = 20 observed sites (obs);</span>
+<span class="c">#         R = 2K + 1 features (basis)</span>
+
+
+def reduced_three_dvar(
+    forecast: Float[Array, "state"],
+    features: Float[Array, "state basis"],
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "obs"] | None = None,
+    obs_mask: Bool[Array, "obs"] | bool = True,
+):
+<span class="c">    # u ~ 𝒩(0, I_R)</span>
+    whitened = numpyro.sample(                              # event (R,)
+        "whitened", dist.Normal(0.0, 1.0).expand([features.shape[1]]).to_event(1)
+    )
+<span class="c">    # δz = G u, so δz ~ 𝒩(0, G Gᵀ) ≈ 𝒩(0, B)</span>
+    increment = einx.dot("state basis, basis -&gt; state", features, whitened)<span class="c">  # (N,)</span>
+<span class="c">    # z = z_f + G u</span>
+    state = numpyro.deterministic("state", forecast + increment)<span class="c">  # (N,)</span>
+<span class="c">    # y ~ 𝒩(H z, σ_o² I)</span>
+    likelihood = dist.Normal(state[obs_index], obs_std)     # batch (M,)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)</pre>
+  <div class="tbl"><table>
+    <thead><tr><th>Increment</th><th>Controls per analysis</th><th>Iterations per analysis</th><th>RMSE window</th><th>RMSE end of window</th></tr></thead>
+    <tbody>
+      <tr><td>\(K = 4\), 9 features</td><td class="num">9</td><td class="num">15</td><td class="num">2.82</td><td class="num">4.57</td></tr>
+      <tr><td>\(K = 8\), 17 features</td><td class="num">17</td><td class="num">22</td><td class="num">2.39</td><td class="num">4.05</td></tr>
+      <tr><td>full \(\mathbf B\) (3D-Var)</td><td class="num">40</td><td class="num">27</td><td class="num">1.80</td><td class="num">3.10</td></tr>
+    </tbody>
+  </table></div>
+  <p>Cycling makes the truncation costly: the small scales the features leave out are never corrected, the chaotic model amplifies them, and the window error is 2.82 with 9 features and 2.39 with 17, against 1.80 for full 3D-Var.</p>
+  </section>
+
+  <section class="variant" id="m3">
+  <h2>3 · Strong-constraint 4D-Var</h2>
+  <p><strong>Intuition.</strong> Trust the model completely. Then the trajectory is a function of its starting point, and the only unknown is \(z_0\): every observation in the window pulls on it through the dynamics. In the program, the rollout is a <code>numpyro.deterministic</code> site, so the posterior lives on \(\xi\) alone.</p>
+  \[ p(\xi\mid y) \propto \mathcal N(\xi; 0, \mathbf I)\prod_k\mathcal N\big(y_k;\ \mathbf H\mathcal M_{k\leftarrow0}(z_b + \mathbf B^{1/2}\xi),\ \sigma_o^2\mathbf I\big). \]
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">strong_4dvar</span><span class="when">one window, a trusted model</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>observed-field units (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) mask<small>1 where observed and in the window</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf B^{1/2}\)<small>square root of the background covariance (gaussx circulant); state units</small></div><code>(state, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathcal M_k\) model step<small>one observation interval</small></div><code>(state,) → (state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf H\) observation operator<small>picks the observed sites (obs_index)</small></div><code>(state,) → (obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\sigma_o\) observation error<small>standard deviation; observation units</small></div><code>()</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(\xi\sim\mathcal N(0, \mathbf I)\)<br>\(z_0 = z_b + \mathbf B^{1/2}\xi\)<br>\(z_k = \mathcal M_{k\leftarrow 0}(z_0)\)<br>\(y_k\sim\mathcal N(\mathbf H z_k, \sigma_o^2\mathbf I)\)<div class="where"><div class="wl">where</div><div><span class="ws">\(\xi\)</span> whitened initial control, standard normal; (state,), dimensionless</div><div><span class="ws">\(z_0\)</span> initial state; (state,), state units</div><div><span class="ws">\(z_k\)</span> state at observation time \(k = 1, \dots, T\); (state,), state units</div><div><span class="ws">\(\mathcal M_{k\leftarrow 0}\)</span> the model run over the first \(k\) intervals; a deterministic site, not a control</div><div><span class="ws">\(\mathcal N(m, \mathbf C)\)</span> Gaussian with mean \(m\) and covariance \(\mathbf C\); \(\mathbf I\) is the identity</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_0^\star\)<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(z_{1:T}^\star\)<small>a model trajectory</small></div><code>(time, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v = \xi\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div></div>
+  <pre><span class="c"># Shapes: N = 40 sites (state); T = 20 observation times (time);</span>
+<span class="c">#         M = 20 observed sites (obs)</span>
+
+
+def rollout(model_step, initial, errors=None, num_times=None):
+    """z₁:T from z₀, with an optional kick η_k after every interval."""
+
+    def interval(state, error):
+<span class="c">        # user (model_step: one observation interval of the dynamics)</span>
+<span class="c">        # z_k = 𝓜_k(z_{k−1}) (+ η_k)</span>
+        state = model_step(state) if error is None else model_step(state) + error
+        return state, state
+
+    _, states = jax.lax.scan(interval, initial, errors, length=num_times)<span class="c">  # → (T, N)</span>
+    return states
+
+
+def strong_4dvar(
+    model_step: Callable,
+    background: Float[Array, "state"],
+    prior_sqrt: lx.AbstractLinearOperator,
+    num_times: int,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "time obs"] | None = None,
+    obs_mask: Bool[Array, "time obs"] | bool = True,
+):
+<span class="c">    # ξ ~ 𝒩(0, I)</span>
+    whitened = numpyro.sample(                              # event (N,)
+        "whitened", dist.Normal(0.0, 1.0).expand(background.shape).to_event(1)
+    )
+<span class="c">    # z₀ = z_b + B^{1/2} ξ</span>
+    initial = numpyro.deterministic(<span class="c">                        # (N,)</span>
+        "initial", background + prior_sqrt.mv(whitened)
+    )
+<span class="c">    # z_k = 𝓜_{k←0}(z₀): deterministic, so the posterior lives on ξ alone</span>
+    states = numpyro.deterministic(<span class="c">                         # (T, N)</span>
+        "states", rollout(model_step, initial, num_times=num_times)
+    )
+<span class="c">    # y_k ~ 𝒩(H z_k, σ_o² I) for every k</span>
+    likelihood = dist.Normal(states[:, obs_index], obs_std)  # batch (T, M)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)</pre>
+  <p>Analysis: \(\mathcal J^\star = \) 509, \(2\mathcal J^\star/p = \) 2.55 (expected about 1 for a correct model), window error 0.64. The Laplace spread of \(z_0\) is 0.12, but its actual error is 0.85: the posterior is confident and wrong, because the model it trusts is biased. A ratio of error to spread far above 1 is the same alarm as \(2\mathcal J^\star/p\gg 1\).</p>
+  </section>
+
+  <section class="variant" id="m4">
+  <h2>4 · Reduced strong-constraint 4D-Var</h2>
+  <p><strong>Intuition.</strong> Correct the initial state only in a few smooth patterns. The control shrinks from \(N\) values to \(R\) coefficients; the price is that variance outside the features cannot be corrected. Here the features are the truncated Fourier series of the background kernel, so the reduced prior is a truncation of \(\mathbf B\) itself.</p>
+  \[ \begin{aligned}
+  z_0 &= z_b + G u \\
+  u &\sim \mathcal N(0, \mathbf I_R) \\
+  \mathbf B &\approx G G^\top
+  \end{aligned} \]
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">reduced_strong_4dvar</span><span class="when">one window, a few features</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>observed-field units (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) mask<small>1 where observed and in the window</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathcal M_k\) model step<small>one observation interval</small></div><code>(state,) → (state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf H\) observation operator<small>picks the observed sites (obs_index)</small></div><code>(state,) → (obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\sigma_o\) observation error<small>standard deviation; observation units</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(G\) features<small>truncated Fourier features of the background kernel (kernellib PeriodicFeatures); state units</small></div><code>(state, basis)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(u\sim\mathcal N(0, \mathbf I_R)\)<br>\(z_0 = z_b + G u\)<br>\(y_k\sim\mathcal N(\mathbf H\mathcal M_{k\leftarrow 0}(z_0), \sigma_o^2\mathbf I)\)<div class="where"><div class="wl">where</div><div><span class="ws">\(u\)</span> whitened coefficients, standard normal; (basis,), dimensionless</div><div><span class="ws">\(R\)</span> number of features, \(2K + 1\) for \(K\) harmonics; \(\mathbf I_R\) is the \(R\times R\) identity</div><div><span class="ws">\(G u\)</span> the initial increment: Gaussian with covariance \(G G^\top\approx\mathbf B\)</div><div><span class="ws">\(\mathcal M_{k\leftarrow 0}\)</span> the model run over the first \(k\) intervals</div><div><span class="ws">\(\mathcal N(m, \mathbf C)\)</span> Gaussian with mean \(m\) and covariance \(\mathbf C\); \(\mathbf I\) is the identity</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(u^\star\)<small>whitened coefficients of the increment</small></div><code>(basis,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(z_{0:T}^\star\)<small>a model trajectory</small></div><code>(time+1, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v = u\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div><div class="op-foot">R controls instead of N. The variance outside the features is simply not correctable.</div></div>
+  <pre><span class="c"># Shapes: N = 40 sites (state); T = 20 observation times (time);</span>
+<span class="c">#         M = 20 observed sites (obs); R = 2K + 1 features (basis)</span>
+
+
+def reduced_strong_4dvar(
+    model_step: Callable,
+    background: Float[Array, "state"],
+    features: Float[Array, "state basis"],
+    num_times: int,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "time obs"] | None = None,
+    obs_mask: Bool[Array, "time obs"] | bool = True,
+):
+<span class="c">    # u ~ 𝒩(0, I_R)</span>
+    whitened = numpyro.sample(                              # event (R,)
+        "whitened", dist.Normal(0.0, 1.0).expand([features.shape[1]]).to_event(1)
+    )
+<span class="c">    # δz₀ = G u</span>
+    increment = einx.dot("state basis, basis -&gt; state", features, whitened)<span class="c">  # (N,)</span>
+<span class="c">    # z₀ = z_b + G u</span>
+    initial = numpyro.deterministic("initial", background + increment)<span class="c">  # (N,)</span>
+    states = numpyro.deterministic(<span class="c">                         # (T, N)</span>
+        "states", rollout(model_step, initial, num_times=num_times)
+    )
+    likelihood = dist.Normal(states[:, obs_index], obs_std)  # batch (T, M)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)
+
+
+def lowrank_strong_4dvar(
+    model_step: Callable,
+    background: Float[Array, "state"],
+    features: Float[Array, "state basis"],
+    nugget: float,
+    num_times: int,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "time obs"] | None = None,
+    obs_mask: Bool[Array, "time obs"] | bool = True,
+):
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # B ≈ ε I + G Gᵀ: solves and log-determinants by Woodbury</span>
+    prior_cov = gx.low_rank_plus_diag(<span class="c">                      # (N, N) PSD op</span>
+        nugget * jnp.ones_like(background), features, psd=True
+    )
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # z₀ ~ 𝒩(z_b, ε I + G Gᵀ): every value is a control again</span>
+    initial = numpyro.sample(                               # event (N,)
+        "initial", gx.MultivariateNormal(background, prior_cov)
+    )
+    states = numpyro.deterministic(<span class="c">                         # (T, N)</span>
+        "states", rollout(model_step, initial, num_times=num_times)
+    )
+    likelihood = dist.Normal(states[:, obs_index], obs_std)  # batch (T, M)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)</pre>
+  <div class="tbl"><table>
+    <thead><tr><th>Prior on \(z_0\)</th><th>Controls</th><th>Variance of \(\mathbf B\) kept</th><th>\(\mathcal J^\star\)</th><th>RMSE window</th><th>Iterations, final stage</th></tr></thead>
+    <tbody>
+      <tr><td>\(K = 2\), 5 features</td><td class="num">5</td><td class="num">57%</td><td class="num">3702</td><td class="num">2.17</td><td class="num">38</td></tr>
+      <tr><td>\(K = 4\), 9 features</td><td class="num">9</td><td class="num">85%</td><td class="num">1322</td><td class="num">1.19</td><td class="num">55</td></tr>
+      <tr><td>\(K = 8\), 17 features</td><td class="num">17</td><td class="num">99%</td><td class="num">647</td><td class="num">0.78</td><td class="num">267</td></tr>
+      <tr><td>full \(\mathbf B\) (strong 4D-Var)</td><td class="num">40</td><td class="num">100%</td><td class="num">509</td><td class="num">0.64</td><td class="num">568</td></tr>
+      <tr><td>9 features + nugget, low-rank MVN</td><td class="num">40</td><td class="num">100%</td><td class="num">377*</td><td class="num">0.49</td><td class="num">286</td></tr>
+    </tbody>
+  </table></div>
+  <p>The second function keeps every value as a control but gives \(z_0\) a <code>low_rank_plus_diag</code> prior: the 9 features plus a white nugget carrying the remaining 0.15 of variance per site. gaussx solves and log-determines it with the Woodbury identity. It is a different prior, so its \(\mathcal J^\star\) (*) is not comparable with the rows above; its window error is.</p>
+  </section>
+
+  <section class="variant" id="m5">
+  <h2>5 · Incremental 4D-Var</h2>
+  <p><strong>Intuition.</strong> Strong-constraint 4D-Var is hard because the model is nonlinear. Incremental 4D-Var takes that difficulty out of the inner solve: run the nonlinear model once from the current analysis, linearise it around that run, and solve the resulting linear-Gaussian problem exactly. Then rerun the model from the new analysis and repeat. It is Gauss–Newton on the strong-constraint cost: it targets the same MAP, and its Laplace spread uses the Gauss–Newton Hessian. In numpyro terms, the inner problem is the strong-constraint program with the rollout replaced by its tangent-linear approximation, which <code>jax.linearize</code> provides.</p>
+  \[ \begin{aligned}
+  z_0^r &= z_b + \mathbf B^{1/2}\xi^r \\
+  z_k &\approx z_k^r + \mathbf M'_{k\leftarrow0}(z_0 - z_0^r) \\
+  \mathcal J_{\text{inner}}(\xi) &= \tfrac12\|\xi\|^2 + \tfrac12\sum_k\big\|y_k - \mathbf H z_k^r - \mathbf H\mathbf M'_{k\leftarrow0}\mathbf B^{1/2}(\xi - \xi^r)\big\|^2_{\sigma_o^{-2}} \\
+  \xi^{r+1} &= \xi^r + \alpha\,(\xi^\star - \xi^r), \quad \alpha\in\{1, \tfrac12, \tfrac14, \dots\}
+  \end{aligned} \]
+  <p>The inner cost is quadratic in \(\xi\), so the linearised problem's posterior is exactly Gaussian and its Laplace approximation is exact; for the nonlinear problem it is the Gauss–Newton approximation at the analysis. The step length \(\alpha\) is halved until the <em>nonlinear</em> cost decreases: on this chaotic window, plain Gauss–Newton steps overshoot. Without the halving, the cost over the last four outer loops went 514.2 → 511.0 → 512.0 → 512.2 for the full increment and 1362 → 1413 → 1371 → 1442 with 9 features.</p>
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">incremental_4dvar</span><span class="when">one window, outer and inner loops</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>observed-field units (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) mask<small>1 where observed and in the window</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf B^{1/2}\)<small>square root of the background covariance (gaussx circulant); state units</small></div><code>(state, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathcal M_k\) model step<small>one observation interval</small></div><code>(state,) → (state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf H\) observation operator<small>picks the observed sites (obs_index)</small></div><code>(state,) → (obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\sigma_o\) observation error<small>standard deviation; observation units</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">outer loops<small>relinearisations per window stage</small></div><code>()</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(z_0^r = z_b + \mathbf B^{1/2}\xi^r\)<br>\(z_{1:T}^r = \mathcal M(z_0^r)\), \(\mathbf M' = \partial\mathcal M/\partial z_0\) at \(z_0^r\)<br>\(\xi\sim\mathcal N(0, \mathbf I)\)<br>\(z_k = z_k^r + \mathbf M'_{k\leftarrow0}(z_b + \mathbf B^{1/2}\xi - z_0^r)\)<br>\(y_k\sim\mathcal N(\mathbf H z_k, \sigma_o^2\mathbf I)\)<br>\(\xi^{r+1} = \xi^r + \alpha(\xi^\star - \xi^r)\)<div class="where"><div class="wl">where</div><div><span class="ws">\(\xi^r\), \(z^r\)</span> the reference: current analysis and its nonlinear trajectory</div><div><span class="ws">\(\mathbf M'_{k\leftarrow0}\)</span> tangent-linear model over the first \(k\) intervals, from <code>jax.linearize</code></div><div><span class="ws">\(\xi^\star\)</span> the inner (linear-Gaussian) program's MAP</div><div><span class="ws">\(\alpha\)</span> step length: 1, then halved until the nonlinear cost decreases</div><div><span class="ws">\(\xi\)</span> whitened initial control, standard normal; (state,), dimensionless</div><div><span class="ws">\(\mathcal N(m, \mathbf C)\)</span> Gaussian with mean \(m\) and covariance \(\mathbf C\); \(\mathbf I\) is the identity</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_0^\star\)<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\mathcal J^\star\)<small>nonlinear cost at the analysis</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v = \xi\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div><div class="op-foot">Each outer loop: one nonlinear run. Each inner iteration: one tangent-linear run and one adjoint run.</div></div>
+  <pre><span class="c"># Shapes: N = 40 sites (state); T = 20 observation times (time);</span>
+<span class="c">#         M = 20 observed sites (obs); R = 2K + 1 features (basis);</span>
+<span class="c">#         D = N or R controls (latent)</span>
+
+
+def incremental_inner(
+    reference_initial: Float[Array, "state"],
+    reference_states: Float[Array, "time state"],
+    tangent: Callable,
+    initial_of: Callable,
+    num_controls: int,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "time obs"] | None = None,
+    obs_mask: Bool[Array, "time obs"] | bool = True,
+):
+    """The inner problem: the strong-constraint program with the model linearised."""
+<span class="c">    # u ~ 𝒩(0, I): ξ for the full increment, u for the reduced one</span>
+    whitened = numpyro.sample(                              # event (D,)
+        "whitened", dist.Normal(0.0, 1.0).expand([num_controls]).to_event(1)
+    )
+<span class="c">    # z₀ = z_b + B^{1/2} ξ, or z_b + G u</span>
+    initial = numpyro.deterministic("initial", initial_of(whitened))<span class="c">  # (N,)</span>
+<span class="c">    # δz₀ = z₀ − z₀ʳ, the departure from the outer loop's reference</span>
+    increment = initial - reference_initial<span class="c">                 # (N,)</span>
+<span class="c">    # z_k ≈ z_kʳ + M′_{k←0} δz₀: tangent-linear, so z is linear in u</span>
+    states = numpyro.deterministic(<span class="c">                         # (T, N)</span>
+        "states", reference_states + tangent(increment)
+    )
+<span class="c">    # y_k ~ 𝒩(H z_k, σ_o² I): linear-Gaussian, so the posterior is Gaussian</span>
+    likelihood = dist.Normal(states[:, obs_index], obs_std)  # batch (T, M)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)
+
+
+def nonlinear_cost(model_step, initial_of, whitened, num_times, obs_index, obs_std,
+                   obs, obs_mask=True):
+    """𝒥(u) = ½‖u‖² + ½ Σ_k ‖y_k − H 𝓜_{k←0}(z₀(u))‖²/σ_o², the outer-loop cost."""
+    states = rollout(model_step, initial_of(whitened), num_times=num_times)<span class="c">  # (T, N)</span>
+<span class="c">    # r_k = (y_k − H z_k) / σ_o, zero where m = 0</span>
+    residual = (obs - states[:, obs_index]) / obs_std<span class="c">       # (T, M)</span>
+    residual = jnp.where(obs_mask, residual, 0.0)<span class="c">           # (T, M)</span>
+    return 0.5 * jnp.sum(whitened**2) + 0.5 * jnp.sum(residual**2)<span class="c">  # → ()</span>
+
+
+def incremental_4dvar(
+    model_step: Callable,
+    initial_of: Callable,
+    num_controls: int,
+    num_times: int,
+    num_outer: int,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "time obs"],
+    obs_mask: Bool[Array, "time obs"] | bool = True,
+    init_values: dict | None = None,
+):
+    """Gauss–Newton: relinearise, solve the linear-Gaussian inner program, repeat."""
+    values = init_values or {"whitened": jnp.zeros(num_controls)}
+    data = (num_times, obs_index, obs_std, obs, obs_mask)
+    cost = nonlinear_cost(model_step, initial_of, values["whitened"], *data)
+    inner_steps = 0
+    for _ in range(num_outer):
+<span class="c">        # z₀ʳ, the current analysis</span>
+        reference_initial = initial_of(values["whitened"])<span class="c">  # (N,)</span>
+
+        def trajectory(initial):
+            return rollout(model_step, initial, num_times=num_times)<span class="c">  # (N,) → (T, N)</span>
+
+<span class="c">        # z₁:Tʳ = 𝓜(z₀ʳ) and δz₀ ↦ M′ δz₀: one nonlinear run per outer loop</span>
+        reference_states, tangent = jax.linearize(trajectory, reference_initial)
+        inner, solution, potential_fn, unravel = fit_map(
+            incremental_inner,
+            values,
+            reference_initial,
+            reference_states,
+            tangent,
+            initial_of,
+            num_controls,
+            obs_index,
+            obs_std,
+            obs=obs,
+            obs_mask=obs_mask,
+        )
+        inner_steps += int(solution.stats["num_steps"])
+<span class="c">        # Δu, the Gauss–Newton step</span>
+        step = inner["whitened"] - values["whitened"]<span class="c">       # (D,)</span>
+<span class="c">        # backtrack: halve Δu until the nonlinear 𝒥 decreases</span>
+        for _ in range(6):
+            trial = values["whitened"] + step<span class="c">               # (D,)</span>
+            trial_cost = nonlinear_cost(model_step, initial_of, trial, *data)
+            if trial_cost &lt; cost:
+                values, cost = {"whitened": trial}, trial_cost
+                break
+            step = 0.5 * step<span class="c">                               # (D,)</span>
+    return values, cost, inner_steps
+
+
+<span class="c"># full increment: ξ ∈ ℝᴺ, z₀ = z_b + B^{1/2} ξ</span>
+def full_initial(whitened):
+    return background + prior_sqrt.mv(whitened)<span class="c">             # (N,) → (N,)</span>
+
+
+<span class="c"># reduced increment: u ∈ ℝᴿ, z₀ = z_b + G u</span>
+def reduced_initial(whitened):
+    return background + einx.dot(<span class="c">                           # (R,) → (N,)</span>
+        "state basis, basis -&gt; state", prior_features, whitened
+    )</pre>
+  <div class="tbl"><table>
+    <thead><tr><th>Solver</th><th>Outer loops</th><th>Inner iterations</th><th>\(\mathcal J^\star\)</th><th>RMSE window</th></tr></thead>
+    <tbody>
+      <tr><td>incremental, quasi-static</td><td class="num">22</td><td class="num">5,530</td><td class="num">509.4</td><td class="num">0.64</td></tr>
+      <tr><td>incremental from the background, no schedule</td><td class="num">8</td><td class="num">5,284</td><td class="num">971</td><td class="num">0.94</td></tr>
+      <tr><td>strong 4D-Var, L-BFGS on the nonlinear cost</td><td class="num">—</td><td class="num">—</td><td class="num">509</td><td class="num">0.64</td></tr>
+    </tbody>
+  </table></div>
+  <p>With the quasi-static schedule (two outer loops per window stage, four on the full window), incremental 4D-Var reaches the same minimum as the direct solve; the cost over the last four outer loops was 514.2 → 511.0 → 509.5 → 509.4. From the background in one go, eight outer loops had only brought \(\mathcal J\) down to 971. Each outer loop costs one nonlinear run; every inner iteration costs only a tangent-linear run and its adjoint, which is the point of the method at scale.</p>
+  </section>
+
+  <section class="variant" id="m6">
+  <h2>6 · Reduced incremental 4D-Var</h2>
+  <p><strong>Intuition.</strong> The same outer loop, with the inner problem restricted to the features: the increment is \(G(u - u^r)\), so each inner problem has only \(R\) unknowns and an \(R\times R\) Hessian. The outer loop still runs the full nonlinear model. Reduced-order incremental 4D-Var in the literature usually takes the basis from EOFs of a model run; here kernellib's features take that place.</p>
+  \[ \begin{aligned}
+  z_0 &= z_b + G u \\
+  z_k &\approx z_k^r + \mathbf M'_{k\leftarrow0}G(u - u^r) \\
+  \mathcal J_{\text{inner}}(u) &= \tfrac12\|u\|^2 + \tfrac12\sum_k\big\|y_k - \mathbf H z_k^r - \mathbf H\mathbf M'_{k\leftarrow0}G(u - u^r)\big\|^2_{\sigma_o^{-2}}
+  \end{aligned} \]
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">incremental_4dvar(reduced_initial)</span><span class="when">one window, increments in R features</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>observed-field units (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) mask<small>1 where observed and in the window</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathcal M_k\) model step<small>one observation interval</small></div><code>(state,) → (state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf H\) observation operator<small>picks the observed sites (obs_index)</small></div><code>(state,) → (obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\sigma_o\) observation error<small>standard deviation; observation units</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(G\) features<small>truncated Fourier features of the background kernel (kernellib PeriodicFeatures); state units</small></div><code>(state, basis)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">outer loops<small>relinearisations per window stage</small></div><code>()</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(z_0^r = z_b + G u^r\)<br>\(z_{1:T}^r = \mathcal M(z_0^r)\), \(\mathbf M'\) at \(z_0^r\)<br>\(u\sim\mathcal N(0, \mathbf I_R)\)<br>\(z_k = z_k^r + \mathbf M'_{k\leftarrow0}G(u - u^r)\)<br>\(y_k\sim\mathcal N(\mathbf H z_k, \sigma_o^2\mathbf I)\)<br>\(u^{r+1} = u^r + \alpha(u^\star - u^r)\)<div class="where"><div class="wl">where</div><div><span class="ws">\(u^r\), \(z^r\)</span> the reference coefficients and their nonlinear trajectory</div><div><span class="ws">\(u\)</span> whitened coefficients, standard normal; (basis,), dimensionless</div><div><span class="ws">\(\mathbf M'_{k\leftarrow0}\)</span> tangent-linear model over the first \(k\) intervals</div><div><span class="ws">\(\alpha\)</span> step length, halved until the nonlinear cost decreases</div><div><span class="ws">\(\mathcal N(m, \mathbf C)\)</span> Gaussian with mean \(m\) and covariance \(\mathbf C\); \(\mathbf I\) is the identity</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(u^\star\)<small>whitened coefficients of the analysis increment</small></div><code>(basis,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v = u\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div><div class="op-foot">The inner Hessian is R × R: small enough to factor directly.</div></div>
+  <p>The snippet above covers both: <code>reduced_initial</code> replaces <code>full_initial</code>, and nothing else changes.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Features</th><th>Outer loops</th><th>Inner iterations</th><th>\(\mathcal J^\star\) incremental</th><th>\(\mathcal J^\star\) direct (section 4)</th><th>RMSE window</th></tr></thead>
+    <tbody>
+      <tr><td>\(K = 4\), 9 features</td><td class="num">22</td><td class="num">849</td><td class="num">1329</td><td class="num">1322</td><td class="num">1.20</td></tr>
+      <tr><td>\(K = 8\), 17 features</td><td class="num">22</td><td class="num">2,837</td><td class="num">648</td><td class="num">647</td><td class="num">0.78</td></tr>
+    </tbody>
+  </table></div>
+  </section>
+
+  <section class="variant" id="m7">
+  <h2>7 · Weak-constraint 4D-Var</h2>
+  <p><strong>Intuition.</strong> Stop trusting the model completely: after every interval the trajectory may jump by \(\eta_k\), at a price set by \(\mathbf Q\). The controls become the whole trajectory's worth of values. With \(\mathbf Q = \mathbf Q_t\otimes\mathbf Q_s\) the jumps can be correlated in time (a persistent error) and in space (a smooth one), and the whitened errors are mapped through the Kronecker square root.</p>
+  \[ \begin{aligned}
+  z_k &= \mathcal M_k(z_{k-1}) + \eta_k \\
+  \operatorname{vec}_r(\eta_{1:T}) &\sim \mathcal N(0, \mathbf Q_t\otimes\mathbf Q_s) \\
+  \mathcal J &= \tfrac12\|\xi\|^2 + \tfrac12\|w\|^2 + \tfrac12\sum_k\|y_k - \mathbf H z_k\|^2_{\sigma_o^{-2}}
+  \end{aligned} \]
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">weak_4dvar</span><span class="when">one window, an imperfect model</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>observed-field units (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) mask<small>1 where observed and in the window</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf B^{1/2}\)<small>square root of the background covariance (gaussx circulant); state units</small></div><code>(state, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathcal M_k\) model step<small>one observation interval</small></div><code>(state,) → (state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf H\) observation operator<small>picks the observed sites (obs_index)</small></div><code>(state,) → (obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\sigma_o\) observation error<small>standard deviation; observation units</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf Q^{1/2} = (\mathbf Q_t\otimes\mathbf Q_s)^{1/2}\)<small>square root of the model-error covariance (gaussx Kronecker); state units per interval</small></div><code>(time·state, time·state)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(\xi\sim\mathcal N(0, \mathbf I)\)<br>\(z_0 = z_b + \mathbf B^{1/2}\xi\)<br>\(w\sim\mathcal N(0, \mathbf I)\)<br>\(\operatorname{vec}_r\eta = \mathbf Q^{1/2}w\)<br>\(z_k = \mathcal M_k(z_{k-1}) + \eta_k\)<br>\(y_k\sim\mathcal N(\mathbf H z_k, \sigma_o^2\mathbf I)\)<div class="where"><div class="wl">where</div><div><span class="ws">\(\xi\)</span> whitened initial control, standard normal; (state,), dimensionless</div><div><span class="ws">\(w\)</span> whitened model errors, standard normal; (time·state,), dimensionless</div><div><span class="ws">\(\eta = (\eta_1, \dots, \eta_T)\)</span> model error added after each interval; (time, state), state units per interval; \(\operatorname{vec}_r\) stacks it time-major, as the code's <code>(t n)</code></div><div><span class="ws">\(\mathbf Q_t\), \(\mathbf Q_s\)</span> time and space factors of the model-error covariance; \(\otimes\) is the Kronecker product</div><div><span class="ws">\(z_k\)</span> state at observation time \(k = 1, \dots, T\); (state,), state units</div><div><span class="ws">\(\mathcal N(m, \mathbf C)\)</span> Gaussian with mean \(m\) and covariance \(\mathbf C\); \(\mathbf I\) is the identity</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(z_{0:T}^\star\)<small>no longer a model trajectory</small></div><code>(time+1, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\eta_{1:T}^\star\) model errors<small>state units per interval</small></div><code>(time, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v = (\xi, w)\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div></div>
+  <pre><span class="c"># Shapes: N = 40 sites (state); T = 20 observation times (time);</span>
+<span class="c">#         M = 20 observed sites (obs)</span>
+
+
+def weak_4dvar(
+    model_step: Callable,
+    background: Float[Array, "state"],
+    prior_sqrt: lx.AbstractLinearOperator,
+    error_sqrt: lx.AbstractLinearOperator,
+    num_times: int,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "time obs"] | None = None,
+    obs_mask: Bool[Array, "time obs"] | bool = True,
+):
+    num_state = background.shape[0]
+<span class="c">    # ξ ~ 𝒩(0, I)</span>
+    whitened = numpyro.sample(                              # event (N,)
+        "whitened", dist.Normal(0.0, 1.0).expand([num_state]).to_event(1)
+    )
+<span class="c">    # z₀ = z_b + B^{1/2} ξ</span>
+    initial = numpyro.deterministic(<span class="c">                        # (N,)</span>
+        "initial", background + prior_sqrt.mv(whitened)
+    )
+<span class="c">    # w ~ 𝒩(0, I_{T·N})</span>
+    whitened_errors = numpyro.sample(                       # event (T·N,)
+        "whitened_errors",
+        dist.Normal(0.0, 1.0).expand([num_times * num_state]).to_event(1),
+    )
+<span class="c">    # (η₁, …, η_T) = (Q_t ⊗ Q_s)^{1/2} w</span>
+    stacked_errors = error_sqrt.mv(whitened_errors)<span class="c">         # (T·N,)</span>
+    errors = einx.id("(t n) -&gt; t n", stacked_errors, t=num_times)<span class="c">  # (T·N,) → (T, N)</span>
+    numpyro.deterministic("errors", errors)
+<span class="c">    # z_k = 𝓜_k(z_{k−1}) + η_k</span>
+    states = numpyro.deterministic(<span class="c">                         # (T, N)</span>
+        "states", rollout(model_step, initial, errors)
+    )
+    likelihood = dist.Normal(states[:, obs_index], obs_std)  # batch (T, M)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)
+
+
+def weak_4dvar_states(
+    model_step: Callable,
+    background: Float[Array, "state"],
+    prior_sqrt: lx.AbstractLinearOperator,
+    error_std: float,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "time obs"],
+):
+    whitened = numpyro.sample(                              # event (N,)
+        "whitened", dist.Normal(0.0, 1.0).expand(background.shape).to_event(1)
+    )
+    initial = numpyro.deterministic(<span class="c">                        # (N,)</span>
+        "initial", background + prior_sqrt.mv(whitened)
+    )
+
+    def transition(previous, obs_k):
+<span class="c">        # z_k ~ 𝒩(𝓜_k(z_{k−1}), q² I): every state is a control</span>
+        state = numpyro.sample(                             # event (N,)
+            "state", dist.Normal(model_step(previous), error_std).to_event(1)
+        )
+<span class="c">        # y_k ~ 𝒩(H z_k, σ_o² I)</span>
+        likelihood = dist.Normal(state[obs_index], obs_std)  # batch (M,)
+        numpyro.sample("obs", likelihood.to_event(1), obs=obs_k)
+        return state, None
+
+<span class="c">    # today (numpyro)</span>
+    scan(transition, initial, obs)</pre>
+  <div class="tbl"><table>
+    <thead><tr><th>Model-error prior</th><th>\(\mathcal J^\star\)</th><th>\(2\mathcal J^\star/p\)</th><th>RMSE window</th><th>Mean \(\eta\) as \(\Delta F\)</th><th>Iterations, final stage</th></tr></thead>
+    <tbody>
+      <tr><td>white, \(q = 0.1\)</td><td class="num">244</td><td class="num">1.22</td><td class="num">0.28</td><td class="num">0.18</td><td class="num">596</td></tr>
+      <tr><td>white, \(q = 0.3\)</td><td class="num">146</td><td class="num">0.73</td><td class="num">0.27</td><td class="num">0.40</td><td class="num">678</td></tr>
+      <tr><td>Kronecker, \(q = 0.3\), \(\tau = 5\) intervals, periodic kernel of length 2 sites</td><td class="num">154</td><td class="num">0.77</td><td class="num">0.26</td><td class="num">0.83</td><td class="num">941</td></tr>
+    </tbody>
+  </table></div>
+  <p>The time-correlated prior fits the window equally well, but attributes far more of the misfit to a persistent error (the mean kick corresponds to \(\Delta F\) = 0.83 instead of 0.40; truth 1.0). The second function is the <strong>state formulation</strong> as a numpyro <code>scan</code>: each \(z_k\) is a sample site with a Gaussian transition. With \(q = 0.3\) it converged to the same minimum as the forcing form (\(\mathcal J^\star\) = 146.4) in 133 iterations from the background trajectory, without the quasi-static schedule.</p>
+  </section>
+
+  <section class="variant" id="m8">
+  <h2>8 · Reduced weak-constraint 4D-Var</h2>
+  <p><strong>Intuition.</strong> If the model's error has a shape you can name (a bias, a slow drift, a large-scale pattern), estimate the few numbers of that shape instead of a kick at every point and time. A temporal basis \(\chi_c(t)\) (Legendre polynomials over the window) and a spatial basis \(\varphi_j(x)\) carry a small coefficient matrix \(W\) with a Kronecker prior. Below, \(\chi\in\mathbb R^{T\times C}\) and \(\Phi\in\mathbb R^{N\times P}\) are the basis matrices, and \(\operatorname{vec}_r\) stacks a matrix row by row, as the code does.</p>
+  \[ \begin{aligned}
+  \eta(x_n, t_k) &= \sum_{c=1}^{C}\sum_{j=1}^{P}\chi_c(t_k)\,W_{cj}\,\varphi_j(x_n) \\
+  \operatorname{vec}_r W &\sim \mathcal N(0, \Lambda_t\otimes\Lambda_s) \\
+  \mathbf Q &= (\chi\otimes\Phi)(\Lambda_t\otimes\Lambda_s)(\chi\otimes\Phi)^\top
+  \end{aligned} \]
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">reduced_weak_4dvar</span><span class="when">one window, a structured model error</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>observed-field units (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) mask<small>1 where observed and in the window</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf B^{1/2}\)<small>square root of the background covariance (gaussx circulant); state units</small></div><code>(state, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathcal M_k\) model step<small>one observation interval</small></div><code>(state,) → (state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf H\) observation operator<small>picks the observed sites (obs_index)</small></div><code>(state,) → (obs,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\sigma_o\) observation error<small>standard deviation; observation units</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\varphi_j(x)\), \(\chi_c(t)\)<small>spatial (geonnax periodic Fourier) and temporal (geonnax Legendre) bases</small></div><code>(state, basis), (time, temporal)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\((\Lambda_t\otimes\Lambda_s)^{1/2}\)<small>square root of the coefficient prior covariance (gaussx Kronecker of diagonals); \(\Lambda_s\) from a kernellib RBF spectral density</small></div><code>(temporal·basis, temporal·basis)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(\xi\sim\mathcal N(0, \mathbf I)\)<br>\(z_0 = z_b + \mathbf B^{1/2}\xi\)<br>\(\omega\sim\mathcal N(0, \mathbf I)\)<br>\(\operatorname{vec}_r W = (\Lambda_t\otimes\Lambda_s)^{1/2}\omega\)<br>\(\eta(x_n, t_k) = \sum_{c,j}\chi_c(t_k)\,W_{cj}\,\varphi_j(x_n)\)<br>\(z_k = \mathcal M_k(z_{k-1}) + \eta(\cdot, t_k)\)<div class="where"><div class="wl">where</div><div><span class="ws">\(\xi\)</span> whitened initial control, standard normal; (state,), dimensionless</div><div><span class="ws">\(\omega\)</span> whitened coefficients, standard normal; (temporal·basis,), dimensionless</div><div><span class="ws">\(\operatorname{vec}_r\)</span> stacks a matrix row by row (time-major), matching the code's <code>(c p)</code> layout</div><div><span class="ws">\(W\)</span> model-error coefficients, one row per temporal mode \(c\), one column per spatial mode \(j\); (temporal, basis), state units per interval</div><div><span class="ws">\(\Lambda_t\), \(\Lambda_s\)</span> diagonal prior variances of the temporal and spatial coefficients</div><div><span class="ws">\(x_n\), \(t_k\)</span> position of site \(n\); time of observation \(k\)</div><div><span class="ws">\(\eta(x_n, t_k)\)</span> model error at site \(n\) after interval \(k\); state units per interval</div><div><span class="ws">\(z_k\)</span> state at observation time \(k = 1, \dots, T\); (state,), state units</div><div><span class="ws">\(\mathcal N(m, \mathbf C)\)</span> Gaussian with mean \(m\) and covariance \(\mathbf C\); \(\mathbf I\) is the identity</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(W^\star\)<small>the model-error pattern, e.g. a bias</small></div><code>(temporal, basis)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(z_{0:T}^\star\)<small>trajectory with the corrected model</small></div><code>(time+1, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v = (\xi, \omega)\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div></div>
+  <pre><span class="c"># Shapes: N = 40 sites (state); T = 20 observation times (time);</span>
+<span class="c">#         M = 20 observed sites (obs); P spatial modes (basis);</span>
+<span class="c">#         C temporal modes (temporal)</span>
+
+<span class="c"># today (geonnax)</span>
+<span class="c"># χ_c(t): Legendre polynomials 1, t, … on the window mapped to [−1, 1]</span>
+window_time = jnp.linspace(-1.0, 1.0, num_times)<span class="c">            # (T,)</span>
+temporal_basis = legendre_polynomials(window_time, num_temporal - 1)<span class="c">  # (T,) → (T, C)</span>
+<span class="c"># today (geonnax)</span>
+<span class="c"># φ_j(x): 1/√(2L), cos(kπx/L)/√L, sin(kπx/L)/√L, orthonormal on [−L, L]</span>
+spatial_basis = fourier_basis_1d(<span class="c">                           # (N, P)</span>
+    positions, num_spatial, half_width, boundary="periodic"
+)
+<span class="c"># today (geonnax)</span>
+<span class="c"># λ_j = (kπ / L)², the Laplacian eigenvalue of each mode</span>
+eigvals = fourier_eigenvalues_1d(<span class="c">                           # (P,)</span>
+    num_spatial, half_width, boundary="periodic", dtype=positions.dtype
+)
+<span class="c"># today (kernellib)</span>
+<span class="c"># Λ_s = S_k(√λ_j): the error kernel's spectral density at each mode</span>
+error_rbf = kl.RBF(variance=error_coeff_var, lengthscale=error_coeff_length)
+frequencies = einx.id("p -&gt; p 1", jnp.sqrt(eigvals))<span class="c">        # (P,) → (P, 1)</span>
+error_spectrum = error_rbf.spectral_density(frequencies)<span class="c">    # (P, 1) → (P,)</span>
+<span class="c"># today (gaussx)</span>
+<span class="c"># W ~ 𝒩(0, Λ_t ⊗ Λ_s)</span>
+coeff_cov = gx.Kronecker(<span class="c">                                   # (C·P, C·P) PSD op</span>
+    lx.DiagonalLinearOperator(temporal_var), lx.DiagonalLinearOperator(error_spectrum)
+)
+<span class="c"># today (gaussx)</span>
+coeff_sqrt = gx.sqrt(coeff_cov)<span class="c">                             # (C·P, C·P) op</span>
+
+
+def reduced_weak_4dvar(
+    model_step: Callable,
+    background: Float[Array, "state"],
+    prior_sqrt: lx.AbstractLinearOperator,
+    spatial_basis: Float[Array, "state basis"],
+    temporal_basis: Float[Array, "time temporal"],
+    coeff_sqrt: lx.AbstractLinearOperator,
+    num_times: int,
+    obs_index: Int[Array, "obs"],
+    obs_std: float,
+    obs: Float[Array, "time obs"] | None = None,
+    obs_mask: Bool[Array, "time obs"] | bool = True,
+):
+    num_temporal = temporal_basis.shape[1]
+    num_spatial = spatial_basis.shape[1]
+    whitened = numpyro.sample(                              # event (N,)
+        "whitened", dist.Normal(0.0, 1.0).expand(background.shape).to_event(1)
+    )
+    initial = numpyro.deterministic(<span class="c">                        # (N,)</span>
+        "initial", background + prior_sqrt.mv(whitened)
+    )
+<span class="c">    # ω ~ 𝒩(0, I_{C·P})</span>
+    whitened_coeffs = numpyro.sample(                       # event (C·P,)
+        "whitened_coeffs",
+        dist.Normal(0.0, 1.0).expand([num_temporal * num_spatial]).to_event(1),
+    )
+<span class="c">    # vec_r W = (Λ_t ⊗ Λ_s)^{1/2} ω</span>
+    stacked_coeffs = coeff_sqrt.mv(whitened_coeffs)<span class="c">         # (C·P,)</span>
+    coeffs = einx.id("(c p) -&gt; c p", stacked_coeffs, c=num_temporal)<span class="c">  # → (C, P)</span>
+    numpyro.deterministic("coeffs", coeffs)
+<span class="c">    # η(x_n, t_k) = Σ_c Σ_j χ_c(t_k) W_cj φ_j(x_n)</span>
+<span class="c">    # (T, C), (C, P), (N, P) → (T, N)</span>
+    errors = einx.dot(
+        "t c, c p, n p -&gt; t n", temporal_basis, coeffs, spatial_basis
+    )
+    numpyro.deterministic("errors", errors)
+    states = numpyro.deterministic(<span class="c">                         # (T, N)</span>
+        "states", rollout(model_step, initial, errors)
+    )
+    likelihood = dist.Normal(states[:, obs_index], obs_std)  # batch (T, M)
+    numpyro.sample("obs", likelihood.mask(obs_mask).to_event(1), obs=obs)</pre>
+  <div class="tbl"><table>
+    <thead><tr><th>Bases</th><th>Extra controls</th><th>\(2\mathcal J^\star/p\)</th><th>RMSE window</th><th>Recovered \(\Delta F\)</th><th>Forecast RMSE, with / without \(\eta\)</th></tr></thead>
+    <tbody>
+      <tr><td>constant in time and space (one bias)</td><td class="num">1</td><td class="num">0.98</td><td class="num">0.12</td><td class="num">1.00 ± 0.04</td><td class="num">1.47 / 2.40</td></tr>
+      <tr><td>Legendre {1, t} × 9 Fourier modes</td><td class="num">18</td><td class="num">0.97</td><td class="num">0.12</td><td class="num">0.98</td><td class="num">2.51 / 2.78</td></tr>
+    </tbody>
+  </table></div>
+  <p>One coefficient recovers the bias to within its Laplace standard deviation, and the forecast with it (1.47) beats a forecast from the <em>true</em> state with the uncorrected model (1.81). The richer basis fits the window as well but spends its freedom on a time trend; extrapolating that trend past the window hurts the forecast.</p>
+  </section>
+
+  <h2 id="inference">Inference: MAP, quasi-static windows, Laplace</h2>
+  <p>One routine fits all eight models (for the incremental ones, each inner problem). numpyro's <code>initialize_model</code> returns the potential energy over the flattened latent sites; L-BFGS minimises it. The mask in the likelihood does double duty: it marks missing observations, and it lets the window grow a few observation times at a time.</p>
+  <pre>import jax
+import optimistix as optx
+from jax.flatten_util import ravel_pytree
+from numpyro.infer.util import init_to_value, initialize_model
+
+<span class="c"># Shapes: D latent values in total (latent); T = 20 observation times (time)</span>
+
+
+def fit_map(model, init_values, *args, **kwargs):
+    """The variational analysis: the mode of the model's posterior."""
+<span class="c">    # today (numpyro)</span>
+<span class="c">    # U(v) = −log p(v, y), the potential energy: 𝒥(v) + const</span>
+    info = initialize_model(
+        jax.random.key(0),
+        model,
+        model_args=args,
+        model_kwargs=kwargs,
+        init_strategy=init_to_value(values=init_values),
+    )
+<span class="c">    # v: every latent site, flattened</span>
+    flat_init, unravel = ravel_pytree(info.param_info.z)<span class="c">    # (D,)</span>
+
+    def potential(flat, _):
+        return info.potential_fn(unravel(flat))<span class="c">             # (D,) → ()</span>
+
+<span class="c">    # not pinned (optimistix)</span>
+<span class="c">    # v* = argmin U(v)</span>
+    solution = optx.minimise(
+        potential,
+        optx.LBFGS(rtol=1e-9, atol=1e-6),
+        flat_init,
+        max_steps=20_000,
+        throw=False,
+    )
+    mode = unravel(solution.value)
+    return mode, solution, info.potential_fn, unravel
+
+
+def quasi_static(model, init_values, *args, num_times, stride=2, **kwargs):
+    """Lengthen the window a few observation times at a time, warm-started."""
+    values = init_values
+    for window in range(stride, num_times + 1, stride):
+<span class="c">        # m_k = 1 for k &lt; window, so later observations are switched off</span>
+        in_window = jnp.arange(num_times) &lt; window<span class="c">          # (T,)</span>
+        obs_mask = einx.id("t -&gt; t 1", in_window)<span class="c">           # (T,) → (T, 1)</span>
+        values, solution, potential_fn, unravel = fit_map(
+            model, values, *args, obs_mask=obs_mask, **kwargs
+        )
+    return values, solution, potential_fn, unravel
+
+
+def laplace(solution, potential_fn, unravel):
+    """𝒩(v*, A⁻¹): the posterior spread at the analysis."""
+<span class="c">    # A = ∇² U(v*), the posterior precision, dense: for small D only</span>
+    hessian = jax.hessian(<span class="c">                                  # (D, D)</span>
+        lambda flat: potential_fn(unravel(flat))
+    )(solution.value)
+<span class="c">    # today (lineax)</span>
+    precision = lx.MatrixLinearOperator(<span class="c">                    # (D, D) PSD op</span>
+        hessian, lx.positive_semidefinite_tag
+    )
+<span class="c">    # today (gaussx)</span>
+<span class="c">    # p(v | y) ≈ 𝒩(v*, A⁻¹), stored by its precision A</span>
+    return gx.MultivariateNormalPrecision(solution.value, precision)  # event (D,)</pre>
+  <p><strong>Why quasi-static.</strong> A 20-interval Lorenz-96 window spans several error-doubling times, and the strong-constraint cost has many minima. From six starting points, L-BFGS found 6 different minima, with \(\mathcal J^\star\) from 1,455 to 4,793 and window errors from 1.50 to 2.56; on the first 10 intervals all six reached the same minimum (\(\mathcal J^\star = \) 140.5). Lengthening the window two observation times at a time, warm-starting each stage, found a deeper minimum than any of the six (\(\mathcal J^\star = \) 509, window error 0.64). It is a heuristic, not a guarantee. Every 4D-Var analysis on this page uses it, except the state formulation (which converged without it), the no-schedule incremental row and the multistart experiment itself.</p>
+  <p><strong>Laplace at scale.</strong> The dense Hessian above is fine for 40 controls and affordable for 840. At ocean size, use the Gauss–Newton precision \(\mathbf I + \mathbf J_r^\top\mathbf J_r\), which gaussx keeps as a low-rank update of the identity: Woodbury solves and log-determinants of the size of the observation vector. Drawing samples from it still factors the precision densely in gaussx today. On the weak-constraint analysis (840 controls, 400 observations) the dense Hessian took about 10 s; the Gauss–Newton marginal standard deviations were within 1% of it at every control.</p>
+  <pre><span class="c"># Shapes: D latent values (latent); p = T·M observations (obs)</span>
+
+
+def whitened_residuals(flat):
+    """r(v) = (y − H z(v)) / σ_o for every observation in the window."""
+<span class="c">    # user (the model's deterministic states at the latent values v)</span>
+    states = states_of(unravel(flat))<span class="c">                       # (D,) → (T, N)</span>
+<span class="c">    # r = (y − H z) / σ_o</span>
+    residual = (obs - states[:, obs_index]) / obs_std<span class="c">       # (T, M)</span>
+    return einx.id("t m -&gt; (t m)", residual)<span class="c">                # → (p,)</span>
+
+
+<span class="c"># J_r = ∂r/∂v at the analysis</span>
+residual_jacobian = jax.jacfwd(whitened_residuals)(solution.value)<span class="c">  # (p, D)</span>
+<span class="c"># today (lineax)</span>
+latent_struct = jax.eval_shape(lambda: solution.value)
+identity = lx.IdentityLinearOperator(latent_struct)<span class="c">         # (D, D) op</span>
+<span class="c"># today (gaussx)</span>
+<span class="c"># A_GN = I + J_rᵀ J_r, a LowRankUpdate on I: Woodbury solves of size p</span>
+precision = gx.gauss_newton_precision(<span class="c">                      # (D, D) PSD op</span>
+    residual_jacobian, base=identity
+)
+<span class="c"># today (gaussx)</span>
+<span class="c"># p(v | y) ≈ 𝒩(v*, A_GN⁻¹)</span>
+posterior = gx.MultivariateNormalPrecision(solution.value, precision)  # event (D,)
+<span class="c"># today (gaussx)</span>
+<span class="c"># draws from it: an ensemble of analyses (a dense Cholesky of A_GN today)</span>
+members = posterior.sample(jax.random.key(1), (16,))<span class="c">        # → (16, D)</span></pre>
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">fit_map → laplace</span><span class="when">any of the eight models</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">numpyro model<small>prior sites, deterministic rollout, masked likelihood</small></div><code>callable</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">initial values<small>per latent site, e.g. zeros</small></div><code>dict</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>observed-field units (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) mask<small>1 where observed and in the window</small></div><code>(time, obs)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(U(v) = -\log p(v, y)\)<br>\(U(v) = \mathcal J(v) + \text{const}\)<br>\(v^\star = \arg\min_v U(v)\)<br>\(\mathbf A = \nabla^2 U(v^\star)\)<br>\(\mathbf A_{\text{GN}} = \mathbf I + \mathbf J_r^\top\mathbf J_r\)<div class="where"><div class="wl">where</div><div><span class="ws">\(v\)</span> all latent sites of the model, whitened and flattened; (latent,)</div><div><span class="ws">\(p(v, y)\)</span> the model's joint density of controls and observations</div><div><span class="ws">\(U\)</span> numpyro's potential energy; \(\mathcal J\) the variational cost</div><div><span class="ws">\(v^\star\)</span> the analysis (MAP)</div><div><span class="ws">\(\mathbf A\)</span> posterior precision: the Hessian of \(U\) at \(v^\star\); (latent, latent)</div><div><span class="ws">\(\mathbf J_r\)</span> Jacobian of the whitened residuals \(r(v) = (y - \mathbf H z(v))/\sigma_o\); (time·obs, latent)</div></div></div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(v^\star\)<small>the variational analysis, whitened</small></div><code>(latent,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\mathcal N(v^\star, \mathbf A^{-1})\)<small>Laplace posterior over the controls \(v\); \(\mathbf A\) is its precision</small></div><code>event (latent,)</code></div></div><div class="op-foot">The cost is never written by hand: numpyro derives it from the model.</div></div>
+
+  <h2 id="compare">The eight side by side</h2>
+  <figure class="figbox"><svg class="fig" viewBox="0 0 390 256" role="img" aria-label="Window RMSE for each method"><text class="bar-l" x="156" y="24" text-anchor="end">background (no assimilation)</text><rect class="bar bg" x="162" y="14" width="187.8" height="14" rx="2"/><text class="bar-v" x="353.8" y="25">3.50</text><text class="bar-l" x="156" y="48" text-anchor="end">3D-Var, cycled</text><rect class="bar " x="162" y="38" width="96.5" height="14" rx="2"/><text class="bar-v" x="262.5" y="49">1.80</text><text class="bar-l" x="156" y="72" text-anchor="end">reduced 3D-Var, 17 features</text><rect class="bar " x="162" y="62" width="128.3" height="14" rx="2"/><text class="bar-v" x="294.3" y="73">2.39</text><text class="bar-l" x="156" y="96" text-anchor="end">strong 4D-Var</text><rect class="bar " x="162" y="86" width="34.3" height="14" rx="2"/><text class="bar-v" x="200.3" y="97">0.64</text><text class="bar-l" x="156" y="120" text-anchor="end">reduced strong, 9 features</text><rect class="bar " x="162" y="110" width="64.2" height="14" rx="2"/><text class="bar-v" x="230.2" y="121">1.19</text><text class="bar-l" x="156" y="144" text-anchor="end">reduced strong, 17 features</text><rect class="bar " x="162" y="134" width="42.1" height="14" rx="2"/><text class="bar-v" x="208.1" y="145">0.78</text><text class="bar-l" x="156" y="168" text-anchor="end">weak 4D-Var, white Q</text><rect class="bar or" x="162" y="158" width="14.3" height="14" rx="2"/><text class="bar-v" x="180.3" y="169">0.27</text><text class="bar-l" x="156" y="192" text-anchor="end">weak 4D-Var, Kronecker Q</text><rect class="bar or" x="162" y="182" width="14.0" height="14" rx="2"/><text class="bar-v" x="180.0" y="193">0.26</text><text class="bar-l" x="156" y="216" text-anchor="end">reduced weak, one bias</text><rect class="bar or" x="162" y="206" width="6.5" height="14" rx="2"/><text class="bar-v" x="172.5" y="217">0.12</text><line class="fg-ax" x1="162" x2="350.0" y1="232" y2="232"/><text class="fg-l" x="162.0" y="245" text-anchor="middle">0</text><text class="fg-l" x="215.7" y="245" text-anchor="middle">1</text><text class="fg-l" x="269.4" y="245" text-anchor="middle">2</text><text class="fg-l" x="323.1" y="245" text-anchor="middle">3</text></svg><figcaption>RMSE over the 20-interval window, Lorenz-96 with a biased model (truth \(F = 8\), model \(F = 7\)). Teal: the model is trusted; amber: model error is a control.</figcaption></figure>
+  <div class="tbl"><table>
+    <thead><tr><th>Method</th><th>Controls</th><th>Prior object</th><th>RMSE window</th><th>\(2\mathcal J^\star/p\)</th><th>Use when</th></tr></thead>
+    <tbody>
+      <tr><td>3D-Var</td><td>\(\xi\): 40 per time</td><td><code>gx.circulant</code> square root</td><td class="num">1.80</td><td>—</td><td>cheap cycling, no adjoint</td></tr>
+      <tr><td>Reduced 3D-Var</td><td>\(u\): 9 or 17 per time</td><td><code>kl.PeriodicFeatures</code></td><td class="num">2.82 / 2.39</td><td>—</td><td>the increment really is smooth, or as a cheap first guess</td></tr>
+      <tr><td>Strong 4D-Var</td><td>\(\xi\): 40</td><td><code>gx.circulant</code> square root</td><td class="num">0.64</td><td class="num">2.55</td><td>the model is good over the window</td></tr>
+      <tr><td>Reduced strong 4D-Var</td><td>\(u\): 9 or 17</td><td><code>kl.PeriodicFeatures</code></td><td class="num">1.19 / 0.78</td><td class="num">6.61 / 3.24</td><td>a few patterns explain the increment</td></tr>
+      <tr><td>Incremental 4D-Var</td><td>\(\xi\): 40, in linear inner problems</td><td><code>gx.circulant</code> square root, <code>jax.linearize</code></td><td class="num">0.64</td><td class="num">2.55</td><td>the adjoint is cheap and the model nearly linear between relinearisations</td></tr>
+      <tr><td>Reduced incremental 4D-Var</td><td>\(u\): 9 or 17, in linear inner problems</td><td><code>kl.PeriodicFeatures</code>, <code>jax.linearize</code></td><td class="num">1.20 / 0.78</td><td class="num">6.65 / 3.24</td><td>as reduced strong, with a cheap inner solve</td></tr>
+      <tr><td>Weak 4D-Var</td><td>\((\xi, w)\): 840</td><td><code>gx.Kronecker</code> square root</td><td class="num">0.27</td><td class="num">0.73</td><td>the model error is unknown in shape</td></tr>
+      <tr><td>Reduced weak 4D-Var</td><td>\((\xi, u)\): 41 or 58</td><td>geonnax basis, kernellib spectrum, <code>gx.Kronecker</code></td><td class="num">0.12</td><td class="num">0.98</td><td>the model error has a known shape</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="application">At ocean scale</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Object</th><th>Lorenz-96 here</th><th>Gulf Stream QG window</th></tr></thead>
+    <tbody>
+      <tr><td>\(\mathbf B\)</td><td><code>kl.Periodic</code> column into <code>gx.circulant</code></td><td>a Kronecker of two 1D kernellib Grams on the 128 × 128 grid; a Matérn SPDE precision (<code>gx.spde_precision_grid</code>) with <code>MultivariateNormalPrecision</code>; <code>kl.DivergenceFree</code> for a velocity state</td></tr>
+      <tr><td>Reduced basis</td><td><code>kl.PeriodicFeatures</code></td><td><code>kl.LaplaceEigenfunctionFeatures</code> or <code>pyrox_nn.HSGPFeatures</code> (Dirichlet box), or EOFs of a free run with <code>geonnax.basis.eof_basis</code></td></tr>
+      <tr><td>\(\mathbf Q\)</td><td><code>gx.Kronecker</code>(time, space)</td><td>the same, with a smooth spatial factor (a wind-stress-curl error, daily to weekly correlation); a non-separable space–time kernel such as <code>kl.Gneiting</code> if errors propagate</td></tr>
+      <tr><td>Spread</td><td>dense Hessian</td><td><code>gx.gauss_newton_precision</code>, or the leading eigenpairs of it</td></tr>
+      <tr><td>Window</td><td>quasi-static, 2 times per stage</td><td>quasi-static by days, or overlapping short windows</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="notes">Notes from building this page</h2>
+  <ul>
+    <li><strong>gaussx</strong>: <code>MultivariateNormal</code>, <code>MultivariateNormalPrecision</code>, <code>circulant</code>, <code>Kronecker</code>, <code>sqrt</code>, <code>low_rank_plus_diag</code> and <code>gauss_newton_precision</code> all worked as documented. The square root of a <code>low_rank_plus_diag</code> falls back to a dense matrix, which is why the low-rank model keeps an unwhitened MVN site; gaussx has a structured root only for orthonormal factors on a scaled identity (<code>low_rank_plus_identity(..., orthonormal=True)</code>), and these features are orthogonal but not normalised. A gaussx MVN site inside a numpyro <code>scan</code> failed with a shape error, so the state formulation uses numpyro's <code>Normal</code>.</li>
+    <li><strong>kernellib</strong>: <code>kl.to_operator</code> returns a dense Gram for a periodic kernel on a regular ring; it does not detect the circulant structure, so the page builds the first column and calls <code>gx.circulant</code>. <code>kl.PeriodicFeatures</code> and <code>spectral_density</code> are public and matched the direct computation.</li>
+    <li><strong>pyrox</strong>: the same spectral density is importable only from the private <code>pyrox_gp._basis</code>; <code>HSGPFeatures</code> offers only Dirichlet boundaries.</li>
+    <li><strong>The weak-constraint page's strong-constraint numbers are a local minimum.</strong> It reported \(\mathcal J^\star = 1519\) (\(2\mathcal J^\star/p = 7.6\)) and a window error of 1.66; with this page's periodic \(\mathbf B\), the quasi-static solve finds \(\mathcal J^\star = \) 509 (2.55) and 0.64. The conclusion stands (the strong analysis cannot fit a biased model), with smaller margins.</li>
+  </ul>
+  <p class="loop">Code markers: <code>today (pkg)</code> names were imported and run at gaussx 0.6.5 (eeda235), kernellib 0.0.22 (c50e01f), geonnax 11d850c, numpyro 0.22.0 and lineax 0.1.1; <code>user</code> marks names this page defines; <code>not pinned</code> marks optimistix 0.1.0, used but not reviewed. Numbers come from running these snippets as printed, in double precision.</p>
+  <footer>Companion to the 4D-Var and weak-constraint 4D-Var primers.</footer>
+</main>
+
+<nav class="series-nav bottom" aria-label="Series navigation"><span class="crumbs"><a href="../esmax-ocean">All ocean pages</a></span><span class="pn"><a href="../learned-weno">← Learned WENO</a></span></nav>
+</body>
+</html>
