@@ -34,6 +34,7 @@ project:
                 - file: docs/geomodels/esmax/ocean/07_advection_c_grid.md
                 - file: docs/geomodels/esmax/ocean/08_learned_weno.md
                 - file: docs/geomodels/esmax/ocean/09_variational_programs.md
+                - file: docs/geomodels/esmax/ocean/10_nondim_standardisation.md
         - title: plumax
           children:
             - file: docs/geomodels/plumax/01_emission_rate.md

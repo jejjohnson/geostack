@@ -1,8 +1,8 @@
 ---
 title: "Ocean state estimation with esmax: a primer series"
-subtitle: "esmax · ocean · Nine pages from the six-step cycle to 4D-Var, hybrid models, learned assimilation, learned advection and variational DA as probabilistic programs"
+subtitle: "esmax · ocean · Ten pages from the six-step cycle to 4D-Var, hybrid models, learned assimilation, learned advection, variational DA as probabilistic programs and non-dimensional models"
 short_title: Overview
-description: "A reading order through nine self-contained pages on ocean state estimation for esmax's ocean component: the six-step cycle in probabilities, the Gulf Stream SSH-mapping problem, strong- and weak-constraint 4D-Var, a taxonomy of hybrid models, learned data assimilation, advection on the C-grid, a learned WENO scheme, and the variational estimators written as numpyro programs."
+description: "A reading order through ten self-contained pages on ocean state estimation for esmax's ocean component: the six-step cycle in probabilities, the Gulf Stream SSH-mapping problem, strong- and weak-constraint 4D-Var, a taxonomy of hybrid models, learned data assimilation, advection on the C-grid, a learned WENO scheme, the variational estimators written as numpyro programs, and non-dimensional models with standardised states."
 date: 2026-10-24
 keywords:
   - esmax
@@ -19,13 +19,15 @@ keywords:
 
 esmax's ocean component exists to be the forward model inside short-window
 data assimilation and the physics inside hybrid models
-([esmax workspace](../../../design/esmax.md)). These nine pages build the
+([esmax workspace](../../../design/esmax.md)). These ten pages build the
 background for that job on one running example, mapping sea-surface height
 over a Gulf Stream window with a quasi-geostrophic model: first the
 generative story and the six-step cycle, then the classical estimator
 (4D-Var, strong and weak), then what can be learned in the model and in the
 assimilation, one concrete hybrid, a learned advection scheme, and finally
 the variational estimators again, written as probabilistic programs.
+Page 10 is the scaling layer under all of them: models built from
+dimensionless numbers, and states standardised by the same affine map.
 
 +++
 
@@ -87,9 +89,15 @@ a trustworthy adjoint.
 numpyro models with gaussx, kernellib and geonnax priors. Read after 3 and 4.
 :::
 
+:::{card} 10 · Non-dimensional models
+:link: 10_nondim_standardisation.md
+Build models from dimensionless numbers with resolution guards, and scale
+states with one affine map shared by the model, DA and emulators.
+:::
+
 ::::
 
-## Conventions shared by all nine pages
+## Conventions shared by all ten pages
 
 **Notation.** $z$ is the latent state, $x$ covariates, $u$ controls and
 forcing, $y$ observations, $m$ the observation mask, $\theta$ physical
@@ -123,10 +131,11 @@ repository's DVC pipeline.
 
 | Library | Used on these pages for | Pages |
 |---|---|---|
-| somax (the future esmax ocean component) | the QG model, its forcing and the forcing-basis design | 2, 3, 4, 5, 6, 8 |
+| somax (the future esmax ocean component) | the QG model, its forcing and the forcing-basis design; scales, `StateAffine` and `from_nondimensional` | 2, 3, 4, 5, 6, 8, 10 |
 | finitevolX | C-grid operators, advection forms and WENO reconstructions | 2, 5, 6, 7, 8 |
 | vardax | strong, incremental and weak-constraint 4D-Var | 2, 3, 4, 6 |
 | gaussx | covariance operators, their square roots and solves, Gaussian distributions | 2, 5, 6, 9 |
 | kernellib | kernels for the covariances, truncated Fourier features, spectral densities | 9 |
 | geonnax | Laplacian eigenfunction and Legendre bases | 9 |
 | pipekit | operator protocols for the learned-assimilation types | 6 |
+| paramax, flowjax | constrained parameters (core), learned priors (optional extra) | 10 |
