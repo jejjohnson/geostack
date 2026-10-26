@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.2](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.1...geostack-v0.2.2) (2026-10-26)
+
+
+### Documentation
+
+* **esmax:** add page 10, non-dimensional models and standardised states ([#98](https://github.com/jejjohnson/geostack/issues/98)) ([48acfef](https://github.com/jejjohnson/geostack/commit/48acfeff1ca0263ab8cb2791a9b3e58cac50ad1b))
+* **esmax:** add the ocean state estimation primer series under geomodels/esmax/ocean ([#96](https://github.com/jejjohnson/geostack/issues/96)) ([fd3943f](https://github.com/jejjohnson/geostack/commit/fd3943f5f86f9c427d1245151967855ed87bff8c))
+* **esmax:** add variational data assimilation as probabilistic programs to the ocean series ([#99](https://github.com/jejjohnson/geostack/issues/99)) ([5203928](https://github.com/jejjohnson/geostack/commit/52039287fe04e15a39dc04aba40ddfd7e35838b7))
+
 ## [0.2.1](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.0...geostack-v0.2.1) (2026-10-24)
 
 

@@ -11,7 +11,7 @@ authors:
 repository-code: https://github.com/jejjohnson/geostack
 url: https://jejjohnson.github.io/geostack
 license: MIT
-version: 0.2.1
+version: 0.2.2
 date-released: '2026-10-12'
 keywords:
   - machine learning
