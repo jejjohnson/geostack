@@ -90,6 +90,16 @@ def test_the_foundation_layers_do_not_import_each_other() -> None:
     assert '"pipekit": "pipekit"' in source.split("ALLOWED")[0]  # forbidden
 
 
+def test_xrtoolz_may_import_geotoolz_but_not_the_reverse() -> None:
+    # xrtoolz is tier 2 above geotoolz (#80): xrops imports geoops kernels
+    assert ("tier", "xrtoolz-core", "geotoolz-ops") not in dg.violations(
+        _with_dependency("xrtoolz-core", "geotoolz-ops")
+    )
+    assert ("tier", "geotoolz-ops", "xrtoolz-core") in dg.violations(
+        _with_dependency("geotoolz-ops", "xrtoolz-core")
+    )
+
+
 def test_a_second_package_edge_between_known_repositories_is_new() -> None:
     new, _ = dg.check(_with_dependency("pipekit-cycle", "geotoolz-cloud"))
     assert ("tier", "pipekit-cycle", "geotoolz-cloud") in new

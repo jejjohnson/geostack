@@ -85,8 +85,8 @@ flowchart TB
   end
   subgraph geostack["GeoStack"]
     direction LR
-    geotoolz["geotoolz"]
     xrtoolz["xrtoolz"]
+    geotoolz["geotoolz"]
     georeader["georeader (third party)"]
     pipekit["pipekit"]
   end
@@ -200,7 +200,8 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoNumerics | 2 | finitevolX | finite volume |
 | GeoNumerics | 1 | spectraldiffx | spectral |
 | GeoNumerics | 0 | gaussx | linear algebra and Gaussians |
-| GeoStack | 1 | geotoolz, xrtoolz | operators on arrays and GeoTensors |
+| GeoStack | 2 | xrtoolz | operators on xarray, lifting geoops over cubes |
+| GeoStack | 1 | geotoolz | operators on arrays and geoarray carriers |
 | GeoStack | 0 | georeader, pipekit | pipelines and readers |
 <!-- tier-table:end -->
 :::
