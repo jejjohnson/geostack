@@ -52,7 +52,7 @@ TITLES = {
 }
 #: within a layer, a repository may import only repositories of a lower tier
 TIERS: dict[str, dict[str, int]] = {
-    "geostack": {"pipekit": 0, "georeader": 0, "xrtoolz": 1, "geotoolz": 1},
+    "geostack": {"pipekit": 0, "georeader": 0, "geotoolz": 1, "xrtoolz": 2},
     "numerics": {"gaussx": 0, "spectraldiffx": 1, "finitevolX": 2},
     "geoml": {
         "geonnax": 0,
@@ -68,7 +68,11 @@ TIERS: dict[str, dict[str, int]] = {
 }
 #: what each tier holds, for the page
 TIER_ROLES = {
-    "geostack": ("pipelines and readers", "operators on arrays and GeoTensors"),
+    "geostack": (
+        "pipelines and readers",
+        "operators on arrays and geoarray carriers",
+        "operators on xarray, lifting geoops over cubes",
+    ),
     "numerics": ("linear algebra and Gaussians", "spectral", "finite volume"),
     "geoml": (
         "layers and flows",
