@@ -21,9 +21,7 @@ pixi install
 
 ## Running Experiments
 
-geostack has no experiments yet. Each one will be a script in `scripts/` that
-composes the upstream libraries, a Hydra config in `configs/` and a stage in
-`dvc.yaml` (the `add-experiment` skill), run with:
+geostack has no experiments yet. Each one will be 1) a script in `scripts/` which composes the upstream libraries, 2) a Hydra config in `configs/` and 3) a stage in `dvc.yaml` (see the `add-experiment` skill). We run them with:
 
 ```bash
 pixi run dvc repro

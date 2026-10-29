@@ -824,11 +824,11 @@ SIX = [
 
 
 SIX_MATH = [
-    "y = H(f(θ)) + ε",
+    "y = h(f(θ)) + ε",
     "p(θ | y) = p(y | θ) p(θ) / p(y)",
-    "f(θ; φ) ≈ f(θ)",
-    "p(θ | y), with f(·; φ) for f",
-    "q(θ | y; ψ) ≈ p(θ | y)",
+    "f̂(θ; θ_emu) ≈ f(θ)",
+    "p(θ | y), with f̂(·; θ_emu) for f",
+    "q(θ | y; ν) ≈ p(θ | y)",  # noqa: RUF001 (Greek nu, the amortized weights)
 ]
 
 
