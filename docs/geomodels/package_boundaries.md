@@ -20,21 +20,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-Methane code is split today between two places that do not match what it is.
-geotoolz, a GeoTensor operator library, holds plume post-processing (masks,
-footprints, the integrated mass enhancement, fluxes) and a matched filter.
-plumax, a JAX dispersion library, holds band-integrated radiative transfer, a
-HITRAN look-up-table pipeline, a 3D-Var retrieval and a second matched
-filter. The proposal moves **plume code to plumax** and **radiative transfer
-and retrieval algorithms to a new radtrax**. Read from the code, the move is
-clean. plumax's radiative-transfer group (radtran, hapi_lut, assimilation and
-matched_filter, 6,100 of its 18,880 lines) imports nothing else in plumax.
-geotoolz's `plume` and `matched_filter` are called by nothing else in
-geotoolz. The package graph after the moves has no cycle, and every edge
-between stacks points from GeoModels down to GeoNumerics and GeoStack. It gets
-one cycle (geotoolz, plumax, radtrax) if geotoolz keeps re-exports of what
-moved, so it must not. **Three matched filters, two spectral-response
-implementations and two air-mass factors become one each.**
+Today, the methane code is split between two places that do not match what it is. geotoolz, a GeoTensor operator library, holds the plume post-processing (masks, footprints, the integrated mass enhancement, fluxes) and a matched filter, whereas plumax, a JAX dispersion library, holds band-integrated radiative transfer, a HITRAN look-up-table pipeline, a 3D-Var retrieval and a second matched filter. We propose to move the **plume code to plumax**, and the **radiative transfer and retrieval algorithms to a new radtrax**. Reading the code, we find that the move is clean. plumax's radiative-transfer group (radtran, hapi_lut, assimilation and matched_filter, 6,100 of its 18,880 lines) imports nothing else in plumax, and geotoolz's `plume` and `matched_filter` are called by nothing else in geotoolz. The package graph after the moves has no cycle, and every edge between stacks points from GeoModels down to GeoNumerics and GeoStack. It gets one cycle (geotoolz, plumax, radtrax) if geotoolz keeps re-exports of what moved, so it must not. **Three matched filters, two spectral-response implementations and two air-mass factors become one each.**
 
 +++
 
@@ -54,8 +40,7 @@ implementations and two air-mass factors become one each.**
 (pb-today)=
 ## Where the code is today
 
-[](#tbl-pb-today) is the inventory the radtrax and plumax pages point to:
-each module, its size and what it holds.
+[](#tbl-pb-today) is the inventory which the radtrax and plumax pages point to, with each module, its size and what it holds.
 
 :::{table} Plume, radiative-transfer and retrieval code in the stack, by package.
 :label: tbl-pb-today
@@ -74,9 +59,7 @@ each module, its size and what it holds.
 (pb-stage-1)=
 ## plumax's radiative-transfer group is closed
 
-**Problem.** A group of modules can leave a package if it imports nothing
-else in that package. The check reads every import in plumax, lazy ones
-included, and keeps those between subpackages.
+**Problem.** A group of modules can leave a package if it imports nothing else in that package. So we read every import in plumax (lazy ones included) and keep those between subpackages.
 
 :::{figure} ../images/package_boundaries/plumax_modules.svg
 :label: fig-pb-plumax
@@ -100,19 +83,12 @@ into_C = {s: edges[s] & C for s in SUBS if edges[s] & C}
 # → coupled: {radtran}, and the package root: {radtran}
 ```
 
-The group imports only itself ([](#fig-pb-plumax)): `matched_filter` imports `assimilation`
-(for the radiance observation model its targets use), which imports
-`radtran`. Nothing in it touches the dispersion models. Two things outside
-it import `radtran`: `coupled`, which turns a simulated plume into radiance,
-and the package root's re-exports. After the move both import radtrax, which
-is the direction the graph needs: plume physics uses radiative transfer, not
-the other way round.
+The group only imports itself ([](#fig-pb-plumax)): `matched_filter` imports `assimilation` (for the radiance observation model its targets use), which imports `radtran`, and nothing in it touches the dispersion models. Two things outside it import `radtran`: 1) `coupled`, which turns a simulated plume into radiance, and 2) the package root's re-exports. After the move both import radtrax, which is the direction the graph needs, since plume physics uses radiative transfer and not the other way round.
 
 (pb-stage-2)=
 ## geotoolz's plume and matched-filter modules stand alone
 
-**Problem.** A module can leave geotoolz if no other geotoolz module calls
-it, and it can live elsewhere if what it imports from geotoolz is public.
+**Problem.** A module can leave geotoolz if no other geotoolz module calls it, and it can live elsewhere if what it imports from geotoolz is public.
 
 :::{table} What `plume` and `matched_filter` import from the rest of geotoolz.
 :label: tbl-pb-private
@@ -123,14 +99,7 @@ it, and it can live elsewhere if what it imports from geotoolz is public.
 | `matched_filter` | `_src.config`, `_src.fitted`, `_src.samples`, `_src.shape`, `_src.valid`, `_src.wrap` | 6 of 6 |
 :::
 
-Only the package root imports either module, for its re-exports;
-`compositing`, `measure` and `segment` mention them in docstrings only. So
-neither has a caller to break. Both depend entirely on geotoolz's private
-helpers, though ([](#tbl-pb-private)): nodata handling (`invalid_values`, `wrap_filled`), carrier
-wrapping (`wrap_like`), band names (`resolve_band`), geometry checks
-(`require_projected_crs`), labelling and thresholds. Code that moves out
-must not import `geotoolz._src`, so those helpers become public first, as
-[Report 16](../reports/16_geo_data_stack.md#r16-ws-a)'s A3 did for pipekit's.
+Only the package root imports either module (for its re-exports), and `compositing`, `measure` and `segment` only mention them in docstrings. So neither module has a caller to break. However, both depend entirely on geotoolz's private helpers ([](#tbl-pb-private)): nodata handling (`invalid_values`, `wrap_filled`), carrier wrapping (`wrap_like`), band names (`resolve_band`), geometry checks (`require_projected_crs`), labelling and thresholds. Code that moves out must not import `geotoolz._src`, so those helpers become public first, as [Report 16](../reports/16_geo_data_stack.md#r16-ws-a)'s A3 did for pipekit's.
 
 (pb-stage-3)=
 ## Implementations that exist more than once
@@ -145,16 +114,7 @@ must not import `geotoolz._src`, so those helpers become public first, as
 | air-mass factor | plumax `hapi_lut/beers.py` (`air_mass_factor`); plumax `radtran/config.py` (`ObservationGeometry.air_mass_factor`) | one function in radtrax |
 :::
 
-Of the duplicates in [](#tbl-pb-dupes), the two plumax matched filters
-share their formula:
-`radtran.matched_filter` inverts a dense covariance, and
-`matched_filter.core` dispatches on gaussx operators and is the one the
-3D-Var derivation links to. geotoolz's NumPy filter and plumax's newer one
-both carry empirical, shrunk, low-rank, cluster and streaming backgrounds. One
-core keeps the estimators and the operator dispatch; the
-[radtrax page](radtrax/01_column_retrieval.md#rx1-stage-5) runs geotoolz's
-filter today, and [Report 16](../reports/16_geo_data_stack.md#r16-stage-2)
-runs it chip by chip.
+Of the duplicates in [](#tbl-pb-dupes), the two plumax matched filters share their formula: `radtran.matched_filter` inverts a dense covariance, whereas `matched_filter.core` dispatches on gaussx operators and is the one the 3D-Var derivation links to. geotoolz's NumPy filter and plumax's newer one both carry empirical, shrunk, low-rank, cluster and streaming backgrounds. So we keep one core with the estimators and the operator dispatch. The [radtrax page](radtrax/01_column_retrieval.md#rx1-stage-5) runs geotoolz's filter today, and [Report 16](../reports/16_geo_data_stack.md#r16-stage-2) runs it chip by chip.
 
 (pb-moves)=
 ## The moves
@@ -171,21 +131,12 @@ runs it chip by chip.
 | geotoolz `_src` helpers used by the above | geotoolz public API | nodata, wrapping, bands, geometry, labels, thresholds | none |
 :::
 
-What stays, outside [](#tbl-pb-moves): georeader's readers and SRF tables (sensor knowledge),
-geotoolz's generic spectral operators (`spectral.BandRatio`,
-`spectral.ContinuumRemoval`), segmentation and measurement, xrtoolz's
-column and unit conversions (`atm.gas.ch4`), and geotoolz-products'
-Carbon Mapper readers, which read plume products rather than make them.
+What stays, outside [](#tbl-pb-moves), is georeader's readers and SRF tables (sensor knowledge), geotoolz's generic spectral operators (`spectral.BandRatio`, `spectral.ContinuumRemoval`), segmentation and measurement, xrtoolz's column and unit conversions (`atm.gas.ch4`), and geotoolz-products' Carbon Mapper readers, which read plume products rather than make them.
 
 (pb-graph)=
 ## The package graph, today and after
 
-**Problem.** The packages' declared dependencies, base and extras, form a
-directed graph. A strongly connected component with more than one node is a
-cycle: two packages that each need the other to install or import. The
-check builds the graph from each `pyproject.toml` and runs Tarjan's
-algorithm on it today, after the moves, and in a counterfactual where
-geotoolz keeps re-exports of what moved, behind extras.
+**Problem.** The packages' declared dependencies (base and extras) form a directed graph. A strongly connected component with more than one node is a cycle, i.e. two packages which each need the other to install or import. We build the graph from each `pyproject.toml` and run Tarjan's algorithm on it in three cases: 1) today, 2) after the moves, and 3) in a counterfactual where geotoolz keeps re-exports of what moved, behind extras.
 
 :::{figure} ../images/package_boundaries/package_graph.svg
 :label: fig-pb-graph
@@ -214,38 +165,16 @@ sccs(shim)                               # → [{geotoolz, plumax, radtrax}] use
 #         finitevolx, radtrax 2 · plumax 3
 ```
 
-The graph is acyclic today and after the moves ([](#fig-pb-graph)). Its longest chain is
-plumax → radtrax → geotoolz → georeader. Every edge between stacks points
-from GeoModels to GeoNumerics (gaussx, finitevolx, spectraldiffx) or to GeoStack (pipekit, geotoolz,
-georeader), and none points back. The one way to break that is the usual
-way a move is softened: if geotoolz kept `geotoolz.plume` and
-`geotoolz.matched_filter` as re-exports behind extras, then geotoolz would
-need plumax and radtrax, and both need geotoolz through their `[geo]`
-extras. That is a cycle of three packages, so the old paths raise an
-`ImportError` naming the new home instead, as
-[Report 16](../reports/16_geo_data_stack.md#r16-ws-d)'s D2 does for the
-window dataset.
+The graph is acyclic today and after the moves ([](#fig-pb-graph)), and its longest chain is plumax → radtrax → geotoolz → georeader. Every edge between stacks points from GeoModels to GeoNumerics (gaussx, finitevolx, spectraldiffx) or to GeoStack (pipekit, geotoolz, georeader), and none points back. The one way to break that is the usual way a move gets softened. If geotoolz kept `geotoolz.plume` and `geotoolz.matched_filter` as re-exports behind extras, then geotoolz would need plumax and radtrax, and both of them need geotoolz through their `[geo]` extras. That is a cycle of three packages, so instead the old paths raise an `ImportError` naming the new home, as [Report 16](../reports/16_geo_data_stack.md#r16-ws-d)'s D2 does for the window dataset.
 
 (pb-rules)=
 ## Ownership rules
 
-1. **geotoolz never imports plumax or radtrax**, not even lazily behind an
-   extra. The moved names leave with an `ImportError` that says where they
-   went.
-2. **radtrax never imports plumax.** Radiative transfer does not know about
-   plumes; the plume-to-radiance coupling (`coupled`) stays in plumax and
-   imports radtrax.
-3. **Geo carriers arrive through extras.** `radtrax[geo]` and `plumax[geo]`
-   add geotoolz and georeader; the base installs stay JAX, xarray and
-   pipekit, as plumax's are today.
-4. **Moved code imports only public geotoolz names.** The private helpers it
-   needs become public in geotoolz before the move.
-5. **Edges between stacks point down.** GeoNumerics (gaussx, spectraldiffx,
-   finitevolx, and external ones such as diffrax) are the foundational
-   operators and import no GeoModels or GeoML package. GeoModels (plumax,
-   somax, radtrax) build on GeoNumerics and GeoStack. Whether GeoModels and GeoML
-   (geonnax and the learning libraries) may import each other is
-   [open](#pb-open-questions).
+1. **geotoolz never imports plumax or radtrax**, not even lazily behind an extra. The moved names leave with an `ImportError` which says where they went.
+2. **radtrax never imports plumax.** Radiative transfer does not know about plumes, so the plume-to-radiance coupling (`coupled`) stays in plumax and imports radtrax.
+3. **Geo carriers arrive through extras.** `radtrax[geo]` and `plumax[geo]` add geotoolz and georeader, and the base installs stay JAX, xarray and pipekit, as plumax's are today.
+4. **Moved code imports only public geotoolz names.** The private helpers it needs become public in geotoolz before the move.
+5. **Edges between stacks point down.** GeoNumerics (gaussx, spectraldiffx, finitevolx, and external ones such as diffrax) are the foundational operators, and they import no GeoModels or GeoML package. GeoModels (plumax, somax, radtrax) build on GeoNumerics and GeoStack. Whether GeoModels and GeoML (geonnax and the learning libraries) may import each other is [open](#pb-open-questions).
 
 (pb-gates)=
 ## Testing gates
@@ -268,27 +197,11 @@ window dataset.
 (pb-open-questions)=
 ## Open questions
 
-1. **Does the 3D-Var retrieval belong in radtrax or in vardax?**
-   `assimilation` is a variational retrieval with a radiance observation
-   operator. Its operator is radiative transfer; its solvers are generic
-   variational data assimilation, which is vardax's job. Splitting it would
-   make radtrax depend on vardax; whether that edge is allowed depends on
-   which stack vardax sits in (question 5).
-2. **Is the matched filter radiative transfer?** It is a detector whose
-   target radtrax computes. radtrax is its natural home while it is the only
-   consumer; a detection library in GeoML would be one if a second gas or
-   sensor family needs it.
-3. **`plumax.geo` or `plumax.integrations.geotoolz`?** geopatcher's
-   `integrations/` pattern names the carrier library; `geo` is shorter and
-   matches `radtrax[geo]`.
-4. **Who owns the SRF tables?** georeader ships Sentinel-2's as package
-   data; EMIT's and PRISMA's come with their products. radtrax could read
-   them all through georeader, or carry its own copies and drop the extra.
-5. **May GeoModels and GeoML import each other?** An emulator of plumax in
-   GeoML would import plumax; a radtrax retrieval with a learned prior would
-   import a GeoML package. Allowing one direction only keeps the graph
-   acyclic; the data-assimilation libraries (vardax, filterax) need a stack
-   first.
+1. **Does the 3D-Var retrieval belong in radtrax or in vardax?** `assimilation` is a variational retrieval with a radiance observation operator. Its operator is radiative transfer, whereas its solvers are generic variational data assimilation, which is vardax's job. Splitting it would make radtrax depend on vardax, and whether that edge is allowed depends on which stack vardax sits in (question 5).
+2. **Is the matched filter radiative transfer?** It is a detector whose target radtrax computes. So radtrax is its natural home while it is the only consumer, and a detection library in GeoML would be one if a second gas or sensor family needs it.
+3. **`plumax.geo` or `plumax.integrations.geotoolz`?** geopatcher's `integrations/` pattern names the carrier library, whereas `geo` is shorter and matches `radtrax[geo]`.
+4. **Who owns the SRF tables?** georeader ships Sentinel-2's as package data, and EMIT's and PRISMA's come with their products. radtrax could read them all through georeader, or carry its own copies and drop the extra.
+5. **May GeoModels and GeoML import each other?** An emulator of plumax in GeoML would import plumax, and a radtrax retrieval with a learned prior would import a GeoML package. Allowing one direction only keeps the graph acyclic, and the data-assimilation libraries (vardax, filterax) need a stack first.
 
 (pb-todos)=
 ## Upcoming work

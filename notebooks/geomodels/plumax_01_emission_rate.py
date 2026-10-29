@@ -497,8 +497,8 @@ W = 760
 rows = [("advection–diffusion", "∂c/∂t + u·∇c = ∇·(K∇c) + S", ov.STATE),
         ("column equation", "∂Ω/∂t + U ∂Ω/∂x = K_y ∂²Ω/∂y² + q", ov.STATE)]
 methods = [("Gaussian plume", "steady, solve"), ("Gaussian puff", "Green's function"),
-           ("cross-sectional flux", "∫ dy"), ("divergence", "∇_H · F"),
-           ("IME", "∬ dA, then τ")]
+           ("cross-sectional flux", "∫ dy"), ("divergence", "∇_h · F"),
+           ("IME", "∬ dA, then τ_res")]
 svg = ov.Svg(W, 330, "Five emission-rate methods from one equation: the plume and"
              " the puff solve the 3D advection-diffusion equation; the cross-sectional"
              " flux, the divergence method and the IME integrate its column form over"

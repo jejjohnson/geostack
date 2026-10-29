@@ -20,29 +20,12 @@ numbering:
 
 +++ {"part": "abstract"}
 
-Sentinel-2 sees methane as a dip in band 12 (2.2 μm), but so does a darker
-patch of ground. The single-band multi-pass (SBMP), multi-band single-pass
-(MBSP) and multi-band multi-pass (MBMP) retrievals remove the ground in three
-ways: compare two dates, compare two bands, or both. This page merges two
-derivations of the family, from the radiative transfer equation to the
-double difference, and runs every method on one synthetic two-pass scene
-with the nuisances the derivations name. A stable mineral patch, a wetted
-field, a patch whose spectral ratio changes, a 5 % scene-wide brightening
-and a 1 % water-vapour change are all in it. The chain holds: MBMP cancels
-everything but the patch whose band ratio changed, which reads as
-0.039 kg/m² of methane. Four corrections come out of the run:
+Sentinel-2 sees methane as a dip in band 12 (2.2 μm), but so does a darker patch of ground. The single-band multi-pass (SBMP), multi-band single-pass (MBSP) and multi-band multi-pass (MBMP) retrievals remove the ground in three ways: 1) compare two dates, 2) compare two bands, or 3) do both. In this page, we merge two derivations of the family, from the radiative transfer equation to the double difference, and we run every method on one synthetic two-pass scene which has the nuisances the derivations name: a stable mineral patch, a wetted field, a patch whose spectral ratio changes, a 5 % scene-wide brightening and a 1 % water-vapour change. The chain from the radiative transfer equation holds, and MBMP cancels everything except the patch whose band ratio changed, which reads as 0.039 kg/m² of methane. Four corrections come out of the run:
 
-- **Fit the scale factor on background pixels.** Fitted over every pixel, as
-  one derivation does, the plume moves it by 0.31 % and MBMP loses 11 % of
-  the plume's mass.
-- **Invert with the band table, not a slope.** A linear inversion in
-  $m\,\Delta\alpha$ recovers 91 % of the mass; the exact two-band table
-  99 %.
-- **Band 11 absorbs.** Setting $\sigma_{11} = 0$ and using $\bar\sigma_{12}$
-  as the slope, as the other derivation does, recovers 78 %.
-- **geotoolz's `SBMP` is an MBMP.** It takes two bands and two passes, and
-  without per-pass scale factors it reads the 1 % water-vapour change as a
-  0.013 kg/m² offset.
+- **Fit the scale factor on background pixels.** When it is fitted over every pixel, as one derivation does, the plume moves it by 0.31 % and MBMP loses 11 % of the plume's mass.
+- **Invert with the band table, not a slope.** A linear inversion in $\mathrm{AMF} \Delta\alpha$ recovers 91 % of the mass, whereas the exact two-band table recovers 99 %.
+- **Band 11 absorbs.** Setting $\sigma_{11} = 0$ and using $\bar{\sigma}_{12}$ as the slope, as the other derivation does, recovers 78 %.
+- **geotoolz's `SBMP` is an MBMP.** It takes two bands and two passes, and without per-pass scale factors it reads the 1 % water-vapour change as a 0.013 kg/m² offset.
 
 +++
 
@@ -56,73 +39,54 @@ everything but the patch whose band ratio changed, which reads as
 | **Audience** | anyone running a Sentinel-2 or Landsat methane retrieval, and anyone choosing between the single-pass and multi-pass forms |
 | **Companions** | [radtrax · 1](01_column_retrieval.md) (the single-pass column retrieval, the band model, the curve of growth and the look-up table this page reuses); [radtrax · 3](03_design.md) (radtrax's design); [plumax · 1](../plumax/01_emission_rate.md) (the emission rate from the column map); the [package boundaries](../package_boundaries.md#pb-today) page (where the code is today) |
 | **Code checked against** | geotoolz 0.10.2 at `088475e`, georeader-spaceml 2.4.1 and plumax 0.1.2 at `28f257e`, all from `references/`. Read on 14 October 2026 |
-| **Running example** | every number and figure is from one run of `notebooks/geomodels/radtrax_02_mbmp.py`, which asserts each one. Code comments carry the [status markers](../../overview_examples.md#ex-markers). The methane spectrum is [radtrax · 1](01_column_retrieval.md)'s synthetic one ($\bar\sigma_{11} = 0.04$, $\bar\sigma_{12} = 0.40$ m²/kg, a modelling choice); the Sentinel-2A band 11 and 12 response functions are real |
+| **Running example** | every number and figure is from one run of `notebooks/geomodels/radtrax_02_mbmp.py`, which asserts each one. Code comments carry the [status markers](../../overview_examples.md#ex-markers). The methane spectrum is [radtrax · 1](01_column_retrieval.md)'s synthetic one ($\bar{\sigma}_{11} = 0.04$, $\bar{\sigma}_{12} = 0.40$ m²/kg, a modelling choice); the Sentinel-2A band 11 and 12 response functions are real |
 | **Sources** | two derivations supplied by the author: "Deriving the MBMP method family from first principles" [@geostack_mbmp_note] and a second, step-by-step optical derivation (generated with Gemini) [@geostack_mbmp_note_gemini]; Varon et al. [@varon2021; @varon2018], Chen et al. [@chen2022], Watine-Guiu et al. [@watineguiu2023] |
 :::
 
 :::{important} What changed from the two derivations
-Both derivations run the same chain: drop emission and scattering from the
-radiative transfer equation, integrate to Beer–Lambert, average over the
-band, then remove the surface by ratios across passes, bands, or both. That
-chain **stands**, and the two agree on the algebra up to the direction of
-the scale factor $c$. Where they differ from each other, or from the run,
-a [Differs box](../../overview.md#sec-conventions) argues the point:
+Both derivations run the same chain: they drop emission and scattering from the radiative transfer equation, integrate to Beer–Lambert, average over the band, and then remove the surface by ratios across passes, bands, or both. That chain **stands**, and the two agree on the algebra up to the direction of the scale factor $c$. Where they differ from each other, or from the run, a [Differs box](../../overview.md#sec-conventions) argues the point:
 
 - **Fit the scale factor on background pixels** ([the run](#rx2-running)).
 - **Band 11 absorbs**, so the sensitivity is $\alpha_{12} - \alpha_{11}$ ([results](#tbl-rx2-results)).
 - **The linearisation and its validity condition** ([band model](#rx2-band)).
-- **The sensitivity's $1/m$** ([band model](#rx2-band)).
+- **The sensitivity's $1/\mathrm{AMF}$** ([band model](#rx2-band)).
 - **Difference of logs, not of δ**, and the direction of $c$ ([three methods](#rx2-methods)).
 - **geotoolz's `plume.SBMP` is an MBMP** ([stack](#rx2-stack)).
-- **The dropped $\cos\theta_s$** ([radiative transfer](#rx2-rte)).
+- **The dropped $\cos(\mathrm{SZA})$** ([radiative transfer](#rx2-rte)).
 
-Smaller points without a box: derivation (1)'s `\,` thin spaces and `\!`
-arrived as commas and `!`, and its subscripts were eaten by Markdown
-italics (`\mathcal{T}*b`), all restored here; its summary chain says MBSP
-cancels "temporal A via regression", where it cancels the albedo within one
-pass.
+There are also smaller points without a box. Derivation (1)'s `\,` thin spaces and `\!` arrived as commas and `!`, and Markdown italics ate its subscripts (`\mathcal{T}*b`), which we restored here. Its summary chain also says that MBSP cancels "temporal A via regression", whereas it cancels the albedo within one pass.
 :::
 
 (rx2-rte)=
 ## The radiative transfer equation in the SWIR
 
-**TL;DR.** Two terms of the radiative transfer equation vanish in the
-shortwave infrared, and what is left integrates to Beer–Lambert.
+**TL;DR.** Two terms of the radiative transfer equation vanish in the shortwave infrared, and what is left integrates to Beer–Lambert.
 
-**Problem.** For the intensity $I_\lambda$ in a plane-parallel atmosphere,
+**Problem.** For the intensity $I_\lambda$ in a plane-parallel atmosphere, the radiative transfer equation is
 
 $$
-\mu \frac{dI_\lambda}{d\tau_\lambda} = I_\lambda - J_\lambda ,
+\mu \frac{\mathrm{d} I_\lambda}{\mathrm{d} \tau_\lambda} = I_\lambda - J_\lambda ,
 $$ (rx2-eq-rte)
 
-with $\mu = \cos\theta$, $\tau_\lambda$ the optical depth and $J_\lambda$ the
-source function, emission plus scattering into the beam. Between 1.6 and
-2.3 μm both are small. Thermal emission: a 300 K surface emits $2\times10^{-4}$
-of the sunlight it reflects at 2.2 μm (albedo 0.2, $\theta_s = 35°$).
-Rayleigh scattering: its optical depth falls as $\lambda^{-4}$, 16 times
-weaker at 2 μm than at 1 μm, and is $3.7\times10^{-4}$ in band 12. With
-$J_\lambda \to 0$, {eq}`rx2-eq-rte` reduces along the path $s$ to
+where $\mu = \cos\theta$ is the cosine of the zenith angle $\theta$, $\tau_\lambda$ is the optical depth and $J_\lambda$ is the source function (emission plus scattering into the beam), and all of them are scalars at the wavelength $\lambda$. Between 1.6 and 2.3 μm both source terms are small. For thermal emission, a 300 K surface emits $2 \times 10^{-4}$ of the sunlight it reflects at 2.2 μm (with an albedo of 0.2 and $\mathrm{SZA} = 35°$). For Rayleigh scattering, the optical depth falls as $\lambda^{-4}$, so it is 16 times weaker at 2 μm than at 1 μm, and it is $3.7 \times 10^{-4}$ in band 12. So with $J_\lambda \to 0$, {eq}`rx2-eq-rte` reduces along the path $s$ to
 
 $$
-\frac{dI_\lambda}{ds} = -\sigma_\lambda\, n(s)\, I_\lambda ,
+\frac{\mathrm{d} I_\lambda}{\mathrm{d} s} = -\sigma_\lambda n(s) I_\lambda ,
 $$ (rx2-eq-extinction)
 
-with $\sigma_\lambda$ the absorption cross-section and $n$ the absorber's
-density. Integrating {eq}`rx2-eq-extinction` down to a Lambertian surface of albedo $A_\lambda$ and
-back up, through the column $\Omega = \int n\, dz$ along the slant paths, it
-gives the TOA reflectance
+where $\sigma_\lambda$ is the absorption cross-section and $n(s)$ is the absorber's density. We integrate {eq}`rx2-eq-extinction` down to a Lambertian surface of albedo $A_\lambda$ and back up, through the column $\Omega = \int n \mathrm{d}z$ along the slant paths, which gives the TOA reflectance
 
 $$
-R_\lambda = \frac{\pi L_\lambda}{E_{\lambda,\odot} \cos\theta_s}
-= A_\lambda\, \exp(-m\, \sigma_\lambda\, \Omega) , \qquad
-m = \frac{1}{\cos\theta_s} + \frac{1}{\cos\theta_v} ,
+R_\lambda = \frac{\pi L_\lambda}{E_{\lambda,\odot} \cos(\mathrm{SZA})} = A_\lambda e^{-\mathrm{AMF} \sigma_\lambda \Omega} ,
 $$ (rx2-eq-beer)
 
-where $L_\lambda$ is the radiance at the sensor, $E_{\lambda,\odot}$ the
-solar irradiance and $m$ the geometric air-mass factor, as in
-[radtrax · 1](01_column_retrieval.md#rx1-provenance). Every pixel has two
-unknowns per wavelength, $A_\lambda$ and $\Omega$; the rest of the page is
-about removing $A_\lambda$.
+with the geometric air-mass factor
+
+$$
+\mathrm{AMF} = \frac{1}{\cos(\mathrm{SZA})} + \frac{1}{\cos(\mathrm{VZA})} ,
+$$ (rx2-eq-amf)
+
+where $L_\lambda$ is the radiance at the sensor, $E_{\lambda,\odot}$ is the solar irradiance, and $\mathrm{SZA}$ and $\mathrm{VZA}$ are the sun and view zenith angles, as in [radtrax · 1](01_column_retrieval.md#rx1-provenance). As in radtrax · 1, $\Omega$ is the methane column in kg/m² (not a spatial domain), and every symbol here is a scalar per pixel and wavelength. So every pixel has two unknowns per wavelength, $A_\lambda$ and $\Omega$, and the rest of the page is about removing $A_\lambda$.
 
 ```{code-block} python
 :caption: The two dropped terms, in numbers, from a real run.
@@ -137,108 +101,81 @@ tau_rayleigh(2.2)                     # → 3.7 × 10⁻⁴           user
 ```
 
 :::{warning} Differs from the plan
-Derivation (1) writes the TOA intensity as $I_\odot A_\lambda / \pi$ and
-drops the $\cos\theta_s$ of the incoming irradiance; derivation (2) keeps it,
-and the reflectance {eq}`rx2-eq-beer` divides it out. Neither treats
-aerosols, which scatter more than air at 2.2 μm over hazy or dusty scenes;
-the ratio methods below remove a scene-wide aerosol change for the same
-reason they remove a scene-wide brightening, but not a local one.
+Derivation (1) writes the TOA intensity as $I_\odot A_\lambda / \pi$ and drops the $\cos(\mathrm{SZA})$ of the incoming irradiance, whereas derivation (2) keeps it, and the reflectance {eq}`rx2-eq-beer` divides it out. Neither treats aerosols, which scatter more than air at 2.2 μm over hazy or dusty scenes. The ratio methods below remove a scene-wide aerosol change for the same reason they remove a scene-wide brightening, but they do not remove a local one.
 :::
 
 (rx2-band)=
 ## The band model and its linearisation
 
-**TL;DR.** Average over the band, split the column into background and
-plume, and see how far a straight line carries.
+**TL;DR.** Average over the band, split the column into background and plume, and see how far a straight line carries.
 
-**Problem.** Band $b$ integrates over its spectral response $f_b(\lambda)$.
-With the albedo flat across the band, $R_b = A_b\, \mathcal{T}_b(\Omega)$,
-where $\mathcal{T}_b$ is the band average of $e^{-m \sigma_\lambda \Omega}$, the
-exact band model of [radtrax · 1](01_column_retrieval.md#rx1-model).
-Split $\Omega = \Omega_{\text{bg}} + \Delta\Omega$, with
-$\Omega_{\text{bg}} = 0.0109$ kg/m² (1.9 ppm). The exact plume optical depth
-of band $b$ is
-$\tau_b(\Delta\Omega) = -\ln[\mathcal{T}_b(\Omega_{\text{bg}} + \Delta\Omega) / \mathcal{T}_b(\Omega_{\text{bg}})]$,
-and its tangent at the background is the sensitivity
+**Problem.** Band $b$ integrates over its spectral response $f_b(\lambda)$. With the albedo flat across the band, $R_b = A_b T_b(\Omega)$, where the band transmittance $T_b(\Omega) \in [0, 1]$ is the band average of $e^{-\mathrm{AMF} \sigma_\lambda \Omega}$ at this page's fixed $\mathrm{AMF}$ (the exact band model of [radtrax · 1](01_column_retrieval.md#rx1-model)). We split the column as $\Omega = \Omega_\text{bg} + \Delta\Omega$, with $\Omega_\text{bg} = 0.0109$ kg/m² (1.9 ppm). The exact plume optical depth of band $b$ is $\tau_b(\Delta\Omega) = -\ln[T_b(\Omega_\text{bg} + \Delta\Omega) / T_b(\Omega_\text{bg})]$, and its tangent at the background is the sensitivity
 
 $$
-\alpha_b = -\frac{1}{m} \frac{\partial \ln \mathcal{T}_b}{\partial \Omega} \bigg|_{\Omega_{\text{bg}}} ,
-\qquad
-R_b \approx \underbrace{A_b\, \mathcal{T}_b(\Omega_{\text{bg}})}_{R_b^0}\,
-e^{-m\, \alpha_b\, \Delta\Omega} .
+\alpha_b = -\frac{1}{\mathrm{AMF}} \left. \frac{\partial \ln T_b}{\partial \Omega} \right|_{\Omega_\text{bg}} ,
 $$ (rx2-eq-alpha)
+
+so that, to first order in $\Delta\Omega$,
+
+$$
+R_b \approx \underbrace{A_b T_b(\Omega_\text{bg})}_{R_b^0} e^{-\mathrm{AMF} \alpha_b \Delta\Omega} ,
+$$ (rx2-eq-linear)
+
+where $\alpha_b \in \mathbb{R}_{>0}$ is in m²/kg, like $\bar{\sigma}_b$, and $R_b^0 \in \mathbb{R}_{\ge 0}$ is the plume-free reflectance.
 
 ```{code-block} python
 :caption: The band sensitivities and the linear range, from a real run.
 :linenos:
 
-# Shapes: G = 100,000 wavelengths (0.01 nm); m = 2.225
+# Shapes: N_λ = 100,000 wavelengths (0.01 nm); AMF = 2.225
 srf_s2 = read_srf("S2A")         # 1 nm table, one column per band  today
-# f_b(λ) on the 0.01 nm grid, zero outside the table          (G,) each
+# f_b(λ) on the 0.01 nm grid, zero outside the table        (N_λ,) each
 f11 = np.interp(WL, srf_s2.index, srf_s2["B11"], left=0, right=0)  # user
 f12 = np.interp(WL, srf_s2.index, srf_s2["B12"], left=0, right=0)  # user
 # σ̄_b = ⟨σ⟩_b: 0.040 and 0.400 m²/kg (chosen)
-# α_b = −(1/m) ∂ ln T_b / ∂Ω at Ω_bg       → 0.0398, 0.3953  user
-# m α₁₂ ΔΩ / τ₁₂(ΔΩ) at ΔΩ = 0.3 kg/m²     → 1.16           user
-# nB_b(ΔX) = ⟨exp(−m σ ΔX)⟩_b, no background         (181,)
+# α_b = −(1/AMF) ∂ ln T_b / ∂Ω at Ω_bg     → 0.0398, 0.3953  user
+# AMF α₁₂ ΔΩ / τ₁₂(ΔΩ) at ΔΩ = 0.3 kg/m²   → 1.16           user
+# nB_b(ΔΩ) = ⟨exp(−AMF σ ΔΩ)⟩_b, no background       (181,)
 nb = build_nb_lut(ds, srf, T_K=280, p_atm=0.8, amf=m)       # today
 # −ln nB₁₂ / τ₁₂ at 0.3 kg/m²                → 1.011          user
 ```
 
-$\alpha_b$ sits just below $\bar\sigma_b$, because the background has
-already darkened the strongest line cores. At 0.3 kg/m² the straight line
-is 16 % above the exact optical depth, the
-[curve of growth](01_column_retrieval.md#rx1-stage-2). Band 11, the 1.66 μm
-band's edge, absorbs a tenth as much as band 12 on this spectrum (a
-modelling choice; it is not zero on real spectra either). plumax's band
-table, `nB`, integrates the plume without the background column, which
-overstates band 12's plume optical depth by 1.1 %.
+$\alpha_b$ sits just below $\bar{\sigma}_b$, because the background has already darkened the strongest line cores. At 0.3 kg/m² the straight line is 16 % above the exact optical depth (the [curve of growth](01_column_retrieval.md#rx1-stage-2)). Band 11, at the edge of the 1.66 μm band, absorbs a tenth as much as band 12 on this spectrum, which is a modelling choice (though it is not zero on real spectra either). plumax's band table, `nB`, integrates the plume without the background column, which overstates band 12's plume optical depth by 1.1 %.
 
 :::{warning} Differs from the plan
-Derivation (1) defines $\alpha_b = -\partial \ln \mathcal{T}_b / \partial \Omega$,
-which already contains $m$, and then writes $e^{-\alpha_b m \Delta\Omega}$; the
-$1/m$ in {eq}`rx2-eq-alpha` makes the two consistent. It calls the
-linearisation valid for small $\Delta\Omega / \Omega_{\text{bg}}$; a 0.3 kg/m²
-plume is 27 times $\Omega_{\text{bg}}$, and the condition that matters is the
-curvature of $\ln \mathcal{T}_b$ over the plume's range. Derivation (2) goes
-one step further, $e^{-x} \approx 1 - x$, which needs $m \sigma \Delta\Omega \ll 1$;
-at the plume peak it is 0.27.
+Derivation (1) defines $\alpha_b = -\partial \ln T_b / \partial \Omega$, which already contains $\mathrm{AMF}$, and then writes $e^{-\alpha_b \mathrm{AMF} \Delta\Omega}$, so the $1/\mathrm{AMF}$ in {eq}`rx2-eq-alpha` makes the two consistent. It calls the linearisation valid for small $\Delta\Omega / \Omega_\text{bg}$. However, a 0.3 kg/m² plume is 27 times $\Omega_\text{bg}$, and the condition that matters is the curvature of $\ln T_b$ over the plume's range. Derivation (2) goes one step further with $e^{-\tau} \approx 1 - \tau$, which needs $\mathrm{AMF} \sigma \Delta\Omega \ll 1$, and at the plume peak it is 0.27.
 :::
 
 (rx2-methods)=
 ## Three ways to remove the surface
 
-**TL;DR.** Ratio across passes (SBMP), across bands (MBSP), or both (MBMP);
-each ratio cancels what it assumes is constant.
+**TL;DR.** Ratio across passes (SBMP), across bands (MBSP), or both (MBMP); each ratio cancels what it assumes is constant.
 
-**Problem.** Write {eq}`rx2-eq-alpha` for bands 11 and 12, on a plume pass
-$(p)$ and a plume-free reference pass $(r)$ over the same pixels. The three
-estimators are:
+**Problem.** We write {eq}`rx2-eq-linear` for bands 11 and 12, on a plume pass $(p)$ and a plume-free reference pass $(r)$ over the same pixels. Each of the three estimators turns the reflectances into a log signal $\Delta\tau \in \mathbb{R}$ per pixel. SBMP compares band 12 across the two passes,
 
 $$
-\begin{aligned}
-\text{SBMP:}\quad & s = -\ln \frac{c_s R_{12}^{(p)}}{R_{12}^{(r)}} = \tau_{12}(\Delta\Omega) + \ln\frac{c_s A_{12}^{(p)}}{A_{12}^{(r)}} , \\
-\text{MBSP:}\quad & s = -\ln(1 + \delta^{(p)}) , \quad
-\delta = \frac{c\, R_{12}}{R_{11}} - 1
-= \tau_{12} - \tau_{11} + \ln\frac{c\, A_{12}\, \mathcal{T}_{12}^{\text{bg}}}{A_{11}\, \mathcal{T}_{11}^{\text{bg}}} , \\
-\text{MBMP:}\quad & s = -\ln \frac{1 + \delta^{(p)}}{1 + \delta^{(r)}}
-= \tau_{12} - \tau_{11} + \ln\frac{c^{(p)} r^{(p)}}{c^{(r)} r^{(r)}} ,
-\quad r = \frac{A_{12}}{A_{11}} .
-\end{aligned}
+\Delta\tau_\text{SBMP} = -\ln \frac{c_s R_{12}^{(p)}}{R_{12}^{(r)}} = \tau_{12}(\Delta\Omega) + \ln \frac{c_s A_{12}^{(p)}}{A_{12}^{(r)}} ,
 $$ (rx2-eq-three)
 
-Each scale factor is a least-squares fit through the origin over background
-pixels: $c_s$ from $R_{12}^{(r)} \approx c_s R_{12}^{(p)}$, and $c$ per pass from
-$R_{11} \approx c\, R_{12}$. The leftover log is what each method assumes
-away. SBMP needs the band-12 albedo unchanged between passes, up to one
-scene-wide factor. MBSP needs the band ratio $r$ the same everywhere in the
-scene, up to $c$. MBMP needs only $r$ unchanged at each pixel between
-passes, up to one scene-wide factor per pass: it is a difference in
-differences, across bands and then across dates. The column comes from
-inverting the exact table, $\Delta\Omega = \tau_{12}^{-1}(s)$ for SBMP and
-$\Delta\Omega = g^{-1}(s)$ with $g = \tau_{12} - \tau_{11}$ for MBSP and MBMP,
-or, to first order, $s / (m\, \alpha_{12})$ and $s / (m\, \Delta\alpha)$ with
-$\Delta\alpha = \alpha_{12} - \alpha_{11}$.
+MBSP compares the two bands within the plume pass,
+
+$$
+\Delta\tau_\text{MBSP} = -\ln(1 + \delta^{(p)}) = \tau_{12} - \tau_{11} + \ln \frac{c A_{12} T_{12}(\Omega_\text{bg})}{A_{11} T_{11}(\Omega_\text{bg})} ,
+$$ (rx2-eq-mbsp)
+
+with the fractional band difference
+
+$$
+\delta = \frac{c R_{12}}{R_{11}} - 1 ,
+$$ (rx2-eq-delta)
+
+and MBMP compares the band difference across the two passes,
+
+$$
+\Delta\tau_\text{MBMP} = -\ln \frac{1 + \delta^{(p)}}{1 + \delta^{(r)}} = \tau_{12} - \tau_{11} + \ln \frac{c^{(p)} r^{(p)}}{c^{(r)} r^{(r)}} ,
+$$ (rx2-eq-mbmp)
+
+where $r = A_{12} / A_{11} \in \mathbb{R}_{>0}$ is the band ratio. [CHECK: taking $-\ln$ of the ratios gives the leftover log terms with a minus sign, e.g. $\tau_{12} - \ln(c_s A_{12}^{(p)} / A_{12}^{(r)})$; the sign does not change what each method assumes away.] Each scale factor is a scalar least-squares fit through the origin over background pixels, $c_s$ from $R_{12}^{(r)} \approx c_s R_{12}^{(p)}$ and $c$ per pass from $R_{11} \approx c R_{12}$. The leftover log is what each method assumes away. SBMP needs the band-12 albedo unchanged between passes, up to one scene-wide factor. MBSP needs the band ratio $r$ to be the same everywhere in the scene, up to $c$. MBMP only needs $r$ unchanged at each pixel between passes, up to one scene-wide factor per pass, so it is a difference in differences (across bands and then across dates). The column comes from inverting the exact table, $\Delta\Omega = \tau_{12}^{-1}(\Delta\tau_\text{SBMP})$ for SBMP and $\Delta\Omega = g^{-1}(\Delta\tau)$ with $g = \tau_{12} - \tau_{11}$ for MBSP and MBMP, or, to first order, from $\Delta\tau_\text{SBMP} / (\mathrm{AMF} \alpha_{12})$ and $\Delta\tau / (\mathrm{AMF} \Delta\alpha)$ with $\Delta\alpha = \alpha_{12} - \alpha_{11}$.
 
 ```{code-block} python
 :caption: The three estimators on a two-pass cube, from a real run.
@@ -261,33 +198,15 @@ gz = gz.plume.SBMP(swir1=0, swir2=1, axis=0)(obs, ref)     # today
 ```
 
 :::{warning} Differs from the plan
-The two derivations write $c$ in opposite directions: derivation (1)
-divides, $\delta = R_{12} / (c\, R_{11}) - 1$ with $c \approx R_{12}/R_{11}$, and
-derivation (2) multiplies, $\delta = c\, R_{12} / R_{11} - 1$ with
-$c \approx R_{11}/R_{12}$; they are the same estimator, and this page uses
-derivation (2)'s form. Derivation (1)'s SBMP assumes
-$A_{12}^{(p)} = A_{12}^{(r)}$ exactly and fits no factor; the published SBMP
-[@varon2021] fits one between the passes, $c_s$ above. Both derivations
-subtract $\delta^{(p)} - \delta^{(r)}$; with $1 + \delta = e^{-x}(1 + \varepsilon)$,
-that difference is $(1 + \varepsilon)(e^{-x} - 1)$, so the surface term
-survives as a multiplier on the signal. The log of the ratio,
-{eq}`rx2-eq-three`, removes it.
+The two derivations write $c$ in opposite directions. Derivation (1) divides, $\delta = R_{12} / (c R_{11}) - 1$ with $c \approx R_{12} / R_{11}$, whereas derivation (2) multiplies, $\delta = c R_{12} / R_{11} - 1$ with $c \approx R_{11} / R_{12}$. They are the same estimator, and this page uses derivation (2)'s form. Derivation (1)'s SBMP assumes $A_{12}^{(p)} = A_{12}^{(r)}$ exactly and fits no factor, whereas the published SBMP [@varon2021] fits one between the passes ($c_s$ above). Both derivations subtract $\delta^{(p)} - \delta^{(r)}$. With $1 + \delta = e^{-\tau}(1 + \gamma)$, where $\tau$ is the plume's signal and $\gamma$ the surface term, that difference is $(1 + \gamma)(e^{-\tau} - 1)$, so the surface term survives as a multiplier on the signal. The log of the ratio, {eq}`rx2-eq-mbmp`, removes it.
 :::
 
 (rx2-running)=
 ## The running example: one scene, every nuisance
 
-**TL;DR.** One plume, two passes, and every surface and atmospheric change
-the derivations warn about, each in its own patch.
+**TL;DR.** One plume, two passes, and every surface and atmospheric change the derivations warn about, each in its own patch.
 
-**Problem.** A 200 × 200 scene with 20 m pixels holds a plume of peak
-0.3 kg/m² (148,700 kg) on the plume pass only. Both passes share a textured
-surface: albedo varies by 15 %, the band ratio $r$ by 4 %, and a mineral
-patch has $r$ 15 % low. Between the passes the whole scene brightens 5 %,
-a field is wetted (both bands × 0.8), one patch's ratio drops 3 %, and
-band 12's water-vapour transmission drops 1 % everywhere. Pixels enter
-through plumax's `inject_plume`, with the band table built against the
-background column.
+**Problem.** A 200 × 200 scene with 20 m pixels holds a plume with a peak of 0.3 kg/m² (148,700 kg) on the plume pass only. Both passes share a textured surface: the albedo varies by 15 %, the band ratio $r$ by 4 %, and a mineral patch has $r$ 15 % low. Between the passes, the whole scene brightens by 5 %, a field is wetted (both bands × 0.8), one patch's ratio drops by 3 %, and band 12's water-vapour transmission drops by 1 % everywhere. The pixels enter through plumax's `inject_plume`, with the band table built against the background column.
 
 :::{figure} ../../images/radtrax_02_mbmp/methods.svg
 :label: fig-rx2-methods
@@ -308,56 +227,36 @@ spectral ratio changed (purple).
 | MBSP | 0.76 | −0.016 | **0.21** | 0.006 | 0.023 | **0.054** |
 | **MBMP**, exact table, $c$ on background | **0.99** | −0.001 | 0.000 | 0.000 | 0.039 | 0.000 |
 | MBMP, $c$ over every pixel (derivation 1) | 0.89 | −0.009 | 0.000 | 0.000 | 0.039 | 0.000 |
-| MBMP, log ratio, linear in $m\,\Delta\alpha$ | 0.91 | −0.001 | 0.000 | 0.000 | 0.039 | 0.000 |
-| MBMP, $\delta$ difference, linear in $m\,\Delta\alpha$ (derivation 1) | 0.88 | −0.001 | 0.000 | 0.000 | 0.039 | 0.000 |
-| MBMP, $\delta$ difference, $\sigma_{11} = 0$, $\bar\sigma_{12}$ (derivation 2) | 0.78 | −0.001 | 0.000 | 0.000 | 0.035 | 0.000 |
+| MBMP, log ratio, linear in $\mathrm{AMF} \Delta\alpha$ | 0.91 | −0.001 | 0.000 | 0.000 | 0.039 | 0.000 |
+| MBMP, $\delta$ difference, linear in $\mathrm{AMF} \Delta\alpha$ (derivation 1) | 0.88 | −0.001 | 0.000 | 0.000 | 0.039 | 0.000 |
+| MBMP, $\delta$ difference, $\sigma_{11} = 0$, $\bar{\sigma}_{12}$ (derivation 2) | 0.78 | −0.001 | 0.000 | 0.000 | 0.035 | 0.000 |
 | geotoolz `plume.SBMP` (with a reference), exact table | 1.16 | **+0.013** | 0.000 | 0.000 | 0.040 | 0.000 |
 :::
 
-The hierarchy is as the derivations say ([](#fig-rx2-methods),
-[](#tbl-rx2-results)). SBMP, with or without a scale
-factor, reads the wetted field as 0.28–0.29 kg/m² of methane, nearly the
-plume's peak; MBSP reads the stable mineral patch as 0.21 kg/m² and the 4 %
-ratio texture as 0.054 kg/m² of clutter; MBMP removes both, and the
-scene-wide brightening and water-vapour change with them. What it keeps is
-the patch whose band ratio changed: 3 % reads as 0.039 kg/m². The plume
-mass then depends on two choices the derivations make differently. A scale
-factor fitted over every pixel takes in the plume, moves by 0.31 % and
-leaves a −0.009 kg/m² offset that costs 11 % of the mass. And the slope that
-converts the signal to a column matters: the exact table recovers 99 %, a
-linear inversion 91 %, the $\delta$ difference 88 %, and $\bar\sigma_{12}$ with
-$\sigma_{11} = 0$ 78 %. geotoolz's `SBMP` keeps the 1 % water-vapour change
-as a +0.013 kg/m² offset over the whole scene, 16 % extra mass on this
-plume ([why](#rx2-stack)).
+We find the hierarchy the derivations describe ([](#fig-rx2-methods), [](#tbl-rx2-results)). SBMP, with or without a scale factor, reads the wetted field as 0.28 to 0.29 kg/m² of methane, which is nearly the plume's peak. MBSP reads the stable mineral patch as 0.21 kg/m² and the 4 % ratio texture as 0.054 kg/m² of clutter. MBMP removes both, and the scene-wide brightening and the water-vapour change with them. What it keeps is the patch whose band ratio changed, where 3 % reads as 0.039 kg/m². The plume's mass then depends on two choices which the derivations make differently. A scale factor fitted over every pixel takes in the plume, moves by 0.31 % and leaves a −0.009 kg/m² offset that costs 11 % of the mass. In addition, the slope that converts the signal to a column matters: the exact table recovers 99 %, a linear inversion 91 %, the $\delta$ difference 88 %, and $\bar{\sigma}_{12}$ with $\sigma_{11} = 0$ 78 %. geotoolz's `SBMP` keeps the 1 % water-vapour change as a +0.013 kg/m² offset over the whole scene, which is 16 % extra mass on this plume ([why](#rx2-stack)).
 
 :::{warning} Differs from the plan
-Derivation (1)'s table says SBMP is vulnerable to temporal surface change
-and MBSP to spectral slope, and MBMP to their joint change only. The run
-agrees, with two refinements. A **scene-wide** change of either kind (the
-brightening, the water vapour) is absorbed by the scale factors, so it is
-not a failure of SBMP with $c_s$ or of MBSP; only a **local** change is. And
-the scale factors are themselves fitted on the scene, so a large plume or a
-large changed patch inside the fitting set moves every pixel's retrieval;
-the fit should exclude a first-pass detection, as derivation (2) has it.
+Derivation (1)'s table says SBMP is vulnerable to temporal surface change, MBSP to spectral slope, and MBMP only to their joint change. The run agrees, with two refinements. 1) A **scene-wide** change of either kind (the brightening, the water vapour) is absorbed by the scale factors, so it is not a failure of SBMP with $c_s$ or of MBSP; only a **local** change is. 2) The scale factors are themselves fitted on the scene, so a large plume or a large changed patch inside the fitting set moves every pixel's retrieval, and the fit should exclude a first-pass detection, as derivation (2) has it.
 :::
 
 (rx2-noise)=
 ## Noise
 
-**TL;DR.** Each ratio cancels a surface term and adds the noise of the
-bands it uses.
+**TL;DR.** Each ratio cancels a surface term and adds the noise of the bands it uses.
 
-**Problem.** With independent noise of relative size $\varepsilon$ in each band
-and pass, the log ratios add variances: SBMP uses two band-12 images,
-MBSP one image of each band, MBMP four images, and the two-band methods
-divide by the smaller $\Delta\alpha$. To first order,
+**Problem.** With independent noise of relative size $\varepsilon \in \mathbb{R}_{>0}$ in each band and pass, the log ratios add variances. SBMP uses two band-12 images, MBSP one image of each band and MBMP four images, and the two-band methods divide by the smaller $\Delta\alpha$. So, to first order, the standard deviations of the retrieved columns are
 
 $$
-\text{sd}(\Delta\hat\Omega) \approx
-\frac{\sqrt{2}\, \varepsilon}{m\, \alpha_{12}} \ (\text{SBMP}), \quad
-\frac{\sqrt{2}\, \varepsilon}{m\, \Delta\alpha} \ (\text{MBSP}), \quad
-\frac{2\, \varepsilon}{m\, \Delta\alpha} \ (\text{MBMP}) .
+\mathrm{sd}(\widehat{\Delta\Omega}_\text{SBMP}) \approx \frac{\sqrt{2} \varepsilon}{\mathrm{AMF} \alpha_{12}} ,
 $$ (rx2-eq-noise)
+
+$$
+\mathrm{sd}(\widehat{\Delta\Omega}_\text{MBSP}) \approx \frac{\sqrt{2} \varepsilon}{\mathrm{AMF} \Delta\alpha} ,
+$$ (rx2-eq-noise-mbsp)
+
+$$
+\mathrm{sd}(\widehat{\Delta\Omega}_\text{MBMP}) \approx \frac{2 \varepsilon}{\mathrm{AMF} \Delta\alpha} .
+$$ (rx2-eq-noise-mbmp)
 
 ```{code-block} python
 :caption: Retrieval noise for 1 % band noise on a stable surface, from a real run.
@@ -368,35 +267,21 @@ $$ (rx2-eq-noise)
 # → SBMP 0.016, MBSP 0.018, MBMP 0.025 kg/m²; theory within 3 %
 ```
 
-As {eq}`rx2-eq-noise` predicts, MBMP pays for its robustness with 1.6
-times SBMP's noise. On a surface that
-is stable in time, SBMP with a scale factor is the more precise retrieval;
-on a surface that is uniform in its band ratio, MBSP needs no reference
-pass. MBMP is the default because real surfaces are neither, and its noise
-falls with averaging where a surface artefact does not.
+As {eq}`rx2-eq-noise` and {eq}`rx2-eq-noise-mbmp` predict, MBMP pays for its robustness with 1.6 times SBMP's noise. On a surface that is stable in time, SBMP with a scale factor is the more precise retrieval, and on a surface that is uniform in its band ratio, MBSP needs no reference pass. MBMP is the default because real surfaces are neither, and its noise falls with averaging whereas a surface artefact does not.
 
 (rx2-not-optimal)=
 ## When MBMP is not the right choice
 
 Derivation (1) lists three cases, and the run bears on each:
 
-1. **No good reference pass.** MBMP and SBMP both need a plume-free date
-   with the same surface. If the only reference is from another season,
-   the local ratio changes grow and MBSP, which needs none, may do better.
-2. **A strongly wavelength-dependent surface.** Where $r$ varies widely
-   across the scene, one $c$ fits it poorly; MBMP still cancels the stable
-   part of $r$ (the mineral patch is 0.000 kg/m² above the offset), but the
-   fitted $c$ is less well defined, and SBMP avoids the band ratio.
-3. **Water vapour that changes between passes.** Band 12 has water-vapour
-   lines. A scene-wide change is a scene-wide factor and the per-pass $c$
-   absorbs it; a change that varies across the scene (a front, terrain)
-   does not, and reads like a changed band ratio: 1 % is 0.013 kg/m².
+1. **No good reference pass.** MBMP and SBMP both need a plume-free date with the same surface. If the only reference is from another season, the local ratio changes grow, and MBSP (which needs no reference) may do better.
+2. **A strongly wavelength-dependent surface.** Where $r$ varies widely across the scene, one $c$ fits it poorly. MBMP still cancels the stable part of $r$ (the mineral patch is 0.000 kg/m² above the offset), but the fitted $c$ is less well defined, and SBMP avoids the band ratio.
+3. **Water vapour that changes between passes.** Band 12 has water-vapour lines. A scene-wide change is a scene-wide factor, which the per-pass $c$ absorbs. However, a change that varies across the scene (a front, terrain) is not absorbed, and it reads like a changed band ratio, where 1 % is 0.013 kg/m².
 
 (rx2-cancels)=
 ## What each method cancels
 
-[](#tbl-rx2-cancels) collects the run: what each method removes, what it
-leaves, and its noise.
+[](#tbl-rx2-cancels) collects the run: what each method removes, what it leaves, and its noise.
 
 :::{table} The family as a difference in differences, from the run.
 :label: tbl-rx2-cancels
@@ -411,42 +296,18 @@ leaves, and its noise.
 (rx2-stack)=
 ## Where it lives in the stack
 
-The [package boundaries inventory](../package_boundaries.md#pb-today) lists
-the pieces: plumax's `radtran.nb_lut` (`build_nb_lut`, `lookup_nb`,
-`inject_plume`) for the band tables, georeader's `read_srf` for the real
-response functions (B11 1569–1658 nm, B12 2113–2286 nm at half maximum),
-and geotoolz's `plume.SBMP` for the two-pass, two-band log signal. The
-scale factors, the background masks and the exact inversion exist nowhere
-in the stack; the notebook writes them.
+The [package boundaries inventory](../package_boundaries.md#pb-today) lists the pieces: plumax's `radtran.nb_lut` (`build_nb_lut`, `lookup_nb`, `inject_plume`) for the band tables, georeader's `read_srf` for the real response functions (B11 from 1569 to 1658 nm and B12 from 2113 to 2286 nm at half maximum), and geotoolz's `plume.SBMP` for the two-pass, two-band log signal. The scale factors, the background masks and the exact inversion exist nowhere in the stack, so we write them in the notebook.
 
 :::{warning} Differs from the plan
-geotoolz's operator is named `SBMP` and documented as a single-band
-multi-pass retrieval, but with a reference scene it uses both bands on both
-passes: $\ln(R_{11}/R_{12}) - \ln(R_{11}'/R_{12}')$, which the notebook
-confirms is the MBMP log signal plus a constant to $10^{-11}$. Without the
-per-pass factors the constant, $\ln(c^{(p)}/c^{(r)})$, stays: on this scene the
-1 % water-vapour change. Its docstring cites "Satellite discovery of
-anomalously large methane point sources from oil/gas production" (RSE, 251)
-for the formula; the method names and this formula are Varon et al.
-2021 [@varon2021]. Its single-pass fallback,
-$(R_{11} - R_{12}) / (R_{11} + R_{12})$, is a detection prefilter, as the
-docstring says, not the MBSP of {eq}`rx2-eq-three`.
+geotoolz's operator is named `SBMP` and documented as a single-band multi-pass retrieval. However, with a reference scene it uses both bands on both passes, $\ln(R_{11} / R_{12}) - \ln(R_{11}' / R_{12}')$, which the notebook confirms is the MBMP log signal plus a constant to $10^{-11}$. Without the per-pass factors the constant $\ln(c^{(p)} / c^{(r)})$ stays, and on this scene it is the 1 % water-vapour change. Its docstring cites "Satellite discovery of anomalously large methane point sources from oil/gas production" (RSE, 251) for the formula, whereas the method names and this formula are from Varon et al. 2021 [@varon2021]. Its single-pass fallback, $(R_{11} - R_{12}) / (R_{11} + R_{12})$, is a detection prefilter (as the docstring says) and not the MBSP of {eq}`rx2-eq-mbsp`.
 :::
 
 (rx2-open-questions)=
 ## Open questions
 
-1. **What should the operators be called?** An `MBMP` operator in radtrax,
-   with `SBMP` and `MBSP` beside it, each with the scale factors and a
-   background mask, would match the literature; the current `SBMP` could
-   become MBMP's `scale_factors=False` mode.
-2. **Where does the background mask come from?** The run uses a first-pass
-   detection grown by a Gaussian of 2 pixels; an iterated fit, or the plume mask from
-   geotoolz's `PlumeMask`, are the alternatives, and the choice moves the
-   offset.
-3. **Should the band table include the background?** plumax's `nB` omits
-   it; including it is one extra integral and changes band 12 by 1 % here,
-   more over high background or long air-mass paths.
+1. **What should the operators be called?** An `MBMP` operator in radtrax, with `SBMP` and `MBSP` beside it, each with the scale factors and a background mask, would match the literature, and the current `SBMP` could become MBMP's `scale_factors=False` mode.
+2. **Where does the background mask come from?** In the run, we use a first-pass detection grown by a Gaussian of 2 pixels. The alternatives are an iterated fit or the plume mask from geotoolz's `PlumeMask`, and the choice moves the offset.
+3. **Should the band table include the background?** plumax's `nB` omits it. Including it is one extra integral and changes band 12 by 1 % here, and more over a high background or long air-mass paths.
 
 (rx2-todos)=
 ## Upcoming work

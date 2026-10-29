@@ -5,6 +5,12 @@ project:
     - name: J. Emmanuel Johnson
   bibliography:
     - references.bib
+  math:
+    '\vect': '\mathbf{#1}'
+    '\mat': '\mathbf{#1}'
+    '\gvect': '\boldsymbol{#1}'
+    '\gmat': '\boldsymbol{#1}'
+    '\op': '\mathrm{#1}'
   toc:
     - file: docs/index.md
     - file: docs/overview.md

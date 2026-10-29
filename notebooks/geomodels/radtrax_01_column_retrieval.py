@@ -181,7 +181,7 @@ stage2 = {
 }
 
 fig, ax = plt.subplots(figsize=(6.4, 3.6), constrained_layout=True)
-ax.plot(omegas, lin12, "--", color="#64748b", label="linear, m σ̄₁₂ ΔΩ")
+ax.plot(omegas, lin12, "--", color="#64748b", label="linear, AMF σ̄₁₂ ΔΩ")
 ax.plot(omegas, tau12, color="#0f766e", lw=2, label="exact, band 12")
 ax.plot(omegas, tau11, color="#1d4ed8", lw=2, label="exact, band 11")
 ax.axvline(0.3, color="#b45309", lw=1, ls=":")
@@ -366,7 +366,7 @@ for a, (img, title) in zip(
     axs,
     [
         (d_omega, "truth"),
-        (omega_a, "(a) k R₁₁ + b, linear"),
+        (omega_a, "(a) θ₁ R₁₁ + θ₀, linear"),
         (omega_lut, "(b) MBSP, look-up table"),
     ],
     strict=True,
@@ -532,15 +532,15 @@ rows = [  # (source, item, operation, term, hue)
     (
         "satellite L1 product",
         "digital numbers or radiance",
-        "scale, offset, π L / E cos θ_s",
+        "scale, offset, π L d² / E cos SZA",
         "R_b",
         ov.OBS,
     ),
     (
         "satellite metadata",
-        "θ_s, θ_v per pixel or tile",
-        "1/cos θ_s + 1/cos θ_v",
-        "m",
+        "SZA, VZA per pixel or tile",
+        "1/cos SZA + 1/cos VZA",
+        "AMF",
         ov.OBS,
     ),
     ("agency SRF table", "f_b(λ)", "⟨·⟩_b over the band", "σ̄_b, T_b", ov.ENG),
@@ -560,7 +560,7 @@ rows = [  # (source, item, operation, term, hue)
     ),
     (
         "radiative transfer model",
-        "T_b over (m, ΔΩ, H₂O)",
+        "T_b over (AMF, ΔΩ, H₂O)",
         "tabulate once",
         "LUT",
         ov.STATE,
