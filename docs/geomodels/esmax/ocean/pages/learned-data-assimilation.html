@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
 <script>
 window.MathJax = {
-  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none' },
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none', macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
   svg: { fontCache: 'global' },
   options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
 };
@@ -269,13 +269,13 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
     </ul>
 
     <nav class="stack" aria-label="Pieces of the analysis and the types that learn each one">
-      <div class="layer io"><div><div class="ln">Inputs</div><div class="lo">\(\mathbf y, \mathbf m, \boldsymbol\sigma\) · <code>(time, height, width)</code>; \(\mathbf z_b\), \(\mathbf x\), \(\mathbf u\)</div></div><div class="chips"></div></div>
+      <div class="layer io"><div><div class="ln">Inputs</div><div class="lo">\(\vect{y}, \vect{m}, \gvect{\sigma}_\varepsilon\) · <code>(time, height, width)</code>; \(\gvect{\mu}_x\), \(\vect{u}\)</div></div><div class="chips"></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Hyperparameters</div><div class="lo">\(\alpha\): scales of B, Q, R; localisation; inflation</div></div><div class="chips"><a class="tchip lo" href="#a1">A1</a></div></div>
+      <div class="layer"><div><div class="ln">Hyperparameters</div><div class="lo">\(\gvect{\alpha}\): scales of \(\gmat{\Sigma}_x\), \(\gmat{\Sigma}_\eta\), \(\gmat{\Sigma}_\varepsilon\); localisation; inflation</div></div><div class="chips"><a class="tchip lo" href="#a1">A1</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Objective</div><div class="lo">likelihood + prior + dynamics, \(\mathcal J(\mathbf z)\)</div></div><div class="chips"><a class="tchip lo" href="#a2">A2</a><a class="tchip si" href="#a11">A11</a></div></div>
+      <div class="layer"><div><div class="ln">Objective</div><div class="lo">likelihood + prior + dynamics, \(\mathcal{J}(\vect{x})\)</div></div><div class="chips"><a class="tchip lo" href="#a2">A2</a><a class="tchip si" href="#a11">A11</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Gradient</div><div class="lo">\(\nabla\mathcal J\) by the adjoint</div></div><div class="chips"><a class="tchip si" href="#a3">A3</a></div></div>
+      <div class="layer"><div><div class="ln">Gradient</div><div class="lo">\(\nabla_{\vect{x}} \mathcal{J}\) by the adjoint</div></div><div class="chips"><a class="tchip si" href="#a3">A3</a></div></div>
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Solver</div><div class="lo">update rule, initial guess, preconditioner</div></div><div class="chips"><a class="tchip si" href="#a4">A4</a><a class="tchip lo" href="#a5">A5</a></div></div>
       <div class="link"><span></span><span></span></div>
@@ -283,38 +283,40 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Amortisation</div><div class="lo">one network across all windows</div></div><div class="chips"><a class="tchip si" href="#a6">A6</a><a class="tchip si" href="#a7">A7</a><a class="tchip lo" href="#a9">A9</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer io"><div><div class="ln">Analysis out</div><div class="lo">\(\hat{\mathbf z}_{0:K}\) · <code>(time+1, height, width)</code>, plus uncertainty</div></div><div class="chips"></div></div>
+      <div class="layer io"><div><div class="ln">Analysis out</div><div class="lo">\(\hat{\vect{x}}_{0:T}\) · <code>(time+1, height, width)</code>, plus uncertainty</div></div><div class="chips"></div></div>
     </nav>
     <p class="loop">Sidebar: the sequential (EnKF) route, <a class="tchip lo" href="#a10">A10</a>. Teal chips fail loudly, amber chips silently.</p>
   </section>
 
   <h2 id="notation">Notation</h2>
-  <p>As on the other two pages. On this page \(\psi\) is again the variational parameters; the QG streamfunction does not appear.</p>
+  <p>As on the other two pages. On this page \(\gvect{\nu}\) is the variational parameters; the QG viscosity does not appear. Losses \(\mathcal{L}\) are always minimised, so \(\mathcal{L}_\text{ELBO} = -\mathrm{ELBO}\).</p>
   <div class="tbl"><table>
     <thead><tr><th>Symbol</th><th>Meaning</th><th>Kind, shape</th></tr></thead>
     <tbody>
-      <tr><td>\(\mathbf z_{0:K}\)</td><td>latent state over the window</td><td>(time+1, height, width)</td></tr>
-      <tr><td>\(\mathbf y_k\), \(\mathbf m_k\), \(\boldsymbol\sigma_k\)</td><td>SSH map, its mask, its error (diagonal of \(\mathbf R_k\))</td><td>(time, height, width) each</td></tr>
-      <tr><td>\(\mathbf z_b\), \(\mathbf x\), \(\mathbf u_k\)</td><td>background, covariates, controls</td><td>(height, width), (variable, height, width), (time, height, width)</td></tr>
-      <tr><td>\(\mathcal F\)</td><td>one-day model: physical or any type T1–T10 of the taxonomy page</td><td>field → field</td></tr>
-      <tr><td>\(\theta\), \(\alpha\)</td><td>physical parameters, hyperparameters</td><td>(param,), (hyper,)</td></tr>
-      <tr><td>\(\mathcal J\), \(\nabla\mathcal J\)</td><td>cost, its gradient</td><td>scalar, (time+1, height, width)</td></tr>
+      <tr><td>\(\vect{x}_{0:T}\)</td><td>state over the window</td><td>\(\mathbb{R}^{(T+1) \times D_x}\) (time+1, height, width)</td></tr>
+      <tr><td>\(\vect{y}_k\), \(\vect{m}_k\), \(\gvect{\sigma}_{\varepsilon,k}\)</td><td>SSH map, its mask, its error (\(\gvect{\sigma}_{\varepsilon,k}^2\) is the diagonal of \(\gmat{\Sigma}_{\varepsilon,k}\))</td><td>(time, height, width) each</td></tr>
+      <tr><td>\(\gvect{\mu}_x\), \(\vect{u}^\text{cov}\), \(\vect{u}^\text{wind}_k\)</td><td>background (prior mean of \(\vect{x}_0\)), covariates, forcing; the exogenous inputs are \(\vect{u}_k = (\vect{u}^\text{cov}, \vect{u}^\text{wind}_k)\)</td><td>(height, width), (variable, height, width), (time, height, width)</td></tr>
+      <tr><td>\(\gmat{\Sigma}_x\), \(\gmat{\Sigma}_\eta\), \(\gmat{\Sigma}_{\varepsilon,k}\)</td><td>background, model-error and observation-error covariances</td><td>\(\mathbb{R}^{D_x \times D_x}\) each</td></tr>
+      <tr><td>\(f\)</td><td>one-day model: physical or any type T1–T10 of the taxonomy page</td><td>\(\mathbb{R}^{D_x} \to \mathbb{R}^{D_x}\), field → field</td></tr>
+      <tr><td>\(\gvect{\theta}\), \(\gvect{\alpha}\)</td><td>physical parameters, hyperparameters</td><td>\(\mathbb{R}^{D_\theta}\) (param,), \(\mathbb{R}^{D_\alpha}\) (hyper,)</td></tr>
+      <tr><td>\(\mathcal{J}\), \(\nabla_{\vect{x}} \mathcal{J}\)</td><td>cost, its gradient</td><td>\(\mathbb{R}\), \(\mathbb{R}^{(T+1) \times D_x}\) (time+1, height, width)</td></tr>
       <tr><td>\(i\), \(N\)</td><td>solver iteration, number of iterations</td><td>—</td></tr>
-      <tr><td>\(\phi\)</td><td>weights of a learned piece: prior, solver, gradient, initialiser, model</td><td>weights</td></tr>
-      <tr><td>\(\psi\), \(q_\psi\)</td><td>variational parameters, variational density</td><td>weights or (rank+2, time+1, height, width)</td></tr>
+      <tr><td>\(\gvect{\theta}_\text{emu}\), \(\gvect{\theta}_\text{DA}\)</td><td>weights of a learned model from the taxonomy page; weights of a learned piece of the analysis: prior, solver, gradient, initialiser, proposal, localisation</td><td>weights</td></tr>
+      <tr><td>\(\gvect{\nu}\), \(q(\vect{x} \mid \vect{y}; \gvect{\nu})\)</td><td>variational parameters, variational density</td><td>weights or (rank+2, time+1, height, width)</td></tr>
+      <tr><td>\(\vect{z}_\text{ens}\), \(\vect{z}_\text{mem}\)</td><td>latents: ensemble coefficients (A3), solver memory (A4)</td><td>\(\mathbb{R}^{N_{\mathcal{E}}}\), (channel, height, width)</td></tr>
       <tr><td>\(w\)</td><td>a window index, over many windows</td><td>—</td></tr>
     </tbody>
   </table></div>
 
   <h2 id="master">The master equation</h2>
-  <p>Weak-constraint 4D-Var over one window. With \(p(\mathbf z\mid\mathbf y)\propto e^{-\mathcal J(\mathbf z)}\), every type on this page edits this cost, its gradient, its solver, or replaces all three:</p>
+  <p>Weak-constraint 4D-Var over one window. With \(p(\vect{x} \mid \vect{y}) \propto \exp(-\mathcal{J}(\vect{x}))\), every type on this page edits this cost, its gradient, its solver, or replaces all three:</p>
   \[
-  \mathcal J(\mathbf z_{0:K}) =
-  \underbrace{\tfrac12\|\mathbf z_0 - \mathbf z_b\|^2_{\mathbf B^{-1}}}_{\text{background}}
-  + \underbrace{\tfrac12\sum_{k=1}^{K}\big\|\mathbf z_k - \mathcal F_\theta(\mathbf z_{k-1};\mathbf x,\mathbf u_k)\big\|^2_{\mathbf Q^{-1}}}_{\text{dynamics}}
-  + \underbrace{\tfrac12\sum_{k=1}^{K}\big\|\mathbf m_k\odot(\mathbf y_k - \mathbf z_k)\big\|^2_{\mathbf R_k^{-1}}}_{\text{observations}} .
+  \mathcal{J}(\vect{x}_{0:T}; \gvect{\theta}) =
+  \underbrace{\frac{1}{2} \Vert \vect{x}_0 - \gvect{\mu}_x \Vert^2_{\gmat{\Sigma}_x^{-1}}}_{\text{background}}
+  + \underbrace{\frac{1}{2} \sum_{k=1}^{T} \Vert \vect{x}_k - f(\vect{x}_{k-1}, \vect{u}_k; \gvect{\theta}) \Vert^2_{\gmat{\Sigma}_\eta^{-1}}}_{\text{dynamics}}
+  + \underbrace{\frac{1}{2} \sum_{k=1}^{T} \Vert \vect{m}_k \odot (\vect{y}_k - \vect{x}_k) \Vert^2_{\gmat{\Sigma}_{\varepsilon,k}^{-1}}}_{\text{observations}} .
   \]
-  <p>The classical solver iterates \(\mathbf z^{(i+1)} = \mathbf z^{(i)} - \eta\,\mathbf P\,\nabla\mathcal J(\mathbf z^{(i)})\) from \(\mathbf z^{(0)}\), with \(N \approx 50\)–\(100\) and \(\mathbf P\) built from \(\mathbf B^{1/2}\). In code, the cost, the solver and the variational objective are three short functions. <code>qg_day</code> and <code>QGParams</code> are the ones defined on the taxonomy page:</p>
+  <p>The classical solver iterates \(\vect{x}^{(i+1)} = \vect{x}^{(i)} - \gamma \mat{P} \nabla_{\vect{x}} \mathcal{J}(\vect{x}^{(i)})\) from \(\vect{x}^{(0)}\), with step size \(\gamma\), \(N \approx 50\)–\(100\) and \(\mat{P}\) built from \(\gmat{\Sigma}_x^{1/2}\). In code, the cost, the solver and the variational objective are three short functions. <code>qg_day</code> and <code>QGParams</code> are the ones defined on the taxonomy page:</p>
   <pre>import einx
 import equinox as eqx
 import finitevolx as fvx
@@ -324,7 +326,7 @@ import jax.numpy as jnp
 import lineax as lx
 from jaxtyping import Array, Bool, Float, PRNGKeyArray
 
-<span class="c"># Shapes: T = 10 maps (time); Z = T + 1 = 11 states z₀ … z₁₀ (day);</span>
+<span class="c"># Shapes: T = 10 maps (time); Z = T + 1 = 11 states x₀ … x₁₀ (day);</span>
 <span class="c">#         H, W = 130 × 130 grid with ghost ring (height, width);</span>
 <span class="c">#         N = H·W (cell); F = Z·N (flat); K = 16 (rank); S = 8 samples (member)</span>
 
@@ -332,7 +334,7 @@ Op = lx.AbstractLinearOperator
 
 
 class Window(eqx.Module):
-    """One window: maps y, masks m, errors σ², background z_b, B, diagonal Q."""
+    """One window: maps y, masks m, errors σ_ε², background μ_x, Σ_x, diagonal Σ_η."""
 
     maps: Float[Array, "time height width"]
     masks: Bool[Array, "time height width"]
@@ -351,15 +353,15 @@ def weak_4dvar_cost(
     params: QGParams,
 ) -&gt; Float[Array, ""]:
 <span class="c">    # --- background ---</span>
-<span class="c">    # δ₀ = z₀ − z_b</span>
+<span class="c">    # δ₀ = x₀ − μ_x</span>
     initial_departure = states[0] - window.background<span class="c">  # (H, W)</span>
     departure_flat = einx.rearrange(<span class="c">                  # (H, W) → (N,)</span>
         "height width -&gt; (height width)", initial_departure
     )
 <span class="c">    # today (gaussx)</span>
-<span class="c">    # δ₀ᵀ B⁻¹ δ₀</span>
+<span class="c">    # δ₀ᵀ Σ_x⁻¹ δ₀</span>
     background_quad = gx.quadratic_form(window.prior_cov, departure_flat)<span class="c">  # → ()</span>
-<span class="c">    # J_b = ½ δ₀ᵀ B⁻¹ δ₀</span>
+<span class="c">    # 𝒥_x = ½ δ₀ᵀ Σ_x⁻¹ δ₀</span>
     background_cost = 0.5 * background_quad<span class="c">           # → ()</span>
 
 <span class="c">    # --- dynamics, all days at once ---</span>
@@ -367,36 +369,36 @@ def weak_4dvar_cost(
     current = states[1:]<span class="c">                              # (Z, Z) → (T, H, W)</span>
     batched_day = jax.vmap(qg_day, in_axes=(0, None, 0, None, None))
 <span class="c">    # user (qg_day, taxonomy page)</span>
-<span class="c">    # 𝓕_θ(z_{k−1}; x, u_k) for every k, in parallel</span>
+<span class="c">    # f(x_{k−1}, u_k; θ) for every k, in parallel</span>
     forecasts = batched_day(<span class="c">                          # (T, H, W) → (T, H, W)</span>
         previous, window.covariates, window.forcing, params, window.grid
     )
-<span class="c">    # w_k = z_k − 𝓕_θ(z_{k−1})</span>
+<span class="c">    # η_k = x_k − f(x_{k−1}, u_k; θ)</span>
     model_error = current - forecasts<span class="c">                 # (T, H, W)</span>
-<span class="c">    # w_k²</span>
+<span class="c">    # η_k²</span>
     squared_error = model_error**2<span class="c">                    # (T, H, W)</span>
-<span class="c">    # w_k² / q²  (diagonal Q)</span>
+<span class="c">    # η_k² / σ_η²  (diagonal Σ_η)</span>
     weighted_error = squared_error / window.model_err_var<span class="c">  # (T, H, W)</span>
-<span class="c">    # ∑_k w_kᵀ Q⁻¹ w_k</span>
+<span class="c">    # ∑_k η_kᵀ Σ_η⁻¹ η_k</span>
     model_sum = einx.sum("time height width -&gt;", weighted_error)<span class="c">  # → ()</span>
-<span class="c">    # J_q = ½ ∑_k ‖w_k‖²_{Q⁻¹}</span>
+<span class="c">    # 𝒥_η = ½ ∑_k ‖η_k‖²_{Σ_η⁻¹}</span>
     model_cost = 0.5 * model_sum<span class="c">                      # → ()</span>
 
 <span class="c">    # --- observations ---</span>
-<span class="c">    # y_k − z_k</span>
+<span class="c">    # y_k − x_k</span>
     misfit = window.maps - current<span class="c">                    # (T, H, W)</span>
-<span class="c">    # r_k = m_k ⊙ (y_k − z_k)</span>
+<span class="c">    # r_k = m_k ⊙ (y_k − x_k)</span>
     residual = jnp.where(window.masks, misfit, 0.0)<span class="c">   # (T, H, W)</span>
 <span class="c">    # r_k²</span>
     squared_residual = residual**2<span class="c">                    # (T, H, W)</span>
-<span class="c">    # r_k² / σ_k²</span>
+<span class="c">    # r_k² / σ_{ε,k}²</span>
     weighted_residual = squared_residual / window.obs_var<span class="c">  # (T, H, W)</span>
-<span class="c">    # ∑_k r_kᵀ R_k⁻¹ r_k</span>
+<span class="c">    # ∑_k r_kᵀ Σ_{ε,k}⁻¹ r_k</span>
     obs_sum = einx.sum("time height width -&gt;", weighted_residual)<span class="c">  # → ()</span>
-<span class="c">    # J_o = ½ ∑_k ‖m_k ⊙ (y_k − z_k)‖²_{R_k⁻¹}</span>
+<span class="c">    # 𝒥_ε = ½ ∑_k ‖m_k ⊙ (y_k − x_k)‖²_{Σ_{ε,k}⁻¹}</span>
     obs_cost = 0.5 * obs_sum<span class="c">                          # → ()</span>
 
-<span class="c">    # 𝒥 = J_b + J_q + J_o</span>
+<span class="c">    # 𝒥 = 𝒥_x + 𝒥_η + 𝒥_ε</span>
     total_cost = background_cost + model_cost + obs_cost<span class="c">  # → ()</span>
     return total_cost
 
@@ -412,14 +414,14 @@ def analyse(
     cost_gradient = jax.grad(weak_4dvar_cost)
 
     def iterate(states, _):
-<span class="c">        # g⁽ⁱ⁾ = ∇𝒥(z⁽ⁱ⁾), by reverse mode</span>
+<span class="c">        # ∇_x 𝒥(x⁽ⁱ⁾), by reverse mode</span>
         gradient = cost_gradient(states, window, params)<span class="c">  # → (Z, H, W)</span>
 <span class="c">        # user</span>
-<span class="c">        # d⁽ⁱ⁾ = P g⁽ⁱ⁾</span>
+<span class="c">        # d⁽ⁱ⁾ = P ∇_x 𝒥(x⁽ⁱ⁾)</span>
         direction = precondition(gradient, window)<span class="c">    # (Z, H, W)</span>
-<span class="c">        # η d⁽ⁱ⁾</span>
+<span class="c">        # γ d⁽ⁱ⁾</span>
         update = step_size * direction<span class="c">                # (Z, H, W)</span>
-<span class="c">        # z⁽ⁱ⁺¹⁾ = z⁽ⁱ⁾ − η P ∇𝒥(z⁽ⁱ⁾)</span>
+<span class="c">        # x⁽ⁱ⁺¹⁾ = x⁽ⁱ⁾ − γ P ∇_x 𝒥(x⁽ⁱ⁾)</span>
         states = states - update<span class="c">                      # (Z, H, W)</span>
         return states, None
 
@@ -430,7 +432,7 @@ def analyse(
 
 
 class LowRankGaussian(eqx.Module):
-    """q(z) = 𝒩(μ, L Lᵀ + D) over a whole window, flattened."""
+    """q(x) = 𝒩(μ_q, L_q L_qᵀ + D_q) over a whole window, flattened."""
 
     mean: Float[Array, "flat"]
     factor: Float[Array, "flat rank"]
@@ -448,15 +450,15 @@ def neg_elbo(
     height, width = window.background.shape
 
 <span class="c">    # --- variational density ---</span>
-<span class="c">    # D = diag(exp(log d))</span>
+<span class="c">    # D_q = diag(exp(log d))</span>
     diag = jnp.exp(posterior.log_diag)<span class="c">                # (F,) → (F,)</span>
 <span class="c">    # today (gaussx)</span>
-<span class="c">    # Σ_q = L Lᵀ + D</span>
+<span class="c">    # Σ_q = L_q L_qᵀ + D_q</span>
     covariance = gx.low_rank_plus_diag(diag, posterior.factor)<span class="c">  # (F, F) PSD op</span>
 
 <span class="c">    # --- samples ---</span>
 <span class="c">    # today (gaussx)</span>
-<span class="c">    # z⁽ˢ⁾ = μ + Σ_q^{1/2} ε,  ε ~ 𝒩(0, I)</span>
+<span class="c">    # x⁽ᵉ⁾ = μ_q + Σ_q^{1/2} ξ,  ξ ~ 𝒩(0, I)</span>
     samples_flat = gx.sample_mvn(<span class="c">                     # → (S, F)</span>
         posterior.mean, covariance, key=key, num_samples=n_samples
     )
@@ -469,15 +471,15 @@ def neg_elbo(
 
 <span class="c">    # --- expected cost and entropy ---</span>
     batched_cost = jax.vmap(weak_4dvar_cost, in_axes=(0, None, None))
-<span class="c">    # 𝒥(z⁽ˢ⁾) for each sample</span>
+<span class="c">    # 𝒥(x⁽ᵉ⁾) for each sample</span>
     sample_costs = batched_cost(samples, window, params)<span class="c">  # → (S,)</span>
-<span class="c">    # 𝔼_q[𝒥] ≈ (1/S) ∑_s 𝒥(z⁽ˢ⁾)</span>
+<span class="c">    # 𝔼_q[𝒥] ≈ (1/S) ∑_e 𝒥(x⁽ᵉ⁾)</span>
     expected_cost = einx.mean("member -&gt;", sample_costs)<span class="c">  # (S,) → ()</span>
 <span class="c">    # today (gaussx)</span>
-<span class="c">    # ℍ[q] = ½ (N (1 + log 2π) + log|Σ_q|)</span>
+<span class="c">    # ℍ[q] = ½ (N (1 + log 2π) + log det Σ_q)</span>
     entropy = gx.gaussian_entropy(covariance)<span class="c">         # → ()</span>
 
-<span class="c">    # −ELBO = 𝔼_q[𝒥(z)] − ℍ[q],  since p(z | y) ∝ exp(−𝒥(z))</span>
+<span class="c">    # ℒ_ELBO = −ELBO = 𝔼_q[𝒥(x)] − ℍ[q],  since p(x | y) ∝ exp(−𝒥(x))</span>
     loss = expected_cost - entropy<span class="c">                    # → ()</span>
     return loss</pre>
   <p class="loop">Markers: <code>today</code> ships on <code>main</code> (checked 24 Oct 2026: finitevolX 831c69f, gaussx eeda235, somax 9cb19b3); <code>today*</code> ships, arguments sketched; <code>user</code> is defined on these pages; <code>not pinned</code> is a library whose API was not checked. Shape column letters are defined in the header.</p>
@@ -504,11 +506,11 @@ def neg_elbo(
   <div class="tbl"><table>
     <thead><tr><th>Signal</th><th>Loss</th><th>Needs</th><th>Returns</th></tr></thead>
     <tbody>
-      <tr><td>MSE on OSSEs</td><td>\(\mathbb E\,\|\mathbf z - \hat{\mathbf z}(\mathbf y)\|^2\)</td><td>simulated truth</td><td>posterior mean</td></tr>
-      <tr><td>Forward KL</td><td>\(\mathbb E_{p(\mathbf z,\mathbf y)}[-\log q_\psi(\mathbf z\mid\mathbf y)]\)</td><td>simulated truth</td><td>a density, mass-covering</td></tr>
-      <tr><td>ELBO</td><td>\(-\mathbb E_q[\mathcal J(\mathbf z)] + \mathbb H[q]\)</td><td>likelihood and a model-based prior; no truth</td><td>a density, mode-seeking</td></tr>
-      <tr><td>Held-out observations</td><td>\(\mathbb E\,\|\mathbf m^{\text{out}}\odot(\mathbf y - \hat{\mathbf z}(\mathbf m^{\text{in}}\odot\mathbf y))\|^2_{\mathbf R^{-1}}\)</td><td>observations only, split \(\mathbf m = \mathbf m^{\text{in}} + \mathbf m^{\text{out}}\)</td><td>the observable part of the mean</td></tr>
-      <tr><td>Evidence</td><td>\(\log p(\mathbf y\mid\alpha)\)</td><td>the model and observations</td><td>hyperparameters</td></tr>
+      <tr><td>MSE on OSSEs</td><td>\(\mathcal{L}_\text{MSE} = \mathbb{E} \Vert \vect{x} - \hat{\vect{x}}(\vect{y}) \Vert^2\)</td><td>simulated truth</td><td>posterior mean</td></tr>
+      <tr><td>Forward KL</td><td>\(\mathcal{L}_\text{NLL} = \mathbb{E}_{p(\vect{x}, \vect{y})}[-\log q(\vect{x} \mid \vect{y}; \gvect{\nu})]\)</td><td>simulated truth</td><td>a density, mass-covering</td></tr>
+      <tr><td>ELBO</td><td>\(\mathcal{L}_\text{ELBO} = \mathbb{E}_q[\mathcal{J}(\vect{x})] - \mathbb{H}[q]\)</td><td>likelihood and a model-based prior; no truth</td><td>a density, mode-seeking</td></tr>
+      <tr><td>Held-out observations</td><td>\(\mathcal{L}_\text{held-out} = \mathbb{E} \Vert \vect{m}^\text{out} \odot (\vect{y} - \hat{\vect{x}}(\vect{m}^\text{in} \odot \vect{y})) \Vert^2_{\gmat{\Sigma}_\varepsilon^{-1}}\)</td><td>observations only, split \(\vect{m} = \vect{m}^\text{in} + \vect{m}^\text{out}\)</td><td>the observable part of the mean</td></tr>
+      <tr><td>Evidence</td><td>\(-\log p(\vect{y} \mid \gvect{\alpha})\)</td><td>the model and observations</td><td>hyperparameters</td></tr>
     </tbody>
   </table></div>
   <div class="note"><span class="tag">The simulation gap and the resolution gap</span><p>OSSE-trained types learn the climate of the QG model: its eddy sizes, its energy, its errors. Observation-trained types learn the real ocean, but gridded SSH maps resolve little below roughly 100 km, so held-out-pixel losses cannot teach anything finer. The practical combination is to pretrain on OSSEs for the small scales and fine-tune with the ELBO or held-out observations for the large ones.</p></div>
@@ -519,13 +521,13 @@ def neg_elbo(
   <article class="tcard" id="a1">
     <header><span class="tn">A1</span><h3>Learned hyperparameters</h3><span class="where">replaces: hand-tuned α</span></header>
     <div class="tbody">
-      <p>Keep everything, and fit the numbers that shape \(\mathbf B\), \(\mathbf Q\), \(\mathbf R\), localisation and inflation by maximising the evidence over many real windows \(w\):</p>
-  \[ \alpha^\star = \arg\max_\alpha \sum_{w} \log p\big(\mathbf y^{(w)}\mid\alpha\big), \qquad
-  \log p(\mathbf y\mid\alpha) \approx -\mathcal J_\alpha(\hat{\mathbf z}) - \tfrac12\log\det\big(\nabla^2\mathcal J_\alpha(\hat{\mathbf z})\big) + \text{const}. \]
-  <p>The right-hand side is the Laplace approximation at the analysis \(\hat{\mathbf z}\). The cheaper alternative is to match the innovation statistics of the state-estimation page.</p>
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
-      <dl class="attrs"><dt>Replaces</dt><dd>manual tuning of B, Q, R scales, localisation radius, inflation</dd><dt>Signal</dt><dd>marginal likelihood, or innovation consistency; observations only</dd><dt>Output</dt><dd>the classical analysis with better weights</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> a bad α shows up in 2𝒥*/p and the innovations</dd><dt>Cost</dt><dd>an outer loop over many classical analyses</dd></dl>
-      <p class="crit">The DA counterpart of T1. Always worth doing first: every later type inherits α, and a learned piece trained with a wrong R learns to compensate for it.</p>
+      <p>Keep everything, and fit the numbers that shape \(\gmat{\Sigma}_x\), \(\gmat{\Sigma}_\eta\), \(\gmat{\Sigma}_\varepsilon\), localisation and inflation by maximising the evidence over many real windows \(w\):</p>
+  \[ \gvect{\alpha}^\star = \mathrm{argmax}_{\gvect{\alpha}} \sum_{w} \log p(\vect{y}^{(w)} \mid \gvect{\alpha}) \]
+  \[ \log p(\vect{y} \mid \gvect{\alpha}) \approx -\mathcal{J}(\hat{\vect{x}}; \gvect{\alpha}) - \frac{1}{2} \log \det \nabla^2_{\vect{x}} \mathcal{J}(\hat{\vect{x}}; \gvect{\alpha}) + \text{const}. \]
+  <p>The right-hand side is the Laplace approximation at the analysis \(\hat{\vect{x}}\). The cheaper alternative is to match the innovation statistics of the state-estimation page.</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">μ_x</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">x̂_0:T</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>manual tuning of Σ_x, Σ_η, Σ_ε scales, localisation radius, inflation</dd><dt>Signal</dt><dd>marginal likelihood, or innovation consistency; observations only</dd><dt>Output</dt><dd>the classical analysis with better weights</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> a bad α shows up in 2𝒥⋆/D_y and the innovations</dd><dt>Cost</dt><dd>an outer loop over many classical analyses</dd></dl>
+      <p class="crit">The DA counterpart of T1. Always worth doing first: every later type inherits α, and a learned piece trained with a wrong Σ_ε learns to compensate for it.</p>
     </div>
   </article>
 
@@ -533,11 +535,11 @@ def neg_elbo(
     <header><span class="tn">A2</span><h3>Learned prior</h3><span class="where">replaces: the background and dynamics terms</span></header>
     <div class="tbody">
       <p>The observation term stays; the regulariser becomes learned. Three forms, from least to most physical:</p>
-  \[ \mathcal J_\phi(\mathbf z) = \tfrac12\sum_k\big\|\mathbf m_k\odot(\mathbf y_k - \mathbf z_k)\big\|^2_{\mathbf R_k^{-1}} + \lambda\,\mathcal R_\phi(\mathbf z), \]
-  \[ \mathcal R_\phi(\mathbf z) \in \Big\{\, -\log p_\phi(\mathbf z),\quad \big\|\mathbf z - \Phi_\phi(\mathbf z)\big\|^2,\quad \tfrac12\sum_k\big\|\mathbf z_k - \mathcal F_\phi(\mathbf z_{k-1})\big\|^2_{\mathbf Q^{-1}} \,\Big\}. \]
-  <p>The first is a density (a flow or an energy model on windows). The second is a projection: \(\Phi_\phi\) maps a window to the nearest plausible one, as in 4DVarNet. The third is weak-constraint 4D-Var with any hybrid model from the taxonomy page as \(\mathcal F_\phi\).</p>
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>prior network</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">plausible windows</span><code>(sim, time+1, height, width)</code></div>
-      <dl class="attrs"><dt>Replaces</dt><dd>½‖z₀ − z_b‖²_{B⁻¹} and the dynamics term</dd><dt>Signal</dt><dd>density fitting on simulated or reanalysis windows (no observations needed), or end to end with A4</dd><dt>Output</dt><dd>the minimiser of the new cost: a MAP under the learned prior</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> the cost is explicit and its value is checkable</dd><dt>Cost</dt><dd>as 4D-Var, plus the prior's gradient</dd></dl>
+  \[ \mathcal{J}_\text{learned}(\vect{x}) = \frac{1}{2} \sum_k \Vert \vect{m}_k \odot (\vect{y}_k - \vect{x}_k) \Vert^2_{\gmat{\Sigma}_{\varepsilon,k}^{-1}} + \beta \mathcal{R}(\vect{x}), \]
+  \[ \mathcal{R}(\vect{x}) \in \left\{ -\log p(\vect{x}; \gvect{\theta}_\text{DA}), \Vert \vect{x} - g_\text{proj}(\vect{x}; \gvect{\theta}_\text{DA}) \Vert^2, \frac{1}{2} \sum_k \Vert \vect{x}_k - f(\vect{x}_{k-1}; \gvect{\theta}_\text{emu}) \Vert^2_{\gmat{\Sigma}_\eta^{-1}} \right\}. \]
+  <p>The first is a density (a flow or an energy model on windows). The second is a projection: \(g_\text{proj}\) maps a window to the nearest plausible one, as in 4DVarNet. The third is weak-constraint 4D-Var with any hybrid model from the taxonomy page as \(f(\cdot; \gvect{\theta}_\text{emu})\).</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">x̂_0:T</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_DA</span><code>prior network</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">plausible windows</span><code>(sim, time+1, height, width)</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>½‖x₀ − μ_x‖²_{Σ_x⁻¹} and the dynamics term</dd><dt>Signal</dt><dd>density fitting on simulated or reanalysis windows (no observations needed), or end to end with A4</dd><dt>Output</dt><dd>the minimiser of the new cost: a MAP under the learned prior</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> the cost is explicit and its value is checkable</dd><dt>Cost</dt><dd>as 4D-Var, plus the prior's gradient</dd></dl>
       <p class="crit">The dynamical form is the important one: it keeps physics in the prior and makes every model on the taxonomy page a candidate. The projection form is expressive but carries no physics, and it is not a normalised density, so it cannot be sampled.</p>
     </div>
   </article>
@@ -545,12 +547,12 @@ def neg_elbo(
   <article class="tcard" id="a3">
     <header><span class="tn">A3</span><h3>Approximate gradient</h3><span class="where">replaces: the adjoint</span></header>
     <div class="tbody">
-      <p>Keep the cost and the solver; compute \(\nabla\mathcal J\) more cheaply. With \(\mathbf F_k\) the tangent-linear model and \(\mathbf Z'\) ensemble anomalies:</p>
-  \[ \underbrace{\mathbf F_k^\top \to \widehat{\mathbf F}_k^\top}_{\text{emulator adjoint}}, \qquad
-  \underbrace{\mathbf z_0 = \mathbf z_b + \mathbf Z'_0\mathbf w,\;\; \mathbf G_k\mathbf Z'_0 \approx \mathbf Z'_k}_{\text{ensemble-variational, no adjoint}}, \qquad
-  \underbrace{\nabla\mathcal J \approx \hat g_\phi(\mathbf z,\mathbf y)}_{\text{learned gradient}} . \]
-  <p>Here \(\mathbf w\) has one entry per ensemble member and \(\mathbf G_k\) maps an initial perturbation to day \(k\).</p>
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>emulator or gradient net</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">Z′</span><code>(member, time+1, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <p>Keep the cost and the solver; compute \(\nabla_{\vect{x}} \mathcal{J}\) more cheaply. With \(\mat{F}_k = \mat{J}_f(\vect{x}_{k-1})\) the tangent-linear model and \(\tilde{\mat{X}}_k \in \mathbb{R}^{D_x \times N_{\mathcal{E}}}\) ensemble anomalies:</p>
+  \[ \underbrace{\mat{F}_k^\top \to \mat{J}_f(\vect{x}_{k-1}; \gvect{\theta}_\text{emu})^\top}_{\text{emulator adjoint}} \]
+  \[ \underbrace{\vect{x}_0 = \gvect{\mu}_x + \tilde{\mat{X}}_0 \vect{z}_\text{ens}, \text{ } \mat{F}_{k \leftarrow 0} \tilde{\mat{X}}_0 \approx \tilde{\mat{X}}_k}_{\text{ensemble-variational, no adjoint}} \]
+  \[ \underbrace{\nabla_{\vect{x}} \mathcal{J} \approx g_\text{grad}(\vect{x}, \vect{y}; \gvect{\theta}_\text{DA})}_{\text{learned gradient}} . \]
+  <p>Here \(\vect{z}_\text{ens} \in \mathbb{R}^{N_{\mathcal{E}}}\) has one entry per ensemble member and \(\mat{F}_{k \leftarrow 0}\) maps an initial perturbation to day \(k\).</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">μ_x</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">x̂_0:T</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu, θ_DA</span><code>emulator or gradient net</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">X̃</span><code>(member, time+1, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
       <dl class="attrs"><dt>Replaces</dt><dd>the adjoint run in each iteration</dd><dt>Signal</dt><dd>emulator: step-1 trajectories with a Jacobian term; ensemble: none</dd><dt>Output</dt><dd>a point estimate, near the 4D-Var MAP if the gradient is right</dd><dt>Failure</dt><dd><span class="fail si">silent</span> a biased gradient converges to the wrong point and the iterations still look healthy</dd><dt>Cost</dt><dd>forward runs only (ensemble), or one network evaluation per iteration</dd></dl>
       <p class="crit">The test for any approximate gradient: at the true minimiser it must vanish. Check it by evaluating the exact gradient once at the end; that single adjoint run turns a silent failure into a loud one.</p>
     </div>
@@ -559,13 +561,14 @@ def neg_elbo(
   <article class="tcard" id="a4">
     <header><span class="tn">A4</span><h3>Learned solver (unrolled)</h3><span class="where">replaces: the optimiser</span></header>
     <div class="tbody">
-      <p>A network decides each update from the gradient and an internal memory \(\mathbf h\). The loop is unrolled for a fixed \(N\approx 10\) iterations and trained end to end, usually together with a learned prior (A2):</p>
+      <p>A network decides each update from the gradient and an internal memory \(\vect{z}_\text{mem}\). The loop is unrolled for a fixed \(N \approx 10\) iterations and trained end to end, usually together with a learned prior (A2):</p>
   \[ \begin{aligned}
-  \mathbf z^{(i+1)} &amp;= \mathbf z^{(i)} - \mathcal S_\phi\big(\nabla\mathcal J_\phi(\mathbf z^{(i)}),\, \mathbf h^{(i)}\big), \qquad \mathbf h^{(i+1)} = \mathcal U_\phi\big(\nabla\mathcal J_\phi(\mathbf z^{(i)}),\, \mathbf h^{(i)}\big),\\
-  \phi^\star &amp;= \arg\min_\phi\; \mathbb E_{(\mathbf z,\mathbf y)}\,\big\|\mathbf z - \mathbf z^{(N)}_\phi(\mathbf y)\big\|^2 .
+  \vect{x}^{(i+1)} &amp;= \vect{x}^{(i)} - g_\text{step}\left(\nabla_{\vect{x}} \mathcal{J}_\text{learned}(\vect{x}^{(i)}), \vect{z}_\text{mem}^{(i)}; \gvect{\theta}_\text{DA}\right),\\
+  \vect{z}_\text{mem}^{(i+1)} &amp;= g_\text{mem}\left(\nabla_{\vect{x}} \mathcal{J}_\text{learned}(\vect{x}^{(i)}), \vect{z}_\text{mem}^{(i)}; \gvect{\theta}_\text{DA}\right),\\
+  \gvect{\theta}_\text{DA}^\star &amp;= \mathrm{argmin}_{\gvect{\theta}_\text{DA}} \mathcal{L}_\text{MSE}(\gvect{\theta}_\text{DA}), \text{ } \mathcal{L}_\text{MSE}(\gvect{\theta}_\text{DA}) = \mathbb{E}_{(\vect{x}, \vect{y})} \Vert \vect{x} - \vect{x}^{(N)}(\vect{y}; \gvect{\theta}_\text{DA}) \Vert^2 .
   \end{aligned} \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>solver 𝒮, memory 𝒰, prior</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">h</span><code>(channel, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
-      <dl class="attrs"><dt>Replaces</dt><dd>L-BFGS or Gauss–Newton, and usually the prior too</dd><dt>Signal</dt><dd>MSE against simulated truth; or held-out observations on real data</dd><dt>Output</dt><dd>after end-to-end MSE training, an estimate of the posterior mean, not the minimiser of 𝒥_φ</dd><dt>Failure</dt><dd><span class="fail si">silent</span> the cost is no longer what is minimised, so its value does not certify the output</dd><dt>Cost</dt><dd>N ≈ 10 gradient evaluations, versus 50–100 classically</dd></dl>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">x̂_0:T</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_DA</span><code>solver g_step, memory g_mem, prior</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">z_mem</span><code>(channel, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>L-BFGS or Gauss–Newton, and usually the prior too</dd><dt>Signal</dt><dd>MSE against simulated truth; or held-out observations on real data</dd><dt>Output</dt><dd>after end-to-end MSE training, an estimate of the posterior mean, not the minimiser of 𝒥_learned</dd><dt>Failure</dt><dd><span class="fail si">silent</span> the cost is no longer what is minimised, so its value does not certify the output</dd><dt>Cost</dt><dd>N ≈ 10 gradient evaluations, versus 50–100 classically</dd></dl>
       <p class="crit">4DVarNet's core. The variational cost becomes an architecture: a good inductive bias for the network, not a probability model. Treat its output as a mean, and do not read its cost as a posterior.</p>
     </div>
   </article>
@@ -574,10 +577,10 @@ def neg_elbo(
     <header><span class="tn">A5</span><h3>Warm start or learned preconditioner</h3><span class="where">replaces: the initial guess and the metric</span></header>
     <div class="tbody">
       <p>The classical solver still decides the answer. The network only proposes where to start, or reshapes the space so fewer iterations are needed:</p>
-  \[ \mathbf z^{(0)} = g_\phi(\mathbf y,\mathbf m,\boldsymbol\sigma,\mathbf z_b), \qquad
-  \mathbf z^{(i+1)} = \mathbf z^{(i)} - \eta\,\mathbf P_\phi\,\nabla\mathcal J(\mathbf z^{(i)}), \qquad \mathbf P_\phi \succ 0 . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>initialiser or preconditioner</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">4D-Var analyses</span><code>(window, time+1, height, width)</code></div>
-      <dl class="attrs"><dt>Replaces</dt><dd>z⁽⁰⁾ = z_b and the plain B^{1/2} change of variables</dd><dt>Signal</dt><dd>the analyses of box 2 itself, or the iteration count</dd><dt>Output</dt><dd>the classical MAP, unchanged</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> a bad guess only costs iterations</dd><dt>Cost</dt><dd>fewer iterations; never more wrong</dd></dl>
+  \[ \vect{x}^{(0)} = g_\text{init}(\vect{y}, \vect{m}, \gvect{\sigma}_\varepsilon, \gvect{\mu}_x; \gvect{\theta}_\text{DA}) \]
+  \[ \vect{x}^{(i+1)} = \vect{x}^{(i)} - \gamma \mat{P}(\gvect{\theta}_\text{DA}) \nabla_{\vect{x}} \mathcal{J}(\vect{x}^{(i)}), \text{ } \mat{P}(\gvect{\theta}_\text{DA}) \succ 0 . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">μ_x</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">x̂_0:T</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_DA</span><code>initialiser or preconditioner</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">4D-Var analyses</span><code>(window, time+1, height, width)</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>x⁽⁰⁾ = μ_x and the plain Σ_x^{1/2} change of variables</dd><dt>Signal</dt><dd>the analyses of box 2 itself, or the iteration count</dd><dt>Output</dt><dd>the classical MAP, unchanged</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> a bad guess only costs iterations</dd><dt>Cost</dt><dd>fewer iterations; never more wrong</dd></dl>
       <p class="crit">The safest learned DA. Its training targets are box 2 outputs, so no truth and no OSSE are needed, and its worst case is plain 4D-Var. The speed-up is bounded by how far the classical solve has to travel.</p>
     </div>
   </article>
@@ -586,11 +589,11 @@ def neg_elbo(
     <header><span class="tn">A6</span><h3>Amortised point analysis</h3><span class="where">replaces: the whole solve</span></header>
     <div class="tbody">
       <p>One forward pass from observations to state, trained across windows:</p>
-  \[ \hat{\mathbf z}_{0:K} = g_\psi(\mathbf y_{1:K},\mathbf m_{1:K},\boldsymbol\sigma_{1:K},\mathbf z_b,\mathbf x,\mathbf u_{1:K}), \qquad
-  \psi^\star = \arg\min_\psi \mathbb E\,\big\|\mathbf z_{0:K} - \hat{\mathbf z}_{0:K}\big\|^2 \;\Rightarrow\; \hat{\mathbf z} = \mathbb E[\mathbf z\mid\mathbf y] . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">ẑ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">ψ</span><code>network</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+  \[ \hat{\vect{x}}_{0:T} = g_\text{amort}(\vect{y}_{1:T}, \vect{m}_{1:T}, \gvect{\sigma}_{\varepsilon,1:T}, \gvect{\mu}_x, \vect{u}_{1:T}; \gvect{\nu}) \]
+  \[ \gvect{\nu}^\star = \mathrm{argmin}_{\gvect{\nu}} \mathcal{L}_\text{MSE}(\gvect{\nu}), \text{ } \mathcal{L}_\text{MSE}(\gvect{\nu}) = \mathbb{E} \Vert \vect{x}_{0:T} - \hat{\vect{x}}_{0:T} \Vert^2 \Rightarrow \hat{\vect{x}} = \mathbb{E}[\vect{x} \mid \vect{y}] . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">μ_x</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">x̂_0:T</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">ν</span><code>network</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
       <dl class="attrs"><dt>Replaces</dt><dd>objective, gradient and solver</dd><dt>Signal</dt><dd>MSE on OSSEs; or held-out observations on real windows</dd><dt>Output</dt><dd>posterior mean, no uncertainty</dd><dt>Failure</dt><dd><span class="fail si">silent</span> an unusual window gets a confident, smooth, wrong field</dd><dt>Cost</dt><dd>one forward pass</dd></dl>
-      <p class="crit">The direct analysis of the state-estimation page. Its output can still be scored for free: evaluate the classical 𝒥 and the innovations on ẑ. That check costs one model run and catches most silent failures.</p>
+      <p class="crit">The direct analysis of the state-estimation page. Its output can still be scored for free: evaluate the classical 𝒥 and the innovations on x̂. That check costs one model run and catches most silent failures.</p>
     </div>
   </article>
 
@@ -598,32 +601,32 @@ def neg_elbo(
     <header><span class="tn">A7</span><h3>Amortised variational inference</h3><span class="where">replaces: the whole solve, with a density</span></header>
     <div class="tbody">
       <p>A conditional density over the window, trained either on simulated truth (forward KL) or on real observations (ELBO):</p>
-  \[ \text{forward KL:}\quad \min_\psi\; \mathbb E_{p(\mathbf z,\mathbf y)}\big[-\log q_\psi(\mathbf z\mid\mathbf y)\big] \]
-  \[ \text{ELBO:}\quad \max_\psi\; \mathbb E_{\mathbf y}\,\mathbb E_{q_\psi}\big[\log p(\mathbf y\mid\mathbf z) + \log p(\mathbf z) - \log q_\psi(\mathbf z\mid\mathbf y)\big] \]
-  <p>The family of \(q_\psi\) sets what uncertainty it can express:</p>
+  \[ \text{forward KL: } \mathcal{L}_\text{NLL}(\gvect{\nu}) = \mathbb{E}_{p(\vect{x}, \vect{y})}\left[-\log q(\vect{x} \mid \vect{y}; \gvect{\nu})\right] \]
+  \[ \text{ELBO: } \mathcal{L}_\text{ELBO}(\gvect{\nu}) = -\mathbb{E}_{\vect{y}} \mathbb{E}_{q}\left[\log p(\vect{y} \mid \vect{x}) + \log p(\vect{x}) - \log q(\vect{x} \mid \vect{y}; \gvect{\nu})\right] \]
+  <p>The family of \(q(\cdot; \gvect{\nu})\) sets what uncertainty it can express:</p>
   <div class="tbl"><table>
     <thead><tr><th>Family</th><th>Form</th><th>Parameters per window</th></tr></thead>
     <tbody>
-      <tr><td>Mean-field</td><td>\(\mathcal N(\boldsymbol\mu_\psi, \operatorname{diag}\boldsymbol\sigma^2_\psi)\)</td><td>(2, time+1, height, width)</td></tr>
-      <tr><td>Low rank + diagonal</td><td>\(\mathcal N(\boldsymbol\mu_\psi, \mathbf L_\psi\mathbf L_\psi^\top + \mathbf D_\psi)\)</td><td>(rank+2, time+1, height, width)</td></tr>
-      <tr><td>Markov</td><td>\(q(\mathbf z_0\mid\mathbf y)\prod_k q(\mathbf z_k\mid\mathbf z_{k-1},\mathbf y)\)</td><td>one transition network</td></tr>
-      <tr><td>Flow or diffusion</td><td>\(\mathbf z = T_\psi(\boldsymbol\epsilon;\mathbf y)\)</td><td>a conditional generator</td></tr>
+      <tr><td>Mean-field</td><td>\(\mathcal{N}(\gvect{\mu}_q, \mathrm{diag}(\gvect{\sigma}^2_q))\)</td><td>(2, time+1, height, width)</td></tr>
+      <tr><td>Low rank + diagonal</td><td>\(\mathcal{N}(\gvect{\mu}_q, \mat{L}_q \mat{L}_q^\top + \mat{D}_q)\)</td><td>(rank+2, time+1, height, width)</td></tr>
+      <tr><td>Markov</td><td>\(q(\vect{x}_0 \mid \vect{y}; \gvect{\nu}) \prod_k q(\vect{x}_k \mid \vect{x}_{k-1}, \vect{y}; \gvect{\nu})\)</td><td>one transition network</td></tr>
+      <tr><td>Flow or diffusion</td><td>\(\vect{x} = g_\text{flow}(\gvect{\xi}; \vect{y}, \gvect{\nu})\)</td><td>a conditional generator</td></tr>
     </tbody>
   </table></div>
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_0:K</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">ψ</span><code>variational parameters</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code><span class="d train"></span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">μ_x</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_q,0:T</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">ν</span><code>variational parameters</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code><span class="d train"></span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
       <dl class="attrs"><dt>Replaces</dt><dd>the whole solve, and the ensemble</dd><dt>Signal</dt><dd>forward KL on OSSEs (needs truth) or ELBO on real observations (needs the likelihood and a model-based prior, no truth)</dd><dt>Output</dt><dd>a density: mean and samples</dd><dt>Failure</dt><dd><span class="fail si">silent</span> forward KL tends to be well spread; ELBO tends to be under-dispersed</dd><dt>Cost</dt><dd>one forward pass per sample</dd></dl>
-      <p class="crit">The ELBO route is the one that trains on the real ocean without truth, because the model enters through log p(z). The Markov family is the natural choice here: it respects time and is a learned smoother.</p>
+      <p class="crit">The ELBO route is the one that trains on the real ocean without truth, because the model enters through log p(x). The Markov family is the natural choice here: it respects time and is a learned smoother.</p>
     </div>
   </article>
 
   <article class="tcard" id="a8">
     <header><span class="tn">A8</span><h3>Per-window variational inference</h3><span class="where">replaces: the point estimate</span></header>
     <div class="tbody">
-      <p>Fit a Gaussian to each window's posterior directly. With \(\boldsymbol\epsilon\sim\mathcal N(\mathbf 0,\mathbf I)\), samples are reparameterised, and the ELBO uses the classical cost because \(p(\mathbf z\mid\mathbf y)\propto e^{-\mathcal J(\mathbf z)}\):</p>
-  \[ \mathbf z = \boldsymbol\mu + \mathbf L\boldsymbol\epsilon_1 + \mathbf D^{1/2}\boldsymbol\epsilon_2, \qquad
-  \max_{\boldsymbol\mu,\mathbf L,\mathbf D}\; -\mathbb E_{q}\big[\mathcal J(\mathbf z)\big] + \mathbb H[q]. \]
-  <p>As the rank grows, \(\boldsymbol\mu\) approaches the posterior mean and \(\mathbf L\mathbf L^\top + \mathbf D\) the posterior covariance. With one sample at \(\boldsymbol\epsilon = \mathbf 0\), it collapses to 4D-Var.</p>
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_0:K</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">μ, L, D</span><code>(rank+2, time+1, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">none</span><code>—</code></div>
+      <p>Fit a Gaussian to each window's posterior directly. With \(\gvect{\xi} \sim \mathcal{N}(\vect{0}, \mat{I})\), samples are reparameterised, and the ELBO uses the classical cost because \(p(\vect{x} \mid \vect{y}) \propto \exp(-\mathcal{J}(\vect{x}))\):</p>
+  \[ \vect{x} = \gvect{\mu}_q + \mat{L}_q \gvect{\xi}_1 + \mat{D}_q^{1/2} \gvect{\xi}_2 \]
+  \[ \min_{\gvect{\mu}_q, \mat{L}_q, \mat{D}_q} \mathcal{L}_\text{ELBO} = \mathbb{E}_{q}\left[\mathcal{J}(\vect{x})\right] - \mathbb{H}[q]. \]
+  <p>As the rank grows, \(\gvect{\mu}_q\) approaches the posterior mean and \(\mat{L}_q \mat{L}_q^\top + \mat{D}_q\) the posterior covariance. With one sample at \(\gvect{\xi} = \vect{0}\), it collapses to 4D-Var.</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">μ_x</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_q,0:T</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">μ_q, L_q, D_q</span><code>(rank+2, time+1, height, width)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">none</span><code>—</code></div>
       <dl class="attrs"><dt>Replaces</dt><dd>4D-Var's point estimate and its Laplace covariance</dd><dt>Signal</dt><dd>this window's ELBO; no training set</dd><dt>Output</dt><dd>a Gaussian posterior for the window</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> the ELBO value is a direct check</dd><dt>Cost</dt><dd>4D-Var × samples per iteration</dd></dl>
       <p class="crit">The honest reference for A7, and box 2 extended to give a density. With gaussx for the low-rank algebra and the somax adjoint, it is mostly a change of loss in code you already have.</p>
     </div>
@@ -633,10 +636,11 @@ def neg_elbo(
     <header><span class="tn">A9</span><h3>Semi-amortised inference</h3><span class="where">amortised proposal, per-window refinement</span></header>
     <div class="tbody">
       <p>Start from an amortised answer, then take a few classical or variational steps on the actual window:</p>
-  \[ \psi^{(0)}_w = a_\phi(\mathbf y^{(w)}), \qquad \psi^{(t+1)}_w = \psi^{(t)}_w + \eta\,\nabla_\psi\,\mathrm{ELBO}_w(\psi^{(t)}_w), \quad t = 0,\dots,T-1 . \]
-  <p>A related route is <em>guided diffusion</em>: learn the prior score \(s_\phi(\mathbf z,\tau) \approx \nabla_{\mathbf z}\log p_\tau(\mathbf z)\) from states alone, and at inference add \(\nabla_{\mathbf z}\log p(\mathbf y\mid\mathbf z)\) with this window's masks to every denoising step.</p>
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_0:K</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>proposal or prior score</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
-      <dl class="attrs"><dt>Replaces</dt><dd>the cold start of A8, or the fixed answer of A7</dd><dt>Signal</dt><dd>proposal trained as A7; refinement uses each window's ELBO</dd><dt>Output</dt><dd>a density refined on the window</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> refinement steps that move far flag an out-of-distribution window</dd><dt>Cost</dt><dd>one pass plus T ≪ N iterations</dd></dl>
+  \[ \gvect{\nu}^{(0)}_w = g_\text{prop}(\vect{y}^{(w)}; \gvect{\theta}_\text{DA}) \]
+  \[ \gvect{\nu}^{(i+1)}_w = \gvect{\nu}^{(i)}_w - \gamma \nabla_{\gvect{\nu}} \mathcal{L}_{\text{ELBO},w}(\gvect{\nu}^{(i)}_w) \text{ for } i = 0, \ldots, N_\text{refine} - 1 . \]
+  <p>A related route is <em>guided diffusion</em>: learn the prior score \(g_\text{score}(\vect{x}, \tau; \gvect{\theta}_\text{DA}) \approx \nabla_{\vect{x}} \log p_\tau(\vect{x})\) from states alone, and at inference add \(\nabla_{\vect{x}} \log p(\vect{y} \mid \vect{x})\) with this window's masks to every denoising step.</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">μ_x</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_q,0:T</span><code>(time+1, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">samples</span><code>(member, time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_DA</span><code>proposal or prior score</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>the cold start of A8, or the fixed answer of A7</dd><dt>Signal</dt><dd>proposal trained as A7; refinement uses each window's ELBO</dd><dt>Output</dt><dd>a density refined on the window</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> refinement steps that move far flag an out-of-distribution window</dd><dt>Cost</dt><dd>one pass plus N_refine ≪ N iterations</dd></dl>
       <p class="crit">Closes the amortisation gap, and the size of the refinement is a built-in novelty detector. Guided diffusion has the same advantage for the observing system: masks change at inference without retraining.</p>
     </div>
   </article>
@@ -644,9 +648,10 @@ def neg_elbo(
   <article class="tcard side" id="a10">
     <header><span class="tn">A10</span><h3>Learned filter pieces</h3><span class="where">sidebar: the sequential route</span></header>
     <div class="tbody">
-      <p>For the EnKF, keep the forecast–analysis cycle and learn its fragile parts: localisation \(\boldsymbol\rho_\phi\), inflation \(\alpha_\phi\), or the gain itself, and run the forecast with an emulator. Trained end to end through the cycle on a rollout loss:</p>
-  \[ \mathbf K_k = \big(\boldsymbol\rho_\phi\circ\mathbf X'_k(\mathbf H_k\mathbf X'_k)^\top\big)\big(\mathbf H_k\mathbf X'_k(\mathbf H_k\mathbf X'_k)^\top + \mathbf R_k\big)^{-1}, \qquad \mathbf X'_k \leftarrow \alpha_\phi\,\mathbf X'_k . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">y_k, m_k</span><code>(height, width) per day</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">members</span><code>(member, height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">analysis members</span><code>(member, height, width) per day</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>ρ, α, or gain net</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
+      <p>For the EnKF, keep the forecast–analysis cycle and learn its fragile parts: localisation \(\gmat{\rho}(\gvect{\theta}_\text{DA})\), inflation \(\alpha_\text{infl}(\gvect{\theta}_\text{DA})\), or the gain itself, and run the forecast with an emulator. Trained end to end through the cycle on a rollout loss:</p>
+  \[ \mat{G}_k = \left(\gmat{\rho} \odot \tilde{\mat{X}}_k (\mat{H}_k \tilde{\mat{X}}_k)^\top\right) \left(\mat{H}_k \tilde{\mat{X}}_k (\mat{H}_k \tilde{\mat{X}}_k)^\top + \gmat{\Sigma}_{\varepsilon,k}\right)^{-1} \]
+  \[ \tilde{\mat{X}}_k \leftarrow \alpha_\text{infl} \tilde{\mat{X}}_k . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">y_k, m_k</span><code>(height, width) per day</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">members</span><code>(member, height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><span class="n">analysis members</span><code>(member, height, width) per day</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_DA</span><code>ρ, α_infl, or gain net</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">OSSE windows</span><code>(sim, time+1, height, width) + obs</code></div>
       <dl class="attrs"><dt>Replaces</dt><dd>hand-tuned localisation and inflation; the forecast model</dd><dt>Signal</dt><dd>rollout error of the filter on OSSEs</dd><dt>Output</dt><dd>an ensemble per day, streaming</dd><dt>Failure</dt><dd><span class="fail lo">loud</span> innovations and spread–error ratio are monitored every cycle</dd><dt>Cost</dt><dd>members × forward runs; no adjoint anywhere</dd></dl>
       <p class="crit">Only forward runs, so step-map emulators (T6–T8) fit here without the Jacobian problem. Kept short on this page; the window route is the focus.</p>
     </div>
@@ -657,27 +662,27 @@ def neg_elbo(
     <div class="tbody">
       <p>To learn a model from data you need the states, and to get the states you need the model. Alternate, with any A-type as the E-step:</p>
   \[ \begin{aligned}
-  \text{E-step:}\quad &amp; q^{(w)}(\mathbf z) \approx p\big(\mathbf z\mid\mathbf y^{(w)};\phi\big) \quad\text{for each window } w,\\
-  \text{M-step:}\quad &amp; \phi \leftarrow \arg\min_\phi \sum_w \mathbb E_{q^{(w)}}\Big[\tfrac12\sum_k\big\|\mathbf z_k - \mathcal F_\phi(\mathbf z_{k-1})\big\|^2_{\mathbf Q^{-1}}\Big].
+  \text{E-step: } &amp; q^{(w)}(\vect{x}) \approx p(\vect{x} \mid \vect{y}^{(w)}; \gvect{\theta}_\text{emu}) \text{ for each window } w,\\
+  \text{M-step: } &amp; \gvect{\theta}_\text{emu} \leftarrow \mathrm{argmin}_{\gvect{\theta}_\text{emu}} \sum_w \mathbb{E}_{q^{(w)}}\left[\frac{1}{2} \sum_k \Vert \vect{x}_k - f(\vect{x}_{k-1}; \gvect{\theta}_\text{emu}) \Vert^2_{\gmat{\Sigma}_\eta^{-1}}\right].
   \end{aligned} \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_b</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_0:K</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>a model from the taxonomy page</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
-      <dl class="attrs"><dt>Replaces</dt><dd>the need for a richer reference model</dd><dt>Signal</dt><dd>observations only; variational EM puts both steps in one ELBO</dd><dt>Output</dt><dd>a corrected model 𝓕_φ and analysed states</dd><dt>Failure</dt><dd><span class="fail si">silent</span> model and states can co-adapt: the model learns the analysis's errors</dd><dt>Cost</dt><dd>an analysis per window per EM iteration</dd></dl>
-      <p class="crit">The bridge between the two pages: it is how a correction-type hybrid (T1–T4, T7) is trained when no high-resolution truth exists. Fix Q and α before starting, or the M-step can explain everything as model error.</p>
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">y, m, σ_ε</span><code>(time, height, width) ×3</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">μ_x</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">α</span><code>(hyper,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">μ_q,0:T</span><code>(time+1, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>a model from the taxonomy page</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">real windows, obs only</span><code>(window, time, height, width) ×3</code></div>
+      <dl class="attrs"><dt>Replaces</dt><dd>the need for a richer reference model</dd><dt>Signal</dt><dd>observations only; variational EM puts both steps in one ELBO</dd><dt>Output</dt><dd>a corrected model f(·; θ_emu) and analysed states</dd><dt>Failure</dt><dd><span class="fail si">silent</span> model and states can co-adapt: the model learns the analysis's errors</dd><dt>Cost</dt><dd>an analysis per window per EM iteration</dd></dl>
+      <p class="crit">The bridge between the two pages: it is how a correction-type hybrid (T1–T4, T7) is trained when no high-resolution truth exists. Fix Σ_η and α before starting, or the M-step can explain everything as model error.</p>
     </div>
   </article>
 
   <h2 id="grid">Model type × assimilation type</h2>
-  <p>Any model from the taxonomy page can sit inside any type that uses a model. A6 and A7 use a model only to make training data (OSSEs) or, for the ELBO, inside \(\log p(\mathbf z)\).</p>
+  <p>Any model from the taxonomy page can sit inside any type that uses a model. A6 and A7 use a model only to make training data (OSSEs) or, for the ELBO, inside \(\log p(\vect{x})\).</p>
   <p><span class="mk y">●</span> natural &nbsp; <span class="mk p">◐</span> works, with a caveat &nbsp; <span class="mk n">○</span> does not fit</p>
   <div class="tbl"><table class="matrix">
-    <thead><tr><th>Assimilation</th><th>Physical 𝓕</th><th>T1–T5 (classical integrator)</th><th>T6–T8 (step maps)</th><th>T9 rollout</th><th>T10 embedding</th></tr></thead>
+    <thead><tr><th>Assimilation</th><th>Physical f</th><th>T1–T5 (classical integrator)</th><th>T6–T8 (step maps)</th><th>T9 rollout</th><th>T10 embedding</th></tr></thead>
     <tbody><tr><td>A1 hyperparameters</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A2 dynamical prior</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A3 approx. gradient</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A4 learned solver</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A5 warm start</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td></tr><tr><td>A8 per-window VI</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A9 semi-amortised</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A10 learned filter</td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td></tr><tr><td>A11 joint learning</td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk p">◐</span></td></tr></tbody>
   </table></div>
   <p>The caveats: T6–T8 need a trustworthy Jacobian wherever a gradient flows through them (A2–A4, A8, A9); T9 has no one-day step, so it cannot enter a weak-constraint dynamics term or cycle in a filter; T10 moves the whole problem into the embedding, with observations entering through the decoder. A11 with the physical model only calibrates θ, which is A1's job done the hard way.</p>
 
   <h2 id="critique">What the structure implies</h2>
-  <div class="note"><span class="tag">Score every output with the classical cost</span><p>Whatever produced \(\hat{\mathbf z}\), computing \(\mathcal J(\hat{\mathbf z})\), \(2\mathcal J^\star/p\) and the innovations costs one model run. It is the cheapest guard against silent failure, and it makes the box-2 diagnostics of the state-estimation page apply to every learned type.</p></div>
-  <div class="note"><span class="tag">A learned cost is not a posterior</span><p>Once a cost is trained end to end for MSE (A2 with A4), its minimiser is no longer the point of interest and \(e^{-\mathcal J_\phi}\) is not a calibrated density. Uncertainty then has to come from somewhere else: an ensemble of solvers, a VI head, or A8 run around the output.</p></div>
+  <div class="note"><span class="tag">Score every output with the classical cost</span><p>Whatever produced \(\hat{\vect{x}}\), computing \(\mathcal{J}(\hat{\vect{x}})\), \(2 \mathcal{J}^\star / D_y\) and the innovations costs one model run. It is the cheapest guard against silent failure, and it makes the box-2 diagnostics of the state-estimation page apply to every learned type.</p></div>
+  <div class="note"><span class="tag">A learned cost is not a posterior</span><p>Once a cost is trained end to end for MSE (A2 with A4), its minimiser is no longer the point of interest and \(\exp(-\mathcal{J}_\text{learned})\) is not a calibrated density. Uncertainty then has to come from somewhere else: an ensemble of solvers, a VI head, or A8 run around the output.</p></div>
   <div class="note"><span class="tag">The safe ladder</span><p>A1 → A5 → A8 → A9 keeps the classical machinery in charge at every step and adds learning only where it pays: tuning, speed, uncertainty, then amortisation with refinement. A4, A6 and A7 jump straight to amortisation and give up the checks; they are worth it when per-window cost is the binding constraint and the training distribution covers the windows you will see.</p></div>
   <div class="note"><span class="tag">Learning the model needs the analysis</span><p>A11 is the only way to train a correction-type hybrid from observations alone. It inherits every weakness of its E-step, and it can let the model absorb analysis errors. Fix α first (A1), and keep the model's learned part structural (T1, T2, T4) so it cannot explain everything.</p></div>
 
@@ -685,7 +690,7 @@ def neg_elbo(
   <div class="tbl"><table>
     <thead><tr><th>Type</th><th>Hook in the stack</th></tr></thead>
     <tbody>
-      <tr><td>A1, A5, A8</td><td>the 4D-Var path (vardax) on a somax model, with gaussx for \(\mathbf B^{1/2}\), low-rank covariances and log-determinants</td></tr>
+      <tr><td>A1, A5, A8</td><td>the 4D-Var path (vardax) on a somax model, with gaussx for \(\gmat{\Sigma}_x^{1/2}\), low-rank covariances and log-determinants</td></tr>
       <tr><td>A2</td><td>the dynamics term takes any somax model; a learned density from the flow and probabilistic libraries</td></tr>
       <tr><td>A3, A10</td><td>ensemble machinery (filterax); emulators from the taxonomy page as forecast or gradient</td></tr>
       <tr><td>A4, A6, A7, A9</td><td>a training loop over windows in pipekit, with the DA cycle supplying OSSE pairs</td></tr>

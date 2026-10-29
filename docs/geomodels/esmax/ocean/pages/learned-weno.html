@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
 <script>
 window.MathJax = {
-  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none' },
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none', macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
   svg: { fontCache: 'global' },
   options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
 };
@@ -283,7 +283,7 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
     <div class="eyebrow">TL;DR</div>
     <h2>Fixed stencils, learned weights</h2>
     <ul>
-      <li><strong>Every advection scheme is a centred part plus a dissipation.</strong> The centred part moves information; the dissipation removes it. Fifth-order upwinding is exactly sixth-order centred plus a hyperdiffusion \(|u|\Delta x^5/60\).</li>
+      <li><strong>Every advection scheme is a centred part plus a dissipation.</strong> The centred part moves information; the dissipation removes it. Fifth-order upwinding is exactly sixth-order centred plus a hyperdiffusion \(\vert u \vert \Delta x^5/60\).</li>
       <li><strong>A single learned kernel cannot work.</strong> Godunov's theorem: a linear scheme that never creates oscillations is at most first order. The weights must depend on the local field.</li>
       <li><strong>WENO already does that, by hand.</strong> It blends three small stencils with weights set by how smooth each one sees the field. Learned WENO adds a learned correction to those weights, starts from zero (so it starts as classical WENO5), and is switched off where the field is smooth.</li>
       <li><strong>Boundaries use the same mechanism.</strong> A candidate that reads a land cell gets weight zero. Near a coast only the safe candidates remain, so the stencil narrows on its own.</li>
@@ -294,17 +294,17 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
     <nav class="stack" aria-label="Pipeline of one face reconstruction">
       <div class="layer io"><div><div class="ln">Inputs at one x-face</div><div class="lo">\(q\) on cells, \(u_{i+\frac12}\) on faces, wet mask · <code>(height, width)</code></div></div><div class="chips"></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Stencil window</div><div class="lo">\(q_{i-2},\dots,q_{i+2}\), mirrored when \(u&lt;0\)</div></div><div class="chips"><span class="tchip fx">fixed</span></div></div>
+      <div class="layer"><div><div class="ln">Stencil window</div><div class="lo">\(q_{i-2},\ldots,q_{i+2}\), mirrored when \(u \lt 0\)</div></div><div class="chips"><span class="tchip fx">fixed</span></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Three candidates</div><div class="lo">third-order face values \(\hat q^{\,r}\)</div></div><div class="chips"><span class="tchip fx">fixed</span></div></div>
+      <div class="layer"><div><div class="ln">Three candidates</div><div class="lo">third-order face values \(\hat q^{r}\)</div></div><div class="chips"><span class="tchip fx">fixed</span></div></div>
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Smoothness</div><div class="lo">\(\beta_r\), normalised to \(\tilde\beta_r\); detector \(\tilde\tau\)</div></div><div class="chips"><span class="tchip fx">fixed</span></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Weights</div><div class="lo">WENO5 logits \(+\;\tilde\tau\,g_\phi(\text{features})\)</div></div><div class="chips"><span class="tchip ln">learned</span></div></div>
+      <div class="layer"><div><div class="ln">Weights</div><div class="lo">WENO5 logits \(+ \tilde\tau g_\text{corr}(\text{features}; \gvect{\theta})\)</div></div><div class="chips"><span class="tchip ln">learned</span></div></div>
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Land mask, softmax</div><div class="lo">dry candidates → weight 0; \(\sum_r\omega_r = 1\)</div></div><div class="chips"><span class="tchip gu">guarantee</span></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Face flux</div><div class="lo">\(F = u\,\hat q - |u|\,\kappa_\phi\,(q_{i+1}-q_i)\), \(\kappa_\phi\ge0\)</div></div><div class="chips"><span class="tchip ln">learned</span><span class="tchip gu">guarantee</span></div></div>
+      <div class="layer"><div><div class="ln">Face flux</div><div class="lo">\(F = u \hat q - \vert u \vert \kappa_{\gvect{\theta}} (q_{i+1}-q_i)\), \(\kappa_{\gvect{\theta}}\ge0\)</div></div><div class="chips"><span class="tchip ln">learned</span><span class="tchip gu">guarantee</span></div></div>
       <div class="link"><span></span><span></span></div>
       <div class="layer io"><div><div class="ln">Tendency</div><div class="lo">\(-(F_{i+\frac12}-F_{i-\frac12})/\Delta x\), conservative for any weights</div></div><div class="chips"><span class="tchip gu">guarantee</span></div></div>
     </nav>
@@ -328,37 +328,40 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
   <div class="tbl"><table>
     <thead><tr><th>Symbol</th><th>Meaning</th><th>Shape</th></tr></thead>
     <tbody>
-      <tr><td>\(q_i\)</td><td>advected quantity (QG potential vorticity) in cell \(i\)</td><td>(height, width)</td></tr>
-      <tr><td>\(u_{i+\frac12}\)</td><td>velocity normal to the face between cells \(i\) and \(i+1\) (C-grid U-point)</td><td>(height, width)</td></tr>
-      <tr><td>\(\hat q_{i+\frac12}\)</td><td>reconstructed value of \(q\) at that face</td><td>(height, width)</td></tr>
-      <tr><td>\(F_{i+\frac12}\)</td><td>flux through the face</td><td>(height, width)</td></tr>
-      <tr><td>\(\Delta x,\ \Delta t,\ C\)</td><td>grid spacing, time step, Courant number \(C=|u|\Delta t/\Delta x\)</td><td>scalars; \(C\) per face</td></tr>
+      <tr><td>\(q_i\)</td><td>advected quantity (QG potential vorticity) in cell \(i\)</td><td>\(\mathbb{R}^{N_y \times N_x}\) (height, width)</td></tr>
+      <tr><td>\(u_{i+\frac12}\)</td><td>velocity normal to the face between cells \(i\) and \(i+1\) (C-grid U-point)</td><td>\(\mathbb{R}^{N_y \times N_x}\) (height, width)</td></tr>
+      <tr><td>\(\hat q_{i+\frac12}\)</td><td>reconstructed value of \(q\) at that face</td><td>\(\mathbb{R}^{N_y \times N_x}\) (height, width)</td></tr>
+      <tr><td>\(F_{i+\frac12}\)</td><td>flux through the face</td><td>\(\mathbb{R}^{N_y \times N_x}\) (height, width)</td></tr>
+      <tr><td>\(\Delta x, \Delta t, C\)</td><td>grid spacing, time step, Courant number \(C = \vert u \vert \Delta t/\Delta x\)</td><td>\(\mathbb{R}_{>0}\); \(C\) per face, \(\mathbb{R}^{N_y \times N_x}\) (height, width)</td></tr>
       <tr><td>\(r = 1,2,3\)</td><td>candidate stencil index</td><td>—</td></tr>
-      <tr><td>\(c^{\,r}_j\)</td><td>fixed coefficients of candidate \(r\)</td><td>(candidate, point)</td></tr>
-      <tr><td>\(\beta_r,\ \tilde\beta_r\)</td><td>smoothness indicator of candidate \(r\), and its normalised form \(\beta_r/\sum_s\beta_s\)</td><td>(candidate, height, width)</td></tr>
-      <tr><td>\(d_r,\ \omega_r\)</td><td>linear (optimal) weights, and the actual nonlinear weights</td><td>(candidate,), (candidate, height, width)</td></tr>
-      <tr><td>\(\tilde\tau\)</td><td>smoothness detector \(|\tilde\beta_1-\tilde\beta_3|\), near zero in smooth flow</td><td>(height, width)</td></tr>
-      <tr><td>\(g_\phi,\ \kappa_\phi\)</td><td>learned logit correction, learned face diffusivity</td><td>(candidate, height, width), (height, width)</td></tr>
-      <tr><td>\(n^-,\ n^+\)</td><td>contiguous wet cells upstream and downstream of the face</td><td>(height, width) each</td></tr>
+      <tr><td>\(c^{r}_j\)</td><td>fixed coefficients of candidate \(r\)</td><td>\(\mathbb{R}^{3 \times 5}\) (candidate, point)</td></tr>
+      <tr><td>\(\beta_r, \tilde\beta_r\)</td><td>smoothness indicator of candidate \(r\), and its normalised form \(\beta_r/\sum_s\beta_s\)</td><td>\(\mathbb{R}^{3 \times N_y \times N_x}\) (candidate, height, width)</td></tr>
+      <tr><td>\(d_r, \omega_r\)</td><td>linear (optimal) weights, and the actual nonlinear weights</td><td>\(\mathbb{R}^{3}\) (candidate), \(\mathbb{R}^{3 \times N_y \times N_x}\) (candidate, height, width)</td></tr>
+      <tr><td>\(\tilde\tau\)</td><td>smoothness detector \(\vert \tilde\beta_1 - \tilde\beta_3 \vert\), near zero in smooth flow</td><td>\(\mathbb{R}^{N_y \times N_x}\) (height, width)</td></tr>
+      <tr><td>\(g_\text{corr}, \kappa_{\gvect{\theta}}\)</td><td>learned logit correction, learned face diffusivity (network weights \(\gvect{\theta}\))</td><td>\(\mathbb{R}^{3 \times N_y \times N_x}\) (candidate, height, width), \(\mathbb{R}^{N_y \times N_x}\) (height, width)</td></tr>
+      <tr><td>\(n^-, n^+\)</td><td>contiguous wet cells upstream and downstream of the face</td><td>\(\mathbb{R}^{N_y \times N_x}\) (height, width) each</td></tr>
     </tbody>
   </table></div>
 
   <h2 id="flux">Flux form: conservation for free</h2>
   <p>Integrate \(\partial_t q + \partial_x(uq) = 0\) over cell \(i\). The cell average changes only through its two faces:</p>
-  \[ \frac{\mathrm d q_i}{\mathrm d t} = -\frac{F_{i+\frac12} - F_{i-\frac12}}{\Delta x}, \qquad F_{i+\frac12} = u_{i+\frac12}\,\hat q_{i+\frac12} . \]
-  <p>Summing over all cells, every interior face appears once with each sign, so \(\frac{\mathrm d}{\mathrm d t}\sum_i q_i\,\Delta x\) depends only on the domain walls, where \(u=0\). Total PV is conserved <em>whatever rule produces</em> \(\hat q\). That is why the learning goes into \(\hat q\), never into a gradient: an advective form \(u\,\partial_x q\) with a learned gradient has no such identity.</p>
+  \[ \frac{\mathrm{d}q_i}{\mathrm{d}t} = -\frac{F_{i+\frac12} - F_{i-\frac12}}{\Delta x}, \]
+  \[ F_{i+\frac12} = u_{i+\frac12} \hat q_{i+\frac12} . \]
+  <p>Summing over all cells, every interior face appears once with each sign, so \(\frac{\mathrm{d}}{\mathrm{d}t}\sum_i q_i \Delta x\) depends only on the domain walls, where \(u=0\). Total PV is conserved <em>whatever rule produces</em> \(\hat q\). That is why the learning goes into \(\hat q\), never into a gradient: an advective form \(u \partial_x q\) with a learned gradient has no such identity.</p>
 
   <h2 id="halves">Every scheme is a centred part plus a dissipation</h2>
-  <p>Take the classical fifth-order upwind reconstruction for \(u\ge0\), on the points \(q_{i-2},\dots,q_{i+3}\), and the sixth-order centred one on the same points:</p>
-  \[ \hat q^{\text{up5}} = \tfrac{1}{60}\left(2q_{i-2} - 13q_{i-1} + 47q_i + 27q_{i+1} - 3q_{i+2}\right), \]
-  \[ \hat q^{\text{c6}} = \tfrac{1}{60}\left(q_{i-2} - 8q_{i-1} + 37q_i + 37q_{i+1} - 8q_{i+2} + q_{i+3}\right). \]
-  <p>Their difference is a fifth difference, so the upwind flux is the centred flux plus a term proportional to \(|u|\):</p>
-  \[ u\,\hat q^{\text{up5}} = u\,\hat q^{\text{c6}} - \frac{|u|}{60}\,\delta^5 q_{i+\frac12}, \qquad \delta^5 q_{i+\frac12} = -q_{i-2} + 5q_{i-1} - 10q_i + 10q_{i+1} - 5q_{i+2} + q_{i+3} . \]
-  <p>For a wave \(q = e^{\mathrm i kx}\), the centred part only moves it (zero damping); the second part damps it at rate \(|u|\,\Delta x^5 k^6/60\) for \(k\Delta x \ll 1\). In continuous form, fifth-order upwinding is the exact equation plus a sixth-order hyperdiffusion:</p>
-  \[ \partial_t q + u\,\partial_x q \approx \frac{|u|\,\Delta x^5}{60}\,\partial_x^6 q . \]
+  <p>Take the classical fifth-order upwind reconstruction for \(u\ge0\), on the points \(q_{i-2},\ldots,q_{i+3}\), and the sixth-order centred one on the same points:</p>
+  \[ \hat q^{\text{up5}} = \frac{1}{60}\left(2q_{i-2} - 13q_{i-1} + 47q_i + 27q_{i+1} - 3q_{i+2}\right), \]
+  \[ \hat q^{\text{c6}} = \frac{1}{60}\left(q_{i-2} - 8q_{i-1} + 37q_i + 37q_{i+1} - 8q_{i+2} + q_{i+3}\right). \]
+  <p>Their difference is a fifth difference, so the upwind flux is the centred flux plus a term proportional to \(\vert u \vert\):</p>
+  \[ u \hat q^{\text{up5}} = u \hat q^{\text{c6}} - \frac{\vert u \vert}{60} \delta^5 q_{i+\frac12}, \]
+  \[ \delta^5 q_{i+\frac12} = -q_{i-2} + 5q_{i-1} - 10q_i + 10q_{i+1} - 5q_{i+2} + q_{i+3} . \]
+  <p>For a wave \(q = e^{\mathrm{i} kx}\), the centred part only moves it (zero damping); the second part damps it at rate \(\vert u \vert \Delta x^5 k^6/60\) for \(k\Delta x \ll 1\). In continuous form, fifth-order upwinding is the exact equation plus a sixth-order hyperdiffusion:</p>
+  \[ \partial_t q + u \partial_x q \approx \frac{\vert u \vert \Delta x^5}{60} \partial_x^6 q . \]
   <p>So "upwinding" is a choice of dissipation, and the dissipation is what decides stability and what the model forgets. The cleanest way to control it is to write any face flux in this split, with a non-negative face diffusivity \(\kappa\) (dimensionless, in units of \(\Delta x\)):</p>
-  \[ F_{i+\frac12} = u\,\hat q_{i+\frac12} - |u|\,\kappa_{i+\frac12}\,(q_{i+1} - q_i), \qquad \kappa \ge 0 . \]
-  <p>With periodic or walled boundaries, the second term changes the variance \(\tfrac12\sum_i q_i^2\) by \(-\sum_i |u|\,\kappa\,(q_{i+1}-q_i)^2\,/\Delta x \le 0\). It can only remove variance. The learned \(\kappa_\phi\) on this page enters exactly here.</p>
+  \[ F_{i+\frac12} = u \hat q_{i+\frac12} - \vert u \vert \kappa_{i+\frac12} (q_{i+1} - q_i), \]
+  \[ \kappa \ge 0 . \]
+  <p>With periodic or walled boundaries, the second term changes the variance \(\frac{1}{2}\sum_i q_i^2\) by \(-\sum_i \vert u \vert \kappa (q_{i+1}-q_i)^2 /\Delta x \le 0\). It can only remove variance. The learned \(\kappa_{\gvect{\theta}}\) on this page enters exactly here.</p>
 
   <h2 id="godunov">Why a single learned kernel cannot win</h2>
   <p>A learned gradient or face kernel with fixed weights is a <em>linear</em> scheme: \(\hat q = \sum_j w_j q_{i+j}\). Godunov's theorem says a linear scheme that never creates new maxima or minima is at most first-order accurate. Training a fixed kernel therefore picks a point on one trade-off curve:</p>
@@ -376,59 +379,65 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
   <p>Read WENO the way a neural operator is read: move the data into a basis, act on the coefficients, evaluate the result where it is needed. Here the basis is local: one small polynomial per candidate stencil.</p>
 
   <h3>Cell averages and a local coordinate</h3>
-  <p>A finite-volume model stores cell averages, \(q_j = \frac{1}{\Delta x}\int_{\text{cell } j} q\,\mathrm dx\). Measure position from the centre of cell \(i\) in cell widths, \(\xi = (x - x_i)/\Delta x\). Cell \(i+j\) is then the interval \([\,j-\tfrac12,\ j+\tfrac12\,]\), and the face \(i+\frac12\) sits at \(\xi = \tfrac12\). For \(u\ge0\) the face sees the window</p>
-  \[ \mathbf v = (q_{i-2},\ q_{i-1},\ q_i,\ q_{i+1},\ q_{i+2}) . \]
+  <p>A finite-volume model stores cell averages, \(q_j = \frac{1}{\Delta x}\int_{\text{cell } j} q \mathrm{d}x\). Measure position from the centre of cell \(i\) in cell widths, \(\xi = (x - x_i)/\Delta x\). Cell \(i+j\) is then the interval \([j-\frac{1}{2}, j+\frac{1}{2}]\), and the face \(i+\frac12\) sits at \(\xi = \frac{1}{2}\). For \(u\ge0\) the face sees the window</p>
+  \[ \vect{q} = (q_{i-2}, q_{i-1}, q_i, q_{i+1}, q_{i+2}) . \]
 
   <h3>Step 1 · A local basis</h3>
-  <p>Each candidate \(r\) is one quadratic, written in the monomial basis \(\boldsymbol\varphi(\xi) = (1,\ \xi,\ \xi^2)^\top\) with its own coefficients \(\mathbf a_r\):</p>
-  \[ p_r(\xi) = \sum_{m=0}^{2} a_{r,m}\,\varphi_m(\xi) = \boldsymbol\varphi(\xi)^\top\mathbf a_r . \]
-  <p>Candidate \(r\) is fitted on three cells: \(\mathcal S_1 = \{i-2, i-1, i\}\), \(\mathcal S_2 = \{i-1, i, i+1\}\), \(\mathcal S_3 = \{i, i+1, i+2\}\).</p>
+  <p>Each candidate \(r\) is one quadratic, written in the monomial basis \(\gvect{\varphi}(\xi) = (1, \xi, \xi^2)^\top\) with its own coefficients \(\vect{a}_r\):</p>
+  \[ p_r(\xi) = \sum_{m=0}^{2} a_{r,m} \varphi_m(\xi) = \gvect{\varphi}(\xi)^\top\vect{a}_r . \]
+  <p>Candidate \(r\) is fitted on three cells: \(\mathcal{S}_1 = \{i-2, i-1, i\}\), \(\mathcal{S}_2 = \{i-1, i, i+1\}\), \(\mathcal{S}_3 = \{i, i+1, i+2\}\).</p>
 
   <h3>Step 2 · Lift: cell averages to coefficients</h3>
-  <p>Ask the quadratic to have the right average on each of its three cells. The average of \(\boldsymbol\varphi\) over cell \(i+j\) is \((1,\ j,\ j^2 + \tfrac1{12})\), so this is a 3 × 3 linear system, solved once:</p>
-  \[ \mathbf A_r\,\mathbf a_r = \mathbf v_{\mathcal S_r}, \qquad (\mathbf A_r)_{j} = \big(1,\ j,\ j^2 + \tfrac1{12}\big), \qquad \mathbf a_r = \mathbf E_r\,\mathbf v . \]
-  <p>\(\mathbf E_r\) is \(\mathbf A_r^{-1}\) placed into the columns of its three cells, a fixed 3 × 5 matrix. For the centred candidate the coefficients are a mean, a slope and a curvature:</p>
-  \[ \mathbf a_2 = \Big(\, -\tfrac1{24}q_{i-1} + \tfrac{13}{12}q_i - \tfrac1{24}q_{i+1},\ \ \tfrac12(q_{i+1} - q_{i-1}),\ \ \tfrac12(q_{i-1} - 2q_i + q_{i+1}) \,\Big). \]
+  <p>Ask the quadratic to have the right average on each of its three cells. The average of \(\gvect{\varphi}\) over cell \(i+j\) is \((1, j, j^2 + \frac{1}{12})\), so this is a 3 × 3 linear system, solved once:</p>
+  \[ \mat{A}_r \vect{a}_r = \vect{q}_{\mathcal{S}_r}, \]
+  \[ (\mat{A}_r)_{j} = (1, j, j^2 + \frac{1}{12}), \]
+  \[ \vect{a}_r = \mat{E}_r \vect{q} . \]
+  <p>\(\mat{E}_r\) is \(\mat{A}_r^{-1}\) placed into the columns of its three cells, a fixed 3 × 5 matrix. For the centred candidate the coefficients are a mean, a slope and a curvature:</p>
+  \[ \vect{a}_2 = \left( -\frac{1}{24}q_{i-1} + \frac{13}{12}q_i - \frac{1}{24}q_{i+1}, \frac{1}{2}(q_{i+1} - q_{i-1}), \frac{1}{2}(q_{i-1} - 2q_i + q_{i+1}) \right). \]
 
   <h3>Step 3 · Evaluate at the face</h3>
-  <p>The candidate's face value is its polynomial at \(\xi = \tfrac12\):</p>
-  \[ \hat q^{\,r} = p_r(\tfrac12) = \boldsymbol\varphi(\tfrac12)^\top\mathbf E_r\,\mathbf v = \mathbf c^{r\top}\mathbf v, \qquad \boldsymbol\varphi(\tfrac12) = (1,\ \tfrac12,\ \tfrac14). \]
-  <p>The same thing in a <em>cardinal</em> basis: \(\ell^{\,r}_j(\xi) = \boldsymbol\varphi(\xi)^\top\mathbf E_r\,\mathbf e_j\) is the quadratic whose average is 1 on cell \(j\) and 0 on the other two. Then \(p_r(\xi) = \sum_{j\in\mathcal S_r} q_j\,\ell^{\,r}_j(\xi)\), and every stencil coefficient is a basis function evaluated at the face: \(c^{\,r}_j = \ell^{\,r}_j(\tfrac12)\).</p>
-  <figure class="figbox"><svg class="fig" viewBox="0 0 360 268" role="img" aria-label="Three quadratic cardinal functions of the centred candidate and their values at the face"><defs><clipPath id="plotclip1"><rect x="36" y="18" width="312" height="178"/></clipPath></defs><text class="fg-t" x="36" y="12">Cardinal basis of candidate 2: ℓ²ⱼ(ξ) = φ(ξ)ᵀ E₂ eⱼ</text><line class="fg-ax" x1="36" x2="348" y1="149.2" y2="149.2"/><text class="fg-l" x="31" y="152.2" text-anchor="end">0</text><line class="fg-grid" x1="36" x2="348" y1="149.2" y2="149.2"/><text class="fg-l" x="31" y="58.5" text-anchor="end">1</text><line class="fg-grid" x1="36" x2="348" y1="55.5" y2="55.5"/><line class="fg-cell" x1="36.0" x2="36.0" y1="18" y2="196"/><text class="fg-l" x="67.2" y="209" text-anchor="middle">i−2</text><line class="fg-cell" x1="98.4" x2="98.4" y1="18" y2="196"/><text class="fg-l" x="129.6" y="209" text-anchor="middle">i−1</text><line class="fg-cell" x1="160.8" x2="160.8" y1="18" y2="196"/><text class="fg-l" x="192.0" y="209" text-anchor="middle">i</text><line class="fg-cell" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l" x="254.4" y="209" text-anchor="middle">i+1</text><line class="fg-cell" x1="285.6" x2="285.6" y1="18" y2="196"/><text class="fg-l" x="316.8" y="209" text-anchor="middle">i+2</text><line class="fg-cell" x1="348.0" x2="348.0" y1="18" y2="196"/><line class="fg-face" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l fg-facel" x="226.2" y="192">face i+½</text><polyline clip-path="url(#plotclip1)" class="fg-line c1" points="98.4,-22.6 100.0,-17.9 101.5,-13.3 103.1,-8.8 104.6,-4.3 106.2,0.1 107.8,4.5 109.3,8.8 110.9,13.0 112.4,17.2 114.0,21.3 115.6,25.4 117.1,29.4 118.7,33.4 120.2,37.2 121.8,41.1 123.4,44.9 124.9,48.6 126.5,52.2 128.0,55.8 129.6,59.4 131.2,62.9 132.7,66.3 134.3,69.7 135.8,73.0 137.4,76.2 139.0,79.4 140.5,82.5 142.1,85.6 143.6,88.6 145.2,91.6 146.8,94.5 148.3,97.3 149.9,100.1 151.4,102.8 153.0,105.5 154.6,108.1 156.1,110.6 157.7,113.1 159.2,115.6 160.8,117.9 162.4,120.2 163.9,122.5 165.5,124.7 167.0,126.8 168.6,128.9 170.2,130.9 171.7,132.9 173.3,134.8 174.8,136.6 176.4,138.4 178.0,140.2 179.5,141.8 181.1,143.4 182.6,145.0 184.2,146.5 185.8,147.9 187.3,149.3 188.9,150.6 190.4,151.9 192.0,153.1 193.6,154.2 195.1,155.3 196.7,156.3 198.2,157.3 199.8,158.2 201.4,159.0 202.9,159.8 204.5,160.6 206.0,161.2 207.6,161.8 209.2,162.4 210.7,162.9 212.3,163.3 213.8,163.7 215.4,164.0 217.0,164.3 218.5,164.5 220.1,164.7 221.6,164.7 223.2,164.8 224.8,164.7 226.3,164.7 227.9,164.5 229.4,164.3 231.0,164.0 232.6,163.7 234.1,163.3 235.7,162.9 237.2,162.4 238.8,161.8 240.4,161.2 241.9,160.6 243.5,159.8 245.0,159.0 246.6,158.2 248.2,157.3 249.7,156.3 251.3,155.3 252.8,154.2 254.4,153.1 256.0,151.9 257.5,150.6 259.1,149.3 260.6,147.9 262.2,146.5 263.8,145.0 265.3,143.4 266.9,141.8 268.4,140.2 270.0,138.4 271.6,136.6 273.1,134.8 274.7,132.9 276.2,130.9 277.8,128.9 279.4,126.8 280.9,124.7 282.5,122.5 284.0,120.2 285.6,117.9"/><circle class="fg-dot c1" cx="223.2" cy="164.8" r="3.2"/><polyline clip-path="url(#plotclip1)" class="fg-line c2" points="98.4,258.5 100.0,251.5 101.5,244.6 103.1,237.9 104.6,231.3 106.2,224.8 107.8,218.4 109.3,212.1 110.9,206.0 112.4,200.0 114.0,194.0 115.6,188.3 117.1,182.6 118.7,177.0 120.2,171.6 121.8,166.2 123.4,161.0 124.9,155.9 126.5,151.0 128.0,146.1 129.6,141.4 131.2,136.7 132.7,132.2 134.3,127.8 135.8,123.6 137.4,119.4 139.0,115.4 140.5,111.4 142.1,107.6 143.6,103.9 145.2,100.4 146.8,96.9 148.3,93.6 149.9,90.4 151.4,87.2 153.0,84.3 154.6,81.4 156.1,78.6 157.7,76.0 159.2,73.5 160.8,71.1 162.4,68.8 163.9,66.6 165.5,64.6 167.0,62.7 168.6,60.8 170.2,59.1 171.7,57.6 173.3,56.1 174.8,54.8 176.4,53.5 178.0,52.4 179.5,51.4 181.1,50.5 182.6,49.8 184.2,49.1 185.8,48.6 187.3,48.2 188.9,47.9 190.4,47.7 192.0,47.7 193.6,47.7 195.1,47.9 196.7,48.2 198.2,48.6 199.8,49.1 201.4,49.8 202.9,50.5 204.5,51.4 206.0,52.4 207.6,53.5 209.2,54.8 210.7,56.1 212.3,57.6 213.8,59.1 215.4,60.8 217.0,62.7 218.5,64.6 220.1,66.6 221.6,68.8 223.2,71.1 224.8,73.5 226.3,76.0 227.9,78.6 229.4,81.4 231.0,84.3 232.6,87.2 234.1,90.4 235.7,93.6 237.2,96.9 238.8,100.4 240.4,103.9 241.9,107.6 243.5,111.4 245.0,115.4 246.6,119.4 248.2,123.6 249.7,127.8 251.3,132.2 252.8,136.7 254.4,141.4 256.0,146.1 257.5,151.0 259.1,155.9 260.6,161.0 262.2,166.2 263.8,171.6 265.3,177.0 266.9,182.6 268.4,188.3 270.0,194.0 271.6,200.0 273.1,206.0 274.7,212.1 276.2,218.4 277.8,224.8 279.4,231.3 280.9,237.9 282.5,244.6 284.0,251.5 285.6,258.5"/><circle class="fg-dot c2" cx="223.2" cy="71.1" r="3.2"/><polyline clip-path="url(#plotclip1)" class="fg-line c3" points="98.4,117.9 100.0,120.2 101.5,122.5 103.1,124.7 104.6,126.8 106.2,128.9 107.8,130.9 109.3,132.9 110.9,134.8 112.4,136.6 114.0,138.4 115.6,140.2 117.1,141.8 118.7,143.4 120.2,145.0 121.8,146.5 123.4,147.9 124.9,149.3 126.5,150.6 128.0,151.9 129.6,153.1 131.2,154.2 132.7,155.3 134.3,156.3 135.8,157.3 137.4,158.2 139.0,159.0 140.5,159.8 142.1,160.6 143.6,161.2 145.2,161.8 146.8,162.4 148.3,162.9 149.9,163.3 151.4,163.7 153.0,164.0 154.6,164.3 156.1,164.5 157.7,164.7 159.2,164.7 160.8,164.8 162.4,164.7 163.9,164.7 165.5,164.5 167.0,164.3 168.6,164.0 170.2,163.7 171.7,163.3 173.3,162.9 174.8,162.4 176.4,161.8 178.0,161.2 179.5,160.6 181.1,159.8 182.6,159.0 184.2,158.2 185.8,157.3 187.3,156.3 188.9,155.3 190.4,154.2 192.0,153.1 193.6,151.9 195.1,150.6 196.7,149.3 198.2,147.9 199.8,146.5 201.4,145.0 202.9,143.4 204.5,141.8 206.0,140.2 207.6,138.4 209.2,136.6 210.7,134.8 212.3,132.9 213.8,130.9 215.4,128.9 217.0,126.8 218.5,124.7 220.1,122.5 221.6,120.2 223.2,117.9 224.8,115.6 226.3,113.1 227.9,110.6 229.4,108.1 231.0,105.5 232.6,102.8 234.1,100.1 235.7,97.3 237.2,94.5 238.8,91.6 240.4,88.6 241.9,85.6 243.5,82.5 245.0,79.4 246.6,76.2 248.2,73.0 249.7,69.7 251.3,66.3 252.8,62.9 254.4,59.4 256.0,55.8 257.5,52.2 259.1,48.6 260.6,44.9 262.2,41.1 263.8,37.2 265.3,33.4 266.9,29.4 268.4,25.4 270.0,21.3 271.6,17.2 273.1,13.0 274.7,8.8 276.2,4.5 277.8,0.1 279.4,-4.3 280.9,-8.8 282.5,-13.3 284.0,-17.9 285.6,-22.6"/><circle class="fg-dot c3" cx="223.2" cy="117.9" r="3.2"/><text class="fg-l c1" x="36" y="226">ℓ for q_{i−1}: −1/6</text><text class="fg-l c2" x="36" y="238">ℓ for q_i: 5/6</text><text class="fg-l c3" x="36" y="250">ℓ for q_{i+1}: 1/3</text></svg><figcaption>The three cardinal functions of candidate 2. Their values at the face, −1/6, 5/6 and 1/3, are exactly the stencil coefficients of \(\hat q^{\,2}\) in the table below.</figcaption></figure>
+  <p>The candidate's face value is its polynomial at \(\xi = \frac{1}{2}\):</p>
+  \[ \hat q^{r} = p_r(\frac{1}{2}) = \gvect{\varphi}(\frac{1}{2})^\top\mat{E}_r \vect{q} = \vect{c}^{r\top}\vect{q}, \]
+  \[ \gvect{\varphi}(\frac{1}{2}) = (1, \frac{1}{2}, \frac{1}{4}). \]
+  <p>The same thing in a <em>cardinal</em> basis: \(\ell^r_j(\xi) = [\gvect{\varphi}(\xi)^\top \mat{E}_r]_j\) is the quadratic whose average is 1 on cell \(j\) and 0 on the other two. Then \(p_r(\xi) = \sum_{j\in\mathcal{S}_r} q_j \ell^{r}_j(\xi)\), and every stencil coefficient is a basis function evaluated at the face: \(c^{r}_j = \ell^{r}_j(\frac{1}{2})\).</p>
+  <figure class="figbox"><svg class="fig" viewBox="0 0 360 268" role="img" aria-label="Three quadratic cardinal functions of the centred candidate and their values at the face"><defs><clipPath id="plotclip1"><rect x="36" y="18" width="312" height="178"/></clipPath></defs><text class="fg-t" x="36" y="12">Cardinal basis of candidate 2: ℓ²ⱼ(ξ) = [φ(ξ)ᵀ E₂]ⱼ</text><line class="fg-ax" x1="36" x2="348" y1="149.2" y2="149.2"/><text class="fg-l" x="31" y="152.2" text-anchor="end">0</text><line class="fg-grid" x1="36" x2="348" y1="149.2" y2="149.2"/><text class="fg-l" x="31" y="58.5" text-anchor="end">1</text><line class="fg-grid" x1="36" x2="348" y1="55.5" y2="55.5"/><line class="fg-cell" x1="36.0" x2="36.0" y1="18" y2="196"/><text class="fg-l" x="67.2" y="209" text-anchor="middle">i−2</text><line class="fg-cell" x1="98.4" x2="98.4" y1="18" y2="196"/><text class="fg-l" x="129.6" y="209" text-anchor="middle">i−1</text><line class="fg-cell" x1="160.8" x2="160.8" y1="18" y2="196"/><text class="fg-l" x="192.0" y="209" text-anchor="middle">i</text><line class="fg-cell" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l" x="254.4" y="209" text-anchor="middle">i+1</text><line class="fg-cell" x1="285.6" x2="285.6" y1="18" y2="196"/><text class="fg-l" x="316.8" y="209" text-anchor="middle">i+2</text><line class="fg-cell" x1="348.0" x2="348.0" y1="18" y2="196"/><line class="fg-face" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l fg-facel" x="226.2" y="192">face i+½</text><polyline clip-path="url(#plotclip1)" class="fg-line c1" points="98.4,-22.6 100.0,-17.9 101.5,-13.3 103.1,-8.8 104.6,-4.3 106.2,0.1 107.8,4.5 109.3,8.8 110.9,13.0 112.4,17.2 114.0,21.3 115.6,25.4 117.1,29.4 118.7,33.4 120.2,37.2 121.8,41.1 123.4,44.9 124.9,48.6 126.5,52.2 128.0,55.8 129.6,59.4 131.2,62.9 132.7,66.3 134.3,69.7 135.8,73.0 137.4,76.2 139.0,79.4 140.5,82.5 142.1,85.6 143.6,88.6 145.2,91.6 146.8,94.5 148.3,97.3 149.9,100.1 151.4,102.8 153.0,105.5 154.6,108.1 156.1,110.6 157.7,113.1 159.2,115.6 160.8,117.9 162.4,120.2 163.9,122.5 165.5,124.7 167.0,126.8 168.6,128.9 170.2,130.9 171.7,132.9 173.3,134.8 174.8,136.6 176.4,138.4 178.0,140.2 179.5,141.8 181.1,143.4 182.6,145.0 184.2,146.5 185.8,147.9 187.3,149.3 188.9,150.6 190.4,151.9 192.0,153.1 193.6,154.2 195.1,155.3 196.7,156.3 198.2,157.3 199.8,158.2 201.4,159.0 202.9,159.8 204.5,160.6 206.0,161.2 207.6,161.8 209.2,162.4 210.7,162.9 212.3,163.3 213.8,163.7 215.4,164.0 217.0,164.3 218.5,164.5 220.1,164.7 221.6,164.7 223.2,164.8 224.8,164.7 226.3,164.7 227.9,164.5 229.4,164.3 231.0,164.0 232.6,163.7 234.1,163.3 235.7,162.9 237.2,162.4 238.8,161.8 240.4,161.2 241.9,160.6 243.5,159.8 245.0,159.0 246.6,158.2 248.2,157.3 249.7,156.3 251.3,155.3 252.8,154.2 254.4,153.1 256.0,151.9 257.5,150.6 259.1,149.3 260.6,147.9 262.2,146.5 263.8,145.0 265.3,143.4 266.9,141.8 268.4,140.2 270.0,138.4 271.6,136.6 273.1,134.8 274.7,132.9 276.2,130.9 277.8,128.9 279.4,126.8 280.9,124.7 282.5,122.5 284.0,120.2 285.6,117.9"/><circle class="fg-dot c1" cx="223.2" cy="164.8" r="3.2"/><polyline clip-path="url(#plotclip1)" class="fg-line c2" points="98.4,258.5 100.0,251.5 101.5,244.6 103.1,237.9 104.6,231.3 106.2,224.8 107.8,218.4 109.3,212.1 110.9,206.0 112.4,200.0 114.0,194.0 115.6,188.3 117.1,182.6 118.7,177.0 120.2,171.6 121.8,166.2 123.4,161.0 124.9,155.9 126.5,151.0 128.0,146.1 129.6,141.4 131.2,136.7 132.7,132.2 134.3,127.8 135.8,123.6 137.4,119.4 139.0,115.4 140.5,111.4 142.1,107.6 143.6,103.9 145.2,100.4 146.8,96.9 148.3,93.6 149.9,90.4 151.4,87.2 153.0,84.3 154.6,81.4 156.1,78.6 157.7,76.0 159.2,73.5 160.8,71.1 162.4,68.8 163.9,66.6 165.5,64.6 167.0,62.7 168.6,60.8 170.2,59.1 171.7,57.6 173.3,56.1 174.8,54.8 176.4,53.5 178.0,52.4 179.5,51.4 181.1,50.5 182.6,49.8 184.2,49.1 185.8,48.6 187.3,48.2 188.9,47.9 190.4,47.7 192.0,47.7 193.6,47.7 195.1,47.9 196.7,48.2 198.2,48.6 199.8,49.1 201.4,49.8 202.9,50.5 204.5,51.4 206.0,52.4 207.6,53.5 209.2,54.8 210.7,56.1 212.3,57.6 213.8,59.1 215.4,60.8 217.0,62.7 218.5,64.6 220.1,66.6 221.6,68.8 223.2,71.1 224.8,73.5 226.3,76.0 227.9,78.6 229.4,81.4 231.0,84.3 232.6,87.2 234.1,90.4 235.7,93.6 237.2,96.9 238.8,100.4 240.4,103.9 241.9,107.6 243.5,111.4 245.0,115.4 246.6,119.4 248.2,123.6 249.7,127.8 251.3,132.2 252.8,136.7 254.4,141.4 256.0,146.1 257.5,151.0 259.1,155.9 260.6,161.0 262.2,166.2 263.8,171.6 265.3,177.0 266.9,182.6 268.4,188.3 270.0,194.0 271.6,200.0 273.1,206.0 274.7,212.1 276.2,218.4 277.8,224.8 279.4,231.3 280.9,237.9 282.5,244.6 284.0,251.5 285.6,258.5"/><circle class="fg-dot c2" cx="223.2" cy="71.1" r="3.2"/><polyline clip-path="url(#plotclip1)" class="fg-line c3" points="98.4,117.9 100.0,120.2 101.5,122.5 103.1,124.7 104.6,126.8 106.2,128.9 107.8,130.9 109.3,132.9 110.9,134.8 112.4,136.6 114.0,138.4 115.6,140.2 117.1,141.8 118.7,143.4 120.2,145.0 121.8,146.5 123.4,147.9 124.9,149.3 126.5,150.6 128.0,151.9 129.6,153.1 131.2,154.2 132.7,155.3 134.3,156.3 135.8,157.3 137.4,158.2 139.0,159.0 140.5,159.8 142.1,160.6 143.6,161.2 145.2,161.8 146.8,162.4 148.3,162.9 149.9,163.3 151.4,163.7 153.0,164.0 154.6,164.3 156.1,164.5 157.7,164.7 159.2,164.7 160.8,164.8 162.4,164.7 163.9,164.7 165.5,164.5 167.0,164.3 168.6,164.0 170.2,163.7 171.7,163.3 173.3,162.9 174.8,162.4 176.4,161.8 178.0,161.2 179.5,160.6 181.1,159.8 182.6,159.0 184.2,158.2 185.8,157.3 187.3,156.3 188.9,155.3 190.4,154.2 192.0,153.1 193.6,151.9 195.1,150.6 196.7,149.3 198.2,147.9 199.8,146.5 201.4,145.0 202.9,143.4 204.5,141.8 206.0,140.2 207.6,138.4 209.2,136.6 210.7,134.8 212.3,132.9 213.8,130.9 215.4,128.9 217.0,126.8 218.5,124.7 220.1,122.5 221.6,120.2 223.2,117.9 224.8,115.6 226.3,113.1 227.9,110.6 229.4,108.1 231.0,105.5 232.6,102.8 234.1,100.1 235.7,97.3 237.2,94.5 238.8,91.6 240.4,88.6 241.9,85.6 243.5,82.5 245.0,79.4 246.6,76.2 248.2,73.0 249.7,69.7 251.3,66.3 252.8,62.9 254.4,59.4 256.0,55.8 257.5,52.2 259.1,48.6 260.6,44.9 262.2,41.1 263.8,37.2 265.3,33.4 266.9,29.4 268.4,25.4 270.0,21.3 271.6,17.2 273.1,13.0 274.7,8.8 276.2,4.5 277.8,0.1 279.4,-4.3 280.9,-8.8 282.5,-13.3 284.0,-17.9 285.6,-22.6"/><circle class="fg-dot c3" cx="223.2" cy="117.9" r="3.2"/><text class="fg-l c1" x="36" y="226">ℓ for q_{i−1}: −1/6</text><text class="fg-l c2" x="36" y="238">ℓ for q_i: 5/6</text><text class="fg-l c3" x="36" y="250">ℓ for q_{i+1}: 1/3</text></svg><figcaption>The three cardinal functions of candidate 2. Their values at the face, −1/6, 5/6 and 1/3, are exactly the stencil coefficients of \(\hat q^{2}\) in the table below.</figcaption></figure>
   <div class="tbl"><table class="cands">
-    <thead><tr><th>\(r\)</th><th>Cells</th><th>Candidate \(\hat q^{\,r} = \mathbf c^{r\top}\mathbf v\)</th><th>Linear weight \(d_r\)</th></tr></thead>
+    <thead><tr><th>\(r\)</th><th>Cells</th><th>Candidate \(\hat q^{r} = \vect{c}^{r\top}\vect{q}\)</th><th>Linear weight \(d_r\)</th></tr></thead>
     <tbody>
-      <tr><td>1</td><td><code>i−2, i−1, i</code></td><td>\(\tfrac13 q_{i-2} - \tfrac76 q_{i-1} + \tfrac{11}6 q_i\)</td><td>0.1</td></tr>
-      <tr><td>2</td><td><code>i−1, i, i+1</code></td><td>\(-\tfrac16 q_{i-1} + \tfrac56 q_i + \tfrac13 q_{i+1}\)</td><td>0.6</td></tr>
-      <tr><td>3</td><td><code>i, i+1, i+2</code></td><td>\(\tfrac13 q_i + \tfrac56 q_{i+1} - \tfrac16 q_{i+2}\)</td><td>0.3</td></tr>
+      <tr><td>1</td><td><code>i−2, i−1, i</code></td><td>\(\frac{1}{3} q_{i-2} - \frac{7}{6} q_{i-1} + \frac{11}{6} q_i\)</td><td>0.1</td></tr>
+      <tr><td>2</td><td><code>i−1, i, i+1</code></td><td>\(-\frac{1}{6} q_{i-1} + \frac{5}{6} q_i + \frac{1}{3} q_{i+1}\)</td><td>0.6</td></tr>
+      <tr><td>3</td><td><code>i, i+1, i+2</code></td><td>\(\frac{1}{3} q_i + \frac{5}{6} q_{i+1} - \frac{1}{6} q_{i+2}\)</td><td>0.3</td></tr>
     </tbody>
   </table></div>
 
   <h3>Step 4 · Smoothness is energy in the non-constant modes</h3>
   <p>The smoothness indicator measures the slope and curvature of each candidate over the face's own cell \(i\), in units of the cell width:</p>
-  \[ \beta_r = \sum_{m=1}^{2}\int_{-1/2}^{1/2}\big(\partial_\xi^m p_r\big)^2\,\mathrm d\xi = a_{r,1}^2 + \tfrac{13}{3}\,a_{r,2}^2 = \mathbf a_r^\top\mathbf S\,\mathbf a_r, \qquad \mathbf S = \operatorname{diag}\big(0,\ 1,\ \tfrac{13}{3}\big). \]
-  <p>(\(a_{r,1}\) and \(a_{r,2}\) are the slope and half-curvature at the centre of cell \(i\); for candidates 1 and 3 that is the end of their stencil.) The constant mode has weight 0, so adding a constant to \(q\) never changes \(\beta\). This is the idea behind modal smoothness indicators in spectral methods: roughness is how much energy sits in the higher modes. In the window, \(\beta_r = \mathbf v^\top\mathbf M_r\mathbf v\) with \(\mathbf M_r = \mathbf E_r^\top\mathbf S\,\mathbf E_r\); expanded, these are the textbook formulas:</p>
+  \[ \beta_r = \sum_{m=1}^{2}\int_{-1/2}^{1/2}(\partial_\xi^m p_r)^2 \mathrm{d}\xi = a_{r,1}^2 + \frac{13}{3} a_{r,2}^2 = \vect{a}_r^\top\mat{S} \vect{a}_r, \]
+  \[ \mat{S} = \mathrm{diag}(0, 1, \frac{13}{3}). \]
+  <p>(\(a_{r,1}\) and \(a_{r,2}\) are the slope and half-curvature at the centre of cell \(i\); for candidates 1 and 3 that is the end of their stencil.) The constant mode has weight 0, so adding a constant to \(q\) never changes \(\beta\). This is the idea behind modal smoothness indicators in spectral methods: roughness is how much energy sits in the higher modes. In the window, \(\beta_r = \vect{q}^\top\mat{M}_r\vect{q}\) with \(\mat{M}_r = \mat{E}_r^\top\mat{S} \mat{E}_r\); expanded, these are the textbook formulas:</p>
   \[ \begin{aligned}
-  \beta_1 &amp;= \tfrac{13}{12}(q_{i-2} - 2q_{i-1} + q_i)^2 + \tfrac14(q_{i-2} - 4q_{i-1} + 3q_i)^2,\\
-  \beta_2 &amp;= \tfrac{13}{12}(q_{i-1} - 2q_i + q_{i+1})^2 + \tfrac14(q_{i-1} - q_{i+1})^2,\\
-  \beta_3 &amp;= \tfrac{13}{12}(q_i - 2q_{i+1} + q_{i+2})^2 + \tfrac14(3q_i - 4q_{i+1} + q_{i+2})^2 .
+  \beta_1 &amp;= \frac{13}{12}(q_{i-2} - 2q_{i-1} + q_i)^2 + \frac{1}{4}(q_{i-2} - 4q_{i-1} + 3q_i)^2,\\
+  \beta_2 &amp;= \frac{13}{12}(q_{i-1} - 2q_i + q_{i+1})^2 + \frac{1}{4}(q_{i-1} - q_{i+1})^2,\\
+  \beta_3 &amp;= \frac{13}{12}(q_i - 2q_{i+1} + q_{i+2})^2 + \frac{1}{4}(3q_i - 4q_{i+1} + q_{i+2})^2 .
   \end{aligned} \]
 
   <h3>Step 5 · Mix</h3>
   <p>The nonlinear weights favour smooth candidates, with \(\tilde\beta_r = \beta_r/\sum_s\beta_s\):</p>
-  \[ \alpha_r = \frac{d_r}{(\tilde\beta_r + \varepsilon)^2}, \qquad \omega_r = \frac{\alpha_r}{\sum_s \alpha_s}, \qquad \hat q = \sum_{r=1}^{3}\omega_r\,\hat q^{\,r} . \]
-  <p>With the linear weights, the mixture is exactly fifth-order upwinding: \(\sum_r d_r\,\mathbf c^r = \tfrac1{60}(2, -13, 47, 27, -3)\). In smooth water all \(\beta_r\) are similar and \(\omega\to\mathbf d\). Across a front, the candidates that straddle it have large \(\beta\) and get almost no weight. finitevolX normalises by \(\sum\beta\) (held out of the gradient), so rescaling \(q\) rescales \(\hat q\) exactly and nothing overflows in float32.</p>
+  \[ \alpha_r = \frac{d_r}{(\tilde\beta_r + \varepsilon)^2}, \]
+  \[ \omega_r = \frac{\alpha_r}{\sum_s \alpha_s}, \]
+  \[ \hat q = \sum_{r=1}^{3}\omega_r \hat q^{r} . \]
+  <p>With the linear weights, the mixture is exactly fifth-order upwinding: \(\sum_r d_r \vect{c}^r = \frac{1}{60}(2, -13, 47, 27, -3)\). In smooth water all \(\beta_r\) are similar and \(\gvect{\omega} \to \vect{d}\). Across a front, the candidates that straddle it have large \(\beta\) and get almost no weight. finitevolX normalises by \(\sum\beta\) (held out of the gradient), so rescaling \(q\) rescales \(\hat q\) exactly and nothing overflows in float32.</p>
 
   <h3>Two windows, worked through</h3>
   <div class="figrow">
-    <figure class="figbox"><svg class="fig" viewBox="0 0 360 268" role="img" aria-label="Smooth window: cell averages of sin(0.3 ξ)"><defs><clipPath id="plotclip2"><rect x="36" y="18" width="312" height="178"/></clipPath></defs><text class="fg-t" x="36" y="12">Smooth window: cell averages of sin(0.3 ξ)</text><line class="fg-ax" x1="36" x2="348" y1="107.0" y2="107.0"/><text class="fg-l" x="31" y="169.3" text-anchor="end">-0.5</text><line class="fg-grid" x1="36" x2="348" y1="166.3" y2="166.3"/><text class="fg-l" x="31" y="110.0" text-anchor="end">0</text><line class="fg-grid" x1="36" x2="348" y1="107.0" y2="107.0"/><text class="fg-l" x="31" y="50.7" text-anchor="end">0.5</text><line class="fg-grid" x1="36" x2="348" y1="47.7" y2="47.7"/><line class="fg-cell" x1="36.0" x2="36.0" y1="18" y2="196"/><text class="fg-l" x="67.2" y="209" text-anchor="middle">i−2</text><line class="fg-cell" x1="98.4" x2="98.4" y1="18" y2="196"/><text class="fg-l" x="129.6" y="209" text-anchor="middle">i−1</text><line class="fg-cell" x1="160.8" x2="160.8" y1="18" y2="196"/><text class="fg-l" x="192.0" y="209" text-anchor="middle">i</text><line class="fg-cell" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l" x="254.4" y="209" text-anchor="middle">i+1</text><line class="fg-cell" x1="285.6" x2="285.6" y1="18" y2="196"/><text class="fg-l" x="316.8" y="209" text-anchor="middle">i+2</text><line class="fg-cell" x1="348.0" x2="348.0" y1="18" y2="196"/><line class="fg-face" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l fg-facel" x="226.2" y="192">face i+½</text><line class="fg-bar" x1="38.0" x2="96.4" y1="173.8" y2="173.8"/><line class="fg-bar" x1="100.4" x2="158.8" y1="141.9" y2="141.9"/><line class="fg-bar" x1="162.8" x2="221.2" y1="107.0" y2="107.0"/><line class="fg-bar" x1="225.2" x2="283.6" y1="72.1" y2="72.1"/><line class="fg-bar" x1="287.6" x2="346.0" y1="40.2" y2="40.2"/><polyline clip-path="url(#plotclip2)" class="fg-line dash c1" points="36.0,188.6 38.1,187.7 40.2,186.7 42.3,185.7 44.4,184.7 46.5,183.7 48.6,182.8 50.7,181.8 52.8,180.8 54.9,179.8 57.0,178.8 59.1,177.8 61.2,176.8 63.3,175.7 65.4,174.7 67.6,173.7 69.7,172.7 71.8,171.7 73.9,170.6 76.0,169.6 78.1,168.6 80.2,167.5 82.3,166.5 84.4,165.4 86.5,164.4 88.6,163.3 90.7,162.3 92.8,161.2 94.9,160.1 97.0,159.1 99.1,158.0 101.2,156.9 103.3,155.9 105.4,154.8 107.5,153.7 109.6,152.6 111.7,151.5 113.8,150.4 115.9,149.3 118.0,148.2 120.1,147.1 122.2,146.0 124.3,144.9 126.4,143.8 128.5,142.6 130.7,141.5 132.8,140.4 134.9,139.2 137.0,138.1 139.1,137.0 141.2,135.8 143.3,134.7 145.4,133.5 147.5,132.4 149.6,131.2 151.7,130.1 153.8,128.9 155.9,127.7 158.0,126.6 160.1,125.4 162.2,124.2 164.3,123.0 166.4,121.8 168.5,120.6 170.6,119.5 172.7,118.3 174.8,117.1 176.9,115.9 179.0,114.6 181.1,113.4 183.2,112.2 185.3,111.0 187.4,109.8 189.5,108.6 191.6,107.3 193.8,106.1 195.9,104.9 198.0,103.6 200.1,102.4 202.2,101.1 204.3,99.9 206.4,98.6 208.5,97.4 210.6,96.1 212.7,94.9 214.8,93.6 216.9,92.3 219.0,91.0 221.1,89.8 223.2,88.5"/><circle class="fg-dot c1" cx="223.2" cy="88.5" r="3"/><polyline clip-path="url(#plotclip2)" class="fg-line dash c2" points="98.4,159.4 100.5,158.2 102.6,157.1 104.7,155.9 106.8,154.7 108.9,153.5 111.0,152.3 113.1,151.2 115.2,150.0 117.3,148.8 119.4,147.6 121.5,146.5 123.6,145.3 125.7,144.1 127.8,142.9 130.0,141.7 132.1,140.6 134.2,139.4 136.3,138.2 138.4,137.0 140.5,135.9 142.6,134.7 144.7,133.5 146.8,132.3 148.9,131.1 151.0,130.0 153.1,128.8 155.2,127.6 157.3,126.4 159.4,125.3 161.5,124.1 163.6,122.9 165.7,121.7 167.8,120.5 169.9,119.4 172.0,118.2 174.1,117.0 176.2,115.8 178.3,114.7 180.4,113.5 182.5,112.3 184.6,111.1 186.7,109.9 188.8,108.8 190.9,107.6 193.1,106.4 195.2,105.2 197.3,104.1 199.4,102.9 201.5,101.7 203.6,100.5 205.7,99.3 207.8,98.2 209.9,97.0 212.0,95.8 214.1,94.6 216.2,93.5 218.3,92.3 220.4,91.1 222.5,89.9 224.6,88.7 226.7,87.6 228.8,86.4 230.9,85.2 233.0,84.0 235.1,82.9 237.2,81.7 239.3,80.5 241.4,79.3 243.5,78.1 245.6,77.0 247.7,75.8 249.8,74.6 251.9,73.4 254.0,72.3 256.2,71.1 258.3,69.9 260.4,68.7 262.5,67.5 264.6,66.4 266.7,65.2 268.8,64.0 270.9,62.8 273.0,61.7 275.1,60.5 277.2,59.3 279.3,58.1 281.4,56.9 283.5,55.8 285.6,54.6"/><circle class="fg-dot c2" cx="223.2" cy="89.5" r="3"/><polyline clip-path="url(#plotclip2)" class="fg-line dash c3" points="160.8,125.5 162.9,124.2 165.0,123.0 167.1,121.7 169.2,120.4 171.3,119.1 173.4,117.9 175.5,116.6 177.6,115.4 179.7,114.1 181.8,112.9 183.9,111.6 186.0,110.4 188.1,109.1 190.2,107.9 192.4,106.7 194.5,105.4 196.6,104.2 198.7,103.0 200.8,101.8 202.9,100.6 205.0,99.4 207.1,98.1 209.2,96.9 211.3,95.7 213.4,94.5 215.5,93.4 217.6,92.2 219.7,91.0 221.8,89.8 223.9,88.6 226.0,87.4 228.1,86.3 230.2,85.1 232.3,83.9 234.4,82.8 236.5,81.6 238.6,80.5 240.7,79.3 242.8,78.2 244.9,77.0 247.0,75.9 249.1,74.8 251.2,73.6 253.3,72.5 255.5,71.4 257.6,70.2 259.7,69.1 261.8,68.0 263.9,66.9 266.0,65.8 268.1,64.7 270.2,63.6 272.3,62.5 274.4,61.4 276.5,60.3 278.6,59.2 280.7,58.1 282.8,57.1 284.9,56.0 287.0,54.9 289.1,53.9 291.2,52.8 293.3,51.7 295.4,50.7 297.5,49.6 299.6,48.6 301.7,47.5 303.8,46.5 305.9,45.4 308.0,44.4 310.1,43.4 312.2,42.3 314.3,41.3 316.4,40.3 318.6,39.3 320.7,38.3 322.8,37.2 324.9,36.2 327.0,35.2 329.1,34.2 331.2,33.2 333.3,32.2 335.4,31.2 337.5,30.3 339.6,29.3 341.7,28.3 343.8,27.3 345.9,26.3 348.0,25.4"/><circle class="fg-dot c3" cx="223.2" cy="89.0" r="3"/><circle class="fg-blend" cx="223.2" cy="89.3" r="5"/><text class="fg-l c1" x="36" y="226">q̂¹ = +0.156   ω₁ = 0.09</text><text class="fg-l c2" x="36" y="238">q̂² = +0.147   ω₂ = 0.64</text><text class="fg-l c3" x="36" y="250">q̂³ = +0.152   ω₃ = 0.27</text><text class="fg-l fg-strong" x="348" y="226" text-anchor="end">q̂ = +0.149   exact +0.149</text></svg><figcaption>Smooth: all three candidates are close and the weights stay near \(\mathbf d = (0.1, 0.6, 0.3)\). WENO5 gives 0.14915; the exact face value is \(\sin(0.15) = 0.14944\).</figcaption></figure>
-    <figure class="figbox"><svg class="fig" viewBox="0 0 360 268" role="img" aria-label="Front window: a jump between i+1 and i+2"><defs><clipPath id="plotclip3"><rect x="36" y="18" width="312" height="178"/></clipPath></defs><text class="fg-t" x="36" y="12">Front window: a jump between i+1 and i+2</text><line class="fg-ax" x1="36" x2="348" y1="157.1" y2="157.1"/><text class="fg-l" x="31" y="160.1" text-anchor="end">0</text><line class="fg-grid" x1="36" x2="348" y1="157.1" y2="157.1"/><text class="fg-l" x="31" y="48.8" text-anchor="end">1</text><line class="fg-grid" x1="36" x2="348" y1="45.8" y2="45.8"/><line class="fg-cell" x1="36.0" x2="36.0" y1="18" y2="196"/><text class="fg-l" x="67.2" y="209" text-anchor="middle">i−2</text><line class="fg-cell" x1="98.4" x2="98.4" y1="18" y2="196"/><text class="fg-l" x="129.6" y="209" text-anchor="middle">i−1</text><line class="fg-cell" x1="160.8" x2="160.8" y1="18" y2="196"/><text class="fg-l" x="192.0" y="209" text-anchor="middle">i</text><line class="fg-cell" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l" x="254.4" y="209" text-anchor="middle">i+1</text><line class="fg-cell" x1="285.6" x2="285.6" y1="18" y2="196"/><text class="fg-l" x="316.8" y="209" text-anchor="middle">i+2</text><line class="fg-cell" x1="348.0" x2="348.0" y1="18" y2="196"/><line class="fg-face" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l fg-facel" x="226.2" y="192">face i+½</text><line class="fg-bar" x1="38.0" x2="96.4" y1="157.1" y2="157.1"/><line class="fg-bar" x1="100.4" x2="158.8" y1="157.1" y2="157.1"/><line class="fg-bar" x1="162.8" x2="221.2" y1="157.1" y2="157.1"/><line class="fg-bar" x1="225.2" x2="283.6" y1="157.1" y2="157.1"/><line class="fg-bar" x1="287.6" x2="346.0" y1="45.8" y2="45.8"/><polyline clip-path="url(#plotclip3)" class="fg-line dash c1" points="36.0,157.1 38.1,157.1 40.2,157.1 42.3,157.1 44.4,157.1 46.5,157.1 48.6,157.1 50.7,157.1 52.8,157.1 54.9,157.1 57.0,157.1 59.1,157.1 61.2,157.1 63.3,157.1 65.4,157.1 67.6,157.1 69.7,157.1 71.8,157.1 73.9,157.1 76.0,157.1 78.1,157.1 80.2,157.1 82.3,157.1 84.4,157.1 86.5,157.1 88.6,157.1 90.7,157.1 92.8,157.1 94.9,157.1 97.0,157.1 99.1,157.1 101.2,157.1 103.3,157.1 105.4,157.1 107.5,157.1 109.6,157.1 111.7,157.1 113.8,157.1 115.9,157.1 118.0,157.1 120.1,157.1 122.2,157.1 124.3,157.1 126.4,157.1 128.5,157.1 130.7,157.1 132.8,157.1 134.9,157.1 137.0,157.1 139.1,157.1 141.2,157.1 143.3,157.1 145.4,157.1 147.5,157.1 149.6,157.1 151.7,157.1 153.8,157.1 155.9,157.1 158.0,157.1 160.1,157.1 162.2,157.1 164.3,157.1 166.4,157.1 168.5,157.1 170.6,157.1 172.7,157.1 174.8,157.1 176.9,157.1 179.0,157.1 181.1,157.1 183.2,157.1 185.3,157.1 187.4,157.1 189.5,157.1 191.6,157.1 193.8,157.1 195.9,157.1 198.0,157.1 200.1,157.1 202.2,157.1 204.3,157.1 206.4,157.1 208.5,157.1 210.6,157.1 212.7,157.1 214.8,157.1 216.9,157.1 219.0,157.1 221.1,157.1 223.2,157.1"/><circle class="fg-dot c1" cx="223.2" cy="157.1" r="3"/><polyline clip-path="url(#plotclip3)" class="fg-line dash c2" points="98.4,157.1 100.5,157.1 102.6,157.1 104.7,157.1 106.8,157.1 108.9,157.1 111.0,157.1 113.1,157.1 115.2,157.1 117.3,157.1 119.4,157.1 121.5,157.1 123.6,157.1 125.7,157.1 127.8,157.1 130.0,157.1 132.1,157.1 134.2,157.1 136.3,157.1 138.4,157.1 140.5,157.1 142.6,157.1 144.7,157.1 146.8,157.1 148.9,157.1 151.0,157.1 153.1,157.1 155.2,157.1 157.3,157.1 159.4,157.1 161.5,157.1 163.6,157.1 165.7,157.1 167.8,157.1 169.9,157.1 172.0,157.1 174.1,157.1 176.2,157.1 178.3,157.1 180.4,157.1 182.5,157.1 184.6,157.1 186.7,157.1 188.8,157.1 190.9,157.1 193.1,157.1 195.2,157.1 197.3,157.1 199.4,157.1 201.5,157.1 203.6,157.1 205.7,157.1 207.8,157.1 209.9,157.1 212.0,157.1 214.1,157.1 216.2,157.1 218.3,157.1 220.4,157.1 222.5,157.1 224.6,157.1 226.7,157.1 228.8,157.1 230.9,157.1 233.0,157.1 235.1,157.1 237.2,157.1 239.3,157.1 241.4,157.1 243.5,157.1 245.6,157.1 247.7,157.1 249.8,157.1 251.9,157.1 254.0,157.1 256.2,157.1 258.3,157.1 260.4,157.1 262.5,157.1 264.6,157.1 266.7,157.1 268.8,157.1 270.9,157.1 273.0,157.1 275.1,157.1 277.2,157.1 279.3,157.1 281.4,157.1 283.5,157.1 285.6,157.1"/><circle class="fg-dot c2" cx="223.2" cy="157.1" r="3"/><polyline clip-path="url(#plotclip3)" class="fg-line dash c3" points="160.8,120.0 162.9,123.7 165.0,127.2 167.1,130.7 169.2,134.0 171.3,137.1 173.4,140.2 175.5,143.1 177.6,145.9 179.7,148.6 181.8,151.2 183.9,153.6 186.0,155.9 188.1,158.0 190.2,160.1 192.4,162.0 194.5,163.8 196.6,165.5 198.7,167.0 200.8,168.4 202.9,169.7 205.0,170.9 207.1,171.9 209.2,172.8 211.3,173.6 213.4,174.2 215.5,174.8 217.6,175.2 219.7,175.4 221.8,175.6 223.9,175.6 226.0,175.5 228.1,175.3 230.2,174.9 232.3,174.4 234.4,173.8 236.5,173.1 238.6,172.2 240.7,171.2 242.8,170.1 244.9,168.9 247.0,167.5 249.1,166.0 251.2,164.4 253.3,162.6 255.5,160.7 257.6,158.7 259.7,156.6 261.8,154.4 263.9,152.0 266.0,149.5 268.1,146.8 270.2,144.1 272.3,141.2 274.4,138.2 276.5,135.0 278.6,131.8 280.7,128.4 282.8,124.9 284.9,121.2 287.0,117.5 289.1,113.6 291.2,109.5 293.3,105.4 295.4,101.1 297.5,96.7 299.6,92.2 301.7,87.5 303.8,82.7 305.9,77.8 308.0,72.8 310.1,67.6 312.2,62.3 314.3,56.9 316.4,51.4 318.6,45.7 320.7,39.9 322.8,34.0 324.9,28.0 327.0,21.8 329.1,15.5 331.2,9.1 333.3,2.5 335.4,-4.2 337.5,-11.0 339.6,-17.9 341.7,-25.0 343.8,-32.1 345.9,-39.5 348.0,-46.9"/><circle class="fg-dot c3" cx="223.2" cy="175.6" r="3"/><circle class="fg-blend" cx="223.2" cy="157.1" r="5"/><text class="fg-l c1" x="36" y="226">q̂¹ = +0.000   ω₁ = 0.14</text><text class="fg-l c2" x="36" y="238">q̂² = +0.000   ω₂ = 0.86</text><text class="fg-l c3" x="36" y="250">q̂³ = −0.167   ω₃ = 0.00</text><text class="fg-l fg-strong" x="348" y="226" text-anchor="end">q̂ = +0.000   exact +0.000</text></svg><figcaption>Front: candidate 3 crosses the jump and undershoots to −1/6. Its \(\tilde\beta_3 = 1\) removes it, and \(\hat q = 0\) exactly. Fixed linear weights would give \(0.3\times(-\tfrac16) = -0.05\): a new minimum, the start of an oscillation.</figcaption></figure>
+    <figure class="figbox"><svg class="fig" viewBox="0 0 360 268" role="img" aria-label="Smooth window: cell averages of sin(0.3 ξ)"><defs><clipPath id="plotclip2"><rect x="36" y="18" width="312" height="178"/></clipPath></defs><text class="fg-t" x="36" y="12">Smooth window: cell averages of sin(0.3 ξ)</text><line class="fg-ax" x1="36" x2="348" y1="107.0" y2="107.0"/><text class="fg-l" x="31" y="169.3" text-anchor="end">-0.5</text><line class="fg-grid" x1="36" x2="348" y1="166.3" y2="166.3"/><text class="fg-l" x="31" y="110.0" text-anchor="end">0</text><line class="fg-grid" x1="36" x2="348" y1="107.0" y2="107.0"/><text class="fg-l" x="31" y="50.7" text-anchor="end">0.5</text><line class="fg-grid" x1="36" x2="348" y1="47.7" y2="47.7"/><line class="fg-cell" x1="36.0" x2="36.0" y1="18" y2="196"/><text class="fg-l" x="67.2" y="209" text-anchor="middle">i−2</text><line class="fg-cell" x1="98.4" x2="98.4" y1="18" y2="196"/><text class="fg-l" x="129.6" y="209" text-anchor="middle">i−1</text><line class="fg-cell" x1="160.8" x2="160.8" y1="18" y2="196"/><text class="fg-l" x="192.0" y="209" text-anchor="middle">i</text><line class="fg-cell" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l" x="254.4" y="209" text-anchor="middle">i+1</text><line class="fg-cell" x1="285.6" x2="285.6" y1="18" y2="196"/><text class="fg-l" x="316.8" y="209" text-anchor="middle">i+2</text><line class="fg-cell" x1="348.0" x2="348.0" y1="18" y2="196"/><line class="fg-face" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l fg-facel" x="226.2" y="192">face i+½</text><line class="fg-bar" x1="38.0" x2="96.4" y1="173.8" y2="173.8"/><line class="fg-bar" x1="100.4" x2="158.8" y1="141.9" y2="141.9"/><line class="fg-bar" x1="162.8" x2="221.2" y1="107.0" y2="107.0"/><line class="fg-bar" x1="225.2" x2="283.6" y1="72.1" y2="72.1"/><line class="fg-bar" x1="287.6" x2="346.0" y1="40.2" y2="40.2"/><polyline clip-path="url(#plotclip2)" class="fg-line dash c1" points="36.0,188.6 38.1,187.7 40.2,186.7 42.3,185.7 44.4,184.7 46.5,183.7 48.6,182.8 50.7,181.8 52.8,180.8 54.9,179.8 57.0,178.8 59.1,177.8 61.2,176.8 63.3,175.7 65.4,174.7 67.6,173.7 69.7,172.7 71.8,171.7 73.9,170.6 76.0,169.6 78.1,168.6 80.2,167.5 82.3,166.5 84.4,165.4 86.5,164.4 88.6,163.3 90.7,162.3 92.8,161.2 94.9,160.1 97.0,159.1 99.1,158.0 101.2,156.9 103.3,155.9 105.4,154.8 107.5,153.7 109.6,152.6 111.7,151.5 113.8,150.4 115.9,149.3 118.0,148.2 120.1,147.1 122.2,146.0 124.3,144.9 126.4,143.8 128.5,142.6 130.7,141.5 132.8,140.4 134.9,139.2 137.0,138.1 139.1,137.0 141.2,135.8 143.3,134.7 145.4,133.5 147.5,132.4 149.6,131.2 151.7,130.1 153.8,128.9 155.9,127.7 158.0,126.6 160.1,125.4 162.2,124.2 164.3,123.0 166.4,121.8 168.5,120.6 170.6,119.5 172.7,118.3 174.8,117.1 176.9,115.9 179.0,114.6 181.1,113.4 183.2,112.2 185.3,111.0 187.4,109.8 189.5,108.6 191.6,107.3 193.8,106.1 195.9,104.9 198.0,103.6 200.1,102.4 202.2,101.1 204.3,99.9 206.4,98.6 208.5,97.4 210.6,96.1 212.7,94.9 214.8,93.6 216.9,92.3 219.0,91.0 221.1,89.8 223.2,88.5"/><circle class="fg-dot c1" cx="223.2" cy="88.5" r="3"/><polyline clip-path="url(#plotclip2)" class="fg-line dash c2" points="98.4,159.4 100.5,158.2 102.6,157.1 104.7,155.9 106.8,154.7 108.9,153.5 111.0,152.3 113.1,151.2 115.2,150.0 117.3,148.8 119.4,147.6 121.5,146.5 123.6,145.3 125.7,144.1 127.8,142.9 130.0,141.7 132.1,140.6 134.2,139.4 136.3,138.2 138.4,137.0 140.5,135.9 142.6,134.7 144.7,133.5 146.8,132.3 148.9,131.1 151.0,130.0 153.1,128.8 155.2,127.6 157.3,126.4 159.4,125.3 161.5,124.1 163.6,122.9 165.7,121.7 167.8,120.5 169.9,119.4 172.0,118.2 174.1,117.0 176.2,115.8 178.3,114.7 180.4,113.5 182.5,112.3 184.6,111.1 186.7,109.9 188.8,108.8 190.9,107.6 193.1,106.4 195.2,105.2 197.3,104.1 199.4,102.9 201.5,101.7 203.6,100.5 205.7,99.3 207.8,98.2 209.9,97.0 212.0,95.8 214.1,94.6 216.2,93.5 218.3,92.3 220.4,91.1 222.5,89.9 224.6,88.7 226.7,87.6 228.8,86.4 230.9,85.2 233.0,84.0 235.1,82.9 237.2,81.7 239.3,80.5 241.4,79.3 243.5,78.1 245.6,77.0 247.7,75.8 249.8,74.6 251.9,73.4 254.0,72.3 256.2,71.1 258.3,69.9 260.4,68.7 262.5,67.5 264.6,66.4 266.7,65.2 268.8,64.0 270.9,62.8 273.0,61.7 275.1,60.5 277.2,59.3 279.3,58.1 281.4,56.9 283.5,55.8 285.6,54.6"/><circle class="fg-dot c2" cx="223.2" cy="89.5" r="3"/><polyline clip-path="url(#plotclip2)" class="fg-line dash c3" points="160.8,125.5 162.9,124.2 165.0,123.0 167.1,121.7 169.2,120.4 171.3,119.1 173.4,117.9 175.5,116.6 177.6,115.4 179.7,114.1 181.8,112.9 183.9,111.6 186.0,110.4 188.1,109.1 190.2,107.9 192.4,106.7 194.5,105.4 196.6,104.2 198.7,103.0 200.8,101.8 202.9,100.6 205.0,99.4 207.1,98.1 209.2,96.9 211.3,95.7 213.4,94.5 215.5,93.4 217.6,92.2 219.7,91.0 221.8,89.8 223.9,88.6 226.0,87.4 228.1,86.3 230.2,85.1 232.3,83.9 234.4,82.8 236.5,81.6 238.6,80.5 240.7,79.3 242.8,78.2 244.9,77.0 247.0,75.9 249.1,74.8 251.2,73.6 253.3,72.5 255.5,71.4 257.6,70.2 259.7,69.1 261.8,68.0 263.9,66.9 266.0,65.8 268.1,64.7 270.2,63.6 272.3,62.5 274.4,61.4 276.5,60.3 278.6,59.2 280.7,58.1 282.8,57.1 284.9,56.0 287.0,54.9 289.1,53.9 291.2,52.8 293.3,51.7 295.4,50.7 297.5,49.6 299.6,48.6 301.7,47.5 303.8,46.5 305.9,45.4 308.0,44.4 310.1,43.4 312.2,42.3 314.3,41.3 316.4,40.3 318.6,39.3 320.7,38.3 322.8,37.2 324.9,36.2 327.0,35.2 329.1,34.2 331.2,33.2 333.3,32.2 335.4,31.2 337.5,30.3 339.6,29.3 341.7,28.3 343.8,27.3 345.9,26.3 348.0,25.4"/><circle class="fg-dot c3" cx="223.2" cy="89.0" r="3"/><circle class="fg-blend" cx="223.2" cy="89.3" r="5"/><text class="fg-l c1" x="36" y="226">q̂¹ = +0.156   ω₁ = 0.09</text><text class="fg-l c2" x="36" y="238">q̂² = +0.147   ω₂ = 0.64</text><text class="fg-l c3" x="36" y="250">q̂³ = +0.152   ω₃ = 0.27</text><text class="fg-l fg-strong" x="348" y="226" text-anchor="end">q̂ = +0.149   exact +0.149</text></svg><figcaption>Smooth: all three candidates are close and the weights stay near \(\vect{d} = (0.1, 0.6, 0.3)\). WENO5 gives 0.14915; the exact face value is \(\sin(0.15) = 0.14944\).</figcaption></figure>
+    <figure class="figbox"><svg class="fig" viewBox="0 0 360 268" role="img" aria-label="Front window: a jump between i+1 and i+2"><defs><clipPath id="plotclip3"><rect x="36" y="18" width="312" height="178"/></clipPath></defs><text class="fg-t" x="36" y="12">Front window: a jump between i+1 and i+2</text><line class="fg-ax" x1="36" x2="348" y1="157.1" y2="157.1"/><text class="fg-l" x="31" y="160.1" text-anchor="end">0</text><line class="fg-grid" x1="36" x2="348" y1="157.1" y2="157.1"/><text class="fg-l" x="31" y="48.8" text-anchor="end">1</text><line class="fg-grid" x1="36" x2="348" y1="45.8" y2="45.8"/><line class="fg-cell" x1="36.0" x2="36.0" y1="18" y2="196"/><text class="fg-l" x="67.2" y="209" text-anchor="middle">i−2</text><line class="fg-cell" x1="98.4" x2="98.4" y1="18" y2="196"/><text class="fg-l" x="129.6" y="209" text-anchor="middle">i−1</text><line class="fg-cell" x1="160.8" x2="160.8" y1="18" y2="196"/><text class="fg-l" x="192.0" y="209" text-anchor="middle">i</text><line class="fg-cell" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l" x="254.4" y="209" text-anchor="middle">i+1</text><line class="fg-cell" x1="285.6" x2="285.6" y1="18" y2="196"/><text class="fg-l" x="316.8" y="209" text-anchor="middle">i+2</text><line class="fg-cell" x1="348.0" x2="348.0" y1="18" y2="196"/><line class="fg-face" x1="223.2" x2="223.2" y1="18" y2="196"/><text class="fg-l fg-facel" x="226.2" y="192">face i+½</text><line class="fg-bar" x1="38.0" x2="96.4" y1="157.1" y2="157.1"/><line class="fg-bar" x1="100.4" x2="158.8" y1="157.1" y2="157.1"/><line class="fg-bar" x1="162.8" x2="221.2" y1="157.1" y2="157.1"/><line class="fg-bar" x1="225.2" x2="283.6" y1="157.1" y2="157.1"/><line class="fg-bar" x1="287.6" x2="346.0" y1="45.8" y2="45.8"/><polyline clip-path="url(#plotclip3)" class="fg-line dash c1" points="36.0,157.1 38.1,157.1 40.2,157.1 42.3,157.1 44.4,157.1 46.5,157.1 48.6,157.1 50.7,157.1 52.8,157.1 54.9,157.1 57.0,157.1 59.1,157.1 61.2,157.1 63.3,157.1 65.4,157.1 67.6,157.1 69.7,157.1 71.8,157.1 73.9,157.1 76.0,157.1 78.1,157.1 80.2,157.1 82.3,157.1 84.4,157.1 86.5,157.1 88.6,157.1 90.7,157.1 92.8,157.1 94.9,157.1 97.0,157.1 99.1,157.1 101.2,157.1 103.3,157.1 105.4,157.1 107.5,157.1 109.6,157.1 111.7,157.1 113.8,157.1 115.9,157.1 118.0,157.1 120.1,157.1 122.2,157.1 124.3,157.1 126.4,157.1 128.5,157.1 130.7,157.1 132.8,157.1 134.9,157.1 137.0,157.1 139.1,157.1 141.2,157.1 143.3,157.1 145.4,157.1 147.5,157.1 149.6,157.1 151.7,157.1 153.8,157.1 155.9,157.1 158.0,157.1 160.1,157.1 162.2,157.1 164.3,157.1 166.4,157.1 168.5,157.1 170.6,157.1 172.7,157.1 174.8,157.1 176.9,157.1 179.0,157.1 181.1,157.1 183.2,157.1 185.3,157.1 187.4,157.1 189.5,157.1 191.6,157.1 193.8,157.1 195.9,157.1 198.0,157.1 200.1,157.1 202.2,157.1 204.3,157.1 206.4,157.1 208.5,157.1 210.6,157.1 212.7,157.1 214.8,157.1 216.9,157.1 219.0,157.1 221.1,157.1 223.2,157.1"/><circle class="fg-dot c1" cx="223.2" cy="157.1" r="3"/><polyline clip-path="url(#plotclip3)" class="fg-line dash c2" points="98.4,157.1 100.5,157.1 102.6,157.1 104.7,157.1 106.8,157.1 108.9,157.1 111.0,157.1 113.1,157.1 115.2,157.1 117.3,157.1 119.4,157.1 121.5,157.1 123.6,157.1 125.7,157.1 127.8,157.1 130.0,157.1 132.1,157.1 134.2,157.1 136.3,157.1 138.4,157.1 140.5,157.1 142.6,157.1 144.7,157.1 146.8,157.1 148.9,157.1 151.0,157.1 153.1,157.1 155.2,157.1 157.3,157.1 159.4,157.1 161.5,157.1 163.6,157.1 165.7,157.1 167.8,157.1 169.9,157.1 172.0,157.1 174.1,157.1 176.2,157.1 178.3,157.1 180.4,157.1 182.5,157.1 184.6,157.1 186.7,157.1 188.8,157.1 190.9,157.1 193.1,157.1 195.2,157.1 197.3,157.1 199.4,157.1 201.5,157.1 203.6,157.1 205.7,157.1 207.8,157.1 209.9,157.1 212.0,157.1 214.1,157.1 216.2,157.1 218.3,157.1 220.4,157.1 222.5,157.1 224.6,157.1 226.7,157.1 228.8,157.1 230.9,157.1 233.0,157.1 235.1,157.1 237.2,157.1 239.3,157.1 241.4,157.1 243.5,157.1 245.6,157.1 247.7,157.1 249.8,157.1 251.9,157.1 254.0,157.1 256.2,157.1 258.3,157.1 260.4,157.1 262.5,157.1 264.6,157.1 266.7,157.1 268.8,157.1 270.9,157.1 273.0,157.1 275.1,157.1 277.2,157.1 279.3,157.1 281.4,157.1 283.5,157.1 285.6,157.1"/><circle class="fg-dot c2" cx="223.2" cy="157.1" r="3"/><polyline clip-path="url(#plotclip3)" class="fg-line dash c3" points="160.8,120.0 162.9,123.7 165.0,127.2 167.1,130.7 169.2,134.0 171.3,137.1 173.4,140.2 175.5,143.1 177.6,145.9 179.7,148.6 181.8,151.2 183.9,153.6 186.0,155.9 188.1,158.0 190.2,160.1 192.4,162.0 194.5,163.8 196.6,165.5 198.7,167.0 200.8,168.4 202.9,169.7 205.0,170.9 207.1,171.9 209.2,172.8 211.3,173.6 213.4,174.2 215.5,174.8 217.6,175.2 219.7,175.4 221.8,175.6 223.9,175.6 226.0,175.5 228.1,175.3 230.2,174.9 232.3,174.4 234.4,173.8 236.5,173.1 238.6,172.2 240.7,171.2 242.8,170.1 244.9,168.9 247.0,167.5 249.1,166.0 251.2,164.4 253.3,162.6 255.5,160.7 257.6,158.7 259.7,156.6 261.8,154.4 263.9,152.0 266.0,149.5 268.1,146.8 270.2,144.1 272.3,141.2 274.4,138.2 276.5,135.0 278.6,131.8 280.7,128.4 282.8,124.9 284.9,121.2 287.0,117.5 289.1,113.6 291.2,109.5 293.3,105.4 295.4,101.1 297.5,96.7 299.6,92.2 301.7,87.5 303.8,82.7 305.9,77.8 308.0,72.8 310.1,67.6 312.2,62.3 314.3,56.9 316.4,51.4 318.6,45.7 320.7,39.9 322.8,34.0 324.9,28.0 327.0,21.8 329.1,15.5 331.2,9.1 333.3,2.5 335.4,-4.2 337.5,-11.0 339.6,-17.9 341.7,-25.0 343.8,-32.1 345.9,-39.5 348.0,-46.9"/><circle class="fg-dot c3" cx="223.2" cy="175.6" r="3"/><circle class="fg-blend" cx="223.2" cy="157.1" r="5"/><text class="fg-l c1" x="36" y="226">q̂¹ = +0.000   ω₁ = 0.14</text><text class="fg-l c2" x="36" y="238">q̂² = +0.000   ω₂ = 0.86</text><text class="fg-l c3" x="36" y="250">q̂³ = −0.167   ω₃ = 0.00</text><text class="fg-l fg-strong" x="348" y="226" text-anchor="end">q̂ = +0.000   exact +0.000</text></svg><figcaption>Front: candidate 3 crosses the jump and undershoots to −1/6. Its \(\tilde\beta_3 = 1\) removes it, and \(\hat q = 0\) exactly. Fixed linear weights would give \(0.3\times(-\frac{1}{6}) = -0.05\): a new minimum, the start of an oscillation.</figcaption></figure>
   </div>
   <p>Dashed curves are the three candidate quadratics \(p_r(\xi)\) over their own cells, solid bars the cell averages, small dots the candidate face values, and the large dot the blended \(\hat q\).</p>
 
   <h3>The whole scheme as an operator</h3>
-<pre>window v            (q_{i−2} … q_{i+2})                (P,)
-   │  lift          aᵣ = Eᵣ v                            (R, B)
+<pre>window q            (q_{i−2} … q_{i+2})                (P,)
+   │  lift          aᵣ = Eᵣ q                            (R, B)
    ▼
 coefficients        mean, slope, curvature per candidate
    │  score         βᵣ = aᵣᵀ S aᵣ                        (R,)
@@ -451,7 +460,7 @@ phi_face = jnp.array([1.0, 0.5, 0.25])<span class="c">      # (B,)</span>
 roughness = jnp.array([0.0, 1.0, 13.0 / 3.0])<span class="c">  # (B,)</span>
 
 <span class="c"># --- lift ---</span>
-<span class="c"># aᵣ = Eᵣ v</span>
+<span class="c"># aᵣ = Eᵣ q</span>
 coeffs = einx.dot(<span class="c">                          # (R, B, P), (P, H, W) → (R, B, H, W)</span>
     "candidate basis point, point height width"
     " -&gt; candidate basis height width",
@@ -477,53 +486,55 @@ candidates = einx.dot(<span class="c">                      # (R, B, H, W), (B,)
     phi_face,
 )</pre>
   <p>Written as a function of position inside cell \(i\), the reconstruction is a sum of coefficients times basis functions, which is the form neural operators use:</p>
-  \[ \underbrace{(\mathcal K v)(x) = \mathcal F^{-1}\!\big(R_\phi\cdot\mathcal F v\big)(x)}_{\text{Fourier neural operator layer}}, \qquad
-     \underbrace{\mathcal G(v)(\xi) = \sum_k b_k(v)\,t_k(\xi)}_{\text{DeepONet}}, \qquad
-     \underbrace{\hat q(\xi) = \sum_{r=1}^{3}\sum_{m=0}^{2}\omega_r(v)\,a_{r,m}(v)\,\varphi_m(\xi)}_{\text{WENO5}} . \]
+  \[ \underbrace{\mathcal{K}[q](x) = \mathfrak{F}^{-1}[\mat{R}_{\gvect{\theta}} \cdot \mathfrak{F}[q]](x)}_{\text{Fourier neural operator layer}}, \]
+  \[ \underbrace{\mathcal{G}[q](\xi) = \sum_l b_l(q) t_l(\xi)}_{\text{DeepONet}}, \]
+  \[ \underbrace{\hat q(\xi) = \sum_{r=1}^{3}\sum_{m=0}^{2}\omega_r(\vect{q}) a_{r,m}(\vect{q}) \varphi_m(\xi)}_{\text{WENO5}} . \]
   <div class="tbl"><table>
     <thead><tr><th></th><th>Basis</th><th>Coefficients</th><th>Acts on coefficients by</th><th>Nonlinearity</th></tr></thead>
     <tbody>
-      <tr><td>FNO layer</td><td>global Fourier modes</td><td>FFT, linear</td><td>a learned fixed multiplier \(R_\phi\)</td><td>pointwise activation after the layer</td></tr>
-      <tr><td>DeepONet</td><td>learned trunk \(t_k(\xi)\)</td><td>learned branch \(b_k(v)\)</td><td>a dot product</td><td>inside the branch network</td></tr>
-      <tr><td>WENO5</td><td>local polynomials \(\varphi_m\), one set per candidate</td><td>lift \(\mathbf E_r\), linear, fixed</td><td>a mixture weighted by roughness \(\mathbf a^\top\mathbf S\mathbf a\)</td><td>softmax over candidates</td></tr>
+      <tr><td>FNO layer</td><td>global Fourier modes</td><td>FFT, linear</td><td>a learned fixed multiplier \(\mat{R}_{\gvect{\theta}}\)</td><td>pointwise activation after the layer</td></tr>
+      <tr><td>DeepONet</td><td>learned trunk \(t_l(\xi)\)</td><td>learned branch \(b_l(q)\)</td><td>a dot product</td><td>inside the branch network</td></tr>
+      <tr><td>WENO5</td><td>local polynomials \(\varphi_m\), one set per candidate</td><td>lift \(\mat{E}_r\), linear, fixed</td><td>a mixture weighted by roughness \(\vect{a}^\top\mat{S}\vect{a}\)</td><td>softmax over candidates</td></tr>
       <tr><td>Learned WENO</td><td>same</td><td>same</td><td>the same mixture with a learned logit correction</td><td>softmax plus a small pointwise network</td></tr>
     </tbody>
   </table></div>
-  <p>In DeepONet terms, the trunk is the fixed polynomial basis and the branch is \(\omega_r(v)\,a_{r,m}(v)\). Every learned part of learned WENO sits in the routing \(\omega\); the basis, the lift and the evaluation stay fixed, and that is what keeps consistency and order.</p>
+  <p>In DeepONet terms, the trunk is the fixed polynomial basis and the branch is \(\omega_r(\vect{q}) a_{r,m}(\vect{q})\). Every learned part of learned WENO sits in the routing \(\omega\); the basis, the lift and the evaluation stay fixed, and that is what keeps consistency and order.</p>
   <p>The hand-chosen parts of classical WENO are the exponent 2, the floor \(\varepsilon\), and the linear weights. They decide where WENO dissipates, and they were tuned on shock-tube problems, not on ocean eddies.</p>
 
 
   <h2 id="learned">Learned WENO</h2>
   <p>Write the WENO weights as a softmax over logits, then add a learned correction to the logits:</p>
-  \[ \omega_r = \operatorname{softmax}_r\!\Big(\underbrace{\log d_r - 2\log(\tilde\beta_r + \varepsilon)}_{\text{classical WENO5}} \;+\; \tilde\tau\; g_\phi(\mathbf e)_r\Big), \qquad \tilde\tau = |\tilde\beta_1 - \tilde\beta_3| . \]
-  <p>Since \(\operatorname{softmax}(\log\alpha) = \alpha/\sum\alpha\), the first term alone is exactly classical WENO5. The feature vector \(\mathbf e\) at each face holds only scale-free numbers:</p>
-  \[ \mathbf e = \big(\tilde\beta_1,\ \tilde\beta_2,\ \tilde\beta_3,\ C,\ n^-,\ n^+\big). \]
+  \[ \omega_r = \mathrm{softmax}_r\left(\underbrace{\log d_r - 2\log(\tilde\beta_r + \varepsilon)}_{\text{classical WENO5}} + \tilde\tau g_\text{corr}(\vect{e}; \gvect{\theta})_r\right), \]
+  \[ \tilde\tau = \vert \tilde\beta_1 - \tilde\beta_3 \vert . \]
+  <p>Since \(\mathrm{softmax}(\log\alpha) = \alpha/\sum\alpha\), the first term alone is exactly classical WENO5. The feature vector \(\vect{e}\) at each face holds only scale-free numbers:</p>
+  \[ \vect{e} = (\tilde\beta_1, \tilde\beta_2, \tilde\beta_3, C, n^-, n^+). \]
   <p>Three design choices carry the safety:</p>
   <ul>
-    <li><strong>Zero initialisation.</strong> The last layer of \(g_\phi\) starts at zero, so the untrained scheme <em>is</em> WENO5. Training only moves away from it as far as the data asks.</li>
+    <li><strong>Zero initialisation.</strong> The last layer of \(g_\text{corr}\) starts at zero, so the untrained scheme <em>is</em> WENO5. Training only moves away from it as far as the data asks.</li>
     <li><strong>Gating by \(\tilde\tau\).</strong> In smooth water \(\tilde\tau\to0\), the correction vanishes, and the weights return to WENO5's, which keeps fifth order where the field is smooth. The learning acts only near fronts and under-resolved eddies.</li>
-    <li><strong>Pointwise network.</strong> \(g_\phi\) is a 1×1 convolution over the feature axis: the same small function at every face. The scheme is translation-equivariant and transfers to other domains and grid sizes.</li>
+    <li><strong>Pointwise network.</strong> \(g_\text{corr}\) is a 1×1 convolution over the feature axis: the same small function at every face. The scheme is translation-equivariant and transfers to other domains and grid sizes.</li>
   </ul>
-  <p>A second head gives the extra dissipation \(\kappa_\phi = \operatorname{softplus}(h_\phi(\mathbf e)) \ge 0\), added through the variance-safe term of the flux. For \(u&lt;0\) the window is mirrored (\(q_{i+3},\dots,q_{i-1}\)) and the <em>same</em> network is applied, so the scheme has no preferred direction.</p>
+  <p>A second head gives the extra dissipation \(\kappa_{\gvect{\theta}} = \mathrm{softplus}(g_\text{diss}(\vect{e}; \gvect{\theta})) \ge 0\), added through the variance-safe term of the flux. For \(u \lt 0\) the window is mirrored (\(q_{i+3},\ldots,q_{i-1}\)) and the <em>same</em> network is applied, so the scheme has no preferred direction.</p>
 
   <h3>Land: the same mechanism</h3>
   <p>Candidate \(r\) reads three cells. If any of them is dry, its logit is set to \(-\infty\) before the softmax, and the remaining weights renormalise:</p>
-  \[ \omega_r = 0 \ \text{ if candidate } r \text{ reads a dry cell}, \qquad \sum_r \omega_r = 1 \ \text{ over the wet ones}. \]
+  \[ \omega_r = 0 \ \text{ if candidate } r \text{ reads a dry cell}, \]
+  \[ \sum_r \omega_r = 1 \ \text{ over the wet ones}. \]
   <p>In open water all three survive. One cell from a coast, only the candidate pointing away from land survives, and the face value is third order. At the coast itself the normal velocity is zero, so the flux vanishes whatever the reconstruction. finitevolX already does a hard version of this: <code>Advection2D</code> with a <code>Mask2D</code> picks, per upwind cell, the widest stencil tier whose cells are all wet (sizes 2 to 10), using the counts of contiguous wet cells in <code>mask.stencil_capability</code>. Learned WENO uses the same counts twice: to mask candidates, and as features \(n^\pm\), so the network can learn boundary-current behaviour (for example, more dissipation along the western boundary, where the grid is most under-resolved).</p>
   <p>If the window reaches past the narrowest candidate (a single wet cell between two coasts), the face falls back to first-order upwind, as the finitevolX tiers already do.</p>
 
-  <h3>What holds for every value of φ</h3>
+  <h3>What holds for every value of θ</h3>
   <div class="tbl"><table>
     <thead><tr><th>Property</th><th>Enforced by</th><th>Holds</th></tr></thead>
     <tbody>
       <tr><td>Conservation of \(\sum q\)</td><td>flux form; one flux per face</td><td>exactly</td></tr>
       <tr><td>Consistency (constants advected exactly)</td><td>each candidate exact for constants; \(\sum\omega = 1\) by softmax</td><td>exactly</td></tr>
       <tr><td>Fifth order in smooth flow</td><td>correction gated by \(\tilde\tau\)</td><td>to the extent \(\tilde\tau\to0\); measured on the sine test</td></tr>
-      <tr><td>Scale invariance \(q\to cq \Rightarrow \hat q\to c\hat q\)</td><td>features use \(\tilde\beta\), never \(q\) itself</td><td>exactly</td></tr>
+      <tr><td>Scale invariance \(q \to \gamma q \Rightarrow \hat q \to \gamma \hat q\)</td><td>features use \(\tilde\beta\), never \(q\) itself</td><td>exactly</td></tr>
       <tr><td>No preferred direction</td><td>mirrored window, shared network</td><td>exactly</td></tr>
       <tr><td>Translation equivariance</td><td>pointwise network</td><td>exactly</td></tr>
       <tr><td>Never reads land</td><td>masked logits</td><td>exactly</td></tr>
-      <tr><td>Extra term only removes variance</td><td>\(\kappa_\phi \ge 0\) by softplus</td><td>exactly</td></tr>
+      <tr><td>Extra term only removes variance</td><td>\(\kappa_{\gvect{\theta}} \ge 0\) by softplus</td><td>exactly</td></tr>
       <tr><td>No new extrema</td><td>none</td><td>not guaranteed (as for WENO5); add a positivity limiter if needed</td></tr>
       <tr><td>Smooth adjoint</td><td>softmax, softplus, \(\varepsilon\) floor</td><td>exactly</td></tr>
     </tbody>
@@ -532,10 +543,12 @@ candidates = einx.dot(<span class="c">                      # (R, B, H, W), (B,)
 
   <h2 id="parallels">Parallels</h2>
   <p>Strip WENO to its skeleton and it is a pattern machine learning uses everywhere: a few fixed local linear estimators, mixed by input-dependent normalised weights.</p>
-  \[ \hat q = \sum_{r=1}^{R}\omega_r(\mathbf v)\,\big\langle\mathbf c^r,\mathbf v\big\rangle, \qquad \omega_r = \operatorname{softmax}_r\big(s_r(\mathbf v)\big), \qquad s_r = \log d_r - p\,\log(\tilde\beta_r + \varepsilon). \]
+  \[ \hat q = \sum_{r=1}^{R}\omega_r(\vect{q}) \langle\vect{c}^r,\vect{q}\rangle, \]
+  \[ \omega_r = \mathrm{softmax}_r(s_r(\vect{q})), \]
+  \[ s_r = \log d_r - p \log(\tilde\beta_r + \varepsilon). \]
   <p>The four strongest parallels follow. All numbers use the two windows of the figures above, so they line up across sections. First, the exponent \(p\) swept from 0 to ∞ on both windows:</p>
   <div class="tbl"><table>
-    <thead><tr><th>\(p\)</th><th>Scheme</th><th>\(\omega\), front</th><th>\(\hat q\), front (exact 0)</th><th>\(\omega\), smooth</th><th>\(\hat q\) error, smooth</th></tr></thead>
+    <thead><tr><th>\(p\)</th><th>Scheme</th><th>\(\gvect{\omega}\), front</th><th>\(\hat q\), front (exact 0)</th><th>\(\gvect{\omega}\), smooth</th><th>\(\hat q\) error, smooth</th></tr></thead>
     <tbody>
       <tr><td>0</td><td>linear upwind 5</td><td class="num">(0.10, 0.60, 0.30)</td><td class="num">−0.0500</td><td class="num">(0.10, 0.60, 0.30)</td><td class="num">−4 × 10⁻⁵</td></tr>
       <tr><td>1</td><td></td><td class="num">(0.14, 0.86, 0.00)</td><td class="num">0.0000</td><td class="num">(0.09, 0.62, 0.28)</td><td class="num">−1.7 × 10⁻⁴</td></tr>
@@ -549,16 +562,16 @@ candidates = einx.dot(<span class="c">                      # (R, B, H, W), (B,)
   <article class="tcard" id="par-attention">
     <header><span class="tn">1</span><h3>Attention, with a temperature</h3><span class="where">transformers</span></header>
     <div class="tbody">
-      <p>Softmax attention mixes values \(\mathbf V_r\) with weights from scores; in WENO the values are the candidate face values and the score is roughness:</p>
-      \[ \text{attention:}\quad \sum_r \operatorname{softmax}_r\!\Big(\frac{\mathbf Q^\top\mathbf K_r}{\sqrt{d_k}} + b_r\Big)\,\mathbf V_r, \]
-      \[ \text{WENO:}\quad \sum_r \operatorname{softmax}_r\big(-p\log(\tilde\beta_r+\varepsilon) + \log d_r\big)\,\hat q^{\,r} . \]
+      <p>Softmax attention mixes values \(\vect{h}_{\text{val},r}\) with weights from scores; in WENO the values are the candidate face values and the score is roughness:</p>
+      \[ \text{attention:} \ \sum_r \mathrm{softmax}_r \left( \frac{\vect{h}_\text{qry}^\top \vect{h}_{\text{key},r}}{\sqrt{D_\text{key}}} + b_r \right) \vect{h}_{\text{val},r}, \]
+      \[ \text{WENO:} \ \sum_r \mathrm{softmax}_r(-p\log(\tilde\beta_r+\varepsilon) + \log d_r) \hat q^{r} . \]
       <div class="tbl"><table>
         <thead><tr><th>Attention</th><th>WENO</th></tr></thead>
         <tbody>
-          <tr><td>query–key score \(\mathbf Q^\top\mathbf K_r\)</td><td>content score \(-\log(\tilde\beta_r+\varepsilon)\): how smooth candidate \(r\) sees the field</td></tr>
+          <tr><td>query–key score \(\vect{h}_\text{qry}^\top \vect{h}_{\text{key},r}\)</td><td>content score \(-\log(\tilde\beta_r+\varepsilon)\): how smooth candidate \(r\) sees the field</td></tr>
           <tr><td>position bias \(b_r\)</td><td>\(\log d_r\): a fixed preference for the central stencil</td></tr>
-          <tr><td>inverse temperature \(1/\sqrt{d_k}\)</td><td>exponent \(p\)</td></tr>
-          <tr><td>values \(\mathbf V_r = \mathbf W_V\mathbf x_r\), learned</td><td>values \(\hat q^{\,r} = \mathbf c^{r\top}\mathbf v\), fixed</td></tr>
+          <tr><td>inverse temperature \(1/\sqrt{D_\text{key}}\)</td><td>exponent \(p\)</td></tr>
+          <tr><td>values \(\vect{h}_{\text{val},r} = \mat{W}_\text{val} \vect{h}_r\), learned</td><td>values \(\hat q^{r} = \vect{c}^{r\top}\vect{q}\), fixed</td></tr>
           <tr><td>several heads</td><td>several candidate families</td></tr>
         </tbody>
       </table></div>
@@ -569,7 +582,7 @@ p = 0   attention to the bias     →  linear 5th-order upwind (ω = d)</pre>
       <pre><span class="c"># Shapes: R = 3 candidates (candidate); P = 5 points (point); H, W grid</span>
 
 <span class="c"># --- transformer attention, one query over R keys ---</span>
-<span class="c"># sᵣ = ⟨Q, Kᵣ⟩ / √d + bᵣ</span>
+<span class="c"># sᵣ = ⟨h_qry, h_key,r⟩ / √D_key + bᵣ</span>
 scores_attn = dot_scores / sqrt_dim + position_bias<span class="c">  # (R, H, W)</span>
 
 <span class="c"># --- WENO, same slot ---</span>
@@ -583,13 +596,13 @@ scores = einx.add(<span class="c">                          # (R,), (R, H, W) �
 )
 <span class="c"># ωᵣ = softmax_r(sᵣ)</span>
 weights = einx.softmax("[candidate] height width", scores) #| (R, H, W)
-<span class="c"># values Vᵣ = q̂ʳ = ⟨cʳ, v⟩, fixed (never learned)</span>
+<span class="c"># values h_val,r = q̂ʳ = ⟨cʳ, q⟩, fixed (never learned)</span>
 values = einx.dot(<span class="c">                          # (R, P), (P, H, W) → (R, H, W)</span>
     "candidate point, point height width -&gt; candidate height width",
     candidate_coeffs,
     window,
 )
-<span class="c"># q̂ = ∑ᵣ ωᵣ Vᵣ</span>
+<span class="c"># q̂ = ∑ᵣ ωᵣ q̂ʳ</span>
 face = einx.dot(<span class="c">                            # (R, H, W) ×2 → (H, W)</span>
     "candidate height width, candidate height width -&gt; height width",
     weights,
@@ -603,8 +616,10 @@ face = einx.dot(<span class="c">                            # (R, H, W) ×2 → 
     <header><span class="tn">2</span><h3>Mixture of experts and conditional convolution</h3><span class="where">CNNs, sparse models</span></header>
     <div class="tbody">
       <p>A mixture of experts routes an input to experts and mixes their outputs; conditional convolution mixes the experts' <em>kernels</em> and applies the result once. When the experts are linear, the two are the same, and WENO is both:</p>
-      \[ \text{MoE:}\quad y = \sum_e G_e(\mathbf x)\,f_e(\mathbf x), \qquad \text{CondConv:}\quad y = \Big(\sum_e \alpha_e(\mathbf x)\,\mathbf W_e\Big)\star\mathbf x, \]
-      \[ \text{WENO:}\quad \hat q = \sum_r\omega_r\,\langle\mathbf c^r,\mathbf v\rangle = \big\langle\mathbf K(\mathbf v),\ \mathbf v\big\rangle, \qquad \mathbf K(\mathbf v) = \sum_r\omega_r\,\mathbf c^r . \]
+      \[ \text{MoE:} \ \sum_r \pi_r(\vect{h}) f_r(\vect{h}), \]
+  \[ \text{CondConv:} \ \left( \sum_r \alpha_r(\vect{h}) \mat{W}_r \right) \star \vect{h}, \]
+      \[ \text{WENO:} \ \hat q = \sum_r\omega_r \langle\vect{c}^r,\vect{q}\rangle = \langle\vect{c}(\vect{q}), \vect{q}\rangle, \]
+  \[ \vect{c}(\vect{q}) = \sum_r\omega_r \vect{c}^r . \]
       <p>So WENO applies a different 5-tap kernel at every face. On the two windows (all ×1/60; each sums to 1):</p>
       <div class="tbl"><table>
         <thead><tr><th>Kernel</th><th>\(q_{i-2}\)</th><th>\(q_{i-1}\)</th><th>\(q_i\)</th><th>\(q_{i+1}\)</th><th>\(q_{i+2}\)</th></tr></thead>
@@ -614,7 +629,7 @@ face = einx.dot(<span class="c">                            # (R, H, W) ×2 → 
           <tr><td>WENO5, front window</td><td class="num">2.86</td><td class="num">−18.57</td><td class="num">58.57</td><td class="num">17.14</td><td class="num">0.00</td></tr>
         </tbody>
       </table></div>
-      <p>At the front the kernel stops reading \(q_{i+2}\) and leans upwind. Treat each face's kernel as if it were used everywhere, and its Fourier symbol gives the damping rate of a wave \(e^{\mathrm ik x}\) (per unit \(u/\Delta x\); negative is damping):</p>
+      <p>At the front the kernel stops reading \(q_{i+2}\) and leans upwind. Treat each face's kernel as if it were used everywhere, and its Fourier symbol gives the damping rate of a wave \(e^{\mathrm{i}k x}\) (per unit \(u/\Delta x\); negative is damping):</p>
       <div class="tbl"><table>
         <thead><tr><th>Kernel</th><th>\(k\Delta x = 0.5\)</th><th>1.5</th><th>2.5</th></tr></thead>
         <tbody>
@@ -628,7 +643,7 @@ face = einx.dot(<span class="c">                            # (R, H, W) ×2 → 
 <span class="c">#         K = 64 test wavenumbers (wavenumber); H, W grid</span>
 
 <span class="c"># --- mixture of experts: mix the outputs ---</span>
-<span class="c"># q̂ = ∑ᵣ ωᵣ ⟨cʳ, v⟩</span>
+<span class="c"># q̂ = ∑ᵣ ωᵣ ⟨cʳ, q⟩</span>
 face_moe = einx.dot(<span class="c">                        # → (H, W)</span>
     "candidate height width, candidate height width -&gt; height width",
     weights,
@@ -636,34 +651,34 @@ face_moe = einx.dot(<span class="c">                        # → (H, W)</span>
 )
 
 <span class="c"># --- conditional convolution: mix the kernels, then apply once ---</span>
-<span class="c"># K(v) = ∑ᵣ ωᵣ cʳ, one 5-tap kernel per face</span>
+<span class="c"># c(q) = ∑ᵣ ωᵣ cʳ, one 5-tap kernel per face</span>
 kernel = einx.dot(<span class="c">                          # (R, H, W), (R, P) → (P, H, W)</span>
     "candidate height width, candidate point -&gt; point height width",
     weights,
     candidate_coeffs,
 )
-<span class="c"># q̂ = ⟨K(v), v⟩, identical to face_moe because the experts are linear</span>
+<span class="c"># q̂ = ⟨c(q), q⟩, identical to face_moe because the experts are linear</span>
 face_conv = einx.dot(<span class="c">                       # (P, H, W) ×2 → (H, W)</span>
     "point height width, point height width -&gt; height width",
     kernel,
     window,
 )
 
-<span class="c"># --- diagnostic: local Fourier symbol of K, a map of numerical damping ---</span>
+<span class="c"># --- diagnostic: local Fourier symbol of c, a map of numerical damping ---</span>
 <span class="c"># k j for test wavenumbers k Δx and offsets j = −2…2</span>
 angles = einx.multiply(<span class="c">                     # (K,), (P,) → (K, P)</span>
     "wavenumber, point -&gt; wavenumber point", k_dx, offsets
 )
 <span class="c"># e^{i k j}</span>
 phase = jnp.exp(1j * angles)<span class="c">                # (K, P)</span>
-<span class="c"># K̂(k) = ∑ⱼ Kⱼ e^{i k j}</span>
+<span class="c"># ĉ(k) = ∑ⱼ cⱼ e^{i k j}</span>
 symbol = einx.dot(<span class="c">                          # (K, P), (P, H, W) → (K, H, W)</span>
     "wavenumber point, point height width -&gt; wavenumber height width",
     phase,
     kernel,
 )
 <span class="c"># user</span>
-<span class="c"># λ(k) = −K̂(k)(1 − e^{−ik}); Re λ &lt; 0 is damping</span>
+<span class="c"># λ(k) = −ĉ(k)(1 − e^{−ik}); Re λ &lt; 0 is damping</span>
 growth = semi_discrete_rate(symbol, k_dx)<span class="c">   # (K, H, W)</span></pre>
       <p class="crit">What transfers: the kernel view gives a diagnostic for free. Map the local damping rate of a trained learned WENO over a snapshot to see where it dissipates. Sparse top-k routing from MoE would be cheaper, but its switches are not smooth, so keep soft routing wherever an adjoint is needed.</p>
     </div>
@@ -673,13 +688,11 @@ growth = semi_discrete_rate(symbol, k_dx)<span class="c">   # (K, H, W)</span></
     <header><span class="tn">3</span><h3>Bayesian model averaging over local splines</h3><span class="where">statistics, GPs</span></header>
     <div class="tbody">
       <p>Each candidate is a local model. Bayesian model averaging weights models by prior times evidence; WENO does the same with \(d_r\) as the prior and a power of roughness as the evidence:</p>
-      \[ P(r\mid\mathbf v) \propto \pi_r\,p(\mathbf v\mid r)
-         \qquad\longleftrightarrow\qquad
-         \omega_r \propto d_r\,(\tilde\beta_r+\varepsilon)^{-p} . \]
-      <p>The roughness \(\beta_r = \int(p_r')^2 + \int(p_r'')^2\) is the same kind of penalty that smoothing splines minimise and that a Matérn Gaussian process uses as its norm. The difference is the shape of the evidence: WENO's is a power law, heavy-tailed, so a rough candidate is down-weighted but not exponentially suppressed. The Bayesian alternative is a Gibbs form with a temperature \(T\):</p>
-      \[ \omega_r \propto d_r\,\exp\!\big(-\tilde\beta_r/T\big) . \]
+      \[ \mathbb{P}(r \mid \vect{q}) \propto \pi_r \mathbb{P}(\vect{q} \mid r) \ \longleftrightarrow \ \omega_r \propto d_r (\tilde\beta_r+\varepsilon)^{-p} . \]
+      <p>The roughness \(\beta_r = \int (p_r')^2 \mathrm{d}\xi + \int (p_r'')^2 \mathrm{d}\xi\) is the same kind of penalty that smoothing splines minimise and that a Matérn Gaussian process uses as its norm. The difference is the shape of the evidence: WENO's is a power law, heavy-tailed, so a rough candidate is down-weighted but not exponentially suppressed. The Bayesian alternative is a Gibbs form with a temperature \(T\):</p>
+      \[ \omega_r \propto d_r \exp(-\tilde\beta_r/T) . \]
       <div class="tbl"><table>
-        <thead><tr><th>Evidence</th><th>\(\omega\), smooth</th><th>\(\hat q\), smooth (exact 0.14944)</th><th>\(\omega\), front</th></tr></thead>
+        <thead><tr><th>Evidence</th><th>\(\gvect{\omega}\), smooth</th><th>\(\hat q\), smooth (exact 0.14944)</th><th>\(\gvect{\omega}\), front</th></tr></thead>
         <tbody>
           <tr><td>power law, \(p = 2\) (WENO5)</td><td class="num">(0.09, 0.64, 0.27)</td><td class="num">0.14915</td><td class="num">(0.14, 0.86, 0.00)</td></tr>
           <tr><td>Gibbs, \(T = 0.1\)</td><td class="num">(0.08, 0.67, 0.25)</td><td class="num">0.14900</td><td class="num">(0.14, 0.86, 0.00)</td></tr>
@@ -696,13 +709,13 @@ log_evidence_power = -2.0 * jnp.log(beta_norm + eps)<span class="c">  # (R, H, W
 <span class="c"># --- Bayesian model averaging: exponential (Gibbs) evidence ---</span>
 <span class="c"># log p(v | r) = −β̃ᵣ / T + const, T a temperature</span>
 log_evidence_gibbs = -beta_norm / temperature<span class="c">  # (R, H, W)</span>
-<span class="c"># log P(r | v) = log dᵣ + log p(v | r) + const</span>
+<span class="c"># log ℙ(r | q) = log dᵣ + log ℙ(q | r) + const</span>
 log_posterior = einx.add(<span class="c">                   # (R,), (R, H, W) → (R, H, W)</span>
     "candidate, candidate height width -&gt; candidate height width",
     log_linear_weights,
     log_evidence_gibbs,
 )
-<span class="c"># P(r | v) = softmax_r(log P)</span>
+<span class="c"># ℙ(r | q) = softmax_r(log ℙ)</span>
 weights = einx.softmax("[candidate] height width", log_posterior)<span class="c">  # (R, H, W)</span>
 
 <span class="c"># --- model uncertainty per face ---</span>
@@ -712,7 +725,7 @@ log_weights = jnp.log(weights + 1e-30)<span class="c">      # (R, H, W)</span>
 plogp = weights * log_weights<span class="c">               # (R, H, W)</span>
 <span class="c"># ℍ[ω] = −∑ᵣ ωᵣ log ωᵣ, high where no stencil is clearly right</span>
 entropy = -einx.sum("candidate height width -&gt; height width", plogp)<span class="c">  # (H, W)</span></pre>
-      <p class="crit">What transfers: a Gibbs evidence with a learned temperature is easier to calibrate than a power law. The entropy map is a state-dependent uncertainty that can feed the model-error covariance \(\mathbf Q\) on the assimilation page. Variants of WENO already replace the polynomial candidates with Gaussian-process predictions, scoring them with the GP likelihood.</p>
+      <p class="crit">What transfers: a Gibbs evidence with a learned temperature is easier to calibrate than a power law. The entropy map is a state-dependent uncertainty that can feed the model-error covariance \(\gmat{\Sigma}_\eta\) on the assimilation page. Variants of WENO already replace the polynomial candidates with Gaussian-process predictions, scoring them with the GP likelihood.</p>
     </div>
   </article>
 
@@ -720,10 +733,12 @@ entropy = -einx.sum("candidate height width -&gt; height width", plogp)<span cla
     <header><span class="tn">4</span><h3>Edge-preserving image filters</h3><span class="where">image processing, super-resolution</span></header>
     <div class="tbody">
       <p>Reconstructing a face value from cell averages is sub-pixel interpolation, and ringing at a front is the same Gibbs problem as ringing at an image edge. Two image methods solve it with the same idea as WENO, in different ways. A bilateral filter weights neighbours by distance <em>and</em> by how different their values are, so it never averages across an edge:</p>
-      \[ \hat q = \frac{\sum_j w_j\,q_j}{\sum_j w_j}, \qquad w_j = \exp\!\Big(-\frac{(x_j - x_{i+\frac12})^2}{2\sigma_s^2}\Big)\,\exp\!\Big(-\frac{(q_j - q_i)^2}{2\sigma_r^2}\Big). \]
-      <p>On the front window (with \(\sigma_s = \Delta x\), \(\sigma_r = 0.3\)) it gives 0.0006: the edge is respected. On the smooth window it gives 0.076 instead of 0.149, because its experts are constants: a local average cannot follow a slope. The right weights, the wrong experts.</p>
-      <p>Learned super-resolution of the RAISR type fixes that: it computes the local structure tensor \(\mathbf J = \sum\nabla q\,\nabla q^\top\), hashes each pixel by edge orientation, strength and coherence, and applies a filter learned for that bucket:</p>
-      \[ b = \operatorname{hash}\big(\theta,\ \lambda_+,\ (\lambda_+ - \lambda_-)/(\lambda_+ + \lambda_-)\big), \qquad \hat q = \big\langle\mathbf K_b,\ \text{patch}\big\rangle . \]
+      \[ \hat q = \frac{\sum_j w_j q_j}{\sum_j w_j}, \]
+  \[ w_j = \exp\left(-\frac{(x_j - x_{i+\frac12})^2}{2\sigma_\text{space}^2}\right) \exp\left(-\frac{(q_j - q_i)^2}{2\sigma_\text{range}^2}\right). \]
+      <p>On the front window (with \(\sigma_\text{space} = \Delta x\), \(\sigma_\text{range} = 0.3\)) it gives 0.0006: the edge is respected. On the smooth window it gives 0.076 instead of 0.149, because its experts are constants: a local average cannot follow a slope. The right weights, the wrong experts.</p>
+      <p>Learned super-resolution of the RAISR type fixes that: it computes the local structure tensor \(\mat{M}_\text{struct} = \sum \nabla q \nabla q^\top\), hashes each pixel by edge orientation, strength and coherence, and applies a filter learned for that bucket:</p>
+      \[ b = \mathrm{hash}(\theta_\text{dir}, \sigma_+^2, (\sigma_+^2 - \sigma_-^2)/(\sigma_+^2 + \sigma_-^2)), \]
+  \[ \hat q = \langle\vect{c}_b, \text{patch}\rangle . \]
       <p>ENO is this with a fixed filter bank and a hash on \(\arg\min_r\beta_r\). Learned WENO is the soft version with the bank fixed. What WENO lacks is the orientation: it reconstructs one direction at a time, so a front oblique to the grid (the Gulf Stream, for instance) looks different to the x and y passes. Adding RAISR's features to the router gives it that information:</p>
       <pre><span class="c"># Shapes: H, W grid (height, width); E = 6 WENO features (feature)</span>
 
@@ -740,34 +755,34 @@ grad_x = faces_to_center_x(grad_x_faces)<span class="c">    # (H, W) → (H, W)<
 <span class="c"># user</span>
 grad_y = faces_to_center_y(grad_y_faces)<span class="c">    # (H, W) → (H, W)</span>
 
-<span class="c"># --- local structure tensor J = ∑_{3×3} ∇q ∇qᵀ ---</span>
+<span class="c"># --- local structure tensor M_struct = ∑_{3×3} ∇q ∇qᵀ ---</span>
 <span class="c"># ∂ₓq², ∂ₓq ∂ᵧq, ∂ᵧq²</span>
 gxx = grad_x * grad_x<span class="c">                       # (H, W)</span>
 gxy = grad_x * grad_y<span class="c">                       # (H, W)</span>
 gyy = grad_y * grad_y<span class="c">                       # (H, W)</span>
 <span class="c"># user</span>
-<span class="c"># Jxx, Jxy, Jyy summed over the 3×3 neighbourhood</span>
+<span class="c"># M_xx, M_xy, M_yy summed over the 3×3 neighbourhood</span>
 jxx, jxy, jyy = box_sum_3x3(gxx, gxy, gyy)<span class="c">  # (H, W) ×3</span>
 
 <span class="c"># --- RAISR-style features ---</span>
-<span class="c"># Jxx + Jyy = λ₊ + λ₋</span>
+<span class="c"># M_xx + M_yy = σ²₊ + σ²₋</span>
 trace = jxx + jyy<span class="c">                           # (H, W)</span>
-<span class="c"># Jxx − Jyy</span>
+<span class="c"># M_xx − M_yy</span>
 diagonal_gap = jxx - jyy<span class="c">                    # (H, W)</span>
-<span class="c"># 2 Jxy</span>
+<span class="c"># 2 M_xy</span>
 off_diagonal = 2.0 * jxy<span class="c">                    # (H, W)</span>
-<span class="c"># λ₊ − λ₋ = √((Jxx − Jyy)² + 4Jxy²)</span>
+<span class="c"># σ²₊ − σ²₋ = √((M_xx − M_yy)² + 4 M_xy²)</span>
 eigen_gap = jnp.hypot(diagonal_gap, off_diagonal)<span class="c">  # (H, W)</span>
-<span class="c"># coherence = (λ₊ − λ₋)/(λ₊ + λ₋): 1 for a straight front, 0 for no direction</span>
+<span class="c"># coherence = (σ²₊ − σ²₋)/(σ²₊ + σ²₋): 1 for a straight front, 0 for no direction</span>
 coherence = eigen_gap / (trace + 1e-30)<span class="c">     # (H, W)</span>
-<span class="c"># 2θ = atan2(2Jxy, Jxx − Jyy): front orientation, sign-free</span>
+<span class="c"># 2θ_dir = atan2(2 M_xy, M_xx − M_yy): front orientation, sign-free</span>
 two_theta = jnp.arctan2(off_diagonal, diagonal_gap)<span class="c">  # (H, W)</span>
-<span class="c"># (cos 2θ, sin 2θ): continuous, no wrap at ±π</span>
+<span class="c"># (cos 2θ_dir, sin 2θ_dir): continuous, no wrap at ±π</span>
 orient_cos = jnp.cos(two_theta)<span class="c">             # (H, W)</span>
 orient_sin = jnp.sin(two_theta)<span class="c">             # (H, W)</span>
 
 <span class="c"># --- add to the router's features ---</span>
-<span class="c"># e′ = (e, cos 2θ, sin 2θ, coherence), all scale-free</span>
+<span class="c"># e′ = (e, cos 2θ_dir, sin 2θ_dir, coherence), all scale-free</span>
 features_2d = einx.rearrange(<span class="c">               # → (E + 3, H, W)</span>
     "feature height width, height width, height width, height width"
     " -&gt; (feature + 1 + 1 + 1) height width",
@@ -786,15 +801,15 @@ features_2d = einx.rearrange(<span class="c">               # → (E + 3, H, W)<
   <h2 id="ops">As operators</h2>
   <article class="tcard" id="op-face">
     <header><span class="tn">x</span><h3>Face flux, one direction</h3><span class="where">the learned piece</span></header>
-    <div class="tbody"><div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">q</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u at x-faces</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">C = |u|Δt/Δx</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><span class="n">wet mask</span><code>(height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">F at x-faces</span><code>(height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>two 1×1 nets, (feature → candidate), (feature → 1)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">coarse-grained runs</span><code>(sim, time, height, width)</code></div><p class="crit">The y-direction call is the same function with \(v\), the y-windows and \(n^\pm\) from <code>y_neg</code>, <code>y_pos</code>. One set of weights φ serves both directions.</p></div>
+    <div class="tbody"><div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">q</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u at x-faces</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">C = |u|Δt/Δx</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><span class="n">wet mask</span><code>(height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">F at x-faces</span><code>(height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ</span><code>two 1×1 nets, (feature → candidate), (feature → 1)</code><span class="d train">train</span><svg class="g" aria-hidden="true"><use href="#g-dataset"/></svg><span class="n">coarse-grained runs</span><code>(sim, time, height, width)</code></div><p class="crit">The y-direction call is the same function with \(v\), the y-windows and \(n^\pm\) from <code>y_neg</code>, <code>y_pos</code>. One set of weights φ serves both directions.</p></div>
   </article>
   <article class="tcard" id="op-tend">
     <header><span class="tn">∇·</span><h3>Advective tendency</h3><span class="where">drop-in for <code>Advection2D</code></span></header>
-    <div class="tbody"><div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">q</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u, v</span><code>(height, width) ×2</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><span class="n">wet mask</span><code>(height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">−∇·F</span><code>(height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>shared by x and y faces</code></div><p class="crit">Same signature as finitevolX's <code>Advection2D(grid, mask)(h, u, v, method)</code>, so it can replace the advection term inside a somax model unchanged.</p></div>
+    <div class="tbody"><div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">q</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u, v</span><code>(height, width) ×2</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><span class="n">wet mask</span><code>(height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">−∇·F</span><code>(height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ</span><code>shared by x and y faces</code></div><p class="crit">Same signature as finitevolX's <code>Advection2D(grid, mask)(h, u, v, method)</code>, so it can replace the advection term inside a somax model unchanged.</p></div>
   </article>
 
   <h2 id="code">Code sketch</h2>
-  <p>The x-direction face flux of learned WENO5. <code>WENO5_CANDIDATES</code> holds the three candidate rows of the table above, padded to the five-point window; <code>WENO5_BETA_MATRICES</code> holds the three \(\mathbf M_r\). <code>stencil_windows_x</code>, <code>candidate_wet_x</code> and <code>shift_east</code> are short page-level helpers for the shifted views and the per-candidate wet test.</p>
+  <p>The x-direction face flux of learned WENO5. <code>WENO5_CANDIDATES</code> holds the three candidate rows of the table above, padded to the five-point window; <code>WENO5_BETA_MATRICES</code> holds the three \(\mat{M}_r\). <code>stencil_windows_x</code>, <code>candidate_wet_x</code> and <code>shift_east</code> are short page-level helpers for the shifted views and the per-candidate wet test.</p>
   <pre>import einx
 import equinox as eqx
 import finitevolx as fvx
@@ -810,7 +825,7 @@ from jaxtyping import Array, Bool, Float, Int, PRNGKeyArray
 class LearnedWENO5(eqx.Module):
     """WENO5 whose candidate weights get a learned, gated logit correction.
 
-    ωᵣ = softmax_r( log dᵣ − 2 log(β̃ᵣ + ε) + s(τ̃) gᵩ(features)ᵣ ).
+    ωᵣ = softmax_r( log dᵣ − 2 log(β̃ᵣ + ε) + s(τ̃) g_corr(features; θ)ᵣ ).
 
     Algorithm:
         1. Build the three 3-point candidate face values q̂ʳ.
@@ -821,10 +836,10 @@ class LearnedWENO5(eqx.Module):
         5. Blend: q̂ = ∑ᵣ ωᵣ q̂ʳ, and add a learned non-negative diffusivity.
 
     Args:
-        weight_net: Pointwise network gᵩ, features → R logit corrections.
+        weight_net: Pointwise network g_corr, features → R logit corrections.
         diffusivity_net: Pointwise network, features → one raw diffusivity.
         candidate_coeffs: Fixed cʳⱼ, padded to the 5-point window.
-        beta_matrices: Fixed quadratic forms with βᵣ = vᵀ Mᵣ v.
+        beta_matrices: Fixed quadratic forms with βᵣ = qᵀ Mᵣ q.
         log_linear_weights: log dᵣ, with d = (0.1, 0.6, 0.3).
     """
 
@@ -839,7 +854,7 @@ class LearnedWENO5(eqx.Module):
         weight_key, diffusivity_key = jax.random.split(key)
 <span class="c">        # user</span>
         weight_net = eqx.nn.Conv2d(6, 3, kernel_size=1, key=weight_key)
-<span class="c">        # zero last layer: gᵩ ≡ 0 at init, so training starts from WENO5</span>
+<span class="c">        # zero last layer: g_corr ≡ 0 at init, so training starts from WENO5</span>
         self.weight_net = eqx.tree_at(
             lambda net: net.weight, weight_net, jnp.zeros_like(weight_net.weight)
         )
@@ -865,7 +880,7 @@ class LearnedWENO5(eqx.Module):
         )
 
 <span class="c">        # --- smoothness ---</span>
-<span class="c">        # βᵣ = vᵀ Mᵣ v</span>
+<span class="c">        # βᵣ = qᵀ Mᵣ q</span>
         betas = einx.dot(<span class="c">                             # → (R, H, W)</span>
             "candidate p1 p2, p1 height width, p2 height width"
             " -&gt; candidate height width",
@@ -915,9 +930,9 @@ class LearnedWENO5(eqx.Module):
             log_beta_twice,
         )
 <span class="c">        # user</span>
-<span class="c">        # gᵩ(e)</span>
+<span class="c">        # g_corr(e; θ)</span>
         correction = self.weight_net(features)<span class="c">        # (E, H, W) → (R, H, W)</span>
-<span class="c">        # s(τ̃) gᵩ(e), gated off where the field is smooth</span>
+<span class="c">        # s(τ̃) g_corr(e; θ), gated off where the field is smooth</span>
         gated = einx.multiply(<span class="c">                        # → (R, H, W)</span>
             "height width, candidate height width -&gt; candidate height width",
             detector,
@@ -992,7 +1007,7 @@ class LearnedWENO5(eqx.Module):
 
 
 <span class="c"># today (finitevolx)</span>
-<span class="c"># the gᵩ ≡ 0 oracle: classical masked WENO5 on the same grid and mask</span>
+<span class="c"># the g_corr ≡ 0 oracle: classical masked WENO5 on the same grid and mask</span>
 baseline = fvx.Advection2D(grid, mask=mask)(pv, u, v, method="weno5")<span class="c">  # (H, W)</span></pre>
   <p class="loop">Markers: <code>today</code> ships on finitevolX <code>main</code> (checked 24 Oct 2026, 831c69f): <code>Advection2D</code> with <code>method="weno5"</code> and a <code>Mask2D</code>, and <code>Mask2D.stencil_capability</code>. <code>user</code> is defined on this page. finitevolX's WENO candidates and indicators are private functions today, so the sketch rebuilds them; a learned-weights hook in finitevolX would be <code>proposed</code>.</p>
 
@@ -1002,7 +1017,7 @@ baseline = fvx.Advection2D(grid, mask=mask)(pv, u, v, method="weno5")<span class
     <thead><tr><th>Route</th><th>Advection</th><th>Dissipation</th><th>When</th></tr></thead>
     <tbody>
       <tr><td>(a) keep Arakawa</td><td>\(-J(\psi,q)\): conserves energy and enstrophy exactly, no implicit dissipation</td><td>all explicit: replace \(\nu\nabla^6\psi\) with a learned, sign-definite closure</td><td>first; smallest change</td></tr>
-      <tr><td>(b) learned WENO</td><td>flux form \(-\nabla\cdot(\mathbf u q)\) with \(u = -\partial_y\psi\), \(v = \partial_x\psi\) on the C-grid</td><td>implicit in the weights, plus \(\kappa_\phi\); drop \(\nu\nabla^6\psi\)</td><td>when fronts dominate; and for shallow-water or primitive equations, where Arakawa's guarantees do not carry over</td></tr>
+      <tr><td>(b) learned WENO</td><td>flux form \(-\nabla\cdot(\vect{v} q)\) with \(u = -\partial_y\psi\), \(v = \partial_x\psi\) on the C-grid</td><td>implicit in the weights, plus \(\kappa_{\gvect{\theta}}\); drop \(\nu\nabla^6\psi\)</td><td>when fronts dominate; and for shallow-water or primitive equations, where Arakawa's guarantees do not carry over</td></tr>
     </tbody>
   </table></div>
   <p>Because the discrete velocity comes from a streamfunction, it has zero discrete divergence, and the flux form and the advective form agree. Route (b) changes the reconstruction, not the physics.</p>
@@ -1012,23 +1027,23 @@ baseline = fvx.Advection2D(grid, mask=mask)(pv, u, v, method="weno5")<span class
     <li><strong>Target.</strong> A QG run at \(\Delta x = 2\) km, coarse-grained to 8 km by cell averaging. This is a <span class="tgt co">correction</span> target in the taxonomy's terms: the scheme learns what the coarse grid misses near fronts.</li>
     <li><strong>Loss.</strong> A posteriori, through the solver: rollout error of \(q\) over several days, plus the error of the kinetic energy spectrum at high wavenumbers, so the scheme is judged on the scales it controls.</li>
     <li><strong>Start.</strong> From classical WENO5 (zero last layer), so every gradient step starts from a working, stable scheme.</li>
-    <li><strong>Check of what it learned.</strong> Map \(\omega\) and \(\kappa_\phi\) over a snapshot. They are physical diagnostics: where the scheme trusts the upwind side, and where it dissipates.</li>
+    <li><strong>Check of what it learned.</strong> Map \(\omega\) and \(\kappa_{\gvect{\theta}}\) over a snapshot. They are physical diagnostics: where the scheme trusts the upwind side, and where it dissipates.</li>
   </ul>
 
   <h2 id="da">For data assimilation</h2>
   <ul>
     <li><strong>A true adjoint.</strong> Classical limiters use min, max and switches, whose adjoints are discontinuous; 4D-Var systems often swap in a smoother linearised scheme for the tangent-linear model. Here every weight is a smooth function of \(q\), so <code>jax.grad</code> of the forecast is the exact adjoint of the forecast that is run.</li>
     <li><strong>Information over the window.</strong> Numerical diffusion also damps perturbations in the tangent-linear model. Over a 10-day window, a too-diffusive scheme makes day-10 maps nearly uninformative about day 0. Lower, targeted dissipation keeps that information, so the advection scheme sets how long a window can usefully be.</li>
-    <li><strong>A dissipation map as a control.</strong> \(\kappa_\phi\) (or a spatial scale on it) can be estimated from observations as a hyperparameter, the A1 route of the assimilation page.</li>
+    <li><strong>A dissipation map as a control.</strong> \(\kappa_{\gvect{\theta}}\) (or a spatial scale on it) can be estimated from observations as a hyperparameter, the A1 route of the assimilation page.</li>
   </ul>
 
   <h2 id="critique">What to watch</h2>
-  <div class="note"><span class="tag">Learned forcing and learned dissipation are not identifiable together</span><p>A forcing that injects energy and a scheme that removes it can fit the same trajectories at any level of both. Constrain one: restrict the learned forcing to large scales (a smooth basis), keep \(\kappa_\phi\) and the weight correction at grid scale, or fit the scheme on free-decay runs before learning the forcing.</p></div>
+  <div class="note"><span class="tag">Learned forcing and learned dissipation are not identifiable together</span><p>A forcing that injects energy and a scheme that removes it can fit the same trajectories at any level of both. Constrain one: restrict the learned forcing to large scales (a smooth basis), keep \(\kappa_{\gvect{\theta}}\) and the weight correction at grid scale, or fit the scheme on free-decay runs before learning the forcing.</p></div>
   <div class="note"><span class="tag">On a coarse grid, numerics and closure blur</span><p>A scheme trained against a finer run learns some subgrid physics as well as better numerics. That is fine, but test it on a grid spacing it was not trained on: if it only fixed numerics it should still help; if it learned a closure tied to 8 km it may not.</p></div>
   <div class="note"><span class="tag">Order is measured, not guaranteed</span><p>The \(\tilde\tau\) gate makes the correction small in smooth flow, not zero. If the convergence test shows order loss, sharpen the gate (\(\tilde\tau^2\), or a threshold) before anything else.</p></div>
 
   <h2 id="tests">Test ladder</h2>
-  <p>Each test has a known answer. Run each with \(g_\phi = 0\) first (it must match finitevolX's <code>method="weno5"</code> to round-off), then with the trained weights.</p>
+  <p>Each test has a known answer. Run each with \(g_\text{corr} = 0\) first (it must match finitevolX's <code>method="weno5"</code> to round-off), then with the trained weights.</p>
   <div class="tbl"><table>
     <thead><tr><th>Test</th><th>Checks</th><th>Pass</th></tr></thead>
     <tbody>

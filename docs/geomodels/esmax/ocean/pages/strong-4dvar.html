@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
 <script>
 window.MathJax = {
-  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none' },
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none', macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
   svg: { fontCache: 'global' },
   options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
 };
@@ -325,13 +325,13 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
     <h2>One cost, one gradient, three ways to minimise</h2>
     <ul>
       <li><strong>4D-Var is the MAP estimate</strong> of the initial state under a Gaussian background, Gaussian observation errors and a model with no error (strong constraint). The cost is minus the log posterior.</li>
-      <li><strong>The control is the initial state</strong> \(z_0\); every later state is the model run from it. The observations at all times pull on \(z_0\) through the model.</li>
+      <li><strong>The control is the initial state</strong> \(\vect{x}_0 \in \mathbb{R}^{D_x}\); every later state \(\vect{x}_k = \vect{x}(t_k)\) is the model run from it. The observations at all times pull on \(\vect{x}_0\) through the model.</li>
       <li><strong>The gradient is one adjoint run:</strong> the backward sweep of the tangent-linear model. In JAX it is reverse-mode differentiation of the forward run; checkpointing trades memory for recomputation.</li>
       <li><strong>Classic</strong> minimises the full nonlinear cost with a quasi-Newton method. <strong>Incremental</strong> relinearises a few times and solves quadratic sub-problems with CG. <strong>Reduced-basis</strong> optimises a few coefficients of a basis instead of every grid value.</li>
       <li><strong>On Lorenz-96</strong> all three reach the same analysis error (0.20, from a background error of 1.00), with very different costs.</li>
     </ul>
     <nav class="stack" aria-label="The pieces of 4D-Var">
-      <div class="layer io"><div><div class="ln">Inputs</div><div class="lo">\(y_{1:T}\), masks, \(z_b\), \(\mathbf B\), \(\mathbf R\), model \(\mathcal M\)</div></div><div class="chips"></div></div>
+      <div class="layer io"><div><div class="ln">Inputs</div><div class="lo">\(\vect{y}_{1:T}\), masks, \(\gvect{\mu}_x\), \(\gmat{\Sigma}_x\), \(\gmat{\Sigma}_\varepsilon\), model \(f\)</div></div><div class="chips"></div></div>
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Cost</div><div class="lo">background + observations over the window</div></div><div class="chips"><a class="tchip" href="#math">§ math</a></div></div>
       <div class="link"><span></span><span></span></div>
@@ -339,7 +339,7 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Minimiser</div><div class="lo">classic · incremental · reduced basis</div></div><div class="chips"><a class="tchip" href="#classic">classic</a><a class="tchip" href="#incremental">incr.</a><a class="tchip" href="#reduced">basis</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer io"><div><div class="ln">Analysis</div><div class="lo">\(z_0^\star\), its trajectory, \(\mathcal J^\star\), optional spread</div></div><div class="chips"><a class="tchip" href="#application">§ application</a></div></div>
+      <div class="layer io"><div><div class="ln">Analysis</div><div class="lo">\(\vect{x}_0^\star\), its trajectory, \(\mathcal{J}^\star\), optional spread</div></div><div class="chips"><a class="tchip" href="#application">§ application</a></div></div>
     </nav>
   </section>
 
@@ -349,8 +349,8 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
     <li><strong>Observations spread information through the dynamics.</strong> An observation at day 7 constrains day 0 along exactly the directions the model carries from day 0 to day 7. Places never observed are still corrected, because the flow brings observed water to them or them to it.</li>
     <li><strong>The model is a hard constraint.</strong> The analysed trajectory is a true model solution: balanced, smooth in time, consistent with the physics. That is also its weakness: if the model is wrong, the analysis has nowhere to put the error (the weak-constraint form relaxes this).</li>
   </ul>
-  <p>A mechanical picture: each observation is a spring pulling the trajectory toward it, with stiffness \(1/\sigma_o^2\); the background is a spring on the initial state with stiffness \(\mathbf B^{-1}\); the model is a rigid rod connecting all times. 4D-Var finds where the rod comes to rest.</p>
-  <p>The running example is Lorenz-96: 40 values around a latitude circle, chaotic, a standard data-assimilation test bed (the one vardax and somax use). The window is 10 observation times of 10 model steps each; every second site is observed with error \(\sigma_o = 1\); the background error is \(\sigma_b = 1\) with a correlation length of 2 sites.</p>
+  <p>A mechanical picture: each observation is a spring pulling the trajectory toward it, with stiffness \(1/\sigma_\varepsilon^2\); the background is a spring on the initial state with stiffness \(\gmat{\Sigma}_x^{-1}\); the model is a rigid rod connecting all times. 4D-Var finds where the rod comes to rest.</p>
+  <p>The running example is Lorenz-96: 40 values around a latitude circle, chaotic, a standard data-assimilation test bed (the one vardax and somax use). The window is 10 observation times of 10 model steps each; every second site is observed with error \(\sigma_\varepsilon = 1\); the background error is \(\sigma_x = 1\) with a correlation length of 2 sites.</p>
   <figure class="figbox"><svg class="fig" viewBox="0 0 380 300" role="img" aria-label="Truth, background and analysis trajectories at an observed and an unobserved Lorenz-96 site"><text class="fg-t" x="34" y="18">site 1 · observed</text><rect class="fg-win" x="34.0" y="24" width="165.0" height="100"/><text class="fg-l" x="195.0" y="34" text-anchor="end">window</text><text class="fg-l" x="203.0" y="34">forecast</text><line class="fg-ax" x1="34" x2="364" y1="124" y2="124"/><polyline class="fg-line c4" points="34.0,103.3 37.3,98.6 40.6,93.4 43.9,88.2 47.2,83.2 50.5,79.0 53.8,75.9 57.1,74.0 60.4,73.4 63.7,73.9 67.0,75.2 70.3,77.2 73.6,79.5 76.9,81.7 80.2,83.8 83.5,85.4 86.8,86.7 90.1,87.4 93.4,87.8 96.7,87.9 100.0,87.6 103.3,87.2 106.6,86.5 109.9,85.6 113.2,84.6 116.5,83.4 119.8,82.1 123.1,80.6 126.4,79.0 129.7,77.3 133.0,75.5 136.3,73.6 139.6,71.7 142.9,69.7 146.2,67.7 149.5,65.6 152.8,63.5 156.1,61.3 159.4,59.0 162.7,56.7 166.0,54.3 169.3,51.8 172.6,49.2 175.9,46.6 179.2,44.0 182.5,41.4 185.8,39.1 189.1,37.0 192.4,35.5 195.7,34.7 199.0,34.8 202.3,36.2 205.6,38.9 208.9,43.3 212.2,49.3 215.5,56.8 218.8,65.4 222.1,74.5 225.4,83.4 228.7,91.6 232.0,98.4 235.3,103.8 238.6,107.5 241.9,109.7 245.2,110.8 248.5,111.0 251.8,110.7 255.1,109.9 258.4,108.8 261.7,107.5 265.0,106.0 268.3,104.1 271.6,101.8 274.9,99.0 278.2,95.6 281.5,91.6 284.8,87.1 288.1,82.4 291.4,77.9 294.7,74.0 298.0,71.2 301.3,69.8 304.6,70.0 307.9,71.6 311.2,74.4 314.5,77.9 317.8,81.6 321.1,84.8 324.4,87.1 327.7,88.0 331.0,87.4 334.3,85.1 337.6,81.4 340.9,76.5 344.2,70.7 347.5,64.3 350.8,57.4 354.1,50.5 357.4,43.7 360.7,37.1 364.0,30.9"/><polyline class="fg-line dash c3" points="34.0,113.1 37.3,106.7 40.6,100.0 43.9,93.5 47.2,87.9 50.5,83.4 53.8,80.4 57.1,78.6 60.4,78.0 63.7,78.2 67.0,78.9 70.3,79.8 73.6,80.8 76.9,81.8 80.2,82.7 83.5,83.4 86.8,84.0 90.1,84.4 93.4,84.6 96.7,84.7 100.0,84.6 103.3,84.4 106.6,84.1 109.9,83.6 113.2,83.0 116.5,82.2 119.8,81.3 123.1,80.4 126.4,79.4 129.7,78.4 133.0,77.4 136.3,76.4 139.6,75.4 142.9,74.5 146.2,73.7 149.5,72.9 152.8,72.1 156.1,71.5 159.4,70.9 162.7,70.5 166.0,70.2 169.3,70.1 172.6,70.2 175.9,70.5 179.2,70.9 182.5,71.5 185.8,72.2 189.1,73.0 192.4,73.7 195.7,74.3 199.0,74.8 202.3,75.2 205.6,75.4 208.9,75.3 212.2,75.0 215.5,74.6 218.8,73.9 222.1,73.0 225.4,72.0 228.7,70.9 232.0,69.7 235.3,68.4 238.6,67.0 241.9,65.6 245.2,64.1 248.5,62.6 251.8,61.0 255.1,59.3 258.4,57.6 261.7,55.8 265.0,53.9 268.3,52.0 271.6,50.0 274.9,47.9 278.2,45.8 281.5,43.7 284.8,41.6 288.1,39.5 291.4,37.6 294.7,35.8 298.0,34.2 301.3,32.9 304.6,32.0 307.9,31.5 311.2,31.7 314.5,32.5 317.8,34.2 321.1,36.8 324.4,40.5 327.7,45.4 331.0,51.6 334.3,59.0 337.6,67.6 340.9,76.9 344.2,86.5 347.5,95.6 350.8,103.7 354.1,110.1 357.4,114.4 360.7,116.7 364.0,117.0"/><polyline class="fg-line c2" points="34.0,103.3 37.3,98.7 40.6,93.5 43.9,88.2 47.2,83.4 50.5,79.4 53.8,76.4 57.1,74.8 60.4,74.4 63.7,75.1 67.0,76.7 70.3,78.8 73.6,81.1 76.9,83.2 80.2,85.1 83.5,86.6 86.8,87.6 90.1,88.1 93.4,88.3 96.7,88.1 100.0,87.7 103.3,87.1 106.6,86.3 109.9,85.4 113.2,84.3 116.5,83.0 119.8,81.6 123.1,80.1 126.4,78.5 129.7,76.8 133.0,74.9 136.3,73.0 139.6,71.1 142.9,69.1 146.2,67.0 149.5,64.9 152.8,62.8 156.1,60.5 159.4,58.2 162.7,55.9 166.0,53.4 169.3,50.8 172.6,48.2 175.9,45.6 179.2,43.0 182.5,40.5 185.8,38.2 189.1,36.3 192.4,35.0 195.7,34.5 199.0,35.1 202.3,37.0 205.6,40.4 208.9,45.4 212.2,52.0 215.5,59.9 218.8,68.6 222.1,77.5 225.4,85.9 228.7,93.3 232.0,99.1 235.3,103.4 238.6,106.1 241.9,107.4 245.2,107.7 248.5,107.3 251.8,106.5 255.1,105.4 258.4,104.1 261.7,102.8 265.0,101.4 268.3,99.8 271.6,97.8 274.9,95.4 278.2,92.4 281.5,88.8 284.8,84.7 288.1,80.4 291.4,76.1 294.7,72.2 298.0,69.3 301.3,67.7 304.6,67.5 307.9,68.8 311.2,71.4 314.5,74.9 317.8,78.9 321.1,82.6 324.4,85.5 327.7,87.2 331.0,87.3 334.3,85.7 337.6,82.6 340.9,78.1 344.2,72.5 347.5,66.1 350.8,59.3 354.1,52.3 357.4,45.3 360.7,38.5 364.0,32.3"/><circle class="fg-obs" cx="50.5" cy="77.1" r="3"/><circle class="fg-obs" cx="67.0" cy="86.6" r="3"/><circle class="fg-obs" cx="83.5" cy="73.7" r="3"/><circle class="fg-obs" cx="100.0" cy="89.8" r="3"/><circle class="fg-obs" cx="116.5" cy="90.2" r="3"/><circle class="fg-obs" cx="133.0" cy="82.0" r="3"/><circle class="fg-obs" cx="149.5" cy="59.7" r="3"/><circle class="fg-obs" cx="166.0" cy="47.2" r="3"/><circle class="fg-obs" cx="182.5" cy="30.1" r="3"/><circle class="fg-obs" cx="199.0" cy="49.7" r="3"/><text class="fg-l" x="34.0" y="136" text-anchor="middle">0</text><text class="fg-l" x="199.0" y="136" text-anchor="middle">1</text><text class="fg-l" x="364.0" y="136" text-anchor="middle">2</text><text class="fg-t" x="34" y="154">site 2 · never observed</text><rect class="fg-win" x="34.0" y="160" width="165.0" height="100"/><text class="fg-l" x="195.0" y="170" text-anchor="end">window</text><text class="fg-l" x="203.0" y="170">forecast</text><line class="fg-ax" x1="34" x2="364" y1="260" y2="260"/><polyline class="fg-line c4" points="34.0,225.2 37.3,228.0 40.6,229.7 43.9,230.2 47.2,229.4 50.5,227.4 53.8,224.3 57.1,220.7 60.4,216.8 63.7,213.1 67.0,209.7 70.3,207.0 73.6,204.8 76.9,203.3 80.2,202.3 83.5,201.8 86.8,201.6 90.1,201.5 93.4,201.6 96.7,201.7 100.0,201.7 103.3,201.7 106.6,201.5 109.9,201.3 113.2,200.8 116.5,200.2 119.8,199.4 123.1,198.4 126.4,197.1 129.7,195.7 133.0,194.1 136.3,192.3 139.6,190.3 142.9,188.2 146.2,186.0 149.5,183.7 152.8,181.4 156.1,179.2 159.4,177.1 162.7,175.3 166.0,173.8 169.3,172.8 172.6,172.4 175.9,172.8 179.2,174.2 182.5,176.6 185.8,180.1 189.1,184.8 192.4,190.5 195.7,197.3 199.0,204.7 202.3,212.5 205.6,220.2 208.9,227.3 212.2,233.3 215.5,237.9 218.8,240.8 222.1,241.9 225.4,241.4 228.7,239.6 232.0,236.9 235.3,233.9 238.6,230.8 241.9,228.0 245.2,225.6 248.5,223.5 251.8,221.7 255.1,220.3 258.4,219.1 261.7,218.2 265.0,217.5 268.3,216.9 271.6,216.6 274.9,216.5 278.2,216.4 281.5,216.2 284.8,215.8 288.1,215.0 291.4,213.6 294.7,211.5 298.0,208.9 301.3,205.9 304.6,202.8 307.9,199.8 311.2,197.3 314.5,195.5 317.8,194.2 321.1,193.6 324.4,193.5 327.7,193.5 331.0,193.5 334.3,193.3 337.6,192.8 340.9,191.9 344.2,190.6 347.5,189.0 350.8,187.0 354.1,184.7 357.4,182.3 360.7,179.9 364.0,177.7"/><polyline class="fg-line dash c3" points="34.0,232.0 37.3,237.1 40.6,240.7 43.9,242.6 47.2,242.9 50.5,241.8 53.8,239.7 57.1,237.1 60.4,234.2 63.7,231.4 67.0,228.8 70.3,226.5 73.6,224.5 76.9,222.8 80.2,221.4 83.5,220.1 86.8,219.1 90.1,218.1 93.4,217.2 96.7,216.4 100.0,215.6 103.3,214.7 106.6,213.9 109.9,213.0 113.2,212.0 116.5,210.9 119.8,209.6 123.1,208.3 126.4,206.8 129.7,205.2 133.0,203.5 136.3,201.7 139.6,199.8 142.9,197.8 146.2,195.7 149.5,193.6 152.8,191.4 156.1,189.3 159.4,187.1 162.7,185.1 166.0,183.1 169.3,181.3 172.6,179.7 175.9,178.3 179.2,177.1 182.5,176.2 185.8,175.5 189.1,175.0 192.4,174.7 195.7,174.6 199.0,174.6 202.3,174.6 205.6,174.8 208.9,175.0 212.2,175.3 215.5,175.6 218.8,176.0 222.1,176.3 225.4,176.7 228.7,177.2 232.0,177.6 235.3,178.0 238.6,178.4 241.9,178.8 245.2,179.2 248.5,179.6 251.8,180.0 255.1,180.4 258.4,180.8 261.7,181.3 265.0,181.9 268.3,182.5 271.6,183.4 274.9,184.4 278.2,185.8 281.5,187.5 284.8,189.6 288.1,192.2 291.4,195.4 294.7,199.1 298.0,203.4 301.3,208.1 304.6,213.2 307.9,218.5 311.2,223.9 314.5,229.2 317.8,234.2 321.1,239.0 324.4,243.2 327.7,246.9 331.0,249.8 334.3,251.9 337.6,253.0 340.9,253.0 344.2,251.7 347.5,249.3 350.8,246.1 354.1,242.4 357.4,238.7 360.7,235.5 364.0,232.9"/><polyline class="fg-line c2" points="34.0,224.0 37.3,226.9 40.6,228.7 43.9,229.3 47.2,228.6 50.5,226.6 53.8,223.7 57.1,220.2 60.4,216.5 63.7,213.0 67.0,210.0 70.3,207.6 73.6,205.8 76.9,204.6 80.2,203.9 83.5,203.6 86.8,203.6 90.1,203.6 93.4,203.8 96.7,203.9 100.0,204.0 103.3,203.9 106.6,203.7 109.9,203.3 113.2,202.8 116.5,202.1 119.8,201.1 123.1,200.0 126.4,198.6 129.7,197.1 133.0,195.3 136.3,193.3 139.6,191.1 142.9,188.8 146.2,186.4 149.5,184.0 152.8,181.5 156.1,179.1 159.4,176.8 162.7,174.8 166.0,173.2 169.3,172.1 172.6,171.7 175.9,172.2 179.2,173.6 182.5,176.2 185.8,180.1 189.1,185.1 192.4,191.2 195.7,198.2 199.0,205.9 202.3,213.8 205.6,221.4 208.9,228.2 212.2,233.9 215.5,237.9 218.8,240.1 222.1,240.6 225.4,239.7 228.7,237.7 232.0,235.0 235.3,232.2 238.6,229.4 241.9,227.0 245.2,224.9 248.5,223.1 251.8,221.6 255.1,220.3 258.4,219.2 261.7,218.3 265.0,217.4 268.3,216.7 271.6,216.2 274.9,215.7 278.2,215.4 281.5,214.9 284.8,214.3 288.1,213.2 291.4,211.7 294.7,209.6 298.0,206.8 301.3,203.7 304.6,200.4 307.9,197.2 311.2,194.4 314.5,192.1 317.8,190.6 321.1,189.7 324.4,189.3 327.7,189.2 331.0,189.3 334.3,189.2 337.6,188.9 340.9,188.1 344.2,186.9 347.5,185.2 350.8,182.8 354.1,179.7 357.4,176.0 360.7,171.6 364.0,166.8"/><text class="fg-l" x="34.0" y="272" text-anchor="middle">0</text><text class="fg-l" x="199.0" y="272" text-anchor="middle">1</text><text class="fg-l" x="364.0" y="272" text-anchor="middle">2</text><text class="fg-l c4" x="34" y="294">truth</text><text class="fg-l c3" x="86" y="294">background</text><text class="fg-l c2" x="174" y="294">4D-Var</text><text class="fg-l c3" x="234" y="294">dots: observations</text></svg><figcaption>One observed and one never-observed site. The background trajectory drifts away from the truth because Lorenz-96 is chaotic; the 4D-Var trajectory follows it through the window and stays close into the forecast. The unobserved site is corrected entirely through the model.</figcaption></figure>
   <div class="tbl"><table>
     <thead><tr><th>RMSE (over all 40 sites)</th><th>at \(t = 0\)</th><th>end of window</th><th>one window later (forecast)</th></tr></thead>
@@ -362,34 +362,39 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
 
   <h2 id="probability">Where it comes from</h2>
   <p>In the terms of the six-step page, 4D-Var is step 2 for one particular set of densities. The prior on the initial state, the transition, and the likelihood are</p>
-  \[ p(z_0) = \mathcal N(z_b, \mathbf B), \qquad p(z_k\mid z_{k-1}) = \delta\big(z_k - \mathcal M_k(z_{k-1})\big), \qquad p(y_k\mid z_k) = \mathcal N\big(\mathcal H_k(z_k), \mathbf R_k\big). \]
-  <p>The point-mass transition makes every state a function of \(z_0\), so the posterior is over \(z_0\) alone, and its negative log is, up to a constant, the 4D-Var cost. 4D-Var returns that posterior's <em>mode</em> (the MAP estimate). It is the right summary when the posterior has one dominant, near-Gaussian peak, and the Laplace approximation around the mode then gives its spread. Replacing the point mass by \(\mathcal N(\mathcal M_k(z_{k-1}), \mathbf Q)\) gives weak-constraint 4D-Var, in which the model errors become extra controls.</p>
+  \[ p(\vect{x}_0) = \mathcal{N}(\gvect{\mu}_x, \gmat{\Sigma}_x), \]
+  \[ p(\vect{x}_k \mid \vect{x}_{k-1}) = \delta(\vect{x}_k - f_k(\vect{x}_{k-1})), \]
+  \[ p(\vect{y}_k \mid \vect{x}_k) = \mathcal{N}(h_k(\vect{x}_k), \gmat{\Sigma}_{\varepsilon,k}). \]
+  <p>The point-mass transition makes every state a function of \(\vect{x}_0\), so the posterior is over \(\vect{x}_0\) alone, and its negative log is, up to a constant, the 4D-Var cost. 4D-Var returns that posterior's <em>mode</em> (the MAP estimate). It is the right summary when the posterior has one dominant, near-Gaussian peak, and the Laplace approximation around the mode then gives its spread. Replacing the point mass by \(\mathcal{N}(f_k(\vect{x}_{k-1}), \gmat{\Sigma}_\eta)\) gives weak-constraint 4D-Var, in which the model errors become extra controls.</p>
 
   <h2 id="math">The mathematics</h2>
   <h3>Notation</h3>
   <div class="tbl"><table>
     <thead><tr><th>Symbol</th><th>Meaning</th><th>Shape</th><th>Units (ocean)</th></tr></thead>
     <tbody>
-      <tr><td>\(z_k\)</td><td>state at observation time \(k = 0,\dots,T\)</td><td>(state,)</td><td>m (SSH) or s⁻¹ (PV)</td></tr>
-      <tr><td>\(z_b\), \(\mathbf B\)</td><td>background mean and covariance of \(z_0\)</td><td>(state,), (state, state)</td><td>m, m²</td></tr>
-      <tr><td>\(\mathcal M_k\), \(\mathcal M_{k\leftarrow0}\)</td><td>model over one interval; over \(k\) intervals</td><td>(state,) → (state,)</td><td>—</td></tr>
-      <tr><td>\(\mathbf M_k\)</td><td>tangent linear of \(\mathcal M_k\) at the current trajectory</td><td>(state, state), never formed</td><td>—</td></tr>
-      <tr><td>\(y_k\), \(\mathcal H_k\), \(\mathbf R_k\)</td><td>observations, observation operator, observation-error covariance</td><td>(obs,), (state,) → (obs,), (obs, obs)</td><td>m, —, m²</td></tr>
-      <tr><td>\(\xi\)</td><td>whitened control: \(z_0 = z_b + \mathbf B^{1/2}\xi\)</td><td>(state,)</td><td>dimensionless</td></tr>
-      <tr><td>\(\Phi\), \(X\), \(\mathbf Q\)</td><td>basis, coefficients, coefficient prior variance</td><td>(state, basis), (basis,), (basis,)</td><td>m per unit, —, —</td></tr>
-      <tr><td>\(\lambda_k\)</td><td>adjoint variable: sensitivity of \(\mathcal J\) to \(z_k\)</td><td>(state,)</td><td>1 / state units</td></tr>
+      <tr><td>\(\vect{x}_k = \vect{x}(t_k)\)</td><td>state at observation time \(t_k\), \(k = 0, \ldots, T\)</td><td>\(\mathbb{R}^{D_x}\) (state)</td><td>m (SSH) or s⁻¹ (PV)</td></tr>
+      <tr><td>\(\gvect{\mu}_x\), \(\gmat{\Sigma}_x\)</td><td>background mean and covariance of \(\vect{x}_0\)</td><td>\(\mathbb{R}^{D_x}\), \(\mathbb{R}^{D_x \times D_x}\)</td><td>m, m²</td></tr>
+      <tr><td>\(f_k\), \(f_{k \leftarrow 0} = f_k \circ \ldots \circ f_1\)</td><td>model over one interval; over \(k\) intervals</td><td>\(\mathbb{R}^{D_x} \to \mathbb{R}^{D_x}\)</td><td>—</td></tr>
+      <tr><td>\(\mat{F}_k = \mat{J}_{f_k}(\vect{x}_{k-1})\), \(\mat{F}_{k \leftarrow 0} = \mat{F}_k \ldots \mat{F}_1\)</td><td>tangent linear of \(f_k\) at the current trajectory</td><td>\(\mathbb{R}^{D_x \times D_x}\), never formed</td><td>—</td></tr>
+      <tr><td>\(\vect{y}_k\), \(h_k\), \(\mat{H}_k = \mat{J}_{h_k}(\vect{x}_k)\), \(\gmat{\Sigma}_{\varepsilon,k}\)</td><td>observations, observation operator, its tangent linear, observation-error covariance</td><td>\(\mathbb{R}^{D_y}\) (obs), \(\mathbb{R}^{D_x} \to \mathbb{R}^{D_y}\), \(\mathbb{R}^{D_y \times D_x}\), \(\mathbb{R}^{D_y \times D_y}\)</td><td>m, —, —, m²</td></tr>
+      <tr><td>\(\gvect{\xi}\)</td><td>whitened control: \(\vect{x}_0 = \gvect{\mu}_x + \gmat{\Sigma}_x^{1/2}\gvect{\xi}\)</td><td>\(\mathbb{R}^{D_x}\)</td><td>dimensionless</td></tr>
+      <tr><td>\(\gmat{\Phi}\), \(\vect{z}_\Phi\), \(\gmat{\Sigma}_{z_\Phi}\)</td><td>basis, coefficients, coefficient prior covariance (diagonal)</td><td>\(\mathbb{R}^{D_x \times N_\Phi}\), \(\mathbb{R}^{N_\Phi}\) (basis), \(\mathbb{R}^{N_\Phi \times N_\Phi}\)</td><td>m per unit, —, —</td></tr>
+      <tr><td>\(\vect{x}^\dagger_k\)</td><td>adjoint variable: sensitivity of \(\mathcal{J}\) to \(\vect{x}_k\)</td><td>\(\mathbb{R}^{D_x}\)</td><td>1 / state units</td></tr>
     </tbody>
   </table></div>
-  <p>vardax writes the state as \(x\); this page keeps \(z\) for the state and \(x\) for covariates, as on the other pages.</p>
+  <p>vardax also writes the state as \(\vect{x}\), so the letters here match its code; \(D_x\) and \(D_y\) are the state and per-time observation sizes.</p>
   <h3>The cost</h3>
-  \[ \mathcal J(z_0) = \underbrace{\tfrac12\,\|z_0 - z_b\|^2_{\mathbf B^{-1}}}_{\text{background}} + \underbrace{\tfrac12\sum_{k=1}^{T}\big\|y_k - \mathcal H_k\big(\mathcal M_{k\leftarrow0}(z_0)\big)\big\|^2_{\mathbf R_k^{-1}}}_{\text{observations}}, \qquad \|v\|^2_{\mathbf A} = v^\top\mathbf A\,v . \]
-  <p>With the change of variable \(z_0 = z_b + \mathbf B^{1/2}\xi\) the background term becomes \(\tfrac12\|\xi\|^2\): all directions of \(\xi\) are equally likely a priori, the problem is far better conditioned, and \(\mathbf B^{-1}\) is never needed. This "control-variable transform" is how operational 4D-Var is run.</p>
-  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">4D-Var analysis</span><span class="when">one window, strong constraint</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>units of the observed field (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) masks / indices<small>which state values each observation sees</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>best prior guess of \(z_0\); state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf B\) background covariance<small>state units²; applied as an operator</small></div><code>(state, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf R\) observation covariance<small>observation units²</small></div><code>(obs, obs) per time</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathcal M_k\) model<small>one observation interval of the dynamics</small></div><code>(state,) → (state,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(z_0^\star = \arg\min_{z_0}\ \tfrac12\|z_0 - z_b\|^2_{\mathbf B^{-1}} + \tfrac12\sum_k\|y_k - \mathcal H_k(\mathcal M_{k\leftarrow0}(z_0))\|^2_{\mathbf R^{-1}}\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_0^\star\) analysis<small>the initial state that best explains the window; state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(z_{1:T}^\star\) analysed trajectory<small>run the model from \(z_0^\star\)</small></div><code>(time, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\mathcal J^\star\)<small>dimensionless; expect about half the number of observations</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">posterior spread (optional)<small>leading eigenpairs of the Gauss–Newton Hessian</small></div><code>(rank, state), (rank,)</code></div></div><div class="op-foot">No training: each window is a fresh optimisation. The model, B and R are inputs, not things 4D-Var learns.</div></div>
+  \[ \mathcal{J}(\vect{x}_0) = \underbrace{\frac{1}{2} \Vert \vect{x}_0 - \gvect{\mu}_x \Vert^2_{\gmat{\Sigma}_x^{-1}}}_{\text{background}} + \underbrace{\frac{1}{2} \sum_{k=1}^{T} \Vert \vect{y}_k - h_k(f_{k \leftarrow 0}(\vect{x}_0)) \Vert^2_{\gmat{\Sigma}_{\varepsilon,k}^{-1}}}_{\text{observations}}, \]
+  \[ \Vert \vect{r} \Vert^2_{\mat{W}} = \vect{r}^\top \mat{W} \vect{r}. \]
+  <p>With the change of variable \(\vect{x}_0 = \gvect{\mu}_x + \gmat{\Sigma}_x^{1/2}\gvect{\xi}\) the background term becomes \(\frac{1}{2}\Vert \gvect{\xi}\Vert^2\): all directions of \(\gvect{\xi}\) are equally likely a priori, the problem is far better conditioned, and \(\gmat{\Sigma}_x^{-1}\) is never needed. This "control-variable transform" is how operational 4D-Var is run.</p>
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">4D-Var analysis</span><span class="when">one window, strong constraint</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\vect{y}_{1:T}\) observations<small>units of the observed field (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(\vect{m}_{1:T}\) masks / indices<small>which state values each observation sees</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\mu}_x\) background<small>best prior guess of \(\vect{x}_0\); state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\gmat{\Sigma}_x\) background covariance<small>state units²; applied as an operator</small></div><code>(state, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\gmat{\Sigma}_\varepsilon\) observation covariance<small>observation units²</small></div><code>(obs, obs) per time</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(f_k\) model<small>one observation interval of the dynamics</small></div><code>(state,) → (state,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(\vect{x}_0^\star = \mathrm{argmin}_{\vect{x}_0} \frac{1}{2} \Vert \vect{x}_0 - \gvect{\mu}_x \Vert^2_{\gmat{\Sigma}_x^{-1}} + \frac{1}{2} \sum_k \Vert \vect{y}_k - h_k(f_{k \leftarrow 0}(\vect{x}_0)) \Vert^2_{\gmat{\Sigma}_\varepsilon^{-1}}\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\vect{x}_0^\star\) analysis<small>the initial state that best explains the window; state units</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\vect{x}_{1:T}^\star\) analysed trajectory<small>run the model from \(\vect{x}_0^\star\)</small></div><code>(time, state)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\mathcal{J}^\star\)<small>dimensionless; expect about half the number of observations</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">posterior spread (optional)<small>leading eigenpairs of the Gauss–Newton Hessian</small></div><code>(rank, state), (rank,)</code></div></div><div class="op-foot">No training: each window is a fresh optimisation. The model, \(\gmat{\Sigma}_x\) and \(\gmat{\Sigma}_\varepsilon\) are inputs, not things 4D-Var learns.</div></div>
   <h3>The gradient: the adjoint recursion</h3>
-  <p>Write \(g_k = \mathbf H_k^\top\mathbf R_k^{-1}\big(\mathcal H_k(z_k) - y_k\big)\) for the observation misfit at time \(k\), pulled back to the state. Starting from \(\lambda_{T+1} = 0\), sweep backwards:</p>
-  \[ \lambda_k = g_k + \mathbf M_{k+1}^\top\lambda_{k+1}, \quad k = T,\dots,1, \qquad \nabla_{z_0}\mathcal J = \mathbf B^{-1}(z_0 - z_b) + \mathbf M_1^\top\lambda_1, \qquad \nabla_\xi\mathcal J = \xi + \mathbf B^{1/2\top}\mathbf M_1^\top\lambda_1 . \]
+  <p>Write \(\nabla_{\vect{x}_k}\mathcal{J}_{\text{o},k} = \mat{H}_k^\top \gmat{\Sigma}_{\varepsilon,k}^{-1}(h_k(\vect{x}_k) - \vect{y}_k)\) for the observation misfit at time \(k\), pulled back to the state. Starting from \(\vect{x}^\dagger_{T+1} = \vect{0}\), sweep backwards:</p>
+  \[ \vect{x}^\dagger_k = \nabla_{\vect{x}_k}\mathcal{J}_{\text{o},k} + \mat{F}_{k+1}^\top \vect{x}^\dagger_{k+1}, \text{ for } k = T, \ldots, 1, \]
+  \[ \nabla_{\vect{x}_0}\mathcal{J} = \gmat{\Sigma}_x^{-1}(\vect{x}_0 - \gvect{\mu}_x) + \mat{F}_1^\top \vect{x}^\dagger_1, \]
+  \[ \nabla_{\gvect{\xi}}\mathcal{J} = \gvect{\xi} + (\gmat{\Sigma}_x^{1/2})^\top \mat{F}_1^\top \vect{x}^\dagger_1. \]
   <p>The adjoint carries each misfit backwards along the trajectory, through the transposed tangent-linear model, accumulating as it goes. Its cost is about one forward run, independent of the number of controls: that is why 4D-Var is feasible for millions of state values.</p>
-  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">cost and gradient</span><span class="when">called by every optimiser iteration</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\xi\) control<small>whitened increment, \(z_0 = z_b + \mathbf B^{1/2}\xi\); dimensionless</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>units of the observed field (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\) masks / indices<small>which state values each observation sees</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>best prior guess of \(z_0\); state units</small></div><code>(state,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>forward run \(z_{1:T}\), misfits \(r_k\); then the adjoint sweep backwards for \(\nabla_\xi\mathcal J\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\mathcal J(\xi)\)<small>dimensionless</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\nabla_\xi\mathcal J\)<small>dimensionless</small></div><code>(state,)</code></div></div><div class="op-foot">One forward run plus one adjoint run per call. Everything else in 4D-Var is a way of calling this fewer times or more cheaply.</div></div>
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">cost and gradient</span><span class="when">called by every optimiser iteration</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\xi}\) control<small>whitened increment, \(\vect{x}_0 = \gvect{\mu}_x + \gmat{\Sigma}_x^{1/2}\gvect{\xi}\); dimensionless</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\vect{y}_{1:T}\) observations<small>units of the observed field (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(\vect{m}_{1:T}\) masks / indices<small>which state values each observation sees</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\mu}_x\) background<small>best prior guess of \(\vect{x}_0\); state units</small></div><code>(state,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>forward run \(\vect{x}_{1:T}\), misfits \(\vect{r}_k\); then the adjoint sweep backwards for \(\nabla_{\gvect{\xi}}\mathcal{J}\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-scalar"/></svg><div class="nm">\(\mathcal{J}(\gvect{\xi})\)<small>dimensionless</small></div><code>()</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\nabla_{\gvect{\xi}}\mathcal{J}\)<small>dimensionless</small></div><code>(state,)</code></div></div><div class="op-foot">One forward run plus one adjoint run per call. Everything else in 4D-Var is a way of calling this fewer times or more cheaply.</div></div>
   <pre>import einx
 import jax
 import jax.numpy as jnp
@@ -404,49 +409,50 @@ import vardax
 def rollout(forward, initial, num_times):
     def interval(state, _):
 <span class="c">        # user (forward.step: one observation interval, vardax's ForwardModel)</span>
-<span class="c">        # z_k = 𝓜_k(z_{k−1})</span>
+<span class="c">        # x_k = f_k(x_{k−1})</span>
         state = forward.step(state, forward.dt)<span class="c">       # (N,) → (N,)</span>
         return state, state
 
-<span class="c">    # z_{1:T}: the model trajectory from z₀</span>
+<span class="c">    # x_{1:T}: the model trajectory from x₀</span>
     _, states = jax.lax.scan(interval, initial, None, length=num_times)<span class="c">  # → (T, N)</span>
     return states
 
 
 def cost(whitened, args):
     forward, background, prior_sqrt, observations, obs_index, obs_std = args
-<span class="c">    # z₀ − z_b = B^{1/2} ξ</span>
+<span class="c">    # x₀ − μ_x = Σ_x^{1/2} ξ</span>
     increment = prior_sqrt.mv(whitened)<span class="c">               # (N,) → (N,)</span>
-<span class="c">    # z₀ = z_b + B^{1/2} ξ</span>
+<span class="c">    # x₀ = μ_x + Σ_x^{1/2} ξ</span>
     initial = background + increment<span class="c">                  # (N,)</span>
     states = rollout(forward, initial, observations.shape[0])<span class="c">  # → (T, N)</span>
-<span class="c">    # H_k(z_k): the observed entries of each state</span>
+<span class="c">    # h_k(x_k): the observed entries of each state</span>
     predicted = states[:, obs_index]<span class="c">                  # (T, N) → (T, M)</span>
-<span class="c">    # y_k − H_k(z_k)</span>
+<span class="c">    # y_k − h_k(x_k)</span>
     misfit = observations - predicted<span class="c">                 # (T, M)</span>
-<span class="c">    # r_k = R^{−1/2} (y_k − H_k(z_k)), diagonal R = σ_o² I</span>
+<span class="c">    # r_k = Σ_ε^{−1/2} (y_k − h_k(x_k)), diagonal Σ_ε = σ_ε² I</span>
     residual = misfit / obs_std<span class="c">                       # (T, M)</span>
 <span class="c">    # ‖r_k‖² summed over the window</span>
     misfit_sq = einx.sum("time obs -&gt;", residual**2)<span class="c">  # (T, M) → ()</span>
-<span class="c">    # J_o = ½ ∑_k ‖y_k − H_k(z_k)‖²_{R⁻¹}</span>
+<span class="c">    # 𝒥_o = ½ ∑_k ‖y_k − h_k(x_k)‖²_{Σ_ε⁻¹}</span>
     obs_cost = 0.5 * misfit_sq<span class="c">                        # → ()</span>
-<span class="c">    # J_b = ½ ‖z₀ − z_b‖²_{B⁻¹} = ½ ‖ξ‖²</span>
+<span class="c">    # 𝒥_b = ½ ‖x₀ − μ_x‖²_{Σ_x⁻¹} = ½ ‖ξ‖²</span>
     background_cost = 0.5 * einx.dot("state, state -&gt;", whitened, whitened)<span class="c">  # → ()</span>
-<span class="c">    # 𝒥(ξ) = J_b + J_o</span>
+<span class="c">    # 𝒥(ξ) = 𝒥_b + 𝒥_o</span>
     return background_cost + obs_cost</pre>
   <h3>Curvature, convergence, and spread</h3>
   <p>The Gauss–Newton Hessian, in whitened variables, and the matching Laplace covariance of the analysis are</p>
-  \[ \mathbf A_{\text{GN}} = \mathbf I + \sum_k\big(\mathbf H_k\mathbf M_{k\leftarrow0}\mathbf B^{1/2}\big)^\top\mathbf R_k^{-1}\big(\mathbf H_k\mathbf M_{k\leftarrow0}\mathbf B^{1/2}\big), \qquad \operatorname{Cov}(z_0\mid y) \approx \mathbf B^{1/2}\mathbf A_{\text{GN}}^{-1}\mathbf B^{1/2\top} . \]
-  <p>Its eigenvalues are 1 plus "how strongly the window's observations constrain each direction"; CG converges in about as many iterations as there are eigenvalues well above 1, which is why the whitened form converges fast. The same Hessian, through a few Lanczos vectors, gives the posterior spread. A last check needs no truth: at the minimum, \(2\mathcal J^\star/p\approx 1\) for \(p\) observations if \(\mathbf B\) and \(\mathbf R\) are right. Here \(p = 200\) and \(2\mathcal J^\star/p = \) 1.01.</p>
+  \[ \gmat{\Lambda}_{\xi \mid y} = \mat{I} + \sum_k (\mat{H}_k \mat{F}_{k \leftarrow 0} \gmat{\Sigma}_x^{1/2})^\top \gmat{\Sigma}_{\varepsilon,k}^{-1} (\mat{H}_k \mat{F}_{k \leftarrow 0} \gmat{\Sigma}_x^{1/2}), \]
+  \[ \gmat{\Sigma}_{x_0 \mid y} \approx \gmat{\Sigma}_x^{1/2} \gmat{\Lambda}_{\xi \mid y}^{-1} (\gmat{\Sigma}_x^{1/2})^\top. \]
+  <p>Its eigenvalues are 1 plus "how strongly the window's observations constrain each direction"; CG converges in about as many iterations as there are eigenvalues well above 1, which is why the whitened form converges fast. The same Hessian, through a few Lanczos vectors, gives the posterior spread. A last check needs no truth: at the minimum, \(2\mathcal{J}^\star / N_\text{obs} \approx 1\) for \(N_\text{obs}\) observations if \(\gmat{\Sigma}_x\) and \(\gmat{\Sigma}_\varepsilon\) are right. Here \(N_\text{obs} = 200\) and \(2\mathcal{J}^\star / N_\text{obs} = \) 1.01.</p>
 
   <h2 id="gradient">Computing the gradient</h2>
-  <p>Every 4D-Var algorithm needs \(\nabla\mathcal J\), or products with the tangent-linear model and its adjoint. There are several ways to get them, and they differ in exactness, memory and run time.</p>
+  <p>Every 4D-Var algorithm needs \(\nabla_{\vect{x}_0}\mathcal{J}\), or products with the tangent-linear model and its adjoint. There are several ways to get them, and they differ in exactness, memory and run time.</p>
   <div class="tbl"><table>
     <thead><tr><th>Method</th><th>What it computes</th><th>Memory</th><th>Exact for the discrete model?</th><th>Use when</th></tr></thead>
     <tbody>
-      <tr><td>Hand-written TL and adjoint codes</td><td>\(\mathbf M_k v\), \(\mathbf M_k^\top w\) line by line</td><td>stored or recomputed trajectory</td><td>yes, if maintained</td><td>legacy Fortran models; JAX makes it unnecessary</td></tr>
+      <tr><td>Hand-written TL and adjoint codes</td><td>\(\mat{F}_k \vect{v}\), \(\mat{F}_k^\top \vect{w}\) line by line</td><td>stored or recomputed trajectory</td><td>yes, if maintained</td><td>legacy Fortran models; JAX makes it unnecessary</td></tr>
       <tr><td><code>jax.grad</code> through the scan</td><td>the discrete adjoint, automatically</td><td>every model step stored</td><td>yes</td><td>small and medium problems; the default</td></tr>
-      <tr><td><code>jax.vjp</code> / <code>jax.jvp</code> per interval</td><td>explicit \(\mathbf M_k^\top w\) and \(\mathbf M_k v\)</td><td>as above</td><td>yes</td><td>incremental 4D-Var, adjoint tests, Hessian products</td></tr>
+      <tr><td><code>jax.vjp</code> / <code>jax.jvp</code> per interval</td><td>explicit \(\mat{F}_k^\top \vect{w}\) and \(\mat{F}_k \vect{v}\)</td><td>as above</td><td>yes</td><td>incremental 4D-Var, adjoint tests, Hessian products</td></tr>
       <tr><td><code>jax.checkpoint</code> on each interval</td><td>the same gradient, recomputing inside intervals</td><td>interval boundaries only</td><td>yes</td><td>long windows; large states</td></tr>
       <tr><td>diffrax <code>RecursiveCheckpointAdjoint</code></td><td>discretise-then-optimise with binomial checkpoints</td><td>about the number of checkpoints</td><td>yes</td><td>models written as diffrax solves; the recommended default</td></tr>
       <tr><td>diffrax <code>BacksolveAdjoint</code></td><td>the continuous adjoint ODE, solved backwards</td><td>O(1)</td><td>no: approximate, can diverge for chaotic or dissipative flows</td><td>almost never for 4D-Var</td></tr>
@@ -454,7 +460,7 @@ def cost(whitened, args):
       <tr><td>Implicit differentiation (<code>ImplicitAdjoint</code>)</td><td>derivatives of a <em>solution</em> via the implicit function theorem</td><td>small</td><td>yes, at a converged solution</td><td>differentiating <em>through</em> the minimiser (vardax's <code>minimiser_adjoint</code>), steady states; not the window's trajectory</td></tr>
     </tbody>
   </table></div>
-  <p>Two adjoints appear in a differentiable 4D-Var and should not be confused. The <strong>forward adjoint</strong> differentiates the model trajectory, to get \(\nabla_\xi\mathcal J\) for the optimiser. The <strong>minimiser adjoint</strong> differentiates the <em>analysis</em> \(z_0^\star(y, \theta)\) with respect to its inputs, which is needed only when 4D-Var sits inside a larger trained system (learned priors, hyperparameter tuning). There, unrolling the optimiser is the expensive route; the implicit function theorem gives \(\partial z_0^\star/\partial\theta = -(\nabla^2\mathcal J)^{-1}\nabla^2_{z_0\theta}\mathcal J\) at the solution, which is what <code>optimistix.ImplicitAdjoint</code> does.</p>
+  <p>Two adjoints appear in a differentiable 4D-Var and should not be confused. The <strong>forward adjoint</strong> differentiates the model trajectory, to get \(\nabla_{\gvect{\xi}}\mathcal{J}\) for the optimiser. The <strong>minimiser adjoint</strong> differentiates the <em>analysis</em> \(\vect{x}_0^\star(\vect{y}, \gvect{\theta})\) with respect to its inputs, which is needed only when 4D-Var sits inside a larger trained system (learned priors, hyperparameter tuning). There, unrolling the optimiser is the expensive route; the implicit function theorem gives \(\partial \vect{x}_0^\star / \partial \gvect{\theta} = -(\nabla^2_{\vect{x}_0}\mathcal{J})^{-1} \nabla^2_{\vect{x}_0 \gvect{\theta}}\mathcal{J}\) at the solution, which is what <code>optimistix.ImplicitAdjoint</code> does.</p>
   <h3>Measured on Lorenz-96</h3>
   <p>Gradient of the cost over a 50-interval window (500 model steps), CPU, after compilation. Memory is the compiled temporary buffer size reported by XLA.</p>
   <div class="tbl"><table>
@@ -467,34 +473,34 @@ def cost(whitened, args):
   <pre><span class="c"># Shapes: N state values (state); T observation times (time); M observed values (obs)</span>
 
 <span class="c"># --- (a) reverse mode through the scan: the discrete adjoint, exact ---</span>
-<span class="c"># ∇_ξ 𝒥: one forward run, one backward sweep, every state z_k stored</span>
+<span class="c"># ∇_ξ 𝒥: one forward run, one backward sweep, every state x_k stored</span>
 value, gradient = jax.value_and_grad(cost)(whitened, args)<span class="c">  # → (), (N,)</span>
 
 <span class="c"># --- (b) the same adjoint, written out with vjp ---</span>
-<span class="c"># g_k = H_kᵀ R⁻¹ (H_k z_k − y_k), scattered back to the state</span>
+<span class="c"># ∇_{x_k} 𝒥_{o,k} = H_kᵀ Σ_ε⁻¹ (h_k(x_k) − y_k), scattered back to the state</span>
 obs_forcing = scatter_obs(-residual / obs_std, obs_index)<span class="c">  # (T, M) → (T, N)</span>
-previous = jnp.concatenate([initial[None], states[:-1]])<span class="c">  # → (T, N), z_{0:T−1}</span>
+previous = jnp.concatenate([initial[None], states[:-1]])<span class="c">  # → (T, N), x_{0:T−1}</span>
 
 
 def backward(carry, inputs):
     state_prev, forcing = inputs
-<span class="c">    # λ_k = g_k + 𝓜'_{k+1}ᵀ λ_{k+1}   (carry holds 𝓜'_{k+1}ᵀ λ_{k+1})</span>
+<span class="c">    # x†_k = ∇_{x_k} 𝒥_{o,k} + F_{k+1}ᵀ x†_{k+1}   (carry holds F_{k+1}ᵀ x†_{k+1})</span>
     lam = forcing + carry<span class="c">                             # (N,)</span>
-<span class="c">    # vjp of one interval at z_{k−1}: v ↦ 𝓜'_kᵀ v</span>
+<span class="c">    # vjp of one interval at x_{k−1}: v ↦ F_kᵀ v</span>
     _, interval_vjp = jax.vjp(lambda s: forward.step(s, forward.dt), state_prev)
-<span class="c">    # 𝓜'_kᵀ λ_k</span>
+<span class="c">    # F_kᵀ x†_k</span>
     (carry,) = interval_vjp(lam)<span class="c">                      # (N,) → (N,)</span>
     return carry, None
 
 
 <span class="c"># backward in time, from k = T down to 1</span>
-grad_initial, _ = jax.lax.scan(<span class="c">                       # → (N,), ∇_{z₀} J_o</span>
+grad_initial, _ = jax.lax.scan(<span class="c">                       # → (N,), ∇_{x₀} 𝒥_o</span>
     backward, jnp.zeros(N), (previous, obs_forcing), reverse=True
 )
-<span class="c"># ∇_ξ 𝒥 = ξ + B^{1/2ᵀ} ∇_{z₀} J_o</span>
+<span class="c"># ∇_ξ 𝒥 = ξ + (Σ_x^{1/2})ᵀ ∇_{x₀} 𝒥_o</span>
 gradient_by_hand = whitened + prior_sqrt.T.mv(grad_initial)<span class="c">  # (N,)</span>
 
-<span class="c"># --- adjoint test: ⟨𝓜' δz, λ⟩ = ⟨δz, 𝓜'ᵀ λ⟩ to round-off ---</span>
+<span class="c"># --- adjoint test: ⟨F δx, x†⟩ = ⟨δx, Fᵀ x†⟩ to round-off ---</span>
 _, tangent = jax.jvp(step_fn, (state,), (perturbation,))<span class="c">  # (N,) → (N,)</span>
 _, step_vjp = jax.vjp(step_fn, state)
 (cotangent,) = step_vjp(dual)<span class="c">                         # (N,) → (N,)</span>
@@ -518,17 +524,18 @@ adjoint = dfx.ForwardMode()</pre>
   <h2>Algorithm 1 · Classic 4D-Var</h2>
   <p><span class="cost-pill">per iteration</span> one forward run + one adjoint run</p>
   <p><strong>Idea.</strong> Hand the full nonlinear cost and its gradient to a quasi-Newton optimiser (L-BFGS or BFGS), which builds its own curvature estimate from successive gradients. Nothing is linearised by hand; the model's nonlinearity is respected at every iteration.</p>
-  \[ \xi^{(i+1)} = \xi^{(i)} - \alpha_i\,\mathbf H^{(i)}_{\text{BFGS}}\,\nabla_\xi\mathcal J\big(\xi^{(i)}\big), \qquad z_0^\star = z_b + \mathbf B^{1/2}\xi^\star . \]
-  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">classic 4D-Var</span><span class="when">quasi-Newton on the full nonlinear cost</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\xi^{(0)} = 0\)<small>start at the background</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">cost and gradient<small>the card above</small></div><code>→ (), (state,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>repeat: \(\mathcal J, \nabla\mathcal J\) by forward + adjoint; L-BFGS step \(\xi \leftarrow \xi - \alpha\,\mathbf H_{\text{LBFGS}}\nabla\mathcal J\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\xi^\star\), \(z_0^\star\)<small>analysis</small></div><code>(state,)</code></div></div><div class="op-foot">Lorenz-96: 61 iterations, 64 forward + adjoint runs.</div></div>
+  \[ \gvect{\xi}^{(i+1)} = \gvect{\xi}^{(i)} - \alpha_i \hat{\gmat{\Sigma}}^{(i)}_{\xi \mid y} \nabla_{\gvect{\xi}}\mathcal{J}(\gvect{\xi}^{(i)}), \]
+  \[ \vect{x}_0^\star = \gvect{\mu}_x + \gmat{\Sigma}_x^{1/2} \gvect{\xi}^\star. \]
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">classic 4D-Var</span><span class="when">quasi-Newton on the full nonlinear cost</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\xi}^{(0)} = \vect{0}\)<small>start at the background</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">cost and gradient<small>the card above</small></div><code>→ (), (state,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>repeat: \(\mathcal{J}, \nabla_{\gvect{\xi}}\mathcal{J}\) by forward + adjoint; L-BFGS step \(\gvect{\xi} \leftarrow \gvect{\xi} - \alpha \hat{\gmat{\Sigma}}_{\xi \mid y} \nabla_{\gvect{\xi}}\mathcal{J}\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\xi}^\star\), \(\vect{x}_0^\star\)<small>analysis</small></div><code>(state,)</code></div></div><div class="op-foot">Lorenz-96: 61 iterations, 64 forward + adjoint runs.</div></div>
   <pre><span class="c"># Shapes: N state values (state); T times (time)</span>
 
 <span class="c"># --- the minimisation, as vardax runs it ---</span>
 <span class="c"># not pinned (optimistix)</span>
-<span class="c"># ξ* = argmin_ξ 𝒥(ξ), quasi-Newton with ∇𝒥 from the adjoint</span>
+<span class="c"># ξ⋆ = argmin_ξ 𝒥(ξ), quasi-Newton with ∇𝒥 from the adjoint</span>
 solution = optx.minimise(<span class="c">                             # → (N,)</span>
     cost, optx.BFGS(rtol=1e-6, atol=1e-6), jnp.zeros(N), args=args, max_steps=200
 )
-<span class="c"># z₀* = z_b + B^{1/2} ξ*</span>
+<span class="c"># x₀⋆ = μ_x + Σ_x^{1/2} ξ⋆</span>
 analysis = background + prior_sqrt.mv(solution.value)<span class="c">  # (N,)</span>
 
 <span class="c"># --- the same through vardax ---</span>
@@ -551,15 +558,17 @@ analysis = strong(batch)<span class="c">                              # → (1, 
   <h2>Algorithm 2 · Incremental 4D-Var</h2>
   <p><span class="cost-pill">per outer loop</span> one nonlinear run <span class="cost-pill">per inner iteration</span> one tangent-linear + one adjoint run</p>
   <p><strong>Idea.</strong> Gauss–Newton. Linearise the observed trajectory around the current guess, solve the resulting <em>quadratic</em> problem for an increment with conjugate gradients, update, relinearise. The inner problem never runs the nonlinear model, and in operational systems it is often solved at lower resolution with simplified physics.</p>
-  \[ \mathcal J^{(n)}(\delta\xi) = \tfrac12\big\|\xi^{(n)} + \delta\xi\big\|^2 + \tfrac12\big\|d^{(n)} - \mathbf G^{(n)}\delta\xi\big\|^2, \qquad d^{(n)} = \mathbf R^{-1/2}y - G\big(\xi^{(n)}\big), \]
-  \[ \big(\mathbf I + \mathbf G^{(n)\top}\mathbf G^{(n)}\big)\,\delta\xi = \mathbf G^{(n)\top}d^{(n)} - \xi^{(n)}, \qquad \xi^{(n+1)} = \xi^{(n)} + \delta\xi . \]
-  <p>Here \(G(\xi) = \mathbf R^{-1/2}\mathcal H(\mathcal M(z_b + \mathbf B^{1/2}\xi))\) stacks the whitened, observed trajectory, and \(\mathbf G^{(n)}\) is its Jacobian at \(\xi^{(n)}\), applied with <code>jax.jvp</code> and transposed with <code>jax.vjp</code>.</p>
-  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">incremental 4D-Var</span><span class="when">Gauss–Newton outer loop, CG inner loop</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\xi^{(n)}\)<small>current outer iterate</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>units of the observed field (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(G\), \(G'\), \(G'^\top\)<small>nonlinear observed trajectory, its tangent linear and adjoint</small></div><code>(state,) → (time·obs,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>outer: one nonlinear run, \(d = R^{-1/2}y - G(\xi)\); inner: CG on \((I + G'^\top G')\,\delta\xi = G'^\top d - \xi\); then \(\xi \leftarrow \xi + \delta\xi\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\xi^{(n+1)}\)<small>next outer iterate</small></div><code>(state,)</code></div></div><div class="op-foot">Lorenz-96: 4 nonlinear runs and about 104 tangent-linear + adjoint pairs.</div></div>
+  \[ \mathcal{J}^{(n)}(\delta\gvect{\xi}) = \frac{1}{2} \Vert \gvect{\xi}^{(n)} + \delta\gvect{\xi} \Vert^2 + \frac{1}{2} \Vert \vect{d}^{(n)} - \mat{H}_\text{win}^{(n)} \delta\gvect{\xi} \Vert^2, \]
+  \[ \vect{d}^{(n)} = \gmat{\Sigma}_\varepsilon^{-1/2} \vect{y} - h_\text{win}(\gvect{\xi}^{(n)}), \]
+  \[ (\mat{I} + \mat{H}_\text{win}^{(n)\top} \mat{H}_\text{win}^{(n)}) \delta\gvect{\xi} = \mat{H}_\text{win}^{(n)\top} \vect{d}^{(n)} - \gvect{\xi}^{(n)}, \]
+  \[ \gvect{\xi}^{(n+1)} = \gvect{\xi}^{(n)} + \delta\gvect{\xi}. \]
+  <p>Here \(h_\text{win}(\gvect{\xi}) = \gmat{\Sigma}_\varepsilon^{-1/2} h(f(\gvect{\mu}_x + \gmat{\Sigma}_x^{1/2}\gvect{\xi})) \in \mathbb{R}^{T D_y}\) stacks the whitened, observed trajectory, and \(\mat{H}_\text{win}^{(n)} = \mat{J}_{h_\text{win}}(\gvect{\xi}^{(n)}) \in \mathbb{R}^{T D_y \times D_x}\) is its Jacobian at \(\gvect{\xi}^{(n)}\), applied with <code>jax.jvp</code> and transposed with <code>jax.vjp</code>.</p>
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">incremental 4D-Var</span><span class="when">Gauss–Newton outer loop, CG inner loop</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\xi}^{(n)}\)<small>current outer iterate</small></div><code>(state,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\vect{y}_{1:T}\) observations<small>units of the observed field (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(h_\text{win}\), \(\mat{H}_\text{win}\), \(\mat{H}_\text{win}^\top\)<small>nonlinear observed trajectory, its tangent linear and adjoint</small></div><code>(state,) → (time·obs,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>outer: one nonlinear run, \(\vect{d} = \gmat{\Sigma}_\varepsilon^{-1/2}\vect{y} - h_\text{win}(\gvect{\xi})\); inner: CG on \((\mat{I} + \mat{H}_\text{win}^\top \mat{H}_\text{win}) \delta\gvect{\xi} = \mat{H}_\text{win}^\top \vect{d} - \gvect{\xi}\); then \(\gvect{\xi} \leftarrow \gvect{\xi} + \delta\gvect{\xi}\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\xi}^{(n+1)}\)<small>next outer iterate</small></div><code>(state,)</code></div></div><div class="op-foot">Lorenz-96: 4 nonlinear runs and about 104 tangent-linear + adjoint pairs.</div></div>
   <pre><span class="c"># Shapes: N state values (state); T·M whitened observations, flattened (obs_flat)</span>
 
 
 def observe(whitened):
-<span class="c">    # G(ξ) = R^{−1/2} H(𝓜(z_b + B^{1/2} ξ)), flattened over the window</span>
+<span class="c">    # h_win(ξ) = Σ_ε^{−1/2} h(f(μ_x + Σ_x^{1/2} ξ)), flattened over the window</span>
     initial = background + prior_sqrt.mv(whitened)<span class="c">    # (N,)</span>
     states = rollout(forward, initial, num_times)<span class="c">     # → (T, N)</span>
     observed = states[:, obs_index] / obs_std<span class="c">         # (T, N) → (T, M)</span>
@@ -569,15 +578,15 @@ def observe(whitened):
 whitened = jnp.zeros(N)<span class="c">                               # (N,), the background</span>
 for _ in range(NUM_OUTER):
 <span class="c">    # --- outer loop: one nonlinear run, linearised around it ---</span>
-<span class="c">    # G(ξ) and its tangent linear v ↦ G'(ξ) v</span>
+<span class="c">    # h_win(ξ) and its tangent linear v ↦ H_win v</span>
     predicted, tangent = jax.linearize(observe, whitened)<span class="c">  # → (T·M,)</span>
-<span class="c">    # adjoint w ↦ G'(ξ)ᵀ w</span>
+<span class="c">    # adjoint w ↦ H_winᵀ w</span>
     adjoint = jax.linear_transpose(tangent, whitened)
-<span class="c">    # d = R^{−1/2} y − G(ξ): whitened innovations</span>
+<span class="c">    # d = Σ_ε^{−1/2} y − h_win(ξ): whitened innovations</span>
     innovation = observations_white - predicted<span class="c">       # (T·M,)</span>
 
     def gauss_newton(v):
-<span class="c">        # (I + G'ᵀ G') v: one tangent-linear and one adjoint run</span>
+<span class="c">        # (I + H_winᵀ H_win) v: one tangent-linear and one adjoint run</span>
         (projected,) = adjoint(tangent(v))<span class="c">            # (N,) → (N,)</span>
         return v + projected
 
@@ -585,12 +594,12 @@ for _ in range(NUM_OUTER):
         gauss_newton, jax.ShapeDtypeStruct((N,), whitened.dtype),
         lx.positive_semidefinite_tag,
     )
-<span class="c">    # b = G'ᵀ d − ξ  (= −∇𝒥 at δξ = 0)</span>
+<span class="c">    # b = H_winᵀ d − ξ  (= −∇_{δξ} 𝒥 at δξ = 0)</span>
     (pulled,) = adjoint(innovation)<span class="c">                   # (T·M,) → (N,)</span>
     rhs = pulled - whitened<span class="c">                           # (N,)</span>
 <span class="c">    # --- inner loop: CG on the quadratic, no nonlinear runs ---</span>
 <span class="c">    # not pinned (lineax)</span>
-<span class="c">    # δξ = (I + G'ᵀ G')⁻¹ b</span>
+<span class="c">    # δξ = (I + H_winᵀ H_win)⁻¹ b</span>
     step = lx.linear_solve(<span class="c">                           # → (N,)</span>
         hessian, rhs, solver=lx.CG(rtol=1e-8, atol=1e-8, max_steps=NUM_INNER)
     ).value
@@ -598,60 +607,61 @@ for _ in range(NUM_OUTER):
     whitened = whitened + step<span class="c">                        # (N,)</span>
 
 <span class="c"># today (vardax)</span>
-<span class="c"># vardax's version solves in z-space with B⁻¹ applied by CG (no B^{1/2} transform)</span>
+<span class="c"># vardax's version solves in x-space with Σ_x⁻¹ applied by CG (no Σ_x^{1/2} transform)</span>
 incremental = vardax.IncrementalFourDVar(
     forward, vardax.MaskedIdentity(), background, prior_cov, obs_cov,
     config=vardax.IncrementalConfig(n_outer=4, n_inner=25),
 )</pre>
   <div class="tbl"><table>
-    <thead><tr><th>Outer loop</th><th>\(\mathcal J\) after the update</th><th>RMSE at \(t = 0\)</th></tr></thead>
+    <thead><tr><th>Outer loop</th><th>\(\mathcal{J}\) after the update</th><th>RMSE at \(t = 0\)</th></tr></thead>
     <tbody><tr><td class="num">1</td><td class="num">203.9</td><td class="num">0.83</td></tr><tr><td class="num">2</td><td class="num">113.0</td><td class="num">0.29</td></tr><tr><td class="num">3</td><td class="num">101.9</td><td class="num">0.20</td></tr><tr><td class="num">4</td><td class="num">100.8</td><td class="num">0.20</td></tr></tbody>
   </table></div>
-  <p>The first linearisation, around the background, captures only part of the nonlinear response over the window (\(\mathcal J\) = 204, against the minimum of 101). Three relinearisations reach the classic minimum. <strong>Strengths:</strong> few expensive nonlinear runs; inner problems are quadratic, so CG with the whitened Hessian converges quickly and predictably. <strong>Weakness:</strong> each outer loop trusts a linearisation; for long or very nonlinear windows the quadratic model can point the wrong way, and more outer loops (or a shorter window) are needed.</p>
+  <p>The first linearisation, around the background, captures only part of the nonlinear response over the window (\(\mathcal{J}\) = 204, against the minimum of 101). Three relinearisations reach the classic minimum. <strong>Strengths:</strong> few expensive nonlinear runs; inner problems are quadratic, so CG with the whitened Hessian converges quickly and predictably. <strong>Weakness:</strong> each outer loop trusts a linearisation; for long or very nonlinear windows the quadratic model can point the wrong way, and more outer loops (or a shorter window) are needed.</p>
   </section>
 
   <section class="variant" id="reduced">
   <h2>Algorithm 3 · Reduced-basis 4D-Var</h2>
-  <p><span class="cost-pill">per iteration</span> one forward run + one adjoint run, over P controls</p>
-  <p><strong>Idea.</strong> Restrict the initial-state correction to the span of \(P \ll N\) basis functions: \(z_0 = z_b + \Phi X\), with a prior \(X\sim\mathcal N(0, \mathbf Q)\). The optimiser then works in \(P\) dimensions. The basis encodes what corrections are plausible: leading EOFs of past states or of an ensemble, Fourier or wavelet modes, radial basis functions on a coarse grid.</p>
-  \[ \mathcal J(X) = \tfrac12\,X^\top\mathbf Q^{-1}X + \tfrac12\sum_{k=1}^{T}\big\|y_k - \mathcal H_k\big(\mathcal M_{k\leftarrow0}(z_b + \Phi X)\big)\big\|^2_{\mathbf R_k^{-1}}, \qquad \nabla_X\mathcal J = \mathbf Q^{-1}X + \Phi^\top\mathbf M_1^\top\lambda_1 . \]
-  <p>If \(\Phi\) holds the leading eigenvectors of \(\mathbf B\) scaled by the square roots of their eigenvalues, this is exactly the whitened full problem truncated to \(P\) directions. Anything outside the span is left at the background.</p>
-  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">reduced-basis 4D-Var</span><span class="when">optimise P coefficients instead of N state values</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\Phi\) basis<small>EOFs, Fourier modes, wavelets or RBFs; state units per unit coefficient</small></div><code>(state, basis)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\mathbf Q = \operatorname{diag}(q)\)<small>prior variance of each coefficient</small></div><code>(basis,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) observations<small>units of the observed field (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background<small>best prior guess of \(z_0\); state units</small></div><code>(state,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(X^\star = \arg\min_X\ \tfrac12 X^\top\mathbf Q^{-1}X + \tfrac12\sum_k\|y_k - \mathcal H_k(\mathcal M_{k\leftarrow0}(z_b + \Phi X))\|^2_{\mathbf R^{-1}}\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(X^\star\)<small>basis coefficients</small></div><code>(basis,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_0^\star = z_b + \Phi X^\star\)<small>analysis, restricted to the span of \(\Phi\)</small></div><code>(state,)</code></div></div><div class="op-foot">The forward and adjoint runs still cost the same; the optimiser works in P dimensions, and forward-mode gradients become affordable.</div></div>
+  <p><span class="cost-pill">per iteration</span> one forward run + one adjoint run, over \(N_\Phi\) controls</p>
+  <p><strong>Idea.</strong> Restrict the initial-state correction to the span of \(N_\Phi \ll D_x\) basis functions: \(\vect{x}_0 = \gvect{\mu}_x + \gmat{\Phi}\vect{z}_\Phi\), with a prior \(\vect{z}_\Phi \sim \mathcal{N}(\vect{0}, \gmat{\Sigma}_{z_\Phi})\). The optimiser then works in \(N_\Phi\) dimensions. The basis encodes what corrections are plausible: leading EOFs of past states or of an ensemble, Fourier or wavelet modes, radial basis functions on a coarse grid.</p>
+  \[ \mathcal{J}(\vect{z}_\Phi) = \frac{1}{2} \vect{z}_\Phi^\top \gmat{\Sigma}_{z_\Phi}^{-1} \vect{z}_\Phi + \frac{1}{2} \sum_{k=1}^{T} \Vert \vect{y}_k - h_k(f_{k \leftarrow 0}(\gvect{\mu}_x + \gmat{\Phi}\vect{z}_\Phi)) \Vert^2_{\gmat{\Sigma}_{\varepsilon,k}^{-1}}, \]
+  \[ \nabla_{\vect{z}_\Phi}\mathcal{J} = \gmat{\Sigma}_{z_\Phi}^{-1} \vect{z}_\Phi + \gmat{\Phi}^\top \mat{F}_1^\top \vect{x}^\dagger_1. \]
+  <p>If \(\gmat{\Phi}\) holds the leading eigenvectors of \(\gmat{\Sigma}_x\) scaled by the square roots of their eigenvalues, this is exactly the whitened full problem truncated to \(N_\Phi\) directions. Anything outside the span is left at the background.</p>
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">reduced-basis 4D-Var</span><span class="when">optimise \(N_\Phi\) coefficients instead of \(D_x\) state values</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-ensemble"/></svg><div class="nm">\(\gmat{\Phi}\) basis<small>EOFs, Fourier modes, wavelets or RBFs; state units per unit coefficient</small></div><code>(state, basis)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\gmat{\Sigma}_{z_\Phi} = \op{diag}(\gvect{\sigma}^2_{z_\Phi})\)<small>prior variance of each coefficient</small></div><code>(basis,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\vect{y}_{1:T}\) observations<small>units of the observed field (m for SSH)</small></div><code>(time, obs)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\mu}_x\) background<small>best prior guess of \(\vect{x}_0\); state units</small></div><code>(state,)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>\(\vect{z}_\Phi^\star = \mathrm{argmin}_{\vect{z}_\Phi} \frac{1}{2} \vect{z}_\Phi^\top \gmat{\Sigma}_{z_\Phi}^{-1} \vect{z}_\Phi + \frac{1}{2} \sum_k \Vert \vect{y}_k - h_k(f_{k \leftarrow 0}(\gvect{\mu}_x + \gmat{\Phi}\vect{z}_\Phi)) \Vert^2_{\gmat{\Sigma}_\varepsilon^{-1}}\)</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><div class="nm">\(\vect{z}_\Phi^\star\)<small>basis coefficients</small></div><code>(basis,)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\vect{x}_0^\star = \gvect{\mu}_x + \gmat{\Phi}\vect{z}_\Phi^\star\)<small>analysis, restricted to the span of \(\gmat{\Phi}\)</small></div><code>(state,)</code></div></div><div class="op-foot">The forward and adjoint runs still cost the same; the optimiser works in \(N_\Phi\) dimensions, and forward-mode gradients become affordable.</div></div>
   <pre><span class="c"># Shapes: N state values (state); P basis functions (basis), P ≪ N;</span>
 <span class="c">#         E background samples (sample)</span>
 
 <span class="c"># today (vardax)</span>
-<span class="c"># Φ: leading EOFs of an ensemble, Q = diag(explained variance)</span>
+<span class="c"># Φ: leading EOFs of an ensemble, Σ_{z_Φ} = diag(explained variance)</span>
 basis = vardax.eof_basis(ensemble, n_modes=16)<span class="c">        # (E, N) → Φ (N, P)</span>
 
 
 def cost_reduced(coeffs, args):
     forward, background, observations, obs_index, obs_std = args
-<span class="c">    # δz₀ = Φ X</span>
+<span class="c">    # δx₀ = Φ z_Φ</span>
     increment = basis.operg(0.0, coeffs)<span class="c">              # (P,) → (N,)</span>
-<span class="c">    # z₀ = z_b + Φ X</span>
+<span class="c">    # x₀ = μ_x + Φ z_Φ</span>
     initial = background + increment<span class="c">                  # (N,)</span>
     states = rollout(forward, initial, observations.shape[0])<span class="c">  # → (T, N)</span>
-<span class="c">    # r_k = R^{−1/2} (y_k − H_k(z_k))</span>
+<span class="c">    # r_k = Σ_ε^{−1/2} (y_k − h_k(x_k))</span>
     residual = (observations - states[:, obs_index]) / obs_std<span class="c">  # (T, M)</span>
-<span class="c">    # J_o = ½ ∑_k ‖r_k‖²</span>
+<span class="c">    # 𝒥_o = ½ ∑_k ‖r_k‖²</span>
     obs_cost = 0.5 * einx.sum("time obs -&gt;", residual**2)<span class="c">  # → ()</span>
-<span class="c">    # Q⁻¹ X, diagonal</span>
+<span class="c">    # Σ_{z_Φ}⁻¹ z_Φ, diagonal</span>
     scaled = basis.prior_inv(coeffs)<span class="c">                  # (P,)</span>
-<span class="c">    # J_b = ½ Xᵀ Q⁻¹ X</span>
+<span class="c">    # 𝒥_b = ½ z_Φᵀ Σ_{z_Φ}⁻¹ z_Φ</span>
     prior_cost = 0.5 * einx.dot("basis, basis -&gt;", coeffs, scaled)<span class="c">  # → ()</span>
     return prior_cost + obs_cost
 
 
 <span class="c"># today (vardax)</span>
-<span class="c"># full nonlinear cost over X with BFGS; the name says "incremental", the method does not</span>
+<span class="c"># full nonlinear cost over z_Φ with BFGS; the name says "incremental", the method does not</span>
 reduced = vardax.Incremental4DVar(
     forward, vardax.MaskedIdentity(), background, prior_cov, obs_cov, basis=basis
 )
 <span class="c"># P = 16 controls: forward mode now costs only 16 tangent runs per gradient</span>
 gradient = jax.jacfwd(cost_reduced)(coeffs, args)<span class="c">     # (P,) → (P,)</span></pre>
   <div class="tbl"><table>
-    <thead><tr><th>Basis size \(P\)</th><th>Variance of \(\mathbf B\) captured</th><th>Runs</th><th>\(\mathcal J^\star\)</th><th>RMSE \(t = 0\)</th><th>RMSE forecast</th></tr></thead>
+    <thead><tr><th>Basis size \(N_\Phi\)</th><th>Variance of \(\gmat{\Sigma}_x\) captured</th><th>Runs</th><th>\(\mathcal{J}^\star\)</th><th>RMSE \(t = 0\)</th><th>RMSE forecast</th></tr></thead>
     <tbody><tr><td class="num">8</td><td class="num">79 %</td><td class="num">22</td><td class="num">120.0</td><td class="num">0.47</td><td class="num">3.56</td></tr><tr><td class="num">16</td><td class="num">99 %</td><td class="num">53</td><td class="num">102.1</td><td class="num">0.20</td><td class="num">1.68</td></tr></tbody>
   </table></div>
   <p>With 8 basis functions (79 % of the background variance) the analysis is limited by what the basis can express: error 0.47 against 0.20. With 16 (99 %) it matches the full-space analysis with fewer runs. <strong>Strengths:</strong> small control, cheap optimiser, forward-mode or even finite-difference gradients become affordable, and the basis regularises. <strong>Weakness:</strong> the analysis cannot correct what the basis cannot represent; choosing the basis is the modelling decision.</p>
@@ -661,11 +671,11 @@ gradient = jax.jacfwd(cost_reduced)(coeffs, args)<span class="c">     # (P,) →
   <div class="tbl"><table>
     <thead><tr><th></th><th>Classic</th><th>Incremental</th><th>Reduced basis</th></tr></thead>
     <tbody>
-      <tr><td>Control</td><td>\(\xi\in\mathbb R^N\)</td><td>\(\delta\xi\in\mathbb R^N\), per outer loop</td><td>\(X\in\mathbb R^P\)</td></tr>
+      <tr><td>Control</td><td>\(\gvect{\xi} \in \mathbb{R}^{D_x}\)</td><td>\(\delta\gvect{\xi} \in \mathbb{R}^{D_x}\), per outer loop</td><td>\(\vect{z}_\Phi \in \mathbb{R}^{N_\Phi}\)</td></tr>
       <tr><td>Optimiser</td><td>L-BFGS / BFGS</td><td>Gauss–Newton + CG</td><td>L-BFGS / BFGS</td></tr>
       <tr><td>Nonlinear model runs</td><td>every iteration</td><td>once per outer loop</td><td>every iteration</td></tr>
       <tr><td>Linearisation</td><td>none</td><td>the whole trajectory, per outer loop</td><td>none</td></tr>
-      <tr><td>Lorenz-96 work</td><td class="num">64 fwd + adj</td><td class="num">4 nonlinear + ~104 TL + AD</td><td class="num">53 fwd + adj (P = 16)</td></tr>
+      <tr><td>Lorenz-96 work</td><td class="num">64 fwd + adj</td><td class="num">4 nonlinear + ~104 TL + AD</td><td class="num">53 fwd + adj (\(N_\Phi = 16\))</td></tr>
       <tr><td>Lorenz-96 RMSE at \(t = 0\)</td><td class="num">0.20</td><td class="num">0.20</td><td class="num">0.20</td></tr>
       <tr><td>Fails when</td><td>conditioning is poor</td><td>the window is too nonlinear for the linearisation</td><td>the needed correction is outside the basis</td></tr>
       <tr><td>vardax</td><td><code>StrongFourDVar</code></td><td><code>IncrementalFourDVar</code> + <code>IncrementalConfig</code></td><td><code>Incremental4DVar(basis=…)</code> or <code>StrongFourDVar(parameterization=LinearParameterization(…))</code></td></tr>
@@ -674,7 +684,7 @@ gradient = jax.jacfwd(cost_reduced)(coeffs, args)<span class="c">     # (P,) →
 
   <h2 id="application">Application: the Gulf Stream window</h2>
   <p>The ocean state estimation page applies the same cost to a 1.5-layer quasi-geostrophic model of the Gulf Stream, with ten daily SSH maps over a 1024 km box. The objects map one to one:</p>
-  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">4D-Var on the Gulf Stream window</span><span class="when">the ocean state estimation page's setting</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(y_{1:T}\) SSH maps<small>metres; σ_o ≈ 3 cm along-track, larger for gridded maps</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(m_{1:T}\)<small>observed pixels</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_b\) background PV or SSH<small>s⁻¹ (PV) or m (SSH)</small></div><code>(height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathbf B\)<small>Matérn, σ_b ≈ 0.1 m, length ≈ 100 km</small></div><code>(cell, cell)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\mathcal M_k\)<small>1.5-layer QG, one day = 48 × 30 min</small></div><code>(height, width) → (height, width)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>same cost; 10 daily windows; \(N = 128^2 = 16\,384\) controls, or \(P\) basis coefficients</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(z_0^\star\)<small>analysed PV / SSH at day 0</small></div><code>(height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(z_{1:T}^\star\)<small>the reanalysis of the window</small></div><code>(time, height, width)</code></div></div></div>
+  <div class="op use"><div class="op-h"><span class="phase use">Use</span><span class="opname">4D-Var on the Gulf Stream window</span><span class="when">the ocean state estimation page's setting</span></div><div class="io-group"><div class="io-l">In</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\vect{y}_{1:T}\) SSH maps<small>metres; σ_ε ≈ 3 cm along-track, larger for gridded maps</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-mask"/></svg><div class="nm">\(\vect{m}_{1:T}\)<small>observed pixels</small></div><code>(time, height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\gvect{\mu}_x\) background PV or SSH<small>s⁻¹ (PV) or m (SSH)</small></div><code>(height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(\gmat{\Sigma}_x\)<small>Matérn, σ_x ≈ 0.1 m, length ≈ 100 km</small></div><code>(cell, cell)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-op"/></svg><div class="nm">\(f_k\)<small>1.5-layer QG, one day = 48 × 30 min</small></div><code>(height, width) → (height, width)</code></div></div><div class="op-arrow"><span class="ar">↓</span><div>same cost; 10 daily windows; \(D_x = 128^2 = 16384\) controls, or \(N_\Phi\) basis coefficients</div></div><div class="io-group"><div class="io-l">Out</div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><div class="nm">\(\vect{x}_0^\star\)<small>analysed PV / SSH at day 0</small></div><code>(height, width)</code></div><div class="io"><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><div class="nm">\(\vect{x}_{1:T}^\star\)<small>the reanalysis of the window</small></div><code>(time, height, width)</code></div></div></div>
   <div class="tbl"><table>
     <thead><tr><th>Choice</th><th>At ocean scale</th></tr></thead>
     <tbody>
@@ -682,7 +692,7 @@ gradient = jax.jacfwd(cost_reduced)(coeffs, args)<span class="c">     # (P,) →
       <tr><td>Incremental</td><td>the operational standard; the inner loop can run the tangent-linear QG model at half resolution</td></tr>
       <tr><td>Reduced basis</td><td>the SSH-mapping practice (MASSH-style): wavelets or radial basis functions in space and time, a few thousand coefficients, priors from the SSH spectrum</td></tr>
       <tr><td>Gradient</td><td><code>jax.checkpoint</code> per day, or diffrax's <code>RecursiveCheckpointAdjoint</code> if the model is written as a diffrax solve</td></tr>
-      <tr><td>Diagnostics</td><td>\(2\mathcal J^\star/p\), innovation statistics, and the Gauss–Newton spread, as on the state estimation page</td></tr>
+      <tr><td>Diagnostics</td><td>\(2\mathcal{J}^\star / N_\text{obs}\), innovation statistics, and the Gauss–Newton spread, as on the state estimation page</td></tr>
     </tbody>
   </table></div>
 
@@ -690,14 +700,14 @@ gradient = jax.jacfwd(cost_reduced)(coeffs, args)<span class="c">     # (P,) →
   <p>Checked against vardax <code>main</code> (3e0f34a) on 24 Oct 2026. Several docs and the code disagree; each point is filed as a vardax issue.</p>
   <ul>
     <li><strong><code>Incremental4DVar</code> is not incremental.</strong> It minimises the full nonlinear cost over basis coefficients with BFGS (the MASSH formulation). The Gauss–Newton method is <code>IncrementalFourDVar</code>. A rename (for example <code>ReducedBasis4DVar</code>) would remove the trap (<a href="https://github.com/jejjohnson/vardax/issues/96">#96</a>).</li>
-    <li><strong>No control-variable transform yet.</strong> <code>IncrementalFourDVar</code> applies \(\mathbf B^{-1}\) with an inner CG solve at every Hessian product. The whitened form on this page is the proposed fix; the <code>IncrementalConfig(cvt=True)</code> shown in the docs does not exist (<a href="https://github.com/jejjohnson/vardax/issues/97">#97</a>).</li>
-    <li><strong>The docs' incremental right-hand side is incomplete.</strong> The code uses \(-\nabla\mathcal J\) of the full nonlinear cost at the current outer iterate, which is the correct Gauss–Newton right-hand side. The docs give \(\sum(\mathbf H'\mathbf M')^\top\mathbf R^{-1}d\), which drops the background term \(-\mathbf B^{-1}(z_0 - z_b)\); the two agree only on the first outer loop, where \(z_0 = z_b\). The code is right and the docs need the fix (<a href="https://github.com/jejjohnson/vardax/issues/98">#98</a>).</li>
-    <li><strong>The posterior adapters omit the model.</strong> <code>LaplaceCovariance</code> and <code>GaussNewtonHessian</code> build \(\mathbf B^{-1} + \mathbf H^\top\mathbf R^{-1}\mathbf H\) without \(\mathbf M_k\): a 3D-Var Hessian, not the 4D-Var one their docstrings state (<a href="https://github.com/jejjohnson/vardax/issues/94">#94</a>).</li>
+    <li><strong>No control-variable transform yet.</strong> <code>IncrementalFourDVar</code> applies \(\gmat{\Sigma}_x^{-1}\) with an inner CG solve at every Hessian product. The whitened form on this page is the proposed fix; the <code>IncrementalConfig(cvt=True)</code> shown in the docs does not exist (<a href="https://github.com/jejjohnson/vardax/issues/97">#97</a>).</li>
+    <li><strong>The docs' incremental right-hand side is incomplete.</strong> The code uses \(-\nabla_{\vect{x}_0}\mathcal{J}\) of the full nonlinear cost at the current outer iterate, which is the correct Gauss–Newton right-hand side. The docs give \(\sum_k (\mat{H}_k \mat{F}_{k \leftarrow 0})^\top \gmat{\Sigma}_\varepsilon^{-1} \vect{d}_k\), which drops the background term \(-\gmat{\Sigma}_x^{-1}(\vect{x}_0 - \gvect{\mu}_x)\); the two agree only on the first outer loop, where \(\vect{x}_0 = \gvect{\mu}_x\). The code is right and the docs need the fix (<a href="https://github.com/jejjohnson/vardax/issues/98">#98</a>).</li>
+    <li><strong>The posterior adapters omit the model.</strong> <code>LaplaceCovariance</code> and <code>GaussNewtonHessian</code> build \(\gmat{\Sigma}_x^{-1} + \mat{H}^\top \gmat{\Sigma}_\varepsilon^{-1} \mat{H}\) without \(\mat{F}_k\): a 3D-Var Hessian, not the 4D-Var one their docstrings state (<a href="https://github.com/jejjohnson/vardax/issues/94">#94</a>).</li>
     <li><strong><code>forward_adjoint</code> is stored but not used.</strong> <code>StrongFourDVar</code> rolls out with <code>jax.lax.scan</code>, so the gradient is plain reverse mode whatever adjoint is passed (<a href="https://github.com/jejjohnson/vardax/issues/95">#95</a>).</li>
     <li><strong>Missing names in the docs:</strong> <code>IncrementalFourDVar.posterior</code>, <code>vardax.utils.multi_start</code>, and a no-argument <code>LaplaceCovariance()</code> (<a href="https://github.com/jejjohnson/vardax/issues/99">#99</a>).</li>
   </ul>
   <p class="loop">Code markers: <code>today (vardax)</code> names ship on vardax <code>main</code> (3e0f34a); <code>today (diffrax 0.7.0)</code> checked in that release; <code>not pinned</code> marks optimistix and lineax, whose APIs were not checked for this page. Lorenz-96 numbers come from a JAX run of the same algorithms, in double precision.</p>
-  <footer>Primer for the learned data assimilation page. Lorenz-96: N = 40, F = 8, Δt = 0.01, 10 steps per observation, 10 observation times, every second site observed with σ_o = 1, B Gaussian-correlated with σ_b = 1 and length 2.</footer>
+  <footer>Primer for the learned data assimilation page. Lorenz-96: D_x = 40, F = 8, Δt = 0.01, 10 steps per observation, 10 observation times, every second site observed with σ_ε = 1, Σ_x Gaussian-correlated with σ_x = 1 and length 2.</footer>
 </main>
 
 <nav class="series-nav bottom" aria-label="Series navigation"><span class="crumbs"><a href="../esmax-ocean">All ocean pages</a></span><span class="pn"><a href="../ocean-state-estimation">← Ocean state estimation</a><a href="../weak-4dvar">Weak-constraint 4D-Var →</a></span></nav>

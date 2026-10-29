@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
 <script>
 window.MathJax = {
-  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none' },
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none', macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
   svg: { fontCache: 'global' },
   options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
 };
@@ -263,25 +263,25 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
     </ul>
 
     <nav class="stack" aria-label="Layers of the model and the types that learn each one">
-      <div class="layer io"><div><div class="ln">State in</div><div class="lo">\(\mathbf z_k\), with \(\mathbf x\), \(\mathbf u_k\) · <code>(variable, height, width)</code></div></div><div class="chips"></div></div>
+      <div class="layer io"><div><div class="ln">State in</div><div class="lo">\(\vect{x}_k\), with \(\vect{u}_k\) · <code>(variable, height, width)</code></div></div><div class="chips"></div></div>
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Representation</div><div class="lo">grid, spectral, or a learned embedding</div></div><div class="chips"><a class="tchip" href="#t10">T10</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Parameters</div><div class="lo">\(\theta = (L_d,\nu)\), constants or fields</div></div><div class="chips"><a class="tchip cor" href="#t1">T1</a></div></div>
+      <div class="layer"><div><div class="ln">Parameters</div><div class="lo">\(\gvect{\theta} = (L_d, \nu)\), constants or fields</div></div><div class="chips"><a class="tchip cor" href="#t1">T1</a></div></div>
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Discretisation</div><div class="lo">stencils and face fluxes on the C-grid</div></div><div class="chips"><a class="tchip cor" href="#t2">T2</a></div></div>
       <div class="link"><span></span><span></span></div>
       <div class="layer"><div><div class="ln">Terms</div><div class="lo">advection, dissipation, forcing, closures</div></div><div class="chips"><a class="tchip cor" href="#t3">T3</a><a class="tchip cor" href="#t4">T4</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Tendency</div><div class="lo">\(f = \sum_i \text{term}_i\)</div></div><div class="chips"><a class="tchip" href="#t5">T5</a></div></div>
+      <div class="layer"><div><div class="ln">Tendency</div><div class="lo">\(\mathcal{F} = \sum_i \text{term}_i\)</div></div><div class="chips"><a class="tchip" href="#t5">T5</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Integrator</div><div class="lo">\(\Phi_{\Delta t}[f]\), RK4, 48 steps a day</div></div><div class="chips"><a class="tchip" href="#t6">T6</a></div></div>
+      <div class="layer"><div><div class="ln">Integrator</div><div class="lo">\(\mathrm{RK4}_{\Delta t}[\mathcal{F}]\), RK4, 48 steps a day</div></div><div class="chips"><a class="tchip" href="#t6">T6</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Step map</div><div class="lo">\(\mathcal F = \Phi_{\Delta t}[f]^{48}\), one day</div></div><div class="chips"><a class="tchip cor" href="#t7">T7</a><a class="tchip" href="#t8">T8</a></div></div>
+      <div class="layer"><div><div class="ln">Step map</div><div class="lo">\(f = \mathrm{RK4}_{\Delta t}[\mathcal{F}]^{48}\), one day</div></div><div class="chips"><a class="tchip cor" href="#t7">T7</a><a class="tchip" href="#t8">T8</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer"><div><div class="ln">Rollout</div><div class="lo">\(\mathcal G = \mathcal F\circ\cdots\circ\mathcal F\), a window</div></div><div class="chips"><a class="tchip" href="#t9">T9</a></div></div>
+      <div class="layer"><div><div class="ln">Rollout</div><div class="lo">\(f_{1:T \leftarrow 0} = f \circ \ldots \circ f\), a window</div></div><div class="chips"><a class="tchip" href="#t9">T9</a></div></div>
       <div class="link"><span></span><span></span></div>
-      <div class="layer io"><div><div class="ln">State out</div><div class="lo">\(\mathbf z_{k+1}\) · <code>(variable, height, width)</code>, or a cube for T9</div></div><div class="chips"></div></div>
+      <div class="layer io"><div><div class="ln">State out</div><div class="lo">\(\vect{x}_{k+1}\) · <code>(variable, height, width)</code>, or a cube for T9</div></div><div class="chips"></div></div>
     </nav>
     <p class="loop">Chip colour gives each type's usual job: <span class="tchip">teal</span> mostly emulation, <span class="tchip cor">amber</span> mostly correction. Several types do either; the card says which target each one takes.</p>
 
@@ -302,31 +302,32 @@ mjx-container[display="true"] { display: block; max-width: 100%; overflow-x: aut
   <div class="tbl"><table>
     <thead><tr><th>Symbol</th><th>Meaning</th><th>Kind, shape</th></tr></thead>
     <tbody>
-      <tr><td>\(\mathbf z_k\)</td><td>latent state at day k; here the model's prognostic PV \(q\) (SSH \(\eta = f_0\psi/g\) is a linear diagnostic of it)</td><td>(variable, height, width)</td></tr>
-      <tr><td>\(\mathbf x\), \(\mathbf u_k\)</td><td>covariates (βy, coordinates) and controls (wind-stress curl)</td><td>(variable, height, width), (height, width)</td></tr>
-      <tr><td>\(\theta\), \(\alpha\)</td><td>physical parameters \((L_d,\nu)\), hyperparameters</td><td>(param,), (hyper,)</td></tr>
-      <tr><td>\(f\)</td><td>tendency, \(\partial_t \mathbf z = f(\mathbf z;\mathbf x,\mathbf u,\theta)\)</td><td>(variable, height, width)</td></tr>
-      <tr><td>\(\Phi_{\Delta t}[f]\)</td><td>one integrator step of size Δt applied to tendency f</td><td>operator</td></tr>
-      <tr><td>\(\mathcal F\)</td><td>step map: one day, \(\Phi_{\Delta t}[f]^{48}\)</td><td>field → field</td></tr>
-      <tr><td>\(\mathcal G\)</td><td>rollout over a window</td><td>field → cube</td></tr>
-      <tr><td>\(\phi\)</td><td>weights of whatever is learned; \(\psi\) stays reserved for variational parameters</td><td>weights</td></tr>
-      <tr><td>\(\mathcal C\)</td><td>coarse-graining from a finer grid to ours</td><td>(height_hr, width_hr) → (height, width)</td></tr>
+      <tr><td>\(\vect{x}_k\)</td><td>state at day k; here the model's prognostic PV \(q\) on the grid (SSH \(\eta = f_0 \psi / g\) is a linear diagnostic of it)</td><td>\(\mathbb{R}^{D_x}\) (variable, height, width)</td></tr>
+      <tr><td>\(\vect{u}^\text{cov}\), \(\vect{u}^\text{wind}_k\)</td><td>exogenous inputs \(\vect{u}_k = (\vect{u}^\text{cov}, \vect{u}^\text{wind}_k)\): covariates (\(\beta s_2\), coordinates) and forcing (wind-stress curl)</td><td>(variable, height, width), (height, width)</td></tr>
+      <tr><td>\(\gvect{\theta}\), \(\gvect{\alpha}\)</td><td>physical parameters \((L_d, \nu)\), hyperparameters</td><td>\(\mathbb{R}^{D_\theta}\) (param,), \(\mathbb{R}^{D_\alpha}\) (hyper,)</td></tr>
+      <tr><td>\(\mathcal{F}\)</td><td>tendency, \(\partial_t q = \mathcal{F}[q; \vect{u}_k, \gvect{\theta}]\)</td><td>operator, output (variable, height, width)</td></tr>
+      <tr><td>\(\mathrm{RK4}_{\Delta t}[\mathcal{F}]\)</td><td>one integrator step of size Δt applied to the tendency \(\mathcal{F}\)</td><td>operator</td></tr>
+      <tr><td>\(f\)</td><td>step map: one day, \(\vect{x}_{k+1} = f(\vect{x}_k, \vect{u}_k; \gvect{\theta}) = \mathrm{RK4}_{\Delta t}[\mathcal{F}]^{48}(\vect{x}_k)\)</td><td>\(\mathbb{R}^{D_x} \to \mathbb{R}^{D_x}\), field → field</td></tr>
+      <tr><td>\(f_{k \leftarrow 0}\), \(f_{1:T \leftarrow 0}\)</td><td>k days of \(f\) composed; the rollout over a window, \((f_{1 \leftarrow 0}, \ldots, f_{T \leftarrow 0})\)</td><td>\(\mathbb{R}^{D_x} \to \mathbb{R}^{T \times D_x}\), field → cube</td></tr>
+      <tr><td>\(\gvect{\theta}_\text{emu}\)</td><td>weights of whatever is learned, emulator or correction</td><td>weights</td></tr>
+      <tr><td>\(g_\text{label}\), \(\mathcal{G}\)</td><td>a learned map on vectors, a learned operator on fields, where the piece has no role letter of its own; the label names the piece</td><td>map, operator</td></tr>
+      <tr><td>\(\mathcal{C}\)</td><td>coarse-graining from a finer grid to ours</td><td>(height_hr, width_hr) → (height, width)</td></tr>
     </tbody>
   </table></div>
-  <p>Note the clash: \(\psi\) in the equations below is the streamfunction, as is standard in QG. The variational parameters of the last page never appear on this page.</p>
+  <p>Note the clash: \(\nu\) in the equations below is the viscosity, as is standard in QG. The variational parameters \(\gvect{\nu}\) of the last page never appear on this page.</p>
 
   <h2 id="model">The physical model, taken apart</h2>
-  <p>The 1.5-layer QG model of the last page, written layer by layer. Let \(\mathcal L = \nabla^2 - L_d^{-2}\) be the Helmholtz operator and \(J(a,b) = \partial_x a\,\partial_y b - \partial_y a\,\partial_x b\) the Jacobian.</p>
+  <p>The 1.5-layer QG model of the last page, written layer by layer. Let \(\nabla := \nabla_{\vect{s}}\) act on the horizontal coordinates \(\vect{s} = (s_1, s_2)\), \(\mathcal{A} = \nabla^2 - L_d^{-2}\) be the Helmholtz operator and \(J(a, b) = \partial_{s_1} a \partial_{s_2} b - \partial_{s_2} a \partial_{s_1} b\) the Jacobian.</p>
   \[
   \begin{aligned}
-  \text{diagnostic solve:}\quad &amp; \psi = \mathcal L^{-1}(q - \beta y)\\
-  \text{terms:}\quad &amp; f(q) = \underbrace{-J(\psi, q)}_{\text{advection}} \;\underbrace{-\,\nu\nabla^6\psi}_{\text{dissipation}} \;+\; \underbrace{u}_{\text{wind forcing}}\\
-  \text{integrator:}\quad &amp; q \leftarrow \Phi_{\Delta t}[f](q) = q + \tfrac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4)\\
-  \text{step map:}\quad &amp; \mathbf z_{k+1} = \mathcal F_\theta(\mathbf z_k;\mathbf x,\mathbf u_k) = \Phi_{\Delta t}[f]^{48}(\mathbf z_k)\\
-  \text{rollout:}\quad &amp; \mathbf z_{1:K} = \mathcal G_\theta(\mathbf z_0,\mathbf u_{1:K};\mathbf x)
+  \text{diagnostic solve: } &amp; \psi = \mathcal{A}^{-1}[q - \beta s_2]\\
+  \text{terms: } &amp; \mathcal{F}[q] = \underbrace{-J(\psi, q)}_{\text{advection}} \underbrace{- \nu \nabla^6 \psi}_{\text{dissipation}} + \underbrace{u^\text{wind}}_{\text{wind forcing}}\\
+  \text{integrator: } &amp; q \leftarrow \mathrm{RK4}_{\Delta t}[\mathcal{F}](q) = q + \frac{\Delta t}{6} \left(\mathcal{F}^{(1)} + 2 \mathcal{F}^{(2)} + 2 \mathcal{F}^{(3)} + \mathcal{F}^{(4)}\right)\\
+  \text{step map: } &amp; \vect{x}_{k+1} = f(\vect{x}_k, \vect{u}_k; \gvect{\theta}) = \mathrm{RK4}_{\Delta t}[\mathcal{F}]^{48}(\vect{x}_k)\\
+  \text{rollout: } &amp; \vect{x}_{1:T} = f_{1:T \leftarrow 0}(\vect{x}_0, \vect{u}_{1:T}; \gvect{\theta})
   \end{aligned}
   \]
-  <p>Below the terms sits the discretisation: \(J\) is the Arakawa stencil and \(\nabla^2\) the five-point stencil on the C-grid, and \(\mathcal L^{-1}\) is a spectral or sine-transform solve. Each layer is a function with a signature, and each can be swapped.</p>
+  <p>Below the terms sits the discretisation: \(J\) is the Arakawa stencil and \(\nabla^2\) the five-point stencil on the C-grid, and \(\mathcal{A}^{-1}\) is a spectral or sine-transform solve. Each layer is a function with a signature, and each can be swapped.</p>
   <p>The sketch below is the model in code. Every type in this page is an edit to one or two of its lines.</p>
   <pre>import equinox as eqx
 import finitevolx as fvx
@@ -334,7 +335,7 @@ import jax
 from jaxtyping import Array, Float
 
 <span class="c"># Shapes: T = 10 days (time); H, W = 130 × 130 grid with ghost ring</span>
-<span class="c">#         (height, width); V covariates, βy first (variable);</span>
+<span class="c">#         (height, width); V covariates, β s_2 first (variable);</span>
 <span class="c">#         48 RK4 substeps per day</span>
 
 
@@ -359,14 +360,14 @@ def qg_tendency(
     beta_y = covariates[0]<span class="c">                            # (H, W)</span>
 
 <span class="c">    # --- diagnostic solve ---</span>
-<span class="c">    # q − βy</span>
+<span class="c">    # q − β s_2</span>
     relative_pv = pv - beta_y<span class="c">                         # (H, W) → (H, W)</span>
 <span class="c">    # L_d²</span>
     radius_squared = params.deformation_radius**2<span class="c">     # → ()</span>
 <span class="c">    # L_d⁻²</span>
     helmholtz_shift = 1.0 / radius_squared<span class="c">            # → ()</span>
 <span class="c">    # today* (finitevolx)</span>
-<span class="c">    # ψ = 𝓛⁻¹(q − βy),  𝓛 = ∇² − L_d⁻²</span>
+<span class="c">    # ψ = 𝒜⁻¹[q − β s_2],  𝒜 = ∇² − L_d⁻²</span>
     streamfunction = fvx.pv_inversion(<span class="c">                # (H, W) → (H, W)</span>
         relative_pv, grid.dx, grid.dy, lambda_=helmholtz_shift, bc="dst"
     )
@@ -375,7 +376,7 @@ def qg_tendency(
 <span class="c">    # today (finitevolx)</span>
 <span class="c">    # J(ψ, q)</span>
     jacobian_term = jacobian(streamfunction, pv)<span class="c">      # (H, W)</span>
-<span class="c">    # A = −J(ψ, q)</span>
+<span class="c">    # advection = −J(ψ, q)</span>
     advection = -jacobian_term<span class="c">                        # (H, W)</span>
 <span class="c">    # today (finitevolx)</span>
 <span class="c">    # ∇²ψ</span>
@@ -386,10 +387,10 @@ def qg_tendency(
 <span class="c">    # today (finitevolx)</span>
 <span class="c">    # ∇⁶ψ = ∇²(∇⁴ψ)</span>
     laplacian_3 = difference.laplacian(laplacian_2)<span class="c">   # (H, W)</span>
-<span class="c">    # D = −ν ∇⁶ψ</span>
+<span class="c">    # dissipation = −ν ∇⁶ψ</span>
     dissipation = -params.viscosity * laplacian_3<span class="c">     # (H, W)</span>
 
-<span class="c">    # f = −J(ψ, q) − ν∇⁶ψ + u</span>
+<span class="c">    # ℱ[q] = −J(ψ, q) − ν∇⁶ψ + u^wind</span>
     tendency = advection + dissipation + forcing<span class="c">      # (H, W)</span>
     return tendency
 
@@ -406,16 +407,16 @@ def qg_day(
 ) -&gt; Float[Array, "height width"]:
     def rhs(state):
 <span class="c">        # user</span>
-<span class="c">        # f(q; x, u, θ)</span>
+<span class="c">        # ℱ[q; u_k, θ]</span>
         return qg_tendency(state, covariates, forcing, params, grid)
 
     def substep(state, _):
 <span class="c">        # today (finitevolx)</span>
-<span class="c">        # q ← Φ_Δt[f](q), classic RK4</span>
+<span class="c">        # q ← RK4_Δt[ℱ](q), classic RK4</span>
         state = fvx.rk4_step(state, rhs, dt)<span class="c">          # (H, W) → (H, W)</span>
         return state, None
 
-<span class="c">    # 𝓕_θ(z_k) = Φ_Δt[f]⁴⁸(z_k)</span>
+<span class="c">    # f(x_k, u_k; θ) = RK4_Δt[ℱ]⁴⁸(x_k)</span>
     next_pv, _ = jax.lax.scan(<span class="c">                        # (H, W) → (H, W)</span>
         substep, pv, None, length=n_substeps
     )
@@ -431,13 +432,13 @@ def qg_rollout(
 ) -&gt; Float[Array, "time height width"]:
     def day(state, daily_forcing):
 <span class="c">        # user</span>
-<span class="c">        # z_k = 𝓕_θ(z_{k−1}; x, u_k)</span>
+<span class="c">        # x_k = f(x_{k−1}, u_k; θ)</span>
         state = qg_day(<span class="c">                               # (H, W) → (H, W)</span>
             state, covariates, daily_forcing, params, grid
         )
         return state, state
 
-<span class="c">    # 𝓖_θ(z₀, u₁:K) = (z₁, …, z_K)</span>
+<span class="c">    # f_{1:T←0}(x₀, u_{1:T}; θ) = (x₁, …, x_T)</span>
     _, trajectory = jax.lax.scan(<span class="c">                     # (H, W) → (T, H, W)</span>
         day, initial_pv, forcing
     )
@@ -467,36 +468,36 @@ def qg_rollout(
   <div class="tbl"><table>
     <thead><tr><th>Glue</th><th>Form</th><th>Guarantee</th><th>Types</th></tr></thead>
     <tbody>
-      <tr><td>Additive</td><td>\(f_{\text{phys}} + g_\phi\), \(\;\mathcal F + r_\phi\)</td><td>none; the network can undo the physics</td><td>T3, T7</td></tr>
-      <tr><td>Parametric</td><td>the network outputs a coefficient the physics uses: \(\nu_\phi(\mathbf x)\), \(\kappa_\phi\)</td><td>the operator bounds what it can do</td><td>T1, T4</td></tr>
-      <tr><td>Structural</td><td>output forced into a form: \(-\nabla\cdot\mathbf S_\phi\), \(\kappa_\phi \ge 0\), flux-form stencils</td><td>conservation or dissipation by construction</td><td>T2, T3 (flux), T4</td></tr>
+      <tr><td>Additive</td><td>\(\mathcal{F}_\text{phys} + \mathcal{G}\), \(f + g_\text{res}\)</td><td>none; the network can undo the physics</td><td>T3, T7</td></tr>
+      <tr><td>Parametric</td><td>the network outputs a coefficient the physics uses: \(g_\nu(\vect{u}^\text{cov}; \gvect{\theta}_\text{emu})\), \(g_\kappa\)</td><td>the operator bounds what it can do</td><td>T1, T4</td></tr>
+      <tr><td>Structural</td><td>output forced into a form: \(-\nabla \cdot \mathcal{G}_\text{flux}\), \(\kappa \ge 0\), flux-form stencils</td><td>conservation or dissipation by construction</td><td>T2, T3 (flux), T4</td></tr>
       <tr><td>Splitting</td><td>physics step, then correction step</td><td>physics untouched; error tied to the step size</td><td>T6</td></tr>
       <tr><td>Replacement</td><td>the network is the piece</td><td>only the signature</td><td>T5, T8, T9</td></tr>
     </tbody>
   </table></div>
 
   <h3>What it is trained against</h3>
-  <p>Two jobs, three sources of reference, four loss levels. Let \(\mathbf z^{\text{ref}}\) be the reference trajectory and \(f^{\text{ref}}\) its tendency.</p>
+  <p>Two jobs, three sources of reference, four loss levels. Let \(\vect{x}^\text{ref}\) be the reference trajectory and \(\mathcal{F}_\text{ref}\) its tendency.</p>
   <div class="tbl"><table>
     <thead><tr><th>Job</th><th>Reference</th><th>Ground truth box</th></tr></thead>
     <tbody>
-      <tr><td><span class="tgt em">emulation</span></td><td>\(\mathbf z^{\text{ref}}\) from the physical model itself</td><td>step 1</td></tr>
-      <tr><td><span class="tgt co">correction</span></td><td>\(\mathbf z^{\text{ref}} = \mathcal C(\mathbf z^{\text{hr}})\), a finer or richer run coarse-grained to our grid</td><td>a better step 1</td></tr>
-      <tr><td><span class="tgt co">correction</span></td><td>observations \(\mathbf y_{1:K}\) through \(\mathbf H_k\)</td><td>the ocean</td></tr>
+      <tr><td><span class="tgt em">emulation</span></td><td>\(\vect{x}^\text{ref}\) from the physical model itself</td><td>step 1</td></tr>
+      <tr><td><span class="tgt co">correction</span></td><td>\(\vect{x}^\text{ref} = \mathcal{C}[\vect{x}^\text{hr}]\), a finer or richer run coarse-grained to our grid</td><td>a better step 1</td></tr>
+      <tr><td><span class="tgt co">correction</span></td><td>observations \(\vect{y}_{1:T}\) through \(\mat{H}_k\)</td><td>the ocean</td></tr>
     </tbody>
   </table></div>
   <p>The loss can sit at four levels, from cheapest to most faithful to how the model will be used:</p>
   \[
   \begin{aligned}
-  \text{tendency:}\quad &amp; \mathbb E\,\big\|f^{\text{ref}}(\mathbf z) - f_\phi(\mathbf z)\big\|^2\\
-  \text{one step:}\quad &amp; \mathbb E\,\big\|\mathbf z^{\text{ref}}_{k+1} - \mathcal F_\phi(\mathbf z^{\text{ref}}_k)\big\|^2\\
-  \text{rollout:}\quad &amp; \mathbb E\sum_{k=1}^{K}\big\|\mathbf z^{\text{ref}}_k - \mathcal F_\phi^{(k)}(\mathbf z^{\text{ref}}_0)\big\|^2\\
-  \text{observations:}\quad &amp; \mathbb E\sum_{k=1}^{K}\big\|\mathbf y_k - \mathbf H_k\mathcal F_\phi^{(k)}(\mathbf z_0)\big\|^2_{\mathbf R_k^{-1}}
+  \mathcal{L}_\text{tendency}(\gvect{\theta}_\text{emu}) &amp;= \mathbb{E} \Vert \mathcal{F}_\text{ref}[q] - \mathcal{F}[q; \gvect{\theta}_\text{emu}] \Vert^2\\
+  \mathcal{L}_\text{step}(\gvect{\theta}_\text{emu}) &amp;= \mathbb{E} \Vert \vect{x}^\text{ref}_{k+1} - f(\vect{x}^\text{ref}_k; \gvect{\theta}_\text{emu}) \Vert^2\\
+  \mathcal{L}_\text{rollout}(\gvect{\theta}_\text{emu}) &amp;= \mathbb{E} \sum_{k=1}^{T} \Vert \vect{x}^\text{ref}_k - f_{k \leftarrow 0}(\vect{x}^\text{ref}_0; \gvect{\theta}_\text{emu}) \Vert^2\\
+  \mathcal{L}_\text{obs}(\gvect{\theta}_\text{emu}) &amp;= \mathbb{E} \sum_{k=1}^{T} \Vert \vect{y}_k - \mat{H}_k f_{k \leftarrow 0}(\vect{x}_0; \gvect{\theta}_\text{emu}) \Vert^2_{\gmat{\Sigma}_{\varepsilon,k}^{-1}}
   \end{aligned}
   \]
   <p>For correction against a finer run, the tendency target is the <em>subgrid forcing</em>: what the coarse physics misses when applied to the coarse-grained state,</p>
-  \[ \mathbf s = \mathcal C\big(f_{\text{hr}}(\mathbf z^{\text{hr}})\big) - f_{\text{phys}}\big(\mathcal C(\mathbf z^{\text{hr}})\big). \]
-  <p>The tendency and one-step losses are <em>a priori</em>: cheap, but the model never sees its own errors, so long rollouts often go unstable. The rollout and observation losses are <em>a posteriori</em>: they differentiate through the solver, which is what a JAX model makes affordable. The observation loss also needs each window's \(\mathbf z_0\), so learning from data is 4D-Var with \(\phi\) added to the control vector.</p>
+  \[ \mathcal{F}_\text{sub} = \mathcal{C}\left[\mathcal{F}_\text{hr}[q^\text{hr}]\right] - \mathcal{F}_\text{phys}\left[\mathcal{C}[q^\text{hr}]\right]. \]
+  <p>The tendency and one-step losses are <em>a priori</em>: cheap, but the model never sees its own errors, so long rollouts often go unstable. The rollout and observation losses are <em>a posteriori</em>: they differentiate through the solver, which is what a JAX model makes affordable. The observation loss also needs each window's \(\vect{x}_0\), so learning from data is 4D-Var with \(\gvect{\theta}_\text{emu}\) added to the control vector.</p>
 
   <h2 id="types">The ten types</h2>
   <p>Each card gives the equation, the operator signature with what is learned, and the training target as a column. Shapes use the named dimensions of the last page.</p>
@@ -505,9 +506,10 @@ def qg_rollout(
     <header><span class="tn">T1</span><h3>Learned parameters</h3><span class="where">layer: parameters</span></header>
     <div class="tbody">
       <p>The equations are fixed. Constants become leaves, or a network maps the covariates to a parameter <em>field</em>:</p>
-  \[ \theta \;\to\; \theta_\phi(\mathbf x) = \mathrm{NN}_\phi(\mathbf x), \qquad f = -J(\psi,q) - \nu_\phi(\mathbf x)\,\nabla^6\psi + u . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">θ_φ(x)</span><code>(param, height, width)</code></div>
-      <dl class="attrs"><dt>Learned</dt><dd>constants, or a parameter field from a small network on x</dd><dt>Glue</dt><dd>parametric: the physics consumes the learned numbers</dd><dt>Target</dt><dd><span class="tgt co">correction</span>data or a richer model; <span class="tgt em">emulation</span>step 1 only to test identifiability</dd><dt>Regime</dt><dd>a posteriori, through the rollout (the parameters have no local target)</dd><dt>Keeps</dt><dd>everything: conservation, Δt freedom, a correct adjoint</dd><dt>Six-step</dt><dd>box 2's inner loop when θ is constant, box 6 when it becomes a field</dd></dl>
+  \[ \gvect{\theta} \to g_\text{param}(\vect{u}^\text{cov}; \gvect{\theta}_\text{emu}) \]
+  \[ \mathcal{F}[q] = -J(\psi, q) - g_\nu(\vect{u}^\text{cov}; \gvect{\theta}_\text{emu}) \nabla^6 \psi + u^\text{wind} . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^cov</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^wind_k</span><code>(height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">g_param(u^cov)</span><code>(param, height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>constants, or a parameter field from a small network on u^cov</dd><dt>Glue</dt><dd>parametric: the physics consumes the learned numbers</dd><dt>Target</dt><dd><span class="tgt co">correction</span>data or a richer model; <span class="tgt em">emulation</span>step 1 only to test identifiability</dd><dt>Regime</dt><dd>a posteriori, through the rollout (the parameters have no local target)</dd><dt>Keeps</dt><dd>everything: conservation, Δt freedom, a correct adjoint</dd><dt>Six-step</dt><dd>box 2's inner loop when θ is constant, box 6 when it becomes a field</dd></dl>
       <p class="crit">The cheapest hybrid and the most honest one. It can only fix errors the equations already have room for: a missing process stays missing.</p>
     </div>
   </article>
@@ -515,10 +517,10 @@ def qg_rollout(
   <article class="tcard" id="t2">
     <header><span class="tn">T2</span><h3>Learned discretisation</h3><span class="where">layer: discretisation</span></header>
     <div class="tbody">
-      <p>The PDE is fixed; the stencil weights are learned. With offsets \((p,s)\in\mathcal S\) and weights \(w\), a derivative or face value is a weighted sum of shifted copies. In flux form the update telescopes, so the domain integral of \(q\) is conserved whatever the weights are:</p>
-  \[ (\mathcal D q)_{j,i} = \sum_{(p,s)\in\mathcal S} w^{\phi}_{ps}(q)\; q_{j+p,\,i+s},
-  \qquad f = -\nabla_h\!\cdot \mathbf F_\phi, \quad \mathbf F_\phi = \mathbf v\, q^{\text{face}}_\phi . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">w</span><code>(offset,)</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">w_φ(q)</span><code>(offset, height, width)</code></div>
+      <p>The PDE is fixed; the stencil weights are learned. With offsets \((p, r) \in \mathcal{O}\) and weights \(w\), a derivative or face value is a weighted sum of shifted copies. In flux form the update telescopes, so the domain integral of \(q\) is conserved whatever the weights are:</p>
+  \[ (\mathcal{D}[q])_{j,i} = \sum_{(p, r) \in \mathcal{O}} w_{pr}(q; \gvect{\theta}_\text{emu}) q_{j+p, i+r} \]
+  \[ \mathcal{F}[q] = -\nabla \cdot \left(\vect{v} q^\text{face}(q; \gvect{\theta}_\text{emu})\right) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^cov</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^wind_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">w</span><code>(offset,)</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">w(q; θ_emu)</span><code>(offset, height, width)</code></div>
       <dl class="attrs"><dt>Learned</dt><dd>stencil coefficients, constant or predicted per point from the local state</dd><dt>Glue</dt><dd>structural: the learned numbers sit inside the stencil, the PDE is untouched</dd><dt>Target</dt><dd><span class="tgt co">correction</span>a finer-grid run coarse-grained to this grid (numerics error, not physics error)</dd><dt>Regime</dt><dd>a posteriori; a priori on face values is possible but drifts</dd><dt>Keeps</dt><dd>conservation (flux form), Δt freedom, the C-grid staggering</dd><dt>Six-step</dt><dd>box 6: it changes how box 1 is computed</dd></dl>
       <p class="crit">Lets a coarse grid behave like a finer one. With constant weights it still compiles to one slice fusion, and its Fourier symbol is inspectable, so you can see what it learned.</p>
     </div>
@@ -528,10 +530,10 @@ def qg_rollout(
     <header><span class="tn">T3</span><h3>Physics plus a learned term</h3><span class="where">layer: terms (additive)</span></header>
     <div class="tbody">
       <p>A network adds the missing term. In flux form the term moves PV around without creating it:</p>
-  \[ f = \underbrace{-J(\psi,q) - \nu\nabla^6\psi + u}_{f_{\text{phys}}} \;+\; g_\phi(q,\psi;\mathbf x,u),
-  \qquad g_\phi = -\nabla_h\!\cdot \mathbf S_\phi . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">S_φ</span><code>(2, height, width) flux</code></div>
-      <dl class="attrs"><dt>Learned</dt><dd>one tendency term: a subgrid PV flux, a missing forcing</dd><dt>Glue</dt><dd>additive, or structural when written as a flux divergence</dd><dt>Target</dt><dd><span class="tgt co">correction</span>subgrid forcing from a coarse-grained high-resolution run, or observations</dd><dt>Regime</dt><dd>a priori on the subgrid forcing, then a posteriori; a priori alone is often unstable</dd><dt>Keeps</dt><dd>Δt freedom; conservation only in flux form; an adjoint as good as g_φ's Jacobian</dd><dt>Six-step</dt><dd>box 6: a structural change to box 1</dd></dl>
+  \[ \mathcal{F}[q] = \underbrace{-J(\psi, q) - \nu \nabla^6 \psi + u^\text{wind}}_{\mathcal{F}_\text{phys}[q]} + \mathcal{G}[q, \psi; \vect{u}_k, \gvect{\theta}_\text{emu}] \]
+  \[ \mathcal{G} = -\nabla \cdot \mathcal{G}_\text{flux}[q, \psi; \gvect{\theta}_\text{emu}] . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^cov</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^wind_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">𝒢_flux</span><code>(2, height, width) flux</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>one tendency term: a subgrid PV flux, a missing forcing</dd><dt>Glue</dt><dd>additive, or structural when written as a flux divergence</dd><dt>Target</dt><dd><span class="tgt co">correction</span>subgrid forcing from a coarse-grained high-resolution run, or observations</dd><dt>Regime</dt><dd>a priori on the subgrid forcing, then a posteriori; a priori alone is often unstable</dd><dt>Keeps</dt><dd>Δt freedom; conservation only in flux form; an adjoint as good as 𝒢's Jacobian</dd><dt>Six-step</dt><dd>box 6: a structural change to box 1</dd></dl>
       <p class="crit">The workhorse of hybrid modelling. Its danger is identifiability: trained jointly with θ, an additive term can absorb part of the physics.</p>
     </div>
   </article>
@@ -540,9 +542,9 @@ def qg_rollout(
     <header><span class="tn">T4</span><h3>Learned fields in a known form</h3><span class="where">layer: terms (parametric)</span></header>
     <div class="tbody">
       <p>The network never writes a tendency. It supplies a field that a physics operator then uses. An eddy diffusivity kept non-negative is dissipative by construction:</p>
-  \[ f = -J(\psi,q) + \nabla_h\!\cdot\!\big(\kappa_\phi(q,\psi;\mathbf x)\,\nabla_h q\big) - \nu\nabla^6\psi + u,
-  \qquad \kappa_\phi = \operatorname{softplus}(\mathrm{NN}_\phi) \ge 0 . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">κ_φ</span><code>(height, width)</code></div>
+  \[ \mathcal{F}[q] = -J(\psi, q) + \nabla \cdot \left(\kappa \nabla q\right) - \nu \nabla^6 \psi + u^\text{wind} \]
+  \[ \kappa = \mathrm{softplus}\left(g_\kappa(q, \psi, \vect{u}^\text{cov}; \gvect{\theta}_\text{emu})\right) \ge 0 . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^cov</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^wind_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">κ = softplus(g_κ)</span><code>(height, width)</code></div>
       <dl class="attrs"><dt>Learned</dt><dd>a coefficient field that depends on the state: diffusivity, an advecting velocity, a source</dd><dt>Glue</dt><dd>parametric and structural: the operator fixes what the field can do</dd><dt>Target</dt><dd><span class="tgt co">correction</span>coarse-grained high-resolution run, or observations</dd><dt>Regime</dt><dd>a posteriori</dd><dt>Keeps</dt><dd>the sign of energy or enstrophy change, conservation, Δt freedom</dd><dt>Six-step</dt><dd>box 6</dd></dl>
       <p class="crit">Sits between T1 and T3. Less expressive than a free term, much harder to break, and the learned field is a physical quantity you can map and inspect.</p>
     </div>
@@ -552,8 +554,9 @@ def qg_rollout(
     <header><span class="tn">T5</span><h3>Neural tendency, classical integrator</h3><span class="where">layer: tendency</span></header>
     <div class="tbody">
       <p>The whole right-hand side is a network; the time stepping stays classical:</p>
-  \[ \partial_t z = g_\phi(z;\mathbf x,u,\theta), \qquad \mathbf z_{k+1} = \Phi_{\Delta t}[g_\phi]^{48}(\mathbf z_k) . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">g_φ(z)</span><code>(variable, height, width)</code></div>
+  \[ \partial_t q = \mathcal{F}[q; \vect{u}_k, \gvect{\theta}, \gvect{\theta}_\text{emu}] \]
+  \[ \vect{x}_{k+1} = \mathrm{RK4}_{\Delta t}[\mathcal{F}]^{48}(\vect{x}_k) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^cov</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^wind_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">ℱ[q; θ_emu]</span><code>(variable, height, width)</code></div>
       <dl class="attrs"><dt>Learned</dt><dd>the tendency</dd><dt>Glue</dt><dd>replacement</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>tendencies of step 1, exact and free; <span class="tgt co">correction</span>a richer model or data</dd><dt>Regime</dt><dd>a priori on tendencies, then a posteriori</dd><dt>Keeps</dt><dd>Δt freedom and the integrator's stability region; loses conservation</dd><dt>Six-step</dt><dd>box 3 when emulating, box 6 when correcting</dd></dl>
       <p class="crit">For QG this is no faster than the physics it replaces, because the network is called 192 times a day (48 steps × 4 RK4 stages). It earns its place when the true tendency is unknown, not when it is expensive.</p>
     </div>
@@ -562,11 +565,11 @@ def qg_rollout(
   <article class="tcard" id="t6">
     <header><span class="tn">T6</span><h3>Physical tendency, learned integrator</h3><span class="where">layer: integrator</span></header>
     <div class="tbody">
-      <p>Take a large step \(\Delta T = 8\,\Delta t\) that the classical integrator gets wrong, and learn the time-discretisation error. Six corrected big steps replace 48 small ones:</p>
-  \[ \mathbf z \leftarrow \Phi_{\Delta T}[f_{\text{phys}}](\mathbf z) + c_\phi(\mathbf z), \quad\text{repeated } 6 \text{ times per day.} \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">c_φ(z)</span><code>(variable, height, width)</code></div>
-      <dl class="attrs"><dt>Learned</dt><dd>the error of a large time step</dd><dt>Glue</dt><dd>splitting: physics step, then correction</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>the same physics at the small Δt (step 1)</dd><dt>Regime</dt><dd>a posteriori through the solver</dd><dt>Keeps</dt><dd>the physical tendency; loses Δt freedom (ΔT is baked in)</dd><dt>Six-step</dt><dd>box 3</dd></dl>
-      <p class="crit">Speed with the physics still visible. The correction is trained for one ΔT and one grid; change either and it must be retrained.</p>
+      <p>Take a large step \(\Delta t_\text{big} = 8 \Delta t\) that the classical integrator gets wrong, and learn the time-discretisation error. Six corrected big steps replace 48 small ones:</p>
+  \[ \vect{x} \leftarrow \mathrm{RK4}_{\Delta t_\text{big}}[\mathcal{F}_\text{phys}](\vect{x}) + g_\text{corr}(\vect{x}; \gvect{\theta}_\text{emu}) \text{, repeated 6 times per day.} \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^cov</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^wind_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">g_corr(x)</span><code>(variable, height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the error of a large time step</dd><dt>Glue</dt><dd>splitting: physics step, then correction</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>the same physics at the small Δt (step 1)</dd><dt>Regime</dt><dd>a posteriori through the solver</dd><dt>Keeps</dt><dd>the physical tendency; loses Δt freedom (Δt_big is baked in)</dd><dt>Six-step</dt><dd>box 3</dd></dl>
+      <p class="crit">Speed with the physics still visible. The correction is trained for one Δt_big and one grid; change either and it must be retrained.</p>
     </div>
   </article>
 
@@ -574,10 +577,10 @@ def qg_rollout(
     <header><span class="tn">T7</span><h3>Residual on the step map</h3><span class="where">layer: step map (additive)</span></header>
     <div class="tbody">
       <p>Run the physical model for a day, then add a learned correction:</p>
-  \[ \mathbf z_{k+1} = \mathcal F_\theta(\mathbf z_k;\mathbf x,\mathbf u_k) + r_\phi(\mathbf z_k;\mathbf x,\mathbf u_k) . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">r_φ(z)</span><code>(variable, height, width)</code></div>
-      <dl class="attrs"><dt>Learned</dt><dd>the one-day error of the physical model</dd><dt>Glue</dt><dd>additive, after the step</dd><dt>Target</dt><dd><span class="tgt co">correction</span>reanalysis states or a richer model sampled daily</dd><dt>Regime</dt><dd>one-step, then rollout</dd><dt>Keeps</dt><dd>nothing beyond what 𝓕_θ gives; loses Δt freedom</dd><dt>Six-step</dt><dd>box 6</dd></dl>
-      <p class="crit">Easy to bolt onto an existing model, and r_φ itself is a map of where the model is wrong. It mixes physics error and numerics error, so it does not tell you which one to fix.</p>
+  \[ \vect{x}_{k+1} = f(\vect{x}_k, \vect{u}_k; \gvect{\theta}) + g_\text{res}(\vect{x}_k, \vect{u}_k; \gvect{\theta}_\text{emu}) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^cov</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^wind_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>network</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">g_res(x)</span><code>(variable, height, width)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the one-day error of the physical model</dd><dt>Glue</dt><dd>additive, after the step</dd><dt>Target</dt><dd><span class="tgt co">correction</span>reanalysis states or a richer model sampled daily</dd><dt>Regime</dt><dd>one-step, then rollout</dd><dt>Keeps</dt><dd>nothing beyond what f(·; θ) gives; loses Δt freedom</dd><dt>Six-step</dt><dd>box 6</dd></dl>
+      <p class="crit">Easy to bolt onto an existing model, and g_res itself is a map of where the model is wrong. It mixes physics error and numerics error, so it does not tell you which one to fix.</p>
     </div>
   </article>
 
@@ -585,9 +588,9 @@ def qg_rollout(
     <header><span class="tn">T8</span><h3>Pure step map</h3><span class="where">layer: step map (replacement)</span></header>
     <div class="tbody">
       <p>One network evaluation replaces the whole day:</p>
-  \[ \mathbf z_{k+1} = \widehat{\mathcal F}_\phi(\mathbf z_k;\mathbf x,\mathbf u_k,\theta) . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code></div>
-      <dl class="attrs"><dt>Learned</dt><dd>the one-day map</dd><dt>Glue</dt><dd>replacement</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>step 1 trajectories; <span class="tgt co">correction</span>reanalysis</dd><dt>Regime</dt><dd>one-step, then rollout fine-tuning for stability</dd><dt>Keeps</dt><dd>nothing by construction; same signature as 𝓕, so it drops into any cycle</dd><dt>Six-step</dt><dd>box 3 (the emulator of the last page)</dd></dl>
+  \[ \vect{x}_{k+1} = f(\vect{x}_k, \vect{u}_k; \gvect{\theta}, \gvect{\theta}_\text{emu}) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^cov</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">u^wind_k</span><code>(height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>network</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the one-day map</dd><dt>Glue</dt><dd>replacement</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>step 1 trajectories; <span class="tgt co">correction</span>reanalysis</dd><dt>Regime</dt><dd>one-step, then rollout fine-tuning for stability</dd><dt>Keeps</dt><dd>nothing by construction; same signature as f, so it drops into any cycle</dd><dt>Six-step</dt><dd>box 3 (the emulator of the last page)</dd></dl>
       <p class="crit">The largest speed-up per day, and the one whose Jacobian is least trustworthy for 4D-Var. Long rollouts drift toward smooth or unstable states unless trained on them.</p>
     </div>
   </article>
@@ -596,9 +599,9 @@ def qg_rollout(
     <header><span class="tn">T9</span><h3>Rollout operator</h3><span class="where">layer: rollout</span></header>
     <div class="tbody">
       <p>The network maps an initial state and a forcing sequence to a whole window at once:</p>
-  \[ \mathbf z_{1:K} = \mathcal G_\phi(\mathbf z_0, \mathbf u_{1:K};\mathbf x,\theta) . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_0</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">u_1:K</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">z_1:K</span><code>(time, variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>network</code></div>
-      <dl class="attrs"><dt>Learned</dt><dd>the trajectory</dd><dt>Glue</dt><dd>replacement</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>step 1 windows; <span class="tgt co">correction</span>reanalysis windows</dd><dt>Regime</dt><dd>trajectory loss</dd><dt>Keeps</dt><dd>nothing; the horizon K is fixed</dd><dt>Six-step</dt><dd>box 3</dd></dl>
+  \[ \vect{x}_{1:T} = f_{1:T \leftarrow 0}(\vect{x}_0, \vect{u}_{1:T}; \gvect{\theta}, \gvect{\theta}_\text{emu}) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_0</span><code>(variable, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">u_1:T</span><code>(time, height, width)</code><span class="d"></span><svg class="g" aria-hidden="true"><use href="#g-vector"/></svg><span class="n">θ</span><code>(param,)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-cube"/></svg><span class="n">x_1:T</span><code>(time, variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>network</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the trajectory</dd><dt>Glue</dt><dd>replacement</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>step 1 windows; <span class="tgt co">correction</span>reanalysis windows</dd><dt>Regime</dt><dd>trajectory loss</dd><dt>Keeps</dt><dd>nothing; the horizon T is fixed</dd><dt>Six-step</dt><dd>box 3</dd></dl>
       <p class="crit">The signature changes from field → field to field → cube, so it cannot be stepped, cycled or restarted mid-window. It fits a fixed 10-day 4D-Var window and little else.</p>
     </div>
   </article>
@@ -606,18 +609,20 @@ def qg_rollout(
   <article class="tcard" id="t10">
     <header><span class="tn">T10</span><h3>Learned representation</h3><span class="where">layer: representation (orthogonal)</span></header>
     <div class="tbody">
-      <p>An encoder maps the state to an embedding \(\mathbf h\), any of T5, T8 or T9 runs there, and a decoder maps back. The embedding is called \(\mathbf h\) because \(\mathbf z\) is already the latent state of the probabilistic model:</p>
-  \[ \mathbf h_k = E_\phi(\mathbf z_k), \qquad \mathbf h_{k+1} = \widetilde{\mathcal F}_\phi(\mathbf h_k;\mathbf u_k), \qquad \hat{\mathbf z}_{k+1} = D_\phi(\mathbf h_{k+1}) . \]
-      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(variable, height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">φ</span><code>E, D and dynamics</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">h_k</span><code>(channel, height′, width′)</code></div>
-      <dl class="attrs"><dt>Learned</dt><dd>the space the dynamics run in, plus the dynamics</dd><dt>Glue</dt><dd>composition E → dynamics → D</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>or <span class="tgt co">correction</span>, plus reconstruction ‖z − D(E(z))‖²</dd><dt>Regime</dt><dd>reconstruction and latent rollout, jointly or in stages</dd><dt>Keeps</dt><dd>whatever the inner type keeps, in the embedding only</dd><dt>Six-step</dt><dd>box 3</dd></dl>
-      <p class="crit">Cheap dynamics in a small space. For assimilation, the observation operator becomes H_k D_φ, so every 4D-Var gradient goes through the decoder, and the decoder's errors become observation errors no R accounts for.</p>
+      <p>An encoder maps the state to an embedding \(\vect{z}_k \in \mathbb{R}^{D_z}\), any of T5, T8 or T9 runs there, and a decoder maps back. The embedding is the latent \(\vect{z}\) because \(\vect{x}\) is already the state of the probabilistic model:</p>
+  \[ \vect{z}_k = g_\text{enc}(\vect{x}_k; \gvect{\theta}_\text{emu}) \]
+  \[ \vect{z}_{k+1} = f_\text{latent}(\vect{z}_k, \vect{u}_k; \gvect{\theta}_\text{emu}) \]
+  \[ \hat{\vect{x}}_{k+1} = g_\text{dec}(\vect{z}_{k+1}; \gvect{\theta}_\text{emu}) . \]
+      <div class="tsig"><span class="d">in</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k</span><code>(variable, height, width)</code><span class="d">out</span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">x_k+1</span><code>(variable, height, width)</code><span class="d learn">learned</span><svg class="g" aria-hidden="true"><use href="#g-weights"/></svg><span class="n">θ_emu</span><code>g_enc, g_dec and dynamics</code><span class="d learn"></span><svg class="g" aria-hidden="true"><use href="#g-field"/></svg><span class="n">z_k</span><code>(channel, height′, width′)</code></div>
+      <dl class="attrs"><dt>Learned</dt><dd>the space the dynamics run in, plus the dynamics</dd><dt>Glue</dt><dd>composition g_enc → dynamics → g_dec</dd><dt>Target</dt><dd><span class="tgt em">emulation</span>or <span class="tgt co">correction</span>, plus reconstruction ‖x − g_dec(g_enc(x))‖²</dd><dt>Regime</dt><dd>reconstruction and latent rollout, jointly or in stages</dd><dt>Keeps</dt><dd>whatever the inner type keeps, in the embedding only</dd><dt>Six-step</dt><dd>box 3</dd></dl>
+      <p class="crit">Cheap dynamics in a small space. For assimilation, the observation operator becomes H_k ∘ g_dec, so every 4D-Var gradient goes through the decoder, and the decoder's errors become observation errors no Σ_ε accounts for.</p>
     </div>
   </article>
 
   <h2 id="matrix">Selection matrix</h2>
   <p><span class="mk y">●</span> yes &nbsp; <span class="mk p">◐</span> partly or with care &nbsp; <span class="mk n">○</span> no</p>
   <div class="tbl"><table class="matrix">
-    <thead><tr><th>Type</th><th>Faster than 𝓕</th><th>Can fix model error</th><th>Free Δt</th><th>Usable adjoint</th><th>Conserves by construction</th><th>Inspectable</th></tr></thead>
+    <thead><tr><th>Type</th><th>Faster than f</th><th>Can fix model error</th><th>Free Δt</th><th>Usable adjoint</th><th>Conserves by construction</th><th>Inspectable</th></tr></thead>
     <tbody>
       <tr><td>T1 parameters</td><td><span class="mk n">○</span></td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td></tr>
       <tr><td>T2 discretisation</td><td><span class="mk y">●</span></td><td><span class="mk p">◐</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td><td><span class="mk y">●</span></td></tr>
@@ -635,7 +640,7 @@ def qg_rollout(
 
   <h2 id="critique">What the structure implies</h2>
   <div class="note"><span class="tag">Emulation and correction are different boxes</span><p>An emulator answers "same model, faster" and is scored against step 1. A correction answers "better model" and is scored against a richer model or the ocean. Benchmarking a closure against the QG model, or an emulator against observations, measures the wrong thing. For this QG example emulation buys little; correction is where the value is.</p></div>
-  <div class="note"><span class="tag">Additive terms are not identifiable</span><p>Fit θ and an additive \(g_\phi\) together and the network can learn part of \(\nu\nabla^6\psi\) or of βy, leaving θ meaningless. The fixes, in order of preference: a parametric or structural form (T4, flux-form T3); fit θ first and freeze it; penalise \(\|g_\phi\|^2\).</p></div>
+  <div class="note"><span class="tag">Additive terms are not identifiable</span><p>Fit θ and an additive \(\mathcal{G}\) together and the network can learn part of \(\nu \nabla^6 \psi\) or of \(\beta s_2\), leaving θ meaningless. The fixes, in order of preference: a parametric or structural form (T4, flux-form T3); fit θ first and freeze it; penalise \(\Vert \mathcal{G} \Vert^2\).</p></div>
   <div class="note"><span class="tag">For 4D-Var, learn low in the stack</span><p>T1–T5 keep a classical integrator, so stability, Δt and the meaning of the adjoint come from the physics. T6–T9 trade that for speed, and a step map that matches values can still have the wrong Jacobian. If a type above T5 is meant for step 4, its training should include Jacobian–vector products, not only values.</p></div>
   <div class="note"><span class="tag">A priori training is a trap for T3–T5</span><p>A term that fits the subgrid forcing perfectly on reference states meets its own errors in a rollout and can blow up within days. Use the a priori loss to initialise, then train a posteriori through the solver.</p></div>
 
