@@ -11,33 +11,20 @@ numbering:
 
 (ex-markers)=
 :::{warning} Design sketches and status markers
-These snippets show the intended APIs. Every call into the stack carries a
-status marker, so you can tell what runs today from what is planned. These
-are the definitions every page in the series uses:
+These snippets show the intended APIs. Every call into the stack carries a status marker, so you can tell what runs today from what is planned. These are the definitions which every page in the series uses:
 
-- `today`: the name is in the [capability index](api/capabilities.md), at
-  the versions it lists (pipekit 0.0.2, geotoolz 0.10.2 and siblings).
-  `today*` means the name exists but the arguments are sketched.
-- `proposed (X)`: not in the index yet. The letter is the workstream that
-  adds it ([the decision](overview.md#sec-decision), or the page's own
-  workstreams).
-- `user`: a function the page's own notebook defines, not a stack name.
-- `not pinned`: lives in a library that is not pinned in `references/`
-  (gaussx, filterax, plumax, pyrox), so its API was not checked here.
+- `today`: the name is in the [capability index](api/capabilities.md), at the versions it lists (pipekit 0.0.2, geotoolz 0.10.2 and siblings). `today*` means the name exists but the arguments are sketched.
+- `proposed (X)`: not in the index yet. The letter is the workstream that adds it ([the decision](overview.md#sec-decision), or the page's own workstreams).
+- `user`: a function which the page's own notebook defines, not a stack name.
+- `not pinned`: lives in a library that is not pinned in `references/` (gaussx, filterax, plumax, pyrox), so we did not check its API here.
 :::
 
-Each section links back to the part of the [GeoStack overview](overview.md)
-it illustrates, and every sketch follows the series' pseudocode convention
-([how the pages are written](overview.md#sec-conventions)).
+Each section links back to the part of the [GeoStack overview](overview.md) it illustrates, and every sketch follows the pseudocode convention of the series ([how the pages are written](overview.md#sec-conventions)).
 
 (ex-methane)=
 ## Methane attribution, end to end
 
-The pipeline behind {numref}`fig-methane-walkthrough`: catalog the scenes,
-retrieve, gap-fill, assimilate, index, evaluate and register. Every stage is
-an operator, so the whole thing composes, serialises and reruns. The
-problem each stage solves, with its equations, is in the
-[walkthrough](overview.md#sec-walkthrough).
+This is the pipeline behind {numref}`fig-methane-walkthrough`, where we catalog the scenes, retrieve, gap-fill, assimilate, index, evaluate and register. Every stage is an operator, so the whole thing composes, serialises and reruns. The problem each stage solves, with its equations, is in the [walkthrough](overview.md#sec-walkthrough).
 
 ```{code-block} python
 :caption: Imports shared by every stage.
@@ -80,14 +67,11 @@ split = pt.splitters.GroupSplit(group="site", test_fraction=0.3,
 tccon_train, tccon_test = split(tccon_cat)                # disjoint sites
 ```
 
-`tccon_train` supplies the matchup pairs a learned retrieval trains on.
-`tccon_test` is the only TCCON data used to validate or evaluate.
+`tccon_train` supplies the matchup pairs which a learned retrieval trains on, whereas `tccon_test` is the only TCCON data we use to validate or evaluate.
 :::
 
 :::{tab-item} 2 · Retrieve
-Classical retrieval and its learned replacement share the same slot in the
-pipeline. `MaskClouds` builds the mask and `ApplyMask` applies it, so the
-retrieval is a small graph rather than a chain.
+Classical retrieval and its learned replacement share the same slot in the pipeline. `MaskClouds` builds the mask and `ApplyMask` applies it, so the retrieval is a small graph rather than a chain.
 
 ```{code-block} python
 :caption: Classical retrieval: a cloud-masked matched filter (stage 1).
@@ -96,11 +80,11 @@ retrieval is a small graph rather than a chain.
 # Shapes: B bands, H × W pixels
 scene = pk.Input("scene")  # GeoTensor (B, H, W)  today
 
-# cᵢ = 1 if the QA bits flag pixel i as cloud
+# c_n = 1 if the QA bits flag pixel n as cloud
 clouds = gz.MaskClouds(qa_band=-1, bits=[10, 11])(scene)  # → (H, W)  today
 clear = gz.ApplyMask()(scene, clouds)  # (B, H, W) → (B, H, W)  today*
 
-# αᵢ = (xᵢ − μ)ᵀ Σ⁻¹ t / (tᵀ Σ⁻¹ t), the estimate   [today*]
+# α_n = J_hᵀ Σ_y⁻¹ (y_n − μ_y) / (J_hᵀ Σ_y⁻¹ J_h), the estimate   [today*]
 alpha = gz.MatchedFilter(target=ch4_template)(clear)  # (B, H, W) → (H, W)
 
 retrieval = pk.Graph(inputs={"scene": scene}, outputs={"alpha": alpha})  # today
@@ -117,14 +101,13 @@ net = pj.JaxModelOp(RetrievalNet()).from_registry(  # today
     registry, "ch4_retrieval_v3"
 )
 
-# α = g_φ(x), trained on tccon_train matchups only
+# α_n = g_ret(y_n), trained on tccon_train matchups only
 alpha_ml = net(clear)                   # (B, H, W) → (H, W)  today
 
 retrieval_ml = pk.Graph(inputs={"scene": scene}, outputs={"alpha": alpha_ml})
 ```
 
-`retrieval_ml` has the same input and output as `retrieval`, so either one
-can fill the observation source below.
+`retrieval_ml` has the same input and output as `retrieval`, so either one can fill the observation source below.
 :::
 
 :::{tab-item} 3 · Gap-fill
@@ -135,8 +118,8 @@ can fill the observation source below.
 # Shapes: M observations, N grid cells
 from pyrox.adapters.pipekit import KrigingOperator  # not pinned
 
-# m = K_*f (K_ff + σ² I)⁻¹ y  [not pinned]
-# v = diag(K_** − K_*f (K_ff + σ² I)⁻¹ K_f*)
+# μ_* = K_*S (K_SS + σ_ε² I)⁻¹ y  [not pinned]
+# v_* = diag(K_** − K_*S (K_SS + σ_ε² I)⁻¹ K_S*)
 gap_fill = KrigingOperator(                         # (M,) → (N,), (N,)
     kernel="matern52",
     length_scale_km=50.0,
@@ -146,42 +129,30 @@ gap_fill = KrigingOperator(                         # (M,) → (N,), (N,)
 :::
 
 :::{tab-item} 4 · Assimilate
-The EnKF analysis needs an ensemble, so the cycle is an `EnsembleDACycle`
-with 40 members. The observation operator matches the instrument the
-observations come from: EMIT. `retrieval` maps one scene to one map, so the
-cycle's observation source wraps it: each hour it queries the catalog for
-that hour's scenes inside the area of interest, reads them with geotoolz's
-`ReadBounds`, retrieves each one, and grids them with the stage-3 kriging.
-The analysis assimilates the kriged mean with the kriged variance as its
-observation error. The pinned `EnsembleDACycle` takes the observations from
-its source but reads R from `DAState.obs_err_cov`, so passing a per-hour R
-needs a new `obs_err_source` hook (proposed, workstream D); `pk.Cache` keeps
-the kriging to one run per hour for both outputs. The
-stochastic analysis draws its perturbations from one key seeded from the
-run's config (`cfg.seed`), so a rerun reproduces them.
+The EnKF analysis needs an ensemble, so the cycle is an `EnsembleDACycle` with 40 members. The observation operator matches the instrument the observations come from (EMIT). `retrieval` maps one scene to one map, so the observation source of the cycle wraps it: each hour it queries the catalog for the scenes of that hour inside the area of interest, reads them with the `ReadBounds` of geotoolz, retrieves each one, and grids them with the stage-3 kriging. The analysis assimilates the kriged mean with the kriged variance as its observation error. However, the pinned `EnsembleDACycle` takes the observations from its source but reads $\gmat{\Sigma}_\varepsilon$ from `DAState.obs_err_cov`, so passing a per-hour $\gmat{\Sigma}_\varepsilon$ needs a new `obs_err_source` hook (proposed, workstream D), and `pk.Cache` keeps the kriging to one run per hour for both outputs. The stochastic analysis draws its perturbations from one key seeded from the config of the run (`cfg.seed`), so a rerun reproduces them.
 
 ```{code-block} python
 :caption: An hourly ensemble DA cycle over the plume model (stage 4).
 :linenos:
 
 # Shapes: N state = N grid cells, N_e = 40 members, T = 24 steps
-# yₜ = m, Rₜ = diag(v): stage 3 kriging of this hour's EMIT retrievals
+# y_t = μ_*, Σ_ε,t = diag(v_*): stage 3 kriging of this hour's EMIT retrievals
 retrieve_one = retrieval | pk.Pick("alpha")       # proposed (A)
 hourly_krige = pk.Cache(pk.Sequential([           # one kriging per hour
     gc.CatalogTimeQuery(emit_cat, window="1h",
                         bbox=aoi),                # AOI ∩ hour  proposed (B)
     pk.ThreadMap(gz.ReadBounds() | retrieve_one), # → S × (H, W)  today*
-    gap_fill,                                     # → {m, v} on N cells
+    gap_fill,                                     # → {μ_*, v_*} on N cells
 ]))                                               # today
-hourly_y = hourly_krige | pk.Pick("mean")         # yₜ = m
-hourly_R = hourly_krige | pk.Pick("var") | pc.DiagCov()  # Rₜ  proposed (D)
+hourly_y = hourly_krige | pk.Pick("mean")         # y_t = μ_*
+hourly_R = hourly_krige | pk.Pick("var") | pc.DiagCov()  # Σ_ε,t  proposed (D)
 key = jax.random.PRNGKey(cfg.seed)  # one seed per run, from the config
 
-# xᵇₜ⁽ⁱ⁾ = 𝓜(xᵃₜ₋₁⁽ⁱ⁾)   [not pinned]
+# x_t|t-1⁽ᵉ⁾ = f(x_t-1|t-1⁽ᵉ⁾)   [not pinned]
 forward = PlumeForward(species="CH4", dt=3600.0)  # (N_e, N) → (N_e, N)
 # y_pred = H x, EMIT columns on the kriging grid   [not pinned]
 obs_op = ColumnObs(instrument="EMIT")             # (N_e, N) → (N_e, N)
-# xᵃ⁽ⁱ⁾ = xᵇ⁽ⁱ⁾ + K (y + ε⁽ⁱ⁾ − H xᵇ⁽ⁱ⁾), ε⁽ⁱ⁾ ~ 𝒩(0, R)  [not pinned]
+# x_t|t⁽ᵉ⁾ = x_t|t-1⁽ᵉ⁾ + G_t (y_t + ε⁽ᵉ⁾ − H x_t|t-1⁽ᵉ⁾), ε⁽ᵉ⁾ ~ 𝒩(0, Σ_ε)  [not pinned]
 analysis = EnKFAnalysis(                          # (N_e, N) → (N_e, N)
     inflation=1.05, localization="gaspari-cohn"
 )
@@ -190,11 +161,11 @@ da = pc.EnsembleDACycle(  # T × (forecast, analysis)  today*
     forward_model=forward,
     obs_op=obs_op,
     analysis_step=analysis,
-    obs_source=hourly_y,                          # yₜ each hour
-    obs_err_source=hourly_R,      # Rₜ → DAState.obs_err_cov  proposed (D)
+    obs_source=hourly_y,                          # y_t each hour
+    obs_err_source=hourly_R,      # Σ_ε,t → DAState.obs_err_cov  proposed (D)
     n_steps=24,
     n_members=40,
-    key=key,                                      # draws every ε⁽ⁱ⁾
+    key=key,                                      # draws every ε⁽ᵉ⁾
 )
 da_hash = pk.config_hash(da)  # content hash of the config  proposed (A)
 ```
@@ -233,10 +204,7 @@ analyses = gcs.load_states(state_cat.where("kind == 'analysis'"), aoi)
 :::
 
 :::{tab-item} 6 · Evaluate
-pipekit-evaluate already ships `Task`, `Estimator`, `Oracle`, `Scorer` and
-`Benchmark`. The region, lead-time and multi-track helpers below are
-proposed on top of them
-([Report 15, workstream D](reports/15_benchmarking.md#r15-ws-d)).
+pipekit-evaluate already ships `Task`, `Estimator`, `Oracle`, `Scorer` and `Benchmark`. The region, lead-time and multi-track helpers below are proposed on top of them ([Report 15, workstream D](reports/15_benchmarking.md#r15-ws-d)).
 
 ```{code-block} python
 :caption: Evaluate against CAMS, aircraft and TCCON at once (stage 5).
@@ -248,7 +216,7 @@ evaluation = pe.Pipeline([                   # proposed (F)
         regions={"permian": permian, "bakken": bakken, "global": None},
         metric=pe.metrics.RMSE(),
     )),
-    # CRPS(F, y) = 𝔼|X − y| − ½ 𝔼|X − X′|   [proposed (F)]
+    # CRPS(F, y) = 𝔼|y′ − y| − ½ 𝔼|y′ − y″|   [proposed (F)]
     pe.metrics.CRPS(ensemble_dim="member"),  # (T, N_e, N) → (T, N)
     # |∑ᵢ xᵢ − ∑ᵢ rᵢ| / ∑ᵢ rᵢ ≤ 0.01, r the reference
     pe.metrics.MassClosure(tolerance=0.01),  # (T, N) → (T,)  proposed (F)
@@ -282,8 +250,7 @@ registry.attach_evaluation(model_hash=da_hash, report=report)  # proposed (E)
 (ex-gaussx)=
 ### gaussx kernel matrix
 
-Tier 1 numerics ([briefs](overview.md#sec-tier-briefs)): kernels and solvers
-are lineax operators, so the Gram matrix never has to be materialised.
+These are tier 1 numerics ([briefs](overview.md#sec-tier-briefs)). The kernels and solvers are lineax operators, so the Gram matrix never has to be materialised.
 
 ```{code-block} python
 :caption: A Matérn-5/2 GP posterior mean with gaussx.
@@ -294,20 +261,16 @@ from gaussx.kernels import Matern52                 # not pinned
 from gaussx.linalg import cholesky_solve            # not pinned
 
 k = Matern52(length_scale=10.0, variance=1.0)
-# K = [k(xᵢ, xⱼ)]ᵢⱼ
+# K_XX = [k(xᵢ, xⱼ)]ᵢⱼ
 K = k.gram(x)  # (M, d) → (M, M) operator, never dense
-# m = K (K + σ² I)⁻¹ y
+# μ = K_XX (K_XX + σ_ε² I)⁻¹ y
 mean = K @ cholesky_solve(K + sigma2 * I, y_train)  # (M,) → (M,)
 ```
 
 (ex-filterax)=
 ### filterax adapter as a DA analysis step
 
-Tier 2 algorithms plug in through adapters; this is the analysis step of
-the methane pipeline's assimilate tab, with its localisation radius. It satisfies
-pipekit-cycle's `AnalysisStep` protocol structurally: no base class needed.
-pipekit-cycle already ships `EnsembleInflator` and `CovarianceLocalizer`, so
-the adapter can take those objects instead of string options.
+Tier 2 algorithms plug in through adapters. This one is the analysis step of the assimilate tab of the methane pipeline, with its localisation radius. It satisfies the `AnalysisStep` protocol of pipekit-cycle structurally, so no base class is needed. pipekit-cycle already ships `EnsembleInflator` and `CovarianceLocalizer`, so the adapter can take those objects instead of string options.
 
 ```{code-block} python
 :caption: An EnKF analysis step from filterax.
@@ -316,7 +279,7 @@ the adapter can take those objects instead of string options.
 # Shapes: N state, N_e members
 from filterax.adapters.pipekit import EnKFAnalysis  # not pinned
 
-# Pᵇ ← ρ ∘ (λ Pᵇ), λ = 1.05, ρ a Gaspari–Cohn taper of 500 km
+# Σ_x ← ρ ∘ (λ Σ_x), λ = 1.05, ρ a Gaspari–Cohn taper of 500 km
 analysis = EnKFAnalysis(                            # (N_e, N) → (N_e, N)
     inflation=1.05,
     localization="gaspari-cohn",
@@ -333,9 +296,7 @@ assert isinstance(analysis, pc.AnalysisStep)        # the protocol: today
 A simplified sketch of how `geotoolz.PercentileClip` is written upstream.
 
 :::{important} Reuse first
-Use the upstream operator. Define a new one only when the
-[capability index](api/capabilities.md) has nothing that fits, and add it to
-the library that owns the concept.
+Use the upstream operator. Only define a new one when the [capability index](api/capabilities.md) has nothing that fits, and add it to the library that owns the concept.
 :::
 
 ```{code-block} python
@@ -366,9 +327,7 @@ class PercentileClip(Operator):
         return gt.with_data(np.clip(gt.data, lo, hi))  # (B, H, W) → (B, H, W)
 ```
 
-`ConfigMixin`, inherited from `Operator`, derives `get_config()` from the
-fields. The operator is picklable, serialisable to YAML, registrable in the
-sandboxed loader and composable with `|`.
+`ConfigMixin`, which is inherited from `Operator`, derives `get_config()` from the fields. So the operator is picklable, serialisable to YAML, registrable in the sandboxed loader and composable with `|`.
 
 (ex-compose)=
 ### Compose pipelines
@@ -427,9 +386,7 @@ result = g(optical=s2_gt, sar=s1_gt, dem=dem_gt)        # dict of GeoTensors
 (ex-catalogs)=
 ### Catalogs
 
-Observation catalogs index L0–L2 ([lifecycle](overview.md#sec-lifecycle));
-matchup is where the two streams converge
-([two streams](overview.md#sec-two-streams)).
+Observation catalogs index L0 to L2 ([lifecycle](overview.md#sec-lifecycle)), and matchup is where the two streams converge ([two streams](overview.md#sec-two-streams)).
 
 ```{code-block} python
 :caption: Build, open, query and match a geocatalog.
@@ -446,27 +403,23 @@ cat = gc.open_catalog("s3://imeo/sentinel2_index_2024.parquet")  # today
 # rows with footprint ∩ aoi ≠ ∅ and t₀ ≤ t ≤ t₁
 rows = gc.query(cat, bbox=aoi, time=(t0, t1))                    # today*
 
-# Wⱼ = {k : |tⱼ − tₖ| ≤ 3 h, d(sⱼ, sₖ) ≤ 25 km}
-# k⋆(j) = argmin over Wⱼ of (d / 25 km)² + (|Δt| / 3 h)²
+# C_j = {r : |t_j − t_r| ≤ 3 h, d(s_j, s_r) ≤ 25 km}
+# r⋆(j) = argmin over C_j of (d / 25 km)² + (|Δt| / 3 h)²
 matched = gc.queries.matchup(  # → M ≤ |tccon| pairs  proposed (B)
     primary=tccon_train,  # training sites only
     secondary=cat,  # the dense satellite stream
     time_tolerance=pd.Timedelta(hours=3),
     space_tolerance_km=25.0,
-    select="nearest",  # one k per j; ties: earlier time, then index
+    select="nearest",  # one r per j; ties: earlier time, then index
 )
 ```
 
-`gc.intersect` (today) already pairs overlapping rows across two catalogs;
-matchup adds the time and distance tolerances on top of it.
+`gc.intersect` (today) already pairs overlapping rows across two catalogs, and matchup adds the time and distance tolerances on top of it.
 
 (ex-patcher)=
 ### Patcher
 
-The names below are geopatcher's since 0.9.0, which dropped the `Spatial`
-prefixes ([Report 7](reports/07_geopatcher.md#r7-surface));
-[Report 16, stage 2](reports/16_geo_data_stack.md#r16-stage-2) runs the same
-pipeline with a matched filter in place of the model.
+The names below are the ones geopatcher uses since 0.9.0, which dropped the `Spatial` prefixes ([Report 7](reports/07_geopatcher.md#r7-surface)). [Report 16, stage 2](reports/16_geo_data_stack.md#r16-stage-2) runs the same pipeline with a matched filter in place of the model.
 
 ```{code-block} python
 :caption: Four-axis patching around a model, for any carrier.
@@ -498,16 +451,12 @@ inference = pk.Sequential([                        # today
 result = inference(field)
 ```
 
-`GridSampler` and `MergePatches` are marked `forbid_in_yaml`, so this
-pipeline runs but does not serialise.
+`GridSampler` and `MergePatches` are marked `forbid_in_yaml`, so this pipeline runs but it does not serialise.
 
 (ex-da-cycle)=
 ### Data assimilation cycle
 
-The standalone, TROPOMI version of the methane pipeline's
-[assimilate tab](#ex-methane): every ingredient satisfies a pipekit-cycle
-protocol, so any part that fits can be swapped in. The emulator and
-evaluation examples below build on it.
+This is the standalone TROPOMI version of the [assimilate tab](#ex-methane) of the methane pipeline. Every ingredient satisfies a pipekit-cycle protocol, so any part that fits can be swapped in. The emulator and evaluation examples below build on it.
 
 ```{code-block} python
 :caption: An ensemble DA cycle with explicit state carry.
@@ -548,8 +497,7 @@ final_state, history = da(x0, carry0)             # history: (T, N_e, N)
 (ex-emulator)=
 ### Swap in a neural emulator
 
-The same DA cycle with a different forward model: steps 3→4 of the
-[six-step cycle](overview.md#sec-six-steps).
+This is the same DA cycle with a different forward model, which is steps 3→4 of the [six-step cycle](overview.md#sec-six-steps).
 
 ::::{tab-set}
 
@@ -559,7 +507,7 @@ The same DA cycle with a different forward model: steps 3→4 of the
 :linenos:
 
 # Shapes: S = 10,000 simulations, N state
-# φ⋆ = argmin_φ 𝔼_θ ‖f(θ) − f_φ(θ)‖², f_φ the emulator
+# θ_emu⋆ = argmin_θ_emu 𝔼_θ ‖f(θ) − f̂(θ; θ_emu)‖², f̂ the emulator
 loop = pt.TrainingLoop(                                      # today*
     model_op=pj.JaxModelOp(ChemistryEmulatorNet()),          # today
     dataset=pt.SimulationDataset(  # S × (θ, f(θ))  today
@@ -587,7 +535,7 @@ emulator_hash = registry.store(                        # → content hash  today
 :linenos:
 :emphasize-lines: 7
 
-# xᵇₜ = f_φ⋆(xᵃₜ₋₁), the trained emulator
+# x_t|t-1 = f̂(x_t-1|t-1; θ_emu⋆), the trained emulator
 neural_forward = pc.NeuralForward(  # (N_e, N) → (N_e, N)  today
     model_op=pj.JaxModelOp(ChemistryEmulatorNet()).from_registry(
         registry, emulator_hash),                      # weights too  today
@@ -610,12 +558,7 @@ da_emulated = pc.EnsembleDACycle(
 (ex-evaluation)=
 ### Evaluation pipeline
 
-What exists today is the benchmark cube. `Task`, `Estimator`, `Estimate` and
-`Scorer` are protocols: you satisfy them with your own objects, structurally,
-and `Benchmark` fits each estimator, resolves its reference and scores it.
-These small classes belong upstream (plumax's adapters); they are inline here
-only to show the shape. The multi-track helpers sketched in the methane
-pipeline should be built on the same cube.
+What exists today is the benchmark cube. `Task`, `Estimator`, `Estimate` and `Scorer` are protocols, so you satisfy them structurally with your own objects, and `Benchmark` fits each estimator, resolves its reference and scores it. These small classes belong upstream (in the adapters of plumax), and we only inline them here to show the shape. The multi-track helpers sketched in the methane pipeline should be built on the same cube.
 
 ```{code-block} python
 :caption: Score an emulator-based estimator against the classical oracle.
@@ -629,7 +572,7 @@ from dataclasses import dataclass
 class EnsembleEstimate:              # satisfies pe.Estimate
     members: jax.Array               # (N_e, N)
 
-    def point(self):                 # x̄ = (1/N_e) ∑ᵢ x⁽ⁱ⁾
+    def point(self):                 # x̄ = (1/N_e) ∑_e x⁽ᵉ⁾
         return self.members.mean(axis=0)               # (N_e, N) → (N,)
 
     def sample(self, n, *, key=None):  # n draws from the empirical ensemble
@@ -665,7 +608,7 @@ emulated = CycleEstimator(da_emulated, x0, carry0, rung=4)
 bench = pe.Benchmark(                                  # today
     task=plume_task,             # a pe.Task from plumax  not pinned
     estimators=[classical, emulated],
-    scorers=[pe.metrics.CRPS()],   # 𝔼|X − y| − ½ 𝔼|X − X′|  proposed (F)
+    scorers=[pe.metrics.CRPS()],   # 𝔼|y′ − y| − ½ 𝔼|y′ − y″|  proposed (F)
     reference=classical,         # explicit oracle (default: lowest rung 2)
 )
 report = bench.run()                                   # → BenchmarkReport
@@ -674,11 +617,7 @@ report = bench.run()                                   # → BenchmarkReport
 (ex-benchmark)=
 ### Benchmark contract
 
-A benchmark is a frozen contract: the task as a level transition, the
-carriers, the split and the gap it reproduces, the references, the scorers and
-the baselines, hashed with pipekit's `stable_json` and `sha256_hex`.
-[Report 15](reports/15_benchmarking.md) runs this contract's synthetic twin;
-the classes are proposed there (workstreams A, B and D).
+A benchmark is a frozen contract: the task as a level transition, the carriers, the split and the gap it reproduces, the references, the scorers and the baselines, all hashed with the `stable_json` and `sha256_hex` of pipekit. [Report 15](reports/15_benchmarking.md) runs the synthetic twin of this contract, and the classes are proposed there (workstreams A, B and D).
 
 ```{code-block} python
 :caption: A pre-registerable, content-addressed benchmark contract.
@@ -712,26 +651,12 @@ report = pe.Benchmark.from_contract(contract, estimators=entries).run()
 report.contract_hash == digest                                  # proposed (A)
 ```
 
-Splits follow [Report 15, stage 2](reports/15_benchmarking.md#r15-stage-2);
-the withheld mission (`"c2"` here) is the curator's choice, sketched. The
-task string `"L1->L2"` follows pipekit-evaluate's level names, which call L2
-gap-filled observations; the overview's levels put gap filling at L2 → L3
-([two names for L2](overview.md#tbl-levels)).
+Splits follow [Report 15, stage 2](reports/15_benchmarking.md#r15-stage-2), and the withheld mission (`"c2"` here) is the curator's choice, which we only sketch. The task string `"L1->L2"` follows the level names of pipekit-evaluate, which call L2 gap-filled observations, whereas the levels of the overview put gap filling at L2 → L3 ([two names for L2](overview.md#tbl-levels)).
 
 (ex-repro)=
 ### Reproducibility artifact
 
-pipekit-experiment already ships `InferenceArtifact`: a JSON snapshot of a
-pipeline's YAML, the hashes of the registered models it loads, the lockfile
-and free-form metadata, with `save` and `load`. What it cannot do yet is
-rebuild and rerun the pipeline from its frozen inputs; that `rerun` is
-proposed. Two more gaps block a faithful cold rerun today: a `Graph`'s
-config is a debug representation, not a round-trippable topology, so
-`pk.dumps` of a pipeline containing one needs a topology serialiser
-(proposed, workstream A); and `reload_models` restores model configs but
-not the weights a `JaxModelOp` keeps in the registry's `weights.bin`, so the
-sketch reloads them with `from_registry`. Gate G1 freezes the evaluation
-too, so the report can be regenerated, not just the analysis.
+pipekit-experiment already ships `InferenceArtifact`, which is a JSON snapshot of the YAML of a pipeline, the hashes of the registered models it loads, the lockfile and free-form metadata, with `save` and `load`. What it cannot do yet is rebuild and rerun the pipeline from its frozen inputs, and that `rerun` is proposed. There are two more gaps which block a faithful cold rerun today: 1) the config of a `Graph` is a debug representation and not a round-trippable topology, so `pk.dumps` of a pipeline containing one needs a topology serialiser (proposed, workstream A), and 2) `reload_models` restores model configs but not the weights a `JaxModelOp` keeps in the `weights.bin` of the registry, so the sketch reloads them with `from_registry`. Gate G1 freezes the evaluation too, so the report can be regenerated as well as the analysis.
 
 ```{code-block} python
 :caption: Freeze the analysis and its evaluation for a cold rerun.

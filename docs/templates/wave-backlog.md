@@ -1,5 +1,5 @@
 <!--
-WAVE BACKLOG DRAFT — COPY-TO-USE TEMPLATE
+WAVE BACKLOG DRAFT: COPY-TO-USE TEMPLATE
 
 Purpose:
   Draft a whole wave of GitHub issues as one reviewable markdown file
@@ -18,9 +18,9 @@ How to use:
   3. Fill in the wave-level shared context once at the top, then
      draft each issue body. Review the whole file as a unit.
   4. When ready, open each draft as a real GitHub issue using the
-     matching .github/ISSUE_TEMPLATE — the epic-wave, epic-theme,
+     matching .github/ISSUE_TEMPLATE (the epic-wave, epic-theme,
      feature, design, bug, and research templates all take bodies
-     compatible with what this file produces.
+     compatible with what this file produces).
   5. After publishing, either delete this file or replace draft IDs
      with the assigned GitHub issue numbers to keep the record.
 
@@ -36,8 +36,8 @@ Conventions:
   - Delete sections that don't apply. Every header below is optional
     except Wave Goal, one Theme Epic, and one child issue.
   - Rename headings to fit the content (see .github/ISSUE_TEMPLATE/
-    guidance for examples — "Design Snapshot" → "Demo To Implement"
-    etc.).
+    guidance for examples, such as "Design Snapshot" → "Demo To
+    Implement").
 -->
 
 # [Wave N] <title>
@@ -66,7 +66,7 @@ duplicate them. Examples of what belongs here:
   wrapper pattern.
 - Shared types: `class WaveState(NamedTuple): ...`
 
-Keep prose short — lead with code.
+Keep prose short and lead with code.
 -->
 
 ```python
@@ -78,7 +78,7 @@ Keep prose short — lead with code.
 <!--
 If this wave introduces new modules, show the intended layout. Later
 waves get to assume this shape. Keep it to the modules touched by
-THIS wave — don't sketch the whole package.
+THIS wave; don't sketch the whole package.
 -->
 
 ```text
@@ -151,7 +151,7 @@ Describes ordering / sequencing between child issues. e.g. "PYX-05
 should land first because most path rewrites depend on the final
 package name. PYX-06 can start once the target module layout is
 agreed."
-Optional — delete if children are fully parallel.
+Optional: delete if children are fully parallel.
 -->
 
 ## Definition of Done
@@ -201,7 +201,7 @@ Draft ID: `<PREFIX>-05`
 
 ## Design Snapshot
 <!--
-Cross-cutting context lives at the top of the wave file — don't
+Cross-cutting context lives at the top of the wave file, so don't
 duplicate it here. Use this section for content specific to THIS
 issue. Rename if warranted ("Demo To Implement", "Config Snippet",
 etc.). Delete if not needed.
@@ -300,8 +300,8 @@ Draft ID: `<PREFIX>-07`
 ```
 
 ## Alternatives Considered
-- **Option A** — pros / cons
-- **Option B** — pros / cons
+- **Option A**: pros / cons
+- **Option B**: pros / cons
 
 ## Decision
 <!-- Filled in when resolved. -->
