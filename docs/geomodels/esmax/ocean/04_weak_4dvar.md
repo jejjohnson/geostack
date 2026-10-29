@@ -16,21 +16,21 @@ keywords:
 
 +++ {"part": "abstract"}
 
-Strong-constraint 4D-Var treats the model as exact and corrects only the initial state. Weak-constraint 4D-Var admits that the model makes errors, and estimates them alongside the state. This page follows the 4D-Var primer: the intuition, the probability, the mathematics, how the gradient changes, three formulations, and how it maps onto the ocean problem.
+Strong-constraint 4D-Var treats the model as exact and only corrects the initial state. However, weak-constraint 4D-Var admits that the model makes errors, and it estimates them alongside the state. This page follows the 4D-Var primer and covers the intuition, the probability, the mathematics, how the gradient changes, three formulations, and how it maps onto the ocean problem.
 
 +++
 
 {button}`Open the full page <./pages/weak-4dvar.html>`
 
-**Where it sits.** When the model is wrong: estimating the state and the model error together. The full page is a self-contained document with operator boxes (inputs, outputs, shapes and units), figures and code sketches; it opens on its own and links back here.
+**Where it sits.** When the model is wrong: estimating the state and the model error together. The full page is a self-contained document with operator boxes (inputs, outputs, shapes and units), figures and code sketches, which opens on its own and links back here.
 
 ## TL;DR: Same cost, plus a price for every model error
 
-- **The transition gets noise:** $z_k = \mathcal M_k(z_{k-1}) + \eta_k$ with $\eta_k\sim\mathcal N(0, \mathbf Q)$. The cost gains $\tfrac12\sum_k\|\eta_k\|^2_{\mathbf Q^{-1}}$. Strong constraint is the limit $\mathbf Q\to0$.
-- **The controls grow** from one state to a whole trajectory: $N$ values become $N(T+1)$. The analysis can now fit observations the model alone could not reach.
-- **The gradient is still one adjoint sweep** in the forcing formulation; in the state formulation it becomes $T$ independent pieces, parallel in time.
-- **$\mathbf Q$ is the hard part.** Too small and the model error leaks into the initial state; too large and the analysis chases observation noise. A basis for the model error turns $\mathbf Q$ into a modelling choice.
-- **On Lorenz-96 with a biased model,** strong constraint leaves a window error of 1.66; weak constraint cuts it to 0.25, and a one-number bias estimate to 0.12 while recovering the bias itself (0.99, true 1.0).
+- **The transition gets noise:** $\vect{x}_k = f_k(\vect{x}_{k-1}) + \gvect{\eta}_k$ with $\gvect{\eta}_k \sim \mathcal{N}(\vect{0}, \gmat{\Sigma}_\eta)$, where $f_k$ is the one-step model map, $\vect{x}_k = \vect{x}(t_k) \in \mathbb{R}^{D_x}$ and $\gmat{\Sigma}_\eta \in \mathbb{R}^{D_x \times D_x}$. The cost gains $\frac{1}{2} \sum_k \Vert \gvect{\eta}_k \Vert^2_{\gmat{\Sigma}_\eta^{-1}}$, and strong constraint is the limit $\gmat{\Sigma}_\eta \to \mat{0}$.
+- **The controls grow** from one state to a whole trajectory, so $D_x$ values become $D_x (T+1)$. The analysis can now fit observations which the model alone could not reach.
+- **The gradient is still one adjoint sweep** in the forcing formulation, whereas in the state formulation it becomes $T$ independent pieces, parallel in time.
+- **$\gmat{\Sigma}_\eta$ is the hard part.** If it is too small, the model error leaks into the initial state; if it is too large, the analysis chases observation noise. A basis for the model error turns $\gmat{\Sigma}_\eta$ into a modelling choice.
+- **On Lorenz-96 with a biased model,** strong constraint leaves a window error of 1.66. Weak constraint cuts it to 0.25, and a one-number bias estimate cuts it to 0.12 while recovering the bias itself (0.99, true 1.0).
 
 ## On the page
 
