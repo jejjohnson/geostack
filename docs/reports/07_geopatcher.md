@@ -19,17 +19,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-geopatcher splits a geospatial field into local patches, runs an operator on
-each one, and stitches the outputs back into a global result. It does this
-along **four independently composable axes**: geometry, sampler, window and
-aggregation. This report scoped it as a standalone package extracted from
-geotoolz, with a framework-free core and an optional pipekit bridge. It has
-been built, and it is now the largest package in the ecosystem. Most of the
-design held: the four axes, the `Field` and `Domain` Protocols, the
-extras-gated adapters, and the pipekit bridge in `integrations/`. Three
-things did not: the dependency-light core, the class names (the axis
-prefixes are gone), and the geotoolz migration. Each is carried to the open
-questions at the end.
+geopatcher splits a geospatial field into local patches, runs an operator on each one, and stitches the outputs back into a global result. It does this along **four independently composable axes**: geometry, sampler, window and aggregation. This report scoped it as a standalone package extracted from geotoolz, with a framework-free core and an optional pipekit bridge. It has been built, and it is now the largest package in the ecosystem. Most of the design held (the four axes, the `Field` and `Domain` Protocols, the extras-gated adapters, and the pipekit bridge in `integrations/`). However, three things did not, namely the dependency-light core, the class names (the axis prefixes are gone) and the geotoolz migration, and we carry each of them to the open questions at the end.
 
 +++
 
@@ -47,25 +37,13 @@ questions at the end.
 :::
 
 :::{important} Which geopatcher this page describes
-Like geocatalog ([Report 6](06_geocatalog.md)), geopatcher has two copies.
-The **archived geopatcher repo** (0.0.6, May to July 2026) holds the design
-of record: its README, docs and figures. The **`geotoolz-patcher`
-distribution** in the geotoolz monorepo
-([geotoolz#97](https://github.com/jejjohnson/geotoolz/issues/97), 13 July
-2026), fourteen releases later at 0.10.2 with ten of them breaking, is the
-copy geostack pins and the source of this page's **API and behaviour**. The
-repo's docs use the names from before 0.9.0 (`gp.SpatialRectangular`,
-`gp.SpatialOverlapAdd`); 0.9.0 dropped the `Spatial` and `Temporal` prefixes
-with no aliases, and the examples here use the current names
-(`geopatcher.spatial.geometry.Rectangular`).
+Like geocatalog ([Report 6](06_geocatalog.md)), geopatcher has two copies. The **archived geopatcher repo** (0.0.6, May to July 2026) holds the design of record, which is its README, docs and figures. The **`geotoolz-patcher` distribution** in the geotoolz monorepo ([geotoolz#97](https://github.com/jejjohnson/geotoolz/issues/97), 13 July 2026) is fourteen releases later at 0.10.2, ten of them breaking. It is the copy geostack pins, so it is the source of this page's **API and behaviour**. The repo's docs use the names from before 0.9.0 (`gp.SpatialRectangular`, `gp.SpatialOverlapAdd`), whereas 0.9.0 dropped the `Spatial` and `Temporal` prefixes with no aliases, so the examples here use the current names (`geopatcher.spatial.geometry.Rectangular`).
 :::
 
 (r7-stack)=
 ## Where geopatcher sits
 
-The repo's README calls geopatcher the **locality layer** between catalogs
-and operators. It answers a single question: "what slice of the data does my
-operator see at once, and how do local outputs become a global field?"
+The repo's README calls geopatcher the **locality layer** between catalogs and operators. It answers a single question: "what slice of the data does my operator see at once, and how do local outputs become a global field?"
 
 ```{code-block} text
 :caption: The ecosystem as scoped.
@@ -81,21 +59,10 @@ operator see at once, and how do local outputs become a global field?"
               geotoolz · xrtoolz
 ```
 
-The scoping report's reading of this picture holds: geopatcher is a peer
-of geocatalog and pipekit, it never imports geocatalog (geocatalog's
-`CatalogDomain` satisfies its `Domain` Protocol instead), and pipekit appears
-only in one 154-line `integrations.pipekit` module behind the `[pipekit]`
-extra. The stack-wide rules behind that layering are in
-[Report 16](16_geo_data_stack.md#r16-ownership).
+The scoping report's reading of this picture holds. geopatcher is a peer of geocatalog and pipekit, it never imports geocatalog (geocatalog's `CatalogDomain` satisfies its `Domain` Protocol instead), and pipekit appears only in one 154-line `integrations.pipekit` module behind the `[pipekit]` extra. The stack-wide rules behind that layering are in [Report 16](16_geo_data_stack.md#r16-ownership).
 
 :::{warning} Differs from the plan
-The scoping report said the core does not depend on **georeader** either,
-importing it only in an extras-gated raster module. At 0.10.2, georeader,
-rasterio and pyproj are base dependencies, and `import geopatcher` loads
-georeader and rasterio ([](#r7-deps)). As with geocatalog
-([Report 6](06_geocatalog.md#r6-migration)), the bottom of the picture is not
-wired: geotoolz consumes only the pipekit bridge, and xrtoolz does not
-import geopatcher at all ([](#r7-migration)).
+The scoping report said the core does not depend on **georeader** either, importing it only in an extras-gated raster module. However, at 0.10.2 georeader, rasterio and pyproj are base dependencies, and `import geopatcher` loads georeader and rasterio ([](#r7-deps)). As with geocatalog ([Report 6](06_geocatalog.md#r6-migration)), the bottom of the picture is not wired, since geotoolz consumes only the pipekit bridge and xrtoolz does not import geopatcher at all ([](#r7-migration)).
 :::
 
 (r7-axes)=
@@ -103,10 +70,7 @@ import geopatcher at all ([](#r7-migration)).
 
 ### The four axes
 
-Each axis is a strategy object, a small dataclass with a single job, that
-the patcher composes at construction. The repo's rule is that anything you
-can swap without touching the other three is on its own axis
-([](#fig-r7-axes) draws each one).
+Each axis is a strategy object, a small dataclass with a single job, that the patcher composes at construction. The repo's rule is that anything we can swap without touching the other three is on its own axis ([](#fig-r7-axes) draws each one).
 
 ```{figure} ../images/reports/r7_four_axes.png
 :label: fig-r7-axes
@@ -127,35 +91,17 @@ can swap without touching the other three is on its own axis
 | Aggregation | how do local outputs become global? | 21 classes: `OverlapAdd`, `Mean`, `Sum`, `Max`, `Min`, `Median`, `Mode`, `Variance`, `MeanStd`, `MinMax`, `WeightedSum`, `InvVarWeightedMean`, `HardVote`, `SoftVote`, `ByIndex`, `Learned`, `ApproxQuantile`, `ApproxCardinality`, `ApproxMode`, `StreamingHistogram`, `Reservoir` | `Mean`, `HierarchicalCombine`, `Fold`, `Forecast` |
 :::
 
-[](#tbl-r7-axes) lists them: 38 spatial and 17 temporal classes, plus `Stencil`, `TimeStencil`
-and `Closed` for coordinate-space temporal stencils. The scoping report
-counted "60+"; the families, not the count, are what matters. The spatial
-aggregation family is where the research-grade work sits. Overlap-add with
-feathered windows, inverse-variance weighting, streaming histograms and
-approximate quantiles are the merge strategies that real sliding-window
-inference needs.
+[](#tbl-r7-axes) lists them: 38 spatial and 17 temporal classes, plus `Stencil`, `TimeStencil` and `Closed` for coordinate-space temporal stencils. The scoping report counted "60+", but the families matter more than the count. The spatial aggregation family is where the research-grade work sits, because overlap-add with feathered windows, inverse-variance weighting, streaming histograms and approximate quantiles are the merge strategies that real sliding-window inference needs.
 
 :::{warning} Differs from the plan
-- **The prefixes are gone.** 0.9.0 renamed every `SpatialX` and `TemporalX`
-  to `X` in its axis module, with no aliases: `SpatialRectangular` is now
-  `geopatcher.spatial.geometry.Rectangular`, and `SpatialOverlapAdd` is
-  `geopatcher.spatial.aggregation.OverlapAdd`. The axis classes are not
-  re-exported at the root, so `gp.SpatialHann` no longer resolves.
-- **Several temporal classes were on the wrong axis in the report.**
-  `Forecast` and `Fold` are aggregations, not geometries. `Periodic` is a
-  window, not a sampler. `FixedLookback` is a geometry, not a window.
-  `SpatialReservoir` is an aggregation, not a sampler.
-- **Two temporal names were folded into others.** `TemporalEventTriggered`
-  became `temporal.sampler.Explicit(times=…)`, and `TemporalCausalRolling`
-  became `temporal.sampler.RegularStride`.
+- **The prefixes are gone.** 0.9.0 renamed every `SpatialX` and `TemporalX` to `X` in its axis module, with no aliases, so `SpatialRectangular` is now `geopatcher.spatial.geometry.Rectangular` and `SpatialOverlapAdd` is `geopatcher.spatial.aggregation.OverlapAdd`. The axis classes are not re-exported at the root, so `gp.SpatialHann` no longer resolves.
+- **Several temporal classes were on the wrong axis in the report.** `Forecast` and `Fold` are aggregations, not geometries; `Periodic` is a window, not a sampler; `FixedLookback` is a geometry, not a window; and `SpatialReservoir` is an aggregation, not a sampler.
+- **Two temporal names were folded into others.** `TemporalEventTriggered` became `temporal.sampler.Explicit(times=…)`, and `TemporalCausalRolling` became `temporal.sampler.RegularStride`.
 :::
 
 ### The patch lifecycle
 
-A run touches each axis in turn. The sampler places anchors, the geometry
-turns each anchor into an index window, the field reads the window, the
-operator transforms the patch, and the aggregation merges the outputs, using
-the window's weights ([](#fig-r7-lifecycle)):
+A run touches each axis in turn. The sampler places anchors, the geometry turns each anchor into an index window, the field reads the window, the operator transforms the patch, and the aggregation merges the outputs, using the window's weights ([](#fig-r7-lifecycle)):
 
 ```{figure} ../images/reports/r7_patch_lifecycle.png
 :label: fig-r7-lifecycle
@@ -168,30 +114,21 @@ the window's weights ([](#fig-r7-lifecycle)):
 Each `Patch` carries:
 - `data`: the payload read from the field, usually an array or a `GeoTensor`;
 - `anchor`: where the sampler put it, `(row, col)` for a raster;
-- `indices`: the geometry's index window, such as a `rasterio.windows.Window`
-  or a list of neighbour ids;
+- `indices`: the geometry's index window, such as a `rasterio.windows.Window` or a list of neighbour ids;
 - `weights`: the window's per-cell weights;
 - `masked`: set when an error policy replaced the data.
 
-`split` is an iterator by design (the repo's ADR-001), so a field larger
-than memory streams patch by patch, and `list(…)` gives the eager case.
+`split` is an iterator by design (the repo's ADR-001), so a field larger than memory streams patch by patch, and `list(…)` gives the eager case.
 
 ### Overlap-add, the canonical merge
 
-The aggregation that matters most for inference is overlap-add. Let patch
-$p$ cover the cells $\Omega_p$, carry window weights $w_p(x)$, and produce
-operator output $\hat y_p(x)$ for each cell $x \in \Omega_p$. The stitched
-field is the weight-normalised sum over every patch that covers the cell:
+The aggregation that matters most for inference is overlap-add. Let $\Omega$ be the field's domain, with cells $\vect{s} \in \Omega$, and let $p = 1, \ldots, N_\text{patch}$ index the patches. Patch $p$ covers the cells $\Omega^{(p)} \subset \Omega$, carries window weights $w^{(p)}(\vect{s}) \in \mathbb{R}_{\ge 0}$, and produces the operator's estimate $\hat{y}^{(p)}(\vect{s}) \in \mathbb{R}$ for each cell $\vect{s} \in \Omega^{(p)}$. The stitched field $\hat{y}(\vect{s}) \in \mathbb{R}$ is then the weight-normalised sum over every patch that covers the cell:
 
 $$
-y(x) = \frac{\sum_{p : x \in \Omega_p} w_p(x) \hat{y}_p(x)}{\sum_{p : x \in \Omega_p} w_p(x)} .
+\hat{y}(\vect{s}) = \frac{\sum_{p : \vect{s} \in \Omega^{(p)}} w^{(p)}(\vect{s}) \hat{y}^{(p)}(\vect{s})}{\sum_{p : \vect{s} \in \Omega^{(p)}} w^{(p)}(\vect{s})}
 $$ (r7-eq-ola)
 
-A feathered window such as Hann tapers each patch towards its edges, so
-seams between patches disappear. The denominator in {eq}`r7-eq-ola` makes
-the reconstruction exact wherever patches overlap: if every $\hat y_p$ is the
-identity, then $y(x)$ is the input. [](#fig-r7-ola) shows the Hann weights,
-their sum and the flat reconstruction.
+A feathered window such as Hann tapers each patch towards its edges, so the seams between patches disappear. The denominator in {eq}`r7-eq-ola` makes the reconstruction exact wherever patches overlap: if every $\hat{y}^{(p)}$ is the identity, then $\hat{y}(\vect{s})$ is the input. [](#fig-r7-ola) shows the Hann weights, their sum and the flat reconstruction.
 
 ```{figure} ../images/reports/r7_overlap_add.png
 :label: fig-r7-ola
@@ -221,32 +158,26 @@ field = gp.RasterField(
 
 # 2. Compose the four axes.
 patcher = gp.SpatialPatcher(
-    geometry=spatial.geometry.Rectangular(size=(16, 16)),     # Ωₚ: 16×16 cells
+    geometry=spatial.geometry.Rectangular(size=(16, 16)),     # Ω⁽ᵖ⁾: 16×16 cells
     sampler=spatial.sampler.RegularStride(step=(8, 8)),       # 50 % overlap
-    window=spatial.window.Hann(),                             # wₚ(x): feathered
-    aggregation=spatial.aggregation.OverlapAdd(),             # y = Σ wₚŷₚ / Σ wₚ
+    window=spatial.window.Hann(),                             # w_p(s): feathered
+    aggregation=spatial.aggregation.OverlapAdd(),             # ŷ(s) = Σ_p w_p(s) ŷ_p(s) / Σ_p w_p(s)
 )
 
 # 3. Split → operate per patch → merge.
-out = [p.with_data(np.asarray(p.data) * 2.0)                  # ŷₚ = 2 · patch
+out = [p.with_data(np.asarray(p.data) * 2.0)                  # ŷ_p = 2 · patch
        for p in patcher.split(field)]                         # 49 patches, 16×16
 stitched = patcher.merge(out, field.domain)                   # → (64, 64) float64
 np.abs(stitched - 2 * arr).max()                              # → 4.4e-16
 patcher.merge_to_field(out, field)                            # → GeoTensor (64, 64)
 ```
 
-With no overlap (stride 16, a boxcar window), both `OverlapAdd` and `Mean`
-reconstruct the field exactly (`np.array_equal` is `True`). The Hann case is
-exact to round-off even at the outer edge, because the outermost Hann
-weights are small but not zero. One detail to know: `merge` returns
-`float64` even for a `float32` field.
+With no overlap (stride 16, a boxcar window), both `OverlapAdd` and `Mean` reconstruct the field exactly (`np.array_equal` is `True`). The Hann case is exact to round-off even at the outer edge, because the outermost Hann weights are small but not zero. One detail to know is that `merge` returns `float64` even for a `float32` field.
 
 (r7-boundary)=
 ### Boundary policies
 
-When an anchor sits close enough to the edge that its neighbourhood would
-overflow the field, the geometry's `boundary` argument decides what happens
-([](#fig-r7-boundary); counts on a real run in [](#tbl-r7-boundary)):
+When an anchor sits close enough to the edge that its neighbourhood would overflow the field, the geometry's `boundary` argument decides what happens ([](#fig-r7-boundary); counts on a real run in [](#tbl-r7-boundary)):
 
 ```{figure} ../images/reports/r7_boundary_modes.png
 :label: fig-r7-boundary
@@ -268,17 +199,12 @@ overflow the field, the geometry's `boundary` argument decides what happens
 | `"raise"` | `ValueError` on the first overflowing window | — | — |
 :::
 
-The default deserves a warning of its own. With `"drop"`, a stride that does
-not divide the field leaves a strip along the far edges that no patch
-covers, and `merge` returns NaN there. The repo's concepts page still lists
-`"reflect"` as a planned follow-up; it landed in the standalone repo's
-last commits in July, just before the merge.
+The default deserves a warning of its own. With `"drop"`, a stride that does not divide the field leaves a strip along the far edges that no patch covers, and `merge` returns NaN there. The repo's concepts page still lists `"reflect"` as a planned follow-up, but it landed in the standalone repo's last commits in July, just before the merge.
 
 (r7-protocols)=
 ## The `Field` and `Domain` Protocols
 
-The whole framework rests on two small Protocols, and the scoping report was
-right to call them the key abstraction:
+The whole framework rests on two small Protocols, and the scoping report was right to call them the key abstraction:
 
 ```{code-block} python
 :caption: The Protocols at geopatcher 0.10.2, simplified from `_src/protocols.py`.
@@ -301,12 +227,7 @@ class Field(Protocol):
     def with_data(self, array: Any) -> Any: ...      # rebuild around new data
 ```
 
-A field may also provide `placeholder(indexer, data)`, which is duck-typed
-and optional and is used by `on_error="mask"`. `AsyncField` has the same
-shape with an awaitable `select`. Because the patcher only talks to these
-Protocols, it does not care what carrier sits underneath: you wrap the data
-once, at the boundary, and the four-axis machinery does the rest.
-[](#tbl-r7-fields) lists the adapters that ship.
+A field may also provide `placeholder(indexer, data)`, which is duck-typed and optional and is used by `on_error="mask"`. `AsyncField` has the same shape with an awaitable `select`. Because the patcher only talks to these Protocols, it does not care what carrier sits underneath, so we wrap the data once, at the boundary, and the four-axis machinery does the rest. [](#tbl-r7-fields) lists the adapters that ship.
 
 :::{table} The Field adapters at 0.10.2, against the scoping report.
 :label: tbl-r7-fields
@@ -325,16 +246,12 @@ once, at the boundary, and the four-axis machinery does the rest.
 | `MatchedField` | several co-registered fields | `geopatcher.matched` | **new** |
 :::
 
-The extras-gated adapters import lazily: `geopatcher.fields.XarrayField`
-resolves on first access, and a missing extra produces a message naming the
-install command. The domains (`RasterDomain`, `GridDomain`, `VectorDomain`,
-`PointDomain`) live in `geopatcher.fields`; `RasterDomain` is georeader's
-`GeoDataBase`.
+The extras-gated adapters import lazily: `geopatcher.fields.XarrayField` resolves on first access, and a missing extra produces a message naming the install command. The domains (`RasterDomain`, `GridDomain`, `VectorDomain`, `PointDomain`) live in `geopatcher.fields`, and `RasterDomain` is georeader's `GeoDataBase`.
 
 (r7-surface)=
 ## Public surface
 
-[](#tbl-r7-surface) lists the public namespaces.
+The public namespaces are listed in [](#tbl-r7-surface).
 
 :::{table} geopatcher's public namespaces at 0.10.2.
 :label: tbl-r7-surface
@@ -355,19 +272,16 @@ install command. The domains (`RasterDomain`, `GridDomain`, `VectorDomain`,
 A patcher does more than `split` and `merge` now. `SpatialPatcher` also has:
 - `merge_to_field` (returns a `GeoTensor`) and `merge_to_xarray`;
 - `patch_at` for random access to one anchor;
-- `reduce` and `two_pass`, the codified helpers for operators that need
-  global context;
+- `reduce` and `two_pass`, the codified helpers for operators that need global context;
 - `to_delayed` and `to_dask_bag` for dask;
-- error handling: `on_error="raise" | "skip" | "mask" | "retry"`, with
-  `max_retries` and `retry_on`, and failures recorded in `patcher.errors`.
+- error handling: `on_error="raise" | "skip" | "mask" | "retry"`, with `max_retries` and `retry_on`, and failures recorded in `patcher.errors`.
 
-`SpatioTemporalPatcher(spatial, temporal, coupling="product" | "coupled")`
-composes the spatial and temporal patchers.
+`SpatioTemporalPatcher(spatial, temporal, coupling="product" | "coupled")` composes the spatial and temporal patchers.
 
 (r7-beyond)=
 ### What shipped beyond the scope
 
-[](#tbl-r7-beyond) lists what the patcher gained beyond the scoping report.
+What the patcher gained beyond the scoping report is listed in [](#tbl-r7-beyond).
 
 :::{table} Shipped features the scoping report did not cover. Most are documented in the repo's recipes and design decisions.
 :label: tbl-r7-beyond
@@ -392,10 +306,7 @@ composes the spatial and temporal patchers.
 (r7-pipekit)=
 ## The pipekit integration
 
-The scoping report isolated the only pipekit-coupled code in geotoolz's
-patcher (`_src/ops.py`, three operator wrappers) in
-`geopatcher.integrations.pipekit`, behind a `[pipekit]` extra. That is what
-shipped, with one rename ([](#tbl-r7-bridge)):
+The scoping report isolated the only pipekit-coupled code in geotoolz's patcher (`_src/ops.py`, three operator wrappers) in `geopatcher.integrations.pipekit`, behind a `[pipekit]` extra. That is what shipped, with one rename ([](#tbl-r7-bridge)):
 
 :::{table} The pipekit bridge, scoped and shipped.
 :label: tbl-r7-bridge
@@ -418,45 +329,31 @@ from geopatcher.integrations.pipekit import ApplyToChips, GridSampler, MergePatc
 
 pipeline = pk.Sequential([
     GridSampler(patcher=patcher),                          # Field → Iterator[Patch]
-    ApplyToChips(operator=model_op),                       # ŷₚ = model(patch)
+    ApplyToChips(operator=model_op),                       # ŷ_p = model(patch)
     MergePatches(aggregation=spatial.aggregation.OverlapAdd(),
-                 domain=field.domain),                     # y = Σ wₚŷₚ / Σ wₚ
+                 domain=field.domain),                     # ŷ(s) = Σ_p w_p(s) ŷ_p(s) / Σ_p w_p(s)
 ])
 result = pipeline(field)
 ```
 
-The scoping report's three reasons for keeping the bridge in geopatcher
-rather than geotoolz held:
-- **It is about the patcher**: the wrappers take a patcher and an
-  aggregation.
-- **xrtoolz could use it too.** It doesn't yet.
-- **The dependency stays opt-in.** Without `[pipekit]`, geopatcher installs
-  without pipekit.
+The scoping report gave three reasons for keeping the bridge in geopatcher rather than geotoolz, and they held:
+- **It is about the patcher**, as the wrappers take a patcher and an aggregation.
+- **xrtoolz could use it too**, although it does not yet.
+- **The dependency stays opt-in.** Without `[pipekit]`, geopatcher installs without pipekit.
 
 geotoolz's `patch_ops` re-exports the same three objects.
 
 :::{warning} Differs from the plan
-- **The bridge imports pipekit's private API.** It uses
-  `nested_config` from `pipekit._base.operator`, the same private helper
-  geotoolz imports ([Report 3](03_sister_libraries.md#r3-geotoolz)), and a
-  private geopatcher helper (`_src.spatial.patcher.on_domain_grid`).
-- **The install note is stale.** The extra is `pipekit>=0.0.2`, and both the
-  README and the module's import error still say pipekit is not on PyPI.
-- **There is only one integration.** The report's plural `integrations/`
-  anticipated `pipekit_jax` and `dask` siblings. Dask and JAX arrived
-  through `geopatcher.run` and the `[dask]` / `[jax]` extras instead.
-- **`GridSampler` and `MergePatches` are `forbid_in_yaml`**, so a pipeline
-  that contains them cannot round-trip through pipekit's loaders
-  ([Report 2](02_pipekit_surface.md#r2-group-l)).
+- **The bridge imports pipekit's private API.** It uses `nested_config` from `pipekit._base.operator`, the same private helper geotoolz imports ([Report 3](03_sister_libraries.md#r3-geotoolz)), and a private geopatcher helper (`_src.spatial.patcher.on_domain_grid`).
+- **The install note is stale.** The extra is `pipekit>=0.0.2`, but both the README and the module's import error still say pipekit is not on PyPI.
+- **There is only one integration.** The report's plural `integrations/` anticipated `pipekit_jax` and `dask` siblings, whereas Dask and JAX arrived through `geopatcher.run` and the `[dask]` / `[jax]` extras instead.
+- **`GridSampler` and `MergePatches` are `forbid_in_yaml`**, so a pipeline that contains them cannot round-trip through pipekit's loaders ([Report 2](02_pipekit_surface.md#r2-group-l)).
 :::
 
 (r7-deps)=
 ## Dependencies and extras
 
-The scoping report's core was **numpy and scipy only**: no field adapters,
-no pipekit. A user would wrap their own data in a `Field` and bring their own
-adapter. [](#tbl-r7-base) and [](#tbl-r7-extras) set that against what
-shipped.
+The scoping report's core was **numpy and scipy only**, with no field adapters and no pipekit, so that a user would wrap their own data in a `Field` and bring their own adapter. [](#tbl-r7-base) and [](#tbl-r7-extras) set that against what shipped.
 
 :::{table} The base install, scoped, as the README describes it, and shipped.
 :label: tbl-r7-base
@@ -482,34 +379,20 @@ shipped.
 :::
 
 :::{warning} Differs from the plan
-The framework-free core does not exist. `import geopatcher` loads georeader
-and rasterio, because the domains, the raster field and the matched fields
-import them at module level. pyproj is imported lazily. The README's "base —
-RasterField only" was already slightly off at 0.0.6, whose base included
-georeader, scipy and pyproj. Someone patching an xarray grid or a
-GeoDataFrame installs the raster stack anyway. See
-[](#r7-open-questions).
+The framework-free core does not exist. `import geopatcher` loads georeader and rasterio, because the domains, the raster field and the matched fields import them at module level. pyproj is imported lazily. The README's "base — RasterField only" was already slightly off at 0.0.6, whose base included georeader, scipy and pyproj. Someone patching an xarray grid or a GeoDataFrame installs the raster stack anyway. See [](#r7-open-questions).
 :::
 
-**No geocatalog dependency.** This holds exactly. You can patch your own
-data without geocatalog, and find files with geocatalog without geopatcher.
-When you want both, `geocatalog.patch.field_for` hands a catalog to
-geopatcher as a `RasterField`, and `CatalogDomain` satisfies `Domain`
-([Report 6](06_geocatalog.md#r6-bridge)). Neither package imports the other
-at module level.
+**No geocatalog dependency.** This holds exactly. We can patch our own data without geocatalog, and find files with geocatalog without geopatcher. When we want both, `geocatalog.patch.field_for` hands a catalog to geopatcher as a `RasterField`, and `CatalogDomain` satisfies `Domain` ([Report 6](06_geocatalog.md#r6-bridge)). Neither package imports the other at module level.
 
 (r7-migration)=
 ## Migration from geotoolz
 
-The scoping report planned to:
-- move `geotoolz.patch` into geopatcher, except `_src/ops.py`, which goes to
-  `integrations/pipekit`;
-- re-export everything from geotoolz (`gz.SpatialPatcher`, `import
-  geopatcher as patch`) for two minor versions;
-- leave a small geotoolz `patch_ops` module with GeoTensor-aware operators
-  (`ReadFromCatalogAsPatches`, `GeoTensorChipFilter`).
+The scoping report planned three steps:
+- move `geotoolz.patch` into geopatcher, except `_src/ops.py`, which goes to `integrations/pipekit`;
+- re-export everything from geotoolz (`gz.SpatialPatcher`, `import geopatcher as patch`) for two minor versions;
+- leave a small geotoolz `patch_ops` module with GeoTensor-aware operators (`ReadFromCatalogAsPatches`, `GeoTensorChipFilter`).
 
-[](#tbl-r7-migration) gives each step's status.
+The status of each step is in [](#tbl-r7-migration).
 
 :::{table} The migration steps at the pinned revisions.
 :label: tbl-r7-migration
@@ -546,23 +429,12 @@ for patch in patcher.split(field):     # patch.data is an xr.DataArray
     ...
 ```
 
-The scoping report's JAX example also holds as a pattern: the patcher
-iterates in Python, the patches are stacked, and a jitted, vmapped function
-processes them all at once. `run.batch_split` and `run.stack_patches` now
-give that stacking step a name. A pipeline built from pipekit operators
-still cannot be jitted ([Report 3](03_sister_libraries.md#r3-other)).
+The scoping report's JAX example also holds as a pattern: the patcher iterates in Python, the patches are stacked, and a jitted, vmapped function processes them all at once. `run.batch_split` and `run.stack_patches` now give that stacking step a name. However, a pipeline built from pipekit operators still cannot be jitted ([Report 3](03_sister_libraries.md#r3-other)).
 
 (r7-monorepo)=
 ## Monorepo, release and timing
 
-The scoping report picked a single "pipekit-ecosystem" monorepo for the
-patcher. Its reasons were especially strong here: six field adapters across
-five ecosystems, 60-odd classes to test across all of them, and a
-cross-package bridge. As with geocatalog, the patcher landed in the
-**geotoolz** monorepo instead, beside geocatalog and geocloud, with
-per-package releases (`geotoolz-patcher-v0.10.2`). There are 60 test modules
-(about 19,000 lines), including a pipekit integration test. [](#tbl-r7-history)
-gives the release record.
+The scoping report picked a single "pipekit-ecosystem" monorepo for the patcher, with reasons that were especially strong here: six field adapters across five ecosystems, 60-odd classes to test across all of them, and a cross-package bridge. As with geocatalog, the patcher landed in the **geotoolz** monorepo instead, beside geocatalog and geocloud, with per-package releases (`geotoolz-patcher-v0.10.2`). There are 60 test modules (about 19,000 lines), including a pipekit integration test, and [](#tbl-r7-history) gives the release record.
 
 :::{table} geopatcher's history.
 :label: tbl-r7-history
@@ -575,80 +447,41 @@ gives the release record.
 | 12 October 2026 | 0.10.2, the pinned revision |
 :::
 
-The estimate was a week and a half of focused work, in one coordinated v1.0
-with the pipekit and geocatalog extractions. It was gradual instead: one
-merge in July, then a series of breaking releases, each absorbed per
-package. What the split was meant to unblock did happen. Aggregations,
-adapters (`CogField`, `DaskField`), samplers (`AlongTrack`) and the run
-machinery all shipped on the patcher's own release cycle.
+The estimate was a week and a half of focused work, in one coordinated v1.0 with the pipekit and geocatalog extractions. It was gradual instead, with one merge in July and then a series of breaking releases, each absorbed per package. What the split was meant to unblock did happen, as aggregations, adapters (`CogField`, `DaskField`), samplers (`AlongTrack`) and the run machinery all shipped on the patcher's own release cycle.
 
 (r7-tradeoffs)=
 ## Trade-offs
 
-The scoping report's list, with how each turned out.
+The scoping report's list is below, with how each item turned out.
 
 **What got better:**
-1. **The patcher gets its own billing**: in part. The repo and the import
-   name are `geopatcher`, but the distribution is `geotoolz-patcher`, and the
-   standalone repo that a search would find is archived
-   ([](#r7-open-questions)).
-2. **The `Field` / `Domain` Protocols get visibility**: yes. They are the
-   root's first exports, and geocatalog's bridge depends on them.
-3. **The aggregations get their own roadmap**: yes. The family grew from
-   about fifteen to 21 classes.
-4. **The async story is clean**: yes. `AsyncSpatialPatcher`,
-   `AsyncRasterField`, prefetch and backpressure are first-class.
+1. **The patcher gets its own billing**: in part. The repo and the import name are `geopatcher`, but the distribution is `geotoolz-patcher`, and the standalone repo that a search would find is archived ([](#r7-open-questions)).
+2. **The `Field` / `Domain` Protocols get visibility**: this worked, as they are the root's first exports and geocatalog's bridge depends on them.
+3. **The aggregations get their own roadmap**: this worked, as the family grew from about fifteen to 21 classes.
+4. **The async story is clean**: this worked, as `AsyncSpatialPatcher`, `AsyncRasterField`, prefetch and backpressure are first-class.
 
 **What got worse, and the mitigations:**
 1. **The test surface is big**: 60 modules, in one monorepo CI.
-2. **More extras to coordinate**: each adapter stays behind its own extra,
-   as planned.
-3. **More documentation**: the docs are tutorial-grade (concepts, a
-   patching guide, recipes, ADRs, a notebook), but they live in the archived
-   repo, with pre-0.9.0 names.
-4. **People forget `[pipekit]`**: the import error says what to install,
-   though its PyPI note is out of date.
+2. **More extras to coordinate**: each adapter stays behind its own extra, as planned.
+3. **More documentation**: the docs are tutorial-grade (concepts, a patching guide, recipes, ADRs, a notebook), but they live in the archived repo, with pre-0.9.0 names.
+4. **People forget `[pipekit]`**: the import error says what to install, though its PyPI note is out of date.
 
 (r7-open-questions)=
 ## Open questions
 
-1. **Where do the docs live now?** The README, concepts, recipes, ADRs and
-   figures are in an archived repo, and they use names removed in 0.9.0.
-   Either they move into the geotoolz monorepo, or the archived repo is
-   unarchived as the docs site. This mirrors geocatalog's question 1
-   ([Report 6](06_geocatalog.md#r6-open-questions)).
-2. **`geopatcher` or `geotoolz-patcher` on PyPI?** Resolved: `geotoolz-patcher`
-   ([Report 16 §F](16_geo_data_stack.md#r16-ws-f)).
-3. **Should the core be georeader-free?** The scoped core was numpy plus
-   scipy, so that xarray, vector and point users would not pull in the
-   raster stack. Moving the raster domain and fields behind a `[raster]`
-   extra would restore that, at the cost of one more extra for the common
-   case. The lazy half is [Report 16 D3](16_geo_data_stack.md#r16-ws-d); the
-   extra stays open.
-4. **Should the axis classes be reachable from the root again?** With the
-   prefixes gone, `Rectangular`, `Mean` and `RegularStride` exist on both the
-   spatial and the temporal side, so the root cannot re-export them flatly.
-   Module-qualified imports (`spatial.geometry.Rectangular`) are the price of
-   that.
-5. **Should `drop` stay the default boundary?** It silently leaves NaN
-   strips when the stride does not divide the field (960 cells in the
-   example above). `"pad"` or `"reflect"`, or at least a warning on
-   uncovered cells, would make the default safe.
-6. **Should the pipekit bridge stop using private API?** Resolved:
-   `nested_config` becomes public
-   ([Report 16 §A](16_geo_data_stack.md#r16-ws-a)).
-7. **Should `GridSampler` and `MergePatches` be serialisable?** They are
-   flagged `forbid_in_yaml`, so a sliding-window pipeline cannot be saved
-   and reloaded, which matters for the deployment use cases.
-8. **What do geotoolz and xrtoolz actually need from the patcher?** The
-   scoped GeoTensor-aware operators (`ReadFromCatalogAsPatches`,
-   `GeoTensorChipFilter`) were never built. For xrtoolz, resolved: it uses
-   geopatcher, not xrpatcher ([Report 16 D4](16_geo_data_stack.md#r16-ws-d)).
+1. **Where do the docs live now?** The README, concepts, recipes, ADRs and figures are in an archived repo, and they use names removed in 0.9.0. Either they move into the geotoolz monorepo, or the archived repo is unarchived as the docs site. This mirrors geocatalog's question 1 ([Report 6](06_geocatalog.md#r6-open-questions)).
+2. **`geopatcher` or `geotoolz-patcher` on PyPI?** Resolved: `geotoolz-patcher` ([Report 16 §F](16_geo_data_stack.md#r16-ws-f)).
+3. **Should the core be georeader-free?** The scoped core was numpy plus scipy, so that xarray, vector and point users would not pull in the raster stack. Moving the raster domain and fields behind a `[raster]` extra would restore that, at the cost of one more extra for the common case. The lazy half is [Report 16 D3](16_geo_data_stack.md#r16-ws-d), whereas the extra stays open.
+4. **Should the axis classes be reachable from the root again?** With the prefixes gone, `Rectangular`, `Mean` and `RegularStride` exist on both the spatial and the temporal side, so the root cannot re-export them flatly, and module-qualified imports (`spatial.geometry.Rectangular`) are the price of that.
+5. **Should `drop` stay the default boundary?** It silently leaves NaN strips when the stride does not divide the field (960 cells in the example above). Using `"pad"` or `"reflect"`, or at least a warning on uncovered cells, would make the default safe.
+6. **Should the pipekit bridge stop using private API?** Resolved: `nested_config` becomes public ([Report 16 §A](16_geo_data_stack.md#r16-ws-a)).
+7. **Should `GridSampler` and `MergePatches` be serialisable?** They are flagged `forbid_in_yaml`, so a sliding-window pipeline cannot be saved and reloaded, which matters for the deployment use cases.
+8. **What do geotoolz and xrtoolz actually need from the patcher?** The scoped GeoTensor-aware operators (`ReadFromCatalogAsPatches`, `GeoTensorChipFilter`) were never built. For xrtoolz this is resolved, as it uses geopatcher, not xrpatcher ([Report 16 D4](16_geo_data_stack.md#r16-ws-d)).
 
 (r7-todos)=
 ## Upcoming work
 
-[](#tbl-r7-todos) lists the follow-ups.
+The follow-ups are listed in [](#tbl-r7-todos).
 
 :::{table} Follow-ups from checking the scoping report against the repo and the code.
 :label: tbl-r7-todos
@@ -670,10 +503,7 @@ The scoping report's list, with how each turned out.
 
 ### Sources
 
-- The [geopatcher repo](https://github.com/jejjohnson/geopatcher) (archived):
-  the README, concepts, the patching guide, design decisions (ADR-001 to
-  ADR-006) and recipes. The four figures on this page are its own.
+- The [geopatcher repo](https://github.com/jejjohnson/geopatcher) (archived): the README, concepts, the patching guide, design decisions (ADR-001 to ADR-006) and recipes. We took the four figures on this page from there.
 - `geotoolz-patcher` 0.10.2 in the geotoolz monorepo, and its changelog.
 
-*Citations to be added:* overlap-add reconstruction, and Hann and Tukey
-windows, as entries in `references.bib`.
+*Citations to be added:* overlap-add reconstruction, and Hann and Tukey windows, as entries in `references.bib`.
