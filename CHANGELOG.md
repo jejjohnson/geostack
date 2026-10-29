@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.3](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.2...geostack-v0.2.3) (2026-10-29)
+
+
+### Documentation
+
+* **design:** decide the xrtoolz layout questions, no shims, OP-O5, OP-O6 and SL-O1 ([#102](https://github.com/jejjohnson/geostack/issues/102)) ([d939875](https://github.com/jejjohnson/geostack/commit/d9398752eedbd1476cd7444f2971962c38172296))
+* **design:** rewrite the design pages and gallery in the maintainers' voice ([#108](https://github.com/jejjohnson/geostack/issues/108)) ([96d01da](https://github.com/jejjohnson/geostack/commit/96d01dab01d27348bfac9e51fd05658369418afd))
+* **esmax:** write the ocean pages in the notation standard ([#106](https://github.com/jejjohnson/geostack/issues/106)) ([77919d8](https://github.com/jejjohnson/geostack/commit/77919d8487a0e3229dea084fd79df324abe61c47))
+* **geomodels:** write radtrax and plumax maths in the notation standard ([#105](https://github.com/jejjohnson/geostack/issues/105)) ([f66921b](https://github.com/jejjohnson/geostack/commit/f66921b36638a95693982e2f1724e9245b07bb83))
+* **overview:** write the overview and landing pages in the notation standard ([#107](https://github.com/jejjohnson/geostack/issues/107)) ([751af13](https://github.com/jejjohnson/geostack/commit/751af13ea895e39f1628943abac6b80cdb841b64))
+* **reports:** write reports 1 to 7 in the notation standard ([#109](https://github.com/jejjohnson/geostack/issues/109)) ([4d19909](https://github.com/jejjohnson/geostack/commit/4d199091a88c2e892b24c31bc5d8ccdfd77b71f8))
+* **reports:** write reports 15 to 18 in the notation standard ([#111](https://github.com/jejjohnson/geostack/issues/111)) ([ed80e4a](https://github.com/jejjohnson/geostack/commit/ed80e4a221cad2035b44dd4b8d605239ff887850))
+* **reports:** write reports 9 to 14 in the notation standard ([#110](https://github.com/jejjohnson/geostack/issues/110)) ([581a1f1](https://github.com/jejjohnson/geostack/commit/581a1f150ee7e5b1936967834a4a893c453a2825))
+
 ## [0.2.2](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.1...geostack-v0.2.2) (2026-10-26)
 
 
