@@ -22,22 +22,22 @@ numbering:
 
 +++ {"part": "abstract"}
 
-Neural fields now clearly win for **gridless reconstruction** from sparse, irregular observations (altimeter tracks, stations, CryoSat-2 point clouds, seismic and gravity inversion) and as **differentiable state parameterizations** for variational assimilation, where the network's spectral bias stands in for a background covariance. For **archival compression** of reanalysis they still lose to tuned error-bounded codecs: a 2026 ERA5 head-to-head found SZ3.1 leads at every error bound. Atmospheric-composition fields (methane, NO₂, XCO₂) have essentially no neural-field work. What GeoStack should do about it is on the [neural-fields design page](../design/neural_fields.md).
+Neural fields now clearly win for **gridless reconstruction** from sparse, irregular observations (altimeter tracks, stations, CryoSat-2 point clouds, seismic and gravity inversion), and as **differentiable state parameterizations** for variational assimilation, where the network's spectral bias stands in for a background covariance. However, for the **archival compression** of reanalysis they still lose to tuned error-bounded codecs, and a 2026 ERA5 head-to-head found that SZ3.1 leads at every error bound. Atmospheric-composition fields (methane, NO₂, XCO₂) have essentially no neural-field work. What GeoStack should do about it is on the [neural-fields design page](../design/neural_fields.md).
 
 +++
 
 ## Key findings
 
-1. **Spherical handling has converged on a few recipes.** Spherical-harmonic embeddings into a SIREN [@russwurm2024geographic] are the baseline. 2025 work showed they fail on small or fragmented regions such as islands and coasts and proposed spherical wavelet encodings [@cai2025location]. HEALPix hybrid grids and learnable spherical Voronoi partitions are the alternatives.
-2. **Compression claims need careful reading.** Most INR compression papers compare against JPEG2000 or vanilla INRs, not SZ3/ZFP at matched error bounds. When the comparison is done properly, SZ3 is hard to beat on smooth gridded fields.
-3. **Gridless reconstruction is the killer application.** Neural fields consume point clouds without regridding and give analytic derivatives for geostrophy, elevation-change rates and PDE residuals.
-4. **Spectral bias is being reframed as a feature.** In 4D-Var and geophysical inversion, the MLP's low-frequency preference acts as an implicit regularizer, replacing hand-built background covariances or smoothness penalties.
-5. **Amortization across samples is thin in practice.** Functa, CORAL and DINo-style modulations are mature on ML benchmarks, but real geoscience deployments are few (PINROD for ocean, multi-altitude climate INRs).
-6. **JAX code exists but is scattered.** BayesNF (Google), DIFFICE-jax (ice shelves), PINNICLE through DeepXDE's JAX backend, and DeepMind's functa. No sphere-aware, geoscience-specific neural-field library exists in JAX.
+1. **Spherical handling has converged on a few recipes.** Spherical-harmonic embeddings into a SIREN [@russwurm2024geographic] are the baseline. However, work in 2025 showed that they fail on small or fragmented regions such as islands and coasts, and it proposed spherical wavelet encodings instead [@cai2025location]. HEALPix hybrid grids and learnable spherical Voronoi partitions are the alternatives.
+2. **Compression claims need careful reading.** Most INR compression papers compare against JPEG2000 or against vanilla INRs, and not against SZ3/ZFP at matched error bounds. When the comparison is done properly, SZ3 is hard to beat on smooth gridded fields.
+3. **Gridless reconstruction is the killer application.** Neural fields consume point clouds without regridding, and they give analytic derivatives for geostrophy, elevation-change rates and PDE residuals.
+4. **Spectral bias is being reframed as a feature.** In 4D-Var and in geophysical inversion, the MLP's preference for low frequencies acts as an implicit regularizer, which replaces the hand-built background covariances or smoothness penalties.
+5. **Amortization across samples is thin in practice.** Functa, CORAL and DINo-style modulations are mature on ML benchmarks, whereas the real geoscience deployments are few (PINROD for the ocean, and the multi-altitude climate INRs).
+6. **JAX code exists but is scattered.** There is BayesNF (Google), DIFFICE-jax (ice shelves), PINNICLE through DeepXDE's JAX backend, and DeepMind's functa. However, no sphere-aware, geoscience-specific neural-field library exists in JAX.
 
 ## Compression and storage reduction
 
-Neural fields do not dominate archival compression in 2026. Their advantages are random-access continuous queries, analytic gradients, context conditioning and compression-as-embedding.
+Neural fields do not dominate archival compression in 2026. Their advantages are random-access continuous queries, analytic gradients, context conditioning and compression as an embedding.
 
 | Work | Group, venue | Field represents | Architecture and encoding | Key result | Code |
 | --- | --- | --- | --- | --- | --- |
@@ -50,52 +50,52 @@ Neural fields do not dominate archival compression in 2026. Their advantages are
 | [ImplicitTerrainV2](https://arxiv.org/html/2605.22556) [@implicitterrainv2_2026] | arXiv 2026 | (x, y) → elevation | Wavelet-guided adaptive SIREN + quantization + entropy coding | Beats ZSTD, ZFP, LERC at 0.5–2 bpp; SZ3 still wins (80.45 dB at 1.96 bpp vs 65.97 dB at 1.23 bpp) | — |
 | [Can DNNs improve compression of very large scientific data?](https://arxiv.org/html/2606.14353) [@dnncompression2026] | arXiv 2026 | ERA5 via learned predictors | CRA5, GraphCast, Aurora as predictors vs SZ3.1, same backend | No learned predictor improves dataset-level compression; up to 9.6× per-variable gains | — |
 
-Non-INR context: DeepMind's *Neural Compression of Atmospheric States* [@mirowski2024neural] uses HEALPix with hyperprior and vector-quantized autoencoders for more than 1,000× at about one second per global state; that is the bar INRs must beat. The 2025 review *Lossy Neural Compression for Geospatial Analytics* [@gomes2025lossy] calls Earth-system-model compression efforts limited and says INR shortcomings must be fixed first.
+For context outside INRs, DeepMind's *Neural Compression of Atmospheric States* [@mirowski2024neural] uses HEALPix with hyperprior and vector-quantized autoencoders to reach more than 1,000× at about one second per global state, which is the bar that INRs must beat. The 2025 review *Lossy Neural Compression for Geospatial Analytics* [@gomes2025lossy] calls the compression efforts for Earth-system models limited, and it says that the shortcomings of INRs must be fixed first.
 
-Benchmark against SZ3/ZFP at matched maximum error, not just PSNR.
+So one should benchmark against SZ3/ZFP at a matched maximum error, and not just on PSNR.
 
 ## Interpolation, gap-filling and continuous reconstruction
 
-This is where neural fields are strongest: point clouds and swaths in, a continuous differentiable field out.
+This is where neural fields are strongest, as point clouds and swaths go in and a continuous, differentiable field comes out.
 
 ### Ocean
 
-- [**Neural fields for fast and scalable interpolation of geophysical ocean variables**](https://arxiv.org/pdf/2211.10444): Johnson et al. (MEOM/IGE), NeurIPS ML4PS 2022 (foundation) [@johnson2022neuralfields]. (lon, lat, t) → SSH from along-track altimetry with SIREN and Fourier-feature MLPs; matches optimal interpolation and scales better. [OceanBench SSH](https://arxiv.org/pdf/2309.15599) [@johnson2023oceanbench] is the benchmark harness.
-- [**Continuous field reconstruction from sparse observations with INRs**](https://arxiv.org/abs/2401.11611): Luo et al., ICLR 2024 [@luo2024continuous]. Separable spatial and temporal basis functions; beats prior INRs on climate output and 0.01° satellite SST.
-- **SWOT noise.** Zhang & Callies (JGR Oceans 2025) find the KaRIn signal below 30–50 km correlates with significant wave height, so aliased waves are the likely source. SSH neural fields must now model anisotropic, wave-correlated noise, not just gaps.
+- [**Neural fields for fast and scalable interpolation of geophysical ocean variables**](https://arxiv.org/pdf/2211.10444): Johnson et al. (MEOM/IGE), NeurIPS ML4PS 2022 (foundation) [@johnson2022neuralfields]. It maps (lon, lat, t) to SSH from along-track altimetry with SIREN and Fourier-feature MLPs, and it matches optimal interpolation while scaling better. [OceanBench SSH](https://arxiv.org/pdf/2309.15599) [@johnson2023oceanbench] is the benchmark harness.
+- [**Continuous field reconstruction from sparse observations with INRs**](https://arxiv.org/abs/2401.11611): Luo et al., ICLR 2024 [@luo2024continuous]. They use separable spatial and temporal basis functions, and they beat prior INRs on climate output and on 0.01° satellite SST.
+- **SWOT noise.** Zhang & Callies (JGR Oceans 2025) find that the KaRIn signal below 30 to 50 km correlates with the significant wave height, so aliased waves are the likely source. So SSH neural fields must now model anisotropic, wave-correlated noise, and not just gaps.
 
 ### Atmosphere and near-surface weather
 
-- **SpLIIF** (del Valle Inclan Redondo et al., Recursive; arXiv 2510.20228) [@delvalle2025spliif]: sparse JMA stations and topography → continuous sub-km temperature and wind; up to 50% better than CorrDiff for temperature and 10–20% for wind.
-- **WindINR** [@windinr2026]: a latent-state INR for local wind queries and observation-driven correction in complex terrain.
-- [**BayesNF**](https://github.com/google/bayesnf) (Saad et al., Google; Nature Communications 2024) [@saad2024bayesnf]: (space, time) → full predictive distribution via hierarchical priors over a neural field with MAP/VI ensembles; beats sparse variational GPs, gradient boosting and GLMMs on tens to hundreds of thousands of points. JAX, GPU/TPU.
+- **SpLIIF** (del Valle Inclan Redondo et al., Recursive; arXiv 2510.20228) [@delvalle2025spliif]: it maps sparse JMA stations and topography to continuous sub-km temperature and wind, and it is up to 50% better than CorrDiff for temperature and 10 to 20% better for wind.
+- **WindINR** [@windinr2026]: a latent-state INR for local wind queries and for observation-driven correction in complex terrain.
+- [**BayesNF**](https://github.com/google/bayesnf) (Saad et al., Google; Nature Communications 2024) [@saad2024bayesnf]: it maps (space, time) to a full predictive distribution through hierarchical priors over a neural field with MAP/VI ensembles, and it beats sparse variational GPs, gradient boosting and GLMMs on tens to hundreds of thousands of points. It runs in JAX, on GPU/TPU.
 
 ### Land and solid Earth
 
-- **ImplicitTerrainV2** (above): DEMs as analytic-gradient terrain.
-- [**IntraSeismic**](https://vccimaging.org/Publications/Romero2024INR/Romero2024INR.pdf) and [**Bayesian seismic inversion with INRs**](https://vccimaging.org/Publications/Romero2025BIS_journal/Romero2025BIS_journal.pdf) (Romero, Heidrich, Ravasi, KAUST; JGR-MLC 2024, GJI 2025) [@romero2025bayesianseismic]: (x, y, z) → elastic properties; multigrid hash encoding and a tiny MLP inside a seismic forward operator; variational inference for uncertainty.
-- [**Implicit gravity inversion**](https://www.sciencedirect.com/science/article/abs/pii/S0098300425002328) (Computers & Geosciences 2025); [Xu & Heagy](https://arxiv.org/pdf/2503.17503) on why neural-field parameterization helps DC-resistivity and seismic inversion; a [1-D magnetotelluric INR](https://arxiv.org/pdf/2606.17069) (2026).
-- [**Ecological field reconstruction**](https://arxiv.org/abs/2604.18083) (2026): sinusoidal and Fourier INRs keep fine structure; ReLU models over-smooth.
-- Soil moisture and vegetation: no 2025–2026 neural-field paper found.
+- **ImplicitTerrainV2** (above): DEMs as terrain with analytic gradients.
+- [**IntraSeismic**](https://vccimaging.org/Publications/Romero2024INR/Romero2024INR.pdf) and [**Bayesian seismic inversion with INRs**](https://vccimaging.org/Publications/Romero2025BIS_journal/Romero2025BIS_journal.pdf) (Romero, Heidrich, Ravasi, KAUST; JGR-MLC 2024, GJI 2025) [@romero2025bayesianseismic]: they map (x, y, z) to elastic properties with a multigrid hash encoding and a tiny MLP inside a seismic forward operator, and they use variational inference for the uncertainty.
+- [**Implicit gravity inversion**](https://www.sciencedirect.com/science/article/abs/pii/S0098300425002328) (Computers & Geosciences 2025), [Xu & Heagy](https://arxiv.org/pdf/2503.17503) on why a neural-field parameterization helps DC-resistivity and seismic inversion, and a [1-D magnetotelluric INR](https://arxiv.org/pdf/2606.17069) (2026).
+- [**Ecological field reconstruction**](https://arxiv.org/abs/2604.18083) (2026): sinusoidal and Fourier INRs keep the fine structure, whereas ReLU models over-smooth.
+- For soil moisture and vegetation, we found no neural-field paper from 2025 or 2026.
 
 ### Ice and cryosphere
 
-- [**INR for ice-sheet surface elevation**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5451425) (Naylor et al., ESA Φ-lab / DTU Space; SSRN 2025) [@naylor2025icesheet]: (x, y, t) → Petermann Glacier elevation from CryoSat-2 points covering 5% of the domain; 83.66% better than its baseline over more than 20,000 km² and 12 years; weak at the low-density rim. [Code](https://github.com/PeterJackNaylor/IceSheetReconstruction), not JAX, not yet peer reviewed.
-- Sea-ice thickness and Greenland bed mapping ([DeepTopoNet](https://arxiv.org/pdf/2505.23980), [physics-guided residuals](https://arxiv.org/pdf/2511.14473)) still use gridded CNNs. No INR paper on sea ice or firn was found.
+- [**INR for ice-sheet surface elevation**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5451425) (Naylor et al., ESA Φ-lab / DTU Space; SSRN 2025) [@naylor2025icesheet]: it maps (x, y, t) to the elevation of Petermann Glacier from CryoSat-2 points which cover 5% of the domain, and it is 83.66% better than its baseline over more than 20,000 km² and 12 years, although it is weak at the low-density rim. The [code](https://github.com/PeterJackNaylor/IceSheetReconstruction) is not in JAX, and the paper is not yet peer reviewed.
+- Sea-ice thickness and Greenland bed mapping ([DeepTopoNet](https://arxiv.org/pdf/2505.23980), [physics-guided residuals](https://arxiv.org/pdf/2511.14473)) still use gridded CNNs, and we found no INR paper on sea ice or firn.
 
 ### Location encoders
 
-- [**Spherical harmonics + SIREN**](https://github.com/MarcCoru/locationencoder) (Rußwurm et al., ICLR 2024) [@russwurm2024geographic]: analytic SH basis up to L = 100, no polar artefacts.
-- [**No Location Left Behind**](https://mlanthology.org/iclr/2025/cai2025iclr-location/) (Cai & Balestriero, ICLR 2025) [@cai2025location]: the FAIR-Earth benchmark shows SH encoders underperform on islands and coasts; proposes spherical wavelets.
-- 2026: a [spherical Voronoi encoder](https://arxiv.org/html/2606.27514), SLED distilled encodings, and an [Earth Embeddings survey](https://arxiv.org/pdf/2608.03410) covering SatCLIP, RANGE and the hash-table LIANet.
+- [**Spherical harmonics + SIREN**](https://github.com/MarcCoru/locationencoder) (Rußwurm et al., ICLR 2024) [@russwurm2024geographic]: an analytic SH basis up to degree L = 100, with no polar artefacts.
+- [**No Location Left Behind**](https://mlanthology.org/iclr/2025/cai2025iclr-location/) (Cai & Balestriero, ICLR 2025) [@cai2025location]: the FAIR-Earth benchmark shows that SH encoders underperform on islands and coasts, and the authors propose spherical wavelets.
+- In 2026 came a [spherical Voronoi encoder](https://arxiv.org/html/2606.27514), SLED distilled encodings, and an [Earth Embeddings survey](https://arxiv.org/pdf/2608.03410) which covers SatCLIP, RANGE and the hash-table LIANet.
 
 ## Physics-constrained neural fields
 
-The live frontier is neural-field 4D-Var, PINN inversion for ice and ocean, and latent dynamics over INR codes.
+The live frontier is in three places: 1) neural-field 4D-Var, 2) PINN inversion for the ice and the ocean, and 3) latent dynamics over INR codes.
 
 | Work | Venue | Neural-field role | Physics | Result | Code |
 | --- | --- | --- | --- | --- | --- |
-| [Neural field reparameterization for 4DVAR](https://arxiv.org/abs/2509.21751) | Jaemin Oh, arXiv 2025 (v2 2026) [@oh2025neuralfield4dvar] | Full state u(t, x) as one field | 4D-Var cost + physics losses, parallel-in-time | Better initial conditions than classical 4D-Var on 2-D Kolmogorov and 3-D Taylor–Green; spectral bias replaces an explicit B; separable PINNs give large speedups; no ground-truth training data | — |
+| [Neural field reparameterization for 4DVAR](https://arxiv.org/abs/2509.21751) | Jaemin Oh, arXiv 2025 (v2 2026) [@oh2025neuralfield4dvar] | Full state $x(\vect{s}, t) \in \mathbb{R}$ as one field | 4D-Var cost + physics losses, parallel-in-time | Better initial conditions than classical 4D-Var on 2-D Kolmogorov and 3-D Taylor–Green; spectral bias replaces an explicit background covariance $\gmat{\Sigma}_x$; separable PINNs give large speedups; no ground-truth training data | — |
 | [StrAss-PINN: deep learning in the abyss](https://arxiv.org/html/2503.19160v1) | arXiv 2025 [@strasspinn2025] | SIREN-style field per ocean layer | 3-layer quasi-geostrophic | Deep flow from SWOT-like SSH, ARGO-like interior, sparse deep-ARGO | — |
 | [PINROD](https://arxiv.org/pdf/2503.21588) | Zhao, Luo et al. (BNL/LANL/ANL), ICLR 2025 CCAI [@zhao2025pinrod] | DINo-style INR decoder + latent codes | Parameterized latent neural ODE | Resolution-independent baroclinic ocean surrogate | — |
 | Deep learning the flow law of Antarctic ice shelves | Wang et al., Science 2025 [@wang2025flowlaw] | MLPs for velocity, thickness, viscosity | Shallow-shelf approximation | Grain-size-sensitive rheology in compression zones; anisotropic viscosity at suture zones | DIFFICE-jax (JAX) |
@@ -103,7 +103,7 @@ The live frontier is neural-field 4D-Var, PINN inversion for ice and ocean, and 
 | [Subglacial topography from two conservation laws](https://tc.copernicus.org/articles/20/3533/2026/) | Krishna, Cheng, Morlighem, The Cryosphere 2026 [@krishna2026subglacial] | PINN for thickness + basal shear | Mass conservation + SSA | Single-law PINNs insufficient in sparse regions; finds bed features absent from BedMachine | PINNICLE |
 | [PINN surface currents from drifters](https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2025.1547995/full) | Frontiers in Marine Science 2025 | (x, y, t) → velocity | Flow equations as soft constraints | Physics term essential for Eulerian fields from Lagrangian drifters | — |
 
-Latent-dynamics foundations: DINo [@yin2023dino] pairs an INR decoder with a latent ODE; CORAL [@serrano2023coral] uses shift-modulated SIRENs with meta-learned codes for operator learning on irregular grids; [AROMA](https://proceedings.neurips.cc/paper_files/paper/2024/file/185a120a3f709187e68bd092e6098851-Paper-Conference.pdf) [@serrano2024aroma] uses local neural fields and transformer latent dynamics and beats both on harder systems.
+The latent-dynamics foundations are DINo [@yin2023dino], which pairs an INR decoder with a latent ODE, CORAL [@serrano2023coral], which uses shift-modulated SIRENs with meta-learned codes for operator learning on irregular grids, and [AROMA](https://proceedings.neurips.cc/paper_files/paper/2024/file/185a120a3f709187e68bd092e6098851-Paper-Conference.pdf) [@serrano2024aroma], which uses local neural fields with transformer latent dynamics and beats both on harder systems.
 
 ## Cross-cutting trends and open problems
 
@@ -131,12 +131,12 @@ Latent-dynamics foundations: DINo [@yin2023dino] pairs an INR decoder with a lat
 | CORAL, AROMA | PyTorch | INR operator learning and latent dynamics |
 | [IceSheetReconstruction](https://github.com/PeterJackNaylor/IceSheetReconstruction) | PyTorch + Nextflow | CryoSat-2 elevation INR pipeline |
 
-Benchmarks: OceanBench (SSH), FAIR-Earth (stratified fairness of Earth INRs), SDRBench-style comparisons against SZ3, ZFP and MGARD.
+The benchmarks are OceanBench (SSH), FAIR-Earth (stratified fairness of Earth INRs), and SDRBench-style comparisons against SZ3, ZFP and MGARD.
 
 ## Caveats
 
-- Several key items are preprints or workshop papers (Naylor et al., PINROD, Oh 2025, ImplicitTerrainV2, the 2026 ERA5 comparison); check numbers against final versions.
-- Compression ratios are not comparable across papers: datasets, error metrics (PSNR vs maximum error) and whether weights are quantized and entropy-coded all differ.
-- Relative gains (83.66%, "up to 50%") depend on baselines that are not always strong.
-- Absence findings (no INR work on trace gases, soil moisture, sea ice or firn) come from a limited search.
-- Works whose title or authors could not be confirmed from the sources opened for this review (Zhang & Callies 2025 on SWOT noise; Xu & Heagy 2025; the 2026 magnetotelluric and ecological INR studies; the 2025 drifter PINN; IntraSeismic, Implicit Gravity Inversion, DeepTopoNet) are linked inline rather than entered in `references.bib`.
+- Several key items are preprints or workshop papers (Naylor et al., PINROD, Oh 2025, ImplicitTerrainV2, the 2026 ERA5 comparison), so one should check their numbers against the final versions.
+- Compression ratios are not comparable across papers, because the datasets, the error metrics (PSNR vs maximum error) and whether the weights are quantized and entropy-coded all differ.
+- Relative gains (83.66%, "up to 50%") depend on baselines which are not always strong.
+- The absence findings (no INR work on trace gases, soil moisture, sea ice or firn) come from a limited search.
+- Works whose title or authors we could not confirm from the sources opened for this review (Zhang & Callies 2025 on SWOT noise; Xu & Heagy 2025; the 2026 magnetotelluric and ecological INR studies; the 2025 drifter PINN; IntraSeismic, Implicit Gravity Inversion, DeepTopoNet) are linked inline rather than entered in `references.bib`.
