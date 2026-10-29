@@ -148,8 +148,8 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | OP-O2 | One named-dims einx bridge in pipekit-array `[einx]` | open |
 | OP-O3 | `to_rows` / `from_rows` plus one scikit-learn estimator wrapper | open |
 | OP-O4 | Lifting is `xrops.lift(op, dim=...)`; geoops has no `[xarray]` extra | decided 22 Oct 2026 |
-| OP-O5 | Operators use `KernelOp` by composition, not subclassing | open |
-| OP-O6 | The `backends` vocabulary: `"numpy"`, `"jax"`, `"xarray"` | open |
+| OP-O5 | Operators use `KernelOp` by composition, not subclassing | decided 29 Oct 2026 |
+| OP-O6 | The `backends` vocabulary: `"numpy"`, `"jax"`, `"dask"`; a `DataArray` reports its data's backend | decided 29 Oct 2026 |
 | OP-O7 | The diagnostic gradient kernel lives in geoops; model-grade calculus stays in finitevolX | decided 22 Oct 2026 |
 | OP-O8 | Whether an L3 algorithm calls another L3 algorithm inside a differentiated cost | open (decide first) |
 
@@ -158,20 +158,20 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | ID | Decision or question | Status |
 | --- | --- | --- |
 | PL-Q1 | The xarray bridges | superseded by OP-O2, OP-O3 and OP-O7 |
-| PL-Q2 | The xarray `Operator` base in `xrops._src` | open (its `Signature` part decided with GA-Q9) |
-| PL-Q3 | The reader's name: `xrproducts` | open |
-| PL-Q4 | How to split `xrtoolz.geo` | open |
-| PL-Q5 | How long the shims live | open |
+| PL-Q2 | The xarray `Operator` base in `xrops._src` | decided 29 Oct 2026 (its `Signature` part with GA-Q9) |
+| PL-Q3 | The reader's name: `xrproducts` | decided 29 Oct 2026 |
+| PL-Q4 | How to split `xrtoolz.geo` | decided 29 Oct 2026 |
+| PL-Q5 | No shims: old import paths are removed outright | decided 29 Oct 2026 |
 | PL-Q6 | State-physics families stay in xrops | decided 22 Oct 2026 (OP-O1) |
-| PL-Q7 | geoproducts or xrproducts, by what one read returns | open |
-| PL-Q8 | `load_states` stays in geocatalog | open |
+| PL-Q7 | geoproducts or xrproducts, by what one read returns | decided 29 Oct 2026 |
+| PL-Q8 | `load_states` stays in geocatalog | decided 29 Oct 2026 |
 | PL-Q9 | Points: a CF DSG `Dataset` on the labeled side, `GeoPoints` on the array side | `GeoPoints` decided; DSG open |
 
 ## Levels across the stack (SL)
 
 | ID | Decision or question | Status |
 | --- | --- | --- |
-| SL-O1 | Ocean and atmosphere diagnostics: option D (xrops L1 and L2; model closure to esmax; products to xrproducts) | open |
+| SL-O1 | Ocean and atmosphere diagnostics: option D (xrops L1 and L2; model closure to esmax; products to xrproducts) | decided 29 Oct 2026 |
 | SL-O2 | Carrier code behind `[geo]` and `[xarray]` extras (`esmax-core[geo]`) | open |
 | SL-O3 | CH₄ column physics: L1 in radtrax, xarray operators behind `radtrax[xarray]` | open |
 | SL-O4 | A `plumax.runs` module per model for L3 runs | open |

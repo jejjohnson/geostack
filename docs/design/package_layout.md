@@ -121,13 +121,13 @@ Every job has the same distribution shape in both repos, and every ops family ha
 2. **Empty the umbrella.**
    `xrtoolz` depends on `xrtoolz-ops` and `xrtoolz-products`, re-exports nothing but `__version__`, and documents the import table, as `geotoolz/__init__.py` does.
 3. **Retire the bridges.**
-   Per PL-Q1, `xreinx` and `xrsklearn` become shims over pipekit-array's bridges, and `xrgrad` becomes `xrops.Gradient`.
+   Per PL-Q1, `xreinx` and `xrsklearn` are removed once pipekit-array's bridges ship (OP-O2, OP-O3), and `xrgrad` becomes `xrops.Gradient`.
 4. **Rename the families.**
    Per PL-Q4, split `xrtoolz.geo`; delete `rs` and `ice`.
 5. **Rename the reader.**
    Per PL-Q3, `xrtoolz-reader` becomes `xrtoolz-products`.
-6. **Shims.**
-   Each old import path re-exports with a `DeprecationWarning` naming its new home, removed in a named 0.X release (PL-Q5).
+6. **No shims.**
+   Old import paths are removed outright, as geotoolz does (PL-Q5): the release that moves a module updates every caller in the stack, and nothing re-exports the old path.
 
 ## Boundary: geoproducts and xrproducts
 
@@ -233,13 +233,13 @@ Each has a recommendation and its alternative; flip any before the issues open.
 | ID | Question | Recommended | Alternative | Status |
 | --- | --- | --- | --- | --- |
 | PL-Q1 | Backend bridges: extras or distributions? | Retire `xreinx` and `xrsklearn` in favour of pipekit-array's shared bridges (OP-O2, OP-O3); `xrgrad` becomes `xrops.Gradient` (OP-O7) | Fold them into `xrops` behind extras (the 21 Oct recommendation), or split `geoops.einx` and `geoops.learn` out into distributions | superseded by OP-O2, OP-O3, OP-O7 |
-| PL-Q2 | Where the xarray Operator base lives | `xrops._src`, as geoops keeps its base; `Signature` is `pipekit.Signature` | Keep `xrcore` if something outside xrtoolz needs the base without the ops | open; `Signature` decided 21 Oct (GA-Q9) |
-| PL-Q3 | Reader name | `xrtoolz-products` (import `xrproducts`), matching `geoproducts` | Keep `xrreader` | open |
-| PL-Q4 | How to split `xrtoolz.geo` | Geometry (crs, mosaic, rasterize, vectorize, footprint, subset) → `xrops.geom`; analysis (detrend, wavelets, extremes, regimes) into named families | Keep `geo` as the generic family and rename `geoops.geom` to match | open |
-| PL-Q5 | Shim lifetime | Removed in the release after the switch, named in each warning | Keep the shims through the whole 0.x series | open |
+| PL-Q2 | Where the xarray Operator base lives | **Decided 29 Oct 2026:** `xrcore` folds into `xrops._src`, as geoops keeps its base; `Signature` is `pipekit.Signature` | Keep `xrcore` if something outside xrtoolz needs the base without the ops | decided 29 Oct 2026 (`Signature` 21 Oct, GA-Q9) |
+| PL-Q3 | Reader name | **Decided 29 Oct 2026:** `xrtoolz-products` (import `xrproducts`), matching `geoproducts` | Keep `xrreader` | decided 29 Oct 2026 |
+| PL-Q4 | How to split `xrtoolz.geo` | **Decided 29 Oct 2026:** geometry (crs, mosaic, rasterize, vectorize, footprint, subset) → `xrops.geom`; analysis (detrend, wavelets, extremes, regimes) into named families | Keep `geo` as the generic family and rename `geoops.geom` to match | decided 29 Oct 2026 |
+| PL-Q5 | Shim lifetime | **Decided 29 Oct 2026:** no shims; old import paths are removed outright in the release that moves them, and the stack's callers move in the same release, as in geotoolz | a one-release `DeprecationWarning` shim (the earlier recommendation), or shims through the whole 0.x series | decided 29 Oct 2026 |
 | PL-Q6 | Domain families | `xrops.atm`, `ocn`, `budgets` stay, because they act on model states; geoops stays domain-neutral | Move them to GeoModels packages next to their physics | decided 22 Oct 2026 (OP-O1); the split by discretisation is SL-O1 |
-| PL-Q7 | geoproducts versus xrproducts | What one read returns: one acquisition → geoproducts; a cube or a station series → xrproducts | Strict provenance (observations versus model output), splitting each provider's reader across both | open |
-| PL-Q8 | Who assembles state cubes | `load_states` stays in geocatalog, which already serves both lanes; xrproducts hands off rows | Move cube assembly into xrproducts and keep geocatalog index-only | open |
+| PL-Q7 | geoproducts versus xrproducts | **Decided 29 Oct 2026:** what one read returns: one acquisition → geoproducts; a cube or a station series → xrproducts | Strict provenance (observations versus model output), splitting each provider's reader across both | decided 29 Oct 2026 |
+| PL-Q8 | Who assembles state cubes | **Decided 29 Oct 2026:** `load_states` stays in geocatalog, which already serves both lanes; xrproducts hands off rows | Move cube assembly into xrproducts and keep geocatalog index-only | decided 29 Oct 2026 |
 | PL-Q9 | Point carriers | CF DSG `Dataset` in the labeled lane, `GeoPoints` in the array lane | One table carrier for both lanes, or xvec for points | `GeoPoints` decided (geoarray page); DSG open |
 
 ## Gates, sequencing and risks
@@ -251,9 +251,9 @@ Each workstream merges only when its gate passes; PL-A ships first because every
 | A1 Port parity | PL-A | the moved tests pass with only import changes, and the test count equals the old `xrtoolz` suite's |
 | A2 Empty umbrella | PL-A | `xrtoolz/__init__.py` exports only `__version__`, and `import xrtoolz` imports no ops module |
 | B1 Light base | PL-B | a fresh `pip install xrtoolz-ops` installs none of jax, einx, scikit-learn |
-| C1 One base | PL-C | every `xrops` operator is an instance of the one base class, and `xrcore.Operator is xrops.Operator` through the shim |
+| C1 One base | PL-C | every `xrops` operator is an instance of the one base class, and `xrcore` no longer exists |
 | D1 Name parity | PL-D | a script lists the families of `geoops` and `xrops`; every name in both means the same job, and the list is checked into the docs |
-| E1 Reader shims | PL-E | `import xrreader` warns and resolves every public name to `xrproducts` |
+| E1 Reader rename | PL-E | every public name of `xrreader` is importable from `xrproducts`, and `import xrreader` fails |
 
 Order: PL-A, then PL-B, PL-C and PL-E in parallel, then PL-D.
 PL-B waits for the pipekit-array release that ships the shared bridges, and `xrops.lift` waits for geoops's slim base ([operators](./operators.md)).
@@ -261,10 +261,10 @@ Each is one minor bump of `xrtoolz` (0.1.0, then 0.2.0).
 
 - **Downstream imports break.**
   pipekit, geostack notebooks and GeoBench import `xrtoolz.*` today.
-  Fallback: shims for one release, and a grep of the stack for old paths before the release.
+  Mitigation: no shims (PL-Q5), so each release greps the stack for the old paths and updates every caller in the same release.
 - **The shared bridges slip.**
   If pipekit-array's einx and scikit-learn bridges are late, PL-B blocks.
   Fallback: keep `xreinx` and `xrsklearn` as they are for one more release; PL-D still applies.
 - **`xrtoolz.geo` has no clean split.**
   Some functions are both geometry and analysis.
-  Fallback: keep a thin `xrops.geo` re-export until D1 lists every name.
+  Fallback: place each such function by its main job and list it in D1's checked-in table.
