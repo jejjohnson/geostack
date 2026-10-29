@@ -20,25 +20,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-[Report 15](reports/15_benchmarking.md) says what makes a benchmark a
-benchmark: a frozen contract with a hash. This gallery drafts eighteen
-entries, across the ocean, the land, the atmosphere, remote sensing and one
-mathematical-model chain, so the framework can be judged on concrete cases.
-Seventeen entries are each one draft contract, specific enough to
-pre-register after a domain expert's review; the chain (5.1) is written here
-as one aggregate entry and would be pre-registered as six linked contracts.
-The notebook hashes each entry, so 5.1 has one hash on this page, not six. Three things set this version apart from its source
-draft [@geostack_gallery_draft]. **The splits follow
-[Report 15's rule](reports/15_benchmarking.md#r15-stage-2)**, so most random space-time blocks
-become withheld platforms or causal splits, and in eleven entries a "split"
-the source names (season, climate phase, altitude, time of day) is a
-breakdown of the score instead. **The stack names are
-the real ones**: each entry lists what imports from the pinned code today
-(61 distinct pieces across the gallery), what a report proposes or the
-overview defers (18), and what nobody has proposed yet (7). **Every claim about the gallery is
-computed**: the notebook `notebooks/reports/benchmarks_gallery.py` holds
-the contracts as data, hashes them, checks every stack name and asserts
-every count on this page that describes the contracts.
+[Report 15](reports/15_benchmarking.md) says what makes a benchmark a benchmark: a frozen contract with a hash. This gallery drafts eighteen entries, across the ocean, the land, the atmosphere, remote sensing and one mathematical-model chain, so the framework can be judged on concrete cases. Seventeen entries are each one draft contract, specific enough to pre-register after a domain expert's review, whereas the chain (5.1) is written here as one aggregate entry and would be pre-registered as six linked contracts. The notebook hashes each entry, so 5.1 has one hash on this page, not six. Three things set this version apart from its source draft [@geostack_gallery_draft]: 1) **the splits follow [Report 15's rule](reports/15_benchmarking.md#r15-stage-2)**, so most random space-time blocks become withheld platforms or causal splits, and in eleven entries a "split" the source names (season, climate phase, altitude, time of day) is a breakdown of the score instead; 2) **the stack names are the real ones**, as each entry lists what imports from the pinned code today (61 distinct pieces across the gallery), what a report proposes or the overview defers (18), and what nobody has proposed yet (7); and 3) **every claim about the gallery is computed**, as the notebook `notebooks/reports/benchmarks_gallery.py` holds the contracts as data, hashes them, checks every stack name and asserts every count on this page that describes the contracts.
 
 +++
 
@@ -57,33 +39,17 @@ every count on this page that describes the contracts.
 :::
 
 :::{important} What changed from the source draft
-- **Counts:** the source says six domains and 22 or 23 benchmarks; it lists
-  eighteen entries in five domains, and 5.1 is written as a cascade of six
-  contracts ([](#gal-5-1)).
-- **Tasks:** each entry names a level transition
-  ([Report 15](reports/15_benchmarking.md#r15-framework)); four
-  remote-sensing entries are not transitions up the ladder, so a contract
-  names its carriers ([](#gal-remote-sensing)).
-- **Splits:** of nine source entries with `SpatioTemporalBlockSplit` and six
-  with a temporal block, none needs random space-time blocks
-  ([Report 15, stage 2](reports/15_benchmarking.md#r15-stage-2); [](#gal-patterns)).
-- **Stratifications:** in eleven entries the source's "splits" (season,
-  phase, altitude, band, time of day, …) are decompositions of the score
-  ([Report 14](reports/14_pipekit_evaluate.md#r14-ws-c)'s wrappers).
-- **Names:** `statecatalog` is geocatalog's state profile
-  ([Report 13](reports/13_state_catalog.md#r13-ws-a)), `EventCatalog` an event
-  profile ([Report 14](reports/14_pipekit_evaluate.md#r14-ws-e)),
-  `MultiTrackEvaluation` the runner with several references
-  ([Report 15](reports/15_benchmarking.md#r15-ws-d)), and
-  `MultiStageEvaluation` a cascade contract ([](#gal-5-1)).
+- **Counts:** the source says six domains and 22 or 23 benchmarks, whereas we list eighteen entries in five domains, and 5.1 is written as a cascade of six contracts ([](#gal-5-1)).
+- **Tasks:** each entry names a level transition ([Report 15](reports/15_benchmarking.md#r15-framework)); however, four remote-sensing entries are not transitions up the ladder, so a contract names its carriers ([](#gal-remote-sensing)).
+- **Splits:** of the nine source entries with `SpatioTemporalBlockSplit` and the six with a temporal block, none needs random space-time blocks ([Report 15, stage 2](reports/15_benchmarking.md#r15-stage-2); [](#gal-patterns)).
+- **Stratifications:** in eleven entries the source's "splits" (season, phase, altitude, band, time of day, …) are decompositions of the score ([Report 14](reports/14_pipekit_evaluate.md#r14-ws-c)'s wrappers).
+- **Names:** `statecatalog` is geocatalog's state profile ([Report 13](reports/13_state_catalog.md#r13-ws-a)), `EventCatalog` is an event profile ([Report 14](reports/14_pipekit_evaluate.md#r14-ws-e)), `MultiTrackEvaluation` is the runner with several references ([Report 15](reports/15_benchmarking.md#r15-ws-d)), and `MultiStageEvaluation` is a cascade contract ([](#gal-5-1)).
 :::
 
 (gal-reading)=
 ## How to read an entry
 
-Each entry is one contract (5.1, the chain, is one entry standing for six). Its rows are the fields of Report 15's proposed
-`BenchmarkContract` ([workstream A](reports/15_benchmarking.md#r15-ws-a)),
-plus the two the gallery adds to make a draft reviewable ([](#tbl-gal-rows)).
+Each entry is one contract (5.1, the chain, is one entry standing for six). Its rows are the fields of Report 15's proposed `BenchmarkContract` ([workstream A](reports/15_benchmarking.md#r15-ws-a)), plus the two rows we add to make a draft reviewable ([](#tbl-gal-rows)).
 
 :::{table} The rows of an entry and the contract fields they fill.
 :label: tbl-gal-rows
@@ -102,21 +68,13 @@ plus the two the gallery adds to make a draft reviewable ([](#tbl-gal-rows)).
 | Contract hash | `content_hash()` | the first 12 hex digits of the SHA-256 of the entry's key-sorted JSON, from the notebook |
 :::
 
-The **Stack** line under each table sorts the pieces the entry needs by
-status ([markers](overview_examples.md#ex-markers)): **today** (imports from the module named, at the pinned revision),
-**name reserved** (imports, but raises `NotImplementedError` until xrtoolz's
-V5), **proposed** (by the report and workstream named), **not proposed yet**
-(the gallery's own findings, collected in [](#gal-needs)), **external** (a tool
-outside the stack) and **not pinned** (a stack library that is not in
-`references/`, so not checked). Every entry also needs
-[Report 15](reports/15_benchmarking.md#r15-ws-a)'s `BenchmarkContract` (A1) and the runner's several references (D2); they are
-left off the per-entry lines.
+The **Stack** line under each table sorts the pieces the entry needs by status ([markers](overview_examples.md#ex-markers)): **today** (imports from the module named, at the pinned revision), **name reserved** (imports, but raises `NotImplementedError` until xrtoolz's V5), **proposed** (by the report and workstream named), **not proposed yet** (the gallery's own findings, collected in [](#gal-needs)), **external** (a tool outside the stack) and **not pinned** (a stack library that is not in `references/`, so not checked). Every entry also needs [Report 15](reports/15_benchmarking.md#r15-ws-a)'s `BenchmarkContract` (A1) and the runner's several references (D2), so we leave them off the per-entry lines.
 
 
 (gal-ocean)=
 ## Ocean
 
-The most mature domain for machine-learning benchmarks: a community benchmark (OceanBench), strong reference products (GLORYS, DUACS, OSTIA, ISAS, CCI), and known gaps in the subsurface, on the shelves and in biogeochemistry. Each entry says which gap it addresses. [](#fig-gal-ocean) maps the domain.
+Ocean is the most mature domain for machine-learning benchmarks, with a community benchmark (OceanBench), strong reference products (GLORYS, DUACS, OSTIA, ISAS, CCI) and known gaps in the subsurface, on the shelves and in biogeochemistry. Each entry says which gap it addresses. [](#fig-gal-ocean) maps the domain.
 
 
 :::{figure} images/benchmarks_gallery/schematic_ocean.svg
@@ -151,7 +109,7 @@ SSH sets the surface geostrophic flow, and mesoscale eddies carry most of the oc
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `resolved_scale` (xrtoolz.metrics), `GeostrophicBalanceError` (xrtoolz.metrics), `GeostrophicVelocities` (xrtoolz.ocn), `CalculateSSHAlongtrack` (xrtoolz.ocn), `along_track_psd_score` (xrtoolz.metrics), `OkuboWeiss` (xrtoolz.ocn), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`. **Proposed:** `optimal_interpolation` ([Report 15 C1](reports/15_benchmarking.md#r15-ws-c)), `persistence` (Report 15 C2), `ClimatologyForecast` (Report 15 C3), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `build_state_catalog` ([Report 13 A2](reports/13_state_catalog.md#r13-ws-a)). **External:** py-eddy-tracker (eddy tracking).
 
 :::{warning} Differs from the source
-The source prescribes 200 km × 60 day blocks and, in the same entry, "split by mission, not pooled". The mission split is the contract's, because it reproduces a mapping product's error ([Report 15, stage 2](reports/15_benchmarking.md#r15-stage-2)). The source's OI baseline uses τ = 15 days while its splits assume 30; the contract fits both scales to the training years instead.
+The source prescribes 200 km × 60 day blocks and, in the same entry, "split by mission, not pooled". We take the mission split for the contract, because it reproduces a mapping product's error ([Report 15, stage 2](reports/15_benchmarking.md#r15-stage-2)). The source's OI baseline uses τ = 15 days while its splits assume 30, so the contract fits both scales to the training years instead.
 :::
 
 (gal-1-2)=
@@ -179,13 +137,13 @@ SST is the most observed ocean variable, used from weather forecasting to ENSO m
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `SSIM` (xrtoolz.metrics), `GradientDifference` (xrtoolz.metrics), `SimulatedClouds` (geotoolz.augment), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `DurationError`. **Proposed:** `optimal_interpolation` ([Report 15 C1](reports/15_benchmarking.md#r15-ws-c)), `ClimatologyForecast` (Report 15 C3), `persistence` (Report 15 C2), `FSS` ([Report 14 B1](reports/14_pipekit_evaluate.md#r14-ws-b)), `MarineHeatwaveDetector` (Report 14 E1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** cloud-mask transplant split.
 
 :::{warning} Differs from the source
-The source splits by 100 km × 30 day blocks. An SST gap-filler is used to fill cloud gaps, so the held-out set is clear-sky pixels hidden under real cloud masks from other days (geotoolz's `SimulatedClouds` draws synthetic ones today; the transplant split itself is proposed by no report yet), plus withheld drifters. Balancing the time of day is a stratification of the score, not a split.
+The source splits by 100 km × 30 day blocks. An SST gap-filler is used to fill cloud gaps, so the held-out set is clear-sky pixels hidden under real cloud masks from other days (geotoolz's `SimulatedClouds` draws synthetic ones today; no report proposes the transplant split itself yet), plus withheld drifters. Balancing the time of day is a stratification of the score and not a split.
 :::
 
 (gal-1-3)=
 ### 1.3 · Sea surface salinity
 
-Salinity drives the haline circulation and marks river plumes, ice melt and rain. Satellite salinity has a low signal-to-noise ratio: calibration errors can match the natural variability, so uncertainty matters more than for SST. Its contract is [](#tbl-gal-1-3).
+Salinity drives the haline circulation and marks river plumes, ice melt and rain. Satellite salinity has a low signal-to-noise ratio, as calibration errors can match the natural variability, so uncertainty matters more than for SST. Its contract is [](#tbl-gal-1-3).
 
 :::{table} Contract 1.3: Sea surface salinity.
 :label: tbl-gal-1-3
@@ -207,7 +165,7 @@ Salinity drives the haline circulation and marks river plumes, ice melt and rain
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `density_from_ts` (xrtoolz.ocn), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `ClimatologyForecast` ([Report 15 C3](reports/15_benchmarking.md#r15-ws-c)), `optimal_interpolation` (Report 15 C1), `persistence` (Report 15 C2), `ThresholdEventDetector` ([Report 14 E1](reports/14_pipekit_evaluate.md#r14-ws-e)), `split_by` (Report 15 B2), `split_regions` (Report 15 B2), `ProfileSlice` (overview, deferred). **Not pinned:** pyrox-gp (Gaussian-process gap filling).
 
 :::{warning} Differs from the source
-The 300 km × 90 day blocks become withheld floats, which is the gap a salinity map fills. Leaving out a river system is kept, as the transfer test it is.
+The 300 km × 90 day blocks become withheld floats, which is the gap a salinity map fills. We keep leaving out a river system, as the transfer test it is.
 :::
 
 (gal-1-4)=
@@ -235,13 +193,13 @@ Chlorophyll is the most used satellite biogeochemical variable and the base of t
 **Stack.** **Today:** `BandRatio` (geotoolz.spectral), `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `Wasserstein1` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`. **Proposed:** `ClimatologyForecast` ([Report 15 C3](reports/15_benchmarking.md#r15-ws-c)), `EvaluateByGroup` ([Report 14 C1](reports/14_pipekit_evaluate.md#r14-ws-c)), `split_regions` (Report 15 B2), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred).
 
 :::{warning} Differs from the source
-The source's province split and its temporal block are kept, the second as a causal split. Withholding cruises is added here: in-situ HPLC samples come by cruise, and two samples from one cruise are not independent. The structural lens in the source (front alignment with SST) needs the SST product of entry 1.2 as a second input, so the contract names that product by contract 1.2's hash.
+We keep the source's province split and its temporal block, the second as a causal split. Withholding cruises is added here, since in-situ HPLC samples come by cruise and two samples from one cruise are not independent. The structural lens in the source (front alignment with SST) needs the SST product of entry 1.2 as a second input, so the contract names that product by contract 1.2's hash.
 :::
 
 (gal-1-5)=
 ### 1.5 · Ocean biogeochemistry
 
-BGC-Argo has only recently grown large enough for gridded products; three-dimensional biogeochemistry is the source's largest ocean gap. Sensor drift makes uncertainty part of the answer, not an extra. Its contract is [](#tbl-gal-1-5).
+BGC-Argo has only recently grown large enough for gridded products, and three-dimensional biogeochemistry is the source's largest ocean gap. Sensor drift makes uncertainty part of the answer and not an extra. Its contract is [](#tbl-gal-1-5).
 
 :::{table} Contract 1.5: Ocean biogeochemistry.
 :label: tbl-gal-1-5
@@ -263,14 +221,14 @@ BGC-Argo has only recently grown large enough for gridded products; three-dimens
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `ReliabilityCurve` (xrtoolz.metrics), `DensityInversionFraction` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `ClimatologyForecast` ([Report 15 C3](reports/15_benchmarking.md#r15-ws-c)), `optimal_interpolation` (Report 15 C1), `ThresholdEventDetector` ([Report 14 E1](reports/14_pipekit_evaluate.md#r14-ws-e)), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred), `EvaluateByGroup` (Report 14 C1). **External:** ESPER (empirical seawater property estimates). **Not pinned:** pyrox-gp (3-D Gaussian-process gap filling).
 
 :::{warning} Differs from the source
-Leave-one-float-out is kept: it is the source's headline split and the right one. The source's split by ocean basin becomes a stratification of the score.
+We keep leave-one-float-out, as it is the source's headline split and the right one. The source's split by ocean basin becomes a stratification of the score.
 :::
 
 
 (gal-land)=
 ## Land
 
-Land-surface variables have a long meteorological record (ERA5-Land, GHCN, IMERG), but machine-learning benchmarks for them lag weather benchmarks. The entries bring the same multi-track, multi-lens discipline. [](#fig-gal-land) maps the domain.
+Land-surface variables have a long meteorological record (ERA5-Land, GHCN, IMERG), but machine-learning benchmarks for them lag weather benchmarks. The entries bring the same multi-track, multi-lens discipline to them. [](#fig-gal-land) maps the domain.
 
 
 :::{figure} images/benchmarks_gallery/schematic_land.svg
@@ -283,7 +241,7 @@ Land-surface variables have a long meteorological record (ERA5-Land, GHCN, IMERG
 (gal-2-1)=
 ### 2.1 · Near-surface temperature
 
-Heatwaves kill, land surface temperature is the most used land remote-sensing variable, and 2 m temperature is the headline public forecast. The station network is uneven and skin temperature is not air temperature, which makes the references disagree with each other. Its contract is [](#tbl-gal-2-1).
+Heatwaves kill, land surface temperature is the most used land remote-sensing variable, and 2 m temperature is the headline public forecast. The station network is uneven and skin temperature is not air temperature, so the references disagree with each other. Its contract is [](#tbl-gal-2-1).
 
 :::{table} Contract 2.1: Near-surface temperature.
 :label: tbl-gal-2-1
@@ -305,7 +263,7 @@ Heatwaves kill, land surface temperature is the most used land remote-sensing va
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `MAE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `RankHistogram` (xrtoolz.metrics), `Cycle` (pipekit_cycle), `pot_threshold` (xrtoolz.geo), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `DurationError`. **Proposed:** `persistence` ([Report 15 C2](reports/15_benchmarking.md#r15-ws-c)), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` ([Report 14 E1](reports/14_pipekit_evaluate.md#r14-ws-e)), `EvaluateByGroup` (Report 14 C1), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `split_regions` (Report 15 B2), `build_state_catalog` ([Report 13 A2](reports/13_state_catalog.md#r13-ws-a)).
 
 :::{warning} Differs from the source
-The 200 km × 30 day blocks become withheld stations for the mapping variant and a causal split for the forecast variant. The Köppen–Geiger zone split stays as the transfer test; elevation band is a stratification.
+The 200 km × 30 day blocks become withheld stations for the mapping variant and a causal split for the forecast variant. We keep the Köppen–Geiger zone split as the transfer test, and elevation band is a stratification.
 :::
 
 (gal-2-2)=
@@ -333,7 +291,7 @@ Precipitation is intermittent, heavy-tailed and the textbook double-penalty vari
 **Stack.** **Today:** `CRPS` (xrtoolz.metrics), `RMSE` (xrtoolz.metrics), `Wasserstein1` (xrtoolz.metrics), `EnsembleCycle` (pipekit_cycle), `SkillByLeadTime` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`, `CriticalSuccessIndex`. **Proposed:** `persistence` ([Report 15 C2](reports/15_benchmarking.md#r15-ws-c)), `ClimatologyForecast` (Report 15 C3), `FSS` ([Report 14 B1](reports/14_pipekit_evaluate.md#r14-ws-b)), `BrierScore` (Report 14 B3), `split_causal` (Report 15 B2), `split_regions` (Report 15 B2), `EvaluateByGroup` (Report 14 C1).
 
 :::{warning} Differs from the source
-The source pairs the causal split with 500 km × 14 day blocks. A forecast's test set is the future; blocks assigned at random in time put future data in training, so the contract keeps the causal split alone and scores by season and threshold as stratifications. FSS belongs to the structural lens ([Report 14](reports/14_pipekit_evaluate.md#r14-ws-b)), not the spectral one.
+The source pairs the causal split with 500 km × 14 day blocks. However, a forecast's test set is the future, and blocks assigned at random in time put future data in training, so the contract keeps the causal split alone and scores by season and threshold as stratifications. FSS belongs to the structural lens ([Report 14](reports/14_pipekit_evaluate.md#r14-ws-b)) and not the spectral one.
 :::
 
 (gal-2-3)=
@@ -361,13 +319,13 @@ Wind is a vector, so its direction needs circular statistics and its errors are 
 **Stack.** **Today:** `WindDirection` (xrtoolz.atm), `WindSpeed` (xrtoolz.atm), `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `DivergenceError` (xrtoolz.metrics), `matchup` (geocatalog.matchup), `Cycle` (pipekit_cycle), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `persistence` ([Report 15 C2](reports/15_benchmarking.md#r15-ws-c)), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` ([Report 14 E1](reports/14_pipekit_evaluate.md#r14-ws-e)), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `split_regions` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** CircularRMSE, Weibull fit.
 
 :::{warning} Differs from the source
-Blocks become withheld stations and a causal split. The source names a "Tepper formula" for direction error; it could not be traced, so the contract defines the error as the wrapped angle difference Δθ = atan2(sin(θ̂ − θ), cos(θ̂ − θ)).
+Blocks become withheld stations and a causal split. The source names a "Tepper formula" for direction error that we could not trace, so the contract defines the error as the wrapped angle difference Δθ = atan2(sin(θ̂ − θ), cos(θ̂ − θ)).
 :::
 
 (gal-2-4)=
 ### 2.4 · Mean sea-level pressure
 
-Pressure tracks synoptic systems, cyclones and blocking. It overlaps entry 3.3, which also scores MSLP; the two are kept apart here because this one scores against surface stations and that one against upper-air fields. Its contract is [](#tbl-gal-2-4).
+Pressure tracks synoptic systems, cyclones and blocking. It overlaps entry 3.3, which also scores MSLP, but we keep the two apart because this one scores against surface stations and that one against upper-air fields. Its contract is [](#tbl-gal-2-4).
 
 :::{table} Contract 2.4: Mean sea-level pressure.
 :label: tbl-gal-2-4
@@ -389,14 +347,14 @@ Pressure tracks synoptic systems, cyclones and blocking. It overlaps entry 3.3, 
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `RankHistogram` (xrtoolz.metrics), `InstanceMatcher` (xrtoolz.metrics), `EnsembleCycle` (pipekit_cycle). **Proposed:** `persistence` ([Report 15 C2](reports/15_benchmarking.md#r15-ws-c)), `ClimatologyForecast` (Report 15 C3), `EvaluateByGroup` ([Report 14 C1](reports/14_pipekit_evaluate.md#r14-ws-c)), `split_causal` (Report 15 B2), `build_state_catalog` ([Report 13 A2](reports/13_state_catalog.md#r13-ws-a)). **Not proposed yet:** blocking index. **External:** TempestExtremes (cyclone tracking).
 
 :::{warning} Differs from the source
-Blocks become a causal split. ENSO phase and season are stratifications of the score. The source's exclusion around large eruptions is kept as a condition on the causal split.
+Blocks become a causal split, and ENSO phase and season are stratifications of the score. We keep the source's exclusion around large eruptions as a condition on the causal split.
 :::
 
 
 (gal-atmosphere)=
 ## Atmosphere
 
-The most benchmarked domain (WeatherBench and the evaluations of GraphCast, Pangu-Weather and GenCast). The gallery's distinct contribution is trace gases, which are structured like weather but far less standardized. [](#fig-gal-atmosphere) maps the domain.
+The atmosphere is the most benchmarked domain (WeatherBench and the evaluations of GraphCast, Pangu-Weather and GenCast). The distinct contribution of the gallery is trace gases, which are structured like weather but far less standardized. [](#fig-gal-atmosphere) maps the domain.
 
 
 :::{figure} images/benchmarks_gallery/schematic_atmosphere.svg
@@ -431,13 +389,13 @@ Methane is the headline case for MARS and IMEO: retrieval at L2, gridding at L3 
 **Stack.** **Today:** `MatchedFilter` (geotoolz.matched_filter), `MatchedFilterSNR` (geotoolz.matched_filter), `IMEEstimate` (geotoolz.plume), `CrossSectionalFlux` (geotoolz.plume), `PlumeMask` (geotoolz.plume), `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `BudgetResidual` (xrtoolz.budgets), `DACycle` (pipekit_cycle), `EvaluateByRegion` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`, `FalseAlarmRatio`, `CriticalSuccessIndex`. **Proposed:** `geocatalog.events` ([Report 14 E2](reports/14_pipekit_evaluate.md#r14-ws-e)), `split_regions` ([Report 15 B2](reports/15_benchmarking.md#r15-ws-b)), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** cascade contract (stages by hash). **Not pinned:** plumax (plume forward model).
 
 :::{warning} Differs from the source
-The source's `BAEMRBaseline` could not be identified as a published retrieval; the column baselines are TROPOMI's operational RemoTeC retrieval and the scientific WFM-DOAS product instead. The source's temporal block becomes a causal split, and its rule that controlled releases be held out in time becomes a split by campaign as well, since the same emitters recur within a campaign. METEC is a ground test facility; the satellite controlled releases are separate campaigns, named as a second reference. The matched filter and the integrated mass enhancement ship in geotoolz today.
+The source's `BAEMRBaseline` could not be identified as a published retrieval, so the column baselines are TROPOMI's operational RemoTeC retrieval and the scientific WFM-DOAS product instead. The source's temporal block becomes a causal split, and its rule that controlled releases be held out in time becomes a split by campaign as well, since the same emitters recur within a campaign. METEC is a ground test facility, and the satellite controlled releases are separate campaigns, named as a second reference. The matched filter and the integrated mass enhancement ship in geotoolz today.
 :::
 
 (gal-3-2)=
 ### 3.2 · Three-dimensional wind
 
-Three-dimensional winds carry chemistry, dust and aerosol, and upper-level jets steer extreme weather. Stratospheric and tropical winds are sparse in observations and weakly constrained by balance. Its contract is [](#tbl-gal-3-2).
+Three-dimensional winds carry chemistry, dust and aerosol, and upper-level jets steer extreme weather. However, stratospheric and tropical winds are sparse in observations and weakly constrained by balance. Its contract is [](#tbl-gal-3-2).
 
 :::{table} Contract 3.2: Three-dimensional wind.
 :label: tbl-gal-3-2
@@ -459,13 +417,13 @@ Three-dimensional winds carry chemistry, dust and aerosol, and upper-level jets 
 **Stack.** **Today:** `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `SpreadSkillRatio` (xrtoolz.metrics), `KESpectralFlux` (xrtoolz.transforms), `PowerSpectrum` (xrtoolz.transforms), `GeostrophicImbalance` (xrtoolz.metrics), `ToPressureLevels` (xrtoolz.interpolate), `Cycle` (pipekit_cycle), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `persistence` ([Report 15 C2](reports/15_benchmarking.md#r15-ws-c)), `ClimatologyForecast` (Report 15 C3), `ThresholdEventDetector` ([Report 14 E1](reports/14_pipekit_evaluate.md#r14-ws-e)), `EvaluateByGroup` (Report 14 C1), `split_causal` (Report 15 B2), `ProfileSlice` (overview, deferred), `build_state_catalog` ([Report 13 A2](reports/13_state_catalog.md#r13-ws-a)).
 
 :::{warning} Differs from the source
-The 500 km × 14 day blocks become a causal split; altitude band is a stratification of the score, not a split.
+The 500 km × 14 day blocks become a causal split, and altitude band is a stratification of the score and not a split.
 :::
 
 (gal-3-3)=
 ### 3.3 · Geopotential and pressure (Z500, MSLP, tropopause)
 
-The anomaly correlation of 500 hPa geopotential is the headline number of medium-range forecasting; WeatherBench 2 [@rasp2024weatherbench] is the standard benchmark. A contract adds what its documentation cannot: a hash that a submission can be checked against. Its contract is [](#tbl-gal-3-3).
+The anomaly correlation of 500 hPa geopotential is the headline number of medium-range forecasting, and WeatherBench 2 [@rasp2024weatherbench] is the standard benchmark. A contract adds what its documentation cannot, which is a hash that a submission can be checked against. Its contract is [](#tbl-gal-3-3).
 
 :::{table} Contract 3.3: Geopotential and pressure (Z500, MSLP, tropopause).
 :label: tbl-gal-3-3
@@ -487,14 +445,14 @@ The anomaly correlation of 500 hPa geopotential is the headline number of medium
 **Stack.** **Today:** `RemoveClimatology` (xrtoolz.geo), `Correlation` (xrtoolz.metrics), `RMSE` (xrtoolz.metrics), `CRPS` (xrtoolz.metrics), `SkillByLeadTime` (xrtoolz.metrics), `EnsembleCycle` (pipekit_cycle). **Proposed:** `persistence` ([Report 15 C2](reports/15_benchmarking.md#r15-ws-c)), `ClimatologyForecast` (Report 15 C3), `EvaluateByGroup` ([Report 14 C1](reports/14_pipekit_evaluate.md#r14-ws-c)), `split_causal` (Report 15 B2), `build_state_catalog` ([Report 13 A2](reports/13_state_catalog.md#r13-ws-a)). **Not proposed yet:** blocking index.
 
 :::{warning} Differs from the source
-Blocks become a causal split. ACC is a correlation of anomalies, not a spectral score; it is composed today from `RemoveClimatology` and `Correlation`. The source's "CDC-style no-skill line" is the conventional usefulness threshold ACC = 0.6.
+Blocks become a causal split. ACC is a correlation of anomalies and not a spectral score, and it is composed today from `RemoveClimatology` and `Correlation`. The source's "CDC-style no-skill line" is the conventional usefulness threshold ACC = 0.6.
 :::
 
 
 (gal-remote-sensing)=
 ## Remote sensing
 
-Benchmarks between instruments: less standardized than weather or ocean benchmarks, and essential to every multi-sensor product. Four of the five are not transitions up the L0–L4 ladder (see the box at the top), which is why a contract names its carriers as well as its levels. [](#fig-gal-remote-sensing) maps the domain.
+Benchmarks between instruments are less standardized than weather or ocean benchmarks, and essential to every multi-sensor product. Four of the five are not transitions up the L0–L4 ladder (see the box at the top), which is why a contract names its carriers as well as its levels. [](#fig-gal-remote-sensing) maps the domain.
 
 
 :::{figure} images/benchmarks_gallery/schematic_remote_sensing.svg
@@ -507,7 +465,7 @@ Benchmarks between instruments: less standardized than weather or ocean benchmar
 (gal-4-1)=
 ### 4.1 · Multispectral to hyperspectral
 
-Hyperspectral data carry far more information than multispectral data and cover far less of the Earth. Predicting one from the other, or fusing them, would bring hyperspectral detail to multispectral coverage; there is no standard benchmark for it. Its contract is [](#tbl-gal-4-1).
+Hyperspectral data carry far more information than multispectral data and cover far less of the Earth. Predicting one from the other, or fusing them, would bring hyperspectral detail to multispectral coverage, and there is no standard benchmark for it. Its contract is [](#tbl-gal-4-1).
 
 :::{table} Contract 4.1: Multispectral to hyperspectral.
 :label: tbl-gal-4-1
@@ -529,13 +487,13 @@ Hyperspectral data carry far more information than multispectral data and cover 
 **Stack.** **Today:** `ApplySRF` (geotoolz.radiometry), `SpectralBinning` (geotoolz.spectral), `ContinuumRemoval` (geotoolz.spectral), `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `SSIM` (xrtoolz.metrics), `SpatialPatcher` (geopatcher), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `split_by` ([Report 15 B2](reports/15_benchmarking.md#r15-ws-b)), `split_regions` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` ([Report 14 C1](reports/14_pipekit_evaluate.md#r14-ws-c)). **Not proposed yet:** spectral angle.
 
 :::{warning} Differs from the source
-Leave-one-scene-out is kept as the right unit, and the source's temporal block becomes a causal split (a later season). Band counts per sensor are left out; the contract carries each sensor's spectral response function instead, which `ApplySRF` consumes.
+We keep leave-one-scene-out as the right unit, and the source's temporal block becomes a causal split (a later season). Band counts per sensor are left out, and the contract carries each sensor's spectral response function instead, which `ApplySRF` consumes.
 :::
 
 (gal-4-2)=
 ### 4.2 · Polar-orbiting and geostationary
 
-Polar orbiters see the globe at high resolution a few times a day; geostationary imagers see a hemisphere every few minutes at lower resolution. Nowcasting depends on fusing them. Its contract is [](#tbl-gal-4-2).
+Polar orbiters see the globe at high resolution a few times a day, whereas geostationary imagers see a hemisphere every few minutes at lower resolution. Nowcasting depends on fusing them. Its contract is [](#tbl-gal-4-2).
 
 :::{table} Contract 4.2: Polar-orbiting and geostationary.
 :label: tbl-gal-4-2
@@ -557,7 +515,7 @@ Polar orbiters see the globe at high resolution a few times a day; geostationary
 **Stack.** **Today:** `matchup` (geocatalog.matchup), `NearestInTime` (geocatalog.matchup), `WithinWindow` (geocatalog.matchup), `ResampleTime` (xrtoolz.interpolate), `RegridLike` (xrtoolz.interpolate), `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `ThresholdEventDetector` ([Report 14 E1](reports/14_pipekit_evaluate.md#r14-ws-e)), `EvaluateByGroup` (Report 14 C1), `split_by` ([Report 15 B2](reports/15_benchmarking.md#r15-ws-b)), `split_causal` (Report 15 B2).
 
 :::{warning} Differs from the source
-The split by sensor pair is kept. Latitude band and season are stratifications, and a causal split by season-year is added so that a model is not scored on the season it was trained on. The geostationary imagers are named by role (GOES-East and GOES-West) rather than by satellite number, which changes with replacements.
+We keep the split by sensor pair. Latitude band and season are stratifications, and a causal split by season-year is added so that a model is not scored on the season it was trained on. The geostationary imagers are named by role (GOES-East and GOES-West) and not by satellite number, which changes with replacements.
 :::
 
 (gal-4-3)=
@@ -585,7 +543,7 @@ Radiative transfer is the inner loop of every retrieval, and it is slow. An emul
 **Stack.** **Today:** `SimulationDataset` (pipekit_train), `NeuralForward` (pipekit_cycle), `RMSE` (xrtoolz.metrics), `EvaluateByRegion` (xrtoolz.metrics). **Proposed:** `split_by` ([Report 15 B2](reports/15_benchmarking.md#r15-ws-b)), `EvaluateByGroup` ([Report 14 C1](reports/14_pipekit_evaluate.md#r14-ws-c)). **Not proposed yet:** Jacobian fidelity. **Not pinned:** rtmx (differentiable RTM).
 
 :::{warning} Differs from the source
-Regimes outside the training distribution are kept as the test; surface type and gas concentration range become stratifications. RTTOV and CRTM are fast radiative transfer models, not learned emulators. Jacobian fidelity is the score no library ships.
+We keep regimes outside the training distribution as the test, and surface type and gas concentration range become stratifications. RTTOV and CRTM are fast radiative transfer models and not learned emulators. Jacobian fidelity is the score no library ships.
 :::
 
 (gal-4-4)=
@@ -613,7 +571,7 @@ The instrument is the boundary between the world and the data, and its response 
 **Stack.** **Today:** `ApplySRF` (geotoolz.radiometry), `GaussianNoise` (geotoolz.augment), `DestripeColumn` (geotoolz), `SimulationDataset` (pipekit_train), `RMSE` (xrtoolz.metrics), `PSDScore` (xrtoolz.metrics). **Proposed:** `EvaluateByGroup` ([Report 14 C1](reports/14_pipekit_evaluate.md#r14-ws-c)), `split_causal` ([Report 15 B2](reports/15_benchmarking.md#r15-ws-b)).
 
 :::{warning} Differs from the source
-The split by mission phase is kept; band and detector element are stratifications. The task is a forward simulation from a high-resolution truth to the instrument's L1 data, down the ladder, which is why the contract names its carriers.
+We keep the split by mission phase, and band and detector element are stratifications. The task is a forward simulation from a high-resolution truth to the instrument's L1 data, down the ladder, which is why the contract names its carriers.
 :::
 
 (gal-4-5)=
@@ -641,14 +599,14 @@ No single sensor gives everything, and most operational L4 products (OSTIA, OC-C
 **Stack.** **Today:** `matchup` (geocatalog.matchup), `NearestInTime` (geocatalog.matchup), `SpatialMosaic` (xrtoolz.geo), `RMSE` (xrtoolz.metrics), `Bias` (xrtoolz.metrics), `SpatialPatcher` (geopatcher). **Proposed:** `EvaluateByEvent` ([Report 14 C2](reports/14_pipekit_evaluate.md#r14-ws-c)), `split_by` ([Report 15 B2](reports/15_benchmarking.md#r15-ws-b)), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1).
 
 :::{warning} Differs from the source
-Leave-one-sensor-out is kept: it is the source's split and the right one. The source's split by sensor-combination availability becomes a stratification.
+We keep leave-one-sensor-out, as it is the source's split and the right one. The source's split by sensor-combination availability becomes a stratification.
 :::
 
 
 (gal-math)=
 ## Mathematical models
 
-Benchmarks of a chain of dependent sub-tasks rather than of one transformation. Methane emission estimation is the example: five linked stages from radiative transfer to an annual total. [](#fig-gal-mathematical-models) maps the domain.
+These are benchmarks of a chain of dependent sub-tasks and not of one transformation. Methane emission estimation is the example, with five linked stages from radiative transfer to an annual total. [](#fig-gal-mathematical-models) maps the domain.
 
 
 :::{figure} images/benchmarks_gallery/schematic_mathematical_models.svg
@@ -661,7 +619,7 @@ Benchmarks of a chain of dependent sub-tasks rather than of one transformation. 
 (gal-5-1)=
 ### 5.1 · Emission estimation (five-stage chain)
 
-Methane emission estimation is a chain of five dependent sub-tasks, from radiative transfer to an annual total. Each stage is a benchmark, the chain is one too, and errors compound along it, which is what regulatory use has to see. Its contract is [](#tbl-gal-5-1).
+Methane emission estimation is a chain of five dependent sub-tasks, from radiative transfer to an annual total. Each stage is a benchmark and the chain is one too, and errors compound along it, which is what regulatory use has to see. Its contract is [](#tbl-gal-5-1).
 
 :::{table} Contract 5.1: Emission estimation (five-stage chain).
 :label: tbl-gal-5-1
@@ -683,58 +641,25 @@ Methane emission estimation is a chain of five dependent sub-tasks, from radiati
 **Stack.** **Today:** `SimulationDataset` (pipekit_train), `NeuralForward` (pipekit_cycle), `DACycle` (pipekit_cycle), `Recurrence` (pipekit_cycle), `MatchedFilter` (geotoolz.matched_filter), `DetectionThreshold` (geotoolz.matched_filter), `IMEEstimate` (geotoolz.plume), `WindAdvectionCone` (geotoolz.plume), `RMSE` (xrtoolz.metrics), `InstanceMatcher` (xrtoolz.metrics), `MaskIoU` (xrtoolz.metrics). **Name reserved, raises:** `ProbabilityOfDetection`. **Proposed:** `BrierScore` ([Report 14 B3](reports/14_pipekit_evaluate.md#r14-ws-b)), `geocatalog.events` (Report 14 E2), `CatalogDataset` ([Report 11 A1](reports/11_pipekit_train.md#r11-ws-a)), `split_regions` ([Report 15 B2](reports/15_benchmarking.md#r15-ws-b)), `split_by` (Report 15 B2), `split_causal` (Report 15 B2), `EvaluateByGroup` (Report 14 C1). **Not proposed yet:** cascade contract (stages by hash), Jacobian fidelity. **Not pinned:** plumax (plume forward model), rtmx (differentiable RTM).
 
 :::{warning} Differs from the source
-The source proposes a new `MultiStageEvaluation`. A cascade is several contracts: one per stage and one end to end, each with its own hash, plus a list of how each stage's output feeds the next. That needs one field on the contract, not a second evaluation class.
+The source proposes a new `MultiStageEvaluation`. However, a cascade is several contracts (one per stage and one end to end, each with its own hash) plus a list of how each stage's output feeds the next, which needs one field on the contract and not a second evaluation class.
 :::
 
 (gal-patterns)=
 ## Patterns across the gallery
 
-The source draws five patterns from its entries. Each is recomputed here
-from the contracts as data: three hold as stated, two need a qualifier, and a
-sixth appears.
+The source draws five patterns from its entries. We recompute each from the contracts as data, and find that three hold as stated, two need a qualifier, and a sixth appears.
 
-- **Three tracks are usually available.** Sixteen of the eighteen entries
-  have an observations track; 4.1 uses airborne spectra in its place, and
-  5.1 has references per stage instead. The OceanBench pattern generalizes,
-  as the source says.
-- **Withheld platforms and causal splits dominate.** Thirteen entries
-  withhold something by a column (a mission, platform, station, float,
-  cruise, scene, sensor, sensor pair, regime, source class or campaign),
-  sixteen need a causal split, and eight withhold a named region; none needs
-  random space-time blocks ([Report 15's rule](reports/15_benchmarking.md#r15-stage-2)).
-- **The variant follows the variable.** Five entries require a probabilistic
-  contract (salinity, biogeochemistry, precipitation, trace gases and the
-  emission chain), eight accept both, and five are deterministic. The source's
-  point stands: the contract declares the variant, and the runner records it
-  on the report, scoring point entries as degenerate distributions
-  ([Report 15's D1](reports/15_benchmarking.md#r15-ws-d)).
-- **Events are everywhere.** Fifteen of the eighteen entries score at least
-  one event (eddies, heatwaves, blooms, plumes, cyclones, blocking, rapid
-  convection). The three that do not (4.1, 4.3, 4.4) are instrument and
-  emulator benchmarks. Pieces exist (instance matching and mask IoU in
-  xrtoolz, the Okubo–Weiss field, external trackers), but no entry can
-  produce its contingency scores today: POD, FAR and CSI are reserved names
-  and the detectors are proposed ([Report 14](reports/14_pipekit_evaluate.md#r14-ws-e)).
-- **Cascades need their own pattern, but not a new class.** Two entries are
-  chains (3.1, retrieval to attribution, and 5.1). [](#gal-5-1) shows the
-  pattern on 5.1, as stage contracts linked by hash; 3.1 would split the same
-  way into its L2, L3 and L4 stages.
-- **Every entry stratifies.** All eighteen break their scores down by
-  something (region, season, phase, altitude, water type, sensor
-  combination). Strata that are region masks (basins, fronts, land cover,
-  latitude bands) go through `EvaluateByRegion`, which ships; every other
-  grouping (season, phase, time of day, altitude, emission rate, band) needs
-  [Report 14](reports/14_pipekit_evaluate.md#r14-ws-c)'s `EvaluateByGroup` (C1), proposed. That is sixteen entries:
-  only 1.1 and 1.3 stratify by region alone.
+- **Three tracks are usually available.** Sixteen of the eighteen entries have an observations track, while 4.1 uses airborne spectra in its place and 5.1 has references per stage instead. So the OceanBench pattern generalizes, as the source says.
+- **Withheld platforms and causal splits dominate.** Thirteen entries withhold something by a column (a mission, platform, station, float, cruise, scene, sensor, sensor pair, regime, source class or campaign), sixteen need a causal split, and eight withhold a named region; none needs random space-time blocks ([Report 15's rule](reports/15_benchmarking.md#r15-stage-2)).
+- **The variant follows the variable.** Five entries require a probabilistic contract (salinity, biogeochemistry, precipitation, trace gases and the emission chain), eight accept both, and five are deterministic. The source's point stands: the contract declares the variant, and the runner records it on the report, scoring point entries as degenerate distributions ([Report 15's D1](reports/15_benchmarking.md#r15-ws-d)).
+- **Events are everywhere.** Fifteen of the eighteen entries score at least one event (eddies, heatwaves, blooms, plumes, cyclones, blocking, rapid convection), and the three that do not (4.1, 4.3, 4.4) are instrument and emulator benchmarks. Pieces exist (instance matching and mask IoU in xrtoolz, the Okubo–Weiss field, external trackers), but no entry can produce its contingency scores today, as POD, FAR and CSI are reserved names and the detectors are proposed ([Report 14](reports/14_pipekit_evaluate.md#r14-ws-e)).
+- **Cascades need their own pattern, but not a new class.** Two entries are chains (3.1, retrieval to attribution, and 5.1). [](#gal-5-1) shows the pattern on 5.1, as stage contracts linked by hash, and 3.1 would split the same way into its L2, L3 and L4 stages.
+- **Every entry stratifies.** All eighteen break their scores down by something (region, season, phase, altitude, water type, sensor combination). Strata that are region masks (basins, fronts, land cover, latitude bands) go through `EvaluateByRegion`, which ships, whereas every other grouping (season, phase, time of day, altitude, emission rate, band) needs [Report 14](reports/14_pipekit_evaluate.md#r14-ws-c)'s `EvaluateByGroup` (C1), proposed. That is sixteen entries, as only 1.1 and 1.3 stratify by region alone.
 
 (gal-needs)=
 ## What the stack needs
 
-The gallery needs no new package. Most of what it cites ships today; the
-rest is proposed in [Reports 11](reports/11_pipekit_train.md) to
-[15](reports/15_benchmarking.md) or deferred in the [overview](overview.md#sec-plan),
-and seven pieces are proposed nowhere ([](#fig-gallery-readiness);
-[](#tbl-gal-needs) lists the pieces that do not run today).
+The gallery needs no new package. Most of what it cites ships today, and the rest is proposed in [Reports 11](reports/11_pipekit_train.md) to [15](reports/15_benchmarking.md) or deferred in the [overview](overview.md#sec-plan), so only seven pieces are proposed nowhere ([](#fig-gallery-readiness); [](#tbl-gal-needs) lists the pieces that do not run today).
 
 :::{figure} images/benchmarks_gallery/readiness.svg
 :label: fig-gallery-readiness
@@ -773,9 +698,7 @@ every entry, are included.
 | Jacobian fidelity | 2 | a scorer over pipekit-jax gradients | not proposed yet |
 :::
 
-The seven pieces nobody proposes are small: each is a function over arrays
-or catalog rows the stack already holds. The cascade contract is the one with design
-content, and it is a field, not a class:
+The seven pieces nobody proposes are small, as each is a function over arrays or catalog rows the stack already holds. The cascade contract is the one with design content, and it is a field and not a class:
 
 ```{code-block} python
 :caption: The emission chain of entry 5.1 as linked contracts (sketch).
@@ -794,36 +717,22 @@ chain = pe.BenchmarkContract(
 # against `chain`; the report records all six hashes
 ```
 
-The source's `MultiStageEvaluation` would compute "cascade uncertainty".
-Here that is a scorer on the end-to-end contract (does the predicted
-uncertainty of the total match its empirical error?), so no second runner is
-needed.
+The source's `MultiStageEvaluation` would compute "cascade uncertainty". Here that is a scorer on the end-to-end contract (does the predicted uncertainty of the total match its empirical error?), so no second runner is needed.
 
 (gal-not)=
 ## What this gallery is not
 
-- **Not a leaderboard.** Running submissions is the work of the projects
-  that host one; the gallery gives them contracts.
-- **Not a standard.** OceanBench, WeatherBench and the others own their
-  domains; these entries show how such a benchmark would read as a contract.
-- **Not complete.** Sea ice, terrestrial carbon fluxes and fire radiative
-  power, among others, are missing.
-- **Not final.** Each contract needs a domain expert's review of its metrics,
-  baselines and splits before it is pre-registered, and its hash will change
-  when it is.
+- **Not a leaderboard.** Running submissions is the work of the projects that host one, so the gallery gives them contracts.
+- **Not a standard.** OceanBench, WeatherBench and the others own their domains, and these entries show how such a benchmark would read as a contract.
+- **Not complete.** Sea ice, terrestrial carbon fluxes and fire radiative power, among others, are missing.
+- **Not final.** Each contract needs a domain expert's review of its metrics, baselines and splits before it is pre-registered, and its hash will change when it is.
 
 (gal-references)=
 ## References
 
 ### Sources
 
-- The source draft, "Benchmarks Gallery" [@geostack_gallery_draft], the
-  companion to the Report 15 scoping report [@geostack_r15_draft]; both are
-  unpublished and were supplied by the author.
-- OceanBench [@johnson2023oceanbench] and WeatherBench 2
-  [@rasp2024weatherbench], the community benchmarks entries 1.1 and 3.3 are
-  modelled on.
-- Block cross-validation for structured data [@roberts2017], the background
-  to the split rule.
-- The pinned code in `references/` and the gallery's notebook,
-  `notebooks/reports/benchmarks_gallery.py`.
+- The source draft, "Benchmarks Gallery" [@geostack_gallery_draft], the companion to the Report 15 scoping report [@geostack_r15_draft]; both are unpublished and were supplied by the author.
+- OceanBench [@johnson2023oceanbench] and WeatherBench 2 [@rasp2024weatherbench], the community benchmarks that entries 1.1 and 3.3 are modelled on.
+- Block cross-validation for structured data [@roberts2017], the background to the split rule.
+- The pinned code in `references/` and the gallery's notebook, `notebooks/reports/benchmarks_gallery.py`.

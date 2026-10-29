@@ -23,28 +23,19 @@ numbering:
 
 ## Summary
 
-xrtoolz adopts geotoolz's split: distributions by job, modules inside the ops package by operation kind, heavy backends as extras.
-geotoolz keeps its shape apart from a slimmer geoops base install, and no code moves between the two repos except bridges that become shared machinery.
-xrops sits one tier above geoops ([the tiers](#design-tiers)), so every kernel lives in geoops or below and xrops adds only what needs xarray.
+We adopt geotoolz's split for xrtoolz: distributions by job, modules inside the ops package by operation kind, and heavy backends as extras. geotoolz keeps its shape apart from a slimmer geoops base install, and no code moves between the two repos except bridges that become shared machinery. xrops sits one tier above geoops ([the tiers](#design-tiers)), so every kernel lives in geoops or below and xrops adds only what needs xarray.
 
-- **PL-A. xrtoolz becomes a meta package.**
-  Today `xrtoolz` is both the ops code and the umbrella that hard-depends on every sibling.
-  Its code moves to a new `xrtoolz-ops` (import `xrops`), and `xrtoolz` holds no code, as `geotoolz` does.
-- **PL-B. Backend bridges stop being distributions.**
-  `xreinx` and `xrsklearn` give way to one named-dims bridge each in pipekit-array (OP-O2, OP-O3); `xrgrad` becomes `xrops.Gradient` over the geoops kernel (OP-O7).
-- **PL-C. One home for the xarray Operator base.**
-  `xrcore`'s `Operator` (with its `DataTree` dispatch) folds into `xrops._src`; its `Signature` becomes a re-export of `pipekit.Signature` for one release, then goes ([pipekit kernels](./pipekit_kernels.md)).
-- **PL-D. Matching family names.**
-  geoops is organised by operation kind, xrtoolz by domain plus a `geo` grab-bag.
-  `xrops` takes geoops's family names wherever the job is the same, keeps state-physics families, and drops the empty `rs` and `ice` stubs.
-- **PL-E. Readers named as products.**
-  `xrreader` (CMEMS, CDS, AEMET) is the xarray twin of `geoproducts` and becomes `xrtoolz-products` (import `xrproducts`).
+- **PL-A. xrtoolz becomes a meta package.** Today `xrtoolz` is both the ops code and the umbrella that hard-depends on every sibling, so we move its code to a new `xrtoolz-ops` (import `xrops`) and leave `xrtoolz` with no code, as `geotoolz` has.
+- **PL-B. Backend bridges stop being distributions.** `xreinx` and `xrsklearn` give way to one named-dims bridge each in pipekit-array (OP-O2, OP-O3), whereas `xrgrad` becomes `xrops.Gradient` over the geoops kernel (OP-O7).
+- **PL-C. One home for the xarray Operator base.** The `Operator` of `xrcore` (with its `DataTree` dispatch) folds into `xrops._src`, and its `Signature` becomes a re-export of `pipekit.Signature` for one release and then goes ([pipekit kernels](./pipekit_kernels.md)).
+- **PL-D. Matching family names.** geoops is organised by operation kind, whereas xrtoolz is organised by domain plus a `geo` grab-bag, so `xrops` takes the family names of geoops wherever the job is the same, keeps the state-physics families, and drops the empty `rs` and `ice` stubs.
+- **PL-E. Readers named as products.** `xrreader` (CMEMS, CDS, AEMET) is the xarray twin of `geoproducts`, so it becomes `xrtoolz-products` (import `xrproducts`).
 
-End state: each repo has a code-free umbrella and the same job-shaped distributions, and `geoops` and `xrops` share family names where the job is the same.
+In the end state each repo has a code-free umbrella and the same job-shaped distributions, and `geoops` and `xrops` share family names where the job is the same.
 
 ## Ownership rules
 
-One axis per level: distributions split by job, modules inside an ops package split by operation kind, and heavy backends sit behind extras.
+We use one axis per level: distributions split by job, modules inside an ops package split by operation kind, and heavy backends sit behind extras.
 
 | Job | geotoolz | xrtoolz |
 | --- | --- | --- |
@@ -54,24 +45,19 @@ One axis per level: distributions split by job, modules inside an ops package sp
 | carry | `geoarray` | xarray |
 | shared | `geocatalog` · `geocloud` · `geopatcher` | `geocatalog` · `geocloud` · `geopatcher` |
 
-Each row is one job; only the names on the right change.
-The shared row already serves both lanes, and pipekit-array (tier 0) sits under both ops packages.
+Each row is one job, and only the names on the right change. The shared row already serves both lanes, and pipekit-array (tier 0) sits under both ops packages.
 
-1. **geotoolz** and **xrtoolz** hold no code.
-   Each depends on its lane's distributions and documents the import table.
-2. **geoops** holds every kernel operator, written once, and every per-item geometry operator.
-   Its base install is slim: rasterio, geopandas and shapely, scikit-image and georeader sit behind `[raster]`, `[vector]`, `[morph]` and `[sensors]`; it has no `[xarray]` extra and never imports xrops or xarray.
-3. **xrops** holds xarray-native work (selection by value, many files, `Dataset` and `DataTree`), `xrops.lift` for geoops operators over cubes, and state physics (`atm`, `ocn`, `budgets`).
-   It may import geoops and geoarray; crossing lanes goes through geoarray's converters ([labeled lane](./labeled_lane.md)).
-4. **Domain physics** on model states lives in `xrops`; on observations it belongs to GeoModels (plumax, radtrax), never to geoops ([stack levels](./stack_levels.md), SL-O1).
-5. **geoproducts** and **xrproducts** read provider data into their lane's carrier and never transform it.
-6. **Heavy backends** (JAX, einx, scikit-learn) are extras, never base dependencies.
-7. **Every package writes [the three levels](#design-levels)** the same way: primitives in `_src/array.py`, operators on carriers above them, carrier code only where the carrier may be imported.
+1. **geotoolz** and **xrtoolz** hold no code, as each depends on the distributions of its lane and documents the import table.
+2. **geoops** holds every kernel operator, written once, and every per-item geometry operator. Its base install is slim, since rasterio, geopandas and shapely, scikit-image and georeader sit behind `[raster]`, `[vector]`, `[morph]` and `[sensors]`, and it has no `[xarray]` extra and never imports xrops or xarray.
+3. **xrops** holds xarray-native work (selection by value, many files, `Dataset` and `DataTree`), `xrops.lift` for geoops operators over cubes, and state physics (`atm`, `ocn`, `budgets`). It may import geoops and geoarray, and crossing lanes goes through the converters of geoarray ([labeled lane](./labeled_lane.md)).
+4. **Domain physics** on model states lives in `xrops`, whereas on observations it belongs to GeoModels (plumax, radtrax) and never to geoops ([stack levels](./stack_levels.md), SL-O1).
+5. **geoproducts** and **xrproducts** read provider data into the carrier of their lane and never transform it.
+6. **Heavy backends** (JAX, einx, scikit-learn) are extras and never base dependencies.
+7. **Every package writes [the three levels](#design-levels)** the same way: primitives in `_src/array.py`, operators on carriers above them, and carrier code only where the carrier may be imported.
 
 ## Current-state audit
 
-Six mismatches need action.
-The audit read the `main` branches of geotoolz (umbrella 0.12.0) and xrtoolz (0.0.5) on 21 Oct 2026; call-site counts are still to do.
+Six mismatches need action. We read the `main` branches of geotoolz (umbrella 0.12.0) and xrtoolz (0.0.5) on 21 Oct 2026 for this audit, and the call-site counts are still to do.
 
 | Symbols | Defined in | Used by | Verdict |
 | --- | --- | --- | --- |
@@ -84,17 +70,10 @@ The audit read the `main` branches of geotoolz (umbrella 0.12.0) and xrtoolz (0.
 
 Smaller findings:
 
-- **Domain modules.**
-  `xrtoolz.atm`, `ocn` and `budgets` act on gridded states; `xrtoolz.ice` is an empty stub.
-  geoops's `plume` and `matched_filter` are already scheduled to leave for plumax and radtrax (radtrax backlog RTX-34, RTX-30).
-- **Readers.**
-  `xrreader` reads CMEMS, CDS and AEMET archives into xarray.
-  It does the job of `geoproducts` but is named like a different kind of package.
-- **Shim policy.**
-  `xrtoolz._operator`, `xrtoolz.signature` and `xrtoolz.einx` say they are removed at 1.0.
-  The stack bumps 0.X.0 for breaking changes, so the removal needs a named 0.X release.
-- **Shared packages stay shared.**
-  `geocatalog` (with `geocatalog.states`), `geocloud` and `geopatcher` already serve both lanes; nothing in xrtoolz duplicates them.
+- **Domain modules.** `xrtoolz.atm`, `ocn` and `budgets` act on gridded states, whereas `xrtoolz.ice` is an empty stub. The `plume` and `matched_filter` modules of geoops are already scheduled to leave for plumax and radtrax (radtrax backlog RTX-34, RTX-30).
+- **Readers.** `xrreader` reads CMEMS, CDS and AEMET archives into xarray, which is the job of `geoproducts`, but it is named like a different kind of package.
+- **Shim policy.** `xrtoolz._operator`, `xrtoolz.signature` and `xrtoolz.einx` say they are removed at 1.0. However, the stack bumps 0.X.0 for breaking changes, so the removal needs a named 0.X release.
+- **Shared packages stay shared.** `geocatalog` (with `geocatalog.states`), `geocloud` and `geopatcher` already serve both lanes, and nothing in xrtoolz duplicates them.
 
 ## Target layout and moves
 
@@ -116,27 +95,18 @@ Every job has the same distribution shape in both repos, and every ops family ha
 | carry | `geoarray` | xarray | unchanged |
 | read + index, store, patch | `geocatalog`, `geocloud`, `geopatcher` | shared | unchanged |
 
-1. **Create `xrtoolz-ops`.**
-   Move every module of the `xrtoolz` distribution into `xrops` with history, tests unchanged apart from imports.
-2. **Empty the umbrella.**
-   `xrtoolz` depends on `xrtoolz-ops` and `xrtoolz-products`, re-exports nothing but `__version__`, and documents the import table, as `geotoolz/__init__.py` does.
-3. **Retire the bridges.**
-   Per PL-Q1, `xreinx` and `xrsklearn` are removed once pipekit-array's bridges ship (OP-O2, OP-O3), and `xrgrad` becomes `xrops.Gradient`.
-4. **Rename the families.**
-   Per PL-Q4, split `xrtoolz.geo`; delete `rs` and `ice`.
-5. **Rename the reader.**
-   Per PL-Q3, `xrtoolz-reader` becomes `xrtoolz-products`.
-6. **No shims.**
-   Old import paths are removed outright, as geotoolz does (PL-Q5): the release that moves a module updates every caller in the stack, and nothing re-exports the old path.
+1. **Create `xrtoolz-ops`.** We move every module of the `xrtoolz` distribution into `xrops` with history, and the tests stay unchanged apart from imports.
+2. **Empty the umbrella.** `xrtoolz` depends on `xrtoolz-ops` and `xrtoolz-products`, re-exports nothing but `__version__`, and documents the import table, as `geotoolz/__init__.py` does.
+3. **Retire the bridges.** Per PL-Q1, `xreinx` and `xrsklearn` are removed once the bridges of pipekit-array ship (OP-O2, OP-O3), and `xrgrad` becomes `xrops.Gradient`.
+4. **Rename the families.** Per PL-Q4, we split `xrtoolz.geo` and delete `rs` and `ice`.
+5. **Rename the reader.** Per PL-Q3, `xrtoolz-reader` becomes `xrtoolz-products`.
+6. **No shims.** Old import paths are removed outright, as geotoolz does (PL-Q5), so the release that moves a module updates every caller in the stack and nothing re-exports the old path.
 
 ## Boundary: geoproducts and xrproducts
 
-The line is what one read returns: geoproducts reads one acquisition into a geoarray carrier, and xrproducts reads anything stacked over time, members or levels, or a station series, into xarray (PL-Q7).
-It follows the workload rule of [the crossover](#design-crossover), and it replaces the 21 Oct wording of observations versus states drawn at an L3 carrier switch.
+The line is what one read returns: geoproducts reads one acquisition into a geoarray carrier, whereas xrproducts reads anything stacked over time, members or levels, or a station series, into xarray (PL-Q7). This follows the workload rule of [the crossover](#design-crossover), and it replaces the 21 Oct wording of observations versus states drawn at an L3 carrier switch.
 
-Provenance alone does not split cleanly.
-CMEMS serves both gridded satellite maps and the GLORYS reanalysis, and CDS serves ERA5 and satellite products.
-A provenance rule would split one provider's reader across two packages.
+Provenance alone does not split cleanly, as CMEMS serves both gridded satellite maps and the GLORYS reanalysis, and CDS serves ERA5 and satellite products. So a provenance rule would split the reader of one provider across two packages.
 
 | Product | Level | One read returns | Package |
 | --- | --- | --- | --- |
@@ -148,42 +118,27 @@ A provenance rule would split one provider's reader across two packages.
 | ERA5 | L4 | a state cube | xrproducts |
 | AEMET stations | in situ | a station series | xrproducts |
 
-1. **Both read, neither transforms.**
-   A reader returns its lane's carrier on the provider's native grid; regridding and derived fields are operators.
-2. **Neither imports the other.**
-   A product that needs both (EMIT scenes matched to ERA5 winds) is joined in geocatalog or a pipekit graph.
-3. **Rename `xrreader`'s `catalog` module.**
-   `xrreader._src.catalog` is a short-name registry (`glorys12.daily` → source and dataset ID), not a catalog.
-   It becomes `xrproducts.registry`, so "catalog" means geocatalog everywhere.
+1. **Both read, neither transforms.** A reader returns the carrier of its lane on the native grid of the provider, and regridding and derived fields are operators.
+2. **Neither imports the other.** A product that needs both (EMIT scenes matched to ERA5 winds) is joined in geocatalog or a pipekit graph.
+3. **Rename the `catalog` module of `xrreader`.** `xrreader._src.catalog` is a short-name registry (`glorys12.daily` → source and dataset ID) and not a catalog, so it becomes `xrproducts.registry` and "catalog" means geocatalog everywhere.
 
 ### Note: how geocatalog handles states
 
-geocatalog already indexes states on `main` through `geocatalog.states`; this plan only adds the hand-off from xrproducts.
+geocatalog already indexes states on `main` through `geocatalog.states`, so this plan only adds the hand-off from xrproducts.
 
-- **Rows.**
-  A state catalog is an xarray-kind catalog with five reserved columns (schema v1): `kind`, `run_time`, `member`, `producer`, `parents`.
-  `build_state_catalog` fills them from each file's metadata, with `CF_NAMES` and `CFGRIB_NAMES` as name maps.
-- **Queries.**
-  `forecasts`, `ensemble_at`, `forecast_chain`, `lead_window`, `at_time` and `latest_analysis` work on either backend.
-- **Loading.**
-  `load_states` stacks one file per (run, member) into an `(init_time, member, lead_time, y, x)` cube, lazily, behind the `[xarray-raster]` extra.
-  Overlapping runs are never dropped.
+- **Rows.** A state catalog is an xarray-kind catalog with five reserved columns (schema v1): `kind`, `run_time`, `member`, `producer`, `parents`. `build_state_catalog` fills them from the metadata of each file, with `CF_NAMES` and `CFGRIB_NAMES` as name maps.
+- **Queries.** `forecasts`, `ensemble_at`, `forecast_chain`, `lead_window`, `at_time` and `latest_analysis` work on either backend.
+- **Loading.** `load_states` stacks one file per (run, member) into an `(init_time, member, lead_time, y, x)` cube, lazily, behind the `[xarray-raster]` extra, and overlapping runs are never dropped.
 
 The split of work:
 
-1. **xrproducts fetches.**
-   Authentication, the provider request, download, cache and opening one dataset.
-2. **geocatalog indexes and loads.**
-   Many files become rows, rows are queried, and `load_states` builds the cube, as it does today.
-3. **The hand-off is rows, not imports.**
-   xrproducts writes state-catalog rows (or calls `build_state_catalog` on what it downloaded) so a fetch lands indexed.
-   geocatalog never imports xrproducts, and xrproducts depends on geocatalog only through an extra (PL-Q8).
+1. **xrproducts fetches.** It handles authentication, the provider request, download, cache and opening one dataset.
+2. **geocatalog indexes and loads.** Many files become rows, the rows are queried, and `load_states` builds the cube, as it does today.
+3. **The hand-off is rows, not imports.** xrproducts writes state-catalog rows (or calls `build_state_catalog` on what it downloaded) so a fetch lands indexed, and geocatalog never imports xrproducts, whereas xrproducts depends on geocatalog only through an extra (PL-Q8).
 
 ## The elephants: points, polygons, rasters, states
 
-Each geometry kind gets one carrier per lane.
-Changing kind (rasterize, sample, bin) is an operator, never the carrier's job.
-On the array side the carriers are `GeoArray` (grids), `GeoSwath` (sensor geometry) and `GeoPoints` (point sets), with stored dims and time stamps on a `TimeAxis` ([geoarray](./geoarray.md)); xarray formalizes neither geometry nor time meaning, conventions do (CF, xvec).
+Each geometry kind gets one carrier per lane, and changing kind (rasterize, sample, bin) is an operator and never the job of the carrier. On the array side the carriers are `GeoArray` (grids), `GeoSwath` (sensor geometry) and `GeoPoints` (point sets), with stored dims and time stamps on a `TimeAxis` ([geoarray](./geoarray.md)), whereas xarray formalizes neither geometry nor time meaning and conventions do (CF, xvec).
 
 | Kind | Examples | Array lane (NumPy / JAX) | Labeled lane (xarray) | At rest |
 | --- | --- | --- | --- | --- |
@@ -196,39 +151,28 @@ On the array side the carriers are `GeoArray` (grids), `GeoSwath` (sensor geomet
 
 Points have three shapes today and no carrier:
 
-- geoops's `RasterToPoints`, `PointsToRaster`, `RasterToPointCloud` and `PointCloudToRaster` take a GeoDataFrame or an xvec array.
-- `xrtoolz.geo` along-track helpers take bare 1-D lon and lat arrays.
-- `geocatalog.matchup` pairs catalog rows, not points.
+- The `RasterToPoints`, `PointsToRaster`, `RasterToPointCloud` and `PointCloudToRaster` operators of geoops take a GeoDataFrame or an xvec array.
+- The along-track helpers of `xrtoolz.geo` take bare 1-D lon and lat arrays.
+- `geocatalog.matchup` pairs catalog rows and not points.
 
 The fix, one carrier per lane (PL-Q9):
 
-1. **Labeled lane: a CF Discrete Sampling Geometry dataset.**
-   One `obs` dim, with lon, lat, time and depth as coordinates on it, and `featureType` naming the layout (point, timeSeries, trajectory, profile).
-   Ragged profiles use DSG's contiguous ragged layout, one `row_size` per feature.
-   Argo and CMEMS along-track files already ship this way, so xrproducts opens them with no conversion.
-2. **xvec only on demand.**
-   Build an xvec geometry index on `obs` only when a spatial query needs it; one shapely object per sample is the cost to avoid at 10⁷ along-track points.
-3. **Array lane: `GeoPoints` in geoarray.**
-   Horizontal `xy` `(obs, 2)`, an optional `z` `(obs,)` with its own vertical descriptor, values, per-sample time, a CRS and a fill, as a pytree; the [geoarray page](./geoarray.md) defines it and says why `z` is never a third column.
-   vardax and filterax need it: an observation operator maps a gridded state to values at points inside `jit` and `grad`, and a GeoDataFrame cannot cross `jit`.
-4. **Kind changes are operators with matching names in both lanes.**
-   Sample (raster to points), bin or grid (points to raster), rasterize and vectorize (polygons to and from raster).
-   geoarray's converters cross lanes (`GeoPoints` to and from a DSG dataset), as for grids ([labeled lane](./labeled_lane.md)).
-5. **At rest.**
-   GeoParquet for point tables geocatalog queries with DuckDB; NetCDF DSG or Zarr when a profile or a trajectory is the unit.
+1. **Labeled lane: a CF Discrete Sampling Geometry dataset.** One `obs` dim, with lon, lat, time and depth as coordinates on it, and `featureType` naming the layout (point, timeSeries, trajectory, profile). Ragged profiles use the contiguous ragged layout of DSG, one `row_size` per feature, and Argo and CMEMS along-track files already ship this way, so xrproducts opens them with no conversion.
+2. **xvec only on demand.** We build an xvec geometry index on `obs` only when a spatial query needs it, since one shapely object per sample is the cost to avoid at 10⁷ along-track points.
+3. **Array lane: `GeoPoints` in geoarray.** It holds horizontal `xy` `(obs, 2)`, an optional `z` `(obs,)` with its own vertical descriptor, values, per-sample time, a CRS and a fill, as a pytree; the [geoarray page](./geoarray.md) defines it and says why `z` is never a third column. vardax and filterax need it, because an observation operator maps a gridded state to values at points inside `jit` and `grad`, and a GeoDataFrame cannot cross `jit`.
+4. **Kind changes are operators with matching names in both lanes.** These are sample (raster to points), bin or grid (points to raster), and rasterize and vectorize (polygons to and from raster). The converters of geoarray cross lanes (`GeoPoints` to and from a DSG dataset), as for grids ([labeled lane](./labeled_lane.md)).
+5. **At rest.** We use GeoParquet for point tables that geocatalog queries with DuckDB, and NetCDF DSG or Zarr when a profile or a trajectory is the unit.
 
 Alternatives considered:
 
-- **One table carrier** (GeoDataFrame or GeoArrow) for points in both lanes.
-  It is best for huge sets and DuckDB, but not labeled N-D and not `jit`-able.
-- **xvec for points too.**
-  One vector story, but one shapely object per point at scale.
+- **One table carrier** (GeoDataFrame or GeoArrow) for points in both lanes. It is best for huge sets and DuckDB, but it is not labeled N-D and not `jit`-able.
+- **xvec for points too.** It gives one vector story, but one shapely object per point at scale.
 
 When to leave a carrier for xarray is the subject of [the crossover](#design-crossover).
 
 ## Open questions
 
-Each has a recommendation and its alternative; flip any before the issues open.
+Each question has a recommendation and its alternative, and we can flip any of them before the issues open.
 
 | ID | Question | Recommended | Alternative | Status |
 | --- | --- | --- | --- | --- |
@@ -255,16 +199,8 @@ Each workstream merges only when its gate passes; PL-A ships first because every
 | D1 Name parity | PL-D | a script lists the families of `geoops` and `xrops`; every name in both means the same job, and the list is checked into the docs |
 | E1 Reader rename | PL-E | every public name of `xrreader` is importable from `xrproducts`, and `import xrreader` fails |
 
-Order: PL-A, then PL-B, PL-C and PL-E in parallel, then PL-D.
-PL-B waits for the pipekit-array release that ships the shared bridges, and `xrops.lift` waits for geoops's slim base ([operators](./operators.md)).
-Each is one minor bump of `xrtoolz` (0.1.0, then 0.2.0).
+The order is PL-A, then PL-B, PL-C and PL-E in parallel, then PL-D. PL-B waits for the pipekit-array release that ships the shared bridges, and `xrops.lift` waits for the slim base of geoops ([operators](./operators.md)). Each is one minor bump of `xrtoolz` (0.1.0, then 0.2.0).
 
-- **Downstream imports break.**
-  pipekit, geostack notebooks and GeoBench import `xrtoolz.*` today.
-  Mitigation: no shims (PL-Q5), so each release greps the stack for the old paths and updates every caller in the same release.
-- **The shared bridges slip.**
-  If pipekit-array's einx and scikit-learn bridges are late, PL-B blocks.
-  Fallback: keep `xreinx` and `xrsklearn` as they are for one more release; PL-D still applies.
-- **`xrtoolz.geo` has no clean split.**
-  Some functions are both geometry and analysis.
-  Fallback: place each such function by its main job and list it in D1's checked-in table.
+- **Downstream imports break.** pipekit, geostack notebooks and GeoBench import `xrtoolz.*` today. Mitigation: there are no shims (PL-Q5), so each release greps the stack for the old paths and updates every caller in the same release.
+- **The shared bridges slip.** If the einx and scikit-learn bridges of pipekit-array are late, PL-B blocks. Fallback: we keep `xreinx` and `xrsklearn` as they are for one more release, and PL-D still applies.
+- **`xrtoolz.geo` has no clean split.** Some functions are both geometry and analysis. Fallback: we place each such function by its main job and list it in the checked-in table of D1.

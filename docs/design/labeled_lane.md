@@ -22,21 +22,13 @@ numbering:
 
 ## Summary
 
-Labeled data (named dims selected by value, many files, lazy cubes) stays in xarray.
-geoarray carriers (`GeoArray`, `GeoSwath`, `GeoPoints`, on the [geoarray page](./geoarray.md)) cross to xarray and back through converters behind geoarray's `[xarray]` extra.
-Nobody builds a labeled array type of their own, and geoarray never selects by value.
+Labeled data (named dims selected by value, many files, lazy cubes) stays in xarray. The geoarray carriers (`GeoArray`, `GeoSwath`, `GeoPoints`, on the [geoarray page](./geoarray.md)) cross to xarray and back through converters behind geoarray's `[xarray]` extra. So we do not build a labeled array type of our own, and geoarray never selects by value.
 
-- **LL-F. xarray converters.**
-  Today only georeader converts, it writes the CRS as `attrs["crs"]`, and nothing in geotoolz or xrtoolz calls it.
-  geoarray converts to and from `DataArray`, `Dataset` and `DataTree`, using the CF `grid_mapping` and GDAL `GeoTransform` convention that rioxarray, xrtoolz, geopatcher and geocloud already share.
-- **LL-G. coordax converter.**
-  coordax is an optional converter for model code that wants `cmap`, not the foundation of the JAX lane.
-  Its coordinates are static, so a georeferenced coordax grid recompiles for every new transform; batching and gradients stay on geoarray carriers.
-- **LL-H. Lane rules.**
-  Every crossing is a named call.
-  Kernel operators run on a `DataArray` lazily; geometry operators reach a cube through `xrops.lift`; nothing converts silently.
+- **LL-F. xarray converters.** Today only georeader converts, it writes the CRS as `attrs["crs"]`, and nothing in geotoolz or xrtoolz calls it. We make geoarray convert to and from `DataArray`, `Dataset` and `DataTree`, using the CF `grid_mapping` and GDAL `GeoTransform` convention that rioxarray, xrtoolz, geopatcher and geocloud already share.
+- **LL-G. coordax converter.** coordax is an optional converter for model code that wants `cmap`, not the foundation of the JAX lane. Its coordinates are static, so a georeferenced coordax grid recompiles for every new transform, whereas batching and gradients stay on geoarray carriers.
+- **LL-H. Lane rules.** Every crossing is a named call. Kernel operators run on a `DataArray` lazily, geometry operators reach a cube through `xrops.lift`, and nothing converts silently.
 
-End state: a carrier crosses to xarray and back without losing its grid, CRS, fill value, dims or per-band metadata, and each workload runs on the side built for it.
+The end state is that a carrier crosses to xarray and back without losing its grid, CRS, fill value, dims or per-band metadata, and that each workload runs on the side built for it.
 
 ## Ownership rules
 
@@ -61,13 +53,10 @@ The two lanes meet only at geoarray's converters and at `xrops.lift`.
  coordax Field (static coordinates)
 ```
 
-1. **geoarray** owns the converters, in `geoarray.interop.xarray` (and `geoarray.interop.coordax`), exposed as `to_xarray()` / `from_xarray()` on the carriers.
-   It imports xarray and coordax only inside those modules, and only behind their extras.
+1. **geoarray** owns the converters, in `geoarray.interop.xarray` (and `geoarray.interop.coordax`), exposed as `to_xarray()` / `from_xarray()` on the carriers. It imports xarray and coordax only inside those modules, and only behind their extras.
 2. **pipekit-array** owns the xarray named-array adapter behind its `[xarray]` extra (PK-P4), so a [KernelOp](#design-kernelop) runs on a `DataArray` without geoops importing xarray.
-3. **xrops** owns xarray-native work: selection by value, many-file assembly, `Dataset` and `DataTree` dispatch, state physics, and `xrops.lift`, which runs a per-item geoops operator over a cube.
-   It may import geoops and geoarray, one tier above them ([the tiers](#design-tiers)).
-4. **geoops** never imports xarray.
-   Its kernel operators accept a `DataArray` through the adapter (GA-Q5); its geometry operators raise on one and name `xrops.lift`.
+3. **xrops** owns xarray-native work (selection by value, many-file assembly, `Dataset` and `DataTree` dispatch, state physics) and `xrops.lift`, which runs a per-item geoops operator over a cube. It may import geoops and geoarray, one tier above them ([the tiers](#design-tiers)).
+4. **geoops** never imports xarray. Its kernel operators accept a `DataArray` through the adapter (GA-Q5), whereas its geometry operators raise on one and name `xrops.lift`.
 5. **coordax** is used, not wrapped, and no geotoolz package depends on it.
 
 ### Decisions this page takes
@@ -85,10 +74,7 @@ The two lanes meet only at geoarray's converters and at `xrops.lift`.
 (design-crossover)=
 ## The crossover: when to leave geoarray
 
-The split is by workload, not by data maturity.
-One item or a fixed batch, possibly under `jit`, is a geoarray carrier.
-Many items selected by value, or anything assembled from more than one file, is xarray.
-A model state inside a JAX model is shaped arrays, and a carrier appears only at its boundary ([the three levels](#design-levels)).
+We split by workload, not by data maturity. One item or a fixed batch, possibly under `jit`, is a geoarray carrier, whereas many items selected by value, or anything assembled from more than one file, is xarray. A model state inside a JAX model is shaped arrays, and a carrier appears only at its boundary ([the three levels](#design-levels)).
 
 ```text
  one item or a fixed batch
@@ -110,7 +96,7 @@ A model state inside a JAX model is shaped arrays, and a carrier appears only at
  somax · vardax · filterax · radtrax
 ```
 
-The test for any feature or operation:
+We apply this test to any feature or operation:
 
 | If it needs | It belongs to |
 | --- | --- |
@@ -119,38 +105,37 @@ The test for any feature or operation:
 | a labeled state under `jit`, `grad` or `vmap` | shaped arrays in the model; a carrier only at its boundary |
 | pixel georeferencing for one acquisition, possibly under `jit` | a geoarray carrier |
 
-Hand-offs:
+There are three hand-offs:
 
-1. **xarray to a carrier at the `jit` boundary.**
-   Select by value in xarray, then `GeoArray.from_xarray(cube.sel(time=…))`.
+1. **xarray to a carrier at the `jit` boundary.** We select by value in xarray, then call `GeoArray.from_xarray(cube.sel(time=…))`.
 2. **A per-item geometry operator over a stack** runs through `xrops.lift(op, dim="time")`: each slice becomes a carrier, the operator runs, and the result is restacked.
-3. **Observations meet states** in data assimilation as `GeoPoints` against a carrier slice of the model state; `geoarray.interp_at` is the bridge for H(x).
+3. **Observations meet states** in data assimilation as `GeoPoints` against a carrier slice of the model state, and `geoarray.interp_at` is the bridge for H(x).
 
-Recommended: this three-way split, with a thin carrier that stores dims but never selects by value, so it does not grow into a second xarray.
-Alternative: xarray as the only NumPy-side container, with geometry checks rebuilt in an accessor.
+We recommend this three-way split, with a thin carrier that stores dims but never selects by value, so it does not grow into a second xarray. The alternative is xarray as the only NumPy-side container, with geometry checks rebuilt in an accessor.
 
 ## Running example: one tile, its labels and its time stack
 
-The data are those of the [geoarray page](./geoarray.md): EMIT's 285-band radiance, orthorectified, and Sentinel-2 L1C over a Delaware Basin well pad.
-What changes is what the data carry: EMIT's bands have wavelengths λ₁ … λ₂₈₅ from 381 to 2,493 nm that analysis code selects by value, Sentinel-2 has three native resolutions that belong in one object, and a year of Sentinel-2 dates is a cube.
+The data are those of the [geoarray page](./geoarray.md): EMIT's 285-band radiance, orthorectified, and Sentinel-2 L1C over a Delaware Basin well pad. What changes is what the data carry, as EMIT's bands have wavelengths λ₁ … λ₂₈₅ from 381 to 2,493 nm that analysis code selects by value, Sentinel-2 has three native resolutions that belong in one object, and a year of Sentinel-2 dates is a cube.
 
 ### Stage 1: EMIT radiance to a CF-compliant file (carrier → xarray)
 
 **TL;DR.** Save the orthorectified EMIT cube so any CF reader recovers its grid, CRS and wavelengths.
 
-Let $x \in \mathbb{R}^{C \times H \times W}$ be the radiance, C = 285, on a pixel grid with transform T = (a, b, c, d, e, f) and a CRS.
-For an axis-aligned grid (b = d = 0) the x and y coordinates are pixel centres:
+Let $L \in \mathbb{R}^{C \times H \times W}$ be the radiance, with $C = 285$ bands on a grid of $H$ rows and $W$ columns, and let $T = (a, b, c, d, e, f)$ be the pixel transform of that grid, which comes with a CRS. For an axis-aligned grid ($b = d = 0$) the pixel centres sit at the coordinates $\mathbf{s} = (s_1, s_2) \in \mathbb{R}^2$, with $s_{1,j}$ along the columns $j$ and $s_{2,i}$ along the rows $i$:
 
 $$
-x_j = c + a \left(j + \tfrac12\right), \qquad y_i = f + e \left(i + \tfrac12\right)
-$$
+s_{1,j} = c + a \left(j + \frac{1}{2}\right)
+$$ (ll-eq-centre-1)
 
-A rotated grid has no 1-D x and y coordinates and is written with `GeoTransform` only.
-GDAL orders the same six numbers as (c, a, b, f, d, e), and that string goes into `spatial_ref.attrs["GeoTransform"]`.
+$$
+s_{2,i} = f + e \left(i + \frac{1}{2}\right)
+$$ (ll-eq-centre-2)
+
+A rotated grid has no 1-D x and y coordinates, so it is written with `GeoTransform` only. GDAL orders the same six numbers as (c, a, b, f, d, e), and that string goes into `spatial_ref.attrs["GeoTransform"]`.
 
 ```python
 # emit: GeoArray["band y x"], C = 285, 60 m UTM grid, SpectralAxis with names and λ in nm
-# dims as stored; xⱼ, yᵢ as centre coordinates; spatial_ref holds crs_wkt and GeoTransform (LL-F1)
+# dims as stored; s_1[j], s_2[i] as centre coordinates (ll-eq-centre-1, ll-eq-centre-2); spatial_ref holds crs_wkt and GeoTransform (LL-F1)
 da: DataArray["band y x"] = emit.to_xarray()
 
 # select by value on the indexed wavelength coordinate: λ ∈ [2,100, 2,450] nm (LL-F2)
@@ -160,16 +145,13 @@ swir: DataArray["band y x"] = da.sel(wavelength=slice(2100.0, 2450.0))
 swir.to_netcdf("emit_swir.nc")
 ```
 
-The file opens in rioxarray, QGIS or geoops's `ReadNetCDF` with its grid intact, because all of them read `spatial_ref`.
-georeader's `toDataArray` would have written the CRS as a plain attribute that none of them read.
+The file opens in rioxarray, QGIS or geoops's `ReadNetCDF` with its grid intact, because all of them read `spatial_ref`. However, georeader's `toDataArray` would have written the CRS as a plain attribute that none of them read.
 
 ### Stage 2: Sentinel-2's three resolutions in one tree (carriers → `DataTree`)
 
 **TL;DR.** Hold the 10, 20 and 60 m bands together, and pull one band back out as a carrier.
 
-Let g₁₀, g₂₀ and g₆₀ be three carriers on nested grids of the same tile.
-Their transforms differ only in pixel size, a = −e = 10, 20 and 60 m, with the same origin (c, f).
-A `DataArray` holds one grid, so the three need a tree with one node per grid.
+Let g₁₀, g₂₀ and g₆₀ be three carriers on nested grids of the same tile. Their transforms differ only in pixel size, a = −e = 10, 20 and 60 m, with the same origin (c, f). A `DataArray` holds one grid, so the three need a tree with one node per grid.
 
 ```python
 # one node per grid, each with its own spatial_ref (LL-F3)
@@ -193,12 +175,11 @@ xrops dispatches per node over a `DataTree`, so per-resolution operators work on
 
 **TL;DR.** Keep the stack lazy in xarray, run kernel operators on it directly, cross to a carrier only where `jit` or a geometry operator needs one.
 
-Let the cube hold T = 52 Sentinel-2 dates on one 20 m grid.
-NDVI is a kernel over the band dim, with ρ the reflectance:
+Let the cube hold the set $\mathcal{T}$ of Sentinel-2 dates on one 20 m grid, with $N_{\mathcal{T}} = 52$. NDVI is a kernel over the band dim, with $\rho \in \mathbb{R}$ the reflectance in the near-infrared or red band:
 
 $$
-\mathrm{NDVI} = \frac{\rho_{\mathrm{NIR}} - \rho_{\mathrm{red}}}{\rho_{\mathrm{NIR}} + \rho_{\mathrm{red}}}
-$$
+\mathrm{NDVI} = \frac{\rho_\text{NIR} - \rho_\text{red}}{\rho_\text{NIR} + \rho_\text{red}}
+$$ (ll-eq-ndvi)
 
 ```python
 # many files, lazy: one dask chunk per date
@@ -226,12 +207,11 @@ ndvi_jit: Callable = jax.jit(ndvi)
 ndvi_scene: GeoArray["y x"] = ndvi_jit(jscene)
 ```
 
-Passing the cube to `to_wgs84` directly raises an error that names `xrops.lift`; passing a JAX carrier and a NumPy carrier to one operator raises and names `to_jax()`.
+Passing the cube to `to_wgs84` directly raises an error that names `xrops.lift`, and passing a JAX carrier and a NumPy carrier to one operator raises and names `to_jax()`.
 
 ## Current-state audit
 
-Two CRS conventions exist on the xarray side, and coordax has no georeferenced coordinate.
-The audit read georeader `9812be1`, geotoolz `48a705a` and xrtoolz `5a2ba2c` on 17 Oct 2026, and coordax 0.2.9 from PyPI.
+Two CRS conventions exist on the xarray side, and coordax has no georeferenced coordinate. The audit read georeader `9812be1`, geotoolz `48a705a` and xrtoolz `5a2ba2c` on 17 Oct 2026, and coordax 0.2.9 from PyPI.
 
 | Symbols | Defined in | Used by | Verdict |
 | --- | --- | --- | --- |
@@ -241,8 +221,7 @@ The audit read georeader `9812be1`, geotoolz `48a705a` and xrtoolz `5a2ba2c` on 
 | `ReadNetCDF`, `read_netcdf` | `geoops/io/_src/operators.py`, `geocloud/_src/hdf.py` | geoops io | **Healthy.** Reads CF `grid_mapping` and GDAL `GeoTransform` |
 | `from_xarray` default coordinate types | coordax 0.2.9 | — | **Split ownership.** x and y come back as `LabeledAxis`; the CRS is dropped |
 
-The coordax check also found that coordinates must be static pytree nodes: shifting a grid coordinate by one pixel recompiled a jitted function (two traces), where the same shift on a `GeoArray` did not.
-That finding is why coordax is a converter here and not the JAX lane.
+The coordax check also found that coordinates must be static pytree nodes: shifting a grid coordinate by one pixel recompiled a jitted function (two traces), whereas the same shift on a `GeoArray` did not. That finding is why coordax is a converter here and not the JAX lane.
 
 ## Workstream LL-F: xarray converters
 
@@ -256,7 +235,7 @@ geoarray converts both ways between its carriers and `DataArray`, `Dataset` and 
 | per-band attrs | `band` names, `wavelength` and FWHM as indexed coordinates (LL-F2) | selection by wavelength |
 | — | `to_dataset`, `to_datatree`, `from_dataset`, `from_datatree` | several variables, several grids (LL-F3) |
 
-What crosses, in each direction:
+The next table lists what crosses, in each direction.
 
 | Carrier | xarray | Back |
 | --- | --- | --- |
@@ -269,36 +248,22 @@ What crosses, in each direction:
 | `SpectralAxis`, `VariableAxis`, `VerticalAxis`, `TimeAxis` | CF coordinates and attributes (`wavelength`, `units`, `positive`) | equal coordinates |
 | other attrs | `.attrs` | hashable values only; others raise on the way back |
 
-1. **Write `spatial_ref` by hand.**
-   A scalar coordinate with `crs_wkt`, `spatial_ref` (the same WKT) and `GeoTransform` attributes, plus `grid_mapping="spatial_ref"` in each variable's encoding.
-   It also carries the CF grid-mapping attributes from pyproj's `CRS.to_cf()` (`grid_mapping_name` and the projection parameters), so CF readers that do not parse WKT still get the projection, as rioxarray writes them.
-   No rioxarray import is needed: pyproj is already a base dependency of geoarray.
-2. **Read in order of trust.**
-   `GeoTransform` first, then the centre coordinates, then georeader's `attrs["crs"]` with a deprecation warning.
-3. **Check the coordinates against the transform.**
-   When both exist, the centres must equal T applied to (j + ½, i + ½) within 10⁻⁹ of a pixel, or the read raises.
-4. **Trees by grid.**
-   `to_datatree` takes a mapping of names to carriers; carriers with equal grids may share a node as variables of one `Dataset`.
+1. **Write `spatial_ref` by hand.** We write a scalar coordinate with `crs_wkt`, `spatial_ref` (the same WKT) and `GeoTransform` attributes, plus `grid_mapping="spatial_ref"` in each variable's encoding. It also carries the CF grid-mapping attributes from pyproj's `CRS.to_cf()` (`grid_mapping_name` and the projection parameters), so CF readers that do not parse WKT still get the projection, as rioxarray writes them. No rioxarray import is needed, as pyproj is already a base dependency of geoarray.
+2. **Read in order of trust.** We read `GeoTransform` first, then the centre coordinates, then georeader's `attrs["crs"]` with a deprecation warning.
+3. **Check the coordinates against the transform.** When both exist, the centres must equal T applied to (j + ½, i + ½) within 10⁻⁹ of a pixel, or the read raises.
+4. **Trees by grid.** `to_datatree` takes a mapping of names to carriers, and carriers with equal grids may share a node as variables of one `Dataset`.
 
 ## The coordax converter (LL-G)
 
-`carrier.to_coordax()` and `from_coordax(field)` sit behind geoarray's `[coordax]` extra and map geoarray's coordinates to coordax coordinates, with the pixel grid as a static coordinate that writes and reads `spatial_ref` like LL-F1.
-They ship only when somax or vardax ask for named-axis model code.
-The 17 Oct proposal of a coordax `lift` helper for geoops kernels is dropped: KernelOps and `xrops.lift` cover it.
+`carrier.to_coordax()` and `from_coordax(field)` sit behind geoarray's `[coordax]` extra and map geoarray's coordinates to coordax coordinates, with the pixel grid as a static coordinate that writes and reads `spatial_ref` like LL-F1. They ship only when somax or vardax ask for named-axis model code. We drop the 17 Oct proposal of a coordax `lift` helper for geoops kernels, as KernelOps and `xrops.lift` cover it.
 
 ## Lane rules (LL-H)
 
-- **Explicit crossings.**
-  No converter runs implicitly; an operator given the wrong carrier raises and names the fix (`xrops.lift`, `to_jax()`, `from_xarray`).
-- **One per-band mapping.**
-  The per-band coordinate list lives in geoarray and both directions read it, so a key that is per-band on one side is per-band on the other.
-- **Kernels everywhere, geometry per item.**
-  A kernel operator (only dim names as geometry) runs on carriers and on `DataArray`; a geometry operator runs on one carrier and reaches a cube only through `xrops.lift`.
-  A kernel operator given a `DataArray` when pipekit-array's xarray adapter is not installed raises and names `pipekit-array[xarray]`; geoops itself never imports xarray.
-- **xarray for files, dask and analysis.**
-  Out-of-core reductions and CF output stay on xarray; the carrier lane is dense and in memory.
-- **Never align silently.**
-  Two inputs on different grids raise; xarray's join on mismatched coordinates is never the default in an operator.
+- **Explicit crossings.** No converter runs implicitly, and an operator given the wrong carrier raises and names the fix (`xrops.lift`, `to_jax()`, `from_xarray`).
+- **One per-band mapping.** The per-band coordinate list lives in geoarray and both directions read it, so a key that is per-band on one side is per-band on the other.
+- **Kernels everywhere, geometry per item.** A kernel operator (only dim names as geometry) runs on carriers and on `DataArray`, whereas a geometry operator runs on one carrier and reaches a cube only through `xrops.lift`. A kernel operator given a `DataArray` when pipekit-array's xarray adapter is not installed raises and names `pipekit-array[xarray]`, and geoops itself never imports xarray.
+- **xarray for files, dask and analysis.** Out-of-core reductions and CF output stay on xarray, and the carrier lane is dense and in memory.
+- **Never align silently.** Two inputs on different grids raise, and xarray's join on mismatched coordinates is never the default in an operator.
 
 ## Testing gates
 
@@ -316,7 +281,7 @@ Each workstream merges only when its truth tests pass.
 
 ## Roadmap and risks
 
-The xarray converters ship with geoarray 0.2.0, because the file format is what other tools see; the lane rules land with the operators.
+The xarray converters ship with geoarray 0.2.0, because the file format is what other tools see, and the lane rules land with the operators.
 
 ```text
  geoarray 0.2.0: carriers, coordinates, converters
@@ -331,18 +296,10 @@ The xarray converters ship with geoarray 0.2.0, because the file format is what 
             ◆ GG1
 ```
 
-- **Two CRS conventions linger.**
-  Files written by georeader's `toDataArray` keep `attrs["crs"]`.
-  Fallback: `from_xarray` reads it with a deprecation warning.
-- **Rotated grids on the xarray side.**
-  They have no 1-D x and y coordinates.
-  Fallback: write `GeoTransform` only and skip the centre coordinates; rioxarray reads that form.
-- **Wavelength selection needs a coordinate index.**
-  `sel(wavelength=…)` works only if `to_xarray` sets an index on the non-dimension coordinate.
-  Fallback: GF1 checks it, and the docs show `swap_dims` for files written elsewhere.
-- **coordax changes its API.**
-  It is at 0.2.9 and describes itself as an experiment.
-  Fallback: everything coordax-specific sits in one module behind an extra that nothing in geotoolz needs.
+- **Two CRS conventions linger.** Files written by georeader's `toDataArray` keep `attrs["crs"]`. Fallback: `from_xarray` reads it with a deprecation warning.
+- **Rotated grids on the xarray side.** They have no 1-D x and y coordinates. Fallback: write `GeoTransform` only and skip the centre coordinates, which rioxarray reads.
+- **Wavelength selection needs a coordinate index.** `sel(wavelength=…)` works only if `to_xarray` sets an index on the non-dimension coordinate. Fallback: GF1 checks it, and the docs show `swap_dims` for files written elsewhere.
+- **coordax changes its API.** It is at 0.2.9 and describes itself as an experiment. Fallback: everything coordax-specific sits in one module behind an extra that nothing in geotoolz needs.
 
 ## References
 

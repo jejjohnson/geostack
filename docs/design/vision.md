@@ -20,12 +20,11 @@ numbering:
   code: true
 ---
 
-The same operator runs in a concurrent ETL, a compiled training step and a lazy cube; users choose how much control they take and how it runs, independently.
-Keras made that choice for training on one backend at a time; GeoStack makes it for whole pipelines, mixing run modes within one run.
+The same operator runs in a concurrent ETL, a compiled training step and a lazy cube, so users choose how much control they take and how it runs independently. Keras made that choice for training on one backend at a time, whereas GeoStack makes it for whole pipelines, mixing run modes within one run.
 
 ## Progressive disclosure
 
-A user starts with a packaged pipeline and steps down only as far as the work needs, as in Keras; each stop is built from the one below it.
+We let a user start with a packaged pipeline and step down only as far as the work needs, as in Keras, and each stop is built from the one below it.
 
 ```{figure} ../images/vision/geo_workflows.svg
 :label: fig-geo-workflows
@@ -36,7 +35,7 @@ A user starts with a packaged pipeline and steps down only as far as the work ne
 Each stop is built from the one to its right and hands it back.
 ```
 
-The stops come from two independent axes: what each step computes (built-in operators down to primitives) and how steps are put together and run (packaged runners down to your own loop).
+The stops come from two independent axes: 1) what each step computes (built-in operators down to primitives) and 2) how the steps are put together and run (packaged runners down to your own loop).
 
 ```{figure} ../images/vision/computation_orchestration.svg
 :label: fig-computation-orchestration
@@ -47,11 +46,11 @@ The stops come from two independent axes: what each step computes (built-in oper
 The four stops are points on these two axes.
 ```
 
-Run mode (eager NumPy, compiled JAX, lazy xarray) is a third axis, orthogonal to both: any point on this picture runs in any mode the carrier allows (next section).
+Run mode (eager NumPy, compiled JAX, lazy xarray) is a third axis, orthogonal to both, so any point on this picture runs in any mode the carrier allows (next section).
 
 ## Two axes
 
-Control (how much a user writes) and run mode (how it executes) are independent: any level runs in any mode, and the operator row is what all of them share.
+Control (how much a user writes) and run mode (how it executes) are independent, so any level runs in any mode and the operator row is what all of them share.
 
 | Level | eager (NumPy carrier) | compiled (JAX carrier) | lazy (xarray carrier) |
 | --- | --- | --- | --- |
@@ -59,13 +58,12 @@ Control (how much a user writes) and run mode (how it executes) are independent:
 | L2 operator | `ndvi(scene)` | `jax.jit(ndvi)(jscene)` | `ndvi(cube)`, one task per chunk |
 | L1 primitive | `matched_filter_score` on NumPy arrays | `jax.vmap(matched_filter_score)` | the same kernel, called per chunk by `KernelOp` |
 
-Read down a column to trade convenience for control; read across a row to change how the same code runs.
+Read down a column to trade convenience for control, and read across a row to change how the same code runs.
 
 (design-levels)=
 ## The three levels
 
-Every package that computes (geotoolz, finitevolX, esmax, plumax, radtrax, vardax) writes its numerics as primitives on arrays, operators on carriers above them, and algorithms on readable geo types at the top.
-This is the one definition the other design pages link to.
+Every package that computes (geotoolz, finitevolX, esmax, plumax, radtrax, vardax) writes its numerics as primitives on arrays, operators on carriers above them, and algorithms on readable geo types at the top. This is the one definition the other design pages link to.
 
 | Level | Takes | Returns | Lives in |
 | --- | --- | --- | --- |
@@ -73,27 +71,19 @@ This is the one definition the other design pages link to.
 | L2 operator | a carrier (`GeoArray`, `DataArray`) | the same carrier family | any package that may import that carrier |
 | L3 algorithm or packaged pipeline | readable geo types (`GeoMap`, `GeoTracks`, `GeoMapSeries`) | readable geo types | the package that runs it (esmax, vardax, plumax) |
 
-- **Derived numeric geometry, never the georeference.**
-  Space, time and viewing geometry as arrays: Δx, Δy, cell areas, Δt, sun and view angles, unit vectors on the sphere.
-  A primitive never receives a CRS, a transform object or a pyproj handle.
-- **Operators derive it.**
-  `KernelOp` generates the operator when the only geometry is a dim name (NDVI, the matched filter); an operator is hand-written when it must derive geometry from the carrier.
-- **Algorithms cross the carrier boundary once.**
-  They unwrap at entry, call L1 primitives directly inside their loops, and rewrap at exit; they never call L2 operators per step.
+- **Derived numeric geometry, never the georeference.** We pass space, time and viewing geometry as arrays (Δx, Δy, cell areas, Δt, sun and view angles, unit vectors on the sphere), whereas a primitive never receives a CRS, a transform object or a pyproj handle.
+- **Operators derive it.** `KernelOp` generates the operator when the only geometry is a dim name (NDVI, the matched filter), and we hand-write an operator when it must derive geometry from the carrier.
+- **Algorithms cross the carrier boundary once.** They unwrap at entry, call L1 primitives directly inside their loops, and rewrap at exit, so they never call L2 operators per step.
 - **A packaged pipeline is a graph of named L2 operators** with readable types at its ends, so the four stops below are the three levels plus the graph that composes them.
-- **Exceptions.**
-  Geometry operators whose engine is not array code (GDAL rasterize, shapely predicates) have no primitive and are eager only.
-  Reprojection splits: the operator computes source pixel coordinates with pyproj; the primitive is the gather.
-- **Primitives check shapes, not meaning.**
-  Units, CRS and grid compatibility are checked at L2 and L3.
+- **Exceptions.** Geometry operators whose engine is not array code (GDAL rasterize, shapely predicates) have no primitive and are eager only. Reprojection splits in two: the operator computes source pixel coordinates with pyproj, and the primitive is the gather.
+- **Primitives check shapes, not meaning.** Units, CRS and grid compatibility are checked at L2 and L3.
 - **Enforced by a test** in geostack's dependency-graph suite: `*/_src/array.py` imports none of geoarray, xarray, pyproj, rasterio, geopandas or shapely.
 
-Where each level sits in every package above GeoStack is on [Levels across the stack](./stack_levels.md); where the operator packages sit relative to each other is [the tiers](#design-tiers).
+Where each level sits in every package above GeoStack is on [Levels across the stack](./stack_levels.md), and where the operator packages sit relative to each other is on [the tiers](#design-tiers).
 
 ## Control: four stops, one plume pipeline
 
-A user picks how much control to take, as in Keras's progressive disclosure (Sequential → functional → subclassing).
-The four stops are the ones in [](#fig-geo-workflows).
+A user picks how much control to take, as in Keras's progressive disclosure (Sequential → functional → subclassing), and the four stops are the ones in [](#fig-geo-workflows).
 
 | Stop | You call | You hold | Typing | Who |
 | --- | --- | --- | --- | --- |
@@ -102,8 +92,7 @@ The four stops are the ones in [](#fig-geo-workflows).
 | 3. Operators (L2) | `SwathToGrid(...)(swath)`, your own `KernelOp` | a carrier with named dims | dims and grids | method developers adding a component |
 | 4. Primitives (L1) | `matched_filter_score(x, mu, sigma, t)` | `.data` and derived geometry | shapes | full control: new numerics, your own loop |
 
-One running example: methane plumes from one EMIT scene.
-Each stage needs a different kind of code from a different repo, so every level shows up.
+We use one running example, methane plumes from one EMIT scene. Each stage needs a different kind of code from a different repo, so we meet every level.
 
 | Stage | Computes | L1 primitive (repo) | L2 operator (repo) |
 | --- | --- | --- | --- |
@@ -114,12 +103,11 @@ Each stage needs a different kind of code from a different repo, so every level 
 | vectorize | mask → polygons | none: GDAL | `geoops.geom.Vectorize`, eager only |
 | the pipeline | all of the above | — | `plumax.pipelines.emit_plumes` (plumax) |
 
-The pipeline lives in plumax because it is the lowest package that may import all four: radtrax (GeoModels, tier below), geonnax (GeoML) and geotoolz (GeoStack).
-The matched filter runs before orthorectification on purpose: its statistics are per detector column, which only exist in sensor geometry.
+We put the pipeline in plumax because it is the lowest package that may import all four: radtrax (GeoModels, tier below), geonnax (GeoML) and geotoolz (GeoStack). The matched filter runs before orthorectification on purpose, as its statistics are per detector column, which only exist in sensor geometry.
 
 ### Stop 1 — L3: a packaged pipeline
 
-The user names a scene and gets plumes back; nothing about bands, swaths or models is visible.
+The user names a scene and gets plumes back, and nothing about bands, swaths or models is visible.
 
 ```python
 # a versioned, packaged pipeline
@@ -132,8 +120,7 @@ plumes: Detections = run.output
 
 ### Stop 2 — L2 + pipekit: the same pipeline as a graph
 
-This is the body of `emit_plumes`.
-Every stage is a named, built-in operator; an analyst copies it, reorders or adds stages, and runs it.
+This is the body of `emit_plumes`. Every stage is a named, built-in operator, so an analyst copies it, reorders or adds stages, and runs it.
 
 ```python
 def emit_plumes(scene_id: str) -> pipekit.Graph:
@@ -175,11 +162,10 @@ plumes: Detections = graph.run()
 
 ### Stop 3 — L2: operators, one per concern
 
-Inside each stage: an operator takes a carrier, derives the geometry its primitive needs, calls the primitive, and rewraps.
-Three shapes of operator appear here.
+Inside each stage, an operator takes a carrier, derives the geometry its primitive needs, calls the primitive, and rewraps. Three shapes of operator appear here.
 
 ```python
-# geoops/geom/operators.py — a geometry operator: pyproj here, numerics in L1
+# geoops/geom/operators.py - a geometry operator: pyproj here, numerics in L1
 class SwathToGrid(Operator):
     backends: tuple[str, ...] = ("numpy", "jax")
 
@@ -201,7 +187,7 @@ class SwathToGrid(Operator):
         return GeoArray.from_grid(gridded, target, dims=("y", "x"))
 
 
-# radtrax/geo/operators.py — behind radtrax[geo]; a fitted operator built from KernelOps
+# radtrax/geo/operators.py - behind radtrax[geo]; a fitted operator built from KernelOps
 class MatchedFilter(FittableOperator):
     def fit(self, swath: GeoSwath["band row col"]) -> "MatchedFilter":
         # μ(col) and Σ(col) over the rows of each column: "(r,c)->(c),(c,d)", Σ on
@@ -230,7 +216,7 @@ class MatchedFilter(FittableOperator):
         return score(swath, self.mu, self.sigma)
 
 
-# plumax/geo/detector.py — behind plumax[geo]; geonnax's network, carrier handling here
+# plumax/geo/detector.py - behind plumax[geo]; geonnax's network, carrier handling here
 class Detector(JaxOperator):
     net: PlumeUNet  # an eqx.Module from geonnax; weights are leaves
     patch: int = eqx.field(static=True, default=256)
@@ -252,15 +238,14 @@ class Detector(JaxOperator):
         return geopatcher.stitch(prob_patches, like=alpha)
 ```
 
-The three shapes: a geometry operator that derives index arrays with pyproj (`SwathToGrid`), a fitted operator made of `KernelOp`s (`MatchedFilter`), and a JAX operator around a network (`Detector`).
-Each lives in the package that may import both its carrier and its primitive.
+The three shapes are a geometry operator that derives index arrays with pyproj (`SwathToGrid`), a fitted operator made of `KernelOp`s (`MatchedFilter`), and a JAX operator around a network (`Detector`). Each lives in the package that may import both its carrier and its primitive.
 
 ### Stop 4 — L1: primitives, arrays only
 
-No carrier, no CRS: arrays in, arrays out, each in its owner's `_src/array.py`.
+There is no carrier and no CRS here, only arrays in and arrays out, each in its owner's `_src/array.py`.
 
 ```python
-# radtrax/_src/array.py — one detector column: R rows, C bands
+# radtrax/_src/array.py - one detector column: R rows, C bands
 def matched_filter_score(
     x: Float[Array, "R C"],
     mu: Float[Array, "C"],
@@ -280,7 +265,7 @@ def matched_filter_score(
     return num / norm
 
 
-# geoops/geom/_src/array.py — bilinear gather at fractional source coordinates
+# geoops/geom/_src/array.py - bilinear gather at fractional source coordinates
 def gather_bilinear(
     s: Float[Array, "R C"], rows: Float[Array, "H W"], cols: Float[Array, "H W"]
 ) -> Float[Array, "H W"]:
@@ -312,12 +297,12 @@ def gather_bilinear(
     return xp.where(inside, q, xp.nan)
 
 
-# geonnax — the network is itself an L1 function of arrays
+# geonnax - the network is itself an L1 function of arrays
 class PlumeUNet(eqx.Module):
     def __call__(self, x: Float[Array, "1 H W"]) -> Float[Array, "H W"]: ...
 ```
 
-The stop-4 user writes a new retrieval as a function like `matched_filter_score`, tests it on arrays, and runs it in their own loop:
+The stop-4 user writes a new retrieval as a function like `matched_filter_score`, tests it on arrays, and runs it in their own loop.
 
 ```python
 # radiance in sensor geometry, raw: (R, Cols, C); per-column statistics: (Cols, C), (Cols, C, C)
@@ -329,12 +314,12 @@ per_column: Callable = jax.vmap(
 alpha: Float[Array, "R K"] = per_column(radiance, mu_cols, sigma_cols, t)
 ```
 
-Each stop is built from the one below and gives it back: the pipeline's `matched_filter` stage is the `MatchedFilter` operator, whose call is a `KernelOp` around `matched_filter_score`.
+Each stop is built from the one below and gives it back, so the pipeline's `matched_filter` stage is the `MatchedFilter` operator, whose call is a `KernelOp` around `matched_filter_score`.
 
 (design-run-modes)=
 ## Run modes: the carrier chooses
 
-The backend is chosen by the carrier passed in, never by a global setting, because one pipeline mixes run modes: I/O is eager NumPy, assembly is lazy xarray, training is compiled JAX.
+The carrier passed in chooses the backend, never a global setting, because one pipeline mixes run modes: I/O is eager NumPy, assembly is lazy xarray, and training is compiled JAX.
 
 | Run mode | Carrier | Good for | Not for |
 | --- | --- | --- | --- |
@@ -342,7 +327,7 @@ The backend is chosen by the carrier passed in, never by a global setting, becau
 | compiled | JAX `GeoArray` | training, assimilation, anything under `grad` or `vmap` | I/O, variable shapes |
 | lazy | xarray `DataArray` / `Dataset` | many files, selection by value, out-of-core reductions | per-patch work, `jit` |
 
-The same operator in each mode:
+The same operator in each mode is shown below.
 
 ```python
 ndvi: geoops.NDVI = geoops.NDVI()
@@ -359,8 +344,7 @@ m_jax: GeoArray["y x"] = ndvi_jit(jscene)
 m_cube: DataArray["time y x"] = ndvi(cube)
 ```
 
-Crossing between modes is always explicit, a named call at a known place: `to_jax()` / `to_numpy()` between eager and compiled, `GeoArray.from_xarray()` / `to_xarray()` between eager and lazy.
-An operator given two carriers of different modes refuses and names the crossing; nothing converts silently.
+Crossing between modes is always explicit, a named call at a known place: `to_jax()` / `to_numpy()` between eager and compiled, and `GeoArray.from_xarray()` / `to_xarray()` between eager and lazy. An operator given two carriers of different modes refuses and names the crossing, so nothing converts silently.
 
 ```text
 1  index the training scenes          lazy · xarray
@@ -381,15 +365,13 @@ An operator given two carriers of different modes refuses and names the crossing
 5  write maps and metrics             lazy · xarray, to Zarr
 ```
 
-Only the training stage compiles; the I/O before it and the writing after it never run under JAX.
+Only the training stage compiles, whereas the I/O before it and the writing after it never run under JAX.
 
-Keras chooses one backend for a whole program (`KERAS_BACKEND`); GeoStack chooses per stage, which is the main way the analogy breaks.
+Keras chooses one backend for a whole program (`KERAS_BACKEND`), but GeoStack chooses per stage, which is the main way the analogy breaks.
 
 ## Typing: one object, checked in different places
 
-Strict for pipelines and loose for exploration is a question of where the check runs, not of different classes.
-A readable type is a name, a dims pattern and a geometry kind, which any registered carrier can match ([readable types](./geoarray.md), CS-F1 decided 23 Oct 2026).
-An exploration result enters a pipeline with no conversion, and a lazy `DataArray` cube is checked by the same type as an eager carrier.
+Strict for pipelines and loose for exploration is a question of where the check runs, not of different classes. A readable type is a name, a dims pattern and a geometry kind, which any registered carrier can match ([readable types](./geoarray.md), CS-F1 decided 23 Oct 2026). So an exploration result enters a pipeline with no conversion, and a lazy `DataArray` cube is checked by the same type as an eager carrier.
 
 | Level | What is checked | When | Failure |
 | --- | --- | --- | --- |
@@ -412,8 +394,7 @@ pipelines.detect_plumes(stack)
 
 ## Stepping down a level in one line
 
-Keras's weak spot was the drop from `fit()` to a custom loop: past a point, the high level gave nothing back and users rewrote.
-Here every level exposes the one below it.
+Keras's weak spot was the drop from `fit()` to a custom loop, where past a point the high level gave nothing back and users rewrote. Here every level exposes the one below it.
 
 ```python
 # a pipeline is a pipekit graph of operators: pull one stage out
@@ -436,38 +417,25 @@ alpha_col: Float[Array, "R"] = kernel(
 )
 ```
 
-The rule this needs: no pipeline stage is a closure or a private function; each is a named operator, and each operator that wraps a kernel names it.
+This needs a rule: no pipeline stage is a closure or a private function, each stage is a named operator, and each operator that wraps a kernel names it.
 
 ## Principles
 
-1. **Write numerics once, as primitives.**
-   Arrays and derived numeric geometry in, arrays out; no carrier, no CRS.
-2. **Operators wrap primitives for carriers.**
-   Generated by `KernelOp` when the only geometry is a dim name; hand-written when geometry must be derived.
-3. **Pipelines are graphs of named operators.**
-   No hidden stage; any stage can be pulled out or replaced.
-4. **The carrier chooses the run mode.**
-   No global backend; crossings are explicit calls.
-5. **One type name on any carrier.**
-   A readable type is a dims signature that eager, compiled and lazy carriers all match; strictness is where the check runs.
-6. **Never align silently.**
-   Two inputs on different grids refuse; xarray's inner join is never the default.
-7. **Dependencies point down.**
-   Primitives live in the lowest package that owns the numerics; carrier code lives where the carrier can be imported.
+1. **Write numerics once, as primitives.** Arrays and derived numeric geometry go in and arrays come out, with no carrier and no CRS.
+2. **Operators wrap primitives for carriers.** `KernelOp` generates them when the only geometry is a dim name, and we hand-write them when geometry must be derived.
+3. **Pipelines are graphs of named operators.** There is no hidden stage, and any stage can be pulled out or replaced.
+4. **The carrier chooses the run mode.** There is no global backend, and crossings are explicit calls.
+5. **One type name on any carrier.** A readable type is a dims signature that eager, compiled and lazy carriers all match, so strictness is where the check runs.
+6. **Never align silently.** Two inputs on different grids refuse, and xarray's inner join is never the default.
+7. **Dependencies point down.** Primitives live in the lowest package that owns the numerics, and carrier code lives where the carrier can be imported.
 
 ## What this is not
 
-- **Not async operators.**
-  Concurrency is a property of the runner (pipekit) and of I/O (geocatalog, geocloud).
-  Operators stay synchronous, pure functions the runner can schedule.
-- **Not a global backend switch.**
-  A pipeline that needs JAX for one stage does not run its I/O under JAX.
-- **Not a new xarray.**
-  Selection by value, groupby and many-file assembly stay xarray's; GeoStack adds operators that also run on xarray.
-- **Not accessors.**
-  No `.geo` on `DataArray`; operators are functions or `Operator`s you import.
-- **Not `GeoSeries`.**
-  That is geopandas' column of shapes; the series types are `GeoImageSeries`, `GeoMapSeries` and `GeoTimeSeries`.
+- **Not async operators.** Concurrency is a property of the runner (pipekit) and of I/O (geocatalog, geocloud), so operators stay synchronous, pure functions the runner can schedule.
+- **Not a global backend switch.** A pipeline that needs JAX for one stage does not run its I/O under JAX.
+- **Not a new xarray.** Selection by value, groupby and many-file assembly stay xarray's, and GeoStack adds operators that also run on xarray.
+- **Not accessors.** There is no `.geo` on `DataArray`, and operators are functions or `Operator`s you import.
+- **Not `GeoSeries`.** That is geopandas' column of shapes, whereas the series types are `GeoImageSeries`, `GeoMapSeries` and `GeoTimeSeries`.
 
 ## How the design pages fit
 
