@@ -74,7 +74,7 @@ UPSTREAM: dict[str, list[str]] = {
     "geotoolz-cloud": ["geocloud"],
     "geotoolz-patcher": ["geopatcher"],
     "geotoolz-products": ["geoproducts"],
-    "xrtoolz": ["xrtoolz"],
+    "xrtoolz-ops": ["xrops"],
     "xrtoolz-core": ["xrcore"],
     "xrtoolz-einx": ["xreinx"],
     "xrtoolz-grad": ["xrgrad"],
@@ -95,7 +95,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "geotoolz-cloud": "Cloud object storage and batched async COG reads.",
     "geotoolz-patcher": "Four-axis patcher: split, run per patch, stitch.",
     "geotoolz-products": "Readers for Earth-observation data products.",
-    "xrtoolz": "Composable operators for Earth System Data Cubes.",
+    "xrtoolz-ops": "Composable operators for Earth System Data Cubes (xrops).",
     "xrtoolz-core": "xarray-aware Operator base and Signature descriptor.",
     "xrtoolz-einx": "Labeled named-tensor algebra bridging xarray and einx.",
     "xrtoolz-grad": "Finite-difference calculus on labeled xarray grids.",
@@ -247,11 +247,11 @@ LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
 ALLOWED_SHARED_NAMES: dict[str, str] = {
     "Operator": (
         "pipekit.Operator is the base (geotoolz re-exports it); xrcore.Operator"
-        " (re-exported by xrtoolz) subclasses it with xarray DataTree dispatch."
+        " subclasses it with xarray DataTree dispatch for the xrops operators."
     ),
     "Signature": (
         "pipekit.Signature records array shape + dtype; xrcore.Signature is the"
-        " xarray-aware descriptor used by xrtoolz operators."
+        " xarray-aware descriptor used by xrops operators."
     ),
     "Composite": (
         "geoops.Composite builds a band composite; pipekit_train.Composite is"

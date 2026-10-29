@@ -17,7 +17,7 @@ This page is the GeoStack layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at pipekit 0.0.2, pipekit-array 0.0.2, pipekit-cycle 0.0.2, pipekit-evaluate 0.0.2, pipekit-experiment 0.0.2, pipekit-jax 0.0.2, pipekit-train 0.0.2, georeader-spaceml 2.4.1, geotoolz-ops 0.10.3, geotoolz-catalog 0.5.1, geotoolz-cloud 0.4.1, geotoolz-patcher 0.10.2, geotoolz-products 0.4.2, xrtoolz 0.0.5, xrtoolz-core 0.0.2, xrtoolz-einx 0.0.1, xrtoolz-grad 0.0.3, xrtoolz-reader 0.0.4, xrtoolz-sklearn 0.0.2.
+Listed at pipekit 0.0.2, pipekit-array 0.0.2, pipekit-cycle 0.0.2, pipekit-evaluate 0.0.2, pipekit-experiment 0.0.2, pipekit-jax 0.0.2, pipekit-train 0.0.2, georeader-spaceml 2.4.1, geotoolz-ops 0.10.3, geotoolz-catalog 0.5.1, geotoolz-cloud 0.4.1, geotoolz-patcher 0.10.2, geotoolz-products 0.4.2, xrtoolz-ops 0.1.0, xrtoolz-core 0.1.0, xrtoolz-einx 0.1.0, xrtoolz-grad 0.1.0, xrtoolz-reader 0.1.0, xrtoolz-sklearn 0.1.0.
 
 ## Upstream: `pipekit`
 
@@ -610,22 +610,27 @@ Readers for Earth-observation data products.
 | `ProductReader` | class | ABC for georeader-compatible product readers. |
 | `stack` | function | Stack readers' bands on the grid of ``readers[like]``. |
 
-## Upstream: `xrtoolz`
+## Upstream: `xrtoolz-ops`
 
-Composable operators for Earth System Data Cubes.
+Composable operators for Earth System Data Cubes (xrops).
 
-### `xrtoolz`
+### `xrops`
 
 | Name | Kind | What it does |
 |---|---|---|
 | `ApplyToEach` | class | Re-instantiate a prototype operator per value and merge results. |
 | `Augment` | class | Run an inner ``Operator`` and merge its output back into the input. |
-| `Operator` | class | Re-exported from `xrcore`. |
-| `Signature` | class | Re-exported from `xrcore`. |
 
 ## Upstream: `xrtoolz-core`
 
 xarray-aware Operator base and Signature descriptor.
+
+### `xrcore`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Operator` | class | ``pipekit.Operator`` plus xarray ``DataTree`` dispatch. |
+| `Signature` | class | Shape-and-dtype descriptor propagated without executing data paths. |
 
 ## Upstream: `xrtoolz-einx`
 
@@ -720,6 +725,7 @@ Authenticated archive readers (CMEMS, CDS, AEMET).
 | `load_aemet` | function | Load AEMET credentials, or ``None`` if none could be found. |
 | `load_cds` | function | Load CDS credentials, or ``None`` if none could be found. |
 | `load_cmems` | function | Load CMEMS credentials, or ``None`` if none could be found. |
+| `open_ch4_inventory` | function | Open a gridded CH₄ emission inventory as a flux in kg m⁻² s⁻¹. |
 | `open_emit_ch4_l2b` | function | Open an EMIT L2B CH4 enhancement scene as a flat CF Dataset. |
 | `open_ghgsat_ch4_l2` | function | Open a GHGSat per-plume NetCDF as a flat CF Dataset. |
 | `open_tropomi_ch4_l2` | function | Flatten a TROPOMI CH4 L2 granule into one CF Dataset. |
