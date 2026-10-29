@@ -21,11 +21,11 @@ numbering:
   code: true
 ---
 
-How [the three levels](#design-levels) land in every package above GeoStack: which levels each package holds today, which it should hold, and what moves.
+This page shows how [the three levels](#design-levels) land in every package above GeoStack: which levels each package holds today, which it should hold, and what moves.
 
 ## At a glance
 
-Most of the stack above GeoStack is L1, as it should be; carriers (L2) and runs (L3) appear only where a package may import them, which is mostly GeoModels.
+Most of the stack above GeoStack is L1, as it should be, whereas carriers (L2) and runs (L3) appear only where a package may import them, which is mostly GeoModels.
 
 | Level | GeoNumerics | GeoML | GeoModels |
 | --- | --- | --- | --- |
@@ -33,13 +33,11 @@ Most of the stack above GeoStack is L1, as it should be; carriers (L2) and runs 
 | L2 operators on carriers | none (may not import carriers) | xtremax.extraction (mixed); filterax.pipekit (inferred) | plumax: operators, met, matched filter (mixed); somax: operators, io |
 | L1 primitives and machinery | gaussx, finitevolX, spectraldiffx | geonnax, kernellib, pyrox, gauss_flows, optax_bayes, vardax costs and solvers, filterax, xtremax distributions | radtrax (all of it); somax core, solvers, eval, da; plumax transport, radtran, DA |
 
-“Mixed” marks a module that holds two levels at once today; those are the modules that move.
-GeoNumerics can only ever be L1, because it may not import GeoStack's carriers.
+“Mixed” marks a module that holds two levels at once today, and those are the modules that move. GeoNumerics can only ever be L1, because it may not import GeoStack's carriers.
 
 ## GeoNumerics: all L1, and it should stay that way
 
-All three packages are primitives and the machinery around them, on raw arrays and array-only bundles; none touches a carrier.
-GeoNumerics may import neither GeoStack nor anything above it, so it can never hold L2 or L3.
+All three packages are primitives and the machinery around them, on raw arrays and array-only bundles, and none touches a carrier. GeoNumerics may import neither GeoStack nor anything above it, so it can never hold L2 or L3.
 
 | Package | Holds | Level | Notes |
 | --- | --- | --- | --- |
@@ -47,12 +45,9 @@ GeoNumerics may import neither GeoStack nor anything above it, so it can never h
 | finitevolX 0.0.47 | C-grid grids and masks (array bundles), stencils, operators, diagnostics (KE, enstrophy, Okubo–Weiss, PV), time steppers, elliptic solvers | L1 + machinery | `solve_ocean_pde` borders L3 (a whole diffrax integration) |
 | spectraldiffx 0.1.1 | Fourier, Chebyshev and spherical grids, derivatives, filters, Helmholtz/Poisson solvers | L1 + machinery | shares the capacitance solver and `SphericalGrid2D` with finitevolX |
 
-What changes: nothing in level.
-The grids already are the array-only bundles the primitives rule asks for (`CGrid`-style).
-Their carrier-facing constructors (`cgrid_from_transform`) cannot live here; they go in the package above that uses them (somax\[geo\]).
+Nothing changes in level. The grids already are the array-only bundles the primitives rule asks for (`CGrid`-style), whereas their carrier-facing constructors (`cgrid_from_transform`) cannot live here and go in the package above that uses them (somax\[geo\]).
 
-**Demo API.**
-Sketches of the target API; names follow the capability index where it has them.
+**Demo API.** These are sketches of the target API, and the names follow the capability index where it has them.
 
 ```python
 # L1, finitevolX: a C-grid bundle (arrays only) and two diagnostics
@@ -73,13 +68,11 @@ alpha: Float[Array, "TN"] = gaussx.solve(op, y)  # α = K⁻¹y
 cgrid: CGrid = somax.geo.cgrid_from_carrier(u_map)  # u_map: GeoArray["y x"]
 ```
 
-Evidence: the GeoNumerics capability index.
-Its packages export flat, so the families in this table are grouped by name, not by module.
+The evidence is the GeoNumerics capability index, and since its packages export flat, we group the families in this table by name, not by module.
 
 ## GeoML: L1 with a thin L3 edge
 
-Your intuition holds for geonnax and most of GeoML: networks, kernels, flows and inference engines are L1.
-Two packages reach L3 (vardax, xtremax) and one reaches L2 by accident (xtremax).
+Your intuition holds for geonnax and most of GeoML, as networks, kernels, flows and inference engines are L1. However, two packages reach L3 (vardax, xtremax) and one reaches L2 by accident (xtremax).
 
 | Package | L1 (primitives, machinery) | L2 (carriers) | L3 (algorithms, pipelines) |
 | --- | --- | --- | --- |
@@ -94,17 +87,14 @@ Two packages reach L3 (vardax, xtremax) and one reaches L2 by accident (xtremax)
 
 What changes:
 
-- **xtremax extraction gets primitives (decided 22 Oct 2026).**
-  The missing piece was L1: extraction methods existed only as functions on xarray.
-  Each becomes a primitive on arrays with time last, and the xarray versions become thin L2 operators behind `xtremax[xarray]`:
+- **xtremax extraction gets primitives (decided 22 Oct 2026).** The missing piece was L1, because extraction methods existed only as functions on xarray. Each becomes a primitive on arrays with time last, and the xarray versions become thin L2 operators behind `xtremax[xarray]`:
   - `block_maxima(x, block)`: `(…, T)` → `(…, T // block)`, Mₖ = max over block k;
   - `peaks_over_threshold(x, u)`: exceedances x − u and their indices where x > u;
   - `decluster_runs(idx, run)`: keeps one peak per cluster, clusters separated by more than `run` steps;
   - quantile thresholds: a fitted operator (fit u(s) by quantile regression once, then apply as a kernel), like the matched filter.
-- **`xtremax.simulations` waits on its purpose** (SL-O6 below): a test fixture for the EVT methods goes to GeoBench or `xtremax.testing`; a stochastic weather generator for scenarios becomes a GeoModels package.
-- **vardax keeps its L3** (cycles, 4DVarNet training) but they take readable types at their boundary (`GeoMap`, `GeoTracks`), as `vardax.geo.assimilate` does in the case studies.
-  The Lorenz plotting moves out of the main namespace.
-- **filterax and optax_bayes** are missing from the index (their import probably fails during generation); fixing that comes before classifying them properly.
+- **`xtremax.simulations` waits on its purpose** (SL-O6 below): a test fixture for the EVT methods goes to GeoBench or `xtremax.testing`, whereas a stochastic weather generator for scenarios becomes a GeoModels package.
+- **vardax keeps its L3** (cycles, 4DVarNet training), but they take readable types at their boundary (`GeoMap`, `GeoTracks`), as `vardax.geo.assimilate` does in the case studies. The Lorenz plotting moves out of the main namespace.
+- **filterax and optax_bayes** are missing from the index (their import probably fails during generation), so fixing that comes before classifying them properly.
 
 **Demo API.**
 
@@ -137,12 +127,9 @@ series: GeoArray["time y x"] = vardax.geo.assimilate(
 
 ## GeoModels: all three levels, and where they mix
 
-GeoModels is the only layer that legitimately holds L1, L2 and L3: it may import GeoStack carriers, GeoML and GeoNumerics.
-The problem is not that it spans levels but that some modules mix them.
+GeoModels is the only layer that legitimately holds L1, L2 and L3, as it may import GeoStack carriers, GeoML and GeoNumerics. The problem is not that it spans levels, but that some modules mix them.
 
-**somax 0.0.15** is mostly L1 by module count, with thin L2 and L3 on top; your guess of “L2, L3, maybe L1” is the other way round today.
-It is also about to become a workspace of Earth-system components (ocean, atmosphere, land, ice, coupler) under a new name, because `somax` is taken on PyPI: see [From somax to an Earth-system workspace](./esmax.md).
-The table below is today's somax; the [esmax page](./esmax.md) says where each module goes.
+**somax 0.0.15** is mostly L1 by module count, with thin L2 and L3 on top, so your guess of “L2, L3, maybe L1” is the other way round today. It is also about to become a workspace of Earth-system components (ocean, atmosphere, land, ice, coupler) under a new name, because `somax` is taken on PyPI: see [From somax to an Earth-system workspace](./esmax.md). The table below is today's somax, and the [esmax page](./esmax.md) says where each module goes.
 
 | Module | Holds | Level today | Target |
 | --- | --- | --- | --- |
@@ -154,13 +141,11 @@ The table below is today's somax; the [esmax page](./esmax.md) says where each m
 | `io` | `State` ↔ xarray `Dataset`, Zarr | L2 | L2 under `somax[xarray]` |
 | `monitor`, `models` | run-loop monitors; model run loops | L3 | L3: `simulate(GeoMap) -> GeoMapSeries`, exposing its L1 loop (case study CS-F16) |
 
-**plumax 0.1.2** mixes levels inside modules: `matched_filter` has array scores next to `apply_image_xarray` and file reading; `hapi_lut` has cross-section kernels next to xarray writers and a LUT-building pipeline; `gauss_plume`, `gauss_puff`, `les_fvm` and `population` pair forward models with NUTS or 4D-Var runs.
-Each splits into `_src/array.py` (L1), an operator module (L2, behind `plumax[geo]`) and a runs module (L3).
+**plumax 0.1.2** mixes levels inside modules: `matched_filter` has array scores next to `apply_image_xarray` and file reading, `hapi_lut` has cross-section kernels next to xarray writers and a LUT-building pipeline, and `gauss_plume`, `gauss_puff`, `les_fvm` and `population` pair forward models with NUTS or 4D-Var runs. Each splits into `_src/array.py` (L1), an operator module (L2, behind `plumax[geo]`) and a runs module (L3).
 
-**radtrax 0.0.0** is pure L1 today: atmosphere, spectroscopy, instrument, slab forwards, all ported from `plumax.radtran`.
-It gains the L2 operators that the plume pipeline needs (`radtrax.geo.MatchedFilter`, `model_xch4`) behind `radtrax[geo]`.
+**radtrax 0.0.0** is pure L1 today (atmosphere, spectroscopy, instrument, slab forwards, all ported from `plumax.radtran`). It gains the L2 operators that the plume pipeline needs (`radtrax.geo.MatchedFilter`, `model_xch4`) behind `radtrax[geo]`.
 
-The pattern across all three: L1 in `_src/array.py`, L2 behind a `[geo]` or `[xarray]` extra, L3 in a runs or pipelines module that takes readable types.
+The pattern across all three is L1 in `_src/array.py`, L2 behind a `[geo]` or `[xarray]` extra, and L3 in a runs or pipelines module that takes readable types.
 
 **Demo API: somax at all three levels.**
 
@@ -209,9 +194,7 @@ posterior: Posterior = plumax.runs.infer_emission_rate(
 
 ## The ocean question: move xrtoolz's ocean physics to somax?
 
-Recommended: no, not wholesale.
-Almost every ocean and atmosphere function in xrtoolz is a diagnostic computable from any collocated gridded state (GLORYS, ERA5, an L4 satellite map), and somax has an equivalent for none of them.
-Move only what depends on a model's discretisation or on one product.
+Recommended: no, not wholesale. Almost every ocean and atmosphere function in xrtoolz is a diagnostic computable from any collocated gridded state (GLORYS, ERA5, an L4 satellite map), and somax has an equivalent for none of them. So we move only what depends on a model's discretisation or on one product.
 
 **What xrtoolz holds today** (main at 2f6318d, 17 Oct 2026; not in the capability index):
 
@@ -233,14 +216,12 @@ Move only what depends on a model's discretisation or on one product.
 | C. Move L1 to finitevolX | collocated kernels next to its C-grid diagnostics, xarray wrappers in somax | same user cost as B; GeoNumerics gains collocated-grid code |
 | **D. Split by discretisation** (recommended) | A, plus: model-consistent budget closure → somax.eval (via finitevolX C-grid stencils); WRF reader and SSH product composition → xrproducts; CH₄ column physics → radtrax | small; each piece goes to the package that owns its reason to change |
 
-The rule behind D: **same physics on a different discretisation is not a duplicate; same physics on the same discretisation is.**
-Relative vorticity on a collocated reanalysis grid (xrops) and on a model's C-grid (finitevolX) are two primitives, each correct for its grid.
-Two TEOS-10 densities on the same grid would be a duplicate.
+The rule behind D: **same physics on a different discretisation is not a duplicate; same physics on the same discretisation is.** Relative vorticity on a collocated reanalysis grid (xrops) and on a model's C-grid (finitevolX) are two primitives, each correct for its grid, whereas two TEOS-10 densities on the same grid would be a duplicate.
 
-What somax should own instead: diagnostics of its own states on its own grid (today's `somax.eval`), the run loop as an L3 `simulate`, and L2 operators that step a model on a `GeoArray` state.
+What somax should own instead is diagnostics of its own states on its own grid (today's `somax.eval`), the run loop as an L3 `simulate`, and L2 operators that step a model on a `GeoArray` state.
 
 **Demo API under option D.**
-Where each ocean call lives once the split is done.
+This shows where each ocean call lives once the split is done.
 
 ```python
 # xrops L1 (xrops/ocn/_src/array.py): MLD from one profile, any collocated grid
@@ -275,7 +256,7 @@ delta_vmr: Float[Array, "H W"] = radtrax.column_mass_to_delta_vmr(
 
 ## Overlaps and the moves they imply
 
-Each row is a duplicate found in the capability indexes (or, for xrtoolz, its source); the move keeps one copy in the lowest package that owns the concept.
+Each row is a duplicate found in the capability indexes (or, for xrtoolz, its source), and the move keeps one copy in the lowest package that owns the concept.
 
 | Overlap | Copies today | Keep | Move or remove |
 | --- | --- | --- | --- |
@@ -292,7 +273,7 @@ Each row is a duplicate found in the capability indexes (or, for xrtoolz, its so
 | spectral pieces | capacitance solver, `SphericalGrid2D` in finitevolX and spectraldiffx; `SphericalHarmonicTransform` in geonnax and spectraldiffx | spectraldiffx | finitevolX and geonnax import it |
 | KE and enstrophy names | finitevolX, somax.eval, xrtoolz.ocn | all three, renamed | different discretisations or integrals (the rule above); names must differ so the capability index stops flagging them |
 
-None of these moves crosses the layer rule: every “keep” is at or below every package that uses it.
+None of these moves crosses the layer rule, as every “keep” is at or below every package that uses it.
 
 ## Open questions
 
@@ -306,5 +287,4 @@ None of these moves crosses the layer rule: every “keep” is at or below ever
 | SL-O6 | What `xtremax.simulations` is for | if it tests EVT methods with known return levels: GeoBench or `xtremax.testing`; if it generates scenarios: a GeoModels package, once it is more than one module | leave it in xtremax as is |
 | SL-O7 | somax's future | the Earth-system workspace on the [esmax page](./esmax.md) (`esmax`, one package per component, a coupler on top) | keep one ocean-only package under a new name |
 
-Evidence: the three capability indexes, `KNOWN_CLASHES` in `scripts/capabilities.py`, and a read of xrtoolz main for its ocean and atmosphere modules.
-The library sources under `references/` were not checked out, so module internals marked “inferred” were not read.
+The evidence is the three capability indexes, `KNOWN_CLASHES` in `scripts/capabilities.py`, and a read of xrtoolz main for its ocean and atmosphere modules. However, the library sources under `references/` were not checked out, so we did not read module internals marked “inferred”.

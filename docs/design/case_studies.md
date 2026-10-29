@@ -20,19 +20,15 @@ numbering:
   code: true
 ---
 
-Thirteen workflows from the stack's real use, spread across the whole quadrant, each run through the vision's levels and run modes to find where it holds and where it needs changing.
-Companion to [the vision](./vision.md).
+We took thirteen workflows from the stack's real use, spread across the whole quadrant, and ran each through the vision's levels and run modes to find where it holds and where it needs changing. This page is a companion to [the vision](./vision.md).
 
 :::{note} Names
-These cases were written before the [esmax](./esmax.md) plan; they use today's package name, somax, for the ocean model.
-Under the plan, `somax.geo` becomes `esmax_core.geo` and `somax.ShallowWater` becomes `esmax_ocean.ShallowWater`.
-Findings are numbered CS-F1 to CS-F17 and are listed with every other decision on [Decisions](./decisions.md).
+These cases were written before the [esmax](./esmax.md) plan, so they use today's package name, somax, for the ocean model. Under the plan, `somax.geo` becomes `esmax_core.geo` and `somax.ShallowWater` becomes `esmax_ocean.ShallowWater`. Findings are numbered CS-F1 to CS-F17 and are listed with every other decision on [Decisions](./decisions.md).
 :::
 
 ## How to read the code
 
-The code shows the **target state**: the vision with every finding applied.
-Each line that depends on a finding is tagged `# ← CS-F3`, so the gap under each case says what is missing today and the code shows what it looks like once fixed.
+The code shows the **target state**, which is the vision with every finding applied. Each line that depends on a finding is tagged `# ← CS-F3`, so the gap under each case says what is missing today and the code shows what it looks like once fixed.
 
 | Annotation | Means | Example |
 | --- | --- | --- |
@@ -42,13 +38,11 @@ Each line that depends on a finding is tagged `# ← CS-F3`, so the gap under ea
 | `DataArray["time depth lat lon"]`, `Dataset["time lat lon"]` | xarray carriers, same style; checkable against readable types through their adapter (CS-F1) | `mld: DataArray["time lat lon"]` |
 | `GeoImage`, `GeoTracks`, `GeoMapSeries`, `Detections` | readable types, used in L3 signatures | `GeoMapSeries`: kind grid, dims `time y x`, on any carrier (CS-F1) |
 
-Math comments use ∑, ∇, δ and friends; every symbol is defined where it first appears.
-Reductions and contractions on arrays are written with einx (`einx.dot`, `einx.mean`, `einx.rearrange`); linear solves use lineax.
-One step per line: each intermediate is named, typed and commented, and no call is nested inside another call's arguments.
+Math comments use ∑, ∇, δ and friends, and we define every symbol where it first appears. Reductions and contractions on arrays are written with einx (`einx.dot`, `einx.mean`, `einx.rearrange`), whereas linear solves use lineax. We write one step per line: each intermediate is named, typed and commented, and no call is nested inside another call's arguments.
 
 ## At a glance
 
-The thirteen cases cover all four quadrants; seven still hand-write how their steps run, so the computation side of the vision is ahead of the orchestration side.
+The thirteen cases cover all four quadrants, and seven of them still hand-write how their steps run, so the computation side of the vision is ahead of the orchestration side.
 
 ```text
 top right: built-in computation, packaged orchestration
@@ -70,7 +64,7 @@ bottom left: your own computation and orchestration
     8 WENO5 scheme (far left) · 11 GP interpolation of SST
 ```
 
-Positions are qualitative: right means the user calls built-in operators or algorithms, up means a packaged pipeline or runner orchestrates the steps.
+Positions are qualitative: right means the user calls built-in operators or algorithms, and up means a packaged pipeline or runner orchestrates the steps.
 
 | Case | Quadrant | Levels used | Run modes | Readable types | Main finding |
 | --- | --- | --- | --- | --- | --- |
@@ -91,11 +85,10 @@ Positions are qualitative: right means the user calls built-in operators or algo
 ## Case 1: methane plume detector, ETL to training
 
 **Who and goal.**
-An ML engineer trains a plume detector on Sentinel-2 over oil and gas basins: labelled scenes in, a trained model and validation metrics out.
+An ML engineer trains a plume detector on Sentinel-2 over oil and gas basins, with labelled scenes in and a trained model and validation metrics out.
 
 **Where it sits.**
-L3 for the ETL (packaged), L2 for the model's features, compiled training.
-Mostly built-in runners and built-in operators: top right of the quadrant.
+We use L3 for the ETL (packaged), L2 for the model's features and compiled training, with mostly built-in runners and built-in operators, so the case sits at the top right of the quadrant.
 
 | Stage | Level | Run mode | Carrier in → out |
 | --- | --- | --- | --- |
@@ -199,19 +192,16 @@ def loss(
 **What it stresses.**
 
 - **Holds:** one crossing (`to_jax()`); I/O never under JAX; the fitted matched filter becomes a `JaxOperator` with μ and Σ⁻¹ as leaves.
-- **Gap:** "read concurrently" has no owner yet.
-  The pipeline needs a runner that fans out I/O stages and joins before patching: the missing pipelines page (vision, VI-V4).
-- **Gap:** labels arrive as polygons (GeoParquet); rasterizing them is a geometry operator with no primitive (GDAL), so this stage can never run under JAX.
-  That is fine, but the vision should say which operators are eager-only.
+- **Gap:** "read concurrently" has no owner yet, so the pipeline needs a runner that fans out I/O stages and joins before patching, which is the missing pipelines page (vision, VI-V4).
+- **Gap:** labels arrive as polygons (GeoParquet), and rasterizing them is a geometry operator with no primitive (GDAL), so this stage can never run under JAX. That is fine, but the vision should say which operators are eager-only.
 
 ## Case 2: emission rate from a detected plume
 
 **Who and goal.**
-An analyst quantifies a plume EMIT saw over a compressor station: an enhancement map and ERA5 winds in, an emission rate with an uncertainty out.
+An analyst quantifies a plume that EMIT saw over a compressor station, with an enhancement map and ERA5 winds in and an emission rate with an uncertainty out.
 
 **Where it sits.**
-An L3 algorithm in plumax, run eagerly, calling an L1 primitive.
-It mixes two carrier families in one call: the plume is a `GeoSwathImage`, the winds an xarray `Dataset`.
+This is an L3 algorithm in plumax, run eagerly, that calls an L1 primitive. It mixes two carrier families in one call, as the plume is a `GeoSwathImage` and the winds are an xarray `Dataset`.
 
 ```python
 # L1, plumax/_src/array.py: integrated mass enhancement, arrays only
@@ -260,23 +250,17 @@ def estimate_emission(
 
 **What it stresses.**
 
-- **Gap: an L3 algorithm takes carriers from two families.**
-  The vision says the carrier chooses the run mode; here two carriers choose two modes in one call.
-  The rule needs a line: an L3 algorithm may take several families, and does its own crossings inside, by value in xarray first.
-- **Gap: the result is a record, not a raster.**
-  An emission estimate is a point with variables (Q, σ_Q, time).
-  `GeoPoints["variable obs"]` carries it, but the vision's readable types only name rasters and series; a `GeoRecords` or `Detections` type may be needed.
-- **Holds: derived geometry from a swath.**
-  `pixel_area` reads the lat/lon leaves and returns arrays; the primitive never sees the swath.
+- **Gap: an L3 algorithm takes carriers from two families.** The vision says the carrier chooses the run mode, but here two carriers choose two modes in one call. So the rule needs a line: an L3 algorithm may take several families, and does its own crossings inside, by value in xarray first.
+- **Gap: the result is a record, not a raster.** An emission estimate is a point with variables (Q, σ_Q, time). `GeoPoints["variable obs"]` carries it, but the vision's readable types only name rasters and series, so a `GeoRecords` or `Detections` type may be needed.
+- **Holds: derived geometry from a swath.** `pixel_area` reads the lat/lon leaves and returns arrays, and the primitive never sees the swath.
 
 ## Case 3: SLA mapping by 4D-Var from along-track altimetry
 
 **Who and goal.**
-An ocean researcher maps daily sea-level anomaly over the Gulf Stream for 2025: CMEMS along-track SLA and a DUACS background in, an analysis cube in Zarr out, scored against one held-out satellite.
+An ocean researcher maps daily sea-level anomaly over the Gulf Stream for 2025, with CMEMS along-track SLA and a DUACS background in and an analysis cube in Zarr out, scored against one held-out satellite.
 
 **Where it sits.**
-A cycled assimilation: an eager outer loop over 7-day windows, a compiled inner minimisation, lazy reading and writing at both ends.
-Built-in operators, custom orchestration: the left half of the quadrant's top.
+This is a cycled assimilation: an eager outer loop over 7-day windows, a compiled inner minimisation, and lazy reading and writing at both ends. It uses built-in operators with custom orchestration, so it sits on the left half of the quadrant's top.
 
 ```python
 # lazy, by value: the DUACS background and the along-track files for 2025
@@ -330,29 +314,24 @@ analysis: DataArray["time lat lon"] = xr.open_zarr(run.out).sla
 # RMSE = √(𝔼[(ηₐ − y_j3)²]) against the held-out Jason-3 track
 ```
 
-The 0.05 m and 0.03 m are illustrative σ_b and σ_o; `exclude="j3"` keeps the held-out satellite out of every window.
+The 0.05 m and 0.03 m are illustrative σ_b and σ_o, and `exclude="j3"` keeps the held-out satellite out of every window.
 
 **What it stresses.**
 
-- **Gap: padding is a crossing.**
-  `to_jax()` is not enough for observations; they need a fixed N with a validity mask.
-  Make it part of the named crossing: `obs.to_jax(pad_to=N)`.
-- **Gap: cycling needs a stateful runner.**
-  Operational cycling warm-starts each window from the last analysis, which this loop does not do yet; the hand-written `for` loop here is exactly what a packaged runner should own (vision, VI-V4), with the state carried between windows and each window's output appended to Zarr.
-- **Holds:** the L3 assimilator never sees xarray; the cube is only touched by value, before and after.
+- **Gap: padding is a crossing.** `to_jax()` is not enough for observations, as they need a fixed N with a validity mask. We would make it part of the named crossing: `obs.to_jax(pad_to=N)`.
+- **Gap: cycling needs a stateful runner.** Operational cycling warm-starts each window from the last analysis, which this loop does not do yet. The hand-written `for` loop here is exactly what a packaged runner should own (vision, VI-V4), with the state carried between windows and each window's output appended to Zarr.
+- **Holds:** the L3 assimilator never sees xarray, and the cube is only touched by value, before and after.
 
 ## Case 4: MLD climatology and anomalies from GLORYS
 
 **Who and goal.**
-A physical oceanographer computes the mixed-layer depth from 30 years of daily GLORYS12 temperature and salinity, then a monthly climatology and anomalies, for the North Atlantic.
+A physical oceanographer computes the mixed-layer depth from 30 years of daily GLORYS12 temperature and salinity, and then a monthly climatology and anomalies, for the North Atlantic.
 
 **Where it sits.**
-Lazy throughout, larger than memory.
-L2 kernel operators (state physics, so xrops per OP-O1) followed by native xarray operations.
-Nothing compiles and nothing is a `GeoArray`.
+This case is lazy throughout and larger than memory. It uses L2 kernel operators (state physics, so xrops per OP-O1) followed by native xarray operations, and nothing compiles and nothing is a `GeoArray`.
 
 ```python
-# lazy, daily 1993–2022, dask chunks of 30 days
+# lazy, daily 1993 to 2022, dask chunks of 30 days
 ts: Dataset["time depth lat lon"] = xrproducts.cmems.open(
     "glorys12_daily", vars=["thetao", "so"], region=north_atlantic
 )
@@ -386,14 +365,9 @@ graph: pipekit.Graph = pipekit.Graph(
 
 **What it stresses.**
 
-- **Gap: readable types stop at the carrier boundary.**
-  `mld` is a series of maps, but because it is a `DataArray` the vision gave it no readable type: readable types were aliases of `GeoArray`.
-  A pipeline that takes "a series of maps" could not say so for its lazy input.
-  **Decided 23 Oct 2026 (CS-F1):** a readable type is a dims signature any carrier can match, and the xarray adapter reads `lat lon` as the grid dims, so `mld` is a `GeoMapSeries` ([readable types](./geoarray.md)).
-- **Gap: native operations are not pipeline stages.**
-  `groupby(...).mean()` is the right call, but the vision says every stage is a named operator.
-  Either xrops wraps the handful of native operations pipelines need (`Climatology`, `Anomaly`) or a stage may be a named native call.
-- **Holds:** the MLD kernel is the same L1 function that runs on a `GeoVolume`; only the wrapper differs.
+- **Gap: readable types stop at the carrier boundary.** `mld` is a series of maps, but because it is a `DataArray` the vision gave it no readable type, as readable types were aliases of `GeoArray`. So a pipeline that takes "a series of maps" could not say so for its lazy input. **Decided 23 Oct 2026 (CS-F1):** a readable type is a dims signature any carrier can match, and the xarray adapter reads `lat lon` as the grid dims, so `mld` is a `GeoMapSeries` ([readable types](./geoarray.md)).
+- **Gap: native operations are not pipeline stages.** `groupby(...).mean()` is the right call, but the vision says every stage is a named operator. So either xrops wraps the handful of native operations pipelines need (`Climatology`, `Anomaly`) or a stage may be a named native call.
+- **Holds:** the MLD kernel is the same L1 function that runs on a `GeoVolume`, and only the wrapper differs.
 
 ## Case 5: a researcher swaps in a new retrieval method
 
@@ -401,8 +375,7 @@ graph: pipekit.Graph = pipekit.Graph(
 A retrieval scientist tests a column-wise matched filter with an air-mass correction against the packaged EMIT plume pipeline, keeping every other stage identical.
 
 **Where it sits.**
-Starts at L3, steps down to L1 for one stage, and comes back up: the vision's "step down in one line" under real use.
-EMIT's matched filter is fitted per detector column, because each cross-track column has its own noise.
+The case starts at L3, steps down to L1 for one stage, and comes back up, which is the vision's "step down in one line" under real use. EMIT's matched filter is fitted per detector column, because each cross-track column has its own noise.
 
 What `emit_plumes` builds inside:
 
@@ -410,7 +383,7 @@ What `emit_plumes` builds inside:
 def emit_plumes(scene_id: str) -> pipekit.Graph:
     # → GeoSwath["band row col"], 285 bands; lat/lon and sun/view angles as leaves
     read: Operator = geoproducts.emit.ReadL1B(scene_id)
-    # GeoSwath["band row col"] → GeoSwath["band row col"], 2100–2450 nm only
+    # GeoSwath["band row col"] → GeoSwath["band row col"], 2100 to 2450 nm only
     window: Operator = geoops.SpectralWindow(2100, 2450, dim="band")
     # t: the unit CH₄ absorption spectrum, (C,)
     target: Float[Array, "C"] = plumes.ch4_unit_spectrum()
@@ -494,23 +467,17 @@ report: Comparison = pipekit.evaluate.compare(
 
 **What it stresses.**
 
-- **Holds:** one stage swapped, the rest identical; the generalized-ufunc spec expresses "statistics over rows, per column" without a loop.
-- **Gap: derived geometry is more than spacing.**
-  Here it is the sun and view zenith angles; in Case 3 it is the time step.
-  The rule should say derived numeric geometry covers space, time and viewing geometry.
-  Geometry that varies per pixel, like this AMF, is a mapped input with the swath's dims, not an unmapped keyword.
-- **Gap: the replaced stage was fitted.**
-  The packaged matched filter fits μ and Σ per scene; the new kernel fits them inside.
-  `replace` must accept either a fitted operator or a stateless one, and say which the slot expects.
+- **Holds:** one stage is swapped and the rest stay identical, and the generalized-ufunc spec expresses "statistics over rows, per column" without a loop.
+- **Gap: derived geometry is more than spacing.** Here it is the sun and view zenith angles, whereas in Case 3 it is the time step. So the rule should say derived numeric geometry covers space, time and viewing geometry. Geometry that varies per pixel, like this AMF, is a mapped input with the swath's dims, not an unmapped keyword.
+- **Gap: the replaced stage was fitted.** The packaged matched filter fits μ and Σ per scene, and the new kernel fits them inside. So `replace` must accept either a fitted operator or a stateless one, and say which the slot expects.
 
 ## Case 6: AEMET station series, several variables
 
 **Who and goal.**
-A climate analyst validates ERA5 2 m temperature and 10 m wind against 40 AEMET stations around Valencia for 2025: hourly station records in, per-station bias and RMSE out.
+A climate analyst validates ERA5 2 m temperature and 10 m wind against 40 AEMET stations around Valencia for 2025, with hourly station records in and per-station bias and RMSE out.
 
 **Where it sits.**
-Points with a time dim and a variable dim, eager, built-in operators, a short custom graph.
-Two equally valid ways exist to sample ERA5 at the stations, one per run mode.
+The data are points with a time dim and a variable dim, handled eagerly with built-in operators and a short custom graph. Two equally valid ways exist to sample ERA5 at the stations, one per run mode.
 
 ```python
 # (8760, 2, 40): hourly, t2m and ws10, 40 stations; elevation in the z leaf; missing reports = fill
@@ -547,23 +514,18 @@ table: pd.DataFrame = bias.to_dataframe()
 
 **What it stresses.**
 
-- **Gap: two samplers must agree.**
-  `xr.interp` and `geoarray.interp_at` both put a grid onto points.
-  If their bilinear weights or edge handling differ, the two ways give different biases.
-  A contract test should hold them equal, or one should be defined as the other.
-- **Gap: analysts want tables.**
-  Station data lives naturally in a DataFrame; `GeoTimeSeries` needs `to_dataframe()` / `from_dataframe()` the way grids have `to_xarray()`.
-- **Holds:** variables are a dim, time is a dim for fixed stations, and fill values are masked; the types from the geoarray page cover this without a new carrier.
+- **Gap: two samplers must agree.** `xr.interp` and `geoarray.interp_at` both put a grid onto points. If their bilinear weights or edge handling differ, the two ways give different biases, so a contract test should hold them equal, or one should be defined as the other.
+- **Gap: analysts want tables.** Station data lives naturally in a DataFrame, so `GeoTimeSeries` needs `to_dataframe()` / `from_dataframe()` the way grids have `to_xarray()`.
+- **Holds:** variables are a dim, time is a dim for fixed stations, and fill values are masked, so the types from the geoarray page cover this without a new carrier.
 - **Small:** station elevation belongs in the `z` leaf, so a lapse-rate correction can read it as derived geometry.
 
 ## Case 7: an operational daily alert pipeline
 
 **Who and goal.**
-An operations team runs a scheduled job every morning: yesterday's TROPOMI XCH₄ over a watchlist of 300 facilities in, hotspot alerts out, with no one writing code day to day.
+An operations team runs a scheduled job every morning, with yesterday's TROPOMI XCH₄ over a watchlist of 300 facilities in and hotspot alerts out, and with no one writing code day to day.
 
 **Where it sits.**
-The far top right: a packaged pipeline, packaged runner, built-in operators only.
-Eager throughout; the runner fans out one task per orbit.
+This is the far top right: a packaged pipeline, a packaged runner and built-in operators only. It runs eagerly throughout, and the runner fans out one task per orbit.
 
 What `tropomi_hotspots.v3` does inside:
 
@@ -579,7 +541,7 @@ def tropomi_hotspots(
     # 300 facilities
     sites: GeoPoints["obs"] = GeoPoints.from_parquet(watchlist)
 
-    # X̄ within 10 km; X̄_bg and σ_bg over a 30–80 km annulus, per site
+    # X̄ within 10 km; X̄_bg and σ_bg over a 30 to 80 km annulus, per site
     disc_stats: Operator = geoops.points.DiscAnnulusStats(
         inner_km=10, outer_km=(30, 80)
     )
@@ -623,20 +585,17 @@ prov: Provenance = run.provenance
 
 **What it stresses.**
 
-- **Gap: pipelines need versions and provenance.**
-  An alert must say which pipeline version and which inputs produced it, and re-running a date must give the same alert.
-  The vision says nothing about versioning or idempotent runs.
-- **Gap: state across runs.** "Two consecutive days" means today's run reads yesterday's output: the same stateful-runner need as Case 3, on a daily cycle.
-- **Holds:** nobody in this case touches a carrier; the readable output type (CS-F6) is what they consume.
+- **Gap: pipelines need versions and provenance.** An alert must say which pipeline version and which inputs produced it, and re-running a date must give the same alert. However, the vision says nothing about versioning or idempotent runs.
+- **Gap: state across runs.** "Two consecutive days" means today's run reads yesterday's output, which is the same stateful-runner need as Case 3, on a daily cycle.
+- **Holds:** nobody in this case touches a carrier, and the readable output type (CS-F6) is what they consume.
 
 ## Case 8: a new finite-volume scheme, pure L1
 
 **Who and goal.**
-A numerics developer adds a WENO5 advection scheme to finitevolX and tests it on a rotating-cone problem: no satellite data, no files, only arrays and a grid.
+A numerics developer adds a WENO5 advection scheme to finitevolX and tests it on a rotating-cone problem, with no satellite data and no files, only arrays and a grid.
 
 **Where it sits.**
-The far bottom left: their own kernel, their own `lax.scan` loop, compiled.
-GeoStack is touched once, if at all, to build a grid bundle and to wrap the final field for a plot.
+This is the far bottom left: their own kernel and their own `lax.scan` loop, compiled. GeoStack is touched once, if at all, to build a grid bundle and to wrap the final field for a plot.
 
 ```python
 # carrier-free derived geometry: 512 × 512 at 1 km ← CS-F12
@@ -679,9 +638,7 @@ def weno5_advect(
 q_final: Float[Array, "H W"] = weno5_advect(q0, u, v, grid, n_steps=2_000)
 ```
 
-The way up, once the scheme works.
-Someone else wants to advect a real SST anomaly map, georeferenced, without knowing about `CGrid`.
-A `KernelOp` gives them an operator on carriers without anyone writing a wrapper class: it maps the carrier's `(y, x)` dims onto the kernel's `(H, W)` axes, builds `grid` from the carrier's transform, calls the kernel and rewraps the result with the same georeference.
+The way up comes once the scheme works. Someone else wants to advect a real SST anomaly map, georeferenced, without knowing about `CGrid`. A `KernelOp` gives them an operator on carriers without anyone writing a wrapper class, as it maps the carrier's `(y, x)` dims onto the kernel's `(H, W)` axes, builds `grid` from the carrier's transform, calls the kernel and rewraps the result with the same georeference.
 
 ```python
 # L2, in somax[geo]: GeoModels may import finitevolX and GeoStack; finitevolX may import neither ← CS-F12
@@ -704,22 +661,17 @@ sst_cube_later: DataArray["time y x"] = advect(sst_cube, u_cube, v_cube)
 
 **What it stresses.**
 
-- **Holds:** the vision must leave this user alone.
-  Nothing here needs a carrier, an operator or a runner.
-- **Gap: derived-geometry helpers need a carrier-free path.**
-  `uniform(...)` builds a `CGrid` from numbers; `cgrid_from_transform` builds one from a carrier.
-  Both must exist: the first in finitevolX, importing nothing from GeoStack; the second in the package above both (somax[geo]), since finitevolX may not import a carrier.
-- **Gap: the way up.**
-  Once WENO5 works, wrapping it as an L2 operator should be one line (`KernelOp` or a thin `Operator`), and the docs should show that path.
+- **Holds:** the vision must leave this user alone, as nothing here needs a carrier, an operator or a runner.
+- **Gap: derived-geometry helpers need a carrier-free path.** `uniform(...)` builds a `CGrid` from numbers, whereas `cgrid_from_transform` builds one from a carrier. Both must exist: the first in finitevolX, importing nothing from GeoStack, and the second in the package above both (somax[geo]), since finitevolX may not import a carrier.
+- **Gap: the way up.** Once WENO5 works, wrapping it as an L2 operator should be one line (`KernelOp` or a thin `Operator`), and the docs should show that path.
 
 ## Case 9: GeoBench, a packaged benchmark running submitted models
 
 **Who and goal.**
-A researcher submits a new SSH-mapping model to GeoBench: the benchmark owns the data, splits, metrics and runner; the submission owns only the model.
+A researcher submits a new SSH-mapping model to GeoBench, where the benchmark owns the data, splits, metrics and runner and the submission owns only the model.
 
 **Where it sits.**
-Top left: packaged orchestration around user computation.
-The benchmark is the packaged pipeline; the model is whatever the user wrote, down to raw L1.
+This is the top left, with packaged orchestration around user computation. The benchmark is the packaged pipeline, and the model is whatever the user wrote, down to raw L1.
 
 What `ssh_mapping_osse.v1.evaluate` does inside:
 
@@ -775,21 +727,17 @@ scores: Scores = task.evaluate(MyMapper(), runner=runner)
 
 **What it stresses.**
 
-- **Holds, and is the strongest use of readable types:** the submission contract is written in them.
-  `GeoTracks` in, `GeoMapSeries` out is a precise, checkable interface that a shape-only contract cannot express.
-- **Gap: the contract needs checking, not just annotating.**
-  The benchmark must refuse a submission whose output has the wrong dims, grid or time stamps before scoring, which is CS-F1's "type as a checkable signature" again.
-- **Gap: leakage is the runner's job.**
-  The packaged runner, not the submission, must guarantee the model never sees test-time observations; the vision should say runners own splits.
+- **Holds, and is the strongest use of readable types:** the submission contract is written in them. `GeoTracks` in, `GeoMapSeries` out is a precise, checkable interface that a shape-only contract cannot express.
+- **Gap: the contract needs checking, not just annotating.** The benchmark must refuse a submission whose output has the wrong dims, grid or time stamps before scoring, which is CS-F1's "type as a checkable signature" again.
+- **Gap: leakage is the runner's job.** The packaged runner, not the submission, must guarantee the model never sees test-time observations, so the vision should say runners own splits.
 
 ## Case 10: a flaring index as a custom graph, promoted to a pipeline
 
 **Who and goal.**
-An analyst builds a gas-flaring detector on Landsat 8/9 SWIR, uses it for a month as a notebook graph, then promotes it to a packaged pipeline the team can run.
+An analyst builds a gas-flaring detector on Landsat 8/9 SWIR, uses it for a month as a notebook graph, and then promotes it to a packaged pipeline the team can run.
 
 **Where it sits.**
-The centre: one new kernel wrapped as a `KernelOp`, built-in operators around it, a custom pipekit graph.
-Eager, then packaged.
+This is the centre of the quadrant: one new kernel wrapped as a `KernelOp`, built-in operators around it, and a custom pipekit graph. The case runs eagerly first and is then packaged.
 
 ```python
 # L1: a thermal-anomaly index on two SWIR bands, arrays only
@@ -830,10 +778,9 @@ The index formula is a placeholder for whichever SWIR thermal-anomaly index the 
 
 **What it stresses.**
 
-- **Gap: the promotion path.**
-  The vision has a way down (pull a stage out) but no way up: a graph that works should become a packaged, versioned pipeline in one call, with its readable input and output types declared then.
+- **Gap: the promotion path.** The vision has a way down (pull a stage out) but no way up, so a graph that works should become a packaged, versioned pipeline in one call, with its readable input and output types declared then.
 - **Holds:** the new kernel is ten lines and runs eagerly here, under `jit` in Case 1's training loop, and lazily on a cube, with no further code.
-- **Small:** `KernelOp.from_function` with band names as inputs avoids the hand-written `NDVI`-style operator class; worth making the default.
+- **Small:** `KernelOp.from_function` with band names as inputs avoids the hand-written `NDVI`-style operator class, and is worth making the default.
 
 ## Case 11: a GP interpolation of SST with your own fitting loop
 
@@ -841,8 +788,7 @@ The index formula is a placeholder for whichever SWIR thermal-anomaly index the 
 A statistician maps daily SST in the Mediterranean from drifter and Argo surface points with a Gaussian process, fitting the kernel hyperparameters themselves, and wants the predictive variance as well as the mean.
 
 **Where it sits.**
-Bottom left: their own model (kernellib / pyrox at L1), their own optax loop, compiled.
-Readable types appear only at the two ends.
+This is the bottom left: their own model (kernellib / pyrox at L1) and their own optax loop, compiled. Readable types appear only at the two ends.
 
 ```python
 # in: surface points for one day
@@ -878,9 +824,7 @@ sst: GeoArray["stat y x"] = grid.with_stats(mean=mean, var=var)
 
 **What it stresses.**
 
-- **Gap: uncertainty has no convention.**
-  Mean and variance here, members in Case 12, quantiles elsewhere.
-  The dim conventions (`time`, `member`, `level`, `band`, `variable`, `patch`) need one for distribution summaries, e.g. `moment` or `stat`, with standard labels.
+- **Gap: uncertainty has no convention.** We have mean and variance here, members in Case 12, and quantiles elsewhere. So the dim conventions (`time`, `member`, `level`, `band`, `variable`, `patch`) need one for distribution summaries, e.g. `moment` or `stat`, with standard labels.
 - **Holds:** derived geometry (unit vectors on the sphere) comes from a helper, and the model never sees a CRS.
 - **Holds:** padding with `valid` (CS-F3) is exactly what a GP needs for a fixed-size kernel matrix.
 
@@ -890,12 +834,12 @@ sst: GeoArray["stat y x"] = grid.with_stats(mean=mean, var=var)
 A modeller runs a 32-member shallow-water ensemble from perturbed initial SSH for a 10-day forecast, and wants the ensemble written as a cube without writing the loop.
 
 **Where it sits.**
-Top centre: a packaged runner over a built-in model (somax), compiled inside, lazy on output.
+This is the top centre: a packaged runner over a built-in model (somax), compiled inside and lazy on output.
 
 What the runner does inside:
 
 ```python
-# pipekit.runners.Ensemble — sketch of its internals. pipekit sits below geoarray,
+# pipekit.runners.Ensemble - sketch of its internals. pipekit sits below geoarray,
 # so the runner sees raw arrays only; the caller's sink rewraps and writes.
 def run_ensemble(
     model: Algorithm,
@@ -962,23 +906,18 @@ summary: DataArray["stat time lat lon"] = stats(cube)
 
 **What it stresses.**
 
-- **Gap: models need a named L1 entry point.**
-  The runner calls `model.l1` to vmap the raw loop; an algorithm that only exposes its L3 signature (`simulate(GeoMap) -> GeoMapSeries`) cannot be vmapped without rewrapping per member.
-  L3 algorithms should expose their L1 core.
-- **Gap: seeds belong to the runner.**
-  One key per member, derived from the run's seed; the vision should say randomness is passed down, never drawn inside operators.
+- **Gap: models need a named L1 entry point.** The runner calls `model.l1` to vmap the raw loop, so an algorithm that only exposes its L3 signature (`simulate(GeoMap) -> GeoMapSeries`) cannot be vmapped without rewrapping per member. L3 algorithms should expose their L1 core.
+- **Gap: seeds belong to the runner.** There is one key per member, derived from the run's seed, and the vision should say randomness is passed down, never drawn inside operators.
 - **Holds:** the `member` dim, `vmap` over it, and lazy writing on `append_dim` all fit the existing conventions.
-- **Holds, with a rule:** a pipekit runner never builds a carrier, since pipekit sits below geoarray; it takes raw arrays and a sink, and the crossing lives in the package that owns the carrier.
+- **Holds, with a rule:** a pipekit runner never builds a carrier, since pipekit sits below geoarray, so it takes raw arrays and a sink, and the crossing lives in the package that owns the carrier.
 
 ## Case 13: a labelling app serving detections on demand
 
 **Who and goal.**
-A geoapps backend: a labeller pans to a facility, the app fetches the latest Sentinel-2 scene, runs the plume detector and returns a candidate mask within a few seconds.
+A geoapps backend: a labeller pans to a facility, and the app fetches the latest Sentinel-2 scene, runs the plume detector and returns a candidate mask within a few seconds.
 
 **Where it sits.**
-Right, upper: built-in operators and a trained model behind a web handler.
-Orchestration is the web framework's, not pipekit's.
-Eager for I/O, compiled for the model, one scene at a time.
+This is the upper right, with built-in operators and a trained model behind a web handler. Orchestration is the web framework's, not pipekit's, and the case is eager for I/O and compiled for the model, one scene at a time.
 
 ```python
 # start-up, once per worker: slim imports (the slim geoops base, decided in the operators doc) and an ahead-of-time compile ← CS-F17
@@ -1010,16 +949,13 @@ async def detect_at(lon: float, lat: float) -> GeoJSON:
 
 **What it stresses.**
 
-- **Gap: latency budgets.**
-  Import time (xarray alone was about 0.57 s in one exploratory run) and the first `jit` compile land on the first request.
-  The app needs ahead-of-time compilation and a slim import path: the slim geoops base ([decided with the tiers](#design-tiers)) matters here more than anywhere.
-- **Holds:** async stays at the I/O edge, as the vision says; the operators are plain functions the handler calls.
-- **Gap: padding also for images.**
-  `pad_to` on a raster, so every scene fits the one compiled shape, generalises CS-F3 beyond points.
+- **Gap: latency budgets.** Import time (xarray alone was about 0.57 s in one exploratory run) and the first `jit` compile land on the first request, so the app needs ahead-of-time compilation and a slim import path. The slim geoops base ([decided with the tiers](#design-tiers)) matters here more than anywhere.
+- **Holds:** async stays at the I/O edge, as the vision says, and the operators are plain functions the handler calls.
+- **Gap: padding also for images.** `pad_to` on a raster, so every scene fits the one compiled shape, generalises CS-F3 beyond points.
 
 ## What the cases change in the vision
 
-Three findings change a principle (CS-F1, CS-F2, CS-F11); the rest add requirements, most of them to the pipelines page that does not exist yet.
+Three findings change a principle (CS-F1, CS-F2, CS-F11), whereas the rest add requirements, most of them to the pipelines page that does not exist yet.
 
 **What held in every case:** one named crossing per mode change; I/O never under JAX; one L1 kernel serving every carrier; a stage swapped without touching the others; generalized-ufunc specs expressing per-column and per-pixel work without loops.
 
@@ -1043,5 +979,4 @@ Three findings change a principle (CS-F1, CS-F2, CS-F11); the rest add requireme
 | CS-F16 | Runners need the L1 core of an algorithm, and own randomness | 12 | every L3 algorithm exposes its L1 loop; seeds are passed down from the run, never drawn inside operators |
 | CS-F17 | Latency: imports and first compile | 13 | ahead-of-time compile for fixed shapes; the slim geoops base (decided on the [operators page](./operators.md)) is required, not optional, for apps |
 
-Three to decide first: CS-F1 changes what a readable type is (decided 23 Oct 2026); CS-F2 and CS-F11 change principles.
-CS-F4, CS-F11, CS-F13, CS-F14 and CS-F16 together are most of the missing pipelines page.
+Three to decide first: CS-F1 changes what a readable type is (decided 23 Oct 2026), and CS-F2 and CS-F11 change principles. CS-F4, CS-F11, CS-F13, CS-F14 and CS-F16 together are most of the missing pipelines page.
