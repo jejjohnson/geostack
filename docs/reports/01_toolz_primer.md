@@ -19,11 +19,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-This report now lives in pipekit's own documentation, as its
-[Background](https://jejjohnson.github.io/pipekit/background/toolz/) page: where pipekit comes from, what it inherits from
-`toolz`, the six things plain functions cannot carry, and why operators
-settled on a typed base class while the data flowing through them did not.
-This page keeps the report's place in the series and points to the sections.
+This report now lives in pipekit's own documentation, as its [Background](https://jejjohnson.github.io/pipekit/background/toolz/) page. It covers where pipekit comes from, what it inherits from `toolz`, the six things plain functions cannot carry, and why operators settled on a typed base class while the data flowing through them did not. We keep this page only to hold the report's place in the series and to point to the sections.
 
 +++
 
@@ -41,9 +37,7 @@ This page keeps the report's place in the series and points to the sections.
 (r1-moved)=
 ## Where each section went
 
-A design that lives with the code is read by the people who use the code, and
-it stays checked against it. The report moved whole, with its examples,
-tables and figures, in MkDocs syntax ([](#tbl-r1-moved)).
+We moved the report because a design that lives with the code is read by the people who use the code, and it stays checked against it. It moved whole, with its examples, tables and figures, in MkDocs syntax ([](#tbl-r1-moved)).
 
 :::{table} The report's sections and their new homes on pipekit's Background page.
 :label: tbl-r1-moved
@@ -58,9 +52,6 @@ tables and figures, in MkDocs syntax ([](#tbl-r1-moved)).
 | Where next | [Where next](https://jejjohnson.github.io/pipekit/background/toolz/#where-next) |
 :::
 
-One correction travelled with it: nested pipelines can be *loaded* from
-hand-written Hydra YAML today (`HydraConfigLoader.from_yaml` in
-pipekit-experiment); what is missing is dumping a pipeline built in Python.
+One correction travelled with it. Nested pipelines can be *loaded* from hand-written Hydra YAML today (`HydraConfigLoader.from_yaml` in pipekit-experiment), whereas what is missing is dumping a pipeline built in Python.
 
-The shipped surface is [Report 2](02_pipekit_surface.md), which now points to
-pipekit's [tour of the core](https://jejjohnson.github.io/pipekit/core-tour/).
+We cover the shipped surface in [Report 2](02_pipekit_surface.md), which now points to pipekit's [tour of the core](https://jejjohnson.github.io/pipekit/core-tour/).

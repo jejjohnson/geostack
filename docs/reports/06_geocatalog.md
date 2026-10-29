@@ -19,16 +19,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-A **catalog** is an index over geospatial files. Each row holds one file's
-footprint, time interval, CRS and path, so a question like "which files
-overlap this area between these dates?" is answered in milliseconds,
-**without opening any file**. This report scoped geocatalog as a standalone
-package extracted from geotoolz. It has been built, and it has outgrown the
-scope: discovery sources, provenance bundles, matchups and staging sit on top
-of the index. Most of the scoping decisions held: `GeoSlice` lives in the
-catalog, there is no pipekit dependency, and the patcher bridge is a
-Protocol. The migration back into geotoolz has not happened, and the light
-base install did not survive. Both are open questions at the end.
+A **catalog** is an index over geospatial files. Each row holds one file's footprint, time interval, CRS and path, so a question like "which files overlap this area between these dates?" is answered in milliseconds, **without opening any file**. This report scoped geocatalog as a standalone package extracted from geotoolz. It has been built and has outgrown the scope, since discovery sources, provenance bundles, matchups and staging now sit on top of the index. Most of the scoping decisions held (`GeoSlice` lives in the catalog, there is no pipekit dependency, and the patcher bridge is a Protocol). However, the migration back into geotoolz has not happened and the light base install did not survive, so we leave both as open questions at the end.
 
 +++
 
@@ -46,32 +37,16 @@ base install did not survive. Both are open questions at the end.
 :::
 
 :::{important} Which geocatalog this page describes
-There are two copies of geocatalog. The **geocatalog repo** (to 0.0.3, May
-to July 2026) holds the design of record: its docs and figures. The
-**`geotoolz-catalog` distribution** in the geotoolz monorepo
-([geotoolz#97](https://github.com/jejjohnson/geotoolz/issues/97), 13 July
-2026), through a breaking reorganisation in 0.3.0 (8 October) to 0.5.1, is
-the copy geostack pins and the source of this page's **API and behaviour**.
-The repo's examples use the flat API from before 0.3.0 (`gc.load_raster`,
-`gc.to_geoparquet`); the examples here use the current namespaced one
-(`geocatalog.load.load_raster`).
+There are two copies of geocatalog. The **geocatalog repo** (to 0.0.3, May to July 2026) holds the design of record, which is its docs and figures. The **`geotoolz-catalog` distribution** in the geotoolz monorepo ([geotoolz#97](https://github.com/jejjohnson/geotoolz/issues/97), 13 July 2026) went through a breaking reorganisation in 0.3.0 (8 October) and is now at 0.5.1. It is the copy geostack pins, so it is the source of this page's **API and behaviour**. The repo's examples use the flat API from before 0.3.0 (`gc.load_raster`, `gc.to_geoparquet`), whereas the examples here use the current namespaced one (`geocatalog.load.load_raster`).
 :::
 
 (r6-stack)=
 ## Where geocatalog sits
 
-The scoping report placed geocatalog beside pipekit and geopatcher, all three
-above georeader and below geotoolz and xrtoolz (the picture is drawn in
-[Report 7](07_geopatcher.md#r7-stack); the stack-wide rules are in
-[Report 16](16_geo_data_stack.md#r16-ownership)). That still holds:
-geocatalog owns the spatiotemporal index end to end, has no pipekit
-reference at all, loads geopatcher and geocloud only lazily inside the
-functions that need them, and consumes georeader rather than replacing it.
+The scoping report placed geocatalog beside pipekit and geopatcher, all three above georeader and below geotoolz and xrtoolz (the picture is drawn in [Report 7](07_geopatcher.md#r7-stack); the stack-wide rules are in [Report 16](16_geo_data_stack.md#r16-ownership)). That still holds. geocatalog owns the spatiotemporal index end to end, has no pipekit reference at all, loads geopatcher and geocloud only lazily inside the functions that need them, and consumes georeader rather than replacing it.
 
 :::{warning} Differs from the plan
-**Neither geotoolz nor xrtoolz imports geocatalog** at the pinned
-revisions. The consumer layer that was to "tie them together" (`CatalogPipeline`, `CatalogReader`, re-exports) does not exist
-yet ([](#r6-migration)).
+**Neither geotoolz nor xrtoolz imports geocatalog** at the pinned revisions. The consumer layer that was to "tie them together" (`CatalogPipeline`, `CatalogReader`, re-exports) does not exist yet ([](#r6-migration)).
 :::
 
 (r6-what)=
@@ -79,12 +54,7 @@ yet ([](#r6-migration)).
 
 ### The mental model
 
-From the repo's own docs. You build a `GeoCatalog` once, from a directory of
-files, a STAC search, a NASA CMR call or a hand-made list. You hand it
-`GeoSlice`s to query, and it hands back smaller catalogs (the matching rows).
-When you want pixels, a loader takes the slice and the matching catalog and
-returns a `GeoTensor` or an `xr.Dataset`. At every step the geometry, time
-and CRS are explicit, so there is no hidden state ([](#fig-r6-dataflow)).
+This is the picture from the repo's own docs. We build a `GeoCatalog` once, from a directory of files, a STAC search, a NASA CMR call or a hand-made list. We then hand it `GeoSlice`s to query, and it hands back smaller catalogs (the matching rows). When we want pixels, a loader takes the slice and the matching catalog and returns a `GeoTensor` or an `xr.Dataset`. At every step the geometry, time and CRS are explicit, so there is no hidden state ([](#fig-r6-dataflow)).
 
 ```{figure} ../images/reports/r6_dataflow.svg
 :label: fig-r6-dataflow
@@ -96,21 +66,13 @@ and CRS are explicit, so there is no hidden state ([](#fig-r6-dataflow)).
 
 It works in three layers, in order:
 
-1. **Discover.** `Source` adapters yield `SourceRow`s, pre-catalog records
-   that carry the query that produced them. The local builders read
-   filenames and metadata directly.
-2. **Index.** A `GeoCatalog` Protocol implementation. Both backends expose
-   the same surface: `query`, `intersect`, `union`, `iter_rows`,
-   `iter_slices`, `total_bounds`, `temporal_extent`.
-3. **Materialise.** Loaders take a `GeoSlice` plus a catalog and return a
-   carrier.
+1. **Discover.** `Source` adapters yield `SourceRow`s, which are pre-catalog records that carry the query that produced them, whereas the local builders read filenames and metadata directly.
+2. **Index.** A `GeoCatalog` Protocol implementation. Both backends expose the same surface: `query`, `intersect`, `union`, `iter_rows`, `iter_slices`, `total_bounds` and `temporal_extent`.
+3. **Materialise.** Loaders take a `GeoSlice` plus a catalog and return a carrier.
 
 ### Source layout and public surface
 
-The scoping report counted 11 files and about 3,600 lines from geotoolz's
-catalog module. The current package is about 14,300 lines, organised into
-ten namespaces by workflow step (since 0.3.0), each a thin facade over
-`geocatalog._src` ([](#tbl-r6-surface)):
+The scoping report counted 11 files and about 3,600 lines from geotoolz's catalog module. The current package is about 14,300 lines, organised since 0.3.0 into ten namespaces by workflow step, each a thin facade over `geocatalog._src` ([](#tbl-r6-surface)):
 
 :::{table} geocatalog's public namespaces at 0.5.1. Names in *italics* need an extra and import lazily.
 :label: tbl-r6-surface
@@ -130,46 +92,30 @@ ten namespaces by workflow step (since 0.3.0), each a thin facade over
 | `geocatalog.utils` | `parse_uri`, `ParsedURI`, `retry_transient_io`, time helpers (`to_naive_utc`, `to_rfc3339`, …) |
 :::
 
-There is also a `geocatalog` command line, with `build {raster, xarray,
-vector}`, `query`, `stats`, `migrate`, `convert` and `info`.
+There is also a `geocatalog` command line, with `build {raster, xarray, vector}`, `query`, `stats`, `migrate`, `convert` and `info`.
 
 :::{warning} Differs from the plan
-The scoping report's surface was **flat**: `from geocatalog import
-load_raster, to_geoparquet, CatalogDomain, …`. The 0.3.0 reorganisation
-removed the flat re-exports, with no aliases. The root keeps only the core
-types and the set algebra; everything else is imported from its namespace.
-The geocatalog repo's docs still show the flat form ([](#r6-todos)).
+The scoping report's surface was **flat**: `from geocatalog import load_raster, to_geoparquet, CatalogDomain, …`. The 0.3.0 reorganisation removed the flat re-exports, with no aliases, so the root now keeps only the core types and the set algebra and everything else is imported from its namespace. The geocatalog repo's docs still show the flat form ([](#r6-todos)).
 :::
 
 (r6-geoslice)=
 ### `GeoSlice`, the unit of work
 
-`GeoSlice` is a frozen dataclass of four fields: `bounds`, `interval` (a
-closed `pd.Interval`), `resolution` and `crs`, plus an `align` mode that is
-excluded from equality and hashing. Because it is frozen, a slice can be
-cached, hashed, sent across processes, or logged and replayed. To change
-one, use `dataclasses.replace`. The repo's docs give the reason: "silent
-mutation of a query that's been logged is the worst kind of bug".
+`GeoSlice` is a frozen dataclass of four fields (`bounds`, `interval` (a closed `pd.Interval`), `resolution` and `crs`), plus an `align` mode that is excluded from equality and hashing. Because it is frozen, a slice can be cached, hashed, sent across processes, or logged and replayed, and to change one we use `dataclasses.replace`. The repo's docs give the reason: "silent mutation of a query that's been logged is the worst kind of bug".
 
-It carries everything the next stage needs to fetch a chip without
-consulting the catalog again: `shape`, `height`, `width` and `transform` are
-derived from it, and `to_crs()` reprojects it.
+A slice carries everything the next stage needs to fetch a chip without consulting the catalog again. The `shape`, `height`, `width` and `transform` are derived from it, and `to_crs()` reprojects it.
 
-**Grid alignment** is the one subtlety. With bounds $(x_0, y_0, x_1, y_1)$
-and resolution $(\Delta x, \Delta y)$, the pixel shape is
+**Grid alignment** is the one subtlety. The bounds are corner coordinates in the slice's CRS, $(x_0, y_0, x_1, y_1) \in \mathbb{R}^{4}$ (map coordinates, not inference variables), and the resolution is $(\Delta x, \Delta y) \in \mathbb{R}_{>0}^{2}$. The pixel counts $n_x, n_y \in \mathbb{N}$ along each axis are then
 
 $$
-\begin{aligned}
-n_x &= \operatorname{round}\left(\frac{x_1 - x_0}{\Delta x}\right) , \\
-n_y &= \operatorname{round}\left(\frac{y_1 - y_0}{\Delta y}\right) ,
-\end{aligned}
+n_x = \mathrm{round}\left(\frac{x_1 - x_0}{\Delta x}\right)
 $$ (r6-eq-shape)
 
-which silently accepts an extent that is not a whole number of pixels
-({eq}`r6-eq-shape` rounds half up). That bites at matchup boundaries, where a
-chip is stacked against a label raster one pixel short. `aligned_shape()` is
-the strict version, and the `align=` mode chooses what construction does
-about a residual:
+$$
+n_y = \mathrm{round}\left(\frac{y_1 - y_0}{\Delta y}\right)
+$$ (r6-eq-shape-y)
+
+These expressions silently accept an extent that is not a whole number of pixels ({eq}`r6-eq-shape` rounds half up), which bites at matchup boundaries, where a chip is stacked against a label raster one pixel short. `aligned_shape()` is the strict version, and the `align=` mode chooses what construction does about a residual:
 
 ```{code-block} python
 :caption: Grid alignment at geocatalog 0.5.1, from a real run.
@@ -199,27 +145,17 @@ is_grid_aligned(s, t, explain=True)
 #    'y_res_match': True, 'x_origin_residual': -5.0, 'y_origin_residual': 0.0}
 ```
 
-The modes are `"off"` (the default), `"warn"` (a `GridAlignmentWarning`),
-`"error"` and `"snap"`. Snapping extends `xmax` right and `ymin` down, so
-the affine origin (`xmin`, `ymax`) never moves. Two slices are on the same
-pixel lattice when they share a CRS and resolution and their origins agree
-modulo the resolution. `is_grid_aligned` checks exactly that.
+The modes are `"off"` (the default), `"warn"` (a `GridAlignmentWarning`), `"error"` and `"snap"`. Snapping extends `xmax` right and `ymin` down, so the affine origin (`xmin`, `ymax`) never moves. Two slices are on the same pixel lattice when they share a CRS and resolution and their origins agree modulo the resolution, which is exactly what `is_grid_aligned` checks.
 
 ### Why `GeoSlice` lives here
 
-This decision was locked in by the scoping report, and the code bears it
-out:
+The scoping report locked in this decision, and the code bears it out:
 
-1. **The catalog is the primary producer.** `catalog.iter_slices(...)` and
-   `CatalogDomain.slices()` yield `GeoSlice`s, and every loader consumes one.
-2. **The patcher does not use it.** geopatcher's unit is a `Patch` (data plus
-   anchor plus neighbourhood), not a bounded request. geopatcher does not
-   import geocatalog.
-3. **A separate package would be over-engineering.** `GeoSlice` is about 330
-   lines.
+1. **The catalog is the primary producer.** `catalog.iter_slices(...)` and `CatalogDomain.slices()` yield `GeoSlice`s, and every loader consumes one.
+2. **The patcher does not use it.** geopatcher's unit is a `Patch` (data plus anchor plus neighbourhood), not a bounded request, and geopatcher does not import geocatalog.
+3. **A separate package would be over-engineering.** `GeoSlice` is about 330 lines.
 
-[](#tbl-r6-geoslice-consumers) shows who imports it: so far, only geocatalog
-and user code.
+[](#tbl-r6-geoslice-consumers) shows who imports it, which so far is only geocatalog and user code.
 
 :::{table} Who imports `GeoSlice`, planned and at the pinned revisions.
 :label: tbl-r6-geoslice-consumers
@@ -254,19 +190,12 @@ Each kind of catalog adds its own columns:
 - **STAC ingestion** adds `asset_key`, `stac_item_id` and `stac_collection`;
 - **bundles** add `id`, `source`, `collection`, `assets` and `provenance`.
 
-The `IntervalIndex` is what makes temporal queries cheap. Combined with an
-R-tree on `geometry` (in memory) or bbox-column pushdown (DuckDB),
-`query(slice)` is two cheap index lookups, intersected. Times are held as
-naive UTC throughout, and footprints ingested from STAC or CMR that cross
-the antimeridian are split into a MultiPolygon at ±180°.
+The `IntervalIndex` is what makes temporal queries cheap. Combined with an R-tree on `geometry` (in memory) or bbox-column pushdown (DuckDB), `query(slice)` is two cheap index lookups, intersected. Times are held as naive UTC throughout, and footprints ingested from STAC or CMR that cross the antimeridian are split into a MultiPolygon at ±180°.
 
 (r6-backends)=
 ### Two backends, one Protocol
 
-Both backends implement `GeoCatalog`, and the Protocol is the contract:
-anywhere code accepts a `GeoCatalog`, either one works. `isinstance` checks
-work against it. [](#tbl-r6-backends) compares the two, and
-[](#fig-r6-backends) shows where each one wins on latency.
+Both backends implement `GeoCatalog`, and the Protocol is the contract, so anywhere code accepts a `GeoCatalog` either one works (`isinstance` checks work against it). [](#tbl-r6-backends) compares the two, and [](#fig-r6-backends) shows where each one wins on latency.
 
 :::{table} The two backends, from the geocatalog repo's concepts page.
 :label: tbl-r6-backends
@@ -290,18 +219,12 @@ work against it. [](#tbl-r6-backends) compares the two, and
 **Where each backend wins.** From the geocatalog repo. The curves are illustrative, synthetic rather than measured; the shape is the point.
 ```
 
-`open_catalog(source, *, engine="auto", …)` picks a backend for a GeoParquet
-artifact: DuckDB when the extra is installed, in memory otherwise.
-`engine="duckdb"` or `"memory"` forces one. A remote DuckDB catalog reads
-only the row groups a query touches. `strict=True` raises
-`CatalogMetadataError` on incomplete metadata instead of inferring it.
+`open_catalog(source, *, engine="auto", …)` picks a backend for a GeoParquet artifact, DuckDB when the extra is installed and in memory otherwise, and `engine="duckdb"` or `"memory"` forces one. A remote DuckDB catalog reads only the row groups a query touches. With `strict=True` it raises `CatalogMetadataError` on incomplete metadata instead of inferring it.
 
 (r6-algebra)=
 ### Set algebra
 
-`query`, `intersect` and `union` all return **new** catalogs and leave their
-inputs untouched, so they are safe to compose and to cache
-([](#fig-r6-algebra)).
+`query`, `intersect` and `union` all return **new** catalogs and leave their inputs untouched, so they are safe to compose and to cache ([](#fig-r6-algebra)).
 
 ```{figure} ../images/reports/r6_set_algebra.png
 :label: fig-r6-algebra
@@ -350,33 +273,20 @@ len(from_geoparquet("cat.parquet"))        # → 2
 open_catalog("cat.parquet", engine="memory")   # → an InMemoryGeoCatalog
 ```
 
-`intersect(…, spatial_only=True)` is the tool for pairing imagery with
-static labels, which have no temporal overlap by construction.
+`intersect(…, spatial_only=True)` is the tool for pairing imagery with static labels, which have no temporal overlap by construction.
 
 ### Why the loaders live here
 
-The scoping report kept the loaders in geocatalog rather than georeader or
-geotoolz, and that held:
-- **They are catalog API.** The pattern is "the catalog produces slices, a
-  loader consumes them", and both sides ship together.
-- **They keep georeader independent.** georeader stays a reader, writer and
-  `GeoTensor` library that knows nothing about catalogs.
+The scoping report kept the loaders in geocatalog rather than georeader or geotoolz, and that held:
+- **They are catalog API.** The pattern is "the catalog produces slices, a loader consumes them", and both sides ship together.
+- **They keep georeader independent.** georeader stays a reader, writer and `GeoTensor` library that knows nothing about catalogs.
 
-`load_raster` reprojects each source into the slice's CRS, range-reads
-remote files through GDAL, and has an async twin, `aload_raster`.
-`load_raster_timeseries` derives its time steps from the slice. The scoping
-report expected the loaders to be extras-gated; at 0.5.1 only the xarray and
-vector loaders are lazy, and the raster loader is part of the base install
-([](#r6-deps)).
+`load_raster` reprojects each source into the slice's CRS, range-reads remote files through GDAL, and has an async twin, `aload_raster`. `load_raster_timeseries` derives its time steps from the slice. The scoping report expected the loaders to be extras-gated, but at 0.5.1 only the xarray and vector loaders are lazy and the raster loader is part of the base install ([](#r6-deps)).
 
 (r6-beyond)=
 ### What shipped beyond the scope
 
-The scoping report described an index with builders and loaders. The
-current package adds the pieces that turn it into a data-acquisition tool.
-Most of them come from the repo's
-[query → matchup → patch design](https://github.com/jejjohnson/geocatalog/blob/main/docs/design/query-matchup.md)
-([](#tbl-r6-beyond)):
+The scoping report described an index with builders and loaders, whereas the current package adds the pieces that turn it into a data-acquisition tool. Most of them come from the repo's [query → matchup → patch design](https://github.com/jejjohnson/geocatalog/blob/main/docs/design/query-matchup.md) ([](#tbl-r6-beyond)):
 
 :::{table} Shipped features the scoping report did not cover.
 :label: tbl-r6-beyond
@@ -398,10 +308,7 @@ Most of them come from the repo's
 (r6-deps)=
 ## Dependencies and extras
 
-The scoping report wanted an index-only install with no GDAL: `pandas`,
-`geopandas`, `pyproj`, `shapely`, and `rasterio` (for `GeoSlice`'s affine
-transforms and windows). Loaders, DuckDB and streaming would be extras.
-[](#tbl-r6-base) and [](#tbl-r6-extras) set that against what shipped.
+The scoping report wanted an index-only install with no GDAL, made of `pandas`, `geopandas`, `pyproj`, `shapely` and `rasterio` (for `GeoSlice`'s affine transforms and windows). Loaders, DuckDB and streaming would be extras. [](#tbl-r6-base) and [](#tbl-r6-extras) set that against what shipped.
 
 :::{table} The base install, scoped and shipped.
 :label: tbl-r6-base
@@ -425,29 +332,15 @@ transforms and windows). Loaders, DuckDB and streaming would be extras.
 :::
 
 :::{warning} Differs from the plan
-The light install does not exist: `pip install` of geocatalog brings in
-georeader, rasterio and pyarrow. Someone who wants only the index over their
-own files pays for the raster stack. Some docstrings still mention a
-`[vector]` extra that is not defined. See [](#r6-open-questions).
+The light install does not exist, as `pip install` of geocatalog brings in georeader, rasterio and pyarrow. So someone who wants only the index over their own files pays for the raster stack. Some docstrings still mention a `[vector]` extra that is not defined. See [](#r6-open-questions).
 :::
 
-**No pipekit dependency.** This held exactly, and it is the cleanest decision
-in the report. The catalog is not an `Operator`; it is a queryable index.
-pipekit composes operators that transform a carrier, and geocatalog finds
-which files match a query. You can open a catalog without pipekit, and a
-pipekit pipeline can read from a source that is not a catalog. The two meet
-in the consumer libraries, which is where the missing operators belong
-([](#r6-migration)).
+**No pipekit dependency.** This held exactly, and it is the cleanest decision in the report. The catalog is not an `Operator` but a queryable index: pipekit composes operators that transform a carrier, whereas geocatalog finds which files match a query. We can open a catalog without pipekit, and a pipekit pipeline can read from a source that is not a catalog. The two meet in the consumer libraries, which is where the missing operators belong ([](#r6-migration)).
 
 (r6-bridge)=
 ## The patcher bridge
 
-`CatalogDomain` lets a geopatcher patcher walk a catalog without either
-package importing the other, and it shipped as designed in that respect.
-geopatcher's `Domain` is a `runtime_checkable` Protocol with two members,
-`crs` and `bounds`. `CatalogDomain` has both, so it satisfies `Domain`
-structurally: `isinstance(CatalogDomain(...), geopatcher.Domain)` returns
-`True` at runtime, and neither package imports the other at module level.
+`CatalogDomain` lets a geopatcher patcher walk a catalog without either package importing the other, and it shipped as designed in that respect. geopatcher's `Domain` is a `runtime_checkable` Protocol with two members, `crs` and `bounds`. `CatalogDomain` has both, so it satisfies `Domain` structurally: `isinstance(CatalogDomain(...), geopatcher.Domain)` returns `True` at runtime, and neither package imports the other at module level.
 
 ```{code-block} python
 :caption: CatalogDomain at geocatalog 0.5.1, from a real run on the catalog above.
@@ -460,10 +353,7 @@ dom.bounds, dom.crs.to_epsg()    # → ((0.0, 0.0, 150.0, 150.0), 32630)
 len(dom.slices())                # → 2  one GeoSlice per catalog row
 ```
 
-`field_for` is the second half of the bridge, which the scoping report did
-not have. With the `[patch]` extra it hands a catalog to geopatcher as a
-`RasterField` (or a list of them), importing geopatcher lazily inside the
-call:
+`field_for` is the second half of the bridge, which the scoping report did not have. With the `[patch]` extra it hands a catalog to geopatcher as a `RasterField` (or a list of them), importing geopatcher lazily inside the call:
 
 ```{code-block} python
 :caption: Catalog-driven iteration meeting patch-driven iteration (a sketch; needs the [patch] extra).
@@ -476,21 +366,15 @@ field = field_for(catalog, slice_, asset="visual")   # → geopatcher.RasterFiel
 ```
 
 :::{warning} Differs from the plan
-The scoping report gave `CatalogDomain` a `rows_for(anchor)` method. The
-shipped class is a frozen dataclass `CatalogDomain(catalog, resolution)` with
-`slices()` instead, which returns every row's slice at that resolution. The
-geocatalog repo's concepts page names `geotoolz.patch.SpatialPatcher` as the
-canonical consumer. The patcher lives in geopatcher, and geotoolz only
-bridges to it through `patch_ops` ([Report 3](03_sister_libraries.md#r3-geotoolz)).
+The scoping report gave `CatalogDomain` a `rows_for(anchor)` method. The shipped class is a frozen dataclass `CatalogDomain(catalog, resolution)` with `slices()` instead, which returns every row's slice at that resolution. The geocatalog repo's concepts page names `geotoolz.patch.SpatialPatcher` as the canonical consumer, but the patcher lives in geopatcher and geotoolz only bridges to it through `patch_ops` ([Report 3](03_sister_libraries.md#r3-geotoolz)).
 :::
 
 (r6-migration)=
 ## Migration from geotoolz
 
-The scoping report planned a transitional period:
+The scoping report planned a transitional period with three steps:
 - move `geotoolz.catalog` and `geotoolz.types.GeoSlice` into geocatalog;
-- have geotoolz re-export everything (including `import geocatalog as
-  catalog`) for two minor versions, then deprecate the re-exports;
+- have geotoolz re-export everything (including `import geocatalog as catalog`) for two minor versions, then deprecate the re-exports;
 - keep only the pipekit-shaped operators in a new `geotoolz.catalog_ops`.
 
 ```{code-block} python
@@ -505,7 +389,7 @@ class CatalogReader(Operator):
     """Read one GeoSlice into a GeoTensor, inline in a Sequential."""
 ```
 
-The move happened. The rest did not ([](#tbl-r6-migration)):
+The first step happened and the rest did not ([](#tbl-r6-migration)):
 
 :::{table} The migration steps at the pinned revisions.
 :label: tbl-r6-migration
@@ -520,10 +404,7 @@ The move happened. The rest did not ([](#tbl-r6-migration)):
 | xrtoolz depends on geocatalog | not done |
 :::
 
-The effect is that geocatalog is used **on its own**: you open a catalog and
-load slices yourself, then hand the results to geotoolz or xrtoolz
-operators. The scoping report's cross-library examples still work in that
-form, with today's names:
+The effect is that geocatalog is used **on its own**: we open a catalog and load slices ourselves, then hand the results to geotoolz or xrtoolz operators. The scoping report's cross-library examples still work in that form, with today's names:
 
 ```{code-block} python
 :caption: One catalog feeding both domain libraries, in today's names (a sketch).
@@ -542,25 +423,18 @@ for sl in reanalysis.iter_slices(resolution=(0.25, 0.25)):
     ...
 ```
 
-`CatalogPipeline` is now assumed by three reports
-([2](02_pipekit_surface.md#r2-group-j), [3](03_sister_libraries.md#r3-todos)
-and this one) and by use cases [2](09_use_cases.md#r9-case-2) and
-[12](09_use_cases.md#r9-case-12), and it exists nowhere. That makes it the most important
-open item here.
+`CatalogPipeline` is now assumed by three reports ([2](02_pipekit_surface.md#r2-group-j), [3](03_sister_libraries.md#r3-todos) and this one) and by use cases [2](09_use_cases.md#r9-case-2) and [12](09_use_cases.md#r9-case-12), and it exists nowhere, which makes it the most important open item here.
 
 (r6-monorepo)=
 ## The monorepo development model
 
-The scoping report chose to develop everything in one "pipekit-ecosystem"
-monorepo with uv workspaces and publish separate packages. The reasons:
+The scoping report chose to develop everything in one "pipekit-ecosystem" monorepo with uv workspaces and publish separate packages, for four reasons:
 - cross-package changes are common early on;
 - `GeoSlice` changes ripple through every consumer;
 - fixtures can be shared;
 - one CI can run the integration matrix.
 
-What exists is **three** monorepos, each a uv workspace with per-package
-releases ([](#tbl-r6-monorepos); [Report 16](16_geo_data_stack.md) maps
-every distribution in them):
+What exists is **three** monorepos, each a uv workspace with per-package releases ([](#tbl-r6-monorepos); [Report 16](16_geo_data_stack.md) maps every distribution in them):
 
 :::{table} The workspaces at the pinned revisions.
 :label: tbl-r6-monorepos
@@ -572,21 +446,12 @@ every distribution in them):
 | xrtoolz | `xrtoolz`, `xrtoolz-core`, `xrtoolz-einx`, `xrtoolz-grad`, `xrtoolz-reader`, `xrtoolz-sklearn` |
 :::
 
-The operating pattern held inside each workspace. Packages resolve to local
-paths during development, and release-please cuts per-package tags
-(`geotoolz-catalog-v0.5.1`). Cross-package pins appear in published metadata,
-for example `patch = [geotoolz-patcher>=0.6]`. The catalog landed in the
-geotoolz workspace, next to the patcher and cloud I/O it works with most,
-rather than beside pipekit. geostack itself is where all three workspaces
-meet (as submodules in `references/`).
+The operating pattern held inside each workspace. Packages resolve to local paths during development, and release-please cuts per-package tags (`geotoolz-catalog-v0.5.1`). Cross-package pins appear in published metadata, for example `patch = [geotoolz-patcher>=0.6]`. The catalog landed in the geotoolz workspace, next to the patcher and cloud I/O it works with most, rather than beside pipekit. geostack itself is where all three workspaces meet (as submodules in `references/`).
 
 (r6-timing)=
 ## Effort and timing
 
-The scoping report estimated a week of focused work, done in one coordinated
-v1.0 release alongside the pipekit and geopatcher extractions, so users would
-absorb one breaking change rather than three. The record is in
-[](#tbl-r6-history).
+The scoping report estimated a week of focused work, done in one coordinated v1.0 release alongside the pipekit and geopatcher extractions, so that users would absorb one breaking change rather than three. The record is in [](#tbl-r6-history).
 
 :::{table} geocatalog's history.
 :label: tbl-r6-history
@@ -600,72 +465,40 @@ absorb one breaking change rather than three. The record is in
 | 12 October 2026 | 0.5.1, the pinned revision |
 :::
 
-There was no single v1.0. The extraction was gradual, with breaking changes
-absorbed per package (geocatalog 0.3.0, geopatcher's matching
-reorganisation). geotoolz is at 0.10.2. What the split unblocked, as the
-report hoped: catalog backends, schema migrations and new sources released on
-their own cycle. There have been twelve `geotoolz-catalog` releases since
-July (0.1.0 to 0.5.1), each tagged on its own.
+There was no single v1.0. The extraction was gradual, with breaking changes absorbed per package (geocatalog 0.3.0, geopatcher's matching reorganisation), and geotoolz is at 0.10.2. The split unblocked what the report hoped, which is that catalog backends, schema migrations and new sources are released on their own cycle. There have been twelve `geotoolz-catalog` releases since July (0.1.0 to 0.5.1), each tagged on its own.
 
 (r6-tradeoffs)=
 ## Trade-offs
 
-The scoping report's list, with how each turned out.
+The scoping report's list is below, with how each item turned out.
 
 **What got better:**
-1. **Discoverability**, partly. The repo and the import name are
-   `geocatalog`, but the distribution from the monorepo is
-   `geotoolz-catalog`, which is not what someone searching for a catalog
-   would find ([](#r6-open-questions)).
-2. **A minimal install for narrow use**: did not happen ([](#r6-deps)).
-3. **`GeoSlice` as a cross-library type**: it is `geocatalog.GeoSlice`, but
-   no other library imports it yet.
-4. **Independent backend work**: yes. DuckDB parity, GeoParquet 1.1 pushdown
-   and schema migrations all shipped in catalog releases.
+1. **Discoverability**, partly. The repo and the import name are `geocatalog`, but the distribution from the monorepo is `geotoolz-catalog`, which is not what someone searching for a catalog would find ([](#r6-open-questions)).
+2. **A minimal install for narrow use**: this did not happen ([](#r6-deps)).
+3. **`GeoSlice` as a cross-library type**: it is `geocatalog.GeoSlice`, but no other library imports it yet.
+4. **Independent backend work**: this worked, as DuckDB parity, GeoParquet 1.1 pushdown and schema migrations all shipped in catalog releases.
 
 **What got worse, and the mitigations:**
 1. **One more package to release**: release-please makes it one tag.
-2. **Version pinning between packages**: largely moot, because geotoolz
-   does not depend on geocatalog yet.
-3. **Documentation has to live somewhere**: it lives in the standalone repo
-   (mkdocs, with the figures and the Lake Tahoe notebook), separate from the
-   code since July.
-4. **The Protocol bridge is implicit**: documented in the repo's concepts
-   page, and checkable with `isinstance`.
+2. **Version pinning between packages**: this is largely moot, because geotoolz does not depend on geocatalog yet.
+3. **Documentation has to live somewhere**: it lives in the standalone repo (mkdocs, with the figures and the Lake Tahoe notebook), separate from the code since July.
+4. **The Protocol bridge is implicit**: it is documented in the repo's concepts page, and we can check it with `isinstance`.
 
 (r6-open-questions)=
 ## Open questions
 
-1. **Which repo is canonical?** The code lives in the geotoolz monorepo; the
-   docs, figures and notebook live in the standalone repo, frozen at 0.0.3.
-   Either the docs move into the monorepo (and the standalone repo is
-   archived with a pointer), or the standalone repo becomes the docs site for
-   `geotoolz-catalog`.
-2. **`geocatalog` or `geotoolz-catalog` on PyPI?** Resolved:
-   `geotoolz-catalog` ([Report 16 §F](16_geo_data_stack.md#r16-ws-f)).
-3. **Should there be an index-only install?** The scoped base had no
-   georeader, and no rasterio beyond what `GeoSlice` needs. If the narrow
-   use case matters, georeader and the raster loader move behind an extra.
-4. **Where do `CatalogPipeline` and `CatalogReader` live?** In geotoolz, as
-   scoped, which needs geotoolz to depend on geocatalog. Or in an optional
-   `geocatalog[pipekit]` module, which breaks the no-pipekit rule only
-   behind an extra. Reports [2](02_pipekit_surface.md#r2-group-j) and
-   [3](03_sister_libraries.md#r3-todos) both depend on the answer.
-5. **Should geotoolz and xrtoolz adopt geocatalog at all?** Today the catalog
-   is used standalone and the domain libraries never see a `GeoSlice`. The
-   scoped re-exports may not be worth a dependency; catalog-aware operators
-   might be.
-6. **Is `slices()` the right bridge?** `CatalogDomain.slices()` returns every
-   row's slice eagerly. The scoped `rows_for(anchor)` was lazy and
-   query-driven, which matters for large catalogs walked by a patcher.
-7. **A third backend?** The scoping report floated PostGIS. Nothing in the
-   design notes picks it up; DuckDB over GeoParquet covers the scale cases so
-   far.
+1. **Which repo is canonical?** The code lives in the geotoolz monorepo, whereas the docs, figures and notebook live in the standalone repo, frozen at 0.0.3. Either the docs move into the monorepo (and the standalone repo is archived with a pointer), or the standalone repo becomes the docs site for `geotoolz-catalog`.
+2. **`geocatalog` or `geotoolz-catalog` on PyPI?** Resolved: `geotoolz-catalog` ([Report 16 §F](16_geo_data_stack.md#r16-ws-f)).
+3. **Should there be an index-only install?** The scoped base had no georeader, and no rasterio beyond what `GeoSlice` needs. If the narrow use case matters, we would move georeader and the raster loader behind an extra.
+4. **Where do `CatalogPipeline` and `CatalogReader` live?** They could live in geotoolz, as scoped, which needs geotoolz to depend on geocatalog. Alternatively they could live in an optional `geocatalog[pipekit]` module, which breaks the no-pipekit rule only behind an extra. Reports [2](02_pipekit_surface.md#r2-group-j) and [3](03_sister_libraries.md#r3-todos) both depend on the answer.
+5. **Should geotoolz and xrtoolz adopt geocatalog at all?** Today the catalog is used standalone and the domain libraries never see a `GeoSlice`. The scoped re-exports may not be worth a dependency, whereas catalog-aware operators might be.
+6. **Is `slices()` the right bridge?** `CatalogDomain.slices()` returns every row's slice eagerly, whereas the scoped `rows_for(anchor)` was lazy and query-driven, which matters for large catalogs walked by a patcher.
+7. **A third backend?** The scoping report floated PostGIS, but nothing in the design notes picks it up, and DuckDB over GeoParquet covers the scale cases so far.
 
 (r6-todos)=
 ## Upcoming work
 
-[](#tbl-r6-todos) lists the follow-ups.
+The follow-ups are listed in [](#tbl-r6-todos).
 
 :::{table} Follow-ups from checking the scoping report against the repo and the code.
 :label: tbl-r6-todos
@@ -687,12 +520,7 @@ The scoping report's list, with how each turned out.
 
 ### Sources
 
-- The [geocatalog repo](https://github.com/jejjohnson/geocatalog): concepts,
-  quickstart, recipes and the design notes on
-  [exact grid alignment](https://github.com/jejjohnson/geocatalog/blob/main/docs/design/exact-grid-alignment.md)
-  and [query → matchup → patch](https://github.com/jejjohnson/geocatalog/blob/main/docs/design/query-matchup.md);
-  the set-algebra and backend figures on this page are its own.
+- The [geocatalog repo](https://github.com/jejjohnson/geocatalog): concepts, quickstart, recipes and the design notes on [exact grid alignment](https://github.com/jejjohnson/geocatalog/blob/main/docs/design/exact-grid-alignment.md) and [query → matchup → patch](https://github.com/jejjohnson/geocatalog/blob/main/docs/design/query-matchup.md); we took the set-algebra and backend figures on this page from there.
 - `geotoolz-catalog` 0.5.1 in the geotoolz monorepo, and its changelog.
 
-*Citations to be added:* GeoParquet 1.1, DuckDB, STAC, and NASA CMR, as
-entries in `references.bib`.
+*Citations to be added:* GeoParquet 1.1, DuckDB, STAC, and NASA CMR, as entries in `references.bib`.

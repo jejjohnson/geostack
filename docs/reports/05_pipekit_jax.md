@@ -22,24 +22,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-The scoping report asked when pipekit would need a JAX-traceable twin, and
-corrected an earlier claim that `jax.jit` cannot pass through pipekit's
-dual-mode `__call__`. The correction is right, and the code goes further than
-the report expected: a plain pipekit `Sequential`, `Graph` or `Fanout` of
-JAX operators already runs under `jit`, `vmap` and `grad` with respect to its
-inputs, with no new package. On the five-band methane retrieval of Reports
-[10](10_pipekit_cycle.md#r10-running), [11](11_pipekit_train.md) and
-[17](17_cycle.md#r17-running), the jitted pipeline matches the eager one exactly, `vmap`
-retrieves 500 scenes in one call, and `grad` gives each scene an error bar
-that is calibrated against the truth. Three things do not work. Gradients
-with respect to **parameters held by operators** never reach them, because a
-pipekit operator is one opaque leaf to JAX. Seven of pipekit's control,
-observation and caching operators misbehave under tracing, and one of them,
-`Cache`, **returns a wrong value without an error**. And pipekit-jax 0.0.2
-is not the operator layer the report planned: it ships a model wrapper with
-a weight round trip, a diffrax forward model and two adjoint helpers.
-**The report's operator layer stays as gated proposals, and the core gets
-trace guards first.**
+The scoping report asked when pipekit would need a JAX-traceable twin, and corrected an earlier claim that `jax.jit` cannot pass through pipekit's dual-mode `__call__`. The correction is right, and the code goes further than the report expected: a plain pipekit `Sequential`, `Graph` or `Fanout` of JAX operators already runs under `jit`, `vmap` and `grad` with respect to its inputs, with no new package. On the five-band methane retrieval of Reports [10](10_pipekit_cycle.md#r10-running), [11](11_pipekit_train.md) and [17](17_cycle.md#r17-running), the jitted pipeline matches the eager one exactly, `vmap` retrieves 500 scenes in one call, and `grad` gives each scene an error bar that is calibrated against the truth. However, three things do not work. 1) Gradients with respect to **parameters held by operators** never reach them, because a pipekit operator is one opaque leaf to JAX. 2) Seven of pipekit's control, observation and caching operators misbehave under tracing, and one of them, `Cache`, **returns a wrong value without an error**. 3) pipekit-jax 0.0.2 is not the operator layer the report planned, as it ships a model wrapper with a weight round trip, a diffrax forward model and two adjoint helpers. So the report's operator layer stays as gated proposals, and the core gets trace guards first.
 
 +++
 
@@ -71,82 +54,41 @@ A **Differs** box carries each argument ([conventions](../overview.md#sec-conven
 (r5-summary)=
 ## Summary
 
-**Decision.** JAX support stays in two places. **pipekit core** stays
-JAX-free and carrier-agnostic, but refuses or flags the operators that are
-wrong under tracing. **pipekit-jax** holds everything that imports JAX or
-Equinox: today's model wrapper, forward model and adjoint helpers, and, when
-a project needs gradients through operator parameters, the operator-as-PyTree
-layer the scoping report designed. Five workstreams.
+**Decision.** We keep JAX support in two places. **pipekit core** stays JAX-free and carrier-agnostic, but it refuses or flags the operators that are wrong under tracing. **pipekit-jax** holds everything that imports JAX or Equinox, which today means the model wrapper, the forward model and the adjoint helpers, and, once a project needs gradients through operator parameters, the operator-as-PyTree layer the scoping report designed. This splits into five workstreams.
 
-- **A. Trace guards in pipekit core.** `Cache` keys every tracer of one shape
-  to the same entry, so a pipeline that caches twice returns the first
-  result for the second call (A1). `Snapshot`, `Sink`, `Profile` and `Tap`
-  run once, at trace time, on a tracer; `Snapshot` leaks it (A2).
-- **B. Operators as PyTrees in pipekit-jax.** A `JaxOperator(Operator,
-  eqx.Module)` mixin and a `JaxSequential` whose operators are a tuple field
-  let gradients reach parameters and let `eqx.tree_at` replace a step (B1).
-  Their configs hold arrays, which breaks `state` as JSON; the config needs
-  an array policy (B2).
-- **C. JAX-native control and observation.** A `CondBranch` and `CondSwitch`
-  on `jax.lax.cond` and `jax.lax.switch` (C1), and a `DebugTap` on
-  `jax.debug.callback`, which runs on every call rather than once per trace
-  (C2).
-- **D. Transformation wrappers.** `VMapOver`, `Checkpoint` and
-  `ScanSequential` wait for a project that needs them; `truncated_scan`
-  already covers the cycle layer's scans.
-- **E. Docs.** One page on build time against trace time (E1), and fixes to
-  pipekit-jax's README and install notes (E2).
+- **A. Trace guards in pipekit core.** `Cache` keys every tracer of one shape to the same entry, so a pipeline that caches twice returns the first result for the second call (A1). `Snapshot`, `Sink`, `Profile` and `Tap` run once, at trace time, on a tracer, and `Snapshot` leaks it (A2).
+- **B. Operators as PyTrees in pipekit-jax.** A `JaxOperator(Operator, eqx.Module)` mixin and a `JaxSequential` whose operators are a tuple field let gradients reach parameters and let `eqx.tree_at` replace a step (B1). However, their configs hold arrays, which breaks `state` as JSON, so the config needs an array policy (B2).
+- **C. JAX-native control and observation.** We add a `CondBranch` and `CondSwitch` on `jax.lax.cond` and `jax.lax.switch` (C1), and a `DebugTap` on `jax.debug.callback`, which runs on every call rather than once per trace (C2).
+- **D. Transformation wrappers.** `VMapOver`, `Checkpoint` and `ScanSequential` wait for a project that needs them, as `truncated_scan` already covers the cycle layer's scans.
+- **E. Docs.** We write one page on build time against trace time (E1), and fix pipekit-jax's README and install notes (E2).
 
-**End state.** A pipeline of JAX operators runs under `jit`, `vmap` and
-`grad` as it does today. An operator that cannot be traced says so instead
-of returning a wrong value, a pipeline whose parameters are learned is built
-from PyTree operators, and its trained weights round-trip through the
-registry the way `JaxModelOp`'s do.
+**End state.** A pipeline of JAX operators runs under `jit`, `vmap` and `grad` as it does today. An operator that cannot be traced says so instead of returning a wrong value, a pipeline whose parameters are learned is built from PyTree operators, and its trained weights round-trip through the registry the way `JaxModelOp`'s do.
 
 (r5-ownership)=
 ## Ownership rules
 
-pipekit core owns composition and the operators that misbehave under
-tracing; pipekit-jax owns everything that imports JAX
-([](#fig-r5-ownership)).
+pipekit core owns composition and the operators that misbehave under tracing, whereas pipekit-jax owns everything that imports JAX ([](#fig-r5-ownership)).
 
 :::{figure} ../images/reports/r5_ownership.svg
 :label: fig-r5-ownership
 :alt: At the top, pipekit pipelines of JAX operators (Sequential, Graph, Fanout) run under jit, vmap and grad over inputs today. Below, pipekit core holds Cache, Snapshot, Sink, Profile, Tap, Branch and Switch, which are wrong or trace-time only under jit, and would add trace guards. pipekit-jax 0.0.2 ships JaxModelOp, DiffraxForwardModel, to_diffrax_adjoint and truncated_scan, and would add JaxOperator, JaxSequential, CondBranch and DebugTap. pipekit-train and pipekit-cycle use it; JAX, Equinox, Optax and diffrax are external.
 
-JAX support between pipekit core and pipekit-jax. Dashed chips are
-proposed.
+JAX support between pipekit core and pipekit-jax. Dashed chips are proposed.
 :::
 
-1. **pipekit core** owns `Operator`, `Sequential`, `Graph`, `Fanout` and the
-   control, observation and caching operators. It never imports JAX. Its
-   guards (A) detect a tracer through `sys.modules`, only when JAX is
-   already imported.
-2. **pipekit-jax** owns every class that subclasses or wraps an
-   `eqx.Module`, every operator built on a `jax.lax` primitive, and the
-   JAX-side adjoint helpers. It depends on pipekit, pipekit-cycle (which
-   [Report 16](16_geo_data_stack.md#r16-ws-b)'s B moves to the `[diffrax]`
-   extra), Equinox and JAX.
+1. **pipekit core** owns `Operator`, `Sequential`, `Graph`, `Fanout` and the control, observation and caching operators. It never imports JAX, and its guards (A) detect a tracer through `sys.modules`, only when JAX is already imported.
+2. **pipekit-jax** owns every class that subclasses or wraps an `eqx.Module`, every operator built on a `jax.lax` primitive, and the JAX-side adjoint helpers. It depends on pipekit, pipekit-cycle (which [Report 16](16_geo_data_stack.md#r16-ws-b)'s B moves to the `[diffrax]` extra), Equinox and JAX.
 
-Neighbours (pipekit-train, pipekit-cycle, the algorithm libraries) follow
-[the stack rules](16_geo_data_stack.md#r16-ownership); for this page the
-one that matters is that pipekit-train differentiates the module a
-`JaxModelOp` wraps, never a pipekit `Sequential` (stage 2).
+Neighbours (pipekit-train, pipekit-cycle, the algorithm libraries) follow [the stack rules](16_geo_data_stack.md#r16-ownership). For this page the one that matters is that pipekit-train differentiates the module a `JaxModelOp` wraps, and never a pipekit `Sequential` (stage 2).
 
 :::{warning} Differs from the plan
-The scoping report's map put pipekit-jax beside geotoolz and xrtoolz at
-v0.3 or later, with a `jax_geotoolz` domain layer under it. pipekit-jax
-0.0.2 exists now, is a workspace member of pipekit, and has no domain layer
-under it; nothing named `jax_geotoolz` exists. Its README describes it as
-"JAX / Equinox carrier integration", the successor to pipekit-train's
-`EquinoxModelOp`, not the operator framework the report described.
+The scoping report's map put pipekit-jax beside geotoolz and xrtoolz at v0.3 or later, with a `jax_geotoolz` domain layer under it. However, pipekit-jax 0.0.2 exists now, is a workspace member of pipekit, and has no domain layer under it (nothing named `jax_geotoolz` exists). Its README describes it as "JAX / Equinox carrier integration", the successor to pipekit-train's `EquinoxModelOp`, and not the operator framework the report described.
 :::
 
 (r5-surface)=
 ## What ships
 
-[](#tbl-r5-surface) lists what pipekit-jax 0.0.2 exports beside the scoping
-report's names; the italic rows were planned and never built.
+[](#tbl-r5-surface) lists what pipekit-jax 0.0.2 exports beside the scoping report's names, where the italic rows were planned and never built.
 
 :::{table} pipekit-jax 0.0.2's public surface. Rows in italics are in the scoping report but not in the code.
 :label: tbl-r5-surface
@@ -165,46 +107,36 @@ report's names; the italic rows were planned and never built.
 (r5-running)=
 ## The running example: one retrieval under jit, vmap and grad
 
-The sensor is the five-band sensor of
-[Report 17](17_cycle.md#r17-running), unchanged: $y_b = e^{-k_b \alpha} +
-\varepsilon_b$ with $k = (0.002, \dots, 0.010)$, $\sigma = 10^{-3}$ and
-$\alpha \sim \mathcal{U}(0, 300)$. The retrieval
-inverts each band, $z_b = -\log y_b / k_b$, and averages the five with
-inverse-variance weights. To first order
-$\operatorname{var} z_b = \sigma^2 / (k_b y_b)^2$, which gives
-{eq}`r5-eq-retrieval`:
+We keep the five-band sensor of [Report 17](17_cycle.md#r17-running) unchanged. The band index is $b = 1, \ldots, B$ with $B = 5$, the observation is $\vect{y} \in \mathbb{R}^{B}$ and the noise is $\gvect{\varepsilon} \in \mathbb{R}^{B}$, so that $y_b = e^{-k_b \alpha} + \varepsilon_b$. Here $\alpha \in \mathbb{R}$ is the column amount, with $\alpha \sim \mathcal{U}(0, 300)$, and $\vect{k} \in \mathbb{R}^{B}$ holds the absorption coefficients, $\vect{k} = (0.002, \ldots, 0.010)$, while the noise scale is $\sigma = 10^{-3}$. The retrieval inverts each band, $z_b = -\log y_b / k_b$ with $z_b \in \mathbb{R}$, and averages the five with inverse-variance weights. To first order $\mathbb{V}[z_b] = \sigma^2 / (k_b y_b)^2$, which gives the retrieval $\hat\alpha \in \mathbb{R}$ in {eq}`r5-eq-retrieval` and the weights $w_b \in \mathbb{R}$ in {eq}`r5-eq-weights`:
 
 $$
-\hat\alpha = \frac{\sum_b w_b z_b}{\sum_b w_b} , \qquad
-w_b = \left(k_b e^{-k_b z_b}\right)^2 .
+\hat\alpha = \frac{\sum_{b=1}^{B} w_b z_b}{\sum_{b=1}^{B} w_b}
 $$ (r5-eq-retrieval)
 
-The test set is 500 scenes; stage 2 adds 2,000 labelled scenes, as from
-controlled releases.
+$$
+w_b = (k_b e^{-k_b z_b})^2
+$$ (r5-eq-weights)
+
+The test set is 500 scenes, and stage 2 adds 2,000 labelled scenes, as from controlled releases.
 
 (r5-stage-1)=
 ### Stage 1 · jit, vmap and grad through a pipeline (pipekit → JAX)
 
-**TL;DR.** Run the retrieval as a plain pipekit `Sequential` under the three
-transformations, and use the gradient as each scene's error bar.
+**TL;DR.** Run the retrieval as a plain pipekit `Sequential` under the three transformations, and use the gradient as each scene's error bar.
 
-**Problem.** A pipeline traces if every `_apply` is pure JAX and dispatch
-does not intercept the tracer. `Operator.__call__` builds a graph node only
-when an argument is a `Node` (`operator.py:160`), and a JAX tracer is not
-one. The noise propagates through the retrieval as
+**Problem.** A pipeline traces if every `_apply` is pure JAX and dispatch does not intercept the tracer. `Operator.__call__` builds a graph node only when an argument is a `Node` (`operator.py:160`), and a JAX tracer is not one. The noise propagates through the retrieval as
 
 $$
-\sigma_{\hat\alpha} \approx \sigma \, \lVert \nabla_y \hat\alpha \rVert ,
+\sigma_{\hat\alpha} \approx \sigma \Vert \nabla_{\vect{y}} \hat\alpha \Vert_2
 $$ (r5-eq-sigma)
 
-so if `grad` is right ({eq}`r5-eq-sigma`), the errors divided by $\sigma_{\hat\alpha}$ have an RMS
-of 1.
+where $\nabla_{\vect{y}} \hat\alpha \in \mathbb{R}^{B}$ and $\sigma_{\hat\alpha} \in \mathbb{R}$. So if `grad` is right ({eq}`r5-eq-sigma`), the errors divided by $\sigma_{\hat\alpha}$ have an RMS of 1.
 
 ```{code-block} python
 :caption: The retrieval as a pipekit Sequential, under jit, vmap and grad, from a real run.
 :linenos:
 
-# Shapes: n = 500 scenes, B = 5 bands
+# Shapes: N = 500 scenes, B = 5 bands
 # z_b = −log y_b / k_b
 invert = Lambda(lambda y: -jnp.log(y) / K)              # (B,) → (B,)   today
 # α̂ = Σ_b w_b z_b / Σ_b w_b,  w_b = (k_b e^{−k_b z_b})²
@@ -212,98 +144,65 @@ combine = Lambda(weighted_mean)                         # (B,) → ()     today
 retrieval = Sequential([invert, combine])                               # today
 jax.jit(retrieval)(y[0])          # → 215.44 (α = 215.29); = eager      today
 jax.make_jaxpr(retrieval)(y[0])   # → one jaxpr, 12 equations           today
-jax.vmap(retrieval)(y)            # (n, B) → (n,): RMSE 0.262           today
-# σ_α̂ = σ ‖∇_y α̂‖
+jax.vmap(retrieval)(y)            # (N, B) → (N,): RMSE 0.262           today
+# σ_α̂ = σ ‖∇_y α̂‖₂
 s = SIG * jnp.linalg.norm(jax.vmap(jax.grad(retrieval))(y), axis=1)  # today
 # RMS of σ_α̂ 0.258; RMS of (α̂ − α) / σ_α̂ = 0.97
 ```
 
-All three transformations pass through the pipeline unchanged. The jitted
-output agrees with the eager one to 10⁻¹², because it is the same
-arithmetic in one jaxpr. The gradient is right too: the linearised error bar
-has an RMS of 0.258 against an actual RMSE of 0.262, and the standardised
-errors have an RMS of 0.97, within the 0.03 that 500 scenes allow. None of
-this needed pipekit-jax; it needs only operators whose `_apply` is pure JAX.
-`Graph` with a diamond (one node feeding two) and `Fanout` behave the same
-under `jit` and `vmap` (stage 3).
+All three transformations pass through the pipeline unchanged. The jitted output agrees with the eager one to 10⁻¹², because it is the same arithmetic in one jaxpr. The gradient is right too, as the linearised error bar has an RMS of 0.258 against an actual RMSE of 0.262, and the standardised errors have an RMS of 0.97, within the 0.03 that 500 scenes allow. None of this needed pipekit-jax, since it only needs operators whose `_apply` is pure JAX. `Graph` with a diamond (one node feeding two) and `Fanout` behave the same under `jit` and `vmap` (stage 3).
 
 :::{warning} Differs from the plan
-The scoping report expected `jit(seq)` to work but proposed a
-`JaxSequential` with a tuple of operators "so it can be vmapped across".
-`vmap` over the **data** needs nothing: `jax.vmap(retrieval)` works on the
-plain `Sequential`. A tuple field matters only for vmapping or
-differentiating over the **operators' parameters** (stages 2 and 4).
+The scoping report expected `jit(seq)` to work but proposed a `JaxSequential` with a tuple of operators "so it can be vmapped across". However, `vmap` over the **data** needs nothing, as `jax.vmap(retrieval)` works on the plain `Sequential`. A tuple field only matters for vmapping or differentiating over the **operators' parameters** (stages 2 and 4).
 :::
 
 (r5-stage-2)=
 ### Stage 2 · Gradients with respect to an operator's parameters (pipekit-jax → Optax)
 
-**TL;DR.** Learn the absorption coefficients from labelled scenes, and see
-that the gradient cannot reach them through the pipeline.
+**TL;DR.** Learn the absorption coefficients from labelled scenes, and see that the gradient cannot reach them through the pipeline.
 
-**Problem.** The coefficients are known only to 10 %, as from an old line
-list. With 2,000 scenes whose $\alpha$ is known, fit $\log k$ by minimising
+**Problem.** The coefficients are known only to 10 %, as from an old line list. With $N = 2000$ scenes whose $\alpha$ is known (indexed by $n$), we fit $\gvect{\theta} = \log \vect{k} \in \mathbb{R}^{B}$ by minimising
 
 $$
-L(\log k) = \frac{1}{n} \sum_i \left(\hat\alpha_{\log k}(y_i) - \alpha_i\right)^2 ,
+\mathcal{L}(\gvect{\theta}) = \frac{1}{N} \sum_{n=1}^{N} (\hat\alpha_{\gvect{\theta}}(\vect{y}_n) - \alpha_n)^2
 $$ (r5-eq-loss)
 
-where the inversion step holds $\log k$ as an `eqx.Module` wrapped in a
-`JaxModelOp`. The gradient of {eq}`r5-eq-loss`,
-$\partial L / \partial \log k$, must flow through the pipeline into the
-operator.
+where the inversion step holds $\gvect{\theta}$ as an `eqx.Module` wrapped in a `JaxModelOp`. The gradient of {eq}`r5-eq-loss`, $\partial \mathcal{L} / \partial \gvect{\theta} \in \mathbb{R}^{B}$, must flow through the pipeline into the operator.
 
 ```{code-block} python
 :caption: Two ways to differentiate a pipeline's parameters, from a real run.
 :linenos:
 
-# Shapes: n = 2,000 labelled scenes, B = 5, log k (5,)
+# Shapes: N = 2,000 labelled scenes, B = 5, θ = log k (5,)
 class BandInversion(eqx.Module):                                       # user
     log_k: jax.Array                    # z_b = −log y_b / exp(log k_b)
 pipe = Sequential([JaxModelOp(BandInversion(log_k0)),
                    Lambda(weighted_mean)])                              # today
 jax.tree.leaves(pipe)            # → [Sequential(...)]: one opaque leaf today
-# ∂L/∂ pipe
+# ∂ℒ/∂pipe
 eqx.filter_grad(loss)(pipe, y, a)          # → None: nothing to diff   today
 # rebuild the pipeline inside the loss; differentiate the module instead
 def loss_m(m, y, a):                                                    # user
     return loss(Sequential([JaxModelOp(m), Lambda(weighted_mean)]), y, a)
-# log k ← Adam(log k, ∂L/∂ log k), 400 steps, learning rate 10⁻²
+# θ ← Adam(θ, ∂ℒ/∂θ), 400 steps, learning rate 10⁻²
 eqx.filter_value_and_grad(loss_m)(m, y, a)                              # today
 # test RMSE: 3.45 at the start → 0.260 (true k: 0.262); k still ≤ 8.7 % off
 ```
 
-The plain pipeline is opaque to JAX. `Sequential` and `JaxModelOp` are
-ordinary Python objects, so `jax.tree.leaves` sees the whole pipeline as one
-leaf, and Equinox's filtered gradient finds no array to differentiate. The
-workaround is the one pipekit-train already uses: differentiate the module,
-and rebuild the pipeline inside the loss. Then 400 Adam steps bring the test
-RMSE from 3.45 to 0.260, as good as the true coefficients (0.262).
+The plain pipeline is opaque to JAX. `Sequential` and `JaxModelOp` are ordinary Python objects, so `jax.tree.leaves` sees the whole pipeline as one leaf, and Equinox's filtered gradient finds no array to differentiate. The workaround is the one pipekit-train already uses, which is to differentiate the module and rebuild the pipeline inside the loss. With that, 400 Adam steps bring the test RMSE from 3.45 to 0.260, as good as the true coefficients (0.262).
 
-The coefficients themselves stay up to 8.7 % off. The labels constrain the
-retrieval, not each band's absorption, and several sets of five $k_b$ give
-the same $\hat\alpha$. A loss on $\hat\alpha$ is the right objective for the
-retrieval; recovering the spectroscopy needs a loss on $y$.
+The coefficients themselves stay up to 8.7 % off. The labels constrain the retrieval and not each band's absorption, so several sets of five $k_b$ give the same $\hat\alpha$. A loss on $\hat\alpha$ is therefore the right objective for the retrieval, whereas recovering the spectroscopy needs a loss on $y$.
 
 :::{warning} Differs from the plan
-The scoping report's headline use case (7.1, "differentiable retrievals")
-assumed that `filter_grad` through a pipeline reaches the target spectrum,
-the cloud threshold and the other parameters inside its operators. It does
-not, for any shipped operator, because none of them is a PyTree. The report
-treated PyTree registration as a detail of `JaxSequential`; it is the
-feature, and it is workstream B.
+The scoping report's headline use case (7.1, "differentiable retrievals") assumed that `filter_grad` through a pipeline reaches the target spectrum, the cloud threshold and the other parameters inside its operators. It does not, for any shipped operator, because none of them is a PyTree. The report treated PyTree registration as a detail of `JaxSequential`, but it is the feature, and it is workstream B.
 :::
 
 (r5-stage-3)=
 ### Stage 3 · Control, observation and caching operators under jit (pipekit)
 
-**TL;DR.** Put each of pipekit's side-effecting and branching operators in a
-jitted pipeline and record what it does.
+**TL;DR.** Put each of pipekit's side-effecting and branching operators in a jitted pipeline and record what it does.
 
-**Problem.** Under `jit` an operator's `_apply` runs once, on a tracer, and
-only the JAX operations it records survive into the compiled function. An
-operator whose job is a side effect, a Python decision or a lookup keyed on
-its input's value cannot do that job. [](#tbl-r5-under-jit) records what each one does.
+**Problem.** Under `jit` an operator's `_apply` runs once, on a tracer, and only the JAX operations it records survive into the compiled function. So an operator whose job is a side effect, a Python decision or a lookup keyed on its input's value cannot do that job. [](#tbl-r5-under-jit) records what each one does.
 
 :::{table} pipekit's operators inside a jitted pipeline, called three times (twice on one input, once on another of the same shape).
 :label: tbl-r5-under-jit
@@ -338,98 +237,61 @@ CondBranch(pred, retrieval, last_band)                  # lax.cond     proposed 
 # → equals the eager Branch to 10⁻¹²
 ```
 
-Four operators are honest about it: `Branch` and `Switch` raise
-(`TracerBoolConversionError` is a subclass of `ConcretizationTypeError`), and
-`Fanout` and a diamond `Graph` simply trace. Four run at trace time only,
-which is what the scoping report predicted; `ShapeTrace` is useful that way,
-`Tap`, `Profile` and `Sink` are not, and `Snapshot` keeps a tracer that
-raises when touched later.
+Four operators are honest about it. `Branch` and `Switch` raise (`TracerBoolConversionError` is a subclass of `ConcretizationTypeError`), and `Fanout` and a diamond `Graph` simply trace. Four more run at trace time only, which is what the scoping report predicted: `ShapeTrace` is useful that way, `Tap`, `Profile` and `Sink` are not, and `Snapshot` keeps a tracer that raises when touched later.
 
-`Cache` is the dangerous one. A tracer has no `tobytes`, so
-`_input_key` (`cache.py:97`) falls back to `stable_repr`, and every tracer
-of one shape and dtype has the same representation. The second `cache` call
-in `twice` hits the first one's entry and returns $x + 1$ in place of
-$10(x + 1) + 1$, with no error. The stored tracers then poison later
-traces of other functions.
+`Cache` is the dangerous one. A tracer has no `tobytes`, so `_input_key` (`cache.py:97`) falls back to `stable_repr`, and every tracer of one shape and dtype has the same representation. The second `cache` call in `twice` therefore hits the first one's entry and returns $x + 1$ in place of $10(x + 1) + 1$, with no error, and the stored tracers then poison later traces of other functions.
 
 :::{warning} Differs from the plan
-The scoping report said `Cache` and `Memoize` are "redundant under jit and
-may actively hurt" and should be dropped from pipekit-jax. The finding is
-stronger: they give wrong results today, in pipekit core, for anyone who
-jits a pipeline containing them. Dropping them from a future package does
-not protect today's users; workstream A1 makes `Cache` refuse a tracer.
-`Memoize` is an alias of `Cache` (`cache.py:94`), not a second class.
+The scoping report said `Cache` and `Memoize` are "redundant under jit and may actively hurt" and should be dropped from pipekit-jax. The finding is stronger, since they give wrong results today, in pipekit core, for anyone who jits a pipeline containing them. Dropping them from a future package does not protect today's users, whereas workstream A1 makes `Cache` refuse a tracer. `Memoize` is an alias of `Cache` (`cache.py:94`) and not a second class.
 :::
 
 (r5-stage-4)=
 ### Stage 4 · Operators as PyTrees, prototyped (pipekit-jax)
 
-**TL;DR.** Prototype the scoping report's `JaxOperator` and `JaxSequential`
-in a few lines, and see what the multiple inheritance gives and costs.
+**TL;DR.** Prototype the scoping report's `JaxOperator` and `JaxSequential` in a few lines, and see what the multiple inheritance gives and costs.
 
-**Problem.** For $\partial L / \partial \theta$ to reach parameters $\theta$
-held by operators, each operator must be a PyTree whose array fields are
-leaves, and so must the container.
+**Problem.** For $\partial \mathcal{L} / \partial \gvect{\theta}$ to reach parameters $\gvect{\theta}$ held by operators, each operator must be a PyTree whose array fields are leaves, and so must the container.
 
 ```{code-block} python
 :caption: The scoping report's PyTree operators, prototyped, from a real run.
 :linenos:
 
-# Shapes: B = 5; two operators, each holding log k (5,)
+# Shapes: B = 5; two operators, each holding θ = log k (5,)
 class JaxOperator(Operator, eqx.Module): pass                  # proposed (B1)
 # MRO: Invert → JaxOperator → Operator → ConfigMixin → Module
 class JaxSequential(Sequential, eqx.Module):                   # proposed (B1)
     operators: tuple
 seq = JaxSequential([Invert(log_k0), Combine(log_k0)])         # proposed (B1)
 jax.tree.leaves(seq)            # → 2 leaves, one per log k     proposed (B1)
-# ∂L/∂θ for both operators; the tied gradient is their sum
+# ∂ℒ/∂θ for both operators; the tied gradient is their sum
 eqx.filter_grad(loss)(seq, y, a)       # = stage 2's, to 10⁻⁹   proposed (B1)
 eqx.tree_at(lambda s: s.operators[0], seq, Invert(log_k))      # proposed (B1)
 seq.summary(None)               # → still a pipekit Sequential  proposed (B1)
 json.dumps(Invert(log_k0).state)       # → TypeError: an Array  proposed (B2)
 ```
 
-The multiple inheritance works as the scoping report said: Equinox's
-`Module` registers the class as a PyTree and pipekit's `Operator` keeps
-dispatch, `summary` and `|`. A single `JaxOperator` is differentiable; put
-in a plain `Sequential` it is opaque again, so the container must be a
-PyTree too. With both, the gradient reaches every operator, and
-`eqx.tree_at` can replace one step. Because each operator holds its own
-$\log k$, the two copies are separate leaves, and their gradients sum to the
-gradient of stage 2's tied parameter. Tying them again is what
-`eqx.nn.Shared` is for.
+The multiple inheritance works as the scoping report said, since Equinox's `Module` registers the class as a PyTree and pipekit's `Operator` keeps dispatch, `summary` and `|`. A single `JaxOperator` is differentiable, but put in a plain `Sequential` it is opaque again, so the container must be a PyTree too. With both, the gradient reaches every operator, and `eqx.tree_at` can replace one step. Because each operator holds its own $\log k$, the two copies are separate leaves, and their gradients sum to the gradient of stage 2's tied parameter (tying them again is what `eqx.nn.Shared` is for).
 
-One cost the report did not mention. `ConfigMixin` derives `get_config` from
-the `__init__` parameters, and Equinox's generated `__init__` takes the array
-fields. So the config holds a JAX array, and `state` is no longer JSON. The
-array values belong in the registry's weight blob, as `JaxModelOp` already
-does it, and the config should record only their shapes and dtypes (B2).
+There is one cost the report did not mention. `ConfigMixin` derives `get_config` from the `__init__` parameters, and Equinox's generated `__init__` takes the array fields, so the config holds a JAX array and `state` is no longer JSON. We think the array values belong in the registry's weight blob, as `JaxModelOp` already does it, and the config should record only their shapes and dtypes (B2).
 
 (r5-stage-5)=
 ### Stage 5 · What pipekit-jax ships (pipekit-jax → pipekit-experiment, pipekit-cycle)
 
-**TL;DR.** Round-trip the trained inversion through the registry, truncate a
-scan's gradient, and solve an ODE forward model with three adjoints.
+**TL;DR.** Round-trip the trained inversion through the registry, truncate a scan's gradient, and solve an ODE forward model with three adjoints.
 
-**Problem.** Three shipped pieces, each with a check. (a) A reloaded model
-must equal the stored one byte for byte. (b) For a plume column refilled
-each hour, $c_{t+1} = 0.9\, c_t + q_t$ over $T = 24$ hours, the exact
-sensitivity of the last column to the first hour's source is
-{eq}`r5-eq-scan`,
+**Problem.** We check three shipped pieces. (a) A reloaded model must equal the stored one byte for byte. (b) For a plume column refilled each hour, $c_{t+1} = 0.9 c_t + q_t$ with $c_t, q_t \in \mathbb{R}$ and the hour $t = 0, \ldots, T-1$ for $T = 24$, the exact sensitivity of the last column to the source at hour $t$ is {eq}`r5-eq-scan`,
 
 $$
-\frac{\partial c_T}{\partial q_t} = 0.9^{\,T - 1 - t} ,
+\frac{\partial c_T}{\partial q_t} = 0.9^{T - 1 - t}
 $$ (r5-eq-scan)
 
-and truncating to the last $k$ steps must zero every earlier term. (c) For
-first-order loss $\dot c = -\lambda c$, $\lambda = 0.25\ \text{h}^{-1}$, one
-hour's solve and its gradient are both $e^{-\lambda} = 0.7788$.
+and truncating to the last $N_\text{trunc}$ steps (the `k` argument) must zero every earlier term. (c) For first-order loss $\dot c = -\beta c$ with decay rate $\beta = 0.25\ \text{h}^{-1}$, one hour's solve and its gradient are both $e^{-\beta} = 0.7788$.
 
 ```{code-block} python
 :caption: pipekit-jax's three pieces on the running example, from a real run.
 :linenos:
 
-# Shapes: log k (5,); q (24,); c ()
+# Shapes: θ = log k (5,); q (24,); c ()
 # (a) the stage 2 module, through the registry and back
 h = reg.store(JaxModelOp(m), weights=JaxModelOp(m).serialize_weights())  # today
 JaxModelOp(BandInversion(jnp.zeros(5))).from_registry(reg, h)           # today
@@ -438,28 +300,18 @@ JaxModelOp(BandInversion(jnp.zeros(5))).from_registry(reg, h)           # today
 truncated_scan(decay, 0.0, q, k=3)     # → 3 nonzero gradients    today
 truncated_scan(decay, 0.0, q, k=24)    # → 24; ∂c_T/∂q_0 = 0.9²³ = 0.0886  today
 # forward values identical to lax.scan
-# (c) ċ = −λc over one hour
-ode = DiffraxForwardModel(vector_field=lambda t, c, a: -LAM * c,
+# (c) ċ = −βc over one hour
+ode = DiffraxForwardModel(vector_field=lambda t, c, a: -BETA * c,
                           dt=1.0, dt0=0.01)                             # today
 ode.step(100.0, 1.0)                   # → 77.88, error < 10⁻¹²     today
 ode.with_adjoint(pc.DirectAdjoint())   # also Backsolve; ∂c/∂c₀ = 0.7788  today
 ode.with_adjoint(pc.TruncatedAdjoint(k=3)).step(1.0, 1.0)  # → ValueError  today
 ```
 
-All three work as documented. `JaxModelOp` round-trips the weights exactly
-through the registry, which is how stage 4's operators should store theirs.
-`truncated_scan` keeps exactly the last $k$ gradients through the carry and
-leaves the forward values alone. `DiffraxForwardModel` satisfies
-pipekit-cycle's `ForwardModel` and `SupportsAdjoint`, and the
-checkpointed, direct and backsolve adjoints give the same gradient on this
-non-stiff problem. A `TruncatedAdjoint` spec raises, by design: truncation
-is a property of a rollout, which `truncated_scan` handles, not of one solve.
+All three work as documented. `JaxModelOp` round-trips the weights exactly through the registry, which is how stage 4's operators should store theirs. `truncated_scan` keeps exactly the last $N_\text{trunc}$ gradients through the carry and leaves the forward values alone. `DiffraxForwardModel` satisfies pipekit-cycle's `ForwardModel` and `SupportsAdjoint`, and the checkpointed, direct and backsolve adjoints give the same gradient on this non-stiff problem. A `TruncatedAdjoint` spec raises by design, because truncation is a property of a rollout, which `truncated_scan` handles, and not of one solve.
 
 :::{warning} Differs from the plan
-The scoping report's `ScanSequential(op, n_steps)` and `Checkpoint(op)` are
-not built. Their closest shipped relatives are `truncated_scan` (a scan with
-a gradient window, for cycles) and the adjoint specs, which choose
-checkpointing for an ODE solve. Neither wraps a pipekit operator.
+The scoping report's `ScanSequential(op, n_steps)` and `Checkpoint(op)` are not built. Their closest shipped relatives are `truncated_scan` (a scan with a gradient window, for cycles) and the adjoint specs, which choose checkpointing for an ODE solve, and neither wraps a pipekit operator.
 :::
 
 (r5-names)=
@@ -488,18 +340,13 @@ checkpointing for an ODE solve. Neither wraps a pipekit operator.
 (r5-audit)=
 ## Current-state audit
 
-Of twelve pieces checked, six ship and work, three ship with defects or run
-at trace time only, one returns wrong values, and two are missing
-([](#tbl-r5-audit)); [](#fig-r5-readiness) counts the page's calls by
-marker. The audit read `references/geostack/pipekit` at `ef3c17f` on 14 October 2026.
+Of twelve pieces checked, six ship and work, three ship with defects or run at trace time only, one returns wrong values, and two are missing ([](#tbl-r5-audit)), and [](#fig-r5-readiness) counts the page's calls by marker. The audit read `references/geostack/pipekit` at `ef3c17f` on 14 October 2026.
 
 :::{figure} ../images/reports/r5_readiness.svg
 :label: fig-r5-readiness
 :alt: A grid with one row per stage of the running example and per workstream, and one square per stack call in that row's sketches, coloured by its marker. Of 41 calls, 24 run today, 15 are proposed by this report's workstreams and 2 are code the reader writes.
 
-What this page's sketches call: of 41 stack calls, 24 run today, 15 are
-proposed by this report's workstreams and 2 are code the reader writes
-([how to read it](../overview.md#sec-conventions)).
+What this page's sketches call: of 41 stack calls, 24 run today, 15 are proposed by this report's workstreams and 2 are code the reader writes ([how to read it](../overview.md#sec-conventions)).
 :::
 
 :::{table} JAX support in the stack, piece by piece.
@@ -523,25 +370,14 @@ proposed by this report's workstreams and 2 are code the reader writes
 
 Smaller findings:
 
-- **Reports 2 and 3 said a pipeline cannot be jitted.**
-  [Report 2](02_pipekit_surface.md#r2-not-here)'s exclusions ("these clash with dual-mode `__call__`") and
-  [Report 3](03_sister_libraries.md#r3-array)'s
-  "`jax.jit` does not compose with a pipekit pipeline" repeated the claim the
-  scoping report corrected; both now link to stage 1.
-- **pipekit-array's namespace dispatch** already supports `jax.numpy` arrays
-  (`_namespace.py`); a pipekit-array operator in a jitted pipeline is pure
-  JAX when its input is a JAX array. Not run here.
-- **pipekit-jax depends on pipekit-cycle in its base install**, only for
-  `diffrax_model.py`'s default adjoint spec. [Report 16](16_geo_data_stack.md#r16-ws-b)'s
-  B moves it to the `[diffrax]` extra.
+- **Reports 2 and 3 said a pipeline cannot be jitted.** [Report 2](02_pipekit_surface.md#r2-not-here)'s exclusions ("these clash with dual-mode `__call__`") and [Report 3](03_sister_libraries.md#r3-array)'s "`jax.jit` does not compose with a pipekit pipeline" repeated the claim the scoping report corrected, and both now link to stage 1.
+- **pipekit-array's namespace dispatch** already supports `jax.numpy` arrays (`_namespace.py`), so a pipekit-array operator in a jitted pipeline is pure JAX when its input is a JAX array. We did not run this.
+- **pipekit-jax depends on pipekit-cycle in its base install**, only for `diffrax_model.py`'s default adjoint spec, and [Report 16](16_geo_data_stack.md#r16-ws-b)'s B moves it to the `[diffrax]` extra.
 
 (r5-ws-a)=
 ## Workstream A · Trace guards in pipekit core
 
-**Decision.** pipekit core stays free of JAX, but an operator that cannot do
-its job on a tracer says so. Detection uses `sys.modules`: if `jax` is
-already imported, `isinstance(x, jax.core.Tracer)`; otherwise nothing is
-traced and nothing is checked. [](#tbl-r5-move-a) lists the moves.
+**Decision.** pipekit core stays free of JAX, but an operator that cannot do its job on a tracer says so. We detect tracers through `sys.modules`: if `jax` is already imported we use `isinstance(x, jax.core.Tracer)`, and otherwise nothing is traced and nothing is checked. [](#tbl-r5-move-a) lists the moves.
 
 :::{table} Workstream A's moves.
 :label: tbl-r5-move-a
@@ -570,30 +406,17 @@ jax.jit(Sequential([snap.at("z"), retrieval]))(y)
 (r5-ws-b)=
 ## Workstream B · Operators as PyTrees in pipekit-jax
 
-**Decision.** When a project differentiates or vmaps over operator
-parameters, pipekit-jax adds the scoping report's mixin. Until then the
-documented pattern is stage 2's: differentiate the module, rebuild the
-pipeline in the loss.
+**Decision.** When a project differentiates or vmaps over operator parameters, pipekit-jax adds the scoping report's mixin. Until then the documented pattern is stage 2's, which is to differentiate the module and rebuild the pipeline in the loss.
 
-1. **B1 · `JaxOperator` and `JaxSequential`.** `JaxOperator(Operator,
-   eqx.Module)` as in stage 4; `JaxSequential(Sequential, eqx.Module)` with
-   `operators: tuple`, keeping `Sequential`'s `summary`, `|` and stateful
-   path. Config fields are `eqx.field(static=True)`, so two pipelines with
-   the same config share one compiled function.
-2. **B2 · An array policy for configs.** `get_config` of a `JaxOperator`
-   records each array field as `{"shape": …, "dtype": …}`, `forbid_in_yaml`
-   stays false for the structure, and the values travel as the registry's
-   weight blob through `serialize_weights` and `with_weights`, shared with
-   `JaxModelOp`.
-3. **No `JaxGraph` yet.** A `Graph` already traces as a callable (stage 3);
-   a PyTree `Graph` meets the tree-not-DAG problem the scoping report
-   described and waits for a use.
+1. **B1 · `JaxOperator` and `JaxSequential`.** `JaxOperator(Operator, eqx.Module)` as in stage 4, and `JaxSequential(Sequential, eqx.Module)` with `operators: tuple`, which keeps `Sequential`'s `summary`, `|` and stateful path. Config fields are `eqx.field(static=True)`, so two pipelines with the same config share one compiled function.
+2. **B2 · An array policy for configs.** `get_config` of a `JaxOperator` records each array field as `{"shape": …, "dtype": …}`, `forbid_in_yaml` stays false for the structure, and the values travel as the registry's weight blob through `serialize_weights` and `with_weights`, shared with `JaxModelOp`.
+3. **No `JaxGraph` yet.** A `Graph` already traces as a callable (stage 3), whereas a PyTree `Graph` meets the tree-not-DAG problem the scoping report described, so it waits for a use.
 
 ```{code-block} python
 :caption: Stage 2's fit, after workstream B.
 :linenos:
 
-# Shapes: log k (5,) per operator
+# Shapes: θ = log k (5,) per operator
 seq = pkj.JaxSequential([pkj.Invert(log_k0), pkj.Combine(log_k0)])  # proposed (B1)
 g = eqx.filter_grad(loss)(seq, y, a)    # reaches both log k     proposed (B1)
 reg.store(seq, weights=seq.serialize_weights())                  # proposed (B2)
@@ -603,36 +426,21 @@ json.dumps(seq.state)                   # shapes and dtypes only proposed (B2)
 (r5-ws-c)=
 ## Workstream C · JAX-native control and observation
 
-**Decision.** Branching on a traced value and observing at run time are
-operators in pipekit-jax, with pipekit's names and JAX's semantics.
+**Decision.** Branching on a traced value and observing at run time become operators in pipekit-jax, with pipekit's names and JAX's semantics.
 
-1. **C1 · `CondBranch(predicate, if_true, if_false)` and `CondSwitch(index,
-   branches)`** on `jax.lax.cond` and `jax.lax.switch`. Both arms are traced
-   and must return the same shape and dtype; the constructor cannot check
-   that, so the first call does.
-2. **C2 · `DebugTap(fn)`** on `jax.debug.callback`, which runs `fn` on
-   concrete values on every call (three calls, three callbacks in stage 3).
-   Its ordering across devices is not guaranteed; the docstring says so.
+1. **C1 · `CondBranch(predicate, if_true, if_false)` and `CondSwitch(index, branches)`** on `jax.lax.cond` and `jax.lax.switch`. Both arms are traced and must return the same shape and dtype, and since the constructor cannot check that, the first call does.
+2. **C2 · `DebugTap(fn)`** on `jax.debug.callback`, which runs `fn` on concrete values on every call (three calls, three callbacks in stage 3). Its ordering across devices is not guaranteed, and the docstring says so.
 
 (r5-ws-d)=
 ## Workstream D · Transformation wrappers
 
-**Decision.** Not now. `jax.vmap`, `jax.checkpoint` and `jax.lax.scan`
-apply to a pipeline directly, as stage 1 does with `vmap`. A `VMapOver(op)`,
-`Checkpoint(op)` or `ScanSequential(op, n)` operator adds a name and a
-config to the transformation, which matters only when a pipeline that uses
-one must round-trip through YAML. The gate is a project that needs that.
+**Decision.** We do not build these now. `jax.vmap`, `jax.checkpoint` and `jax.lax.scan` apply to a pipeline directly, as stage 1 does with `vmap`, and a `VMapOver(op)`, `Checkpoint(op)` or `ScanSequential(op, n)` operator only adds a name and a config to the transformation. That matters when a pipeline that uses one must round-trip through YAML, so the gate is a project that needs that.
 
 (r5-ws-e)=
 ## Workstream E · Docs
 
-1. **E1 · Build time and trace time.** One page in pipekit's docs: what runs
-   once at trace time (`ShapeTrace`, `Tap`, a `Lambda`'s Python), what
-   survives into the compiled function, why `Cache` refuses a tracer, and
-   stage 2's pattern for differentiating a module inside a pipeline.
-2. **E2 · pipekit-jax's README and install notes.** Drop the link to
-   `docs/design/` (or add the notes), remove `orbax-checkpoint` from the
-   install notes, and drop `jaxtyping` from the dependencies or use it.
+1. **E1 · Build time and trace time.** One page in pipekit's docs covering what runs once at trace time (`ShapeTrace`, `Tap`, a `Lambda`'s Python), what survives into the compiled function, why `Cache` refuses a tracer, and stage 2's pattern for differentiating a module inside a pipeline.
+2. **E2 · pipekit-jax's README and install notes.** We drop the link to `docs/design/` (or add the notes), remove `orbax-checkpoint` from the install notes, and either drop `jaxtyping` from the dependencies or use it.
 
 (r5-gates)=
 ## Testing gates
@@ -663,43 +471,19 @@ one must round-trip through YAML. The gate is a project that needs that.
 The order: an honest core first, then PyTree operators, then wrappers.
 :::
 
-[](#fig-r5-roadmap) orders the work. Phase 1 is small and protects users now: A1 is a few lines and a test, and
-it removes the one silent wrong answer. Phase 2 starts when a project fits
-operator parameters, as stage 2 does; until then stage 2's pattern works.
-Phase 3 waits for a pipeline that must round-trip a transformation through
-YAML.
+[](#fig-r5-roadmap) orders the work. Phase 1 is small and protects users now, as A1 is a few lines and a test, and it removes the one silent wrong answer. Phase 2 starts when a project fits operator parameters, as stage 2 does, and until then stage 2's pattern works. Phase 3 waits for a pipeline that must round-trip a transformation through YAML.
 
-- **Equinox's `Module` and `ConfigMixin` disagree about `__init__`.** The
-  mixin reads `__init__`'s parameters; Equinox generates `__init__` from
-  fields. Stage 4 shows they coexist, but a custom `__init__` on a
-  `JaxOperator` must keep the field names, or `get_config` breaks. B1's
-  test covers both.
-- **Static fields and retracing.** A config field left as a leaf retraces
-  on every new value, and an array marked static breaks hashing. B1's
-  compile-once check catches the first; Equinox raises on the second.
-- **The workaround may be enough.** If every project trains one module per
-  pipeline, as pipekit-train does, B never needs to ship. That is the open
-  question below.
+- **Equinox's `Module` and `ConfigMixin` disagree about `__init__`.** The mixin reads `__init__`'s parameters, whereas Equinox generates `__init__` from fields. Stage 4 shows they coexist, but a custom `__init__` on a `JaxOperator` must keep the field names or `get_config` breaks, and B1's test covers both.
+- **Static fields and retracing.** A config field left as a leaf retraces on every new value, and an array marked static breaks hashing. B1's compile-once check catches the first, and Equinox raises on the second.
+- **The workaround may be enough.** If every project trains one module per pipeline, as pipekit-train does, B never needs to ship, which is the open question below.
 
 (r5-open-questions)=
 ## Open questions
 
-1. **Does any project need gradients through more than one operator?**
-   Stage 2's rebuild pattern covers one learned module. Workstream B is
-   worth it only for pipelines with several learned steps, or for vmapping
-   over whole pipelines (the scoping report's hyperparameter sweeps, 7.6).
-2. **Should `Cache` refuse tracers or pass them through?** Refusing (A1) is
-   explicit; passing through to the inner operator would make a pipeline
-   with a `Cache` jittable unchanged, at the cost of a cache that silently
-   does nothing under `jit`.
-3. **Where do the PyTree operators live if geotoolz needs them?** A JAX
-   version of a GeoTensor operator (the scoping report's `jax_geotoolz`)
-   would subclass `JaxOperator`. Whether that is a geotoolz extra or a new
-   package is open, and nothing needs it yet.
-4. **`JaxModelOp` and `JaxOperator`: one class or two?** A wrapper keeps
-   any module unchanged; a mixin makes the operator itself the module.
-   [Report 16](16_geo_data_stack.md#r16-ws-b) settles on `JaxModelOp` as the
-   one wrapper; B1 would add the mixin beside it, not replace it.
+1. **Does any project need gradients through more than one operator?** Stage 2's rebuild pattern covers one learned module, so workstream B is only worth it for pipelines with several learned steps, or for vmapping over whole pipelines (the scoping report's hyperparameter sweeps, 7.6).
+2. **Should `Cache` refuse tracers or pass them through?** Refusing (A1) is explicit, whereas passing through to the inner operator would make a pipeline with a `Cache` jittable unchanged, at the cost of a cache that silently does nothing under `jit`.
+3. **Where do the PyTree operators live if geotoolz needs them?** A JAX version of a GeoTensor operator (the scoping report's `jax_geotoolz`) would subclass `JaxOperator`. Whether that is a geotoolz extra or a new package is open, and nothing needs it yet.
+4. **`JaxModelOp` and `JaxOperator`: one class or two?** A wrapper keeps any module unchanged, whereas a mixin makes the operator itself the module. [Report 16](16_geo_data_stack.md#r16-ws-b) settles on `JaxModelOp` as the one wrapper, and B1 would add the mixin beside it and not replace it.
 
 (r5-todos)=
 ## Upcoming work
@@ -722,10 +506,7 @@ YAML.
 
 ### Sources
 
-- The scoping report, "Report 5 — `pipekit-jax`: a future-direction
-  analysis" [@geostack_r5_draft].
-- pipekit 0.0.2 and pipekit-jax 0.0.2 in `references/geostack/pipekit` at `ef3c17f`:
-  source, tests, README, CHANGELOG and docs.
-- JAX [@jax2018github], Equinox [@kidger2021equinox] and diffrax
-  [@kidger2021neural], at the versions in the header.
+- The scoping report, "Report 5 — `pipekit-jax`: a future-direction analysis" [@geostack_r5_draft].
+- pipekit 0.0.2 and pipekit-jax 0.0.2 in `references/geostack/pipekit` at `ef3c17f`: source, tests, README, CHANGELOG and docs.
+- JAX [@jax2018github], Equinox [@kidger2021equinox] and diffrax [@kidger2021neural], at the versions in the header.
 - The running example's notebook, described in [](#r5-running).

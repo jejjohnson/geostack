@@ -19,12 +19,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-This report began as the proposal for pipekit's first public surface and
-became a record of what pipekit 0.0.2 ships. The record now lives with the
-code, as pipekit's [tour of the core](https://jejjohnson.github.io/pipekit/core-tour/): every module, group by group, with
-examples checked against a real run and a list of today's limits. This page
-keeps what is GeoStack planning rather than pipekit documentation: where the
-deferred operators went, the open questions and the upcoming work.
+This report began as the proposal for pipekit's first public surface and became a record of what pipekit 0.0.2 ships. The record now lives with the code, as pipekit's [tour of the core](https://jejjohnson.github.io/pipekit/core-tour/), which goes through every module group by group, with examples checked against a real run and a list of today's limits. However, some of the content is GeoStack planning rather than pipekit documentation, so we keep it here: where the deferred operators went, the open questions and the upcoming work.
 
 +++
 
@@ -42,11 +37,7 @@ deferred operators went, the open questions and the upcoming work.
 (r2-layout)=
 ## Where each group went
 
-The proposal organised pipekit by **semantic group**, one module each, and
-that organisation shipped ({numref}`fig-r2-groups`). Each group below links
-its section in the tour and keeps the one difference from the plan that
-matters to a user; [the full inventory](#r2-inventory) has the symbols and
-line counts.
+The proposal organised pipekit by **semantic group**, one module each, and that organisation shipped ({numref}`fig-r2-groups`). For each group below we link its section in the tour and keep the one difference from the plan that matters to a user, whereas [the full inventory](#r2-inventory) has the symbols and line counts.
 
 ```{figure} ../images/reports/r2_groups.svg
 :label: fig-r2-groups
@@ -59,67 +50,62 @@ line counts.
 (r2-group-a)=
 ## Group A · Foundations
 
-Now [Foundations](https://jejjohnson.github.io/pipekit/core-tour/#foundations) in the tour. `Operator`, `ConfigMixin`, `Sequential`, `Graph`, `Input`, `Node`. Differs from the plan: no `Graph.summary()` and no signatures through `Graph`.
+This group is now [Foundations](https://jejjohnson.github.io/pipekit/core-tour/#foundations) in the tour, and it holds `Operator`, `ConfigMixin`, `Sequential`, `Graph`, `Input` and `Node`. It differs from the plan in that there is no `Graph.summary()` and no signatures through `Graph`.
 
 (r2-group-b)=
 ## Group B · Composition
 
-Now [Composition](https://jejjohnson.github.io/pipekit/core-tour/#composition) in the tour. `pipe`, `compose`, `compose_left`, `juxt`, `complement`, as planned.
+This group is now [Composition](https://jejjohnson.github.io/pipekit/core-tour/#composition) in the tour, and it holds `pipe`, `compose`, `compose_left`, `juxt` and `complement`. All of them shipped as planned.
 
 (r2-group-c)=
 ## Group C · Building blocks
 
-Now [Building blocks](https://jejjohnson.github.io/pipekit/core-tour/#building-blocks) in the tour. `Identity`, `Const`, `Lambda`, `Sink`, as planned.
+This group is now [Building blocks](https://jejjohnson.github.io/pipekit/core-tour/#building-blocks) in the tour, and it holds `Identity`, `Const`, `Lambda` and `Sink`. All of them shipped as planned.
 
 (r2-group-d)=
 ## Group D · Control flow
 
-Now [Control flow](https://jejjohnson.github.io/pipekit/core-tour/#control-flow) in the tour. `Branch`, `Switch`, `Try`, `Coalesce`, `Retry`. Differs: `Try` and `Retry` are not flagged `forbid_in_yaml`.
+This group is now [Control flow](https://jejjohnson.github.io/pipekit/core-tour/#control-flow) in the tour, and it holds `Branch`, `Switch`, `Try`, `Coalesce` and `Retry`. It differs from the plan in that `Try` and `Retry` are not flagged `forbid_in_yaml`.
 
 (r2-group-e)=
 ## Group E · Observers
 
-Now [Observers](https://jejjohnson.github.io/pipekit/core-tour/#observers) in the tour. `Tap`, `Snapshot`, `ShapeTrace`, `Profile`, `Histogram`. Differs: no `ShapeTrace` hook for an extra line.
+This group is now [Observers](https://jejjohnson.github.io/pipekit/core-tour/#observers) in the tour, and it holds `Tap`, `Snapshot`, `ShapeTrace`, `Profile` and `Histogram`. It differs from the plan in that `ShapeTrace` has no hook for an extra line.
 
 (r2-group-f)=
 ## Group F · Combination
 
-Now [Combination](https://jejjohnson.github.io/pipekit/core-tour/#combination) in the tour. `Fanout`, as planned.
+This group is now [Combination](https://jejjohnson.github.io/pipekit/core-tour/#combination) in the tour, and it holds `Fanout`. The group shipped as planned, with nothing to add.
 
 (r2-group-g)=
 ## Group G · Caching
 
-Now [Caching](https://jejjohnson.github.io/pipekit/core-tour/#caching) in the tour. `Cache`, `Memoize`, as planned.
+This group is now [Caching](https://jejjohnson.github.io/pipekit/core-tour/#caching) in the tour, and it holds `Cache` and `Memoize`. Both operators shipped as planned, with no differences worth noting.
 
 (r2-group-h)=
 ## Group H · Quality control
 
-Now [Quality control](https://jejjohnson.github.io/pipekit/core-tour/#quality-control) in the tour. `Quarantine`, four `Assert*` operators and `QCError`, as planned plus `QCError`.
+This group is now [Quality control](https://jejjohnson.github.io/pipekit/core-tour/#quality-control) in the tour, and it holds `Quarantine`, four `Assert*` operators and `QCError`. It shipped as planned, plus `QCError`.
 
 (r2-group-i)=
 ## Group I · Shape inference
 
-Now [Shape inference](https://jejjohnson.github.io/pipekit/core-tour/#shape-inference) in the tour. `Signature`, `compute_output_signature`. Differs: an unknown dimension prints `?` instead of raising, and inference stops at `Sequential`.
+This group is now [Shape inference](https://jejjohnson.github.io/pipekit/core-tour/#shape-inference) in the tour, and it holds `Signature` and `compute_output_signature`. It differs from the plan in that an unknown dimension prints `?` instead of raising, and inference stops at `Sequential`.
 
 (r2-group-j)=
 ## Group J · Parallelism
 
-Now [Parallelism](https://jejjohnson.github.io/pipekit/core-tour/#parallelism) in the tour. `ThreadMap`, `ProcessMap`, `AsyncMap`, `BatchedMap`, `check_pickleable`. Differs: `BatchedMap` batches lists, not array axis 0.
+This group is now [Parallelism](https://jejjohnson.github.io/pipekit/core-tour/#parallelism) in the tour, and it holds `ThreadMap`, `ProcessMap`, `AsyncMap`, `BatchedMap` and `check_pickleable`. It differs from the plan in that `BatchedMap` batches lists, not array axis 0.
 
 (r2-pickle)=
 ### The pickleability discipline
 
-Every operator in a process-pool pipeline must pickle, and closures do not. The discipline (`forbid_in_yaml`, `check_pickleable`) is in the tour's [Parallelism](https://jejjohnson.github.io/pipekit/core-tour/#parallelism) section.
+Every operator in a process-pool pipeline must pickle, whereas closures do not. We describe the discipline (`forbid_in_yaml`, `check_pickleable`) in the tour's [Parallelism](https://jejjohnson.github.io/pipekit/core-tour/#parallelism) section.
 
 (r2-group-k)=
 ## Group K · Where the deferred operators went
 
-The proposal used Group K for operators that are carrier-specific and so do
-not belong in core. pipekit 0.0.2 reuses the letter: its docstring reserves
-Group K for a disk-cache backend, and nothing ships under it. The deferred
-list is still worth tracking, because most of it has not landed anywhere.
-{numref}`tbl-r2-deferred` checks each one against the capability index of
-every upstream library.
+The proposal used Group K for operators that are carrier-specific and so do not belong in core. pipekit 0.0.2 reuses the letter (its docstring reserves Group K for a disk-cache backend), but nothing ships under it. We still track the deferred list, because most of it has not landed anywhere, and {numref}`tbl-r2-deferred` checks each operator against the capability index of every upstream library.
 
 :::{table} The proposal's deferred operators, and where each one is at pipekit 0.0.2, geotoolz 0.10.2 and xrtoolz 0.0.5.
 :label: tbl-r2-deferred
@@ -138,36 +124,32 @@ every upstream library.
 | `Spy`, `Hook` | cross-cutting hooks: open design questions | deferred; the hook stub is reserved | not shipped, as planned |
 :::
 
-pipekit-array exists (0.0.2), but it ships four names (`array_namespace`,
-`ConcatenateAlong`, `StackAlong`, `MeanScalar`), none of them from this list.
-It is the planned home for most of the list, which makes it the biggest gap
-between plan and code. [Report 3](03_sister_libraries.md) covers it.
+pipekit-array exists (0.0.2), but it ships only four names (`array_namespace`, `ConcatenateAlong`, `StackAlong`, `MeanScalar`), none of them from this list. However, it is the planned home for most of the list, which makes it the biggest gap between plan and code (see [Report 3](03_sister_libraries.md)).
 
 (r2-group-l)=
 ## Group L · Serialisation
 
-Now [Serialisation](https://jejjohnson.github.io/pipekit/core-tour/#serialisation) in the tour. `dumps`, `loads`, `loads_sandboxed`, `register`, `unregister`, `allowed`. Differs: no YAML or Hydra extras in core; nested pipelines do not round-trip.
+This group is now [Serialisation](https://jejjohnson.github.io/pipekit/core-tour/#serialisation) in the tour, and it holds `dumps`, `loads`, `loads_sandboxed`, `register`, `unregister` and `allowed`. It differs from the plan in that core has no YAML or Hydra extras and nested pipelines do not round-trip.
 
 (r2-group-m)=
 ## Group M · State
 
-Now [State](https://jejjohnson.github.io/pipekit/core-tour/#state) in the tour. `StatefulOperator`, `CarryState`. Differs: `Graph` does not thread state.
+This group is now [State](https://jejjohnson.github.io/pipekit/core-tour/#state) in the tour, and it holds `StatefulOperator` and `CarryState`. It differs from the plan in that `Graph` does not thread state.
 
 (r2-group-n)=
 ## Group N · Protocols, new
 
-Now [Protocols](https://jejjohnson.github.io/pipekit/core-tour/#protocols) in the tour. `Predictor`, `FittableTransformer`: structural seams the plan did not have.
+This group is now [Protocols](https://jejjohnson.github.io/pipekit/core-tour/#protocols) in the tour, and it holds `Predictor` and `FittableTransformer`. These are structural seams that the plan did not have.
 
 (r2-hashing)=
 ## Shared hashing (`hashing.py`), new
 
-`stable_json`, `stable_repr` and `sha256_hex`, shared by pipekit-experiment's registry; pipekit's [patterns](https://jejjohnson.github.io/pipekit/patterns/) page uses them for orchestrator task keys.
+This module holds `stable_json`, `stable_repr` and `sha256_hex`, which pipekit-experiment's registry shares, and pipekit's [patterns](https://jejjohnson.github.io/pipekit/patterns/) page uses them for orchestrator task keys.
 
 (r2-inventory)=
 ## The full inventory
 
-[](#tbl-r2-inventory) is the canonical list of what each group ships, with
-the proposed and shipped line counts side by side.
+[](#tbl-r2-inventory) is the canonical list of what each group ships, with the proposed and shipped line counts side by side.
 
 :::{table} The v0.1 inventory as proposed, against pipekit 0.0.2. The proposal's line counts are estimates; the shipped counts include docstrings.
 :label: tbl-r2-inventory
@@ -195,31 +177,19 @@ the proposed and shipped line counts side by side.
 (r2-not-here)=
 ## What is intentionally not here
 
-The proposal's exclusions all held at 0.0.2:
+All of the proposal's exclusions held at 0.0.2:
 
-- **Distributed execution** (Dask, Ray, Beam, Flink): the orchestrator's
-  job.
-- **Automatic differentiation and JAX `jit`** as pipekit features: they
-  live in a separate package, pipekit-jax. They do not clash with dual-mode
-  `__call__`, as this page first said: a tracer is not a `Node`, so a
-  pipeline of JAX operators already runs under `jit`, `vmap` and `grad` with
-  respect to its inputs ([Report 5](05_pipekit_jax.md#r5-stage-1)).
-- **Type-checking operator chains at construction**: `Sequential([op_a,
-  op_b])` does not check that `op_a`'s output type matches `op_b`'s input.
-  `Signature` checks shape; type checking is a stretch goal.
-- **Carrier-specific operators**: see [](#r2-group-k) and
-  [Report 3](03_sister_libraries.md).
-- **A GUI or pipeline builder**: a possibility, not in scope.
-- **Workflow scheduling** (Airflow, Prefect, Dagster): adapters belong in
-  extras or downstream libraries. pipekit-experiment's DVC, Hydra and
-  Metaflow adapters are the first of these.
+- **Distributed execution** (Dask, Ray, Beam, Flink) is the orchestrator's job.
+- **Automatic differentiation and JAX `jit`** as pipekit features live in a separate package, pipekit-jax. They do not clash with dual-mode `__call__`, as this page first said, because a tracer is not a `Node`, so a pipeline of JAX operators already runs under `jit`, `vmap` and `grad` with respect to its inputs ([Report 5](05_pipekit_jax.md#r5-stage-1)).
+- **Type-checking operator chains at construction** is not done: `Sequential([op_a, op_b])` does not check that `op_a`'s output type matches `op_b`'s input. `Signature` checks shape, and type checking is a stretch goal.
+- **Carrier-specific operators** are covered in [](#r2-group-k) and [Report 3](03_sister_libraries.md).
+- **A GUI or pipeline builder** is a possibility, but not in scope.
+- **Workflow scheduling** (Airflow, Prefect, Dagster) belongs in adapters in extras or downstream libraries, and pipekit-experiment's DVC, Hydra and Metaflow adapters are the first of these.
 
 (r2-open-questions)=
 ## Open questions
 
-The proposal carried seven scoping questions, each with a lean
-([](#tbl-r2-questions)). The shipped code settles six of them and partly settles question 4;
-its leans on questions 3 and 5 were overturned.
+The proposal carried seven scoping questions, each with a lean ([](#tbl-r2-questions)). The shipped code settles six of them and partly settles question 4, whereas its leans on questions 3 and 5 were overturned.
 
 :::{table} The proposal's scoping questions, and how pipekit 0.0.2 answered them.
 :label: tbl-r2-questions
@@ -235,40 +205,19 @@ its leans on questions 3 and 5 were overturned.
 | 7 | `AsyncMap` only, or `AsyncSequential` too? | `AsyncMap` only | **settled** as leaned |
 :::
 
-The differences recorded above raise six new questions that need a decision
-rather than a fix:
+The differences recorded above raise six new questions that need a decision rather than a fix:
 
-1. **Should `Graph` thread state?** Today `Sequential` does and `Graph`
-   does not. Either `Graph` learns to, or the docs say stateful operators
-   are `Sequential`-only. DA cycles with several inputs would want the
-   former.
-2. **Should `CarryState` be frozen?** If yes, it becomes a frozen dataclass
-   and the hash is safe. If not, it should stop defining `__hash__`, since
-   states routinely hold arrays.
-3. **What dumps a nested pipeline?** Flat operators round-trip through
-   `dumps` / `loads`; `Sequential`, `Try`, `Cache` and the rest do not.
-   Loading is answered by pipekit-experiment's `HydraConfigLoader`, which
-   builds nested pipelines from hand-written YAML; the open half is the
-   other direction, a dumper that writes a built pipeline as nested
-   `{"class", "config"}` payloads or `_target_` YAML.
-4. **Should `AsyncMap.__call__` work inside a running loop?** At the moment
-   a server handler must know to call `.run`. An alternative is to detect a
-   running loop and fail with a message that names `.run`.
-5. **Should shape inference be wired through `Graph` and `Fanout`?** Only
-   `Sequential` threads signatures today, so a `Graph` reports its input
-   signature as its output.
-6. **Should a `Graph`'s `state` describe the whole graph?** Today it records
-   the inputs and the operators that produce the outputs, not the steps
-   upstream of them, so two graphs that differ in an upstream step have equal
-   `state` and hash the same. Anything that keys work by a pipeline's hash
-   (the registry, orchestrator tasks, use cases 9, 12 and 15) needs the whole
-   graph, which is also what a `Graph` dumper (question 3) would write.
+1. **Should `Graph` thread state?** Today `Sequential` does and `Graph` does not, so either `Graph` learns to or the docs say that stateful operators are `Sequential`-only. DA cycles with several inputs would want the former.
+2. **Should `CarryState` be frozen?** If yes, it becomes a frozen dataclass and the hash is safe. If not, it should stop defining `__hash__`, since states routinely hold arrays.
+3. **What dumps a nested pipeline?** Flat operators round-trip through `dumps` / `loads`, whereas `Sequential`, `Try`, `Cache` and the rest do not. Loading is answered by pipekit-experiment's `HydraConfigLoader`, which builds nested pipelines from hand-written YAML, so the open half is the other direction, a dumper that writes a built pipeline as nested `{"class", "config"}` payloads or `_target_` YAML.
+4. **Should `AsyncMap.__call__` work inside a running loop?** At the moment a server handler must know to call `.run`, and an alternative is to detect a running loop and fail with a message that names `.run`.
+5. **Should shape inference be wired through `Graph` and `Fanout`?** Only `Sequential` threads signatures today, so a `Graph` reports its input signature as its output.
+6. **Should a `Graph`'s `state` describe the whole graph?** Today it records the inputs and the operators that produce the outputs, not the steps upstream of them, so two graphs that differ in an upstream step have equal `state` and hash the same. Anything that keys work by a pipeline's hash (the registry, orchestrator tasks, use cases 9, 12 and 15) needs the whole graph, which is also what a `Graph` dumper (question 3) would write.
 
 (r2-todos)=
 ## Upcoming work
 
-Changes whose shape is already clear ([](#tbl-r2-todos)). Each is a candidate
-issue on pipekit or a sister library.
+These are changes whose shape is already clear ([](#tbl-r2-todos)), and each is a candidate issue on pipekit or a sister library.
 
 :::{table} Follow-ups from checking the proposal against pipekit 0.0.2.
 :label: tbl-r2-todos
@@ -292,5 +241,4 @@ issue on pipekit or a sister library.
 
 ### Citations
 
-*To be added:* `toolz`, the Python Array API standard, and the use-case
-gallery, as entries in `references.bib`.
+*To be added:* `toolz`, the Python Array API standard, and the use-case gallery, as entries in `references.bib`.
