@@ -298,7 +298,7 @@ None of these moves crosses the layer rule: every “keep” is at or below ever
 
 | ID | Question | Recommended | Alternative |
 | --- | --- | --- | --- |
-| SL-O1 | Ocean and atmosphere diagnostics | D: stay in xrops as L1 + L2; model-consistent closure to somax; products to xrproducts | B: move all to somax, at the cost of a JAX install for every reanalysis user |
+| SL-O1 | Ocean and atmosphere diagnostics | **Decided 29 Oct 2026:** D: stay in xrops as L1 + L2; model-consistent closure to somax; products to xrproducts | B: move all to somax, at the cost of a JAX install for every reanalysis user |
 | SL-O2 | Where somax's carrier code lives | `somax[geo]` (GeoArray steps, `simulate`) and `somax[xarray]` (`io`) extras; in the workspace plan, `esmax-core[geo]` and `[xarray]` | in the base install |
 | SL-O3 | CH₄ column physics on xarray | L1 in radtrax; xarray operators behind `radtrax[xarray]` | keep an xrops copy for analysts, accepting one duplicate across layers |
 | SL-O4 | L3 runs in plumax (NUTS, 4D-Var, scenario grids) | a `plumax.runs` module per model, taking readable types | leave them next to the forward models |
