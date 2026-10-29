@@ -145,8 +145,8 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | ID | Decision or question | Status |
 | --- | --- | --- |
 | OP-O1 | Observation and sensor kernels in geoops; state-domain kernels (MLD, budgets) in xrops, which never re-implements a geoops kernel | decided 22 Oct 2026 |
-| OP-O2 | One named-dims einx bridge in pipekit-array `[einx]` | open |
-| OP-O3 | `to_rows` / `from_rows` plus one scikit-learn estimator wrapper | open |
+| OP-O2 | One named-dims einx bridge in pipekit-array `[einx]`; geoops keeps only `SpatialPool` | decided 29 Oct 2026 |
+| OP-O3 | `to_rows` / `from_rows` plus one scikit-learn `Estimator` in pipekit-array `[sklearn]` | decided 29 Oct 2026 |
 | OP-O4 | Lifting is `xrops.lift(op, dim=...)`; geoops has no `[xarray]` extra | decided 22 Oct 2026 |
 | OP-O5 | Operators use `KernelOp` by composition, not subclassing | decided 29 Oct 2026 |
 | OP-O6 | The `backends` vocabulary: `"numpy"`, `"jax"`, `"dask"`; a `DataArray` reports its data's backend | decided 29 Oct 2026 |

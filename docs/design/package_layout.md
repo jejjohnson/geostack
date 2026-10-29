@@ -27,7 +27,7 @@ We adopt geotoolz's split for xrtoolz: distributions by job, modules inside the 
 
 - **PL-A. xrtoolz becomes a meta package.** Today `xrtoolz` is both the ops code and the umbrella that hard-depends on every sibling, so we move its code to a new `xrtoolz-ops` (import `xrops`) and leave `xrtoolz` with no code, as `geotoolz` has.
 - **PL-B. Backend bridges stop being distributions.** `xreinx` and `xrsklearn` give way to one named-dims bridge each in pipekit-array (OP-O2, OP-O3), whereas `xrgrad` becomes `xrops.Gradient` over the geoops kernel (OP-O7).
-- **PL-C. One home for the xarray Operator base.** The `Operator` of `xrcore` (with its `DataTree` dispatch) folds into `xrops._src`, and its `Signature` becomes a re-export of `pipekit.Signature` for one release and then goes ([pipekit kernels](./pipekit_kernels.md)).
+- **PL-C. One home for the xarray Operator base.** The `Operator` of `xrcore` (with its `DataTree` dispatch) folds into `xrops._src`, and its `Signature` is replaced by `pipekit.Signature`, with no re-export (PL-Q5; [pipekit kernels](./pipekit_kernels.md)).
 - **PL-D. Matching family names.** geoops is organised by operation kind, whereas xrtoolz is organised by domain plus a `geo` grab-bag, so `xrops` takes the family names of geoops wherever the job is the same, keeps the state-physics families, and drops the empty `rs` and `ice` stubs.
 - **PL-E. Readers named as products.** `xrreader` (CMEMS, CDS, AEMET) is the xarray twin of `geoproducts`, so it becomes `xrtoolz-products` (import `xrproducts`).
 
@@ -199,7 +199,7 @@ Each workstream merges only when its gate passes; PL-A ships first because every
 | D1 Name parity | PL-D | a script lists the families of `geoops` and `xrops`; every name in both means the same job, and the list is checked into the docs |
 | E1 Reader rename | PL-E | every public name of `xrreader` is importable from `xrproducts`, and `import xrreader` fails |
 
-The order is PL-A, then PL-B, PL-C and PL-E in parallel, then PL-D. PL-B waits for the pipekit-array release that ships the shared bridges, and `xrops.lift` waits for the slim base of geoops ([operators](./operators.md)). Each is one minor bump of `xrtoolz` (0.1.0, then 0.2.0).
+The order is PL-A, then PL-B and PL-E in parallel, then PL-C, then PL-D. PL-C waits for PL-B: `xreinx` and `xrsklearn` subclass `xrcore.Operator` and `xrops` depends on `xrsklearn`, so folding `xrcore` into `xrops` before those bridges are deleted would make a cycle. PL-B waits for the pipekit-array release that ships the shared bridges (OP-O2, OP-O3), and `xrops.lift` waits for the slim base of geoops ([operators](./operators.md)). Each is one minor bump of `xrtoolz` (0.1.0, then 0.2.0).
 
 - **Downstream imports break.** pipekit, geostack notebooks and GeoBench import `xrtoolz.*` today. Mitigation: there are no shims (PL-Q5), so each release greps the stack for the old paths and updates every caller in the same release.
 - **The shared bridges slip.** If the einx and scikit-learn bridges of pipekit-array are late, PL-B blocks. Fallback: we keep `xreinx` and `xrsklearn` as they are for one more release, and PL-D still applies.

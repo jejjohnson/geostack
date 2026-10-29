@@ -474,10 +474,10 @@ class Reproject(Operator):
 | `indices`, `qa` | kernel operators | numpy, jax, xarray |
 | `normalize` | kernel operators; skimage-backed ones engine-bound | numpy, jax, xarray / numpy |
 | `compositing` | thin named operators over `stack`, `reduce`, `argreduce`, `take_along` | numpy, jax, xarray |
-| `einx` | kernel operators over einx patterns (see OP-O2) | numpy, jax, xarray |
+| `einx` | `SpatialPool` only; every other einx operation is `pipekit_array.einx` (OP-O2) | numpy |
 | `augment` | kernel operators for flips, crops, noise (PRNG key under JAX); scipy warps engine-bound | numpy, jax / numpy |
 | `spectral` | kernel operators backed by scipy | numpy, xarray |
-| `learn` | scikit-learn wrappers | numpy |
+| `learn` | `Pixelwise*` presets over pipekit-array's `Estimator` and `to_rows` / `from_rows` (OP-O3) | numpy |
 | `geom`, `io`, `viz` | geometry, engine-bound | numpy |
 | `mask`, `measure`, `feature`, `segment`, `restore`, `radiometry` | mixed: vector and solar-geometry parts engine-bound, array parts kernel operators | per op |
 | `matched_filter`, `plume` | leaving for radtrax and plumax (#482); rebuilt there as kernel operators | — |
@@ -611,7 +611,7 @@ GeoStack and GeoNumerics still never import each other, which fixes where model-
 | `transforms` (Fourier, wavelet, DCT) | kernel operators over named dims |
 | `interpolate` | native `interp` plus many-item geometry |
 | `geo` | split: geometry (crs, mosaic, rasterize, footprint) → many-item geometry; analysis (detrend, extremes, regimes) → value analysis |
-| `einx` (`xreinx`), `sklearn` (`xrsklearn`) | see OP-O2 and OP-O3 |
+| `einx` (`xreinx`), `sklearn` (`xrsklearn`) | deleted (xrtoolz #367): `pipekit_array.einx` and `Estimator` replace them, with `pack_dataset` / `unpack_dataset` and `xrops.learn` (Dataset, DataTree, `.sklearn`) on top (OP-O2, OP-O3) |
 | `rs`, `ice` | removed (empty stubs; observation indices live in geoops and run on cubes as they are) |
 
 ## Testing
@@ -656,8 +656,8 @@ Each step is a 0.X.0 bump. xrops now follows geoops instead of moving in paralle
 | ID | Question | Recommended | Alternative |
 | --- | --- | --- | --- |
 | OP-O1 | Where kernel operators live | **Decided 22 Oct 2026:** observation and sensor kernels in geoops; state-domain kernels (MLD, budgets) in xrops; xrops imports geoops kernels and never re-implements one | a third, neutral package of kernel operators |
-| OP-O2 | Two einx bridges (`geoops.einx`, `xreinx`) | one named-dims einx bridge in pipekit-array (`[einx]` extra); geoops keeps only its spatial-survival rule | keep both |
-| OP-O3 | Two scikit-learn bridges (`geoops.learn`, `xrsklearn`) | `to_rows` / `from_rows` as dim-level functions in pipekit-array, one estimator wrapper on pipekit's `FittableTransformer` | keep both |
+| OP-O2 | Two einx bridges (`geoops.einx`, `xreinx`) | **Decided 29 Oct 2026:** one named-dims einx bridge, `pipekit_array.einx` behind an `[einx]` extra: `rearrange`, `reduce`, `einsum`, `repeat` and an `Einx` operator whose pattern tokens are dim names, on the data's own backend, rewrapped through each carrier's adapter. geoarray's adapter already returns a `GeoArray` when the output still ends in `y x` on the input's grid, so geoops's spatial-survival rule goes with `Einx`, `CHWtoHWC`, `HWCtoCHW` and `PerBandReduce`; geoops keeps `SpatialPool`, which changes the transform. xrops keeps only the Dataset helpers `pack_dataset` / `unpack_dataset` | keep both |
+| OP-O3 | Two scikit-learn bridges (`geoops.learn`, `xrsklearn`) | **Decided 29 Oct 2026:** `to_rows(x, sample_dims, feature_dims)` → `(rows, layout)` and `from_rows(rows, layout)` as dim-level functions in pipekit-array on any carrier, and one `Estimator(estimator, sample_dims=…, nan_policy=…)` operator behind a `[sklearn]` extra that satisfies `FittableTransformer` (`fit`, `transform`, `inverse_transform`, `predict`; fitted state on the host), with xrsklearn's NaN policies (`propagate`, `raise`, `mask_features`, `mask_samples`). xrops keeps the `Dataset` / `DataTree` layouts and the `.sklearn` accessor in a thin `xrops.learn` (PK-P5); geoops keeps its nodata-to-NaN step, the `Pixelwise*` presets with named dims instead of positional modes, and its joblib state | keep both |
 | OP-O4 | Lifting geometry over cubes | **Decided 22 Oct 2026:** `xrops.lift(op, dim=...)` in xrops; geoops has no `[xarray]` extra | `geoops.lift` behind `geoops[xarray]` (not taken) |
 | OP-O5 | How operators use `KernelOp` | **Decided 29 Oct 2026:** by composition: an operator keeps its own config and calls a `KernelOp` inside, as built in geotoolz #582–#584 (`geoops._src.kernels`) | every kernel operator subclasses `KernelOp` |
 | OP-O6 | The `backends` vocabulary | **Decided 29 Oct 2026:** `"numpy"`, `"jax"`, `"dask"`; a `DataArray` reports the backend of its data (`pipekit.backend_of`), so there is no `"xarray"` entry, as the geoops contract test enforces (geotoolz #580) | backends and carrier families declared separately |
