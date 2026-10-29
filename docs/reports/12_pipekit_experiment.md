@@ -21,20 +21,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-pipekit-experiment is where a pipekit model leaves the stack: it is logged
-to a tracker, stored in a registry, promoted to production and pinned in a
-reproducibility artifact. The scoping report asked for a thin adapter layer
-over MLflow, W&B, DVC, Hydra and Metaflow, with a content-addressed registry
-at its centre. Version 0.0.2 ships the registry, the two protocols, the run
-records, the training and inference artifacts, and adapters for Hydra, DVC
-and Metaflow. It does not ship a single tracker: there is no MLflow or W&B
-code, although their extras exist. Following one emulator from training to
-an inference artifact breaks in six places: `load` cannot rebuild a JAX
-model, a model stored without weights hashes on its class name alone, tags
-move without a trace, an artifact pins a tag instead of a hash, the training
-artifact loses its tracker run id, and nested pipelines do not survive the
-Hydra round trip. **Every idea from the scoping report that has not shipped
-stays as a proposal with a gate.**
+pipekit-experiment is where a pipekit model leaves the stack: it is logged to a tracker, stored in a registry, promoted to production and pinned in a reproducibility artifact. The scoping report asked for a thin adapter layer over MLflow, W&B, DVC, Hydra and Metaflow, with a content-addressed registry at its centre. Version 0.0.2 ships the registry, the two protocols, the run records, the training and inference artifacts, and adapters for Hydra, DVC and Metaflow. However, it does not ship a single tracker, so there is no MLflow or W&B code even though their extras exist. When we follow one emulator from training to an inference artifact, it breaks in six places: 1) `load` cannot rebuild a JAX model, 2) a model stored without weights hashes on its class name alone, 3) tags move without a trace, 4) an artifact pins a tag instead of a hash, 5) the training artifact loses its tracker run id, and 6) nested pipelines do not survive the Hydra round trip. **Every idea from the scoping report that has not shipped stays as a proposal with a gate.**
 
 +++
 
@@ -52,60 +39,26 @@ stays as a proposal with a gate.**
 :::
 
 :::{important} How this page treats the scoping report
-pipekit-experiment has no design docs of its own, so its code and README are
-the only record of what was decided (the registry's hash, the fsspec
-backend, write-once tags, JSON artifacts); there the code stands
-([conventions](../overview.md#sec-conventions)). Where the scoping report asked for something
-that does not exist (trackers, the MLflow registry, `rerun`, `gc`, tag
-history), it becomes a workstream rather than an open question.
+pipekit-experiment has no design docs of its own, so its code and README are the only record of what was decided (the registry's hash, the fsspec backend, write-once tags, JSON artifacts), and there we let the code stand ([conventions](../overview.md#sec-conventions)). Where the scoping report asked for something that does not exist (trackers, the MLflow registry, `rerun`, `gc`, tag history), we turn it into a workstream rather than an open question.
 :::
 
 (r12-summary)=
 ## Summary
 
-**Decision.** pipekit-experiment stays the thin boundary package the
-scoping report and its README describe: protocols, a content-addressed
-registry, JSON artifacts and one adapter per tool, with nothing from those
-tools imported by pipekit pipelines. The registry's design stands. Five
-workstreams finish the package.
+**Decision.** pipekit-experiment stays the thin boundary package which the scoping report and its README describe: protocols, a content-addressed registry, JSON artifacts and one adapter per tool, with nothing from those tools imported by pipekit pipelines. The registry's design stands, and five workstreams finish the package.
 
-- **A. The registry.** `load` cannot rebuild a model whose weights live in
-  `weights.bin` (A1). A model stored without weights hashes on its class
-  name, so two architectures collide (A2). Tags can move silently through
-  `store(name=...)` and leave no history (A3). There is no `gc` or delete
-  (A4); the fsspec backend needs parent directories and fails on an empty
-  `list` (A5); and the scoping report's `MLflowModelRegistry` does not exist
-  (A6).
-- **B. Trackers.** There is no `ExperimentTracker` implementation at all.
-  Add a file tracker for tests and offline runs (B1), then MLflow (B2) and
-  W&B (B3), and fix the training artifact's `tracker_run_id`, which is
-  `None` for the shipped `Run` and `repr(handle)` for anything else (B4).
-- **C. Artifacts.** `TrainingArtifact.rerun` does not exist (C1);
-  `InferenceArtifact` accepts a tag where it should pin a hash (C2); and the
-  training artifact's `model_registry_uri` omits the registry it points at
-  (C3).
-- **D. Orchestration adapters.** Nested pipelines do not survive
-  `HydraConfigLoader.to_yaml` and `from_yaml` (D1,
-  [Report 9](09_use_cases.md#r9-proposals)'s proposal A);
-  `MetaflowStepAdapter.as_step` builds a step Metaflow rejects (D2); the DVC
-  pointer is parsed line by line (D3).
-- **E. Run records.** `Run`, `RunMetrics` and `RunArtifacts` exist, but
-  nothing creates them, `RunMetrics` has no `to_dataframe`, and
-  `RunArtifacts.attach` takes only a URI string (E1).
+- **A. The registry.** `load` cannot rebuild a model whose weights live in `weights.bin` (A1). A model stored without weights hashes on its class name, so two architectures collide (A2). Tags can move silently through `store(name=...)` and they leave no history (A3). There is no `gc` or delete (A4), the fsspec backend needs parent directories and fails on an empty `list` (A5), and the scoping report's `MLflowModelRegistry` does not exist (A6).
+- **B. Trackers.** There is no `ExperimentTracker` implementation at all. So we add a file tracker for tests and offline runs (B1), then MLflow (B2) and W&B (B3), and we fix the training artifact's `tracker_run_id`, which is `None` for the shipped `Run` and `repr(handle)` for anything else (B4).
+- **C. Artifacts.** `TrainingArtifact.rerun` does not exist (C1), `InferenceArtifact` accepts a tag where it should pin a hash (C2), and the training artifact's `model_registry_uri` leaves out the registry it points at (C3).
+- **D. Orchestration adapters.** Nested pipelines do not survive `HydraConfigLoader.to_yaml` and `from_yaml` (D1, which is [Report 9](09_use_cases.md#r9-proposals)'s proposal A), `MetaflowStepAdapter.as_step` builds a step which Metaflow rejects (D2), and the DVC pointer is parsed line by line (D3).
+- **E. Run records.** `Run`, `RunMetrics` and `RunArtifacts` exist. However, nothing creates them, `RunMetrics` has no `to_dataframe`, and `RunArtifacts.attach` only takes a URI string (E1).
 
-**End state.** A trained model is stored with its weights under a hash that
-identifies its architecture and weights, reloaded by hash or by tag in one
-call, promoted with a recorded tag move, and pinned by hash in an inference
-artifact. Its training run is logged to any tracker that satisfies the
-protocol, and its training artifact names the run, the data, the registry
-and enough of the loop to retrain.
+**End state.** A trained model is stored with its weights under a hash that identifies its architecture and weights. It is reloaded by hash or by tag in one call, promoted with a recorded tag move, and pinned by hash in an inference artifact. Its training run is logged to any tracker that satisfies the protocol, and its training artifact names the run, the data, the registry and enough of the loop to retrain it.
 
 (r12-ownership)=
 ## Ownership rules
 
-pipekit-experiment owns the records a run leaves behind and the registry
-models live in; the external tools own scheduling, dashboards and storage
-([](#fig-r12-ownership)).
+pipekit-experiment owns the records which a run leaves behind and the registry that models live in, whereas the external tools own scheduling, dashboards and storage ([](#fig-r12-ownership)).
 
 :::{figure} ../images/reports/r12_ownership.svg
 :label: fig-r12-ownership
@@ -115,35 +68,18 @@ pipekit-experiment 0.0.2 between pipekit and the tools it adapts. Dashed
 chips are missing.
 :::
 
-**pipekit-experiment** owns the `ExperimentTracker` and `ModelRegistry`
-protocols, the run records, the registries, the artifacts and the tool
-adapters. Its core depends only on `pipekit`; each tool arrives through its
-own extra. The registry stores weight bytes and never interprets them: each
-model operator (`JaxModelOp`, `EquinoxModelOp`) owns its format through
-`serialize_weights` and `from_registry`.
+**pipekit-experiment** owns the `ExperimentTracker` and `ModelRegistry` protocols, the run records, the registries, the artifacts and the tool adapters. Its core only depends on `pipekit`, and each tool arrives through its own extra. The registry stores weight bytes and never interprets them, so each model operator (`JaxModelOp`, `EquinoxModelOp`) owns its format through `serialize_weights` and `from_registry`.
 
-Neighbours (pipekit-train, the external tools, serving) follow
-[the stack rules](16_geo_data_stack.md#r16-ownership). One rule is this
-page's: pipekit-train's fallback `_LocalArtifact` (`loop.py:174`), which
-`_build_artifact` returns when pipekit-experiment is not installed
-(`loop.py:427-433`), is the only second artifact type, is never persisted,
-and is documented as such; removing it (making `[experiment]` a hard
-dependency of `run()`) is [an open question](#r12-open-questions).
+The neighbours (pipekit-train, the external tools, serving) follow [the stack rules](16_geo_data_stack.md#r16-ownership). One rule is this page's own. pipekit-train's fallback `_LocalArtifact` (`loop.py:174`), which `_build_artifact` returns when pipekit-experiment is not installed (`loop.py:427-433`), is the only second artifact type, it is never persisted, and it is documented as such. Removing it (making `[experiment]` a hard dependency of `run()`) is [an open question](#r12-open-questions).
 
 :::{warning} Differs from the plan
-The scoping report's extras were `mlflow`, `wandb`, `dvc`, `hydra`,
-`metaflow`, `s3`, `mlflow-registry`, `train` and `all`. 0.0.2 has `mlflow`,
-`wandb`, `dvc`, `hydra`, `metaflow` and `s3`. The `mlflow` and `wandb` extras
-install packages that no code in pipekit-experiment uses, because neither
-adapter exists. The README lists them as planned for "v0.0.2", the version
-the package already has.
+The scoping report's extras were `mlflow`, `wandb`, `dvc`, `hydra`, `metaflow`, `s3`, `mlflow-registry`, `train` and `all`, whereas 0.0.2 has `mlflow`, `wandb`, `dvc`, `hydra`, `metaflow` and `s3`. The `mlflow` and `wandb` extras install packages that no code in pipekit-experiment uses, because neither adapter exists. The README lists them as planned for "v0.0.2", which is the version the package already has.
 :::
 
 (r12-surface)=
 ## What ships
 
-[](#tbl-r12-surface) lists the public surface; the italic rows were planned
-and never built.
+[](#tbl-r12-surface) lists the public surface, where the italic rows were planned and never built.
 
 :::{table} pipekit-experiment 0.0.2's public surface. Rows in italics are in the scoping report but not in the code.
 :label: tbl-r12-surface
@@ -162,18 +98,12 @@ and never built.
 (r12-running)=
 ## The running example: one emulator from training to an artifact
 
-The stages follow the linear emulator of [Report 11](11_pipekit_train.md),
-a learned $W \in \mathbb{R}^{40 \times 40}$ that replaces
-[Report 10](10_pipekit_cycle.md#r10-running)'s transport operator $M$, through everything pipekit-experiment does to a
-model after training. For readable outputs some stages use a two-parameter
-operator `Scale(factor, offset)`, $x \mapsto \text{factor} \cdot x + \text{offset}$,
-alongside it.
+The stages follow the linear emulator of [Report 11](11_pipekit_train.md) through everything pipekit-experiment does to a model after training. The emulator is a learned weight matrix $\mat{W} \in \mathbb{R}^{40 \times 40}$ which replaces [Report 10](10_pipekit_cycle.md#r10-running)'s transport operator $\mat{M}$ (a linear map of the same shape). To keep the outputs readable, some stages also use a two-parameter operator `Scale(factor, offset)`, which acts on each entry as $x \mapsto \text{factor} \cdot x + \text{offset}$ with $x \in \mathbb{R}$.
 
 (r12-stage-1)=
 ### Stage 1 · Store the emulator under its content hash (pipekit-jax → pipekit-experiment)
 
-**TL;DR.** Store the trained emulator and check that its address changes
-exactly when the model does.
+**TL;DR.** Store the trained emulator and check that its address changes exactly when the model does.
 
 **Problem.** The registry addresses a model by the hash {eq}`r12-eq-hash`,
 
@@ -181,9 +111,7 @@ $$
 h = \mathrm{SHA256}\left( \mathrm{json}(\text{state}) \Vert \texttt{0x00} \Vert w \right) ,
 $$ (r12-eq-hash)
 
-where state is the operator's class and config and $w$ its serialised
-weights (empty if none). Two stores of the same model must give the same
-$h$; changing the config or a weight must change it.
+where $\text{state}$ is the operator's class and config, $w$ is its serialised weights as a byte string (empty if none), $\Vert$ is byte concatenation and $h$ is the 256-bit digest. Two stores of the same model must give the same $h$, and changing the config or a weight must change it.
 
 ```{code-block} python
 :caption: Storing a JaxModelOp with its weights, from a real run.
@@ -206,32 +134,18 @@ reg.store(JaxModelOp(eqx.nn.Linear(40, 40, key=k1))) == \
     reg.store(JaxModelOp(eqx.nn.Linear(3, 7, key=k2)))   # → True: no weights
 ```
 
-The address is exactly as the code defines it, and it behaves. Writes are
-atomic on the local backend (a `.tmp` file, then `os.replace`), and refs are
-checked as a single path segment, so `reg.load("../x")` raises. One case
-fails: without weights, a `JaxModelOp`'s state is just
-`{"module_class": "Linear"}`, so a 40 × 40 and a 3 × 7 layer share a hash,
-and the second store is merged into the first one's entry.
+The address is exactly as the code defines it, and it behaves well. Writes are atomic on the local backend (a `.tmp` file, then `os.replace`), and refs are checked as a single path segment, so `reg.load("../x")` raises. However, one case fails, because without weights a `JaxModelOp`'s state is just `{"module_class": "Linear"}`, so a 40 × 40 and a 3 × 7 layer share a hash, and the second store is merged into the first one's entry.
 
 :::{warning} Differs from the plan
-The scoping report hashed `hash(training_config, dataset_content, weights)`.
-The code hashes the operator's state and its weights, nothing else: the
-address identifies the **model**, and its provenance lives in the
-`TrainingArtifact`. This page keeps the code's choice, because a model
-retrained from different data to the same weights is the same model, and
-records the link from model to training in workstream C. The layout differs
-too: `operator.json` rather than `operator.yaml`, `weights.bin` rather than
-`model.bin`, `_tags/<name>` without `.txt`, and no `preview.json`.
+The scoping report hashed `hash(training_config, dataset_content, weights)`. The code hashes the operator's state and its weights and nothing else, so the address identifies the **model** and its provenance lives in the `TrainingArtifact`. We keep the code's choice on this page, because a model retrained from different data to the same weights is the same model, and we record the link from model to training in workstream C. The layout differs too: `operator.json` rather than `operator.yaml`, `weights.bin` rather than `model.bin`, `_tags/<name>` without `.txt`, and no `preview.json`.
 :::
 
 (r12-stage-2)=
 ### Stage 2 · Load it back (pipekit-experiment → pipekit-cycle)
 
-**TL;DR.** Reload the emulator by hash and by name, with its weights, and
-drop it into a cycle.
+**TL;DR.** Reload the emulator by hash and by name, with its weights, and drop it into a cycle.
 
-**Problem.** A round trip must be exact:
-$\max \lvert W_{\text{loaded}} - W \rvert = 0$.
+**Problem.** A round trip must be exact, $\max_{i,j} \vert [\mat{W}_\text{loaded}]_{ij} - [\mat{W}]_{ij} \vert = 0$, where $\mat{W}_\text{loaded} \in \mathbb{R}^{40 \times 40}$ is the reloaded weight matrix.
 
 ```{code-block} python
 :caption: The registry's load path, and the skeleton path that works.
@@ -247,30 +161,18 @@ loaded = skeleton.from_registry(reg, "lin40")             # by tag     today
 emulator = pc.NeuralForward(loaded, dt=1.0)               # Report 10  today
 ```
 
-`ModelRegistry.load(ref)` rebuilds an operator with `Operator.from_state`
-and never touches `weights.bin`. That works for operators whose config is
-plain values (`Scale`), and fails for every model with weights, because
-`JaxModelOp` and `EquinoxModelOp` are `forbid_in_yaml`. The path that works
-is the model's own: build a skeleton of the right shape, then
-`from_registry(reg, ref)` reads the weights into it. Workstream A1 makes
-`load` do this.
+`ModelRegistry.load(ref)` rebuilds an operator with `Operator.from_state` and never touches `weights.bin`. That works for operators whose config is plain values (`Scale`). However, it fails for every model with weights, because `JaxModelOp` and `EquinoxModelOp` are `forbid_in_yaml`. The path that works is the model's own, where we build a skeleton of the right shape and then `from_registry(reg, ref)` reads the weights into it. Workstream A1 makes `load` do this.
 
 :::{warning} Differs from the plan
-The scoping report's `load` was
-`Operator.from_state(config).with_weights(weights)`. There is no
-`with_weights` in pipekit; weights come back through
-`ModelRegistry.load_weights(ref)` and the model class's `from_registry`.
+The scoping report's `load` was `Operator.from_state(config).with_weights(weights)`. However, there is no `with_weights` in pipekit, and the weights come back through `ModelRegistry.load_weights(ref)` and the model class's `from_registry`.
 :::
 
 (r12-stage-3)=
 ### Stage 3 · Promote it (pipekit-experiment)
 
-**TL;DR.** Mark the emulator as production, then promote a candidate, and
-see what the registry remembers.
+**TL;DR.** Mark the emulator as production, then promote a candidate, and see what the registry remembers.
 
-**Problem.** Deployments resolve the tag `production` to a hash. A
-promotion must be deliberate, must not be silent, and must leave a record
-of what `production` meant before.
+**Problem.** Deployments resolve the tag `production` to a hash. So a promotion must be deliberate, it must not be silent, and it must leave a record of what `production` meant before.
 
 ```{code-block} python
 :caption: Tag-based promotion, from a real run.
@@ -286,23 +188,14 @@ reg.store(op5, name="production")           # moves it again, no force   today
 reg.list(tags={"v": "1"})                   # → []: the stored tag is the int 1
 ```
 
-Write-once tags are the code's default, as the scoping report asked, and
-`force=True` is the explicit override. Two things undo that. `store(...,
-name=...)` moves a tag without `force`, so a script can repoint
-`production` by storing a model under that name. And no tag move is
-recorded: after a promotion, nothing says what `production` used to be.
-`list(tags=...)` compares with `==`, so a string `"1"` does not match a
-stored integer `1`. Workstream A3 fixes the first two.
+Write-once tags are the code's default, as the scoping report asked, and `force=True` is the explicit override. However, two things undo that. First, `store(..., name=...)` moves a tag without `force`, so a script can repoint `production` simply by storing a model under that name. Second, no tag move is recorded, so after a promotion nothing says what `production` used to be. In addition, `list(tags=...)` compares with `==`, so a string `"1"` does not match a stored integer `1`. Workstream A3 fixes the first two.
 
 (r12-stage-4)=
 ### Stage 4 · Pin it in an inference artifact (pipekit-experiment)
 
-**TL;DR.** Freeze an inference pipeline that uses the emulator, so it can be
-rebuilt with exactly this model later.
+**TL;DR.** Freeze an inference pipeline that uses the emulator, so it can be rebuilt with exactly this model later.
 
-**Problem.** An inference artifact maps each model in a pipeline to the
-hash it used: $\{\text{operator path} \mapsto h\}$. Rebuilding must load the
-same $h$, whatever the tags say by then.
+**Problem.** An inference artifact maps each model in a pipeline to the hash it used, $\{\text{operator path} \mapsto h\}$. Rebuilding must load the same $h$, whatever the tags say by then.
 
 ```{code-block} python
 :caption: An InferenceArtifact, and what it accepts as a pin.
@@ -316,29 +209,18 @@ art.reload_models(reg)
 # with a JaxModelOp pinned → RuntimeError (from_state, as in stage 2)
 ```
 
-`pinned_model_hashes` takes any ref, and `reload_models` resolves tags, so an
-artifact pinned to `"production"` drifts the next time the tag moves: the
-opposite of a pin. It also inherits stage 2's failure for models with
-weights. Workstream C2 accepts only hashes.
+`pinned_model_hashes` takes any ref and `reload_models` resolves tags, so an artifact pinned to `"production"` drifts the next time the tag moves, which is the opposite of a pin. It also inherits stage 2's failure for models with weights. Workstream C2 only accepts hashes.
 
 :::{warning} Differs from the plan
-The scoping report made `InferenceArtifact` a subclass of
-`pipekit.repro.Artifact`, the regulatory snapshot of use case 9. There is no
-`pipekit.repro` module and no `Artifact` class in pipekit core;
-`InferenceArtifact` and `TrainingArtifact` are dataclasses over a shared JSON
-base (`_JsonArtifact`). [Report 9](09_use_cases.md#r9-case-9)'s use case 9
-builds its artifact from these.
+The scoping report made `InferenceArtifact` a subclass of `pipekit.repro.Artifact`, the regulatory snapshot of use case 9. However, there is no `pipekit.repro` module and no `Artifact` class in pipekit core, and `InferenceArtifact` and `TrainingArtifact` are dataclasses over a shared JSON base (`_JsonArtifact`). [Report 9](09_use_cases.md#r9-case-9)'s use case 9 builds its artifact from these.
 :::
 
 (r12-stage-5)=
 ### Stage 5 · Log the training run, and read its artifact (pipekit-train → pipekit-experiment)
 
-**TL;DR.** Train the emulator with two trackers attached, and check what the
-training artifact records.
+**TL;DR.** Train the emulator with two trackers attached, and check what the training artifact records.
 
-**Problem.** One training run should reach several trackers with identical
-metric streams, and its artifact should name the tracker run, the data, the
-stored model and the registry it lives in.
+**Problem.** One training run should reach several trackers with identical metric streams, and its artifact should name the tracker run, the data, the stored model and the registry that the model lives in.
 
 ```{code-block} python
 :caption: Two trackers on one loop, and the artifact the loop returns, from a real run.
@@ -364,44 +246,23 @@ pk.loads(art.training_pipeline_yaml)
 # → RuntimeError: from_state cannot reconstruct TrainingLoop … forbid_in_yaml
 ```
 
-Stacking trackers works as the scoping report promised: each
-`LogToExperiment` gets the same stream. But there is no tracker to stack;
-every one is user code. The artifact the loop fills has four problems, and
-only one is pipekit-experiment's own:
+Stacking trackers works as the scoping report promised, and each `LogToExperiment` gets the same stream. However, there is no tracker to stack, so every one of them is user code. The artifact which the loop fills has four problems, and only one of them is pipekit-experiment's own:
 
-- **`tracker_run_id` is never the run id.** `_build_artifact`
-  (`loop.py:414-419`) keeps a callback's `run` only if it has
-  `__getitem__`, and then stores `repr(run)`. The shipped `Run` is a
-  dataclass without `__getitem__`, so the field is `None`, as here; a
-  tracker that returns a mapping or a string gets its whole `repr`
-  (`"{'name': 'emu', 'id': 'run-0'}"` in
-  [Report 11](11_pipekit_train.md#r11-stage-4)'s run), never the id
-  alone (B4).
-- **`model_registry_uri` is `registry://<hash>`.** It does not say which
-  registry, and the registries give `Checkpoint` nothing to say it with:
-  `LocalModelRegistry` exposes `root`, `S3ModelRegistry` exposes `uri`, and
-  only the private `_where()` is common to both (C3).
-- **The weights are not stored.** The Equinox adapter re-wraps the trained
-  module as `EquinoxModelOp`, which has no `serialize_weights`; this is
-  [Report 11](11_pipekit_train.md#r11-ws-b)'s workstream B1.
-- **The pipeline YAML cannot be loaded.** `TrainingLoop` is
-  `forbid_in_yaml`, so the artifact cannot retrain (C1).
+- **`tracker_run_id` is never the run id.** `_build_artifact` (`loop.py:414-419`) only keeps a callback's `run` if it has `__getitem__`, and then it stores `repr(run)`. The shipped `Run` is a dataclass without `__getitem__`, so the field is `None` (as here), and a tracker that returns a mapping or a string gets its whole `repr` (`"{'name': 'emu', 'id': 'run-0'}"` in [Report 11](11_pipekit_train.md#r11-stage-4)'s run) and never the id alone (B4).
+- **`model_registry_uri` is `registry://<hash>`.** It does not say which registry, and the registries give `Checkpoint` nothing to say it with: `LocalModelRegistry` exposes `root`, `S3ModelRegistry` exposes `uri`, and only the private `_where()` is common to both (C3).
+- **The weights are not stored.** The Equinox adapter re-wraps the trained module as `EquinoxModelOp`, which has no `serialize_weights`. This is [Report 11](11_pipekit_train.md#r11-ws-b)'s workstream B1.
+- **The pipeline YAML cannot be loaded.** `TrainingLoop` is `forbid_in_yaml`, so the artifact cannot retrain (C1).
 
 :::{warning} Differs from the plan
-The scoping report's `TrainingArtifact` had `save`, `load`, `rerun` and
-`reload_model`. The shipped one has `save`, `load` (JSON) and
-`reload_model(registry)`, which calls `registry.load` and so fails as in
-stage 2. There is no `rerun`.
+The scoping report's `TrainingArtifact` had `save`, `load`, `rerun` and `reload_model`. The shipped one has `save`, `load` (JSON) and `reload_model(registry)`, which calls `registry.load` and so it fails as in stage 2. There is no `rerun`.
 :::
 
 (r12-stage-6)=
 ### Stage 6 · Hand the pipeline to orchestration tools (pipekit-experiment → Hydra, DVC, Metaflow)
 
-**TL;DR.** Express the pipeline as Hydra YAML, version its data with DVC
-and run it as a Metaflow step.
+**TL;DR.** Express the pipeline as Hydra YAML, version its data with DVC and run it as a Metaflow step.
 
-**Problem.** Each adapter must round-trip what it is given: a pipeline to
-YAML and back, a file to a DVC hash, a pipeline to a runnable step.
+**Problem.** Each adapter must round-trip what it is given: 1) a pipeline to YAML and back, 2) a file to a DVC hash, and 3) a pipeline to a runnable step.
 
 ```{code-block} python
 :caption: The three adapters that ship, from real runs.
@@ -424,21 +285,9 @@ MetaflowStepAdapter.run(seq, self, name="scaled", inputs=["x"])  # inside a
 # hand-written @step → 3.5                                              today
 ```
 
-Flat operators round-trip through Hydra; nested ones do not, because
-`to_yaml` writes pipekit's debug config instead of `_target_` entries, which
-is [Report 9](09_use_cases.md#r9-proposals)'s proposal A seen from this
-side (D1). The DVC adapter works and
-shells out to the `dvc` CLI; its `hash` reads the first `md5:` or `hash:`
-line of the pointer file, so a pointer with `hash: md5` first would return
-the string `"md5"` (D3). `as_step` builds a step without `self.next`, which
-Metaflow refuses in any position but the end, while `run` inside a
-hand-written step works (D2).
+Flat operators round-trip through Hydra. However, nested ones do not, because `to_yaml` writes pipekit's debug config instead of `_target_` entries, which is [Report 9](09_use_cases.md#r9-proposals)'s proposal A seen from this side (D1). The DVC adapter works and shells out to the `dvc` CLI. Its `hash` reads the first `md5:` or `hash:` line of the pointer file, so a pointer with `hash: md5` first would return the string `"md5"` (D3). `as_step` builds a step without `self.next`, which Metaflow refuses in any position but the end, whereas `run` inside a hand-written step works (D2).
 
-The fsspec registry was checked the same way: `S3ModelRegistry("memory://")`
-gives the same hashes and layout as the local one, but `list()` on an empty
-registry raises `FileNotFoundError`, a `file://` registry fails on its first
-store unless `storage_options={"auto_mkdir": True}`, and its writes are not
-atomic (A5). Real S3 was not tested.
+We checked the fsspec registry the same way. `S3ModelRegistry("memory://")` gives the same hashes and layout as the local one. However, `list()` on an empty registry raises `FileNotFoundError`, a `file://` registry fails on its first store unless `storage_options={"auto_mkdir": True}`, and its writes are not atomic (A5). We did not test real S3.
 
 (r12-names)=
 ## The scoping report's names, checked
@@ -465,10 +314,7 @@ atomic (A5). Real S3 was not tested.
 (r12-audit)=
 ## Current-state audit
 
-Of sixteen pieces checked, eight ship and work, six ship with defects, and
-two are missing ([](#tbl-r12-audit)); [](#fig-r12-readiness) counts the
-page's calls by marker. The audit read `references/geostack/pipekit` at `ef3c17f` on
-13 October 2026.
+Of the sixteen pieces we checked, eight ship and work, six ship with defects, and two are missing ([](#tbl-r12-audit)), and [](#fig-r12-readiness) counts the page's calls by marker. The audit read `references/geostack/pipekit` at `ef3c17f` on 13 October 2026.
 
 :::{figure} ../images/reports/r12_readiness.svg
 :label: fig-r12-readiness
@@ -504,24 +350,16 @@ proposed by this report's workstreams and 1 is code the reader writes
 
 Smaller findings:
 
-- **Concurrent writers can race.** `store` reads and rewrites
-  `metadata.json` with no lock, and `tag` checks that a tag is free before
-  writing it, so two processes can both pass the check.
-- **Re-storing merges tags.** Storing the same model again with new tags
-  merges them into `metadata.json` rather than replacing them.
-- **`b""` and `None` weights hash the same**, which is the intended reading
-  of "no weights".
-- **`LogToExperiment` never calls `log_artifact`**, so a tracker never sees
-  the stored model or the artifact file.
-- **A directory's DVC hash carries a `.dir` suffix** (`1df8f132….dir`),
-  which a caller comparing against a file hash must expect.
+- **Concurrent writers can race.** `store` reads and rewrites `metadata.json` with no lock, and `tag` checks that a tag is free before it writes it, so two processes can both pass the check.
+- **Re-storing merges tags.** If we store the same model again with new tags, they are merged into `metadata.json` rather than replacing the old ones.
+- **`b""` and `None` weights hash the same**, which is the intended reading of "no weights".
+- **`LogToExperiment` never calls `log_artifact`**, so a tracker never sees the stored model or the artifact file.
+- **A directory's DVC hash carries a `.dir` suffix** (`1df8f132….dir`), which a caller comparing against a file hash must expect.
 
 (r12-ws-a)=
 ## Workstream A · The registry
 
-**Decision.** The registry's content hash and storage layout stand; what
-changes is that a stored model comes back whole, its address cannot collide,
-and every tag move is deliberate and recorded ([](#tbl-r12-move-a)).
+**Decision.** The registry's content hash and storage layout stand. What changes is that a stored model comes back whole, its address cannot collide, and every tag move is deliberate and recorded ([](#tbl-r12-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r12-move-a
@@ -556,9 +394,7 @@ reg.tag_history("production")            # → [(t₁, None, h3), (t₂, h3, h4)
 (r12-ws-b)=
 ## Workstream B · Trackers
 
-**Decision.** Ship trackers, starting with one that needs no service, so
-that `LogToExperiment` has something to log to out of the box
-([](#tbl-r12-move-b)).
+**Decision.** We ship trackers, starting with one that needs no service, so that `LogToExperiment` has something to log to out of the box ([](#tbl-r12-move-b)).
 
 :::{table} Workstream B's moves.
 :label: tbl-r12-move-b
@@ -575,8 +411,7 @@ that `LogToExperiment` has something to log to out of the box
 (r12-ws-c)=
 ## Workstream C · Artifacts
 
-**Decision.** An artifact pins by hash, names its registry, and keeps
-enough of its training loop to run it again ([](#tbl-r12-move-c)).
+**Decision.** An artifact pins by hash, names its registry, and keeps enough of its training loop to run it again ([](#tbl-r12-move-c)).
 
 :::{table} Workstream C's moves.
 :label: tbl-r12-move-c
@@ -593,8 +428,7 @@ enough of its training loop to run it again ([](#tbl-r12-move-c)).
 (r12-ws-d)=
 ## Workstream D · Orchestration adapters
 
-**Decision.** Each adapter round-trips what it is given; the three that ship
-get their gaps closed before more are added ([](#tbl-r12-move-d)).
+**Decision.** Each adapter round-trips what it is given, and the three that ship get their gaps closed before we add more ([](#tbl-r12-move-d)).
 
 :::{table} Workstream D's moves.
 :label: tbl-r12-move-d
@@ -609,8 +443,7 @@ get their gaps closed before more are added ([](#tbl-r12-move-d)).
 (r12-ws-e)=
 ## Workstream E · Run records
 
-**Decision.** The run records are produced by the trackers (B1) and given
-the conveniences the scoping report specified ([](#tbl-r12-move-e)).
+**Decision.** The run records are produced by the trackers (B1), and they get the conveniences which the scoping report specified ([](#tbl-r12-move-e)).
 
 :::{table} Workstream E's moves.
 :label: tbl-r12-move-e
@@ -624,8 +457,7 @@ the conveniences the scoping report specified ([](#tbl-r12-move-e)).
 (r12-gates)=
 ## Testing gates
 
-Each workstream merges only when its gates pass; the existing gates are
-checks the code passes today ([](#tbl-r12-gates)).
+Each workstream only merges when its gates pass, and the existing gates are checks which the code passes today ([](#tbl-r12-gates)).
 
 :::{table} Gates for the proposals and for what ships.
 :label: tbl-r12-gates
@@ -656,9 +488,7 @@ checks the code passes today ([](#tbl-r12-gates)).
 (r12-risks)=
 ## Sequencing and risks
 
-The registry and artifact fixes come first, because every model that goes
-through the registry today comes back without its weights or loses its
-pin; trackers come second, round trips last ([](#fig-r12-roadmap)).
+The registry and artifact fixes come first, because every model that goes through the registry today comes back without its weights or loses its pin. Trackers come second and round trips come last ([](#fig-r12-roadmap)).
 
 :::{figure} ../images/reports/r12_roadmap.svg
 :label: fig-r12-roadmap
@@ -667,50 +497,21 @@ pin; trackers come second, round trips last ([](#fig-r12-roadmap)).
 Correctness first, then trackers, then round trips.
 :::
 
-- **Write-once `store(name=)` breaks scripts.** Scripts that store under
-  `production` to promote would start raising. Fallback: warn for one
-  release, then raise, and document `tag(..., force=True)` as the
-  promotion call.
-- **Two writers on a shared registry.** Neither tags nor metadata are
-  locked, and S3 has no rename. Fallback: conditional writes where the
-  backend has them (S3 `If-None-Match`), a lock file elsewhere, and a
-  documented single-writer rule until then.
-- **Retraining needs more than a config.** A `TrainingLoop` holds Python
-  objects (datasets, callbacks) that YAML cannot carry. Fallback: `rerun`
-  takes a builder function or a Hydra config rather than parsing
-  `training_pipeline_yaml`, and checks the rebuilt `dataset_hash`.
-- **Tracker APIs churn.** MLflow and W&B change often. Fallback: pin
-  versions in the extras and run B2 and B3 against local, offline modes in
-  CI.
-- **`like=` asks the caller for the architecture.** A user loading by tag
-  may not know the shapes. Fallback: store the module's constructor
-  arguments in `operator.json` when the model class can provide them, so
-  `load` can build the skeleton itself.
+- **Write-once `store(name=)` breaks scripts.** Scripts that store under `production` to promote a model would start raising. Fallback: we warn for one release, then raise, and we document `tag(..., force=True)` as the promotion call.
+- **Two writers on a shared registry.** Neither tags nor metadata are locked, and S3 has no rename. Fallback: conditional writes where the backend has them (S3 `If-None-Match`), a lock file elsewhere, and a documented single-writer rule until then.
+- **Retraining needs more than a config.** A `TrainingLoop` holds Python objects (datasets, callbacks) which YAML cannot carry. Fallback: `rerun` takes a builder function or a Hydra config rather than parsing `training_pipeline_yaml`, and it checks the rebuilt `dataset_hash`.
+- **Tracker APIs churn.** MLflow and W&B change very often. Fallback: we pin versions in the extras and run B2 and B3 against local, offline modes in CI.
+- **`like=` asks the caller for the architecture.** A user loading by tag may not know the shapes. Fallback: we store the module's constructor arguments in `operator.json` when the model class can provide them, so that `load` can build the skeleton itself.
 
 (r12-open-questions)=
 ## Open questions
 
-1. **Should the registry hash include provenance?** The code identifies the
-   model by state and weights; the scoping report wanted training config and
-   data too. This page keeps the code's choice and links provenance through
-   metadata (C). Is a second, provenance-inclusive hash needed for
-   regulatory use?
-2. **Where does a `like` skeleton come from at serving time?** A server that
-   loads `production` needs the architecture. Is it in the deployment
-   config, in `operator.json`, or in a model card stored beside the weights?
-3. **Does the stack need `pipekit.repro.Artifact`?** Two JSON dataclasses
-   cover training and inference. Is a core base class still wanted for
-   other snapshots (use case 9's regulatory artifact)?
-4. **Do tags carry stages?** The scoping report used `candidate` and
-   `production` as plain tags. Should stages be a first-class field with
-   allowed transitions, as MLflow has?
-5. **Should pipekit-train keep `_LocalArtifact`?** It lets `run()` work
-   without pipekit-experiment, at the cost of a second artifact type that
-   cannot be saved or reloaded. The alternative is to require the
-   `[experiment]` extra for `run()` and return only `TrainingArtifact`.
-6. **A preview with each model.** The scoping report's `preview.json` held
-   example inputs and outputs for sanity checks. Is it worth adding, and
-   does it belong in the registry or the model card?
+1. **Should the registry hash include provenance?** The code identifies the model by its state and weights, whereas the scoping report wanted the training config and data too. This page keeps the code's choice and links provenance through metadata (C). Is a second, provenance-inclusive hash needed for regulatory use?
+2. **Where does a `like` skeleton come from at serving time?** A server that loads `production` needs the architecture. Is it in the deployment config, in `operator.json`, or in a model card stored beside the weights?
+3. **Does the stack need `pipekit.repro.Artifact`?** Two JSON dataclasses already cover training and inference. Is a core base class still wanted for other snapshots (use case 9's regulatory artifact)?
+4. **Do tags carry stages?** The scoping report used `candidate` and `production` as plain tags. Should stages be a first-class field with allowed transitions, as MLflow has?
+5. **Should pipekit-train keep `_LocalArtifact`?** It lets `run()` work without pipekit-experiment, at the cost of a second artifact type which cannot be saved or reloaded. The alternative is to require the `[experiment]` extra for `run()` and only return `TrainingArtifact`.
+6. **A preview with each model.** The scoping report's `preview.json` held example inputs and outputs for sanity checks. Is it worth adding, and if so, does it belong in the registry or in the model card?
 
 (r12-todos)=
 ## Upcoming work
@@ -734,9 +535,6 @@ Correctness first, then trackers, then round trips.
 
 ### Sources
 
-- The scoping report, "Report 12 — `pipekit-experiment`: experiment
-  tracking and model registry" (supplied by the author).
-- pipekit-experiment 0.0.2 in `references/geostack/pipekit/packages/pipekit-experiment`:
-  its source, tests, README, CHANGELOG and `pyproject.toml`.
-- The running example's scripts and outputs, described in
-  [](#r12-running).
+- The scoping report, "Report 12 — `pipekit-experiment`: experiment tracking and model registry" (supplied by the author).
+- pipekit-experiment 0.0.2 in `references/geostack/pipekit/packages/pipekit-experiment`: its source, tests, README, CHANGELOG and `pyproject.toml`.
+- The running example's scripts and outputs, described in [](#r12-running).

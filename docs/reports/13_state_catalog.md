@@ -21,19 +21,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-A **model state** is a field a model produced: an analysis, a forecast step,
-one ensemble member of a reanalysis. Unlike an observation, it has two times
-(when the run started and when the state is valid), a member index, a
-producer and a parent state. The scoping report proposed `statecatalog`, a new
-sister package with its own slice, backends and queries for these states.
-Reading the pinned code shows that most of that package already exists in
-pieces. geocatalog rows can carry the extra columns and filter on them,
-xrtoolz scores forecasts by lead time and by ensemble, and pipekit-cycle keeps
-the trajectory in memory. What is missing is narrower: typed state columns,
-loading that keeps runs apart, a handful of queries, forecast alignment and an
-ensemble history, plus area weighting when producers run on different
-grids, as in a CMIP ensemble. **This report recommends building those pieces
-where their concepts already live, and not building `statecatalog`.**
+A **model state** is a field which a model produced: an analysis, a forecast step, or one ensemble member of a reanalysis. Unlike an observation, it has two times (when the run started and when the state is valid), a member index, a producer and a parent state. The scoping report proposed `statecatalog`, a new sister package with its own slice, backends and queries for these states. However, when we read the pinned code, we find that most of that package already exists in pieces: geocatalog rows can carry the extra columns and filter on them, xrtoolz scores forecasts by lead time and by ensemble, and pipekit-cycle keeps the trajectory in memory. What is missing is narrower, namely typed state columns, loading that keeps runs apart, a handful of queries, forecast alignment and an ensemble history, plus area weighting when producers run on different grids (as in a CMIP ensemble). **This report recommends building those pieces where their concepts already live, and not building `statecatalog`.**
 
 +++
 
@@ -51,78 +39,31 @@ where their concepts already live, and not building `statecatalog`.**
 :::
 
 :::{important} What changed from the scoping report
-The scoping report's vocabulary holds: valid time, run time, lead time,
-ensemble member, producer hash and parent state are the right fields, and
-ensembles and lineage belong in the first version. Its packaging does not.
-The report argued that putting model-state fields into geocatalog "would
-corrupt the abstraction". At the pinned revisions the fields fit in
-geocatalog's **rows**, not in `GeoSlice`, and the slice stays what it is: a
-request for a region and a time interval. A **Differs** box carries each
-disagreement ([conventions](../overview.md#sec-conventions)).
+The scoping report's vocabulary holds: valid time, run time, lead time, ensemble member, producer hash and parent state are the right fields, and ensembles and lineage belong in the first version. However, its packaging does not. The report argued that putting model-state fields into geocatalog "would corrupt the abstraction". At the pinned revisions, the fields fit in geocatalog's **rows** and not in `GeoSlice`, so the slice stays what it is: a request for a region and a time interval. A **Differs** box carries each disagreement ([conventions](../overview.md#sec-conventions)).
 :::
 
 (r13-summary)=
 ## Summary
 
-**Decision.** Model states are indexed by geocatalog, through a new
-`geocatalog.states` namespace over the existing backends, and scored by
-xrtoolz's existing forecast metrics. There is no `statecatalog` package, no
-`StateSlice` and no second GeoParquet format. The overview is updated to
-match in the same change. No library starts importing
-another: pipekit-cycle, geocatalog and xrtoolz stay independent, and scripts
-join them.
+**Decision.** Model states are indexed by geocatalog, through a new `geocatalog.states` namespace over the existing backends, and they are scored by xrtoolz's existing forecast metrics. There is no `statecatalog` package, no `StateSlice` and no second GeoParquet format, and we update the overview to match in the same change. No library starts importing another: pipekit-cycle, geocatalog and xrtoolz stay independent, and scripts join them.
 
-- **A. State columns in geocatalog.** Today a forecast's run time and member
-  can live in extra columns, but nothing names, types or fills them. Reserve
-  five columns in schema v1 and add a builder that reads them from CF or
-  cfgrib metadata.
-- **B. Run-aware loading and typed queries.** `load_xarray` concatenates on
-  time and drops duplicates, so overlapping runs lose steps silently. Add
-  `load_states`, which stacks files into an (init time, member, lead time)
-  cube, or into an `xr.DataTree` with one leaf per producer when producers
-  use different grids, and typed query functions that replace hand-written
-  `where` strings.
-- **C. Forecast alignment in xrtoolz.** `SkillByLeadTime` and `CRPS` score a
-  forecast cube today, but the caller builds the verifying reference by hand,
-  and pixel metrics cannot reduce over a dimension the reference lacks. Add
-  `align_reference`, broadcast the reference in the pixel metrics, and let
-  `geo.Reduce` weight by cell area, so multi-model area means need no user
-  code.
-- **D. Ensemble histories in pipekit-cycle.** `Cycle` and `DACycle` keep
-  their trajectory in `history`; `EnsembleCycle` and `EnsembleDACycle`
-  keep nothing. Add `save_history` to both. Writing files stays in scripts, as AGENTS.md
-  requires.
+- **A. State columns in geocatalog.** Today a forecast's run time and member can live in extra columns, but nothing names, types or fills them. So we reserve five columns in schema v1 and add a builder that reads them from CF or cfgrib metadata.
+- **B. Run-aware loading and typed queries.** `load_xarray` concatenates on time and drops duplicates, so overlapping runs lose steps silently. We add `load_states`, which stacks files into an (init time, member, lead time) cube (or into an `xr.DataTree` with one leaf per producer when producers use different grids), and typed query functions which replace hand-written `where` strings.
+- **C. Forecast alignment in xrtoolz.** `SkillByLeadTime` and `CRPS` score a forecast cube today. However, the caller builds the verifying reference by hand, and pixel metrics cannot reduce over a dimension which the reference lacks. So we add `align_reference`, broadcast the reference in the pixel metrics, and let `geo.Reduce` weight by cell area, so that multi-model area means need no user code.
+- **D. Ensemble histories in pipekit-cycle.** `Cycle` and `DACycle` keep their trajectory in `history`, whereas `EnsembleCycle` and `EnsembleDACycle` keep nothing. We add `save_history` to both, and writing files stays in scripts, as AGENTS.md requires.
 
-**End state.** A script runs a cycle and writes one file per run and member.
-geocatalog indexes the files with typed state columns and loads them back as
-a cube without mixing runs. xrtoolz aligns the cube with its analyses and
-scores it by lead time. Runs from several models on several grids load as
-a tree, are summarised on their own grids and are regridded conservatively
-only for the comparison. pipekit-experiment's `Run.pipeline_hash` names the
-producer. Every one of the scoping report's queries is either a function in
-`geocatalog.states` or an existing call.
+**End state.** A script runs a cycle and writes one file per run and member. geocatalog indexes the files with typed state columns and loads them back as a cube without mixing runs, and xrtoolz aligns the cube with its analyses and scores it by lead time. Runs from several models on several grids load as a tree, they are summarised on their own grids, and they are only regridded conservatively for the comparison. pipekit-experiment's `Run.pipeline_hash` names the producer. Every one of the scoping report's queries is either a function in `geocatalog.states` or an existing call.
 
 (r13-problem)=
 ## The problem, as the scoping report put it
 
-An observation has one time. A model state has several, and the scoping
-report named them well. Let $r$ be the **run time** (the initialisation time
-of a forecast), $v$ the **valid time** (the time the state describes), and
+An observation has one time. A model state has several, and the scoping report named them well. Let $r \in \mathcal{T}$ be the **run time** (the initialisation time of a forecast) and $v \in \mathcal{T}$ the **valid time** (the time the state describes), where both are time stamps on the time axis $\mathcal{T} \subset \mathbb{R}$, and let
 
 $$
 \tau = v - r
 $$ (r13-eq-lead)
 
-the **lead time** ({eq}`r13-eq-lead`). An **analysis** is the state a data-assimilation step
-produces at its own valid time, so $\tau = 0$. A forecast run started at $r$
-produces states at $\tau = \Delta t, 2 \Delta t, \ldots$ for a model step
-$\Delta t$. An ensemble repeats each run $N_e$ times, with members
-$m = 0, \ldots, N_e - 1$. Each state also has a **producer**, the hash of
-the model and configuration that made it, and its **parents**, the states
-it was computed from: one for a forecast (the state its run started from), and
-the whole forecast ensemble for an ensemble-Kalman analysis, whose gain is
-estimated from all members at once. [](#tbl-r13-fields) lists each field
-with its CF name and where it lives today.
+be the **lead time** ({eq}`r13-eq-lead`), a scalar $\tau \in \mathbb{R}_{\ge 0}$. An **analysis** is the state which a data-assimilation step produces at its own valid time, so $\tau = 0$. A forecast run started at $r$ produces states at $\tau = \Delta t, 2 \Delta t, \ldots$ for a model step $\Delta t \in \mathbb{R}_{>0}$. An ensemble repeats each run $N_{\mathcal{E}}$ times, with members $e \in \mathcal{E}$ indexed $e = 0, \ldots, N_{\mathcal{E}} - 1$. In addition, each state has a **producer** $h$ (the hash of the model and configuration that made it) and its **parents** (the states it was computed from). A forecast has one parent, the state its run started from, whereas an ensemble-Kalman analysis has the whole forecast ensemble as its parents, because its gain is estimated from all members at once. [](#tbl-r13-fields) lists each field with its CF name and where it lives today.
 
 :::{table} The fields of a model state, their CF names and where each one lives today.
 :label: tbl-r13-fields
@@ -132,22 +73,17 @@ with its CF name and where it lives today.
 | Valid time | $v$ | `time`, `valid_time` | `time` | geocatalog's row interval (`start_time`, `end_time`) |
 | Run time | $r$ | `forecast_reference_time` / cfgrib `time` | | an extra column, if the user adds it |
 | Lead time | $\tau = v - r$ | `forecast_period` / cfgrib `step` | | derived; xrtoolz's `lead_dim="lead_time"` |
-| Member | $m$ | `realization` / cfgrib `number` | `member_id`, a variant label such as `r1i1p1f1` | an extra column; xrtoolz's `ensemble_dim="member"` |
+| Member | $e$ | `realization` / cfgrib `number` | `member_id`, a variant label such as `r1i1p1f1` | an extra column; xrtoolz's `ensemble_dim="member"` |
 | Producer | $h$ | | `source_id` | `Run.pipeline_hash` in pipekit-experiment; an extra column in the catalog |
-| Parents | $P(s)$, a set | | | nowhere |
+| Parents | $P(f)$, a set | | | nowhere |
 :::
 
-The questions the scoping report wanted answered are the right ones: which
-states are valid at a time, what the latest analysis before a time is, which
-states one run produced, which members share a run, what a state descends
-from, and which observations an analysis assimilated. The rest of this page
-answers each one with the code that exists, and adds what is missing.
+The questions which the scoping report wanted answered are the right ones: 1) which states are valid at a time, 2) what the latest analysis before a time is, 3) which states one run produced, 4) which members share a run, 5) what a state descends from, and 6) which observations an analysis assimilated. The rest of this page answers each one with the code that exists, and we add what is missing.
 
 (r13-ownership)=
 ## Ownership rules
 
-States are produced by pipekit-cycle, indexed by geocatalog and scored by
-xrtoolz, and only scripts join the three ([](#fig-r13-ownership)).
+States are produced by pipekit-cycle, indexed by geocatalog and scored by xrtoolz, and only scripts join the three ([](#fig-r13-ownership)).
 
 :::{figure} ../images/reports/r13_ownership.svg
 :label: fig-r13-ownership
@@ -157,77 +93,41 @@ Ownership of model states. The dashed box is the only new namespace; the
 other three already ship.
 :::
 
-**geocatalog** owns the index of states (`geocatalog.states`): the reserved
-columns, the state builder, run-aware loading and the state queries. It
-never imports pipekit or xrtoolz.
+**geocatalog** owns the index of states (`geocatalog.states`), which means the reserved columns, the state builder, run-aware loading and the state queries. It never imports pipekit or xrtoolz.
 
-The other three follow [the stack rules](16_geo_data_stack.md#r16-ownership):
-pipekit-cycle produces states in memory and writes no files, xrtoolz
-verifies them, pipekit-experiment names the producer
-(`Run.pipeline_hash`), none of them imports another, and scripts own every
-side effect.
+The other three follow [the stack rules](16_geo_data_stack.md#r16-ownership): pipekit-cycle produces states in memory and writes no files, xrtoolz verifies them, and pipekit-experiment names the producer (`Run.pipeline_hash`). None of them imports another, and scripts own every side effect.
 
 :::{warning} Differs from the plan
-The scoping report placed `statecatalog` as a **sibling of geocatalog** with
-its own `StateSlice`, `StateRow`, `StateCatalog` Protocol, in-memory and
-DuckDB backends, streaming writes and GeoParquet extension: about 1,100 lines
-and 2.5 to 3 weeks. Every one of those pieces exists in geocatalog already,
-for rows that carry extra columns ([](#r13-stage-1)). A second package would
-duplicate the backends, the GeoParquet round trip and the schema
-versioning, and give users two indexes to learn. The overview
-([](../overview.md)) described the two-index design until this change; it
-now describes one index with a state profile.
+The scoping report placed `statecatalog` as a **sibling of geocatalog** with its own `StateSlice`, `StateRow`, `StateCatalog` Protocol, in-memory and DuckDB backends, streaming writes and GeoParquet extension, which comes to about 1,100 lines and 2.5 to 3 weeks. However, every one of those pieces already exists in geocatalog for rows that carry extra columns ([](#r13-stage-1)). A second package would duplicate the backends, the GeoParquet round trip and the schema versioning, and it would give users two indexes to learn. The overview ([](../overview.md)) described the two-index design until this change, and it now describes one index with a state profile.
 :::
 
 (r13-running)=
 ## The running example: a regional methane forecast archive
 
-**The archive.** A regional methane system covers a 4 × 4 grid over the
-Permian Basin (31° to 34° N, 104° to 101° W). Each day it runs one
-data-assimilation step, which writes an **analysis** of the column-methane
-anomaly $a(v, x)$ in ppb at grid cell $x$. From each of the first three
-analyses it launches a two-member ensemble **forecast** with leads of 0, 1
-and 2 days. The archive therefore holds $5$ analysis files and
-$R \times N_e = 3 \times 2 = 6$ forecast files, one per run and member, each
-NetCDF with a `time` axis of valid times. Each file's attributes record its
-kind, run time, member, producer hash and parent file.
+**The archive.** A regional methane system covers a 4 × 4 grid over the Permian Basin (31° to 34° N, 104° to 101° W), which is the state grid $\Omega_x$ with $N_{\Omega_x} = H W = 16$ cells indexed by $n$. Each day, it runs one data-assimilation step which writes an **analysis** of the column-methane anomaly field $x(\vect{s}, t) \in \mathbb{R}$ in ppb, at location $\vect{s} \in \Omega$ and time $t \in \mathcal{T}$, and we write $a_n(v) \in \mathbb{R}$ for the analysis at valid time $v$ in grid cell $n$. From each of the first three analyses, it launches a two-member ensemble **forecast** with leads of 0, 1 and 2 days. So the archive holds $5$ analysis files and $N_\text{run} N_{\mathcal{E}} = 3 \times 2 = 6$ forecast files (one per run and member, with $N_\text{run}$ the number of runs), and each of them is NetCDF with a `time` axis of valid times. Each file's attributes record its kind, run time, member, producer hash and parent file.
 
-**The data.** The truth is a random walk in time; the analyses add noise
-with a standard deviation of 0.05 ppb, and the forecast error grows with lead
-as $\sigma_\tau = 0.1 + 0.5 \tau$ (in days). The data are synthetic, so the
-scores in stage 4 can be checked against their expected values.
+**The data.** The truth is a random walk in time, and the analyses add noise with a standard deviation of 0.05 ppb, whereas the forecast error grows with lead as $\sigma_\tau = 0.1 + 0.5 \tau$ (with $\tau$ in days and $\sigma_\tau \in \mathbb{R}_{>0}$ in ppb). The data are synthetic, so we can check the scores in stage 4 against their expected values.
 
-The notebook [`notebooks/reports/report13_state_catalog.py`](https://github.com/jejjohnson/geostack/blob/main/notebooks/reports/report13_state_catalog.py)
-builds the archive from a fixed seed in a temporary directory, runs every
-stage, and asserts each number on this page; it runs with geocatalog 0.5.1
-and xrtoolz 0.0.5 from `references/`. Stage 6 widens the example from one
-regional system to a multi-model comparison, with its own six-file archive
-in the same notebook. The blocks below are excerpts with their real outputs;
-names such as `cat`, `t3` and `five_days` are defined in the notebook. Lines
-marked `user` ([markers](../overview_examples.md#ex-markers)) are glue the
-workstreams remove.
+The notebook [`notebooks/reports/report13_state_catalog.py`](https://github.com/jejjohnson/geostack/blob/main/notebooks/reports/report13_state_catalog.py) builds the archive from a fixed seed in a temporary directory, runs every stage, and asserts each number on this page, and it runs with geocatalog 0.5.1 and xrtoolz 0.0.5 from `references/`. Stage 6 widens the example from one regional system to a multi-model comparison, with its own six-file archive in the same notebook. The blocks below are excerpts with their real outputs, and names such as `cat`, `t3` and `five_days` are defined in the notebook. Lines marked `user` ([markers](../overview_examples.md#ex-markers)) are glue which the workstreams remove.
 
 (r13-stage-1)=
 ### Stage 1 · Index the archive (scripts → geocatalog)
 
 **TL;DR.** Index the eleven files so that later questions never open a file.
 
-**Problem.** Each file $f$ has a footprint, a valid-time interval
-$[v_{\min}(f), v_{\max}(f)]$ and a path, which geocatalog's xarray kind
-already records. A state index also needs $r(f)$, $m(f)$, $h(f)$ and the
-parent $p(f)$ on every row.
+**Problem.** Each file $f$ has a footprint, a valid-time interval $[v_{\min}(f), v_{\max}(f)]$ and a path, which geocatalog's xarray kind already records. However, a state index also needs the run time $r(f)$, the member $e(f)$, the producer $h(f)$ and the set of parents $P(f)$ on every row.
 
 ```{code-block} python
 :caption: Index the archive with today's xarray builder, then copy the state fields into extra columns.
 :linenos:
 
-# Shapes: R = 3 runs, N_e = 2 members, L = 3 leads, H = W = 4 cells; 11 files
+# Shapes: N_run = 3 runs, N_e = 2 members, N_lead = 3 leads, H = W = 4 cells; 11 files
 from geocatalog.build import build_xarray_catalog
 from geocatalog.storage import from_geoparquet, to_geoparquet
 
 # one row per file: footprint, [v_min, v_max], path
 cat = build_xarray_catalog(paths, crs="EPSG:4326")      # 11 files → 11 rows  today
-# r(f), m(f), h(f), p(f): read from the file attributes
+# r(f), e(f), h(f), P(f): read from the file attributes
 attrs = [xr.open_dataset(p).attrs for p in cat.gdf.filepath]           # user
 cat.gdf["run_time"] = pd.to_datetime([a["run_time"] for a in attrs])   # user
 cat.gdf["member"] = [int(a["member"]) for a in attrs]                  # user
@@ -237,36 +137,34 @@ to_geoparquet(cat, "states.parquet")                     # extras kept          
 cat = from_geoparquet("states.parquet")                  # run_time datetime64  today
 ```
 
-The extra columns survive the GeoParquet round trip with their types
-(`run_time` as `datetime64[us]`, `member` as `int64`), because geocatalog
-keeps every non-reserved column in `CatalogRow.extras`. What does not exist
-is a builder that fills them: the xarray builder reads neither
-`forecast_reference_time` nor `realization`, and a file without a `time`
-coordinate gets the placeholder interval 1900 to 2100 with
-`n_timesteps=0`. Workstream A adds the builder and reserves the names.
+The extra columns survive the GeoParquet round trip with their types (`run_time` as `datetime64[us]`, `member` as `int64`), because geocatalog keeps every non-reserved column in `CatalogRow.extras`. What does not exist is a builder that fills them. The xarray builder reads neither `forecast_reference_time` nor `realization`, and a file without a `time` coordinate gets the placeholder interval 1900 to 2100 with `n_timesteps=0`. Workstream A adds the builder and reserves the names.
 
 (r13-stage-2)=
 ### Stage 2 · Ask the scoping report's questions (geocatalog)
 
-**TL;DR.** Find one run's forecasts, the latest analysis before a time, and
-the members of a run, using only the index.
+**TL;DR.** Find one run's forecasts, the latest analysis before a time, and the members of a run, using only the index.
 
-**Problem.** With $\mathcal{C}$ the set of rows, the three questions are
-the filters {eq}`r13-eq-queries`:
+**Problem.** With $\mathcal{C}$ the set of rows, the three questions are the filters {eq}`r13-eq-queries`, {eq}`r13-eq-latest` and {eq}`r13-eq-members`:
 
 $$
-\begin{aligned}
-\mathrm{chain}(r_0, m_0) &= \{ f \in \mathcal{C} : r(f) = r_0, m(f) = m_0, f \text{ a forecast} \} , \\
-\mathrm{latest}(t) &= \arg\max_{f \text{ an analysis}} \{ v_{\max}(f) : v_{\max}(f) \le t \} , \\
-\mathrm{members}(r_0) &= \{ m(f) : r(f) = r_0, f \text{ a forecast} \} .
-\end{aligned}
+\mathrm{chain}(r_0, e_0) = \{ f \in \mathcal{C} : r(f) = r_0, e(f) = e_0, f \text{ a forecast} \} ,
 $$ (r13-eq-queries)
+
+$$
+\mathrm{latest}(t) = \mathrm{argmax}_{f \text{ an analysis}} \{ v_{\max}(f) : v_{\max}(f) \le t \} ,
+$$ (r13-eq-latest)
+
+$$
+\mathrm{members}(r_0) = \{ e(f) : r(f) = r_0, f \text{ a forecast} \} ,
+$$ (r13-eq-members)
+
+where $r_0 \in \mathcal{T}$ is a run time, $e_0 \in \mathcal{E}$ is a member and $t \in \mathcal{T}$ is the query time, so the first filter returns a set of rows, the second one row and the third a set of members.
 
 ```{code-block} python
 :caption: The three questions as where strings over the extra columns, with their outputs.
 :linenos:
 
-# chain(r₀ = 01-02, m₀ = 0)
+# chain(r₀ = 01-02, e₀ = 0)
 cat.where("kind == 'forecast' and member == 0 and run_time == '2026-01-02'")
 # → 0 rows: a string equality on a datetime column matches nothing    today
 cat.where("kind == 'forecast' and member == 0"
@@ -283,36 +181,26 @@ cat.where("kind == 'forecast' and run_time < '2026-01-02'").gdf.member
 # → [0, 1]                                                              today
 ```
 
-Every answer is right, but each one is a string the user must get exactly
-right. The first query shows why that matters: on pandas 3.0.6, the version
-in `pixi.lock`, `DataFrame.query("t == '2026-01-02'")` on a datetime column
-returns no rows, while `df[df.t == "2026-01-02"]` returns one. The failure
-is silent. Typed functions that take a `pd.Timestamp` (workstream B2) remove
-the trap.
+Every answer is right, but each one is a string which the user must get exactly right. The first query shows why that matters: on pandas 3.0.6 (the version in `pixi.lock`), `DataFrame.query("t == '2026-01-02'")` on a datetime column returns no rows, whereas `df[df.t == "2026-01-02"]` returns one, and nothing warns about the miss. Typed functions which take a `pd.Timestamp` (workstream B2) remove the trap.
 
 (r13-stage-3)=
 ### Stage 3 · Load a forecast cube (geocatalog → xarray)
 
-**TL;DR.** Load the six forecast files as one array indexed by run, member
-and lead.
+**TL;DR.** Load the six forecast files as one array indexed by run, member and lead.
 
-**Problem.** The cube xrtoolz expects is {eq}`r13-eq-cube`,
+**Problem.** The cube which xrtoolz expects is {eq}`r13-eq-cube`,
 
 $$
-\begin{aligned}
-F &\in \mathbb{R}^{R \times N_e \times L \times H \times W} , \\
-F[r, m, \tau, x] &= \text{member } m \text{ of run } r \text{ at lead } \tau \text{, cell } x ,
-\end{aligned}
+\mat{X} \in \mathbb{R}^{N_\text{run} \times N_{\mathcal{E}} \times N_\text{lead} \times H \times W} ,
 $$ (r13-eq-cube)
 
-with a two-dimensional coordinate $v = r + \tau$. Three runs overlap in valid
-time: all three are valid on 3 January, at leads 2, 1 and 0.
+whose entry $x^{(e)}_n(r, \tau) \in \mathbb{R}$ is member $e$ of run $r$ at lead $\tau$ in cell $n$, with $N_\text{lead} = 3$ leads and the $N_{\Omega_x} = H W$ cells laid out on the grid. The valid time $v = r + \tau$ is a two-dimensional coordinate. Three runs overlap in valid time, since all three are valid on 3 January, at leads 2, 1 and 0.
 
 ```{code-block} python
 :caption: Today's loader keeps one run per valid time; the cube has to be stacked by hand.
 :linenos:
 
-# Shapes: R = 3, N_e = 2, L = 3, H = W = 4
+# Shapes: N_run = 3, N_e = 2, N_lead = 3, H = W = 4
 from geocatalog import GeoSlice
 from geocatalog.load import load_xarray
 
@@ -323,7 +211,7 @@ jan3 = GeoSlice(bounds=(-104.5, 30.5, -100.5, 34.5),
 m0 = cat.where("kind == 'forecast' and member == 0").query(jan3)  # 3 rows   today
 load_xarray(m0, jan3).sizes["time"]                  # → 1: two runs dropped  today
 
-# F[r, m, τ, x]: one file per (r, m), relabelled from v to τ = v − r
+# x⁽ᵉ⁾_n(r, τ): one file per (r, e), relabelled from v to τ = v − r
 pieces = []
 for (r, m), row in rows.set_index(["run_time", "member"]).iterrows():  # user
     ds = xr.open_dataset(row.filepath).load()                         # user
@@ -335,48 +223,38 @@ fc = fc.assign_coords(valid_time=fc.init_time + fc.lead_time)        # user
 # → sizes {'init_time': 3, 'member': 2, 'lead_time': 3, 'lat': 4, 'lon': 4}
 ```
 
-`load_xarray` is right for observations, where two files covering the same
-time are duplicates. For forecasts the same valid time from two runs is two
-different states, and `drop_duplicates` on time keeps one of them without a
-warning. The eight user lines are the cube builder that workstream B1 puts in
-`load_states`.
+`load_xarray` is right for observations, where two files covering the same time are duplicates. However, for forecasts the same valid time from two runs is two different states, and `drop_duplicates` on time keeps one of them without a warning. The eight user lines are the cube builder which workstream B1 puts in `load_states`.
 
 (r13-stage-4)=
 ### Stage 4 · Score the forecasts by lead time (xrtoolz)
 
-**TL;DR.** Compare each forecast with the analysis valid at the same time,
-and report the error at each lead.
+**TL;DR.** Compare each forecast with the analysis valid at the same time, and report the error at each lead.
 
-**Problem.** The verifying reference for run $r$ at lead $\tau$ is the
-analysis at its valid time, $A[r, \tau, x] = a(r + \tau, x)$. With
-$\bar{F}$ the ensemble mean over members and $N = R H W$ the number of
-scored values per lead, the two scores are {eq}`r13-eq-skill`,
+**Problem.** The verifying reference for run $r$ at lead $\tau$ is the analysis at its valid time, $y_n(r, \tau) = a_n(r + \tau)$, which we stack into $\mat{Y} \in \mathbb{R}^{N_\text{run} \times N_\text{lead} \times H \times W}$. With $\bar{x}_n(r, \tau) = N_{\mathcal{E}}^{-1} \sum_{e \in \mathcal{E}} x^{(e)}_n(r, \tau)$ the ensemble mean over members and $N_\text{score} = N_\text{run} N_{\Omega_x}$ the number of scored values per lead, the two scores are {eq}`r13-eq-skill` and {eq}`r13-eq-crps`,
 
 $$
-\begin{aligned}
-\mathrm{RMSE}(\tau) &= \left( \frac{1}{N} \sum_{r, x} \left( \bar{F}[r, \tau, x] - A[r, \tau, x] \right)^2 \right)^{1/2} , \\
-\mathrm{CRPS}(\tau) &= \frac{1}{N} \sum_{r, x} \mathrm{CRPS}\left( F[r, \cdot, \tau, x], A[r, \tau, x] \right) ,
-\end{aligned}
+\mathrm{RMSE}(\tau) = \left( \frac{1}{N_\text{score}} \sum_{r, n} \left( \bar{x}_n(r, \tau) - y_n(r, \tau) \right)^2 \right)^{1/2} ,
 $$ (r13-eq-skill)
 
-with the CRPS of an ensemble as in the overview ({eq}`eq-crps`). For this
-archive the expected ensemble-mean RMSE is
-$(\sigma_\tau^2 / 2 + 0.05^2)^{1/2}$, which is 0.087, 0.427 and 0.779 ppb at
-leads 0, 1 and 2 days.
+$$
+\mathrm{CRPS}(\tau) = \frac{1}{N_\text{score}} \sum_{r, n} \mathrm{CRPS}\left( \{ x^{(e)}_n(r, \tau) \}_{e \in \mathcal{E}}, y_n(r, \tau) \right) ,
+$$ (r13-eq-crps)
+
+with the CRPS of an ensemble as in the overview ({eq}`eq-crps`), so both scores are scalars in ppb at each lead. For this archive, the expected ensemble-mean RMSE is $(\sigma_\tau^2 / 2 + 0.05^2)^{1/2}$, which is 0.087, 0.427 and 0.779 ppb at leads 0, 1 and 2 days.
 
 ```{code-block} python
 :caption: Align the analyses with the cube, then score by lead with today's xrtoolz metrics.
 :linenos:
 
-# Shapes: F (R, N_e, L, H, W); A (R, L, H, W)
+# Shapes: X (N_run, N_e, N_lead, H, W); Y (N_run, N_lead, H, W)
 from xrtoolz.metrics import CRPS, RMSE, SkillByLeadTime
 
 an = load_xarray(cat.where("kind == 'analysis'"), five_days)  # (T = 5, H, W)  today
-# A[r, τ, x] = a(r + τ, x)
-ref = an.sel(time=fc.valid_time).drop_vars("time")       # → (R, L, H, W)      user
+# y_n(r, τ) = a_n(r + τ)
+ref = an.sel(time=fc.valid_time).drop_vars("time")  # → (N_run, N_lead, H, W)  user
 dims = ("init_time", "lat", "lon")
 # RMSE(τ) of the ensemble mean
-SkillByLeadTime(RMSE("xch4", dims=dims))(fc.mean("member"), ref)  # → (L,)   today
+SkillByLeadTime(RMSE("xch4", dims=dims))(fc.mean("member"), ref)  # → (N_lead,) today
 # → [0.076, 0.467, 0.746]
 # CRPS(τ) over members
 SkillByLeadTime(CRPS("xch4", ensemble_dim="member", dims=dims))(fc, ref)  # today
@@ -388,46 +266,24 @@ SkillByLeadTime(RMSE("xch4", dims=("member", *dims)))(*xr.broadcast(fc, ref))
 # → [0.109, 0.617, 1.132]                                               user
 ```
 
-The measured RMSE (0.076, 0.467 and 0.746) sits within sampling error of
-the expected values, with $N = 48$ cells per lead. The per-member RMSE
-matches its expected $(\sigma_\tau^2 + 0.05^2)^{1/2}$, which is 0.112, 0.602
-and 1.101. The scoring is shipped. What is missing is the alignment line
-(workstream C1) and the broadcast that lets pixel metrics reduce over a
-dimension only the forecast has (C2).
+The measured RMSE (0.076, 0.467 and 0.746) sits within sampling error of the expected values, with $N_\text{score} = 48$ cells per lead. The per-member RMSE matches its expected $(\sigma_\tau^2 + 0.05^2)^{1/2}$, which is 0.112, 0.602 and 1.101. So the scoring is shipped, and what is missing is the alignment line (workstream C1) and the broadcast which lets pixel metrics reduce over a dimension that only the forecast has (C2).
 
 :::{warning} Differs from the plan
-The scoping report's verification example looped over forecasts, looked up
-"the latest analysis before" each valid time, read both files and called a
-`compute_rmse` it did not define. Two things changed. Verification is
-already in xrtoolz (`SkillByLeadTime`, `CRPS`, `SpreadSkillRatio`,
-`RankHistogram`, `EnsembleCoverage`, and `viz.validation.LeadTimeSkillPanel`
-to plot it), so the catalog's job is only to load the cube. And "the latest
-analysis before $v$" is the wrong reference: it is the analysis **at** $v$,
-which is an exact selection on the aligned cube, not a query per forecast.
+The scoping report's verification example looped over forecasts, looked up "the latest analysis before" each valid time, read both files and called a `compute_rmse` which it did not define. Two things changed. First, verification is already in xrtoolz (`SkillByLeadTime`, `CRPS`, `SpreadSkillRatio`, `RankHistogram`, `EnsembleCoverage`, and `viz.validation.LeadTimeSkillPanel` to plot it), so the catalog's only job is to load the cube. Second, "the latest analysis before $v$" is the wrong reference. The right one is the analysis **at** $v$, which is an exact selection on the aligned cube and not a query per forecast.
 :::
 
 (r13-stage-5)=
 ### Stage 5 · Trace lineage and the assimilation window (geocatalog)
 
-**TL;DR.** Follow a state back through the runs it came from, and find the
-observations an analysis used.
+**TL;DR.** Follow a state back through the runs it came from, and find the observations an analysis used.
 
-**Problem.** With $P(s)$ the set of parents of state $s$, the lineage of $s$
-is every state reachable by following parents, $s$, $P(s)$, $P(P(s))$, and
-so on, until no state has parents left: a directed acyclic graph, which is a
-chain when every state has one parent. This archive is the simple case:
-each analysis lists one parent, the member-0 forecast. An ensemble-Kalman
-analysis would list every forecast member, because its gain is computed from
-all of them. For an
-analysis at time $t$ with an assimilation window of width $w$, the
-observations used are the rows $o$ of an observation catalog whose
-valid time falls in $[t - w/2, t + w/2]$.
+**Problem.** With $P(f) \subset \mathcal{C}$ the set of parents of the state in row $f$, the lineage of $f$ is every state we reach by following parents ($f$, $P(f)$, $P(P(f))$, and so on) until no state has parents left. This is a directed acyclic graph, which is a chain when every state has one parent. This archive is the simple case, where each analysis lists one parent (the member-0 forecast). An ensemble-Kalman analysis would list every forecast member, because its gain is computed from all of them. For an analysis at time $t \in \mathcal{T}$ with an assimilation window of width $w \in \mathbb{R}_{>0}$, the observations used are the rows $o$ of an observation catalog whose valid time falls in $[t - w/2, t + w/2]$.
 
 ```{code-block} python
 :caption: Lineage is a walk over the parent column; the assimilation window is an ordinary query on the observation catalog.
 :linenos:
 
-# s, P(s), P(P(s)), … until P = ∅; one parent per state in this archive
+# f, P(f), P(P(f)), … until P = ∅; one parent per state in this archive
 by_uri = cat.gdf.set_index("filepath")                                  # user
 uri, chain = "ana_20260104.nc", []                                      # user
 while uri:                                                              # user
@@ -442,69 +298,46 @@ window = GeoSlice(bounds=aoi, interval=pd.Interval(t - w / 2, t + w / 2,
 obs_used = obs_cat.query(window)                       # (M rows)          today
 ```
 
-The lineage walk is five lines of user code when each state has one parent,
-and a graph search when states have several. The scoping report's `assimilation_window` needs no new code: it is
-`GeoCatalog.query` with the window as the interval, or `matchup` with
-`WithinWindow(start, end)` when many analyses are matched at once. Workstream
-B2 adds `lineage`; the window stays an existing call.
+The lineage walk is five lines of user code when each state has one parent, and a graph search when states have several. The scoping report's `assimilation_window` needs no new code, since it is `GeoCatalog.query` with the window as the interval, or `matchup` with `WithinWindow(start, end)` when many analyses are matched at once. Workstream B2 adds `lineage`, and the window stays an existing call.
 
 (r13-stage-6)=
 ### Stage 6 · Many producers on many grids: a CMIP-style comparison (geocatalog → xrtoolz)
 
-**TL;DR.** Compare models that run on different grids, either by computing
-each model's statistics on its own grid or by regridding all of them to one
-grid first, and see when the two give different answers.
+**TL;DR.** Compare models that run on different grids, either by computing each model's statistics on its own grid or by regridding all of them to one grid first, and see when the two give different answers.
 
-**Problem.** A multi-model ensemble such as CMIP6 [@eyring2016] holds runs
-from many models $k \in \mathcal{K}$. In CMIP6 terms the model is the
-`source_id`, a run is a `member_id` (a variant label such as `r1i1p1f1`),
-and each model writes on its own grid (`grid_label`). Model $k$ has $N_k$
-members and a grid of cells $i$ with areas $a_i$; the field is $x_k(t, i)$
-at day $t$. The archive here is synthetic: model A on a 1° grid with 3
-members, B on 2.5° with 1, C on 2° with 2, 90 days each, with independent
-cell-scale weather of standard deviation 2 K on a zonal climatology. The six
-files are indexed like stage 1, with `producer` and `member` columns.
+**Problem.** A multi-model ensemble such as CMIP6 [@eyring2016] holds runs from many models $k \in \mathcal{K}$, with $N_{\mathcal{K}} = \vert \mathcal{K} \vert$ models. In CMIP6 terms, the model is the `source_id`, a run is a `member_id` (a variant label such as `r1i1p1f1`), and each model writes on its own grid (`grid_label`). Model $k$ has $N_k$ members and a grid $\Omega_k$ of cells $n$, where cell $n$ is the region $c_n$ with area $\vert c_n \vert$, and its field is $x_k(\vect{s}_n, t) \in \mathbb{R}$ at day $t$. The archive here is synthetic: model A on a 1° grid with 3 members, B on 2.5° with 1, and C on 2° with 2, 90 days each, with independent cell-scale weather of standard deviation 2 K on a zonal climatology. The six files are indexed like stage 1, with `producer` and `member` columns.
 
-The area mean of a field $y$ on a grid with cells $i$ is
-$\langle y \rangle = \sum_i a_i y_i / \sum_i a_i$. A **conservative regrid**
-$\mathcal{R}$ onto a common grid with cells $j$ and areas $A_j$ weights each
-source cell by its overlap $w_{ji} = |c_j \cap c_i|$, so that the area mean
-survives whenever the common grid covers the source grid:
+The area mean of a field $x$ on a grid with cells $n$ is the scalar $\langle x \rangle = \sum_n \vert c_n \vert x_n / \sum_n \vert c_n \vert$, with $x_n$ the value in cell $n$. A **conservative regrid** $\mathcal{R}$ onto a common grid $\Omega_\text{common}$ with cells $n'$ and areas $\vert c_{n'} \vert$ weights each source cell by its overlap $\omega_{n'n} = \vert c_{n'} \cap c_n \vert$, so that the area mean survives whenever the common grid covers the source grid:
 
 $$
-\begin{aligned}
-(\mathcal{R} y)_j &= \frac{\sum_i w_{ji} y_i}{\sum_i w_{ji}} , \\
-\langle \mathcal{R} y \rangle &= \langle y \rangle ,
-\end{aligned}
+(\mathcal{R}[x])_{n'} = \frac{\sum_n \omega_{n'n} x_n}{\sum_n \omega_{n'n}} ,
 $$ (r13-eq-regrid)
 
-A statistic $S$ over time and members, applied cell by cell, either commutes
-with $\mathcal{R}$ or does not. The time mean is linear, so
-$S(\mathcal{R} x) = \mathcal{R} S(x)$. The 99th percentile $q_{0.99}$ is
-not: averaging cells before taking the percentile removes the cell-scale
-extremes that the percentile measures. That gives the three pipelines of
-{eq}`r13-eq-pipelines`:
+$$
+\langle \mathcal{R}[x] \rangle = \langle x \rangle .
+$$ (r13-eq-conserve)
+
+A statistic $S$ over time and members, applied cell by cell, either commutes with $\mathcal{R}$ or it does not. The time mean is linear, so $S(\mathcal{R}[x]) = \mathcal{R}[S(x)]$. However, the 99th percentile (the sample quantile $\hat{F}^{-1}(0.99)$ of each cell's values) is not, because averaging cells before taking the percentile removes the cell-scale extremes that the percentile measures. That gives the three pipelines {eq}`r13-eq-pipelines`, {eq}`r13-eq-regrid-first` and {eq}`r13-eq-hybrid`:
 
 $$
-\begin{aligned}
-\text{(1) native: } & \langle S(x_k) \rangle \text{ on model } k \text{'s grid} , \\
-\text{(2) regrid first: } & \langle S(\mathcal{R} x_k) \rangle , \\
-\text{(3) hybrid: } & \langle \mathcal{R} S(x_k) \rangle = \langle S(x_k) \rangle ,
-\end{aligned}
+\text{(1) native: } \langle S(x_k) \rangle \text{ on model } k \text{'s grid} ,
 $$ (r13-eq-pipelines)
 
-where (3) equals (1) by {eq}`r13-eq-regrid`, and (2) equals (1) only when
-$S$ is linear. Pipeline (3) is the usual way to draw a multi-model map: each
-statistic is computed where the model resolved it, and only the result is
-regridded. Combining the models needs one more choice: one vote per model,
-$\bar{x} = |\mathcal{K}|^{-1} \sum_k \langle S(x_k) \rangle$, or one vote per
-member, $\sum_k N_k \langle S(x_k) \rangle / \sum_k N_k$.
+$$
+\text{(2) regrid first: } \langle S(\mathcal{R}[x_k]) \rangle ,
+$$ (r13-eq-regrid-first)
+
+$$
+\text{(3) hybrid: } \langle \mathcal{R}[S(x_k)] \rangle = \langle S(x_k) \rangle ,
+$$ (r13-eq-hybrid)
+
+where (3) equals (1) by {eq}`r13-eq-conserve`, and (2) only equals (1) when $S$ is linear. Pipeline (3) is the usual way to draw a multi-model map, since each statistic is computed where the model resolved it and only the result is regridded. Combining the models needs one more choice, which is either one vote per model, $\bar{S}_\text{model} = N_{\mathcal{K}}^{-1} \sum_{k \in \mathcal{K}} \langle S(x_k) \rangle$, or one vote per member, $\bar{S}_\text{member} = \sum_k N_k \langle S(x_k) \rangle / \sum_k N_k$, where both are scalars in K.
 
 ```{code-block} python
 :caption: Three models on three grids, loaded as a DataTree and compared three ways, from a real run.
 :linenos:
 
-# Shapes: K = 3 models; model k: (N_k, T = 90, H_k, W_k), H_k × W_k its own grid
+# Shapes: N_K = 3 models; model k: (N_k, T = 90, H_k, W_k), H_k × W_k its own grid
 from xrtoolz.interpolate import RegridConservative
 
 # one leaf per producer, members stacked inside it; the grids differ
@@ -519,14 +352,14 @@ tree = xr.DataTree.from_dict(leaves)                                    # today
 regrid = RegridConservative(grid_25, mode="mean", normalize="destarea")  # today
 common = regrid(tree)                       # every leaf → (N_k, 90, 72, 144)  today
 
-# ⟨y⟩ = Σᵢ aᵢ yᵢ / Σᵢ aᵢ, with aᵢ ∝ sin φᵢ₊ − sin φᵢ₋
+# ⟨x⟩ = Σₙ |cₙ| xₙ / Σₙ |cₙ|, with |cₙ| ∝ sin φₙ₊ − sin φₙ₋
 def area_mean(y): ...                                                   # user
 
 # S = time mean (linear): (1) and (2) agree
 # → native    A 277.9999 · B 279.4971 · C 277.2991 K
 # → regridded A 277.9999 · B 279.4971 · C 277.2991 K   (max difference 1.2e-11)
 
-# S = q₀.₉₉ − time mean (nonlinear), per cell, then ⟨·⟩
+# S = F̂⁻¹(0.99) − time mean (nonlinear), per cell, then ⟨·⟩
 # → (1) native        A 4.289 · B 4.279 · C 4.288 K
 # → (2) regrid first  A 1.544 · B 4.279 · C 2.564 K
 # → (3) hybrid        A 4.289 · B 4.279 · C 4.288 K    (equals (1) to 1.2e-11)
@@ -535,27 +368,9 @@ def area_mean(y): ...                                                   # user
 # → 278.2654 K vs 278.0159 K
 ```
 
-The tree, the regrid and the map over models all ship today: xrcore's
-`Operator` maps any xrtoolz operator over the leaves of an `xr.DataTree`,
-and `RegridConservative` keeps area means to 1.2e-11 K across a 1° → 2.5°
-and a non-nested 2° → 2.5° regrid. The numbers show why the order of
-operations matters. Regridding first leaves the time mean untouched but
-removes 64 % of model A's warm extremes and 40 % of model C's, so the fine
-models look less extreme than the coarse one only because they were
-averaged. Model B is unchanged because it is already on the common grid.
-Two things are user code: grouping the catalog into leaves, which workstream
-B1 adds as `load_states(..., group_by="producer")`, and the area mean, which
-`geo.Reduce` cannot weight (workstream C3). The vote is a choice the script
-must state: here it moves the ensemble mean by 0.25 K.
+The tree, the regrid and the map over models all ship today: xrcore's `Operator` maps any xrtoolz operator over the leaves of an `xr.DataTree`, and `RegridConservative` keeps area means to 1.2e-11 K across a 1° to 2.5° and a non-nested 2° to 2.5° regrid. The numbers show why the order of operations matters. Regridding first leaves the time mean untouched, but it removes 64 % of model A's warm extremes and 40 % of model C's, so the fine models look less extreme than the coarse one only because they were averaged. Model B is unchanged because it is already on the common grid. Two things are user code: 1) grouping the catalog into leaves, which workstream B1 adds as `load_states(..., group_by="producer")`, and 2) the area mean, which `geo.Reduce` cannot weight (workstream C3). The vote is a choice which the script must state, and here it moves the ensemble mean by 0.25 K.
 
-Comparing each model with observations runs the other way: the
-observations are regridded onto **each** model's native grid, so that the
-statistic is computed where the model resolved it. `RegridConservative` and
-`RegridLike` take their target grid when they are built, so today that is
-one operator per leaf, built in a loop (`regrid_conservative(obs, leaf)`
-inside `xr.map_over_datasets` does the same). This is also the step where a
-pipekit `Graph` earns its place: two inputs, the model leaf and the
-observations, feed one bias operator.
+Comparing each model with observations runs the other way, where the observations are regridded onto **each** model's native grid so that the statistic is computed where the model resolved it. `RegridConservative` and `RegridLike` take their target grid when they are built, so today that is one operator per leaf, built in a loop (`regrid_conservative(obs, leaf)` inside `xr.map_over_datasets` does the same). This is also the step where a pipekit `Graph` earns its place, since two inputs (the model leaf and the observations) feed one bias operator.
 
 (r13-names)=
 ## The scoping report's names, checked
@@ -580,11 +395,7 @@ observations, feed one bias operator.
 (r13-audit)=
 ## Current-state audit
 
-Eleven pieces of the proposed package were checked: seven are healthy as
-they ship, three are split between a library that has them and a gap, and
-one is missing ([](#tbl-r13-audit)); [](#fig-r13-readiness) counts the
-page's calls by marker. The audit read the revisions pinned in
-`references/` on 13 October 2026.
+We checked eleven pieces of the proposed package: seven are healthy as they ship, three are split between a library that has them and a gap, and one is missing ([](#tbl-r13-audit)), and [](#fig-r13-readiness) counts the page's calls by marker. The audit read the revisions pinned in `references/` on 13 October 2026.
 
 :::{figure} ../images/reports/r13_readiness.svg
 :label: fig-r13-readiness
@@ -601,7 +412,7 @@ proposed by this report's workstreams and 34 are code the reader writes
 | Symbols | Defined in | Used by | Verdict |
 |---|---|---|---|
 | bounds, CRS, valid-time interval; `query`, `GeoSlice` | `geocatalog` (`InMemoryGeoCatalog.query`, `DuckDBGeoCatalog.query`) | every catalog workflow | **Healthy.** Answers "valid at $t$" at file granularity |
-| extra columns; `CatalogRow.extras`; `where`, `sql` | `geocatalog._src.base`, `backends.memory`, `backends.duckdb_backend` | STAC `extra_properties`, user filters | **Healthy.** Holds $r$, $m$, $h$, $p$, but untyped and unnamed |
+| extra columns; `CatalogRow.extras`; `where`, `sql` | `geocatalog._src.base`, `backends.memory`, `backends.duckdb_backend` | STAC `extra_properties`, user filters | **Healthy.** Holds $r$, $e$, $h$, $P$, but untyped and unnamed |
 | xarray builder; `build_xarray_catalog(time_var=...)` | `geocatalog._src.formats.xarray_backend` | xarray-kind catalogs | **Split ownership.** One row per file; reads no forecast metadata |
 | loader; `load_xarray` | same module | xarray-kind catalogs | **Split ownership.** Right for observations; for forecasts, drops overlapping runs ([](#r13-stage-3)) |
 | schema versioning; `SCHEMA_VERSION_CURRENT = 0`, `parquet._MIGRATIONS` | `geocatalog._src._schema`, `storage.parquet` | GeoParquet round trip | **Healthy.** No migration registered yet; a reserved column is the first |
@@ -615,30 +426,12 @@ proposed by this report's workstreams and 34 are code the reader writes
 
 Smaller findings:
 
-- **A plain `Cycle` does not advance time.** `_ForwardModelAdapter` passes
-  the carry state through unchanged, so `DAState.t` stays 0.0. Only the DA
-  cycles call `_advance_da_state`. A history entry's valid time must be
-  computed from its index: entry $k$ with stride $s$ is valid at
-  $r + (ks + 1) \Delta t$ (checked: a 4-step `Cycle` with stride 2 keeps the
-  states after steps 1 and 3).
-- **`EnsembleCycle` threads one carry state through all members.** Its loop
-  calls `step_op(member_j, state)` member by member, so a step that counts
-  calls cannot tell members apart. This is one reason to write from the
-  history (workstream D) rather than from inside the step.
-- **`DAState.t` is a float with no epoch.** There is no run time or calendar
-  anywhere in pipekit-cycle; the script that writes files supplies $r$.
-- **`CatalogDataset` is documented but not built.** pipekit-train's
-  `docs/design/api/datasets.md` already says its catalog can be "A
-  `geocatalog.GeoCatalog` (or StateCatalog) reference". With this redesign
-  the two are the same object.
-- **xrreader has no forecast products.** Its CDS presets are ERA5 reanalyses
-  (`product_type="reanalysis"`) and its CMEMS presets are reanalyses and NRT
-  observations. `_TIME_COORDS` in `cds/source.py` includes
-  `forecast_reference_time` only to trim on time. The download cache maps a
-  request to a path; it keeps no index.
-- **pipekit-evaluate has the level but not the scoring.** `LEVEL_NAMES["L4"]`
-  is `"reanalysis_forecast"`, and references come from `Task.datasets()`.
-  No lead-time or CRPS scoring ships there; xrtoolz's does.
+- **A plain `Cycle` does not advance time.** `_ForwardModelAdapter` passes the carry state through unchanged, so `DAState.t` stays 0.0, and only the DA cycles call `_advance_da_state`. So a history entry's valid time must be computed from its index, where entry $i$ with a stride of $\delta \in \mathbb{N}$ steps is valid at $r + (i \delta + 1) \Delta t$ (checked: a 4-step `Cycle` with stride 2 keeps the states after steps 1 and 3).
+- **`EnsembleCycle` threads one carry state through all members.** Its loop calls `step_op(member_j, state)` member by member, so a step that counts calls cannot tell members apart. This is one reason to write from the history (workstream D) rather than from inside the step.
+- **`DAState.t` is a float with no epoch.** There is no run time or calendar anywhere in pipekit-cycle, so the script that writes the files supplies $r$.
+- **`CatalogDataset` is documented but not built.** pipekit-train's `docs/design/api/datasets.md` already says its catalog can be "A `geocatalog.GeoCatalog` (or StateCatalog) reference". With this redesign, the two are the same object.
+- **xrreader has no forecast products.** Its CDS presets are ERA5 reanalyses (`product_type="reanalysis"`), and its CMEMS presets are reanalyses and NRT observations. `_TIME_COORDS` in `cds/source.py` only includes `forecast_reference_time` to trim on time. The download cache maps a request to a path and keeps no index.
+- **pipekit-evaluate has the level but not the scoring.** `LEVEL_NAMES["L4"]` is `"reanalysis_forecast"`, and references come from `Task.datasets()`. However, no lead-time or CRPS scoring ships there, whereas xrtoolz's does.
 
 (r13-options)=
 ## Options considered
@@ -656,14 +449,12 @@ Smaller findings:
 | 4 · An `xr.DataTree` of producers | one tree leaf per producer, members inside it | none: xrcore operators already map over tree leaves | a way to hold a loaded result, not an index; **adopted** as `load_states(group_by="producer")` for producers on different grids ([](#r13-stage-6)) |
 :::
 
-**Recommended:** option 2. **Alternative:** option 3 for a single producer
-with one store, which needs only workstream C.
+**Recommended:** option 2. **Alternative:** option 3 for a single producer with one store, which needs only workstream C.
 
 (r13-ws-a)=
 ## Workstream A · State columns in geocatalog
 
-**Decision.** The state fields are reserved row columns of geocatalog's
-schema, not fields of a new slice ([](#tbl-r13-move-a)).
+**Decision.** The state fields are reserved row columns of geocatalog's schema, not fields of a new slice ([](#tbl-r13-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r13-move-a
@@ -677,17 +468,11 @@ schema, not fields of a new slice ([](#tbl-r13-move-a)).
 
 ### A1 · Reserve the columns
 
-1. **Register the migration.** Bump `SCHEMA_VERSION_CURRENT` to 1 and
-   register a v0 → v1 function in `parquet._MIGRATIONS` that adds the four
-   columns as nulls. A v0 catalog then reads as a catalog of states with no
-   state fields.
-2. **Add the names to the reserved set.** `CatalogRow.extras` stops carrying
-   them, and a `CatalogRow.state` property returns them typed.
-3. **Document them** in `docs/catalog/schema-versions.md`, the place the
-   schema module points to.
+1. **Register the migration.** We bump `SCHEMA_VERSION_CURRENT` to 1 and register a v0-to-v1 function in `parquet._MIGRATIONS` that adds the four columns as nulls [CHECK: four or five? Workstream A reserves five columns (`kind`, `run_time`, `member`, `producer`, `parents`) and gate A1 expects all five null; the first risk also says "four names"], so a v0 catalog then reads as a catalog of states with no state fields.
+2. **Add the names to the reserved set.** `CatalogRow.extras` stops carrying them, and a `CatalogRow.state` property returns them typed.
+3. **Document them** in `docs/catalog/schema-versions.md`, the place the schema module points to.
 
-Lead time is not stored: a row covers $[v_{\min}, v_{\max}]$, so its leads
-are $[v_{\min} - r, v_{\max} - r]$, derived when needed.
+Lead time is not stored. A row covers $[v_{\min}, v_{\max}]$, so its leads are $[v_{\min} - r, v_{\max} - r]$, which we derive when needed.
 
 ### A2 · Build the columns from metadata
 
@@ -709,23 +494,12 @@ cat = build_state_catalog(paths, crs="EPSG:4326", names=CF_NAMES)  # proposed (A
 cat.gdf[["kind", "run_time", "member", "producer", "parents"]]    # proposed (A1)
 ```
 
-`names` maps each field to where it is found: a coordinate, a variable, a
-global attribute or a callable on the path (for archives that encode the run
-in the file name, such as `fc_20260102_m0.nc`). `kind`, `producer` and
-`parents` have no CF name, so they come from attributes the script writes,
-or, for `kind`, from a callable on the path. The member
-column is a string, not the integer of stage 1's glue: a CF realization is a
-number, but a CMIP member is a variant label such as `r1i1p1f1` whose four
-indices (realization, initialization, physics, forcing) all distinguish runs,
-so an integer column would lose them. Stage 1's members become `"0"` and
-`"1"`, and its analyses, written with `member=-1`, get a null.
+`names` maps each field to where it is found: a coordinate, a variable, a global attribute or a callable on the path (for archives that encode the run in the file name, such as `fc_20260102_m0.nc`). `kind`, `producer` and `parents` have no CF name, so they come from attributes which the script writes, or, for `kind`, from a callable on the path. The member column is a string, not the integer of stage 1's glue. A CF realization is a number, but a CMIP member is a variant label such as `r1i1p1f1` whose four indices (realization, initialization, physics, forcing) all distinguish runs, so an integer column would lose them. Stage 1's members become `"0"` and `"1"`, and its analyses, written with `member=-1`, get a null.
 
 (r13-ws-b)=
 ## Workstream B · Run-aware loading and typed queries
 
-**Decision.** `geocatalog.states` holds the loader and the queries that know
-what a run is; the observation loader stays as it is ([](#tbl-r13-move-b));
-[](#tbl-r13-placement) places every new name of workstreams A to C.
+**Decision.** `geocatalog.states` holds the loader and the queries which know what a run is, and the observation loader stays as it is ([](#tbl-r13-move-b)). [](#tbl-r13-placement) places every new name of workstreams A to C.
 
 :::{table} Workstream B's moves.
 :label: tbl-r13-move-b
@@ -745,26 +519,20 @@ what a run is; the observation loader stays as it is ([](#tbl-r13-move-b));
 | Object | Lives in | Name | Kind | Event shape |
 |---|---|---|---|---|
 | State builder | `geocatalog.build` | `build_state_catalog` | function | a catalog: one row per file |
-| Run-aware loader | `geocatalog.states` | `load_states` | function | `xr.Dataset` (R, N_e, L, H, W) |
+| Run-aware loader | `geocatalog.states` | `load_states` | function | `xr.Dataset` (N_run, N_e, N_lead, H, W) |
 | Grouped loader | `geocatalog.states` | `load_states(group_by="producer")` | function | `xr.DataTree`, leaf $k$: (N_k, T, H_k, W_k) |
 | Forecast chain | `geocatalog.states` | `forecast_chain` | function | a catalog: one run, one member |
 | Latest analysis | `geocatalog.states` | `latest_analysis` | function | one `CatalogRow`, or `None` |
 | Members of a run | `geocatalog.states` | `ensemble_at` | function | a catalog: one run, all members |
 | Lead window | `geocatalog.states` | `lead_window` | function | a catalog: rows whose leads overlap $[\tau_0, \tau_1]$ |
 | Lineage | `geocatalog.states` | `lineage` | function | a list of `CatalogRow`, newest first |
-| Reference alignment | `xrtoolz.metrics` | `align_reference` | function | `xr.Dataset` (R, L, H, W) |
+| Reference alignment | `xrtoolz.metrics` | `align_reference` | function | `xr.Dataset` (N_run, N_lead, H, W) |
 | Area-weighted reduction | `xrtoolz.geo` | `Reduce(..., weights="cell_area")` | `Operator` option | the input without the reduced dims |
 :::
 
 ### B1 · Load without mixing runs
 
-`load_states` is stage 3's eight user lines, with a check that each
-(run, member) pair appears once. Members missing from a run come back as NaN,
-not as a shorter cube. With `group_by="producer"` it is stage 6's grouping
-loop instead: one leaf per producer, each on its own grid, so that every
-xrtoolz operator maps over the models unchanged. The return type follows the
-argument, never the data: a plain call on rows with different grids raises
-rather than returning a tree by surprise.
+`load_states` is stage 3's eight user lines, with a check that each (run, member) pair appears once. Members missing from a run come back as NaN, not as a shorter cube. With `group_by="producer"`, it is stage 6's grouping loop instead: one leaf per producer, each on its own grid, so that every xrtoolz operator maps over the models unchanged. The return type follows the argument and never the data, so a plain call on rows with different grids raises rather than returning a tree by surprise.
 
 ### B2 · Typed queries
 
@@ -772,7 +540,7 @@ rather than returning a tree by surprise.
 :caption: Stages 2, 3 and 5, before and after workstream B.
 :linenos:
 
-# Shapes: R = 3, N_e = 2, L = 3, H = W = 4
+# Shapes: N_run = 3, N_e = 2, N_lead = 3, H = W = 4
 import geocatalog.states as gs
 
 # Today:
@@ -789,36 +557,23 @@ fc = gs.load_states(gs.forecasts(cat), aoi)    # → (3, 2, 3, 4, 4)  proposed (
 gs.lineage(cat, "ana_20260104.nc")             # → 7 rows           proposed (B2)
 ```
 
-`latest_analysis` filters on the reserved `kind` column. Zero leads are not
-enough: in a one-row-per-step archive (a GRIB file per step, or
-[open question 1](#r13-open-questions)'s `explode="step"`) a lead-0 forecast
-row also has $v_{\min} = v_{\max} = r$, so a lead test would return it as
-an analysis. The member filter takes a string, as the column does
-([](#r13-ws-a)); an integer raises `TypeError` rather than silently matching
-nothing.
+`latest_analysis` filters on the reserved `kind` column, because zero leads are not enough. In a one-row-per-step archive (a GRIB file per step, or [open question 1](#r13-open-questions)'s `explode="step"`), a lead-0 forecast row also has $v_{\min} = v_{\max} = r$, so a lead test would return it as an analysis. The member filter takes a string, as the column does ([](#r13-ws-a)), and an integer raises `TypeError` rather than silently matching nothing.
 
 :::{warning} Differs from the plan
-The scoping report's queries returned "a subset `StateCatalog`" or a list of
-`StateSlice`s. Here they return geocatalog catalogs and rows, so every
-existing geocatalog call (`query`, `matchup`, `stage`, `to_geoparquet`,
-`CatalogBundle`) works on states with no bridge module. The scoping report's
-`geocatalog → state` bridge, `states_that_used(obs_slice)`, needs the
-assimilated observations recorded per analysis; it goes to
-[](#r13-open-questions).
+The scoping report's queries returned "a subset `StateCatalog`" or a list of `StateSlice`s. Here, they return geocatalog catalogs and rows, so every existing geocatalog call (`query`, `matchup`, `stage`, `to_geoparquet`, `CatalogBundle`) works on states with no bridge module. The scoping report's `geocatalog → state` bridge, `states_that_used(obs_slice)`, needs the assimilated observations to be recorded per analysis, so it goes to [](#r13-open-questions).
 :::
 
 (r13-ws-c)=
 ## Workstream C · Forecast alignment in xrtoolz
 
-**Decision.** xrtoolz builds the verifying reference and broadcasts it;
-the metrics stay as they are ([](#tbl-r13-move-c)).
+**Decision.** xrtoolz builds the verifying reference and broadcasts it, and the metrics stay as they are ([](#tbl-r13-move-c)).
 
 :::{table} Workstream C's moves.
 :label: tbl-r13-move-c
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `align_reference(forecast, reference, *, init_dim, lead_dim, time_dim)` | `xrtoolz.metrics` (beside `skill_by_lead_time`) | selects $A[r, \tau, x] = a(r + \tau, x)$; NaN where the reference has no valid time |
+| `align_reference(forecast, reference, *, init_dim, lead_dim, time_dim)` | `xrtoolz.metrics` (beside `skill_by_lead_time`) | selects $y_n(r, \tau) = a_n(r + \tau)$; NaN where the reference has no valid time |
 | reference broadcasting in the pixel metrics | `xrtoolz.metrics._src` (the `apply_ufunc` wrappers) | `RMSE(dims=("member", …))` raises `ValueError` when the reference lacks `member`; broadcasting first gives the per-member score |
 | `forecast_reference_time` → `lead_time` | `align_reference` (accepts either layout) | CF files store $r$ and $\tau$, or $r$ and $v$; nothing converts today |
 | `weights="cell_area"` | `xrtoolz.geo.Reduce` | stage 6's area mean is user code: `Reduce` calls the plain `ds.mean`. Exact spherical cell areas from the latitude bounds, as `regrid_conservative` already computes them |
@@ -828,17 +583,17 @@ the metrics stay as they are ([](#tbl-r13-move-c)).
 :caption: Stage 4, before and after workstream C.
 :linenos:
 
-# Shapes: F (R, N_e, L, H, W); a (T, H, W)
+# Shapes: X (N_run, N_e, N_lead, H, W); a (T, H, W)
 # Today:
-ref = an.sel(time=fc.valid_time).drop_vars("time")    # (R, L, H, W)     user
+ref = an.sel(time=fc.valid_time).drop_vars("time")  # (N_run, N_lead, H, W)  user
 SkillByLeadTime(RMSE("xch4", dims=("member", *dims)))(*xr.broadcast(fc, ref))  # user
 
 # After:
 from xrtoolz.metrics import align_reference
-# A[r, τ, x] = a(r + τ, x)
+# y_n(r, τ) = a_n(r + τ)
 ref = align_reference(fc, an, init_dim="init_time", lead_dim="lead_time",
-                      time_dim="time")               # → (R, L, H, W) proposed (C1)
-SkillByLeadTime(RMSE("xch4", dims=("member", *dims)))(fc, ref)  # (L,)  proposed (C2)
+                      time_dim="time")     # → (N_run, N_lead, H, W) proposed (C1)
+SkillByLeadTime(RMSE("xch4", dims=("member", *dims)))(fc, ref)  # (N_lead,) proposed (C2)
 # → [0.109, 0.617, 1.132]
 ```
 
@@ -849,7 +604,7 @@ SkillByLeadTime(RMSE("xch4", dims=("member", *dims)))(fc, ref)  # (L,)  proposed
 :linenos:
 
 # Shapes: leaf k: (N_k, T, H_k, W_k) → (N_k, T)
-# ⟨y⟩ = Σᵢ aᵢ yᵢ / Σᵢ aᵢ, aᵢ ∝ Δλ (sin φᵢ₊ − sin φᵢ₋)
+# ⟨x⟩ = Σₙ |cₙ| xₙ / Σₙ |cₙ|, |cₙ| ∝ Δλ (sin φₙ₊ − sin φₙ₋)
 # Today:
 geo.Reduce("mean", dim=("lat", "lon"))(tree)   # unweighted: wrong on a sphere  today
 def area_mean(y): ...                          # sin-latitude weights            user
@@ -858,22 +613,19 @@ def area_mean(y): ...                          # sin-latitude weights           
 geo.Reduce("mean", dim=("lat", "lon"), weights="cell_area")(tree)  # proposed (C3)
 ```
 
-Because `Reduce` is an xrcore `Operator`, the weighted form maps over the
-tree like every other operator, and each leaf is weighted by its own cell
-areas.
+Because `Reduce` is an xrcore `Operator`, the weighted form maps over the tree like every other operator, and each leaf is weighted by its own cell areas.
 
 (r13-ws-d)=
 ## Workstream D · Ensemble histories in pipekit-cycle
 
-**Decision.** The cycle's `history` is the write seam; files are written by
-the script, after the call ([](#tbl-r13-move-d)).
+**Decision.** The cycle's `history` is the write seam, and the files are written by the script after the call ([](#tbl-r13-move-d)).
 
 :::{table} Workstream D's moves.
 :label: tbl-r13-move-d
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `save_history`, `history_stride`, `history` | `pipekit_cycle.EnsembleCycle` (as on `Cycle`: one `(members, state)` pair per kept step, where `members` is the list of $N_e$ carriers) | the ensemble forecast is the case the scoping report wrote for, and it keeps no trajectory |
+| `save_history`, `history_stride`, `history` | `pipekit_cycle.EnsembleCycle` (as on `Cycle`: one `(members, state)` pair per kept step, where `members` is the list of $N_{\mathcal{E}}$ carriers) | the ensemble forecast is the case the scoping report wrote for, and it keeps no trajectory |
 | `save_history`, `history` | `pipekit_cycle.EnsembleDACycle` (as on `DACycle`: one (forecast, analysis) pair per cycle, here of member lists) | the overview's methane walkthrough runs an `EnsembleDACycle` and indexes its analyses |
 | writing one file per (run, member) | geostack `scripts/` | AGENTS.md: side effects live in scripts; the library computes |
 | `CycleStateWriter`, `CycleStateReader` | not added | a writer inside `step_op` cannot tell members apart and has no clock ([](#r13-audit)); reading an initial state is `latest_analysis` and `xr.open_dataset` |
@@ -887,7 +639,7 @@ the script, after the call ([](#tbl-r13-move-d)).
 fcst = pc.EnsembleCycle(step_op=model, n_steps=T, n_members=N_e,
                         save_history=True)                       # proposed (D1)
 members, _ = fcst([x_a] * N_e, pc.DAState())                     # today
-# v_k = r + (k + 1) Δt for history entry k (stride 1)
+# v_i = r + (i + 1) Δt for history entry i (stride 1)
 for m in range(N_e):                                             # user (script)
     # history entry h = (members, state), so h[0][m] is member m's carrier
     ds = to_dataset([h[0][m] for h in fcst.history], r, dt)      # arguments sketched
@@ -898,27 +650,16 @@ cat = build_state_catalog(sorted(root.glob("fc_*.zarr")),
                           crs=crs, names=CF_NAMES)               # proposed (A2)
 ```
 
-`to_dataset` is the model's own carrier-to-xarray step, which differs per
-model; it is not a library function. `h_hash` is the producer:
-`sha256_hex(stable_json(fcst.get_config()))` today, or
-[Report 9](09_use_cases.md#r9-proposals)'s proposed `pipeline_hash`.
+`to_dataset` is the model's own carrier-to-xarray step, which differs per model, so it is not a library function. `h_hash` is the producer, which is `sha256_hex(stable_json(fcst.get_config()))` today or [Report 9](09_use_cases.md#r9-proposals)'s proposed `pipeline_hash`.
 
 :::{warning} Differs from the plan
-The scoping report made **pipekit-cycle the primary writer and reader** of
-the state catalog, through `CycleStateWriter` placed inside the cycle's step
-(`pc.Sequential([chemistry_forward, writer])`). At the pinned revisions that
-composition raises `TypeError`, pipekit-cycle has no per-step hook, and its
-states carry no run time. Writing from `history` after the call needs one
-flag on each ensemble cycle and keeps the cycle free of I/O. The cost is memory:
-the whole trajectory is held until the script writes it (see
-[](#r13-risks)).
+The scoping report made **pipekit-cycle the primary writer and reader** of the state catalog, through a `CycleStateWriter` placed inside the cycle's step (`pc.Sequential([chemistry_forward, writer])`). However, at the pinned revisions that composition raises `TypeError`, pipekit-cycle has no per-step hook, and its states carry no run time. Writing from `history` after the call needs one flag on each ensemble cycle, and it keeps the cycle free of I/O. The cost is memory, because the whole trajectory is held until the script writes it (see [](#r13-risks)).
 :::
 
 (r13-gates)=
 ## Testing gates
 
-Each workstream merges only when its gates pass ([](#tbl-r13-gates)). The
-fixtures are the running example's eleven files.
+Each workstream only merges when its gates pass ([](#tbl-r13-gates)), and the fixtures are the running example's eleven files.
 
 :::{table} One gate per proposal, each with a pass condition.
 :label: tbl-r13-gates
@@ -926,7 +667,7 @@ fixtures are the running example's eleven files.
 | Gate | Workstream | Passes when |
 |---|---|---|
 | A1 Schema round trip | A1 | a v1 catalog round-trips through GeoParquet with `run_time` as `datetime64[us]` and `member` as `string` (a CMIP variant label `r1i1p1f1` and a null both survive) and `parents` as `list<string>`, and `kind` as `string`; a v0 file reads with the five columns all null, and every other column unchanged |
-| A2 Builder | A2 | `build_state_catalog` on the 11 files fills 11 of 11 rows, equal to stage 1's hand-filled columns; with `CFGRIB_NAMES` on a cfgrib-decoded file it reads $r$, $\tau$ and $m$ |
+| A2 Builder | A2 | `build_state_catalog` on the 11 files fills 11 of 11 rows, equal to stage 1's hand-filled columns; with `CFGRIB_NAMES` on a cfgrib-decoded file it reads $r$, $\tau$ and $e$ |
 | B1 No dropped runs | B1 | `load_states` on the 6 forecast files returns sizes (3, 2, 3, 4, 4), equal to stage 3's hand-stacked cube with a maximum absolute difference of 0; the slice for 3 January returns 3 runs (today: 1) |
 | B2 Typed queries | B2 | on the archive, `forecast_chain` returns 1 row, `latest_analysis` `ana_20260103.nc`, `ensemble_at` members `["0", "1"]`, and `lineage` 7 rows in stage 5's order; on a one-row-per-step copy of the archive `latest_analysis` still returns the analysis, not a lead-0 forecast, and `member=0` raises `TypeError`; `forecast_chain` with an exact `pd.Timestamp` returns the row the string query misses |
 | C1 Alignment | C1 | `align_reference` equals `an.sel(time=fc.valid_time)` exactly, and `SkillByLeadTime(RMSE)` on it reproduces [0.076, 0.467, 0.746] to 1e-12; a lead past the last analysis is NaN |
@@ -934,15 +675,13 @@ fixtures are the running example's eleven files.
 | B3 Producers as leaves | B1 | `load_states(group_by="producer")` on stage 6's 6 files returns 3 leaves of sizes (3, 90, 180, 360), (1, 90, 72, 144) and (2, 90, 90, 180), equal to stage 6's hand-grouped tree to 0; the same call without `group_by` raises |
 | C3 Area weights | C3 | `Reduce("mean", weights="cell_area")` equals the sin-latitude weighted mean to 1e-12 on each leaf, and the global mean of a constant field is that constant to 1e-12 on every grid |
 | C4 Conservation (existing) | — | `RegridConservative(mode="mean", normalize="destarea")` keeps each model's time-mean area mean to 1e-10 K; the hybrid pipeline equals the native one to 1e-10 K. It passes today: 1.2e-11 ([](#r13-stage-6)) |
-| D1 Ensemble history | D1 | with `save_history=True`, `EnsembleCycle` keeps `len(history) == ceil(T / s)` `(members, state)` entries with `len(members) == N_e`, and `EnsembleDACycle` one (forecast, analysis) pair of $N_e$ members per cycle; with it off, outputs equal today's to 0 and `history` is empty |
+| D1 Ensemble history | D1 | with `save_history=True`, `EnsembleCycle` keeps `len(history) == ceil(T / s)` `(members, state)` entries with `len(members) == N_e`, and `EnsembleDACycle` one (forecast, analysis) pair of $N_{\mathcal{E}}$ members per cycle; with it off, outputs equal today's to 0 and `history` is empty |
 :::
 
 (r13-risks)=
 ## Sequencing and risks
 
-The three phase-1 pieces are independent, so they ship side by side; the
-builder, loader and queries follow because they use A1's columns
-([](#fig-r13-roadmap)).
+The three phase-1 pieces are independent, so they ship side by side. The builder, loader and queries follow, because they use A1's columns ([](#fig-r13-roadmap)).
 
 :::{figure} ../images/reports/r13_roadmap.svg
 :label: fig-r13-roadmap
@@ -951,61 +690,23 @@ builder, loader and queries follow because they use A1's columns
 Foundations first, then the state profile, then its consumers.
 :::
 
-- **The first schema migration.** A1 is geocatalog's first registered
-  migration, and a mistake in it touches every saved catalog. Fallback:
-  ship A2 and B with the four names as documented extra columns and no
-  schema bump, and reserve them once the API has settled.
-- **geocatalog keeps growing.** [Report 6](06_geocatalog.md) found it had
-  already outgrown its scope. Fallback: if `geocatalog.states` passes about
-  500 lines, move it to its own distribution in the geotoolz monorepo that
-  depends on geocatalog, still with one index format.
-- **Metadata conventions vary.** CF files, cfgrib-decoded GRIB, and
-  archives that encode the run in the file name all store $r$ and $m$
-  differently. Fallback: `names` accepts a callable on the path, so any
-  archive can be indexed without changing the builder.
-- **One row per file is coarse.** A file per (run, member) answers
-  "valid at $t$" at file granularity, and a per-step query must open the
-  file. Fallback: when steps are separate files (common for GRIB), rows are
-  per step without any change; a per-step explode option is open question 1.
-- **Histories held in memory.** A 72-step, 40-member trajectory at 0.25°
-  does not fit in memory. Fallback: run the cycle in chunks of steps from
-  the last state and write after each chunk; a streaming hook on the cycles
-  is open question 3.
-- **Pandas query semantics.** Users who keep writing `where` strings still
-  hit stage 2's silent miss. Fallback: B2's functions use boolean masks, and
-  the `where` docstring gets a warning about datetime equality.
-- **Curvilinear model grids.** `regrid_conservative` works along two
-  rectilinear dimensions, and many CMIP ocean models use curvilinear or
-  tripolar native grids (`grid_label="gn"`). Fallback: use the regridded
-  products the modelling centres publish (`grid_label="gr"`), or regrid
-  those models with an external tool such as xESMF in the script; open
-  question 5.
+- **The first schema migration.** A1 is geocatalog's first registered migration, so a mistake in it touches every saved catalog. Fallback: we ship A2 and B with the four names as documented extra columns and no schema bump, and reserve them once the API has settled.
+- **geocatalog keeps growing.** [Report 6](06_geocatalog.md) found that it had already outgrown its scope. Fallback: if `geocatalog.states` passes about 500 lines, we move it to its own distribution in the geotoolz monorepo, which depends on geocatalog and still has one index format.
+- **Metadata conventions vary.** CF files, cfgrib-decoded GRIB, and archives that encode the run in the file name all store $r$ and $e$ differently. Fallback: `names` accepts a callable on the path, so any archive can be indexed without changing the builder.
+- **One row per file is coarse.** A file per (run, member) answers "valid at $t$" at file granularity, so a per-step query must open the file. Fallback: when steps are separate files (common for GRIB), rows are per step without any change, and a per-step explode option is open question 1.
+- **Histories held in memory.** A 72-step, 40-member trajectory at 0.25° does not fit in memory. Fallback: we run the cycle in chunks of steps from the last state and write after each chunk, and a streaming hook on the cycles is open question 3.
+- **Pandas query semantics.** Users who keep writing `where` strings still hit stage 2's silent miss. Fallback: B2's functions use boolean masks, and the `where` docstring gets a warning about datetime equality.
+- **Curvilinear model grids.** `regrid_conservative` works along two rectilinear dimensions, whereas many CMIP ocean models use curvilinear or tripolar native grids (`grid_label="gn"`). Fallback: we use the regridded products which the modelling centres publish (`grid_label="gr"`), or regrid those models with an external tool such as xESMF in the script (open question 5).
 
 (r13-open-questions)=
 ## Open questions
 
-1. **One row per file, or per step?** Per file keeps catalogs small (40 rows
-   for a 40-member run instead of the scoping report's 2,880). Per step
-   answers "valid at $t$" without opening files. Should `build_state_catalog`
-   offer an `explode="step"` option?
-2. **Which kinds?** `kind` is reserved with three values: `analysis`,
-   `forecast`, `reanalysis`. Do hindcasts and reforecasts need their own
-   values, or are they forecasts with a producer that says so?
-3. **A streaming hook on the cycles.** Should `Cycle` and `EnsembleCycle`
-   take an `on_step(k, carriers, state)` callable, so scripts can write while
-   the cycle runs? It would also give `SmootherCycle` and `WindowedCycle` a
-   history.
-4. **Recording assimilated observations.** The scoping report's
-   `states_that_used(obs_slice)` needs each analysis to record which
-   observation rows it used. A `CatalogBundle` matchup table between the
-   analysis and observation catalogs would do it; is that the right home?
-5. **Curvilinear grids.** Should xrtoolz grow a conservative regrid for
-   curvilinear grids (cell polygons rather than two 1-D weight matrices), or
-   should the stack defer to xESMF for them?
-6. **Targets that differ per leaf.** `RegridConservative` and `RegridLike`
-   fix their target grid when built, so regridding one observation field onto
-   each model's own grid needs one operator per leaf. Should they accept the
-   target as a second input, so the step maps over a tree of targets?
+1. **One row per file, or per step?** One row per file keeps catalogs small (40 rows for a 40-member run instead of the scoping report's 2,880), whereas one row per step answers "valid at $t$" without opening files. Should `build_state_catalog` offer an `explode="step"` option?
+2. **Which kinds?** `kind` is reserved with three values: `analysis`, `forecast`, `reanalysis`. Do hindcasts and reforecasts need their own values, or are they forecasts with a producer that says so?
+3. **A streaming hook on the cycles.** Should `Cycle` and `EnsembleCycle` take an `on_step(k, carriers, state)` callable, so that scripts can write while the cycle runs? It would also give `SmootherCycle` and `WindowedCycle` a history.
+4. **Recording assimilated observations.** The scoping report's `states_that_used(obs_slice)` needs each analysis to record which observation rows it used. A `CatalogBundle` matchup table between the analysis and observation catalogs would do it, but is that the right home?
+5. **Curvilinear grids.** Should xrtoolz grow a conservative regrid for curvilinear grids (cell polygons rather than two 1-D weight matrices), or should the stack defer to xESMF for them?
+6. **Targets that differ per leaf.** `RegridConservative` and `RegridLike` fix their target grid when built, so regridding one observation field onto each model's own grid needs one operator per leaf. Should they accept the target as a second input, so the step maps over a tree of targets?
 
 (r13-todos)=
 ## Upcoming work
@@ -1029,11 +730,7 @@ Foundations first, then the state profile, then its consumers.
 
 ### Sources
 
-- The scoping report, "Report 13 — `statecatalog`: catalog for model
-  states" (supplied by the author).
-- The pinned code in `references/`: geocatalog (`geotoolz-catalog`), xrtoolz
-  and xrreader, pipekit-cycle, pipekit-train, pipekit-experiment and
-  pipekit-evaluate.
-- CF conventions, [standard name table](https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html)
-  (`forecast_reference_time`, `forecast_period`, `realization`).
+- The scoping report, "Report 13 — `statecatalog`: catalog for model states" (supplied by the author).
+- The pinned code in `references/`: geocatalog (`geotoolz-catalog`), xrtoolz and xrreader, pipekit-cycle, pipekit-train, pipekit-experiment and pipekit-evaluate.
+- CF conventions, [standard name table](https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html) (`forecast_reference_time`, `forecast_period`, `realization`).
 - The running example's script and outputs, described in [](#r13-running).

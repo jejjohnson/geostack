@@ -20,19 +20,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-pipekit-cycle turns a one-step transition into a run over time. A `Cycle`
-repeats a step, a `DACycle` alternates forecast and analysis, and a
-`Recurrence` iterates until a condition holds. Three protocols
-(`ForwardModel`, `ObservationOperator`, `AnalysisStep`) let algorithm
-libraries plug in without importing it. The scoping report described this
-package before it was built. Version 0.0.2 ships everything the report
-named and more: eleven further protocols, a back-and-forth nudging cycle and
-adjoint specs that pipekit-jax reads. Where the two disagree, **the code
-holds** ([conventions](../overview.md#sec-conventions)). A Kalman filter written as a `DACycle` matches a hand-written loop
-exactly, and an EnKF converges to it at the $1/\sqrt{N_e}$ rate. Two real
-gaps remain: a stateful `Sequential` cannot be a cycle's step, and the
-observation index restarts on every call, which silently feeds a restarted
-cycle the wrong observations. This page proposes two small fixes.
+pipekit-cycle turns a one-step transition into a run over time. A `Cycle` repeats a step, a `DACycle` alternates forecast and analysis, and a `Recurrence` iterates until a condition holds. Three protocols (`ForwardModel`, `ObservationOperator`, `AnalysisStep`) let algorithm libraries plug in without importing it. The scoping report described this package before it was built, and version 0.0.2 ships everything the report named and more: eleven further protocols, a back-and-forth nudging cycle and adjoint specs that pipekit-jax reads. Where the two disagree, **the code holds** ([conventions](../overview.md#sec-conventions)). A Kalman filter written as a `DACycle` matches a hand-written loop exactly, and an EnKF converges to it at the $1/\sqrt{N_{\mathcal{E}}}$ rate (with $N_{\mathcal{E}}$ the number of members). However, two real gaps remain: 1) a stateful `Sequential` cannot be a cycle's step, and 2) the observation index restarts on every call, which silently feeds a restarted cycle the wrong observations. We propose two small fixes on this page.
 
 +++
 
@@ -52,36 +40,18 @@ cycle the wrong observations. This page proposes two small fixes.
 (r10-summary)=
 ## Summary
 
-**Decision.** pipekit-cycle 0.0.2 stays as it is: a separate package beside
-pipekit-array, depending only on pipekit, with no JAX and no domain code.
-Its protocols, cycles and helpers are the contract algorithm libraries
-target. Two additions close the gaps the running example hits, and one more
-is already proposed in [Report 13](13_state_catalog.md#r13-ws-d).
+**Decision.** pipekit-cycle 0.0.2 stays as it is: a separate package beside pipekit-array, which depends only on pipekit and has no JAX and no domain code. Its protocols, cycles and helpers are the contract that algorithm libraries target. Two additions close the gaps the running example hits, and one more is already proposed in [Report 13](13_state_catalog.md#r13-ws-d).
 
-- **A. Stateful pipelines as cycle steps.** `pipekit.Sequential` threads a
-  carry state when it holds a stateful step, but it is not a
-  `StatefulOperator`, so `Cycle` and its siblings reject it with a
-  `TypeError`. Accept any `Sequential` that is stateful as a step.
-- **B. Observation inputs on the cycle's clock.** `obs_source(i)` receives a
-  call-local index that restarts at 0 on every call, and R comes only from
-  the state. Let the index follow `state.cycle_count` (B1), and let a source
-  set R per step (B2, the overview's `obs_err_source`).
-- **Report 13 D1. Ensemble histories.** `EnsembleCycle` and `EnsembleDACycle`
-  keep no trajectory; [Report 13](13_state_catalog.md#r13-ws-d) adds
-  `save_history` to both, so cycle outputs can be written and indexed.
+- **A. Stateful pipelines as cycle steps.** `pipekit.Sequential` threads a carry state when it holds a stateful step, but it is not a `StatefulOperator`, so `Cycle` and its siblings reject it with a `TypeError`. We would accept any stateful `Sequential` as a step.
+- **B. Observation inputs on the cycle's clock.** `obs_source(i)` receives a call-local index that restarts at 0 on every call, and the observation-error covariance $\gmat{\Sigma}_\varepsilon$ only comes from the state. We would let the index follow `state.cycle_count` (B1), and let a source set $\gmat{\Sigma}_\varepsilon$ per step (B2, the overview's `obs_err_source`).
+- **Report 13 D1. Ensemble histories.** `EnsembleCycle` and `EnsembleDACycle` keep no trajectory, so [Report 13](13_state_catalog.md#r13-ws-d) adds `save_history` to both, which lets cycle outputs be written and indexed.
 
-**End state.** A script composes a step from stateless and stateful
-operators, cycles it, and restarts it from the last state without
-re-reading old observations. Algorithm libraries supply forward models,
-observation operators and analysis steps by structural typing. Every cycle
-can keep its history, which Report 13's state profile indexes.
+**End state.** A script composes a step from stateless and stateful operators, cycles it, and restarts it from the last state without re-reading old observations. Algorithm libraries supply forward models, observation operators and analysis steps by structural typing. Every cycle can keep its history, which Report 13's state profile indexes.
 
 (r10-ownership)=
 ## Ownership rules
 
-pipekit-cycle owns the shape of a run over time; the carrier, the physics
-and the algorithms belong to whoever supplies the steps
-([](#fig-r10-ownership)).
+pipekit-cycle owns the shape of a run over time, whereas the carrier, the physics and the algorithms belong to whoever supplies the steps ([](#fig-r10-ownership)).
 
 :::{figure} ../images/reports/r10_ownership.svg
 :label: fig-r10-ownership
@@ -91,25 +61,12 @@ pipekit-cycle 0.0.2 between pipekit core and the code that uses it. Dashed
 arrows are structural: nothing is imported.
 :::
 
-**pipekit-cycle** owns the cycles, the DA cycles, the protocols, the
-generic observation and forward helpers, the carry states and the adjoint
-specs. It imports only pipekit, and never an array library, JAX or a domain
-package.
+**pipekit-cycle** owns the cycles, the DA cycles, the protocols, the generic observation and forward helpers, the carry states and the adjoint specs. It only imports pipekit, and never an array library, JAX or a domain package.
 
-Neighbours follow [the stack rules](16_geo_data_stack.md#r16-ownership).
-Two matter here: algorithm libraries (filterax, vardax, plumax) satisfy the
-protocols by structural typing without importing pipekit-cycle, and scripts
-own the carrier, the initial state, the observations and every file a run
-writes ([Report 13](13_state_catalog.md#r13-ws-d)).
+Neighbours follow [the stack rules](16_geo_data_stack.md#r16-ownership), and two of them matter here: 1) algorithm libraries (filterax, vardax, plumax) satisfy the protocols by structural typing without importing pipekit-cycle, and 2) scripts own the carrier, the initial state, the observations and every file a run writes ([Report 13](13_state_catalog.md#r13-ws-d)).
 
 :::{warning} Differs from the plan
-The scoping report listed three extras: `array`, `jax` and `catalog` (the
-last for `statecatalog`). pipekit-cycle 0.0.2 has one, `array =
-["pipekit-array"]`, and depends only on `pipekit`. There is no `jax` extra:
-JAX execution lives in pipekit-jax, which reads pipekit-cycle's adjoint
-specs instead of pipekit-cycle importing it. There is no `catalog` extra:
-[Report 13](13_state_catalog.md) replaces `statecatalog` with a state
-profile in geocatalog that scripts, not cycles, write to.
+The scoping report listed three extras: `array`, `jax` and `catalog` (the last one for `statecatalog`). pipekit-cycle 0.0.2 has one, `array = ["pipekit-array"]`, and it only depends on `pipekit`. There is no `jax` extra, because JAX execution lives in pipekit-jax, which reads pipekit-cycle's adjoint specs instead of pipekit-cycle importing it. There is no `catalog` extra either, because [Report 13](13_state_catalog.md) replaces `statecatalog` with a state profile in geocatalog that scripts write to (not cycles).
 :::
 
 (r10-surface)=
@@ -131,41 +88,26 @@ profile in geocatalog that scripts, not cycles, write to.
 | *Adjoint specs* | *`AdjointSpec`, `DirectAdjoint`, `RecursiveCheckpointAdjoint`, `TruncatedAdjoint`, `ImplicitAdjoint`, `BacksolveAdjoint`: frozen dataclasses with no behaviour here, interpreted by pipekit-jax* | *`adjoints`* |
 :::
 
-The eleven further protocols (the italic rows of [](#tbl-r10-surface)) are
-the shared vocabulary for the algorithm
-libraries: a tangent-linear model and its adjoint (M′, M\*), a low-rank error
-subspace B ≈ LLᵀ, a reduced-order model with `encode`, `decode` and `step`,
-covariance localisers, ensemble inflators, adaptive step schedulers, and
-ensemble Kalman inversion as an `IterativeProcess`. None is used by a cycle
-in pipekit-cycle; they exist so that, say, filterax's inflator and vardax's
-error subspace agree on one signature.
+The eleven further protocols (the italic rows of [](#tbl-r10-surface)) are the shared vocabulary for the algorithm libraries: a tangent-linear model and its adjoint (the Jacobian $\mat{J}_f$ of the dynamics $f$ and its transpose $\mat{J}_f^\top$), a low-rank error subspace $\gmat{\Sigma}_x \approx \mat{L} \mat{L}^\top$, a reduced-order model with `encode`, `decode` and `step`, covariance localisers, ensemble inflators, adaptive step schedulers, and ensemble Kalman inversion as an `IterativeProcess`. No cycle in pipekit-cycle uses any of them. They exist so that, for example, filterax's inflator and vardax's error subspace agree on one signature.
 
 (r10-running)=
 ## The running example: a methane plume advected along a transect
 
-**The problem.** A methane enhancement $x \in \mathbb{R}^N$, in ppb above
-background, sits on a periodic transect of $N = 40$ cells. Wind carries it
-downstream one hour at a time. A column sensor sees every fourth cell, so
-there are $p = 10$ observations per hour, for $T = 10$ hours. The plume
-starts as a Gaussian of 50 ppb peak at cell 8.
+**The problem.** A methane enhancement $\vect{x}_t \in \mathbb{R}^{D_x}$, in ppb above background, sits on a periodic transect of $D_x = 40$ cells, and $t$ indexes the hours. The wind carries it downstream one hour at a time. A column sensor sees every fourth cell, so there are $D_y = 10$ observations $\vect{y}_t \in \mathbb{R}^{D_y}$ per hour, for $T = 10$ hours. The plume starts as a Gaussian with a 50 ppb peak at cell 8.
 
-**The model.** Let $M \in \mathbb{R}^{N \times N}$ be first-order upwind
-advection with Courant number 0.4,
-$M = 0.6 I + 0.4 S$ with $S$ the one-cell downstream shift; $Q = 0.01 I$ the
-model-error covariance; $H \in \{0, 1\}^{p \times N}$ the selection of every
-fourth cell; and $R = 0.1 I$ the observation-error covariance. The truth and
-the observations follow {eq}`r10-eq-model`:
+**The model.** The dynamics are first-order upwind advection with Courant number 0.4, which is the linear map $\mat{F} = 0.6 \mat{I} + 0.4 \mat{S} \in \mathbb{R}^{D_x \times D_x}$, where $\mat{S} \in \{0, 1\}^{D_x \times D_x}$ is the one-cell downstream shift. The model-error covariance is $\gmat{\Sigma}_\eta = 0.01 \mat{I} \in \mathbb{R}^{D_x \times D_x}$, the observation operator $\mat{H} \in \{0, 1\}^{D_y \times D_x}$ selects every fourth cell, and the observation-error covariance is $\gmat{\Sigma}_\varepsilon = 0.1 \mat{I} \in \mathbb{R}^{D_y \times D_y}$. The truth and the observations follow {eq}`r10-eq-model` and {eq}`r10-eq-model-obs`,
 
 $$
-\begin{aligned}
-x_t &= M x_{t-1} + \eta_t , & \eta_t &\sim \mathcal{N}(0, Q) , \\
-y_t &= H x_t + \varepsilon_t , & \varepsilon_t &\sim \mathcal{N}(0, R) .
-\end{aligned}
+\vect{x}_t = \mat{F} \vect{x}_{t-1} + \gvect{\eta}_t ,
 $$ (r10-eq-model)
 
-The filter starts from $m_0 = 0$ with $P_0 = 100 I$: it knows nothing about
-the plume. The data are synthetic, so every stage has an exact answer to
-check against.
+$$
+\vect{y}_t = \mat{H} \vect{x}_t + \gvect{\varepsilon}_t ,
+$$ (r10-eq-model-obs)
+
+where $\gvect{\eta}_t \sim \mathcal{N}(\vect{0}, \gmat{\Sigma}_\eta)$ is the model noise in $\mathbb{R}^{D_x}$ and $\gvect{\varepsilon}_t \sim \mathcal{N}(\vect{0}, \gmat{\Sigma}_\varepsilon)$ is the observation noise in $\mathbb{R}^{D_y}$. The filter starts from the prior mean $\gvect{\mu}_{x,0 \mid 0} = \vect{0}$ with the prior covariance $\gmat{\Sigma}_{x,0 \mid 0} = 100 \mat{I}$, so it knows nothing about the plume. The data are synthetic, so every stage has an exact answer to check against.
+
+In the code sketches, the arrays keep the script's names: `M` is $\mat{F}$, `Q` is $\gmat{\Sigma}_\eta$, `R` is $\gmat{\Sigma}_\varepsilon$, `m` and `P` are the mean and covariance, and `N` is $D_x$.
 
 (r10-stage-1)=
 ### Stage 1 · Forecast only (pipekit-cycle)
@@ -173,41 +115,33 @@ check against.
 **TL;DR.** Push the plume downstream for six hours and keep every second
 state.
 
-**Problem.** With no observations the forecast is
-$x_{t} = M x_{t-1}$, repeated $n$ times; a history with stride $s$ keeps the
-states after steps $1, 1 + s, 1 + 2s, \ldots$
+**Problem.** With no observations, the forecast is simply $\vect{x}_t = \mat{F} \vect{x}_{t-1}$ repeated $n$ times, and a history with stride $s$ keeps the states after steps $1, 1 + s, 1 + 2s, \ldots$
 
 ```{code-block} python
 :caption: A forecast is a Cycle over a ForwardModel; the history lives on the operator.
 :linenos:
 
-# Shapes: N = 40 cells
+# Shapes: D_x = 40 cells (N in the code); M ≡ F
 import pipekit_cycle as pc
 
 class Advect:                                  # satisfies pc.ForwardModel    user
     dt = 1.0
     state_signature = None
-    # x_t = M x_{t−1}
+    # x_t = F x_{t−1}
     def step(self, x, dt):
-        return M @ x                           # (N,) → (N,)
+        return M @ x                           # (D_x,) → (D_x,)
 
 fc = pc.Cycle(Advect(), n_steps=6, save_history=True, history_stride=2)  # today
-x6, state = fc(x_true_0, pc.DAState())         # (N,) → (N,)                 today
+x6, state = fc(x_true_0, pc.DAState())         # (D_x,) → (D_x,)             today
 len(fc.history)                                # → 3: after steps 1, 3, 5    today
 [int(np.argmax(c)) for c, _ in fc.history]     # → [9, 10, 10]: the peak moves
 state.t                                        # → 0.0: Cycle keeps no clock
 ```
 
-A plain `Cycle` wraps the `ForwardModel` in an internal adapter and threads
-the state through untouched, so `DAState.t` stays at 0; only the DA cycles
-advance it.
+A plain `Cycle` wraps the `ForwardModel` in an internal adapter and threads the state through untouched, so `DAState.t` stays at 0. Only the DA cycles advance it.
 
 :::{warning} Differs from the plan
-The scoping report said a `Cycle` returns
-`(final_carrier, final_state, history)`. It returns
-`(final_carrier, final_state)`, and the history is the list
-`Cycle.history` of `(carrier, state)` pairs, reset on every call. The last
-step is kept only when $(n - 1)$ is a multiple of the stride.
+The scoping report said a `Cycle` returns `(final_carrier, final_state, history)`. It returns `(final_carrier, final_state)`, and the history is the list `Cycle.history` of `(carrier, state)` pairs, which is reset on every call. The last step is only kept when $(n - 1)$ is a multiple of the stride.
 :::
 
 (r10-stage-2)=
@@ -216,36 +150,50 @@ step is kept only when $(n - 1)$ is a multiple of the stride.
 **TL;DR.** Assimilate the ten hours of observations with an exact Kalman
 filter, and check that the cycle changes nothing about the arithmetic.
 
-**Problem.** The Kalman filter carries a mean $m_t$ and a covariance $P_t$:
+**Problem.** The Kalman filter carries a mean $\gvect{\mu}_{x,t \mid t} \in \mathbb{R}^{D_x}$ and a covariance $\gmat{\Sigma}_{x,t \mid t} \in \mathbb{R}^{D_x \times D_x}$, where $t \mid t-1$ marks the forecast and $t \mid t$ the analysis. The forecast step propagates both through the dynamics,
 
 $$
-\begin{aligned}
-m_t^b &= M m_{t-1} , & P_t^b &= M P_{t-1} M^\top + Q , \\
-K_t &= P_t^b H^\top \left( H P_t^b H^\top + R \right)^{-1} , \\
-m_t &= m_t^b + K_t \left( y_t - H m_t^b \right) , & P_t &= \left( I - K_t H \right) P_t^b .
-\end{aligned}
+\gvect{\mu}_{x,t \mid t-1} = \mat{F} \gvect{\mu}_{x,t-1 \mid t-1} ,
 $$ (r10-eq-kf)
 
+$$
+\gmat{\Sigma}_{x,t \mid t-1} = \mat{F} \gmat{\Sigma}_{x,t-1 \mid t-1} \mat{F}^\top + \gmat{\Sigma}_\eta ,
+$$ (r10-eq-kf-cov)
+
+and the analysis step corrects them with the gain $\mat{G}_t \in \mathbb{R}^{D_x \times D_y}$,
+
+$$
+\mat{G}_t = \gmat{\Sigma}_{x,t \mid t-1} \mat{H}^\top \left( \mat{H} \gmat{\Sigma}_{x,t \mid t-1} \mat{H}^\top + \gmat{\Sigma}_\varepsilon \right)^{-1} ,
+$$ (r10-eq-kf-gain)
+
+$$
+\gvect{\mu}_{x,t \mid t} = \gvect{\mu}_{x,t \mid t-1} + \mat{G}_t \left( \vect{y}_t - \mat{H} \gvect{\mu}_{x,t \mid t-1} \right) ,
+$$ (r10-eq-kf-mean)
+
+$$
+\gmat{\Sigma}_{x,t \mid t} = \left( \mat{I} - \mat{G}_t \mat{H} \right) \gmat{\Sigma}_{x,t \mid t-1} .
+$$ (r10-eq-kf-cov-a)
+
 ```{code-block} python
-:caption: The Kalman filter as a DACycle, against a hand-written loop over {eq}`r10-eq-kf`.
+:caption: The Kalman filter as a DACycle, against a hand-written loop over {eq}`r10-eq-kf` to {eq}`r10-eq-kf-cov-a`.
 :linenos:
 
-# Shapes: N = 40, p = 10, T = 10; the carrier is (m, P): (N,), (N, N)
+# Shapes: D_x = 40, D_y = 10, T = 10; the carrier is (m, P): (D_x,), (D_x, D_x)
 class KFForward:                               # pc.ForwardModel              user
     dt = 1.0
     state_signature = None
-    # m_b = M m;  P_b = M P Mᵀ + Q
+    # μ_{t|t−1} = F μ_{t−1|t−1};  Σ_{t|t−1} = F Σ_{t−1|t−1} Fᵀ + Σ_η
     def step(self, carrier, dt):
         m, P = carrier
-        return M @ m, M @ P @ M.T + Q          # ((N,), (N, N)) → same
+        return M @ m, M @ P @ M.T + Q          # ((D_x,), (D_x, D_x)) → same
 
 class KalmanAnalysis:                          # pc.AnalysisStep              user
-    # K = P_b Hᵀ (H P_b Hᵀ + R)⁻¹
-    # m = m_b + K (y − H m_b);  P = (I − K H) P_b
+    # G = Σ_{t|t−1} Hᵀ (H Σ_{t|t−1} Hᵀ + Σ_ε)⁻¹
+    # μ_{t|t} = μ_{t|t−1} + G (y − H μ_{t|t−1});  Σ_{t|t} = (I − G H) Σ_{t|t−1}
     def __call__(self, forecast, obs, *, obs_op, obs_err_cov):
         m, P = forecast
-        Hm = obs_op.linearize(m).H                                   # (p, N)
-        K = P @ Hm.T @ np.linalg.inv(Hm @ P @ Hm.T + obs_err_cov)  # (N, p)
+        Hm = obs_op.linearize(m).H                                   # (D_y, D_x)
+        K = P @ Hm.T @ np.linalg.inv(Hm @ P @ Hm.T + obs_err_cov)  # (D_x, D_y)
         return m + K @ (obs - obs_op(m)), (np.eye(N) - K @ Hm) @ P
 
 da = pc.DACycle(KFForward(), pc.LinearObs(H), KalmanAnalysis(),
@@ -256,29 +204,13 @@ da = pc.DACycle(KFForward(), pc.LinearObs(H), KalmanAnalysis(),
 state.t, state.cycle_count, len(da.history)   # → 10.0, 10, 10       today
 ```
 
-Each cycle steps the forward model, calls `obs_source(i)` for the step's
-observations, and hands both to the analysis with `obs_err_cov` read from
-the state. The result is bit-for-bit the hand-written filter. Two
-conventions follow from the code and are worth stating once:
+Each cycle steps the forward model, calls `obs_source(i)` for the step's observations, and hands both to the analysis with `obs_err_cov` read from the state. The result is bit-for-bit the hand-written filter. Two conventions follow from the code, and they are worth stating once:
 
-- **The covariance travels in the carrier.** `AnalysisStep.__call__`
-  receives the forecast, the observations, the observation operator and R,
-  but never the state. Anything the analysis updates, such as $P$ or an
-  ensemble, must be part of the carrier; here it is a `(m, P)` tuple.
-- **`ObservationOperator` requires `linearize`.** The protocol check fails
-  for a class with only `__call__`. `LinearObs` and `IdentityObs` return
-  themselves; `CallableObs` takes an optional `linearize_fn` and raises
-  `NotImplementedError` without it.
+- **The covariance travels in the carrier.** `AnalysisStep.__call__` receives the forecast, the observations, the observation operator and $\gmat{\Sigma}_\varepsilon$, but never the state. So anything the analysis updates, such as $\gmat{\Sigma}_{x,t \mid t}$ or an ensemble, must be part of the carrier, which here is a `(m, P)` tuple.
+- **`ObservationOperator` requires `linearize`.** The protocol check fails for a class with only `__call__`. `LinearObs` and `IdentityObs` return themselves, whereas `CallableObs` takes an optional `linearize_fn` and raises `NotImplementedError` without it.
 
 :::{warning} Differs from the plan
-The scoping report's `DAState` held `background_state` and
-`ensemble_members` alongside `t` and `cycle_count`. The shipped one holds
-`t`, `cycle_count`, `obs_err_cov` and a free-form `extras` dict. The
-background and the ensemble are the carrier, which is why the analysis never
-needs the state. `IterationState` is `iter_count`, `residual_norm`, `extras`
-(no `lr`, no `history`, and `iter_count` rather than `iter`), and
-`WindowState` is `window_index`, `last_analysis`, `extras`; no cycle uses
-`WindowState` yet.
+The scoping report's `DAState` held `background_state` and `ensemble_members` alongside `t` and `cycle_count`. The shipped one holds `t`, `cycle_count`, `obs_err_cov` and a free-form `extras` dict. The background and the ensemble are the carrier, which is why the analysis never needs the state. `IterationState` is `iter_count`, `residual_norm` and `extras` (no `lr`, no `history`, and `iter_count` rather than `iter`), and `WindowState` is `window_index`, `last_analysis` and `extras`. No cycle uses `WindowState` yet.
 :::
 
 (r10-stage-3)=
@@ -287,46 +219,28 @@ needs the state. `IterationState` is `iter_count`, `residual_norm`, `extras`
 **TL;DR.** Replace the exact covariance with an ensemble and check that the
 ensemble mean approaches the Kalman mean as the ensemble grows.
 
-**Problem.** With $N_e$ members $x^{(i)}$, the forecast covariance is the
-sample covariance of the anomalies, and every member is updated against its
-own perturbed observations, as in the overview ({eq}`eq-enkf`). For a
-linear-Gaussian model the EnKF mean converges to the Kalman mean $m_t$, and
-its error falls as $N_e^{-1/2}$ once the ensemble is large enough that the
-gain is well estimated.
+**Problem.** With $N_{\mathcal{E}}$ members $\vect{x}^{(e)} \in \mathbb{R}^{D_x}$, $e \in \mathcal{E}$, the forecast covariance is the sample covariance of the anomalies, and every member is updated against its own perturbed observations, as in the overview ({eq}`eq-enkf`). For a linear-Gaussian model, the EnKF mean converges to the Kalman mean $\gvect{\mu}_{x,t \mid t}$, and its error falls as $N_{\mathcal{E}}^{-1/2}$ once the ensemble is large enough that the gain is well estimated.
 
 ```{code-block} python
 :caption: An EnKF as an EnsembleDACycle; the carrier is a list of members.
 :linenos:
 
-# Shapes: N_e members, each (N,); the carrier is a list of N_e arrays
+# Shapes: N_e members, each (D_x,); the carrier is a list of N_e arrays
 class EnKF:                                    # pc.AnalysisStep              user
-    # K = P_b Hᵀ (H P_b Hᵀ + R)⁻¹;  x⁽ⁱ⁾ ← x⁽ⁱ⁾ + K (y + ε⁽ⁱ⁾ − H x⁽ⁱ⁾)
+    # G = Σ_{t|t−1} Hᵀ (H Σ_{t|t−1} Hᵀ + Σ_ε)⁻¹;  x⁽ᵉ⁾ ← x⁽ᵉ⁾ + G (y + ε⁽ᵉ⁾ − H x⁽ᵉ⁾)
     def __call__(self, forecast, obs, *, obs_op, obs_err_cov): ...   # list → list
 
 eda = pc.EnsembleDACycle(Member(), pc.LinearObs(H), EnKF(),
                          obs_source=obs_source, n_steps=T, n_members=N_e)  # today
-members, state = eda(members_0, pc.DAState(obs_err_cov=R))   # N_e × (N,)     today
-# RMS |mean(members) − m| , median over 10 seeds; KF posterior std 0.193 ppb
+members, state = eda(members_0, pc.DAState(obs_err_cov=R))   # N_e × (D_x,)   today
+# RMS |mean(members) − μ_{t|t}| , median over 10 seeds; KF posterior std 0.193 ppb
 # → N_e =  50: 0.367   N_e = 200: 0.063   N_e = 800: 0.027
 ```
 
-From 200 to 800 members the gap shrinks by a factor of 2.3, close to the
-factor of 2 that $N_e^{-1/2}$ predicts: the log-log slope is −0.61, and a
-seeded bootstrap over the ten seeds puts its 99 % interval at
-[−0.96, −0.38], which contains −0.5. At 50 members it is six times larger
-than at 200: with no localisation, 50 members estimate a 40 × 40 covariance
-poorly, and the gain carries that error. Inflation and localisation are the
-analysis step's business; pipekit-cycle names their signatures
-(`EnsembleInflator`, `CovarianceLocalizer`) but does not apply them.
+From 200 to 800 members the gap shrinks by a factor of 2.3, which is close to the factor of 2 that $N_{\mathcal{E}}^{-1/2}$ predicts. The log-log slope is −0.61, and a seeded bootstrap over the ten seeds puts its 99 % interval at [−0.96, −0.38], which contains −0.5. At 50 members the gap is six times larger than at 200, because with no localisation 50 members estimate a 40 × 40 covariance poorly and the gain carries that error. Inflation and localisation are the analysis step's business, so pipekit-cycle names their signatures (`EnsembleInflator`, `CovarianceLocalizer`) but does not apply them.
 
 :::{warning} Differs from the plan
-The scoping report described the ensemble carrier as "a stacked ensemble
-(leading axis = ensemble member)". The shipped `EnsembleCycle` and
-`EnsembleDACycle` take a **list** of members, length-checked against
-`n_members`, and step each member separately; one carry state is threaded
-through all members in turn. Vectorising over members is the user's
-choice (a batched or vmapped step). Neither ensemble cycle keeps a history,
-which [Report 13](13_state_catalog.md#r13-ws-d)'s D1 adds.
+The scoping report described the ensemble carrier as "a stacked ensemble (leading axis = ensemble member)". However, the shipped `EnsembleCycle` and `EnsembleDACycle` take a **list** of members, length-checked against `n_members`, and they step each member separately, with one carry state threaded through all the members in turn. Vectorising over members is the user's choice (a batched or vmapped step). Neither ensemble cycle keeps a history, which [Report 13](13_state_catalog.md#r13-ws-d)'s D1 adds.
 :::
 
 (r10-stage-4)=
@@ -335,9 +249,7 @@ which [Report 13](13_state_catalog.md#r13-ws-d)'s D1 adds.
 **TL;DR.** Replace the physical model with an emulator and leave the cycle
 unchanged.
 
-**Problem.** The cycle only needs something that satisfies `ForwardModel`.
-An emulator $\hat{M}$ trained to reproduce $M$ should therefore drop in with
-no other change, and an exact emulator must give the same analysis.
+**Problem.** The cycle only needs something that satisfies `ForwardModel`. So an emulator $\hat{f}$ trained to reproduce the dynamics $\mat{F}$ should drop in with no other change, and an exact emulator must give the same analysis.
 
 ```{code-block} python
 :caption: The forward model swapped twice: a callable and a pipekit Operator.
@@ -353,18 +265,10 @@ for fwd in (emulator, neural):
 # → max |m_swap − m| = 0.0 for both
 ```
 
-`NeuralForward(model_op, dt, state_signature=None)` is a thin, working
-wrapper, not a stub: `step` calls `model_op(state)` and ignores `dt`, so any
-pipekit `Operator` (a registry-loaded model, a `Sequential`) becomes a
-forward model.
+`NeuralForward(model_op, dt, state_signature=None)` is a thin wrapper that works, not a stub. Its `step` calls `model_op(state)` and ignores `dt`, so any pipekit `Operator` (a registry-loaded model, a `Sequential`) becomes a forward model.
 
 :::{warning} Differs from the plan
-`CompositeForward` has **no `dt` argument**: its `dt` is the sum of its
-components' `dt`, and its `step` ignores the `dt` it is passed, stepping
-each component by its own. The scoping report said it "enforces consistent
-total dt across components"; the code adds them instead. `BFNCycle` rejects
-`CompositeForward` and `NeuralForward` unless a `backward_model` is given,
-because it needs to step backwards in time.
+`CompositeForward` has **no `dt` argument**. Its `dt` is the sum of its components' `dt`, and its `step` ignores the `dt` it is passed and steps each component by its own. The scoping report said it "enforces consistent total dt across components", whereas the code adds them. `BFNCycle` rejects `CompositeForward` and `NeuralForward` unless a `backward_model` is given, because it needs to step backwards in time.
 :::
 
 (r10-stage-5)=
@@ -373,30 +277,26 @@ because it needs to step backwards in time.
 **TL;DR.** Retrieve a methane column enhancement from five-band
 transmittances by iterating until the update is negligible.
 
-**Problem.** Beer–Lambert absorption gives transmittances
-$f_b(\alpha) = \exp(-k_b \alpha)$ in bands $b = 1, \ldots, 5$ with
-absorption coefficients $k_b$, for a column enhancement $\alpha$. With
-measured $y_b$ and Jacobian $J_b = -k_b \exp(-k_b \alpha)$, Gauss–Newton
-iterates {eq}`r10-eq-gn`,
+**Problem.** Beer–Lambert absorption gives the transmittance $h_b(\alpha) = e^{-\sigma_b \alpha}$ in each band $b = 1, \ldots, 5$, where $\alpha \in \mathbb{R}$ is the column enhancement and $\sigma_b \in \mathbb{R}_{>0}$ is the band's absorption coefficient. We stack the bands into the forward model $h(\alpha) \in \mathbb{R}^5$ and the measured transmittances into $\vect{y} \in \mathbb{R}^5$ (a separate observation vector from the transect's $\vect{y}_t$). With the Jacobian $\vect{J}_h \in \mathbb{R}^5$, whose entries are $-\sigma_b e^{-\sigma_b \alpha}$, Gauss–Newton iterates {eq}`r10-eq-gn`,
 
 $$
-\alpha_{j+1} = \alpha_j + \frac{J^\top \left( y - f(\alpha_j) \right)}{J^\top J} ,
+\alpha^{(j+1)} = \alpha^{(j)} + \frac{\vect{J}_h^\top \left( \vect{y} - h(\alpha^{(j)}) \right)}{\vect{J}_h^\top \vect{J}_h} ,
 $$ (r10-eq-gn)
 
-and stops when $|\alpha_{j+1} - \alpha_j| < 10^{-8}$.
+where $j$ counts the iterations and $\vect{J}_h$ is evaluated at $\alpha^{(j)}$. It stops when $\vert \alpha^{(j+1)} - \alpha^{(j)} \vert < 10^{-8}$.
 
 ```{code-block} python
 :caption: An iterative retrieval is a Recurrence with a stateful step and a condition operator.
 :linenos:
 
-# Shapes: α scalar; y, f(α), J: (5,)
-f = pc.CallableObs(lambda a: np.exp(-k * a),
-                   linearize_fn=lambda a: -k * np.exp(-k * a))       # today
+# Shapes: α scalar; y, h(α), J_h: (5,)
+h = pc.CallableObs(lambda a: np.exp(-sigma * a),
+                   linearize_fn=lambda a: -sigma * np.exp(-sigma * a))  # today
 
 class GaussNewton(pk.StatefulOperator):                               # user
-    # α ← α + Jᵀ (y − f(α)) / (Jᵀ J)
+    # α ← α + J_hᵀ (y − h(α)) / (J_hᵀ J_h)
     def _apply(self, a, s):
-        J, r = f.linearize(a), y_b - f(a)                     # (5,), (5,)
+        J, r = h.linearize(a), y_b - h(a)                     # (5,), (5,)
         step = float(J @ r / (J @ J))
         return a + step, pc.IterationState(iter_count=s.iter_count + 1,
                                            residual_norm=abs(step))
@@ -406,20 +306,13 @@ gn = pc.Recurrence(GaussNewton(),
                    max_iters=50)                                      # today
 a_hat, s = gn(0.0, pc.IterationState())                               # today
 # → α̂ = 120.014 (truth 120), gn.iters = 6, gn.converged = True
-# → Jᵀ (y − f(α̂)) = 9.9e-20: the normal equations hold at α̂
+# → J_hᵀ (y − h(α̂)) = 9.9e-20: the normal equations hold at α̂
 ```
 
-`Recurrence(step_op, condition_op, max_iters=1000)` calls `condition_op` on
-the state after each step and stops on a truthy result; it records
-`iters` and `converged` on the operator. The condition must be an
-`Operator`, so a bare function is wrapped in `pk.Lambda`.
+`Recurrence(step_op, condition_op, max_iters=1000)` calls `condition_op` on the state after each step and stops on a truthy result, and it records `iters` and `converged` on the operator. The condition must be an `Operator`, so a bare function is wrapped in `pk.Lambda`.
 
 :::{warning} Differs from the plan
-The scoping report's retrieval used
-`condition_op=pk.qc.AssertCallable(predicate=…)`. `AssertCallable` is a QC
-pass-through that **raises `QCError` when the predicate is false**, so that
-recurrence stops with an exception on its first iteration. A condition is
-a `pk.Lambda` that returns a boolean.
+The scoping report's retrieval used `condition_op=pk.qc.AssertCallable(predicate=…)`. However, `AssertCallable` is a QC pass-through that **raises `QCError` when the predicate is false**, so that recurrence stops with an exception on its first iteration. A condition is a `pk.Lambda` that returns a boolean.
 :::
 
 (r10-stage-6)=
@@ -429,10 +322,7 @@ a `pk.Lambda` that returns a boolean.
 cycle restarted from its last state would, and build a cycle step from a
 `Sequential`.
 
-**Problem.** Restarting a filter from its last carrier and state must give
-the same analysis as one uninterrupted run, provided the second call reads
-observations $y_5, \ldots, y_9$. A step that mixes a stateless operator and a
-stateful one is a `Sequential`, which pipekit core threads state through.
+**Problem.** Restarting a filter from its last carrier and state must give the same analysis as one uninterrupted run, provided that the second call reads the observations $\vect{y}_5, \ldots, \vect{y}_9$. In addition, a step that mixes a stateless operator and a stateful one is a `Sequential`, which pipekit core threads the state through.
 
 ```{code-block} python
 :caption: Two gaps in 0.0.2: the observation index restarts, and a stateful Sequential is not a step.
@@ -452,17 +342,12 @@ pc.Cycle(step, n_steps=3)
 # → TypeError: step_op must be a StatefulOperator or a ForwardModel, got Sequential.
 ```
 
-The restart silently re-assimilates the first five hours of observations
-and misplaces the plume by up to 15 ppb, with no warning: the state's
-`cycle_count` is 10, but `obs_source` sees the call-local index. `BFNCycle`'s
-docstring already tells users to "supply a stateful or clock-aware
-`obs_source`" for a global clock. Workstream B makes the clock part of the
-cycle. The `Sequential` case is workstream A.
+The restart silently re-assimilates the first five hours of observations and misplaces the plume by up to 15 ppb with no warning, because the state's `cycle_count` is 10 but `obs_source` sees the call-local index. `BFNCycle`'s docstring already tells users to "supply a stateful or clock-aware `obs_source`" for a global clock. Workstream B makes the clock part of the cycle, and the `Sequential` case is workstream A.
 
 (r10-names)=
 ## The scoping report's names, checked
 
-[](#tbl-r10-names) checks the stack names the scoping report's examples use.
+[](#tbl-r10-names) checks the stack names that the scoping report's examples use.
 
 :::{table} The stack names the scoping report's examples use, at the pinned revisions.
 :label: tbl-r10-names
@@ -483,9 +368,7 @@ cycle. The `Sequential` case is workstream A.
 (r10-audit)=
 ## Current-state audit
 
-Two of the scoping report's pieces need action; the rest ship and work
-([](#tbl-r10-audit)), and [](#fig-r10-readiness) counts the page's calls by
-marker. The audit read `references/geostack/pipekit` at `ef3c17f` on 13 October 2026.
+Two of the scoping report's pieces need action, and the rest ship and work ([](#tbl-r10-audit)). [](#fig-r10-readiness) counts the page's calls by marker. The audit read `references/geostack/pipekit` at `ef3c17f` on 13 October 2026.
 
 :::{figure} ../images/reports/r10_readiness.svg
 :label: fig-r10-readiness
@@ -508,7 +391,7 @@ proposed by this report's workstreams and 5 are code the reader writes
 | `step_op` coercion, `_coerce_step` | `cycle.py:50` | every cycle above | **Split ownership.** Accepts a `StatefulOperator` or a `ForwardModel`; rejects a stateful `Sequential` that pipekit core threads state through |
 | `DACycle(forward_model, obs_op, analysis_step, obs_source=None, n_steps=1, save_history=True)` | `da.py:84` | the overview's stage 4 | **Healthy.** Exact against a hand-written Kalman filter |
 | `EnsembleDACycle(..., n_steps=1, *, n_members)` | `da.py:184` | | **Healthy.** No `key`, no inflation argument, no history |
-| `obs_source(i)` and `obs_err_cov` from the state | `da.py`, `bfn.py` | all DA cycles | **Split ownership.** Call-local index; R fixed per call (stage 6; the overview's `obs_err_source`) |
+| `obs_source(i)` and `obs_err_cov` from the state | `da.py`, `bfn.py` | all DA cycles | **Split ownership.** Call-local index; $\gmat{\Sigma}_\varepsilon$ fixed per call (stage 6; the overview's `obs_err_source`) |
 | `SmootherCycle(forward_model, obs_op, analysis_step, window, stride=1, obs_source=None)` | `da.py:284` | | **Healthy.** `stride` is windows per call; the analysis receives lists of forecasts and observations |
 | `BFNCycle(forward_model, obs_op, nudging_gain, *, window, max_iters=10, tol=1e-3, …)` | `bfn.py:79` | | **Healthy.** Beyond the plan |
 | `IdentityObs`, `LinearObs(H)`, `CallableObs(fn, linearize_fn=None)`, `CompositeObs(components)` | `obs.py` | | **Healthy.** `CompositeObs` applies `components[0]` first |
@@ -519,29 +402,16 @@ proposed by this report's workstreams and 5 are code the reader writes
 
 Smaller findings:
 
-- **The README is a release behind.** Its table says "What's shipped
-  (v0.0.1)" and omits `BFNCycle`, the adjoint specs and the eleven further
-  protocols. The CHANGELOG for 0.0.2 (11 July 2026) lists them.
-- **The latent-space design is not built.** `docs/design/latent.md` (draft
-  0.1.0) proposes a `latent.py` with `Encoder`, `Decoder`,
-  `LatentForwardModel`, `LiftedObservationOperator`, `EncodedForwardModel`,
-  `LatentDAState` and a `LatentDACycle` in three flavours (strong-latent,
-  prior-only, hybrid). Only the `LatentMap` protocol ships.
-- **`SmootherCycle` cannot see the window's start state.** It steps the
-  model `window` times and passes the forecasts after each step, so a
-  strong-constraint 4D-Var analysis, whose control is the start state, must
-  carry it inside the carrier.
-- **`WindowState` is unused**, and `Recurrence` never touches
-  `IterationState`: the step owns the counters, as in stage 5.
-- **Sequential threading works the other way round.** A cycle inside a
-  `Sequential` is fine (`Inc() | Cycle(Inc(), 3)` runs); only a `Sequential`
-  inside a cycle is rejected.
+- **The README is a release behind.** Its table says "What's shipped (v0.0.1)" and it omits `BFNCycle`, the adjoint specs and the eleven further protocols, which the CHANGELOG for 0.0.2 (11 July 2026) lists.
+- **The latent-space design is not built.** `docs/design/latent.md` (draft 0.1.0) proposes a `latent.py` with `Encoder`, `Decoder`, `LatentForwardModel`, `LiftedObservationOperator`, `EncodedForwardModel`, `LatentDAState` and a `LatentDACycle` in three flavours (strong-latent, prior-only, hybrid). Only the `LatentMap` protocol ships.
+- **`SmootherCycle` cannot see the window's start state.** It steps the model `window` times and passes the forecasts after each step, so a strong-constraint 4D-Var analysis, whose control is the start state, must carry that state inside the carrier.
+- **`WindowState` is unused**, and `Recurrence` never touches `IterationState`, so the step owns the counters (as in stage 5).
+- **Sequential threading works the other way round.** A cycle inside a `Sequential` is fine (`Inc() | Cycle(Inc(), 3)` runs), and only a `Sequential` inside a cycle is rejected.
 
 (r10-ws-a)=
 ## Workstream A · Stateful pipelines as cycle steps
 
-**Decision.** A `Sequential` that holds at least one stateful step is a
-valid `step_op` for every cycle ([](#tbl-r10-move-a)).
+**Decision.** A `Sequential` that holds at least one stateful step is a valid `step_op` for every cycle ([](#tbl-r10-move-a)).
 
 :::{table} Workstream A's moves.
 :label: tbl-r10-move-a
@@ -552,32 +422,27 @@ valid `step_op` for every cycle ([](#tbl-r10-move-a)).
 | `Sequential` with no stateful step | still rejected, with a clearer message | a stateless pipeline is not a transition of the carry state; wrap it as a `CallableForward` or a `ForwardModel` instead |
 :::
 
-1. **Accept it.** In `_coerce_step`, return a `Sequential` unchanged when
-   `step_op._is_stateful` is true, so `Cycle`, `EnsembleCycle`,
-   `WindowedCycle` and `Recurrence` take it.
-2. **Name the rule in the error.** A stateless `Sequential` gets a message
-   that says which wrapper to use.
-3. **Make the private check public** if the cycles are not the only callers:
-   an `is_stateful` property on `Sequential` in pipekit core.
+1. **Accept it.** In `_coerce_step`, we return a `Sequential` unchanged when `step_op._is_stateful` is true, so that `Cycle`, `EnsembleCycle`, `WindowedCycle` and `Recurrence` all take it.
+2. **Name the rule in the error.** A stateless `Sequential` gets a message that says which wrapper to use.
+3. **Make the private check public** if the cycles are not the only callers, with an `is_stateful` property on `Sequential` in pipekit core.
 
 ```{code-block} python
 :caption: Stage 6's composed step, before and after workstream A.
 :linenos:
 
-# Shapes: x (N,)
+# Shapes: x (D_x,); M ≡ F
 step = pk.Sequential([pk.Lambda(lambda x: M @ x), Count()])   # stateful   today
 # Today:
 pc.Cycle(step, n_steps=3)                     # → TypeError                today
 # After:
 x3, s = pc.Cycle(step, n_steps=3)(x, pc.DAState())            # proposed (A)
-# → x3 = M³ x, s.cycle_count = 3
+# → x3 = F³ x, s.cycle_count = 3
 ```
 
 (r10-ws-b)=
 ## Workstream B · Observation inputs on the cycle's clock
 
-**Decision.** The DA cycles take their observation index, and optionally R,
-from the cycle's own clock in the state ([](#tbl-r10-move-b)).
+**Decision.** The DA cycles take their observation index, and optionally the observation-error covariance $\gmat{\Sigma}_{\varepsilon,t}$, from the cycle's own clock in the state ([](#tbl-r10-move-b)).
 
 :::{table} Workstream B's moves.
 :label: tbl-r10-move-b
@@ -585,23 +450,16 @@ from the cycle's own clock in the state ([](#tbl-r10-move-b)).
 | Symbol | Destination | Reason |
 |---|---|---|
 | `obs_clock: Literal["call", "state"] = "call"` | `DACycle`, `EnsembleDACycle`, `SmootherCycle`, `BFNCycle` | with `"state"`, `obs_source` receives `state.cycle_count` (or the window index), so a restarted cycle reads the right observations; the default keeps today's behaviour |
-| `obs_err_source: Operator \| None` | the same cycles | returns $R_t$ for the step and writes it into `DAState.obs_err_cov` before the analysis; the overview's recommended answer to a per-step R ([overview](../overview.md), open questions) |
+| `obs_err_source: Operator \| None` | the same cycles | returns $\gmat{\Sigma}_{\varepsilon,t}$ for the step and writes it into `DAState.obs_err_cov` before the analysis; the overview's recommended answer to a per-step $\gmat{\Sigma}_\varepsilon$ ([overview](../overview.md), open questions) |
 :::
 
 ### B1 · An index that survives restarts
 
-The cycle already advances `cycle_count` in the state. With
-`obs_clock="state"` it passes that count to `obs_source` instead of the
-call-local `i`. Nothing else changes, and the default stays `"call"` so
-existing scripts keep their meaning.
+The cycle already advances `cycle_count` in the state. With `obs_clock="state"`, it passes that count to `obs_source` instead of the call-local `i`. Nothing else changes, and the default stays `"call"` so that existing scripts keep their meaning.
 
 ### B2 · A per-step observation error
 
-Today a script can return `(y_t, R_t)` from `obs_source` and unpack it in
-its own analysis step, because the analysis is user code. That works, but
-it hides R from the cycle and from every analysis step that expects
-`obs_err_cov`. `obs_err_source` puts $R_t$ where the protocol already
-expects it.
+Today a script can return `(y_t, R_t)` from `obs_source` and unpack it in its own analysis step, because the analysis is user code. That works, but it hides $\gmat{\Sigma}_{\varepsilon,t}$ from the cycle and from every analysis step that expects `obs_err_cov`. So `obs_err_source` puts $\gmat{\Sigma}_{\varepsilon,t}$ where the protocol already expects it.
 
 ```{code-block} python
 :caption: Stage 6's restart, before and after workstream B.
@@ -623,29 +481,26 @@ da5 = pc.DACycle(KFForward(), pc.LinearObs(H), KalmanAnalysis(),
 (r10-gates)=
 ## Testing gates
 
-Each workstream merges only when its gates pass; the existing gates are
-checks the code passes today and must keep passing ([](#tbl-r10-gates)).
+Each workstream only merges when its gates pass, and the existing gates are checks the code passes today and must keep passing ([](#tbl-r10-gates)).
 
 :::{table} Gates for the proposals and for what ships.
 :label: tbl-r10-gates
 
 | Gate | Workstream | Passes when |
 |---|---|---|
-| A1 Composed step | A | `Cycle(Sequential([Lambda(M @ ·), Count()]), n_steps=3)` returns $M^3 x$ to 0 and `cycle_count == 3`; a stateless `Sequential` still raises `TypeError` |
+| A1 Composed step | A | `Cycle(Sequential([Lambda(M @ ·), Count()]), n_steps=3)` returns $\mat{F}^3 \vect{x}$ to 0 and `cycle_count == 3`; a stateless `Sequential` still raises `TypeError` |
 | B1 Restart | B1 | two 5-step calls with `obs_clock="state"` give the 10-step analysis of stage 2 to 0 (today 15.4 ppb); with the default the indices are `[0 … 4, 0 … 4]` as today |
-| B2 Per-step R | B2 | with `obs_err_source` returning $R_t = (0.1 + 0.01 t) I$, the cycle equals a hand-written Kalman filter using the same $R_t$ to 0 |
+| B2 Per-step $\gmat{\Sigma}_\varepsilon$ | B2 | with `obs_err_source` returning $\gmat{\Sigma}_{\varepsilon,t} = (0.1 + 0.01 t) \mat{I}$, the cycle equals a hand-written Kalman filter using the same $\gmat{\Sigma}_{\varepsilon,t}$ to 0 |
 | K1 Kalman exactness (existing) | — | stage 2: `DACycle` equals the hand-written filter to 0 in mean and covariance. Passes today |
-| K2 EnKF rate (existing) | — | stage 3: the log-log slope of the median RMS gap from $N_e = 200$ to 800 is consistent with the $N_e^{-1/2}$ rate: $-0.5$ lies inside its 99 % interval from a seeded bootstrap over the 10 seeds (4,000 resamples). Passes today: slope −0.61, interval [−0.96, −0.38] |
+| K2 EnKF rate (existing) | — | stage 3: the log-log slope of the median RMS gap from $N_{\mathcal{E}} = 200$ to 800 is consistent with the $N_{\mathcal{E}}^{-1/2}$ rate: $-0.5$ lies inside its 99 % interval from a seeded bootstrap over the 10 seeds (4,000 resamples). Passes today: slope −0.61, interval [−0.96, −0.38] |
 | K3 Model swap (existing) | — | stage 4: `CallableForward` and `NeuralForward` wrapping the same step give the same analysis to 0. Passes today |
-| K4 Retrieval (existing) | — | stage 5: Gauss–Newton converges in at most 10 iterations with $|J^\top (y - f(\hat{\alpha}))| < 10^{-12}$. Passes today: 6 iterations, 9.9e-20 |
+| K4 Retrieval (existing) | — | stage 5: Gauss–Newton converges in at most 10 iterations with $\vert \vect{J}_h^\top (\vect{y} - h(\hat{\alpha})) \vert < 10^{-12}$. Passes today: 6 iterations, 9.9e-20 |
 :::
 
 (r10-risks)=
 ## Sequencing and risks
 
-The two workstreams are independent and small, so they ship together with
-[Report 13](13_state_catalog.md#r13-ws-d)'s ensemble histories; the
-documentation follows ([](#fig-r10-roadmap)).
+The two workstreams are independent and small, so they ship together with [Report 13](13_state_catalog.md#r13-ws-d)'s ensemble histories, and the documentation follows ([](#fig-r10-roadmap)).
 
 :::{figure} ../images/reports/r10_roadmap.svg
 :label: fig-r10-roadmap
@@ -654,49 +509,20 @@ documentation follows ([](#fig-r10-roadmap)).
 Small fixes first, then the documentation and the latent design.
 :::
 
-- **A default that changes meaning.** Making `obs_clock="state"` the
-  default would change every existing script that restarts a cycle on
-  purpose with per-call observations. Fallback: keep `"call"` as the default
-  and warn when a DA cycle starts with `cycle_count > 0` and the default
-  clock.
-- **Stateful detection leaks a private attribute.** Workstream A reads
-  `Sequential._is_stateful`. Fallback: add the public `is_stateful` property
-  in pipekit core in the same release, or duck-type on `_apply_stateful`.
-- **Analysis steps that need the state.** Some analyses want the cycle
-  count or the time (adaptive inflation, time-dependent localisation), and
-  today the analysis never sees the state. Fallback: keep the carrier
-  convention and pass time through `obs_source`'s output; revisit only if
-  two adapters need it (open question 2).
-- **Unverified adapters.** filterax, vardax and plumax are not pinned in
-  `references/`, so whether their adapters satisfy the protocols is
-  unchecked. Fallback: pin one of them and add an adapter test that runs
-  stage 2 with its analysis step.
+- **A default that changes meaning.** Making `obs_clock="state"` the default would change every existing script that restarts a cycle on purpose with per-call observations. Fallback: we keep `"call"` as the default and warn when a DA cycle starts with `cycle_count > 0` and the default clock.
+- **Stateful detection leaks a private attribute.** Workstream A reads `Sequential._is_stateful`. Fallback: we add the public `is_stateful` property in pipekit core in the same release, or duck-type on `_apply_stateful`.
+- **Analysis steps that need the state.** Some analyses want the cycle count or the time (adaptive inflation, time-dependent localisation), and today the analysis never sees the state. Fallback: we keep the carrier convention and pass the time through `obs_source`'s output, and only revisit this if two adapters need it (open question 2).
+- **Unverified adapters.** filterax, vardax and plumax are not pinned in `references/`, so whether their adapters satisfy the protocols is unchecked. Fallback: we pin one of them and add an adapter test that runs stage 2 with its analysis step.
 
 (r10-open-questions)=
 ## Open questions
 
-1. **Should a plain `Cycle` advance the clock?** `DACycle` advances
-   `DAState.t` by `dt`; `Cycle` leaves it at 0, so
-   [Report 13](13_state_catalog.md#r13-ws-d) computes valid
-   times from the history index. Advancing `t` when the step is a
-   `ForwardModel` and the state has `t` would make the two agree.
-2. **Should `AnalysisStep` receive the state?** Passing `state=` as a
-   keyword would let analyses read the clock, but it changes the protocol
-   every adapter satisfies.
-3. **A cycle checkpoint.** The scoping report's `Checkpoint(cycle_op)` does
-   not exist. A checkpoint is the triple (config, `CarryState.to_dict()`,
-   carrier); is it a pipekit-cycle operator, a pipekit-experiment artifact,
-   or a script's job?
-4. **The window's start state in `SmootherCycle`.** Should the analysis
-   receive the state the window started from, so a 4D-Var analysis need not
-   carry it inside the carrier?
-5. **`CompositeForward` and `dt`.** Summing the components' steps is one
-   reading of composition (operator splitting with sequential sub-steps).
-   Should a composite that advances all components over one shared `dt`
-   exist as well?
-6. **The latent design.** Build `latent.py` as `docs/design/latent.md`
-   drafts it, or retire the draft in favour of the shipped `LatentMap` and
-   `ReducedOrderModel` protocols?
+1. **Should a plain `Cycle` advance the clock?** `DACycle` advances `DAState.t` by `dt`, whereas `Cycle` leaves it at 0, so [Report 13](13_state_catalog.md#r13-ws-d) computes valid times from the history index. Advancing `t` when the step is a `ForwardModel` and the state has `t` would make the two agree.
+2. **Should `AnalysisStep` receive the state?** Passing `state=` as a keyword would let analyses read the clock, but it changes the protocol that every adapter satisfies.
+3. **A cycle checkpoint.** The scoping report's `Checkpoint(cycle_op)` does not exist. A checkpoint is the triple (config, `CarryState.to_dict()`, carrier), so is it a pipekit-cycle operator, a pipekit-experiment artifact, or a script's job?
+4. **The window's start state in `SmootherCycle`.** Should the analysis receive the state the window started from, so that a 4D-Var analysis need not carry it inside the carrier?
+5. **`CompositeForward` and `dt`.** Summing the components' steps is one reading of composition (operator splitting with sequential sub-steps). Should a composite that advances all components over one shared `dt` exist as well?
+6. **The latent design.** Do we build `latent.py` as `docs/design/latent.md` drafts it, or retire the draft in favour of the shipped `LatentMap` and `ReducedOrderModel` protocols?
 
 (r10-todos)=
 ## Upcoming work
@@ -709,7 +535,7 @@ Small fixes first, then the documentation and the latent design.
 | Follow-up | Where | Why |
 |---|---|---|
 | Refresh the README for 0.0.2 and fix `filterx` → `filterax` in its quickstart | pipekit-cycle `README.md` | the table lists v0.0.1 and omits `BFNCycle`, the adjoint specs and eleven protocols |
-| Document the carrier convention for covariances and ensembles | pipekit-cycle docs | the analysis never sees the state, so $P$ and the ensemble belong in the carrier (stage 2) |
+| Document the carrier convention for covariances and ensembles | pipekit-cycle docs | the analysis never sees the state, so $\gmat{\Sigma}_{x,t \mid t}$ and the ensemble belong in the carrier (stage 2) |
 | Add an adapter test against one algorithm library, and pin filterax in `references/` and `UPSTREAM` | pipekit-cycle tests; `references/filterax`; `scripts/capabilities.py` | the protocols' main users are unchecked; once filterax is pinned, the notebook's `KalmanAnalysis` and `EnKF` (user-written `AnalysisStep`s, as the report's running example) are replaced by imports of filterax's |
 :::
 
