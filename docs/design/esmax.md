@@ -23,44 +23,20 @@ numbering:
 
 ## Motivation: models for short-window data assimilation
 
-esmax is for data assimilation.
-Its models are the forward models inside an assimilation window, a forecast step or an emulator's training loop, run over a fixed horizon of hours to weeks (a season at most).
-Each window stays within the predictability time of the scales the model resolves, so nothing here has to run stably for 100 years, and the requirements that come with long simulations do not apply.
+esmax is for data assimilation. Its models are the forward models inside an assimilation window, a forecast step or an emulator's training loop, which run over a fixed horizon of hours to weeks (a season at most). Each window stays within the predictability time of the scales the model resolves, so nothing here has to run stably for 100 years, and the requirements that come with long simulations do not apply.
 
-**Why short windows.**
-Data assimilation itself is not limited to short horizons.
-Reanalyses (ERA5, ORAS5) cycle over decades; ECCO fits the MITgcm by strong-constraint 4D-Var over a single multi-decade window starting in 1992; paleoclimate reanalyses assimilate annual-mean proxies into climate-model ensembles.
-What limits a window is predictability.
-Past the predictability time of the resolved scales (hours for convection, weeks to months for ocean eddies), the trajectory depends chaotically on the initial state and the 4D-Var cost becomes too non-convex to minimise.
-So long-horizon state estimation works at coarse scales on slow variables, or on time means, while fine scales are assimilated in many short windows, cycled.
-esmax targets the second case, at the horizons of the problems it serves: hours for methane plumes, days to weeks for sea-surface-height mapping, weeks for the land surface.
-Long-horizon state estimation of the ECCO kind is out of scope by choice, not because data assimilation cannot do it.
+**Why short windows.** Data assimilation itself is not limited to short horizons. Reanalyses (ERA5, ORAS5) cycle over decades, ECCO fits the MITgcm by strong-constraint 4D-Var over a single multi-decade window starting in 1992, and paleoclimate reanalyses assimilate annual-mean proxies into climate-model ensembles. What limits a window is predictability. Past the predictability time of the resolved scales (hours for convection, weeks to months for ocean eddies), the trajectory depends chaotically on the initial state and the 4D-Var cost becomes too non-convex to minimise. So long-horizon state estimation works at coarse scales on slow variables, or on time means, whereas fine scales are assimilated in many short windows, cycled. esmax targets the second case, at the horizons of the problems it serves: hours for methane plumes, days to weeks for sea-surface-height mapping, and weeks for the land surface. Long-horizon state estimation of the ECCO kind is out of scope by choice, and not because data assimilation cannot do it.
 
-**The model is a prior.**
-In data assimilation the forward model supplies the prior: the background state, the forecast that carries information from one window to the next, and the structure (balance, propagation) that spreads sparse observations through space and time.
-The same models serve learning as a physics prior for emulators and learned corrections.
-What esmax is after is **good, cheap priors**:
+**The model is a prior.** In data assimilation the forward model supplies the prior: the background state, the forecast which carries information from one window to the next, and the structure (balance, propagation) which spreads sparse observations through space and time. The same models serve learning as a physics prior for emulators and learned corrections. So what we are after in esmax is **good, cheap priors**:
 
-- **Cheap.**
-  A step costs little enough to run ensembles of tens to hundreds of members, and to take gradients through a whole window many times during optimisation or training.
-- **Good where the observations look.**
-  The dominant balance and propagation (geostrophy, Rossby waves, advection) are right; processes that do not shape the observed fields can be missing.
-- **Honest about their error.**
-  A cheap model is wrong, so it comes with a model-error term: weak-constraint 4D-Var with a model-error covariance Q, or stochastic forcing in an ensemble.
-  Without one, the posterior is overconfident.
-  What the error term shows to be systematic is what a learned closure should absorb.
-- **Learnable.**
-  Parameters, closures and forcings are differentiable and carry priors, so data can correct the prior instead of a person retuning it.
+- **Cheap.** A step costs little enough to run ensembles of tens to hundreds of members, and to take gradients through a whole window many times during optimisation or training.
+- **Good where the observations look.** The dominant balance and propagation (geostrophy, Rossby waves, advection) are right, whereas processes that do not shape the observed fields can be missing.
+- **Honest about their error.** A cheap model is wrong, so it comes with a model-error term: weak-constraint 4D-Var with a model-error covariance $\gmat{\Sigma}_\eta$, or stochastic forcing in an ensemble. Without one, the posterior is overconfident. What the error term shows to be systematic is what a learned closure should absorb.
+- **Learnable.** Parameters, closures and forcings are differentiable and carry priors, so data can correct the prior instead of a person retuning it.
 
-This sets the priority for what goes in the package.
-Anything that makes the prior cheaper or better calibrated comes before anything that makes a long run more faithful: reduced and simple models, tangent-linear and adjoint models (from JAX), model-error terms, learned corrections.
+This sets the priority for what goes in the package. Anything that makes the prior cheaper or better calibrated comes before anything that makes a long run more faithful, which means reduced and simple models, tangent-linear and adjoint models (from JAX), model-error terms and learned corrections.
 
-**Good is relative.**
-Over a short window a simple dynamical prior competes with purely statistical ones: optimal interpolation, Gaussian processes, and operational products such as DUACS for sea-surface height.
-Its advantage is propagation: it carries information along Rossby waves and advection to where the observations do not reach.
-BFN-QG improving on DUACS in sea-surface-height mapping is the kind of evidence that justifies a component.
-So every component has to pass the same test: with the same observations, it beats the best statistical prior.
-Without that test, “cheap” may only mean “worse than OI”.
+**Good is relative.** Over a short window a simple dynamical prior competes with purely statistical ones: optimal interpolation, Gaussian processes, and operational products such as DUACS for sea-surface height. Its advantage is propagation, as it carries information along Rossby waves and advection to where the observations do not reach. BFN-QG improving on DUACS in sea-surface-height mapping is the kind of evidence that justifies a component. So every component has to pass the same test: with the same observations, it beats the best statistical prior. Without that test, “cheap” may only mean “worse than OI”.
 
 That narrows the scope:
 
@@ -72,52 +48,34 @@ That narrows the scope:
 | Learned parts | learned closures, corrections and forcings, each with a prior | — |
 | Speed that matters | gradients through the window (4D-Var), ensembles (EnKF, `vmap`), batched training | throughput of one long trajectory |
 
-In a 4D-Var window the controls are the initial state x₀, the learned parameters θ and the forcing f, each with a prior (background x_b, θ_b, f_b; covariances B, Σ_θ, Σ_f).
-With observations yₖ, observation operators Hₖ, observation-error covariances Rₖ, and xₖ the model state at step k of K:
+In a 4D-Var window the controls are the initial state $\vect{x}_0 \in \mathbb{R}^{D_x}$, the learned parameters $\gvect{\theta} \in \mathbb{R}^{D_\theta}$ and the forcing $\vect{u} \in \mathbb{R}^{D_u}$, each with a prior given by a mean ($\gvect{\mu}_x$, $\gvect{\mu}_\theta$, $\gvect{\mu}_u$) and a covariance ($\gmat{\Sigma}_x \in \mathbb{R}^{D_x \times D_x}$, $\gmat{\Sigma}_\theta \in \mathbb{R}^{D_\theta \times D_\theta}$, $\gmat{\Sigma}_u \in \mathbb{R}^{D_u \times D_u}$). We write $\vect{y}_k \in \mathbb{R}^{D_{y,k}}$ for the observations at step $k$ of $K$, $h_k: \mathbb{R}^{D_x} \to \mathbb{R}^{D_{y,k}}$ for the observation operators, $\gmat{\Sigma}_{\varepsilon,k} \in \mathbb{R}^{D_{y,k} \times D_{y,k}}$ for the observation-error covariances and $\vect{x}_k \in \mathbb{R}^{D_x}$ for the model state at step $k$, so the cost $\mathcal{J} \in \mathbb{R}$ is
 
-```{math}
-:label: esmax-4dvar-cost
-J(x_0, \theta, f) = \tfrac12 \lVert x_0 - x_b \rVert^2_{B^{-1}}
-  + \tfrac12 \lVert \theta - \theta_b \rVert^2_{\Sigma_\theta^{-1}}
-  + \tfrac12 \lVert f - f_b \rVert^2_{\Sigma_f^{-1}}
-  + \tfrac12 \sum_{k=0}^{K} \lVert y_k - H_k(x_k) \rVert^2_{R_k^{-1}}
-```
+$$
+\mathcal{J}(\vect{x}_0, \gvect{\theta}, \vect{u}) = \frac{1}{2} \Vert \vect{x}_0 - \gvect{\mu}_x \Vert^2_{\gmat{\Sigma}_x^{-1}} + \frac{1}{2} \Vert \gvect{\theta} - \gvect{\mu}_\theta \Vert^2_{\gmat{\Sigma}_\theta^{-1}} + \frac{1}{2} \Vert \vect{u} - \gvect{\mu}_u \Vert^2_{\gmat{\Sigma}_u^{-1}} + \frac{1}{2} \sum_{k=0}^{K} \Vert \vect{y}_k - h_k(\vect{x}_k) \Vert^2_{\gmat{\Sigma}_{\varepsilon,k}^{-1}}
+$$ (esmax-4dvar-cost)
 
 What follows for the package:
 
-- **Differentiability and batching come first.**
-  Every L1 step is a pure function of state, parameters and forcing that `jax.grad` and `vmap` go through over the whole window.
-- **Learned components and learned forcings are first-class.**
-  In data assimilation the model is often part physics, part learned: a learned closure for unresolved terms, or a forcing (wind stress, heat flux) estimated with a prior instead of read from a file.
-  `esmax-core` gives both a typed slot that carries its prior, so either can be a control variable in vardax or an augmented state in filterax.
-- **Stability is judged over the window.**
-  A model needs to be stable and accurate over the horizon it is assimilated over, plus a margin.
-  Cycled assimilation still chains many windows, so the bar is “stable across a cycle of windows”, not “stable for 100 years”.
-  Gates use window-length runs, not years.
-  Short windows do not excuse bias: in cycled assimilation a biased model shows up as systematic analysis increments, which the model-error term and learned corrections have to absorb.
-- **Short horizons still need closed budgets.**
-  Spurious drift inside a window biases the analysis, so conservation stays a test; it is measured over the window.
+- **Differentiability and batching come first.** Every L1 step is a pure function of state, parameters and forcing which `jax.grad` and `vmap` go through over the whole window.
+- **Learned components and learned forcings are first-class.** In data assimilation the model is often part physics and part learned: a learned closure for unresolved terms, or a forcing (wind stress, heat flux) estimated with a prior instead of read from a file. `esmax-core` gives both a typed slot that carries its prior, so either one can be a control variable in vardax or an augmented state in filterax.
+- **Stability is judged over the window.** A model needs to be stable and accurate over the horizon it is assimilated over, plus a margin. Cycled assimilation still chains many windows, so the bar is “stable across a cycle of windows” and not “stable for 100 years”, and the gates use window-length runs, not years. However, short windows do not excuse bias: in cycled assimilation a biased model shows up as systematic analysis increments, which the model-error term and the learned corrections have to absorb.
+- **Short horizons still need closed budgets.** Spurious drift inside a window biases the analysis, so conservation stays a test, and it is measured over the window.
 
 ## Decision
 
-somax (“simple ocean model in JAX”) becomes a workspace of simple Earth-system components: a shared core, one package per component (ocean, atmosphere, land, ice), and a coupler on top.
-Today's somax becomes the ocean component plus the core; atmosphere comes next; land and ice are added only when they have real code.
+somax (“simple ocean model in JAX”) becomes a workspace of simple Earth-system components: a shared core, one package per component (ocean, atmosphere, land, ice), and a coupler on top. Today's somax becomes the ocean component plus the core, the atmosphere comes next, and land and ice are only added when they have real code.
 
-Why now:
+There are three reasons to do it now:
 
 - **The name stops fitting.** “Simple ocean model” does not describe an atmosphere, land or ice component.
-- **The name is not available on PyPI.**
-  `somax` is registered by IRCAM's Somax2, a music-improvisation library (version 0.1.2 on 22 Oct 2026).
-  Publishing this stack under that name is not possible.
-- **One package would not stay healthy.**
-  Coupling is a package's worth of work on its own, and land (column physics) and sea ice (rheology plus thermodynamics) share the core but little else with the ocean.
-  Separate packages can ship and be tested alone, as the pyrox workspace does.
+- **The name is not available on PyPI.** `somax` is registered by IRCAM's Somax2, a music-improvisation library (version 0.1.2 on 22 Oct 2026), so publishing this stack under that name is not possible.
+- **One package would not stay healthy.** Coupling is a package's worth of work on its own, and land (column physics) and sea ice (rheology plus thermodynamics) share the core but little else with the ocean. Separate packages can ship and be tested alone, as the pyrox workspace does.
 
-The workspace keeps [the three levels](#design-levels), as [stack levels](./stack_levels.md) applies them: every component has L1 dynamics on arrays, L2 operators on carriers behind a `[geo]` extra, and an L3 `simulate` that takes readable types.
+The workspace keeps [the three levels](#design-levels), as [stack levels](./stack_levels.md) applies them: every component has L1 dynamics on arrays, L2 operators on carriers behind a `[geo]` extra, and an L3 `simulate` which takes readable types.
 
 ## Names
 
-Recommended: **esmax** (“Earth-system models in JAX”), as a workspace named like pyrox: one distribution per package, `esmax-<part>`, imported as `esmax_<part>`.
+We recommend **esmax** (“Earth-system models in JAX”), as a workspace named like pyrox, with one distribution per package, `esmax-<part>`, imported as `esmax_<part>`.
 
 | Option | Umbrella | Fits land and ice? | On PyPI (22 Oct 2026) | Notes |
 | --- | --- | --- | --- | --- |
@@ -126,8 +84,7 @@ Recommended: **esmax** (“Earth-system models in JAX”), as a workspace named 
 | C. keep somax | `somax` | no | **taken** (IRCAM Somax2) | could stay a GitHub name only; never installable as `somax` |
 | D. one name per component | `oceax`, `atmax`, `landax`, `icax` | yes | all free | four unrelated names, no umbrella; the coupler has nowhere obvious to live |
 
-Also checked and taken: `terrax` (Google's NeuralGCM group, “AI-first Earth System Modeling”) and `climax` (an argparse wrapper).
-Only PyPI was checked, not GitHub or conda-forge.
+We also checked `terrax` (Google's NeuralGCM group, “AI-first Earth System Modeling”) and `climax` (an argparse wrapper), and both are taken. We only checked PyPI, not GitHub or conda-forge.
 
 The names under option A:
 
@@ -145,7 +102,7 @@ The GitHub repository `jejjohnson/somax` is renamed to `esmax` (GitHub redirects
 
 ## The workspace
 
-Three tiers inside one workspace: the core at the bottom, one package per component above it, and the coupler on top; arrows point to what a package imports.
+There are three tiers inside one workspace, with the core at the bottom, one package per component above it, and the coupler on top. The arrows point to what a package imports.
 
 ```text
 esmax-couple         tier 2: flux exchange, regridding,
@@ -164,13 +121,11 @@ imports below: finitevolX, spectraldiffx, gaussx (GeoNumerics),
 vardax, filterax (GeoML), geoarray only behind [geo]
 ```
 
-Dashed components start only when they have real code.
-The whole workspace sits in GeoModels, so it may import GeoML, GeoNumerics and, behind `[geo]`, GeoStack's carriers.
+Dashed components only start when they have real code. The whole workspace sits in GeoModels, so it may import GeoML, GeoNumerics and, behind `[geo]`, GeoStack's carriers. [CHECK: the diagram above draws no dashed components; the atmosphere, land and ice packages are only marked as next or later.]
 
 ## Where today's somax goes
 
-Every somax 0.0.15 module has one destination.
-Model-agnostic machinery goes to the core; anything that knows it is an ocean goes to the ocean component; duplicates of GeoML go back to GeoML.
+Every somax 0.0.15 module has one destination. Model-agnostic machinery goes to the core, anything that knows it is an ocean goes to the ocean component, and duplicates of GeoML go back to GeoML.
 
 | somax module | Holds today | Goes to | Change |
 | --- | --- | --- | --- |
@@ -186,11 +141,11 @@ Model-agnostic machinery goes to the core; anything that knows it is an ocean go
 | `monitor` | run-loop monitors | `esmax-core` | none |
 | `models` | the model classes (not in the capability index) | `esmax-ocean`; any atmosphere models to `esmax-atmos` | split by component; the split is inferred until the module is read |
 
-Nothing moves into GeoNumerics: finitevolX and spectraldiffx stay the stencils and solvers every component imports.
+Nothing moves into GeoNumerics, as finitevolX and spectraldiffx stay the stencils and solvers which every component imports.
 
 ## Each component at L1, L2 and L3
 
-Every component has the same three-level shape, so a user who knows one knows them all.
+Every component has the same three-level shape, so a user who knows one of them knows them all.
 
 | Component | L1 (arrays) | L2 (`[geo]`, carriers) | L3 (readable types) |
 | --- | --- | --- | --- |
@@ -200,10 +155,9 @@ Every component has the same three-level shape, so a user who knows one knows th
 | ice | zero-layer thermodynamic slab ice, then EVP rheology | `Step` on ice-thickness maps | same |
 | coupler | bulk flux formulae, regridding weights | — | coupled `simulate` over several components |
 
-The model lists for atmosphere, land and ice are starting points, not commitments.
+The model lists for atmosphere, land and ice are starting points and not commitments.
 
-**Demo API: the ocean component.**
-Sketches of the target API.
+**Demo API: the ocean component.** These are sketches of the target API.
 
 ```python
 # L1, esmax_ocean: a model on arrays and a grid bundle
@@ -212,7 +166,7 @@ model: esmax_ocean.ShallowWater = esmax_ocean.ShallowWater(
     depth=4_000.0, dt=600.0, grid=grid
 )
 state: esmax_core.State = model.init(eta0)  # eta0: Float[Array, "Ny Nx"]
-# ∂η/∂t = −H∇·𝐮 ; ∂𝐮/∂t + f𝐳×𝐮 = −g∇η, one IMEX step
+# ∂η/∂t = −H ∇·v ; ∂v/∂t + f e_z × v = −g ∇η, one IMEX step
 state_next: esmax_core.State = model.step(state)
 
 # L2, esmax_core[geo]: one step on a carrier; the grid comes from its transform
@@ -226,8 +180,7 @@ series: GeoArray["time y x"] = esmax_ocean.simulate(eta_map, times, model)
 ds: Dataset["time y x"] = esmax_core.io.to_dataset(series)
 ```
 
-**Demo API: land, once it exists.**
-Same shape, different physics.
+**Demo API: land, once it exists.** It has the same shape, with different physics.
 
 ```python
 # L1, esmax_land: a bucket model per column, vectorised over the grid
@@ -244,8 +197,7 @@ soil: GeoArray["time y x"] = esmax_land.simulate(w0_map, forcing, bucket)
 
 ## The coupler
 
-The coupler is where the work is: components exchange fluxes at their interface, on different grids and at different time steps.
-It sits one tier above the components, so no component imports another.
+The coupler is where the work is, as the components exchange fluxes at their interface on different grids and at different time steps. It sits one tier above the components, so no component imports another.
 
 | Job | L1 primitive | Notes |
 | --- | --- | --- |
@@ -271,11 +223,11 @@ result: CoupledSeries = esmax_couple.simulate(
 )
 ```
 
-Start with the smallest useful coupling: an atmosphere over a slab ocean, before any dynamic ocean–atmosphere pair.
+We start with the smallest useful coupling, which is an atmosphere over a slab ocean, before any dynamic ocean-atmosphere pair.
 
 ## Phases and gates
 
-Each phase ships on its own and merges only when its gate passes.
+Each phase ships on its own and only merges when its gate passes.
 
 | Phase | Scope | Gate |
 | --- | --- | --- |
@@ -285,10 +237,7 @@ Each phase ships on its own and merges only when its gate passes.
 | P3 First coupling | `esmax-couple`: atmosphere over a slab ocean | exchanged energy is conserved to round-off over a 30-day assimilation window, and the coupled model stays stable over a cycle of windows |
 | P4 Land, then ice | when there is real code for them | each component runs and tests alone |
 
-P0 and P1 change no science; P2 onwards adds it.
-Every component's gate also includes the benchmark test: with the same observations, it beats the best statistical prior.
-For the ocean component that is a QG model against DUACS on a sea-surface-height mapping benchmark, run as a baseline in P0 and kept as a regression test.
-geostack's `scripts/dependency_graph.py` gets the new packages and their tiers in P0.
+P0 and P1 change no science, whereas P2 onwards adds it. Every component's gate also includes the benchmark test: with the same observations, it beats the best statistical prior. For the ocean component that is a QG model against DUACS on a sea-surface-height mapping benchmark, which we run as a baseline in P0 and keep as a regression test. geostack's `scripts/dependency_graph.py` gets the new packages and their tiers in P0.
 
 ## Open questions
 
@@ -300,4 +249,4 @@ geostack's `scripts/dependency_graph.py` gets the new packages and their tiers i
 | ES-N4 | plumax's atmospheric transport (`les_fvm`) | stays in plumax; it may later run on `esmax-atmos` winds | moves into `esmax-atmos` as its tracer component |
 | ES-N5 | Synthetic climates (`xtremax.simulations`) | not in esmax: a statistical weather generator is not a fluid model (see [stack levels](./stack_levels.md), SL-O6) | a stochastic component in esmax |
 
-Evidence: somax's modules come from the GeoModels capability index (somax 0.0.15); the name checks are PyPI lookups on 22 Oct 2026.
+Evidence: somax's modules come from the GeoModels capability index (somax 0.0.15), and the name checks are PyPI lookups on 22 Oct 2026.

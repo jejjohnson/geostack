@@ -15,22 +15,22 @@ keywords:
 
 +++ {"part": "abstract"}
 
-The advection scheme is where a coarse ocean model loses information: it smooths fronts, dissipates eddies, and decides whether a run stays stable. This page keeps everything that makes WENO safe (flux form, fixed candidate stencils, convex weights, land masks) and learns one thing: how to weigh the candidates at each face. Same Gulf Stream QG example as the other pages.
+The advection scheme is where a coarse ocean model loses information: it smooths fronts, dissipates eddies, and decides whether a run stays stable. In this page, we keep everything that makes WENO safe (flux form, fixed candidate stencils, convex weights, land masks) and learn only one thing, which is how to weigh the candidates at each face. We use the same Gulf Stream QG example as the other pages.
 
 +++
 
 {button}`Open the full page <./pages/learned-weno.html>`
 
-**Where it sits.** One concrete hybrid (type T2 of the taxonomy), worked through from the basis functions to training and the adjoint. The full page is a self-contained document with operator boxes (inputs, outputs, shapes and units), figures and code sketches; it opens on its own and links back here.
+**Where it sits.** One concrete hybrid (type T2 of the taxonomy), worked through from the basis functions to the training and the adjoint. The full page is a self-contained document with operator boxes (inputs, outputs, shapes and units), figures and code sketches, which opens on its own and links back here.
 
 ## TL;DR: Fixed stencils, learned weights
 
-- **Every advection scheme is a centred part plus a dissipation.** The centred part moves information; the dissipation removes it. Fifth-order upwinding is exactly sixth-order centred plus a hyperdiffusion $|u|\Delta x^5/60$.
-- **A single learned kernel cannot work.** Godunov's theorem: a linear scheme that never creates oscillations is at most first order. The weights must depend on the local field.
+- **Every advection scheme is a centred part plus a dissipation.** The centred part moves information and the dissipation removes it. Fifth-order upwinding is exactly sixth-order centred plus a hyperdiffusion $\vert u \vert \Delta x^5 / 60$, with $u \in \mathbb{R}$ the velocity at the face (m s⁻¹) and $\Delta x \in \mathbb{R}_{>0}$ the grid spacing (m).
+- **A single learned kernel cannot work.** Godunov's theorem says that a linear scheme which never creates oscillations is at most first order, so the weights must depend on the local field.
 - **WENO already does that, by hand.** It blends three small stencils with weights set by how smooth each one sees the field. Learned WENO adds a learned correction to those weights, starts from zero (so it starts as classical WENO5), and is switched off where the field is smooth.
-- **Boundaries use the same mechanism.** A candidate that reads a land cell gets weight zero. Near a coast only the safe candidates remain, so the stencil narrows on its own.
-- **It is a familiar machine-learning object:** soft attention, or a mixture of experts, over a fixed bank of local polynomial experts, scored by their roughness. The parallels section works each comparison through with the same numbers.
-- **Every weight is smooth in the state**, so the adjoint is the true linearisation of the forecast: important for 4D-Var.
+- **Boundaries use the same mechanism.** A candidate that reads a land cell gets a weight of zero. So near a coast only the safe candidates remain, and the stencil narrows on its own.
+- **It is a familiar machine-learning object:** soft attention, or a mixture of experts, over a fixed bank of local polynomial experts which are scored by their roughness. The parallels section works each comparison through with the same numbers.
+- **Every weight is smooth in the state**, so the adjoint is the true linearisation of the forecast, which is important for 4D-Var.
 
 ## On the page
 

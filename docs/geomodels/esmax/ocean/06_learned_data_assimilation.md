@@ -14,20 +14,20 @@ keywords:
 
 +++ {"part": "abstract"}
 
-The taxonomy page took the model apart. This page takes the assimilation apart: the objective, its gradient, the solver, the output, and whether the answer is computed per window or learned across windows. Eleven ways to learn one of those pieces, on the same Gulf Stream QG example and the same 10-day window of SSH maps.
+The taxonomy page took the model apart, and this page takes the assimilation apart: the objective, its gradient, the solver, the output, and whether the answer is computed per window or learned across windows. We give eleven ways to learn one of those pieces, on the same Gulf Stream QG example and the same 10-day window of SSH maps.
 
 +++
 
 {button}`Open the full page <./pages/learned-data-assimilation.html>`
 
-**Where it sits.** Boxes 4 and 5 taken apart: what can be learned in the assimilation itself. The full page is a self-contained document with operator boxes (inputs, outputs, shapes and units), figures and code sketches; it opens on its own and links back here.
+**Where it sits.** Boxes 4 and 5 taken apart: what can be learned in the assimilation itself. The full page is a self-contained document with operator boxes (inputs, outputs, shapes and units), figures and code sketches, which opens on its own and links back here.
 
 ## TL;DR: One analysis operator, eleven insides
 
-- **Every type is box 2's operator:** maps, masks, errors, background, covariates and forcing in; a state window and its uncertainty out. What changes is the inside, the training data it needs, and whether the output is a point, an ensemble or a density.
-- **The training signal matters more than the network.** Simulated truth (OSSE) learns the QG model's ocean; the ELBO and held-out observations learn the real one but never see unobserved scales.
-- **Mean, mode or sample.** 4D-Var returns a mode, an MSE-trained network a mean, VI a density. Benchmarks must compare the same statistic.
-- **Teal types fail loudly**: the classical cost or solver is still there to check the answer. **Amber types fail silently**: an unusual window gets a confident wrong field. Scoring any output with the classical 𝒥 and its innovations turns most silent failures into loud ones.
+- **Every type is box 2's operator:** maps, masks, errors, background, covariates and forcing go in, and a state window and its uncertainty come out. What changes is the inside, the training data it needs, and whether the output is a point, an ensemble or a density.
+- **The training signal matters more than the network.** Simulated truth (OSSE) learns the QG model's ocean, whereas the ELBO and held-out observations learn the real one but never see the unobserved scales.
+- **Mean, mode or sample.** 4D-Var returns a mode, an MSE-trained network returns a mean and VI returns a density, so benchmarks must compare the same statistic.
+- **Teal types fail loudly**, because the classical cost or solver is still there to check the answer. **Amber types fail silently**, which means an unusual window gets a confident wrong field. Scoring any output with the classical cost $\mathcal{J}$ and its innovations turns most of the silent failures into loud ones.
 
 ## On the page
 
