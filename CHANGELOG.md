@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.4](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.3...geostack-v0.2.4) (2026-10-30)
+
+
+### Documentation
+
+* **design:** decide OP-O2 and OP-O3, the shared einx and scikit-learn bridges; PL-C after PL-B ([#113](https://github.com/jejjohnson/geostack/issues/113)) ([63bea33](https://github.com/jejjohnson/geostack/commit/63bea33a1f06f6ca04ac7c6e6a3d37c4ce2dd6fd))
+* **esmax:** write the ocean HTML pages in the notation standard ([#115](https://github.com/jejjohnson/geostack/issues/115)) ([a8d8d68](https://github.com/jejjohnson/geostack/commit/a8d8d680c33f9095ba69650803ce5db120b49493))
+
 ## [0.2.3](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.2...geostack-v0.2.3) (2026-10-29)
 
 
