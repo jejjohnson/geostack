@@ -51,10 +51,10 @@ def test_page_is_current(page: Path) -> None:
 
 
 def test_the_cycle_check_is_live() -> None:
-    # a re-export of plumax from geotoolz (Package boundaries' counterfactual)
-    # must close a cycle through plumax → pipekit → geotoolz
-    edges = [(e.source, e.target) for e in GRAPH.edges] + [("geotoolz", "plumax")]
-    assert ["geotoolz", "pipekit", "plumax"] in dg.sccs(list(GRAPH.repos), edges)
+    # a re-export of xrops from pipekit (a counterfactual) must close a cycle
+    # through xrtoolz → geotoolz → pipekit
+    edges = [(e.source, e.target) for e in GRAPH.edges] + [("pipekit", "xrtoolz")]
+    assert ["geotoolz", "pipekit", "xrtoolz"] in dg.sccs(list(GRAPH.repos), edges)
 
 
 def _with_dependency(source: str, target: str) -> dg.Graph:
@@ -92,11 +92,11 @@ def test_the_foundation_layers_do_not_import_each_other() -> None:
 
 def test_xrtoolz_may_import_geotoolz_but_not_the_reverse() -> None:
     # xrtoolz is tier 2 above geotoolz (#80): xrops imports geoops kernels
-    assert ("tier", "xrtoolz-core", "geotoolz-ops") not in dg.violations(
-        _with_dependency("xrtoolz-core", "geotoolz-ops")
+    assert ("tier", "xrtoolz-ops", "geotoolz-ops") not in dg.violations(
+        _with_dependency("xrtoolz-ops", "geotoolz-ops")
     )
-    assert ("tier", "geotoolz-ops", "xrtoolz-core") in dg.violations(
-        _with_dependency("geotoolz-ops", "xrtoolz-core")
+    assert ("tier", "geotoolz-ops", "xrtoolz-ops") in dg.violations(
+        _with_dependency("geotoolz-ops", "xrtoolz-ops")
     )
 
 
@@ -167,11 +167,11 @@ def test_a_stale_tier_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_every_edge_of_a_longer_cycle_is_red() -> None:
-    # the counterfactual re-export closes geotoolz → plumax → pipekit → geotoolz
-    g = _with_dependency("geotoolz", "plumax")
+    # the counterfactual re-export closes pipekit → xrtoolz → geotoolz → pipekit
+    g = _with_dependency("pipekit", "xrtoolz-ops")
     lines = dg.mermaid(g, "```mermaid").splitlines()
     drawn = [line.split() for line in lines if "-->" in line or "-.->" in line]
-    loop = {"geotoolz", "pipekit", "plumax"}
+    loop = {"geotoolz", "pipekit", "xrtoolz"}
     on_loop = {str(i) for i, (a, _, b) in enumerate(drawn) if {a, b} <= loop}
     style = next(line for line in lines if "linkStyle" in line)
     assert set(style.split()[1].split(",")) == on_loop
