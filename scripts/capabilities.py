@@ -70,16 +70,13 @@ UPSTREAM: dict[str, list[str]] = {
         "georeader.mosaic",
     ],
     "geotoolz-ops": ["geoops"],
+    "geotoolz-array": ["geoarray"],
     "geotoolz-catalog": ["geocatalog"],
     "geotoolz-cloud": ["geocloud"],
     "geotoolz-patcher": ["geopatcher"],
     "geotoolz-products": ["geoproducts"],
     "xrtoolz-ops": ["xrops"],
-    "xrtoolz-core": ["xrcore"],
-    "xrtoolz-einx": ["xreinx"],
-    "xrtoolz-grad": ["xrgrad"],
-    "xrtoolz-reader": ["xrreader"],
-    "xrtoolz-sklearn": ["xrsklearn"],
+    "xrtoolz-products": ["xrproducts"],
 }
 UPSTREAM_BLURB: dict[str, str] = {
     "pipekit": "Carrier-agnostic operator-graph framework for pipelines.",
@@ -91,16 +88,13 @@ UPSTREAM_BLURB: dict[str, str] = {
     "pipekit-train": "Training pipelines for emulators and amortized inference.",
     "georeader-spaceml": "Raster reading and the GeoTensor carrier.",
     "geotoolz-ops": "Composable remote-sensing operators on GeoTensor.",
+    "geotoolz-array": "The GeoArray carrier: an array with its grid (transform, CRS).",
     "geotoolz-catalog": "Spatiotemporal catalog over geospatial files.",
     "geotoolz-cloud": "Cloud object storage and batched async COG reads.",
     "geotoolz-patcher": "Four-axis patcher: split, run per patch, stitch.",
     "geotoolz-products": "Readers for Earth-observation data products.",
     "xrtoolz-ops": "Composable operators for Earth System Data Cubes (xrops).",
-    "xrtoolz-core": "xarray-aware Operator base and Signature descriptor.",
-    "xrtoolz-einx": "Labeled named-tensor algebra bridging xarray and einx.",
-    "xrtoolz-grad": "Finite-difference calculus on labeled xarray grids.",
-    "xrtoolz-reader": "Authenticated archive readers (CMEMS, CDS, AEMET).",
-    "xrtoolz-sklearn": "scikit-learn to xarray bridge (XarrayEstimator, SklearnOp).",
+    "xrtoolz-products": "Archive readers (CMEMS, CDS, AEMET) and the CF registry.",
     # GeoNumerics
     "gaussx": "Structured linear algebra and Gaussian primitives on lineax.",
     "finitevolx": "Arakawa C-grid finite-volume operators.",
@@ -246,24 +240,20 @@ LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
 # Names two homes may share on purpose, and why: {name: reason}.
 ALLOWED_SHARED_NAMES: dict[str, str] = {
     "Operator": (
-        "pipekit.Operator is the base (geotoolz re-exports it); xrcore.Operator"
+        "pipekit.Operator is the base (geotoolz re-exports it); xrops.Operator"
         " subclasses it with xarray DataTree dispatch for the xrops operators."
     ),
-    "Signature": (
-        "pipekit.Signature records array shape + dtype; xrcore.Signature is the"
-        " xarray-aware descriptor used by xrops operators."
+    "stack": (
+        "pipekit_array.stack adds a leading dim on any named carrier and never"
+        " aligns; geoarray.stack stacks GeoArrays on one grid."
     ),
     "Composite": (
         "geoops.Composite builds a band composite; pipekit_train.Composite is"
         " a weighted sum of losses."
     ),
-    "SklearnOp": (
-        "One scikit-learn adapter per carrier: geoops.SklearnOp for"
-        " GeoTensor, xrsklearn.SklearnOp for xarray."
-    ),
     "register": (
         "pipekit.register marks a class as loadable by loads_sandboxed;"
-        " xrreader.register adds a Variable to the CF variable registry."
+        " xrproducts.register adds a Variable to the CF variable registry."
     ),
 }
 

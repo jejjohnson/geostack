@@ -39,17 +39,14 @@ pipekit-jax = { path = "references/geostack/pipekit/packages/pipekit-jax", edita
 pipekit-train = { path = "references/geostack/pipekit/packages/pipekit-train", editable = true }
 geotoolz = { path = "references/geostack/geotoolz/packages/geotoolz", editable = true }
 geotoolz-ops = { path = "references/geostack/geotoolz/packages/geotoolz-ops", editable = true }
+geotoolz-array = { path = "references/geostack/geotoolz/packages/geotoolz-array", editable = true }
 geotoolz-catalog = { path = "references/geostack/geotoolz/packages/geotoolz-catalog", editable = true }
 geotoolz-cloud = { path = "references/geostack/geotoolz/packages/geotoolz-cloud", editable = true }
 geotoolz-patcher = { path = "references/geostack/geotoolz/packages/geotoolz-patcher", editable = true }
 geotoolz-products = { path = "references/geostack/geotoolz/packages/geotoolz-products", editable = true }
 xrtoolz = { path = "references/geostack/xrtoolz/packages/xrtoolz", editable = true }
 xrtoolz-ops = { path = "references/geostack/xrtoolz/packages/xrtoolz-ops", editable = true }
-xrtoolz-core = { path = "references/geostack/xrtoolz/packages/xrtoolz-core", editable = true }
-xrtoolz-einx = { path = "references/geostack/xrtoolz/packages/xrtoolz-einx", editable = true }
-xrtoolz-grad = { path = "references/geostack/xrtoolz/packages/xrtoolz-grad", editable = true }
-xrtoolz-reader = { path = "references/geostack/xrtoolz/packages/xrtoolz-reader", editable = true }
-xrtoolz-sklearn = { path = "references/geostack/xrtoolz/packages/xrtoolz-sklearn", editable = true }
+xrtoolz-products = { path = "references/geostack/xrtoolz/packages/xrtoolz-products", editable = true }
 
 [pypi-options.dependency-overrides]
 # The reference repos are uv workspaces whose own [tool.uv.sources] point
@@ -65,17 +62,14 @@ pipekit-jax = { path = "references/geostack/pipekit/packages/pipekit-jax", edita
 pipekit-train = { path = "references/geostack/pipekit/packages/pipekit-train", editable = true }
 geotoolz = { path = "references/geostack/geotoolz/packages/geotoolz", editable = true }
 geotoolz-ops = { path = "references/geostack/geotoolz/packages/geotoolz-ops", editable = true }
+geotoolz-array = { path = "references/geostack/geotoolz/packages/geotoolz-array", editable = true }
 geotoolz-catalog = { path = "references/geostack/geotoolz/packages/geotoolz-catalog", editable = true }
 geotoolz-cloud = { path = "references/geostack/geotoolz/packages/geotoolz-cloud", editable = true }
 geotoolz-patcher = { path = "references/geostack/geotoolz/packages/geotoolz-patcher", editable = true }
 geotoolz-products = { path = "references/geostack/geotoolz/packages/geotoolz-products", editable = true }
 xrtoolz = { path = "references/geostack/xrtoolz/packages/xrtoolz", editable = true }
 xrtoolz-ops = { path = "references/geostack/xrtoolz/packages/xrtoolz-ops", editable = true }
-xrtoolz-core = { path = "references/geostack/xrtoolz/packages/xrtoolz-core", editable = true }
-xrtoolz-einx = { path = "references/geostack/xrtoolz/packages/xrtoolz-einx", editable = true }
-xrtoolz-grad = { path = "references/geostack/xrtoolz/packages/xrtoolz-grad", editable = true }
-xrtoolz-reader = { path = "references/geostack/xrtoolz/packages/xrtoolz-reader", editable = true }
-xrtoolz-sklearn = { path = "references/geostack/xrtoolz/packages/xrtoolz-sklearn", editable = true }
+xrtoolz-products = { path = "references/geostack/xrtoolz/packages/xrtoolz-products", editable = true }
 # GeoNumerics, GeoML and GeoModels: installed only in the environments below,
 # each sibling pinned to its submodule (their own [tool.uv.sources] pin older
 # commits of one another; see .plans/submodules_by_stack.md).

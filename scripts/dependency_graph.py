@@ -90,28 +90,6 @@ TIER_ROLES = {
 #: Rules between packages name the two packages, and ``undeclared`` names the
 #: importing file, so a new edge or a new import is a new entry
 KNOWN: dict[tuple[str, str, str], str] = {
-    ("package-cycle", "geotoolz-patcher", "pipekit-train"): (
-        "geotoolz#486 added geopatcher.integrations.train, which imports"
-        " pipekit_train, while the pinned pipekit-train still imports"
-        " geopatcher; clears when the pipekit pin moves past the train"
-        " dataset's move (Report 16 D2)"
-    ),
-    ("cycle", "geotoolz", "pipekit"): (
-        "pipekit-train's _xreader and xarray_window import geopatcher.time (which"
-        " no longer exists); Report 16 D2 moves the dataset to"
-        " geopatcher.integrations.train"
-    ),
-    ("tier", "pipekit-train", "geotoolz-patcher"): "the same imports",
-    (
-        "undeclared",
-        "pipekit-train:src/pipekit_train/_xreader.py",
-        "geotoolz-patcher",
-    ): "the same imports",
-    (
-        "undeclared",
-        "pipekit-train:src/pipekit_train/xarray_window.py",
-        "geotoolz-patcher",
-    ): "the same imports",
     ("undeclared", "somax:somax/_src/da/filterax_bridge.py", "filterax"): (
         "module-level imports in somax/_src/da, declared only in the da"
         " dependency group; make it an extra"
@@ -755,7 +733,7 @@ def render(page: Path, g: Graph) -> str:
 GUARD_PATHS = {
     "pipekit": "packages/pipekit/tests/test_dependency_rules.py",
     "geotoolz": "packages/geotoolz-ops/tests/test_dependency_rules.py",
-    "xrtoolz": "packages/xrtoolz-core/tests/test_dependency_rules.py",
+    "xrtoolz": "packages/xrtoolz-ops/tests/test_dependency_rules.py",
     "pyrox": "packages/pyrox/tests/test_dependency_rules.py",
 }
 PAGE_URL = (

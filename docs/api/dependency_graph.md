@@ -24,7 +24,7 @@ lazy, `try`-guarded and type-checking-only imports). It then states eight
 rules that keep the graph free of cycles.
 
 <!-- violation-summary:begin -->
-Today it has **one cycle between repositories (geotoolz ⇄ pipekit)**, **one cycle between packages**, **one edge that does not point down a tier** and **four imports their package does not declare**. [](#tbl-dg-violations) lists each one with its fix.
+Today it has **two imports their package does not declare**. [](#tbl-dg-violations) lists each one with its fix.
 <!-- violation-summary:end -->
 
 +++
@@ -98,7 +98,6 @@ flowchart TB
   kernellib --> gaussx
   kernellib --> geonnax
   optax_bayes -.-> gaussx
-  pipekit --> geotoolz
   plumax --> finitevolX
   plumax --> pipekit
   pyrox -.-> gauss_flows
@@ -113,12 +112,11 @@ flowchart TB
   vardax --> gaussx
   vardax --> geonnax
   vardax --> pipekit
-  xrtoolz --> pipekit
-  linkStyle 4,8 stroke:#c62828,stroke-width:2.5px
+  xrtoolz --> geotoolz
 ```
 :::
 
-18 repositories, 38 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out. Red arrows form a cycle.
+18 repositories, 35 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -227,11 +225,6 @@ the shared vocabulary belongs in filterax, and vardax reuses it
 <!-- violation-table:begin -->
 | Rule | From | To | Where | Why, and the fix |
 |---|---|---|---|---|
-| cycle | geotoolz | pipekit | `geotoolz ⇄ pipekit` | pipekit-train's _xreader and xarray_window import geopatcher.time (which no longer exists); Report 16 D2 moves the dataset to geopatcher.integrations.train |
-| package-cycle | geotoolz-patcher | pipekit-train | `geotoolz-patcher ⇄ pipekit-train` | geotoolz#486 added geopatcher.integrations.train, which imports pipekit_train, while the pinned pipekit-train still imports geopatcher; clears when the pipekit pin moves past the train dataset's move (Report 16 D2) |
-| tier | pipekit-train | geotoolz-patcher | `import, src/pipekit_train/xarray_window.py (guarded)` | the same imports |
-| undeclared | pipekit-train:src/pipekit_train/_xreader.py | geotoolz-patcher | `lazy` | the same imports |
-| undeclared | pipekit-train:src/pipekit_train/xarray_window.py | geotoolz-patcher | `guarded` | the same imports |
 | undeclared | somax:somax/_src/da/filterax_bridge.py | filterax | `module` | module-level imports in somax/_src/da, declared only in the da dependency group; make it an extra |
 | undeclared | somax:somax/_src/da/obs.py | filterax | `module` | the same extra |
 <!-- violation-table:end -->
@@ -317,9 +310,9 @@ cannot import, so most of its tests could no longer be collected.
 | finitevolX | gaussx | base | `finitevolx → gaussx` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
-| geotoolz | georeader | base | `geotoolz-catalog → georeader-spaceml` |
-| geotoolz | pipekit | base | `geotoolz-ops → pipekit` |
-| pipekit | geotoolz | import | `pipekit-train → geotoolz-patcher` |
-| xrtoolz | pipekit | base | `xrtoolz-core → pipekit` |
+| geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
+| geotoolz | pipekit | base | `geotoolz-array → pipekit` |
+| xrtoolz | geotoolz | base | `xrtoolz-ops → geotoolz-ops` |
+| xrtoolz | pipekit | base | `xrtoolz-ops → pipekit` |
 <!-- edge-table:end -->
 :::
