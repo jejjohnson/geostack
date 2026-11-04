@@ -158,12 +158,12 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 
 | ID | Decision or question | Status |
 | --- | --- | --- |
-| OC-Q1 | The name: "coupling class", not "family" (taken for carrier families and namespaces) | open |
-| OC-Q2 | Where the class lives: a `coupling` class attribute holding a frozen `Coupling` record | open |
-| OC-Q3 | The dim vocabulary: geoarray's dims, with `y x` as one `space` | open |
-| OC-Q4 | The contract test requires measured ⊆ declared, and equality for the kernel operators | open |
+| OC-Q1 | The name: "coupling class", not "family" (taken for carrier families and namespaces) | decided 4 Nov 2026 |
+| OC-Q2 | Where the class lives: a `coupling` class attribute holding a frozen `Coupling` record, public in `geoops.carrier` | decided 4 Nov 2026 |
+| OC-Q3 | The dim vocabulary: geoarray's dims, with `y x` as one `space` | decided 4 Nov 2026 |
+| OC-Q4 | The contract test requires measured ⊆ declared, and equality where the probe is exact (`indices`, `spectral`, `radiometry`) | built as recommended (geotoolz #616), open for review |
 | OC-Q5 | The axis of the N-ary reducers: `time` for compositing, `source` for different sensors | open |
-| OC-Q6 | Where the probe lives: a geotoolz script now, `geoops.testing.coupling_of` once the tag exists | open |
+| OC-Q6 | Where the probe lives: `geoops.testing.measure_coupling` / `assert_coupling`, with a report script | built as recommended (geotoolz #615), open for review |
 
 ## Package layout (PL)
 
