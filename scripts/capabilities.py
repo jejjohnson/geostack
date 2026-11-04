@@ -255,6 +255,11 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         "pipekit.register marks a class as loadable by loads_sandboxed;"
         " xrproducts.register adds a Variable to the CF variable registry."
     ),
+    "Estimator": (
+        "pipekit_array.Estimator is the scikit-learn operator on a named"
+        " carrier; pipekit_evaluate.Estimator is the benchmark protocol for a"
+        " rung that maps observations to an Estimate."
+    ),
 }
 
 # Name clashes the layers above GeoStack ship today, as {layer: {name: why}}.
