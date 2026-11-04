@@ -98,7 +98,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | GA-B3 | geoarray reads only the georeference (re-index, join, re-describe, read at); everything that computes is geoops; H(x) is `interp_at` | decided 24 Oct 2026; amended 4 Nov 2026 by GA-B6 |
 | GA-B4 | The positional band guard stays until geoops takes `dim=` (geotoolz #531); removed in geotoolz-array 0.4 | decided 24 Oct 2026 |
 | GA-B5 | `geoarray.stack` is a 0.3 deprecation shim; `pipekit_array.stack` from 0.4 | decided 24 Oct 2026 |
-| GA-B6 | `interp_at` and the named reductions move to geoops: `geoops.geom.interp_at` plus an `InterpAt` operator, and nodata-aware `reduce` / `argreduce` in geoops; geoarray stops re-exporting `reduce` / `argreduce` (they stay in pipekit-array, GA-Q3). geoarray's documented computing exceptions are `valid_mask` (the nodata model) and `astype` (a cast) | decided 4 Nov 2026 |
+| GA-B6 | `interp_at` and the named reductions move to geoops: `geoops.geom.interp_at` plus an `InterpAt` operator, and nodata-aware `geoops.compositing.reduce` / `argreduce`; geoarray stops re-exporting `reduce` / `argreduce` (they stay in pipekit-array, GA-Q3). geoarray's documented computing exceptions are `valid_mask` (the nodata model) and `astype` (a cast) | decided 4 Nov 2026 |
 | GA-C1 | Eager `np.asarray` copies to host and raises under transforms; mixed NumPy and JAX inputs refuse (0.3 warns, 0.4 raises) | decided 17 Oct 2026, partly superseded 21 Oct 2026; migration decided 24 Oct 2026 |
 | GA-D1 | One coordinated breaking release from `GeoTensor` to `GeoArray` | decided 17 Oct 2026 |
 | GA-E1 | JAX kernels in `geoops.functional` | superseded 22 Oct 2026 by the kernel model on [operators](./operators.md) |

@@ -507,7 +507,7 @@ model_b: GeoPoints["time variable obs"] = geoarray.map_over(
 # m − y per hour, station and variable
 error: GeoPoints["time variable obs"] = model_b - stations
 # bias(v, s) = (1/T) ∑ₜ [m(t, v, s) − y(t, v, s)], over valid t only
-bias: GeoPoints["variable obs"] = geoops.reduce(error, "mean", "time")  # invalid entries left out
+bias: GeoPoints["variable obs"] = geoops.compositing.reduce(error, "mean", "time")  # invalid entries left out
 # for the analyst: one row per (station, variable) ← CS-F10
 table: pd.DataFrame = bias.to_dataframe()
 ```

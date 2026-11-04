@@ -473,7 +473,7 @@ class Reproject(Operator):
 | --- | --- | --- |
 | `indices`, `qa` | kernel operators | numpy, jax, xarray |
 | `normalize` | kernel operators; skimage-backed ones engine-bound | numpy, jax, xarray / numpy |
-| `compositing` | thin named operators over `stack`, geoops `reduce` / `argreduce`, `take_along` | numpy, jax, xarray |
+| `compositing` | thin named operators over `stack`, `geoops.compositing.reduce` / `argreduce`, `take_along` | numpy, jax, xarray |
 | `einx` | `SpatialPool` only; every other einx operation is `pipekit_array.einx` (OP-O2) | numpy |
 | `augment` | kernel operators for flips, crops, noise (PRNG key under JAX); scipy warps engine-bound | numpy, jax / numpy |
 | `spectral` | kernel operators backed by scipy | numpy, xarray |
