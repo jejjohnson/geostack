@@ -76,7 +76,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | CS-F7 | xrops wraps the native xarray operations pipelines need (`Climatology`, `Anomaly`, `Resample`) | open |
 | CS-F8 | Operators declare `backends`; eager-only ones are listed | open (see OP-O6) |
 | CS-F9 | A pipeline slot says whether it expects a fitted operator; `replace` checks | open |
-| CS-F10 | `geoops.geom.interp_at` held equal to `xr.interp`; `GeoPoints` to and from data frames | open |
+| CS-F10 | `geoops.geom.interp_at` held equal to `scipy.ndimage.map_coordinates` (what `xr.interp` uses); `GeoPoints` to and from data frames | open |
 | CS-F11 | Packaged pipelines are versioned, record provenance and re-run idempotently | open (decide first) |
 | CS-F12 | Carrier-free geometry helpers, and one documented path L1 → `KernelOp` → pipeline | open |
 | CS-F13 | Runners own splits and hold back truth | open; for the pipelines page |
