@@ -36,10 +36,6 @@ jobs:
           pixi-version: v0.81.0
           run-install: false
           cache: false
-      - name: Diagnose --locked (temporary)
-        run: |
-          pixi install --locked -vvv 2>&1 | grep -iE "not (up-to-date|satisf)|unsatisf|mismatch|because|reason|expected|differ|outdated" | head -80 || true
-          pixi install --locked 2>&1 | tail -5 || true
       - name: Lock
         run: pixi lock
       - name: Regenerate the capability indexes
