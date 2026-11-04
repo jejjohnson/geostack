@@ -195,7 +195,7 @@ Multidimensional evaluation (Unit x Lens x Stage).
 | `Cell` | class | One cell of the benchmark cube. |
 | `CellResult` | class | The scored outcome for one cube cell. |
 | `CovarianceEstimate` | class | An :class:`Estimate` that also reports its posterior covariance. |
-| `DEFAULT_STAGES` | constant | `frozenset({<Stage.VALIDATION: 'validation'>, <Stage.FINAL...` |
+| `DEFAULT_STAGES` | constant | `frozenset({<Stage.FINAL: 'final'>, <Stage.VALIDATION: 'va...` |
 | `Estimate` | class | A point and/or a posterior produced by an estimator. |
 | `Estimator` | class | Any rung that maps observations → an :class:`Estimate`. |
 | `EvaluationReport` | class | The tagged scores of one evaluation run. |
@@ -583,10 +583,10 @@ Composable remote-sensing operators on GeoTensor.
 | `SAVI` | class | Soil-Adjusted Vegetation Index — Huete 1988. |
 | `SBMP` | class | Single-band multi-pass Sentinel-2 SWIR ratio retrieval. |
 | `SCL` | class | Sentinel-2 L2A Scene Classification Layer class IDs. |
-| `SCL_CLOUDS` | constant | `frozenset({<SCL.CLOUD_MEDIUM_PROBABILITY: 8>, <SCL.CLOUD_...` |
-| `SCL_CLOUDS_AND_INVALID` | constant | `frozenset({<SCL.NO_DATA: 0>, <SCL.SATURATED_OR_DEFECTIVE:...` |
-| `SCL_INVALID` | constant | `frozenset({<SCL.NO_DATA: 0>, <SCL.SATURATED_OR_DEFECTIVE:...` |
-| `SCL_LAND` | constant | `frozenset({<SCL.VEGETATION: 4>, <SCL.NOT_VEGETATED: 5>})` |
+| `SCL_CLOUDS` | constant | `frozenset({<SCL.CLOUD_HIGH_PROBABILITY: 9>, <SCL.CLOUD_ME...` |
+| `SCL_CLOUDS_AND_INVALID` | constant | `frozenset({<SCL.CLOUD_HIGH_PROBABILITY: 9>, <SCL.CLOUD_ME...` |
+| `SCL_INVALID` | constant | `frozenset({<SCL.CLOUD_SHADOWS: 3>, <SCL.NO_DATA: 0>, <SCL...` |
+| `SCL_LAND` | constant | `frozenset({<SCL.NOT_VEGETATED: 5>, <SCL.VEGETATION: 4>})` |
 | `SCL_WATER` | constant | `frozenset({<SCL.WATER: 6>})` |
 | `SENSOR_QA_REGISTRY` | constant | `{'s2_qa60': {'cloud': {'bits': (10,)}, 'cirrus': {'bits':...` |
 | `SLIC` | class | SLIC superpixels via :func:`skimage.segmentation.slic`. |

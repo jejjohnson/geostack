@@ -260,6 +260,16 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         " carrier; pipekit_evaluate.Estimator is the benchmark protocol for a"
         " rung that maps observations to an Estimate."
     ),
+    "Stage": (
+        "geonnax.Stage is one encoder/decoder stage of a U-Net;"
+        " pipekit_evaluate.Stage is the enum of where in a model's life a score"
+        " may run."
+    ),
+    "Divergence2D": (
+        "geoops.Divergence2D is a pipekit Operator on a GeoArray's collocated"
+        " map axes; finitevolx.Divergence2D is the finite-volume divergence on"
+        " an Arakawa C-grid. GeoStack may not import GeoNumerics."
+    ),
 }
 
 # Name clashes the layers above GeoStack ship today, as {layer: {name: why}}.
@@ -272,7 +282,6 @@ _LIKELIHOODS = "likelihoods in both gaussx and pyrox-gp"
 _NN_LAYERS = "layers in both geonnax and pyrox-nn"
 _SOMAX = "somax's own name for a different object"
 _NUMERICS = "the same solver or grid in several GeoNumerics libraries"
-_CALCULUS = "kernel operators in kernellib, finite differences in xrtoolz-grad"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
 _PLUME_PUFF = "the same name in plumax's plume and puff models"
 _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
@@ -315,13 +324,9 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "SphericalHarmonicTransform": "spherical harmonics, geonnax and spectraldiffx",
         "StudentTLikelihood": _LIKELIHOODS,
         "White": _KERNELS,
-        "curl": _CALCULUS,
-        "divergence": _CALCULUS,
         "funk_hecke_coefficients": _KERNELS,
         "gaussian_entropy": _DIVERGENCES,
-        "gradient": _CALCULUS,
         "kl_divergence": _DIVERGENCES,
-        "laplacian": _CALCULUS,
     },
     "geomodels": {
         "ATM_TO_PA": _PORTED,
@@ -398,12 +403,24 @@ def _origin(obj: object) -> str:
     return module
 
 
+def _repr(obj: object) -> str:
+    """``repr(obj)``, with a set's members sorted.
+
+    A set's order follows string hashing, which Python salts per process,
+    so a plain ``repr`` would change the index from one run to the next.
+    """
+    if not isinstance(obj, set | frozenset) or not obj:
+        return repr(obj)
+    members = "{" + ", ".join(sorted(repr(m) for m in obj)) + "}"
+    return members if type(obj) is set else f"{type(obj).__name__}({members})"
+
+
 def _summary(obj: object, *, home: str) -> str:
     origin = _origin(obj).split(".")[0]
     if origin != home and (callable(obj) or inspect.isclass(obj)):
         return f"Re-exported from `{origin}`."
     if not callable(obj):
-        value = repr(obj)
+        value = _repr(obj)
         return f"`{value if len(value) <= 60 else value[:57] + '...'}`".replace(
             "|", "\\|"
         )
