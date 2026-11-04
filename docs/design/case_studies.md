@@ -507,14 +507,14 @@ model_b: GeoPoints["time variable obs"] = geoarray.map_over(
 # m − y per hour, station and variable
 error: GeoPoints["time variable obs"] = model_b - stations
 # bias(v, s) = (1/T) ∑ₜ [m(t, v, s) − y(t, v, s)], over valid t only
-bias: GeoPoints["variable obs"] = geoarray.reduce(error, np.nanmean, dim="time")
+bias: GeoPoints["variable obs"] = geoops.compositing.reduce(error, "mean", "time")  # invalid entries left out
 # for the analyst: one row per (station, variable) ← CS-F10
 table: pd.DataFrame = bias.to_dataframe()
 ```
 
 **What it stresses.**
 
-- **Gap: two samplers must agree.** `xr.interp` and `geoarray.interp_at` both put a grid onto points. If their bilinear weights or edge handling differ, the two ways give different biases, so a contract test should hold them equal, or one should be defined as the other.
+- **Gap: two samplers must agree.** `xr.interp` and `geoops.geom.interp_at` both put a grid onto points. If their bilinear weights or edge handling differ, the two ways give different biases, so a contract test should hold them equal, or one should be defined as the other.
 - **Gap: analysts want tables.** Station data lives naturally in a DataFrame, so `GeoTimeSeries` needs `to_dataframe()` / `from_dataframe()` the way grids have `to_xarray()`.
 - **Holds:** variables are a dim, time is a dim for fixed stations, and fill values are masked, so the types from the geoarray page cover this without a new carrier.
 - **Small:** station elevation belongs in the `z` leaf, so a lapse-rate correction can read it as derived geometry.
@@ -970,7 +970,7 @@ Three findings change a principle (CS-F1, CS-F2, CS-F11), whereas the rest add r
 | CS-F7 | Native xarray operations are not pipeline stages | 4 | xrops wraps the few that pipelines need (`Climatology`, `Anomaly`, `Resample`) as named operators |
 | CS-F8 | Some operators can never compile (GDAL rasterize, vectorize) | 1, 10, 13 | operators declare `backends`; the docs list eager-only ones (operators page, [OP-O6](./operators.md)) |
 | CS-F9 | A replaced stage may have been fitted | 5 | each pipeline slot says whether it expects a fitted or a stateless operator; `replace` checks |
-| CS-F10 | Two ways to sample a grid at points; analysts want tables | 6 | a contract test holds `geoarray.interp_at` equal to `xr.interp`; `GeoPoints.to_dataframe()` / `from_dataframe()` |
+| CS-F10 | Two ways to sample a grid at points; analysts want tables | 6 | a contract test holds `geoops.geom.interp_at` equal to `scipy.ndimage.map_coordinates`, the reference both share; `GeoPoints.to_dataframe()` / `from_dataframe()` |
 | CS-F11 | Production runs need versions, provenance and idempotence | 7 | **a new principle:** a packaged pipeline is versioned; every output records pipeline version, operator versions and input checksums; re-running a key gives the same output |
 | CS-F12 | Pure-L1 users must be left alone, and given a way up | 8 | geometry helpers have carrier-free constructors; the docs show L1 → `KernelOp` → pipeline as one path |
 | CS-F13 | Splits and leakage belong to the runner | 9 | runners own splits and hold back truth; a submission or stage never sees test data |
