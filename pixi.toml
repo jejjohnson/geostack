@@ -146,6 +146,10 @@ gaussx = { path = "references/numerics/gaussx", editable = true }
 numpyro = ">=0.21"
 finitevolx = { path = "references/numerics/finitevolX", editable = true }
 spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
+# scikit-image (for the GeoModels notebooks) is listed here, not in geomodels:
+# the geo solve group puts it in every geo environment's lock, and
+# `pixi install --locked` rejects lock packages an environment does not require.
+scikit-image = "*"
 
 [feature.geoml.pypi-dependencies]
 geonnax = { path = "references/geoml/geonnax", editable = true }
@@ -168,7 +172,6 @@ radtrax = { path = "references/geomodels/radtrax", editable = true }
 optax = "*"
 openpyxl = "*"
 tqdm = "*"
-scikit-image = "*"
 
 [environments]
 default = { features = ["dev"], solve-group = "default" }
