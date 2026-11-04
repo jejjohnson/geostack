@@ -29,6 +29,7 @@ When a status changes, change it on the page first, then here.
 | LL | [Labeled lane](./labeled_lane.md) |
 | PK | [pipekit kernels](./pipekit_kernels.md) |
 | OP | [Operators](./operators.md) |
+| OC | [Operator coupling](./operator_coupling.md) |
 | PL | [Package layout](./package_layout.md) |
 | SL | [Levels across the stack](./stack_levels.md) |
 | ES | [esmax](./esmax.md) |
@@ -152,6 +153,17 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | OP-O6 | The `backends` vocabulary: `"numpy"`, `"jax"`, `"dask"`; a `DataArray` reports its data's backend | decided 29 Oct 2026 |
 | OP-O7 | The diagnostic gradient kernel lives in geoops; model-grade calculus stays in finitevolX | decided 22 Oct 2026 |
 | OP-O8 | Whether an L3 algorithm calls another L3 algorithm inside a differentiated cost | open (decide first) |
+
+## Operator coupling (OC)
+
+| ID | Decision or question | Status |
+| --- | --- | --- |
+| OC-Q1 | The name: "coupling class", not "family" (taken for carrier families and namespaces) | open |
+| OC-Q2 | Where the class lives: a `coupling` class attribute holding a frozen `Coupling` record | open |
+| OC-Q3 | The dim vocabulary: geoarray's dims, with `y x` as one `space` | open |
+| OC-Q4 | The contract test requires measured ⊆ declared, and equality for the kernel operators | open |
+| OC-Q5 | The axis of the N-ary reducers: `time` for compositing, `source` for different sensors | open |
+| OC-Q6 | Where the probe lives: a geotoolz script now, `geoops.testing.coupling_of` once the tag exists | open |
 
 ## Package layout (PL)
 
