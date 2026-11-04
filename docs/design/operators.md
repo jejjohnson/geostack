@@ -300,7 +300,7 @@ def assimilate(
         x0_map: GeoMap = background.with_data(x0_ocean)
         traj: GeoMapSeries = forward(x0_map, times, valid_b)
         # H(M(x₀)): sampled at the observations in space and time
-        predicted: GeoTracks = geoarray.interp_at(traj, obs)
+        predicted: GeoTracks = geoops.geom.interp_at(traj, obs)
         # d = m ⊙ (y − H(M(x₀))); padded slots give 0, never NaN
         resid: Float[Array, "N"] = obs.data - predicted.data
         d: Float[Array, "N"] = jnp.where(obs.valid, resid, 0.0)
@@ -473,7 +473,7 @@ class Reproject(Operator):
 | --- | --- | --- |
 | `indices`, `qa` | kernel operators | numpy, jax, xarray |
 | `normalize` | kernel operators; skimage-backed ones engine-bound | numpy, jax, xarray / numpy |
-| `compositing` | thin named operators over `stack`, `reduce`, `argreduce`, `take_along` | numpy, jax, xarray |
+| `compositing` | thin named operators over `stack`, geoops `reduce` / `argreduce`, `take_along` | numpy, jax, xarray |
 | `einx` | `SpatialPool` only; every other einx operation is `pipekit_array.einx` (OP-O2) | numpy |
 | `augment` | kernel operators for flips, crops, noise (PRNG key under JAX); scipy warps engine-bound | numpy, jax / numpy |
 | `spectral` | kernel operators backed by scipy | numpy, xarray |

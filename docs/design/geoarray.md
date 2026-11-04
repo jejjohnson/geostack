@@ -442,24 +442,29 @@ The match rule is what lets both satisfy one readable type.
 geoarray owns every operation that reads only the georeference, written once against the array namespace `xp`; geoops owns everything that computes (GA-B3):
 
 ```
-geoarray: reads the georeference, never computes a field
+geoarray: re-indexes and re-describes; computes no values of its own
   re-index     isel, sel, crop, read_window, write_window, pad
-  join         stack, concat, combine      one grid; your fn computes
-  re-describe  dims, coords, pixel_coords, valid_mask, footprint
-  read at      to_pixel, interp_at         points in, values out
+  join         stack, concatenate, concat        one grid
+  carry        combine, map_over, GeoArray.map    one grid; your fn computes
+  re-describe  dims, coords, pixel_coords, footprint
+  read at      to_pixel                           coordinates → pixels
+  exceptions   valid_mask, astype
 
 geoops: computes
   new values   indices, radiometry, mask, normalize, …   same grid
   new grid     reproject, resample, warp, mosaic, rasterize
+  at points    interp_at, InterpAt                       H(x)
+  reductions   reduce, argreduce                         nodata left out
 ```
 
 The test: if the output holds only input values, fills and coordinates,
-or values read at points you gave it, it is geoarray. Otherwise it is
-geoops.
+it is geoarray. Otherwise it is geoops, unless it is one of the two
+documented exceptions: `valid_mask`, which defines the nodata model every
+package shares, and `astype`, a cast that carries the fill (GA-B6).
 
 Everything that computes new values (warping, resampling, mosaics, CRS maths, padding by reflection) is a geoops operator: an L1 kernel wrapped as a [KernelOp](#design-kernelop), or a hand-written geometry operator that derives source coordinates and calls a primitive ([operators](./operators.md)).
 geoarray holds none of them.
-`interp_at` (H(x)) blends neighbouring pixels, but its output lives on the points it was given, not on a new grid, so it is "read at", not resampling; `combine` aligns carriers on one grid and runs the caller's function, so geoarray computes nothing of its own.
+`interp_at` (H(x)) blends the four pixels around each point, so it computes: it is `geoops.geom.interp_at`, with an `InterpAt` operator that declares its coupling (spatial, reach 1). Named reductions compute too: geoops' `reduce` / `argreduce` leave out invalid entries and then call pipekit-array's (GA-B6). `combine` aligns carriers on one grid and runs the caller's function, so geoarray computes nothing of its own.
 The nouns `sample` (an ML batch item) and `member` (an ensemble draw) stay free for dim names.
 
 | `GeoTensor` symbol | Destination | Reason |
@@ -537,14 +542,16 @@ def crop(
 ### Shared dim-level functions
 
 A short list of dim-level functions works on a geoarray carrier (NumPy or JAX) and on an `xr.DataArray`.
-They are written once, in pipekit-array, over a named-array adapter that each carrier family registers; geoarray registers its adapter and re-exports them, so `geoarray.reduce` and `pipekit_array.reduce` are the same object.
+They are written once, in pipekit-array, over a named-array adapter that each carrier family registers; geoarray registers its adapter and re-exports the ones that compute nothing (`geoarray.isel is pipekit_array.isel`); the named reductions `reduce` and `argreduce` are re-exported by geoops instead, behind a nodata-aware wrapper (GA-B6).
 The rule for adding one is on the [pipekit kernels](./pipekit_kernels.md) page: it never reads coordinate values or geometry and behaves identically on every carrier.
 
 | Piece | Where it lives |
 | --- | --- |
-| `isel`, `sel` (exact), `transpose`, `reduce`, `argreduce`, `take_along`, `map_over`, `stack`, `concat`, `combine` | pipekit-array, re-exported by geoarray |
+| `isel`, `sel` (exact), `transpose`, `take_along`, `map_over`, `stack`, `concat`, `combine` | pipekit-array, re-exported by geoarray |
+| `reduce`, `argreduce` | pipekit-array; geoops wraps them to leave out invalid entries (GA-B6) |
 | the geoarray adapter: dims, data, labels, an `isel` that slices coordinates and moves the transform origin, a `rewrap` that keeps the georeference, a `check_compatible` that compares grids and raises `GridMismatchError`, `map_over` over data and transform rows together | geoarray |
-| geometry functions: `interp_at` (H(x)), windows that move the transform, `to_rows` / `from_rows` for pixels as rows, `to_pixel` | geoarray |
+| geometry functions: windows that move the transform, `to_rows` / `from_rows` for pixels as rows, `to_pixel` | geoarray |
+| `interp_at` (H(x)) and the `InterpAt` operator | `geoops.geom` (GA-B6) |
 | type names and `check_dims`, built on `pipekit.Signature` patterns | geoarray (names), pipekit (rule) |
 
 The full operator surface is not shared, because the backends differ in four behaviours:
@@ -559,8 +566,8 @@ The full operator surface is not shared, because the backends differ in four beh
 On xarray, `combine` and `stack` use the xarray adapter's exact comparison, so the silent-alignment trap does not apply to them; the alignment difference is one explicit check per carrier family instead of a hidden default.
 
 **Composites are two ops.**
-A median composite is `stack` then `reduce` over `time`.
-A max-NDVI or cloud-free composite picks a time index per pixel from one quantity and gathers the other bands at it: `argreduce` then `take_along`.
+A median composite is `stack` then `geoops.reduce` over `time`, which leaves out cloudy and nodata entries before taking the median.
+A max-NDVI or cloud-free composite picks a time index per pixel from one quantity and gathers the other bands at it: `geoops.argreduce` then `take_along`.
 The maths is the same on every backend; the execution differs (eager in memory, or chunked with dask for 100 scenes of 10k × 10k).
 
 ## Backends and crossings
@@ -612,7 +619,7 @@ What runs where, for geoarray's own functions:
 | `isel`, `sel` | yes | yes | concrete slices and labels only |
 | `crop` | yes | yes | traced offset, static size |
 | `read_window`, `write_window`, `pad` | yes | yes | concrete window |
-| `stack`, `concat`, `reduce`, `map_over` | yes | yes | yes |
+| `stack`, `concat`, `map_over` | yes | yes | yes |
 | `footprint` | yes | no | no (shapely) |
 
 ### When to jit
@@ -646,7 +653,7 @@ The test for any operator: put it inside `jit` when it runs many times on the sa
 
 Some operators sit on both sides.
 `normalize` runs in pre for a one-off product and inside the training step when its statistics are learned; that is why a handful of geoops operators are dual-backend.
-The ones that pass the test and call no CPU-only library run on JAX: indices, QA, array-maths `normalize`, compositing (as `reduce` / `argreduce` + `take_along`), basic augmentation.
+The ones that pass the test and call no CPU-only library run on JAX: indices, QA, array-maths `normalize`, compositing (as geoops `reduce` / `argreduce` + `take_along`), basic augmentation.
 `matched_filter` and `plume` move to radtrax and plumax (geotoolz #482).
 
 ## Running example: one methane plume, two sensors
@@ -938,7 +945,7 @@ obs: GeoPoints["obs"] = GeoPoints(
 @jax.jit
 def cost(ssh: GeoMap, obs: GeoTracks, sigma: float) -> Float[Array, ""]:
     # H(x): bilinear sample of the state at each observation
-    predicted: GeoPoints["obs"] = geoarray.interp_at(ssh, obs)
+    predicted: GeoPoints["obs"] = geoops.geom.interp_at(ssh, obs)
     # y − H(x)
     innovation: Float[Array, "N"] = obs.data - predicted.data
     # m ∈ {0, 1}: 1 for a real observation, 0 for a padded slot
@@ -1123,6 +1130,7 @@ Decisions from the GeoTensor design (17 Oct 2026) that the stored-dims design (2
 | GA-B3 | What geoarray holds; the name of H(x) | decided 24 Oct | operations that read only the georeference, in four families: re-index, join, re-describe, read at (points in, values out); anything that computes is geoops. H(x) is `interp_at`, not `sample`: "sample" already means an ML batch item and an ensemble draw across the stack, and those nouns stay free for dim names | keep `sample` as the one exception to "never computes new values"; or move H(x) to geoops, which charges every assimilation user for geoops |
 | GA-B4 | Positional band guard | decided 24 Oct | on a `(time, band, y, x)` carrier, `g[:, k]` or a squeeze that leaves `(time, y, x)` raises while geoops reads `axis=-3`; removed in geotoolz-array 0.4, once geotoolz #531 (`dim=` for `axis=`) lands. By name (`isel`, `sel`) it is allowed | remove it now (a silent wrong answer until #531); keep it for good (friction once every consumer reads stored dims) |
 | GA-B5 | Identity of `geoarray.stack` | decided 24 Oct | 0.3 keeps geoarray's own `stack` as a deprecation shim for the 0.2 forms (`axis=`, a name inferred from the rank); from 0.4 `geoarray.stack is pipekit_array.stack`, removed with `concatenate` | re-export in 0.3, breaking 0.2 callers without a warning; keep a geoarray-only `stack` for good |
+| GA-B6 | Where H(x) and the named reductions live | decided 4 Nov | `interp_at` blends four pixels and `reduce` / `argreduce` compute named reductions, so both are geoops: `geoops.geom.interp_at` and an `InterpAt` operator that declares its coupling, and geoops `reduce` / `argreduce` that leave out invalid entries before calling pipekit-array's. geoarray keeps two documented exceptions: `valid_mask` (it defines the nodata model every package shares, and packages that may not import geoops need it) and `astype` (a cast that carries the fill). GA-B3 rejected moving H(x) for its install cost; no assimilation code calls it yet, so the cost is accepted for one home for resampling maths and a declared, checked coupling | keep `interp_at` as geoarray's one exception (GA-B3 as decided); keep `reduce` re-exported and blind to nodata |
 | GA-C1 | NumPy interop for JAX data | decided 17 Oct; mixed-input promotion superseded 21 Oct; migration decided 24 Oct | `np.asarray(g)` copies eagerly and raises `GeoArrayTraceError` inside `jit`, `grad` or `vmap`; mixed NumPy and JAX inputs refuse and name `to_jax()`; operators declare `backends` and raise `BackendError`. geotoolz-array 0.2 promoted mixed inputs to JAX, so 0.3 still promotes with a `DeprecationWarning` and 0.4 raises `BackendError`; under a trace a NumPy carrier is a constant of the trace and joins without a warning | `np.asarray(g)` on a JAX carrier always raises; promotion everywhere, pipekit included (hides host-to-device copies, and needs a rule per backend pair) |
 | GA-D1 | Migration style | decided 17 Oct | one coordinated breaking release; `GeoTensor` is never accepted next to `GeoArray` | a dual-carrier release in geoops first: two code paths in every operator |
 | GA-E1 | Where JAX kernels live | superseded 22 Oct | L1 kernels in geoops wrapped as `KernelOp`s or called by geometry operators ([operators](./operators.md)), not a `geoops.functional` module | — |
