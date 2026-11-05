@@ -1140,7 +1140,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
         <li>The layer table and tiers in <code>scripts/dependency_graph.py</code>, and the diagram it generates.</li>
         <li>One capability index per layer: Core replaces GeoML.</li>
         <li>The pixi environments: <code>geoml</code> becomes <code>core</code>, or merges into the default.</li>
-        <li>No library changes code: every import found today already fits.</li>
+        <li>Two code moves, both planned on this page: kernellib imports functax instead of geonnax (the geonnax split), and geoproducts stops importing geoops (its presets become data). Every other import found today fits as it is, with vardax at Core tier 4, above pipekit-jax, and gridax at GeoNumerics tier 1, above geophysix, whose cell areas it uses.</li>
       </ul>
     </div>
   </section>
@@ -1202,7 +1202,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     { id: "gauss_flows",   layer: "core",     tier: 1, today: "geoml",    x: 362, y: 640, why: "normalising flows" },
     { id: "kernellib",     layer: "core",     tier: 1, today: "geoml",    x: 511, y: 640, why: "kernels as operators" },
     { id: "filterax",      layer: "core",     tier: 1, today: "geoml",    x: 648, y: 640, why: "Kalman filters; localisation is distance maths" },
-    { id: "vardax",        layer: "core",     tier: 2, today: "geoml",    x: 680, y: 560, why: "variational data assimilation and observation operators" },
+    { id: "vardax",        layer: "core",     tier: 4, today: "geoml",    x: 680, y: 560, why: "variational data assimilation and observation operators" },
     { id: "argminax",      layer: "core",     tier: 1, today: "none",     x: 781, y: 640, why: "optimisation with uncertainty at the optimum: solvers, curvature, adjoints", proposed: true },
     { id: "integrix",   layer: "core",     tier: 1, today: "none",     x: 914, y: 640, why: "integration over time, space, spectrum and probability: rules, scans, time stepping, adjoints", proposed: true },
     { id: "pyrox",         layer: "core",     tier: 1, today: "geoml",    ws: "pyrox", x: 73,  y: 640, why: "pyrox: the Equinox-to-NumPyro bridge (PyroxModule, Parameterized) and ensemble inference; 2k lines" },
@@ -1210,14 +1210,14 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     { id: "pyrox-lgm",     layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 360, y: 560, why: "pyrox-lgm: latent Gaussian models: GMRF components, PC priors, inla(); 4.7k lines" },
     { id: "pyrox-nn",      layer: "core",     tier: 3, today: "geoml",    ws: "pyrox", x: 420, y: 480, why: "pyrox-nn: Bayesian and uncertainty-aware layers and the Bayesian neural field estimator; 7.2k lines" },
     { id: "manipy",        layer: "core",     tier: 2, today: "outside",  x: 520, y: 560, why: "manifold alignment, dimensionality reduction and hyperspectral workflows on kernellib" },
-    { id: "geophysix",     layer: "numerics", tier: 0, today: "none",     x: 330, y: 660, why: "constants, ellipsoid and sphere metrics, Coriolis, geodesics, thermodynamics, equations of state, column units", proposed: true },
-    { id: "gridax",        layer: "numerics", tier: 0, today: "none",     x: 560, y: 660, why: "geophysical grids, vertical coordinates and remapping, masks, metric arrays, diagnostic finite differences", proposed: true },
-    { id: "spectraldiffx", layer: "numerics", tier: 1, today: "numerics", x: 210, y: 585, why: "spectral and spherical-harmonic discretisations" },
-    { id: "diagnostix",    layer: "numerics", tier: 1, today: "none",     x: 420, y: 585, why: "ocean and atmosphere kinematics, column and mixed-layer physics, budgets", proposed: true },
-    { id: "radiomax",      layer: "numerics", tier: 1, today: "none",     x: 610, y: 585, why: "observation geometry, radiometry, empirical retrievals, SAR and altimetry corrections", proposed: true },
-    { id: "finitevolX",    layer: "numerics", tier: 2, today: "numerics", x: 380, y: 510, why: "Arakawa C-grid finite volumes" },
-    { id: "skillax",       layer: "numerics", tier: 2, today: "none",     x: 560, y: 510, why: "spectra, wavelets, filters, climatologies, trends, weighted EOFs, skill scores", proposed: true },
-    { id: "tracerax",      layer: "numerics", tier: 2, today: "none",     x: 740, y: 510, why: "Lagrangian particles, FTLE, residence time, connectivity, footprints", proposed: true },
+    { id: "geophysix",     layer: "numerics", tier: 0, today: "none",     x: 450, y: 668, why: "constants, ellipsoid and sphere metrics, Coriolis, geodesics, thermodynamics, equations of state, column units", proposed: true },
+    { id: "gridax",        layer: "numerics", tier: 1, today: "none",     x: 330, y: 616, why: "geophysical grids, vertical coordinates and remapping, masks, metric arrays, diagnostic finite differences", proposed: true },
+    { id: "spectraldiffx", layer: "numerics", tier: 2, today: "numerics", x: 210, y: 564, why: "spectral and spherical-harmonic discretisations" },
+    { id: "diagnostix",    layer: "numerics", tier: 2, today: "none",     x: 450, y: 564, why: "ocean and atmosphere kinematics, column and mixed-layer physics, budgets", proposed: true },
+    { id: "radiomax",      layer: "numerics", tier: 1, today: "none",     x: 590, y: 616, why: "observation geometry, radiometry, empirical retrievals, SAR and altimetry corrections", proposed: true },
+    { id: "finitevolX",    layer: "numerics", tier: 3, today: "numerics", x: 360, y: 512, why: "Arakawa C-grid finite volumes" },
+    { id: "skillax",       layer: "numerics", tier: 3, today: "none",     x: 590, y: 512, why: "spectra, wavelets, filters, climatologies, trends, weighted EOFs, skill scores", proposed: true },
+    { id: "tracerax",      layer: "numerics", tier: 2, today: "none",     x: 690, y: 564, why: "Lagrangian particles, FTLE, residence time, connectivity, footprints", proposed: true },
     { id: "geoarray",      layer: "toolkits", tier: 0, today: "geostack", ws: "geotoolz", x: 250, y: 593, why: "geotoolz-array: the carriers (GeoArray, GeoSwath, GeoPoints), grids with a CRS, windows, RasterSource; 7.5k lines" },
     { id: "geocloud",      layer: "toolkits", tier: 1, today: "geostack", ws: "geotoolz", x: 530, y: 541, why: "geotoolz-cloud: the obstore client pool, file verbs, credentials, async COG and HDF reads; 6.5k lines" },
     { id: "geopatcher",    layer: "toolkits", tier: 2, today: "geostack", ws: "geotoolz", x: 530, y: 489, why: "geotoolz-patcher: split, process, stitch along geometry × sampler × window × aggregation; 18.6k lines" },
@@ -1260,7 +1260,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     ] }
   ];
   const CORE_SHIFT = 474;
-  const CORE_Y = { 0: 1200, 1: 1112, 2: 1030, 3: 952 };
+  const CORE_Y = { 0: 1210, 1: 1149, 2: 1088, 3: 1027, 4: 966 };
   const CORE_X = {
     xtremax: 160, gaussx: 400, functax: 650, pipekit: 1045,
     pyrox: 53, geonnax: 141, optax_bayes: 254, gauss_flows: 383, kernellib: 504, filterax: 613, argminax: 718, integrix: 823,
@@ -1285,7 +1285,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
   // [importer, imported]: stack-to-stack imports from the source scan
   const EDGES = [
     ["filterax", "gaussx"],
-    ["kernellib", "gaussx"], ["kernellib", "geonnax"],
+    ["kernellib", "gaussx"],
     ["pyrox", "gaussx"],
     ["pyrox-gp", "pyrox"], ["pyrox-gp", "gaussx"], ["pyrox-gp", "kernellib"], ["pyrox-gp", "geonnax"], ["pyrox-gp", "gauss_flows"],
     ["pyrox-lgm", "gaussx"], ["pyrox-lgm", "kernellib"],
@@ -1338,7 +1338,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     ["tracerax", "functax"], ["tracerax", "integrix"]
   );
   // imports that exist today and are planned to go away
-  const LEAVING = [["geoproducts", "geoops"]];
+  const LEAVING = [["geoproducts", "geoops"], ["kernellib", "geonnax"]];
   const PLANNED_FUNCTAX = PLANNED.filter(([, t]) => t === "functax");
 
   // import statements of each foundation, from the source scan
@@ -1414,8 +1414,8 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     { key: "found",    x: 10,  y: 1268, w: 1220, h: 172, label: "Foundations",     rule: "third-party: what the stack builds on" }
   ];
   const TIER_ROWS = [
-    { band: "core", y: 1200, t: "T0" }, { band: "core", y: 1112, t: "T1" }, { band: "core", y: 1030, t: "T2" }, { band: "core", y: 952, t: "T3" },
-    { band: "numerics", y: 860, t: "T0" }, { band: "numerics", y: 785, t: "T1" }, { band: "numerics", y: 710, t: "T2" },
+    { band: "core", y: 1210, t: "T0" }, { band: "core", y: 1149, t: "T1" }, { band: "core", y: 1088, t: "T2" }, { band: "core", y: 1027, t: "T3" }, { band: "core", y: 966, t: "T4" },
+    { band: "numerics", y: 868, t: "T0" }, { band: "numerics", y: 816, t: "T1" }, { band: "numerics", y: 764, t: "T2" }, { band: "numerics", y: 712, t: "T3" },
     { band: "toolkits", y: 593, t: "T0" }, { band: "toolkits", y: 541, t: "T1" }, { band: "toolkits", y: 489, t: "T2" },
     { band: "toolkits", y: 437, t: "T3" }, { band: "toolkits", y: 385, t: "T4" },
     { band: "models", y: 228, t: "T0" }, { band: "models", y: 164, t: "T1" }
@@ -1611,11 +1611,13 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     return TODAY_RANK[la] > TODAY_RANK[lb];
   };
   const count = (list, fn) => list.filter(([s, t]) => fn(s, t)).length;
+  const failing = (list) => list.filter(([s, t]) => !allowedProposed(s, t)).map(([s, t]) => `${s} → ${t}`);
+  const failNote = (list) => (failing(list).length ? ` (not allowed: ${failing(list).join(", ")})` : "");
   const blockedToday = PLANNED_FUNCTAX.filter(([s, t]) => !allowedToday(s, t)).map(([s]) => s);
   const foundCount = Object.values(USES).reduce((a, m) => a + Object.keys(m).length, 0);
   document.getElementById("check").innerHTML = `
-    <span class="ok">Imports between our libraries today: <b>${count(EDGES, allowedProposed)} of ${EDGES.length}</b> allowed in the proposed layers</span>
-    <span class="ok">Planned imports of functax, integrix and argminax: <b>${count(PLANNED, allowedProposed)} of ${PLANNED.length}</b> allowed</span>
+    <span class="ok">Imports between our libraries today: <b>${count(EDGES, allowedProposed)} of ${EDGES.length}</b> allowed in the proposed layers${failNote(EDGES)}, plus ${LEAVING.length} planned to go away</span>
+    <span class="ok">Planned imports (the new libraries and their users): <b>${count(PLANNED, allowedProposed)} of ${PLANNED.length}</b> allowed${failNote(PLANNED)}</span>
     <span class="warn">Under today's layers, with functax in GeoNumerics tier 0: <b>${count(PLANNED_FUNCTAX, allowedToday)} of ${PLANNED_FUNCTAX.length}</b> functax users allowed${blockedToday.length ? ` (blocked: ${blockedToday.join(", ")})` : ""}</span>
     <span>Imports into the foundations: <b>${foundCount}</b>, all pointing down</span>`;
 
