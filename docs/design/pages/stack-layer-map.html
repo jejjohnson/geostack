@@ -607,7 +607,9 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
           <tr><td class="lib">somax</td><td class="lib">sesmax-core</td><td>state, terms, forcing, DA adapters and I/O, moved at somax <code>9cb19b3</code>; the ocean models follow into sesmax-ocean, then somax is archived</td></tr>
           <tr><td class="lib">sesmax-core</td><td class="lib">integrix</td><td>generic stepping and step-size control (<code>stable_step</code>, <code>imex_stepsize_controller</code>); model terms stay</td></tr>
           <tr><td class="lib">pyrox-lgm</td><td class="lib">argminax</td><td>the inner Newton fit and the outer L-BFGS search of <code>inla()</code></td></tr>
-          <tr><td class="lib">pyrox-gp</td><td class="lib">kernellib</td><td>its duplicate <code>KernelOperator</code> (one object, one name)</td></tr>
+          <tr><td class="lib">pyrox-gp</td><td class="lib">kernellib</td><td>its duplicate <code>KernelOperator</code> (one object, one name); <code>spectral_density</code>, which is kernellib's <code>unit_spectral_density</code> scaled by variance and lengthscale</td></tr>
+          <tr><td class="lib">pyrox-gp</td><td class="lib">functax</td><td>the re-export of geonnax's bases in <code>_basis</code>; pyrox-gp and pyrox-nn import bases from functax directly</td></tr>
+          <tr><td class="lib">pyrox-gp</td><td class="lib">pyrox</td><td>freezing a module's priors before a call (<code>_kernel_context</code>, <code>_freeze</code>): PyroxModule machinery, made public in pyrox</td></tr>
           <tr><td class="lib">gauss_flows</td><td class="lib">functax</td><td>its two interpax calls; interpax leaves the stack</td></tr>
           <tr><td class="lib">pyrox-gp</td><td class="lib">argminax</td><td>the iteration in <code>LaplaceInference</code>, <code>GaussNewtonInference</code>, <code>QuasiNewtonInference</code> and their Markov versions</td></tr>
           <tr><td class="lib">vardax</td><td class="lib">argminax</td><td>adjoint strategies (k-step, one-step, mapping), <code>GaussNewtonHessian</code>, <code>LaplaceCovariance</code></td></tr>
@@ -782,6 +784,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
       <li><b>geonnax moves to Core tier 1</b>, because it now imports functax (tier 0).</li>
       <li><b>kernellib, vardax, sesmax-core and pyrox-gp import functax instead of geonnax.</b> kernellib's import of geonnax is the one that already breaks the layer rule in the proposed layers (both are tier 1); it goes away with the move.</li>
       <li><b>pyrox-nn becomes geonnax's one consumer</b> in the stack; applications are the rest.</li>
+      <li><b>pyrox-nn stops importing pyrox-gp.</b> Its three imports from pyrox-gp were bases (geonnax's, re-exported), a kernel's spectral density (kernellib maths) and the prior-freezing helper (pyrox machinery). With each taken from its home, pyrox-gp and pyrox-nn are siblings at Core tier 2.</li>
     </ul>
     <h3 class="minor small">Grey zones</h3>
     <ul class="decide">
@@ -1140,7 +1143,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
         <li>The layer table and tiers in <code>scripts/dependency_graph.py</code>, and the diagram it generates.</li>
         <li>One capability index per layer: Core replaces GeoML.</li>
         <li>The pixi environments: <code>geoml</code> becomes <code>core</code>, or merges into the default.</li>
-        <li>Two code moves, both planned on this page: kernellib imports functax instead of geonnax (the geonnax split), and geoproducts stops importing geoops (its presets become data). Every other import found today fits as it is, with vardax at Core tier 4, above pipekit-jax, and gridax at GeoNumerics tier 1, above geophysix, whose cell areas it uses.</li>
+        <li>Four imports go away, each by a move planned on this page: kernellib and pyrox-gp take bases from functax instead of geonnax (the geonnax split); pyrox-nn takes bases, spectral densities and prior freezing from functax, kernellib and pyrox instead of pyrox-gp; and geoproducts stops importing geoops (its presets become data). Every other import found today fits as it is, with vardax at Core tier 4, above pipekit-jax, and gridax at GeoNumerics tier 1, above geophysix, whose cell areas it uses.</li>
       </ul>
     </div>
   </section>
@@ -1208,7 +1211,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     { id: "pyrox",         layer: "core",     tier: 1, today: "geoml",    ws: "pyrox", x: 73,  y: 640, why: "pyrox: the Equinox-to-NumPyro bridge (PyroxModule, Parameterized) and ensemble inference; 2k lines" },
     { id: "pyrox-gp",      layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 200, y: 560, why: "pyrox-gp: Gaussian-process building blocks: kernels, guides, likelihoods, sparse and Markov GPs, pathwise sampling; 10.8k lines" },
     { id: "pyrox-lgm",     layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 360, y: 560, why: "pyrox-lgm: latent Gaussian models: GMRF components, PC priors, inla(); 4.7k lines" },
-    { id: "pyrox-nn",      layer: "core",     tier: 3, today: "geoml",    ws: "pyrox", x: 420, y: 480, why: "pyrox-nn: Bayesian and uncertainty-aware layers and the Bayesian neural field estimator; 7.2k lines" },
+    { id: "pyrox-nn",      layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 420, y: 480, why: "pyrox-nn: Bayesian and uncertainty-aware layers and the Bayesian neural field estimator; 7.2k lines" },
     { id: "manipy",        layer: "core",     tier: 2, today: "outside",  x: 520, y: 560, why: "manifold alignment, dimensionality reduction and hyperspectral workflows on kernellib" },
     { id: "geophysix",     layer: "numerics", tier: 0, today: "none",     x: 450, y: 668, why: "constants, ellipsoid and sphere metrics, Coriolis, geodesics, thermodynamics, equations of state, column units", proposed: true },
     { id: "gridax",        layer: "numerics", tier: 1, today: "none",     x: 330, y: 616, why: "geophysical grids, vertical coordinates and remapping, masks, metric arrays, diagnostic finite differences", proposed: true },
@@ -1264,8 +1267,8 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     xtremax: 160, gaussx: 400, functax: 650, pipekit: 1045,
     pyrox: 53, geonnax: 141, optax_bayes: 254, gauss_flows: 383, kernellib: 504, filterax: 613, argminax: 718, integrix: 823,
     "pipekit-array": 965, "pipekit-train": 1125,
-    "pyrox-gp": 200, "pyrox-lgm": 360, manipy: 520, vardax: 680, "pipekit-cycle": 1045,
-    "pyrox-nn": 420, "pipekit-jax": 960, "pipekit-evaluate": 1120,
+    "pyrox-gp": 150, "pyrox-nn": 290, "pyrox-lgm": 430, manipy: 570, vardax: 680, "pipekit-cycle": 1045,
+    "pipekit-jax": 960, "pipekit-evaluate": 1120,
   };
   const NUM_SHIFT = 200;
   FOUND_ROWS.forEach((row) => {
@@ -1286,9 +1289,9 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     ["filterax", "gaussx"],
     ["kernellib", "gaussx"],
     ["pyrox", "gaussx"],
-    ["pyrox-gp", "pyrox"], ["pyrox-gp", "gaussx"], ["pyrox-gp", "kernellib"], ["pyrox-gp", "geonnax"], ["pyrox-gp", "gauss_flows"],
+    ["pyrox-gp", "pyrox"], ["pyrox-gp", "gaussx"], ["pyrox-gp", "kernellib"], ["pyrox-gp", "gauss_flows"],
     ["pyrox-lgm", "gaussx"], ["pyrox-lgm", "kernellib"],
-    ["pyrox-nn", "pyrox"], ["pyrox-nn", "pyrox-gp"], ["pyrox-nn", "geonnax"],
+    ["pyrox-nn", "pyrox"], ["pyrox-nn", "geonnax"],
     ["vardax", "gaussx"], ["vardax", "pipekit"], ["vardax", "pipekit-cycle"], ["vardax", "pipekit-jax"], ["vardax", "pipekit-train"], ["vardax", "geonnax"],
     ["optax_bayes", "gaussx"], ["gauss_flows", "gaussx"],
     ["spectraldiffx", "gaussx"],
@@ -1319,7 +1322,9 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     ["argminax", "gaussx"],
     ["geonnax", "functax"],
     ["xrops", "xrcf"], ["xrproducts", "xrcf"],
-    ["gauss_flows", "functax"]
+    ["gauss_flows", "functax"],
+    // pyrox-nn takes its bases and spectral densities from below, not from pyrox-gp
+    ["pyrox-nn", "functax"], ["pyrox-nn", "kernellib"]
   ];
   const to = (target, sources) => sources.map((s) => [s, target]);
   PLANNED.push(
@@ -1336,7 +1341,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     ["tracerax", "functax"], ["tracerax", "integrix"]
   );
   // imports that exist today and are planned to go away
-  const LEAVING = [["geoproducts", "geoops"], ["kernellib", "geonnax"]];
+  const LEAVING = [["geoproducts", "geoops"], ["kernellib", "geonnax"], ["pyrox-gp", "geonnax"], ["pyrox-nn", "pyrox-gp"]];
   const PLANNED_FUNCTAX = PLANNED.filter(([, t]) => t === "functax");
 
   // import statements of each foundation, from the source scan
@@ -1671,13 +1676,13 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     "finitevolX": ["Arakawa C-grid finite-volume operators, advection and limiters, multigrid and elliptic solvers, coast-aware masks", "time steppers → <b>integrix</b>; vertical modes → <b>gridax</b>"],
     "tracerax": ["Lagrangian particle seeding and advection, FTLE, residence time, connectivity, footprints", "Eulerian finite-volume advection → <b>finitevolX</b>; plume physics → <b>plumax</b>"],
     "pyrox": ["the Equinox-to-NumPyro bridge (PyroxModule, Parameterized, pyrox_method), ensemble inference, a Laplace approximation around the MAP",
-              "Gaussian algebra → <b>gaussx</b> (through its <code>[laplace]</code> extra); everything model-specific → the three subpackages"],
-    "pyrox-gp": ["Gaussian-process building blocks: kernels on kernellib, guides, likelihoods, inducing points, sparse and Markov GPs, multi-output and latent-factor models, warped GPs, pathwise sampling, bases (Slepian caps)",
-                 "the iteration in Laplace, Gauss–Newton and quasi-Newton inference → <b>argminax</b>; bases → <b>functax</b>; its own <code>KernelOperator</code> duplicates kernellib's → <b>kernellib</b>"],
+              "Gaussian algebra → <b>gaussx</b> (through its <code>[laplace]</code> extra); everything model-specific → the three subpackages, which import pyrox and never each other's internals"],
+    "pyrox-gp": ["Gaussian-process building blocks: kernels on kernellib, guides, likelihoods, inducing points, sparse and Markov GPs, multi-output and latent-factor models, warped GPs, pathwise sampling",
+                 "the iteration in Laplace, Gauss–Newton and quasi-Newton inference → <b>argminax</b>; bases, Slepian caps included → <b>functax</b>; its own <code>KernelOperator</code> and <code>spectral_density</code> → <b>kernellib</b>; freezing priors → <b>pyrox</b>"],
     "pyrox-lgm": ["latent Gaussian models: GMRF components (SPDE, areal, temporal, combinators), PC priors, a formula interface, <code>inla()</code>, diagnostics",
                   "the inner Newton fit and the outer L-BFGS search of <code>inla()</code> → <b>argminax</b>; sparse precision algebra stays on <b>gaussx</b>; <code>to_xarray</code> is an export at the edge. Declares pyrox but never imports it"],
     "pyrox-nn": ["Bayesian and uncertainty-aware layers (SNGP, VSSGP, SIREN, MFN, Slepian features, ensembles, heteroscedastic heads) and the Bayesian neural field estimator API",
-                 "plain layers and encoders stay in <b>geonnax</b>; bases come from <b>pyrox-gp</b> (to <b>functax</b>)"],
+                 "plain layers and encoders stay in <b>geonnax</b>; bases come from <b>functax</b> and spectral densities from <b>kernellib</b>, not from pyrox-gp: the two are siblings. A pyrox-gp kernel passed to <code>HSGPFeatures</code> is the caller's composition, not an import"],
     "vardax": ["variational DA (3D/4D-Var, OI), observation operators, background covariances, control transforms", "solvers, curvature, adjoints → <b>argminax</b>; bilinear stencils → <b>functax</b>"],
     "manipy": ["manifold learning, hyperspectral workflows, unmixing, MNF and PCA", "kernels and graphs → <b>kernellib</b>"],
     "integrix": ["integration over time, space, spectrum and probability: quadrature procedures, cumulative integrals, Monte Carlo, ODE steppers, step-size control, adjoints", "quadrature rules → <b>functax</b>; integrands and measures stay with their domains"],
