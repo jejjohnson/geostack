@@ -530,7 +530,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
         <div class="rel-from"><span class="pill ext">diffrax</span><span class="pill ext">quadax adaptive</span><span class="pill ext">scipy.integrate</span></div>
         <div class="rel-kind k-extends">extends</div>
         <div class="rel-to"><span class="pill c-core new">integrix</span></div>
-        <div class="rel-note">the 11 diffrax solver classes now in finitevolX and the adjoint strategies now in pipekit-jax; adaptive quadrature written here, drawing on quadax's design (adaptive Gauss–Kronrod, tanh–sinh, Romberg, cumulative integrals) without depending on it</div>
+        <div class="rel-note">the 10 diffrax time steppers now in finitevolX (its semi-Lagrangian scheme stays there) and the adjoint strategies now in pipekit-jax; adaptive quadrature written here, drawing on quadax's design (adaptive Gauss–Kronrod, tanh–sinh, Romberg, cumulative integrals) without depending on it</div>
       </div>
       <div class="rel-row">
         <div class="rel-topic">Nonlinear solves</div>
@@ -594,7 +594,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
       <table>
         <thead><tr><th>From</th><th>To</th><th>What</th></tr></thead>
         <tbody>
-          <tr><td class="lib">finitevolX</td><td class="lib">integrix</td><td>11 diffrax solver classes: forward Euler, RK2 to RK4, SSP-RK, IMEX, Adams–Bashforth, leapfrog with Robert–Asselin filter, split-explicit and semi-Lagrangian</td></tr>
+          <tr><td class="lib">finitevolX</td><td class="lib">integrix</td><td>10 diffrax solver classes: forward Euler, RK2 to RK4, SSP-RK, IMEX, Adams–Bashforth, leapfrog with Robert–Asselin filter and split-explicit. <code>SemiLagrangianSolver</code> and <code>semi_lagrangian_step</code> stay: an advection scheme, field in and field out, that takes its interpolation from functax</td></tr>
           <tr><td class="lib">pipekit-experiment</td><td class="lib out">GeoBench</td><td>the whole package: tracking adapters, runs, the model registry, Hydra and DVC glue; nothing in the stack imports it</td></tr>
           <tr><td class="lib">pipekit-train</td><td class="lib">none</td><td>drop the <code>[experiment]</code> extra: declared, never imported, and it would point Core up at the apps</td></tr>
           <tr><td class="lib">pipekit-jax</td><td class="lib">integrix</td><td><code>truncated_scan</code>, <code>to_diffrax_adjoint</code>; pipekit keeps composition and <code>JaxOperator</code></td></tr>
@@ -639,10 +639,10 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
           <tr><td class="lib">geoarray, geoops</td><td class="lib">geophysix</td><td>pixel areas and the Earth's radius (defined four ways in geotoolz today)</td></tr>
           <tr><td class="lib">radtrax, plumax</td><td class="lib">radiomax</td><td>per-pixel geometry, geometric air-mass factor, radiometric conversions</td></tr>
           <tr><td class="lib">xrops (<code>ocn</code>, <code>atm</code>, <code>budgets</code>, <code>transforms</code>, <code>anomaly</code>, <code>metrics</code>)</td><td class="lib">diagnostix</td><td>vorticity, strain, Okubo–Weiss, geostrophy, N², column integrals, budgets; spectra, climatologies and anomalies, trends, metrics; the DataArray API stays in xrops</td></tr>
-          <tr><td class="lib">plumax, xrops</td><td class="lib">tracerax</td><td>particle tracking machinery; the planned <code>xrtoolz.lagrangian</code> epic</td></tr>
+          <tr><td class="lib">plumax (<code>lagrangian</code>), xrops</td><td class="lib">tracerax</td><td>the particle machinery: <code>ParticleState</code>, <code>langevin_step</code>, <code>integrate_particles</code>, <code>bin_positions</code>, <code>compute_footprint</code>; turbulence closures (<code>HannaTurbulence</code>) and source inversions stay in plumax, and particles take σ<sub>w</sub>(z) as an argument. xrops: the planned <code>xrtoolz.lagrangian</code> epic</td></tr>
           <tr><td class="lib">sesmax-core, finitevolX</td><td class="lib">gridax</td><td>vertical modes</td></tr>
           <tr><td class="lib">sesmax-core, plumax, xrops</td><td class="lib">geophysix</td><td>physical constants, thermodynamics, seawater equations of state</td></tr>
-          <tr><td class="lib">finitevolX</td><td class="lib out">integrix (Core)</td><td>moves out: 11 diffrax time-stepper classes</td></tr>
+          <tr><td class="lib">finitevolX</td><td class="lib out">integrix (Core)</td><td>moves out: 10 diffrax time-stepper classes; the semi-Lagrangian scheme stays</td></tr>
           <tr><td class="lib">spectraldiffx</td><td class="lib out">functax (Core)</td><td>moves out: Chebyshev and spherical grids with their quadrature</td></tr>
         </tbody>
       </table>
@@ -715,7 +715,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
           <tr><td class="lib">plumax</td><td class="lib">radtrax</td><td>spectroscopy copies</td></tr>
           <tr><td class="lib">sesmax-core</td><td class="lib out">integrix (Core)</td><td>moves out: <code>stable_step</code>, <code>imex_stepsize_controller</code>; the model terms stay</td></tr>
           <tr><td class="lib">radtrax</td><td class="lib out">argminax (Core)</td><td>moves out: optimal-estimation loops</td></tr>
-          <tr><td class="lib">plumax</td><td class="lib out">tracerax</td><td>moves out: particle tracking machinery; plume physics stays</td></tr>
+          <tr><td class="lib">plumax</td><td class="lib out">tracerax</td><td>moves out: particle state, drift–diffusion stepping, binning and footprints; turbulence closures and inversions stay</td></tr>
         </tbody>
       </table>
     </div>
@@ -1135,6 +1135,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
         <li><b>geonnax.</b> The name says geo, but its encoders and sphere grids are maths on the sphere, which passes the Core test.</li>
         <li><b>xtremax.</b> Its "spatiotemporal data extraction" belongs in GeoStack if it reads products or CRS data; the modelling stays in Core.</li>
         <li><b>One diagnostics library, not two.</b> Physical diagnostics need statistics (eddy kinetic energy and eddy fluxes are built on anomalies) and spectral statistics need kinematics (spectral fluxes use velocities), so a split would make each import the other. diagnostix holds both, in submodules: <code>kinematics</code>, <code>column</code>, <code>budgets</code>, <code>stats</code>, <code>spectral</code>, <code>modes</code>, <code>skill</code>. What goes in: a quantity derived from a geophysical field, physical or statistical, that needs area weights, a calendar or a constant; signal processing that needs none of these is functax's.</li>
+        <li><b>Eulerian or Lagrangian.</b> finitevolX and spectraldiffx hold operators on fields, whose state stays on the grid; tracerax holds positions carried forward in time and the analysis of their trajectories. Semi-Lagrangian advection traces a departure point for one step and discards it, so it stays with the field schemes. FTLE needs the flow map, so it is tracerax's; Okubo–Weiss uses the instantaneous field, so it is diagnostix's. The two sides never import each other: a model couples them through velocity in and concentration out.</li>
         <li><b>spectraldiffx.</b> Its package description is stale ("Pre-, Geo-, and ML processing for ocean applications") and should say what it does.</li>
       </ol>
     </div>
@@ -1639,7 +1640,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
   // ---------- boundaries ----------
   const BOUNDS = {
     "plumax": ["plume physics: Gaussian plume and puff, LES finite volumes, Lagrangian plumes; integrated mass enhancement and flux; inversions; met loaders",
-               "particle tracking machinery → <b>tracerax</b>; spectroscopy copies → <b>radtrax</b>; geometry → <b>radiomax</b>; constants → <b>geophysix</b>"],
+               "particle state, stepping, binning and footprints → <b>tracerax</b> (turbulence closures and inversions stay); spectroscopy copies → <b>radtrax</b>; geometry → <b>radiomax</b>; constants → <b>geophysix</b>"],
     "radtrax": ["radiative transfer, spectroscopy and cross-section tables, optics, surface, instrument (SRF, PSF, noise), retrievals, full air-mass factors, CH₄ column physics, matched-filter targets",
                 "per-pixel geometry and radiometric conversions → <b>radiomax</b>; optimal-estimation loops → <b>argminax</b>; SRF tables stay in <b>georeader</b>"],
     "sesmax-core": ["model state and parameters, term algebra, forcing, DA adapters, monitors, I/O, test problems",
@@ -1668,13 +1669,13 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
                   "model scales and non-dimensionalisation stay in the models"],
     "gridax": ["staggered, curvilinear, swath and spherical grids, all CRS-free (geoarray adds the CRS); vertical coordinates and remapping; masks; metric arrays and cell areas; diagnostic A-grid finite differences; vertical modes",
                "model-grade C-grid operators → <b>finitevolX</b>; spectral transforms → <b>spectraldiffx</b>; affine grids and point location → <b>functax</b>; the CRS and the data → <b>geoarray</b>"],
-    "spectraldiffx": ["spectral and spherical-harmonic differentiation, spectral elliptic solvers", "bases and quadrature → <b>functax</b>; grids → <b>gridax</b>"],
+    "spectraldiffx": ["spectral and spherical-harmonic differentiation, pseudo-spectral advection (u·∇q), spectral elliptic solvers: operators on fields", "bases and quadrature → <b>functax</b>; grids → <b>gridax</b>; particles and trajectories → <b>tracerax</b>"],
     "diagnostix": ["diagnostics of geophysical fields, physical and statistical: kinematics (vorticity, strain, Okubo–Weiss, geostrophy, PV); columns (N², mixed-layer depth, PBL height, column integrals); budgets; climatologies, anomalies, trends and filters; power, cross and rotary spectra, wavelets and spectral fluxes; area-weighted EOFs; skill scores",
                    "benchmark contracts → <b>pipekit</b> (evaluate); bases and generic signal processing → <b>functax</b>; the DataArray API stays in <b>xrops</b>"],
     "radiomax": ["solar and viewing geometry per pixel, Earth–Sun distance, radiometric conversions, Planck and brightness temperature, geometric air-mass factor, parallax and geostationary navigation, swath and bowtie geometry, empirical retrievals (split-window SST and LST, ocean-colour ratios, BRDF and NBAR), SAR calibration and despeckling, altimetry corrections",
                  "radiative transfer and full air-mass factors → <b>radtrax</b>; SRF tables → <b>georeader</b>; indices stay in <b>geoops</b>"],
-    "finitevolX": ["Arakawa C-grid finite-volume operators, advection and limiters, multigrid and elliptic solvers, coast-aware masks", "time steppers → <b>integrix</b>; vertical modes → <b>gridax</b>"],
-    "tracerax": ["Lagrangian particle seeding and advection, FTLE, residence time, connectivity, footprints", "Eulerian finite-volume advection → <b>finitevolX</b>; plume physics → <b>plumax</b>"],
+    "finitevolX": ["Arakawa C-grid finite-volume operators, advection and limiters, semi-Lagrangian advection, multigrid and elliptic solvers, coast-aware masks: operators on fields, whose state stays on the grid", "time steppers → <b>integrix</b>; vertical modes → <b>gridax</b>; interpolation at departure points → <b>functax</b>; particles and trajectories → <b>tracerax</b>"],
+    "tracerax": ["positions carried forward in time and the analysis of trajectories: particle seeding, deterministic and stochastic advection, FTLE, residence time, connectivity, binning to grids, footprints", "operators on fields, including semi-Lagrangian schemes that discard their departure points → <b>finitevolX</b> and <b>spectraldiffx</b>; turbulence closures and plume physics → <b>plumax</b>; velocity at points → <b>functax</b>; stepping → <b>integrix</b>"],
     "pyrox": ["the Equinox-to-NumPyro bridge (PyroxModule, Parameterized, pyrox_method) and ensemble inference; no Gaussian algebra, so no gaussx",
               "last-layer Laplace → <b>pyrox-nn</b>, its curvature and evidence → <b>argminax</b> (<a href=\"https://github.com/jejjohnson/pyrox/issues/332\">pyrox#332</a>); everything model-specific → the three subpackages, which import pyrox and never each other's internals"],
     "pyrox-gp": ["Gaussian-process building blocks: kernels on kernellib, guides, likelihoods, inducing points, sparse and Markov GPs, multi-output and latent-factor models, warped GPs, pathwise sampling",
