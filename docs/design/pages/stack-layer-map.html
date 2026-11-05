@@ -490,7 +490,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     </div>
     <div class="canvas">
       <svg class="graph" id="graph" viewBox="0 0 1240 1450" role="img" aria-labelledby="graph-desc">
-        <desc id="graph-desc">Dependency graph of the GeoStack libraries in the proposed layers. Third-party foundations at the bottom: JAX, Equinox, jaxtyping, lineax, optimistix, diffrax, einx, optax, NumPyro, FlowJAX, interpax, NumPy, SciPy, xarray, pyproj, Shapely, rasterio and georeader. Core above them holds the pipekit workspace (pipekit, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate), gaussx, functax, geonnax, xtremax, kernellib, optax_bayes, gauss_flows, filterax, vardax and the pyrox workspace (pyrox, pyrox-gp, pyrox-lgm, pyrox-nn). GeoNumerics above Core holds geophysix, gridax, spectraldiffx, diagnostix, radiomax, finitevolX, skillax and tracerax. GeoStack sit above GeoNumerics: the geotoolz workspace (geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts) and the xrtoolz workspace (xrproducts, xrops), with georeader among the third-party foundations. GeoModels (radtrax, sesmax-core, plumax, and the planned sesmax-ocean and sesmax-atmos) sit above both, and applications on top. functax, integrix and argminax are proposed.</desc>
+        <desc id="graph-desc">Dependency graph of the GeoStack libraries in the proposed layers. Third-party foundations at the bottom: JAX, Equinox, jaxtyping, lineax, optimistix, diffrax, einx, optax, NumPyro, FlowJAX, interpax, NumPy, SciPy, xarray, pyproj, Shapely, rasterio and georeader. Core above them holds the pipekit workspace (pipekit, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate), gaussx, functax, geonnax, xtremax, kernellib, optax_bayes, gauss_flows, filterax, vardax and the pyrox workspace (pyrox, pyrox-gp, pyrox-lgm, pyrox-nn). GeoNumerics above Core holds geophysix, gridax, spectraldiffx, diagnostix, radiomax, finitevolX and tracerax. GeoStack sit above GeoNumerics: the geotoolz workspace (geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts) and the xrtoolz workspace (xrproducts, xrops), with georeader among the third-party foundations. GeoModels (radtrax, sesmax-core, plumax, and the planned sesmax-ocean and sesmax-atmos) sit above both, and applications on top. functax, integrix and argminax are proposed.</desc>
         <defs>
           <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-default"/></marker>
           <marker id="arrow-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-hot"/></marker>
@@ -624,7 +624,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     <div class="legend-kinds"><span class="chip">imports today</span><span class="chip planned">planned</span><span class="lk-arrow">↓ builds on</span><span class="lk-arrow">↑ used by</span></div>
 
     <h3 class="minor layer-h" style="--lc:var(--numerics)">GeoNumerics</h3>
-    <p class="sub">Numerical methods on geophysical domains, on plain arrays: the grids, spheres and physics geophysics uses, but no CRS and no data files. Eight libraries, six of them new; most of what fills them is already written, spread over geotoolz, xrtoolz and the models.</p>
+    <p class="sub">Numerical methods on geophysical domains, on plain arrays: the grids, spheres and physics geophysics uses, but no CRS and no data files. Seven libraries, five of them new; most of what fills them is already written, spread over geotoolz, xrtoolz and the models.</p>
     <div class="tiers band-numerics" id="tiers-numerics"></div>
     <h3 class="minor small">What moves in</h3>
     <div class="table-wrap">
@@ -635,8 +635,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
           <tr><td class="lib">geoarray, geoops (<code>geom</code>), xrops (<code>grad</code>)</td><td class="lib">gridax</td><td>curvilinear and swath cell geometry, diagnostic finite differences, metric arrays</td></tr>
           <tr><td class="lib">geoarray, geoops</td><td class="lib">geophysix</td><td>pixel areas and the Earth's radius (defined four ways in geotoolz today)</td></tr>
           <tr><td class="lib">radtrax, plumax</td><td class="lib">radiomax</td><td>per-pixel geometry, geometric air-mass factor, radiometric conversions</td></tr>
-          <tr><td class="lib">xrops (<code>ocn</code>, <code>atm</code>, <code>budgets</code>)</td><td class="lib">diagnostix</td><td>vorticity, strain, Okubo–Weiss, geostrophy, N², column integrals, budgets; the DataArray API stays in xrops</td></tr>
-          <tr><td class="lib">xrops (<code>transforms</code>, <code>anomaly</code>, <code>metrics</code>)</td><td class="lib">skillax</td><td>spectra, climatologies and anomalies, trends, metrics</td></tr>
+          <tr><td class="lib">xrops (<code>ocn</code>, <code>atm</code>, <code>budgets</code>, <code>transforms</code>, <code>anomaly</code>, <code>metrics</code>)</td><td class="lib">diagnostix</td><td>vorticity, strain, Okubo–Weiss, geostrophy, N², column integrals, budgets; spectra, climatologies and anomalies, trends, metrics; the DataArray API stays in xrops</td></tr>
           <tr><td class="lib">plumax, xrops</td><td class="lib">tracerax</td><td>particle tracking machinery; the planned <code>xrtoolz.lagrangian</code> epic</td></tr>
           <tr><td class="lib">sesmax-core, finitevolX</td><td class="lib">gridax</td><td>vertical modes</td></tr>
           <tr><td class="lib">sesmax-core, plumax, xrops</td><td class="lib">geophysix</td><td>physical constants, thermodynamics, seawater equations of state</td></tr>
@@ -690,7 +689,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
           <tr><td class="lib">geoarray, geoops, geoproducts</td><td class="lib out">GeoNumerics</td><td>radiometry and geometry → radiomax; grid geometry → gridax; areas and constants → geophysix (table above)</td></tr>
           <tr><td class="lib">geoops (<code>plume</code>, <code>matched_filter</code>)</td><td class="lib out">plumax, radtrax</td><td>plume and matched-filter code (#482)</td></tr>
           <tr><td class="lib">xrproducts (<code>types</code>), xrops (<code>cf</code>, <code>geom</code> CRS and subsetting)</td><td class="lib">xrcf (proposed)</td><td>the CF Variable registry, the typed vocabulary, coordinate and CRS conventions; xrops then drops its import of xrproducts</td></tr>
-          <tr><td class="lib">xrops</td><td class="lib out">GeoNumerics</td><td>diagnostics → diagnostix; spectra and metrics → skillax; Lagrangian → tracerax (table above)</td></tr>
+          <tr><td class="lib">xrops</td><td class="lib out">GeoNumerics</td><td>diagnostics, spectra and metrics → diagnostix; Lagrangian → tracerax (table above)</td></tr>
           <tr><td class="lib">geoproducts (<code>presets</code>)</td><td class="lib">geoops</td><td>sensor presets become plain data specs and geoops builds the Operator (<code>RGBRecipe.from_spec</code>); the <code>[operators]</code> extra goes, and geoproducts drops from tier 4 to tier 2, below geoops, mirroring xrproducts below xrops</td></tr>
           <tr><td class="lib">xtremax</td><td class="lib">xrops</td><td>moves in: extraction and simulations on xarray</td></tr>
           <tr><td class="lib">vardax</td><td class="lib">xrops</td><td>moves in: the xarray halves of <code>extract_patches</code> and the observation masks</td></tr>
@@ -765,7 +764,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
         <tbody>
           <tr><td class="topic">bases: Legendre and Gauss–Legendre, scalar and vector spherical harmonics, Slepian (caps and regions), needlets, box Fourier and divergence-free, RBF and Wendland, Gabor frames, DWT matrices, shell products</td><td><span class="pill c-core new">functax</span></td><td>expansions and their maths; trainable θ stays possible</td></tr>
           <tr><td class="topic">sphere grids and quadrature, icosphere and meshes, Laplace–Beltrami eigenbasis</td><td><span class="pill c-core new">functax</span></td><td>CRS-free geometry and quadrature</td></tr>
-          <tr><td class="topic">EOF basis; graph-Laplacian eigenpairs</td><td><span class="pill c-core new">functax</span></td><td>a basis from data (weights as an argument) or from a given operator; skillax adds area weights and the analysis, kernellib builds the graph</td></tr>
+          <tr><td class="topic">EOF basis; graph-Laplacian eigenpairs</td><td><span class="pill c-core new">functax</span></td><td>a basis from data (weights as an argument) or from a given operator; diagnostix adds area weights and the analysis, kernellib builds the graph</td></tr>
           <tr><td class="topic"><code>randfeat</code>: Fourier features at given frequencies</td><td><span class="pill c-core new">functax</span></td><td>drawing frequencies from a kernel's spectral density goes to <span class="pill c-core">kernellib</span>, with pyrox-gp's <code>_spectral_density</code></td></tr>
           <tr><td class="topic"><code>diffops</code>: grad, Laplacian, surface gradient, Laplace–Beltrami of continuous fields</td><td><span class="pill c-core new">functax</span></td><td>derivatives of functions; derivatives on grids belong to gridax, finitevolX and spectraldiffx</td></tr>
           <tr><td class="topic">spherical-harmonic transform, non-uniform FFT</td><td><span class="pill c-core new">functax</span></td><td>basis transforms; spectraldiffx uses the same SHT</td></tr>
@@ -1131,6 +1130,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
         <li><b>Data assimilation.</b> vardax and filterax import only Core, so the test puts them there. If you read DA as geophysical state estimation, they move up to GeoNumerics.</li>
         <li><b>geonnax.</b> The name says geo, but its encoders and sphere grids are maths on the sphere, which passes the Core test.</li>
         <li><b>xtremax.</b> Its "spatiotemporal data extraction" belongs in GeoStack if it reads products or CRS data; the modelling stays in Core.</li>
+        <li><b>One diagnostics library, not two.</b> Physical diagnostics need statistics (eddy kinetic energy and eddy fluxes are built on anomalies) and spectral statistics need kinematics (spectral fluxes use velocities), so a split would make each import the other. diagnostix holds both, in submodules: <code>kinematics</code>, <code>column</code>, <code>budgets</code>, <code>stats</code>, <code>spectral</code>, <code>modes</code>, <code>skill</code>. What goes in: a quantity derived from a geophysical field, physical or statistical, that needs area weights, a calendar or a constant; signal processing that needs none of these is functax's.</li>
         <li><b>spectraldiffx.</b> Its package description is stale ("Pre-, Geo-, and ML processing for ocean applications") and should say what it does.</li>
       </ol>
     </div>
@@ -1213,10 +1213,9 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     { id: "geophysix",     layer: "numerics", tier: 0, today: "none",     x: 450, y: 668, why: "constants, ellipsoid and sphere metrics, Coriolis, geodesics, thermodynamics, equations of state, column units", proposed: true },
     { id: "gridax",        layer: "numerics", tier: 1, today: "none",     x: 330, y: 616, why: "geophysical grids, vertical coordinates and remapping, masks, metric arrays, diagnostic finite differences", proposed: true },
     { id: "spectraldiffx", layer: "numerics", tier: 2, today: "numerics", x: 210, y: 564, why: "spectral and spherical-harmonic discretisations" },
-    { id: "diagnostix",    layer: "numerics", tier: 2, today: "none",     x: 450, y: 564, why: "ocean and atmosphere kinematics, column and mixed-layer physics, budgets", proposed: true },
+    { id: "diagnostix",    layer: "numerics", tier: 2, today: "none",     x: 450, y: 564, why: "diagnostics of geophysical fields: kinematics, columns, budgets, climatologies and anomalies, spectra, EOFs, skill scores", proposed: true },
     { id: "radiomax",      layer: "numerics", tier: 1, today: "none",     x: 590, y: 616, why: "observation geometry, radiometry, empirical retrievals, SAR and altimetry corrections", proposed: true },
-    { id: "finitevolX",    layer: "numerics", tier: 3, today: "numerics", x: 360, y: 512, why: "Arakawa C-grid finite volumes" },
-    { id: "skillax",       layer: "numerics", tier: 3, today: "none",     x: 590, y: 512, why: "spectra, wavelets, filters, climatologies, trends, weighted EOFs, skill scores", proposed: true },
+    { id: "finitevolX",    layer: "numerics", tier: 3, today: "numerics", x: 450, y: 512, why: "Arakawa C-grid finite volumes" },
     { id: "tracerax",      layer: "numerics", tier: 2, today: "none",     x: 690, y: 564, why: "Lagrangian particles, FTLE, residence time, connectivity, footprints", proposed: true },
     { id: "geoarray",      layer: "toolkits", tier: 0, today: "geostack", ws: "geotoolz", x: 250, y: 593, why: "geotoolz-array: the carriers (GeoArray, GeoSwath, GeoPoints), grids with a CRS, windows, RasterSource; 7.5k lines" },
     { id: "geocloud",      layer: "toolkits", tier: 1, today: "geostack", ws: "geotoolz", x: 530, y: 541, why: "geotoolz-cloud: the obstore client pool, file verbs, credentials, async COG and HDF reads; 6.5k lines" },
@@ -1326,15 +1325,14 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
   PLANNED.push(
     ...to("geophysix", ["gridax", "diagnostix", "radiomax", "tracerax", "finitevolX", "spectraldiffx",
                         "sesmax-core", "plumax", "radtrax", "geoarray", "geoops", "xrops"]),
-    ...to("gridax", ["diagnostix", "skillax", "tracerax", "finitevolX", "spectraldiffx",
+    ...to("gridax", ["diagnostix", "tracerax", "finitevolX", "spectraldiffx",
                      "sesmax-core", "geoarray", "geoops", "xrops"]),
-    ...to("diagnostix", ["skillax", "xrops", "sesmax-ocean"]),
+    ...to("diagnostix", ["xrops", "sesmax-ocean"]),
     ...to("radiomax", ["radtrax", "plumax", "geoops", "geoproducts"]),
     // each model's geo extra wraps the model in Operators on carriers
     ...to("geoops", ["radtrax", "plumax", "sesmax-core"]),
-    ...to("skillax", ["xrops"]),
     ...to("tracerax", ["plumax", "sesmax-ocean", "xrops"]),
-    ["gridax", "functax"], ["radiomax", "integrix"], ["skillax", "functax"],
+    ["gridax", "functax"], ["radiomax", "integrix"], ["diagnostix", "functax"],
     ["tracerax", "functax"], ["tracerax", "integrix"]
   );
   // imports that exist today and are planned to go away
@@ -1381,9 +1379,8 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     argminax: ["jax", "jaxtyping", "equinox", "lineax", "optimistix"],
     geophysix: ["jax", "numpy"],
     gridax: ["jax", "numpy", "equinox"],
-    diagnostix: ["jax", "numpy"],
+    diagnostix: ["jax", "numpy", "scipy"],
     radiomax: ["jax", "numpy"],
-    skillax: ["jax", "numpy", "scipy"],
     tracerax: ["jax", "equinox", "diffrax"]
   };
   // main published dependencies between the foundations (not scanned)
@@ -1645,7 +1642,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     "sesmax-ocean": ["shallow-water, QG and spherical ocean models, scenarios, model-consistent budgets", "diagnostics maths → <b>diagnostix</b>; drifters → <b>tracerax</b>"],
     "sesmax-atmos": ["atmosphere component", "thermodynamics → <b>geophysix</b>"],
     "xrops": ["Operators on DataArray, Dataset and DataTree in 17 families: geom, mask, cf, anomaly, extremes, grad, transforms, wavelets, interpolate, ocn, atm, budgets, metrics, learn, inference, viz; <code>lift</code> runs a geoops Operator per item over a cube",
-                "kinematics, columns, budgets → <b>diagnostix</b>; spectra, climatologies, metrics → <b>skillax</b>; Lagrangian → <b>tracerax</b>; constants and EOS → <b>geophysix</b>; differences → <b>gridax</b> (today through geoops); regrid and gap-fill maths → <b>functax</b>; extremes modelling → <b>xtremax</b>"],
+                "kinematics, columns, budgets, spectra, climatologies, metrics → <b>diagnostix</b>; Lagrangian → <b>tracerax</b>; constants and EOS → <b>geophysix</b>; differences → <b>gridax</b> (today through geoops); regrid and gap-fill maths → <b>functax</b>; extremes modelling → <b>xtremax</b>"],
     "xrproducts": ["authenticated archive readers (CMEMS, CDS, AEMET), local methane L2 openers (TROPOMI, EMIT, GHGSat), emission inventories, the typed request vocabulary (BBox, TimeRange, Variable) and a CF variable registry",
                    "the typed vocabulary and the CF Variable registry → <b>xrcf</b>, so xrops stops importing a reader package; a shared request vocabulary with <b>geocatalog</b> is an open question"],
     "xrcf": ["proposed: the floor of the xarray side, as geoarray is of the GeoArray side. CF conventions and the Variable registry (from <code>xrproducts.types</code>), coordinate and CRS conventions (from <code>xrops.cf</code> and <code>xrops.geom</code>: validation, CRS, subsetting), the typed vocabulary (BBox, TimeRange, levels)",
@@ -1667,12 +1664,11 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     "gridax": ["staggered, curvilinear, swath and spherical grids, all CRS-free (geoarray adds the CRS); vertical coordinates and remapping; masks; metric arrays and cell areas; diagnostic A-grid finite differences; vertical modes",
                "model-grade C-grid operators → <b>finitevolX</b>; spectral transforms → <b>spectraldiffx</b>; affine grids and point location → <b>functax</b>; the CRS and the data → <b>geoarray</b>"],
     "spectraldiffx": ["spectral and spherical-harmonic differentiation, spectral elliptic solvers", "bases and quadrature → <b>functax</b>; grids → <b>gridax</b>"],
-    "diagnostix": ["ocean and atmosphere kinematics (vorticity, strain, Okubo–Weiss, geostrophy, PV), N², mixed-layer depth, column integrals, PBL height, budgets",
-                   "the DataArray API stays in <b>xrops</b>"],
+    "diagnostix": ["diagnostics of geophysical fields, physical and statistical: kinematics (vorticity, strain, Okubo–Weiss, geostrophy, PV); columns (N², mixed-layer depth, PBL height, column integrals); budgets; climatologies, anomalies, trends and filters; power, cross and rotary spectra, wavelets and spectral fluxes; area-weighted EOFs; skill scores",
+                   "benchmark contracts → <b>pipekit</b> (evaluate); bases and generic signal processing → <b>functax</b>; the DataArray API stays in <b>xrops</b>"],
     "radiomax": ["solar and viewing geometry per pixel, Earth–Sun distance, radiometric conversions, Planck and brightness temperature, geometric air-mass factor, parallax and geostationary navigation, swath and bowtie geometry, empirical retrievals (split-window SST and LST, ocean-colour ratios, BRDF and NBAR), SAR calibration and despeckling, altimetry corrections",
                  "radiative transfer and full air-mass factors → <b>radtrax</b>; SRF tables → <b>georeader</b>; indices stay in <b>geoops</b>"],
     "finitevolX": ["Arakawa C-grid finite-volume operators, advection and limiters, multigrid and elliptic solvers, coast-aware masks", "time steppers → <b>integrix</b>; vertical modes → <b>gridax</b>"],
-    "skillax": ["power, cross and rotary spectra, spectral fluxes, wavelets, filters, climatologies and anomalies, trends, area-weighted EOFs, skill scores", "benchmark contracts → <b>pipekit</b> (evaluate); the DataArray API stays in <b>xrops</b>"],
     "tracerax": ["Lagrangian particle seeding and advection, FTLE, residence time, connectivity, footprints", "Eulerian finite-volume advection → <b>finitevolX</b>; plume physics → <b>plumax</b>"],
     "pyrox": ["the Equinox-to-NumPyro bridge (PyroxModule, Parameterized, pyrox_method), ensemble inference, a Laplace approximation around the MAP",
               "Gaussian algebra → <b>gaussx</b> (through its <code>[laplace]</code> extra); everything model-specific → the three subpackages"],
@@ -1706,7 +1702,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     "pipekit-train": ["training loops for emulators and amortised inference: TrainingLoop, datasets, losses, callbacks, sweeps, Blackjax tasks, sharding; Lightning through an extra",
                       "experiment tracking → <b>pipekit-experiment</b> (its <code>[experiment]</code> extra is declared but never imported: drop it); the Bayesian learning rule → <b>optax_bayes</b>"],
     "pipekit-evaluate": ["the evaluation framework: the Unit × Lens × Stage taxonomy, scorers, reports, benchmark runs",
-                         "the metrics themselves → <b>skillax</b>; xskillscore and proper scores through extras"],
+                         "the metrics themselves → <b>diagnostix</b>; xskillscore and proper scores through extras"],
     "pipekit-experiment": ["experiment tracking adapters (MLflow, W&B, DVC, Hydra, Metaflow), runs, a content-addressed model registry (local and S3)",
                            "nothing in the stack imports it: it is experiment tooling, so it sits with GeoBench (and serves GeoApps)"]
   };
@@ -1722,7 +1718,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     optax_bayes: ["P", "M"], gauss_flows: ["M"], kernellib: ["P", "M"], filterax: ["P", "M"],
     vardax: ["P", "M", "Oa"], "pipekit-array": ["Oa", "P"], "pipekit-cycle": ["Oa"], "pipekit-jax": ["Oa"], "pipekit-train": ["Oa"], "pipekit-evaluate": ["Oa", "P"], argminax: ["P", "M"], integrix: ["P", "M"], pyrox: ["P", "M"], "pyrox-gp": ["P", "M"], "pyrox-lgm": ["P", "M"], "pyrox-nn": ["M"], manipy: ["P", "M"],
     geophysix: ["P"], gridax: ["P", "M"], spectraldiffx: ["P", "M"], diagnostix: ["P"], radiomax: ["P", "M"],
-    finitevolX: ["P", "M"], skillax: ["P"], tracerax: ["P", "M"],
+    finitevolX: ["P", "M"], tracerax: ["P", "M"],
     geoarray: ["C", "P"], geocloud: ["C", "P"], geopatcher: ["Oc", "P"], geoops: ["Oc", "P"], geocatalog: ["C", "P"],
     geoproducts: ["C"], xrops: ["Oc", "P"], xrproducts: ["P"], xrcf: ["P"],
     "sesmax-core": ["P", "M", "Oa", "Oc:geo"], "sesmax-ocean": ["M", "Oa"], "sesmax-atmos": ["M", "Oa"],
@@ -1733,8 +1729,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     "pipekit-array": [0, 1, 5], "pipekit-train": [5], "pipekit-cycle": [5], "pipekit-jax": [5], "pipekit-evaluate": [4, 5],
     optax_bayes: [2], gauss_flows: [0, 3, 4], kernellib: [0, 1, 2, 3, 4], filterax: [2, 3, 4], argminax: [2, 4], integrix: [0, 2, 4],
     pyrox: [0, 4], "pyrox-gp": [0, 3, 4], "pyrox-lgm": [0, 3, 4], "pyrox-nn": [0, 3], manipy: [3, 4], vardax: [0, 3, 4, 5],
-    geophysix: [0, 1], gridax: [0, 1], spectraldiffx: [0, 1, 2], diagnostix: [1], radiomax: [0, 1], finitevolX: [0, 1, 2],
-    skillax: [1, 4], tracerax: [0, 4],
+    geophysix: [0, 1], gridax: [0, 1], spectraldiffx: [0, 1, 2], diagnostix: [1, 4], radiomax: [0, 1], finitevolX: [0, 1, 2], tracerax: [0, 4],
     geoarray: [0, 1], geocloud: [1], geopatcher: [2, 5], geoops: [1, 5], geocatalog: [0, 1, 4], geoproducts: [0, 1], xrcf: [0, 1],
     xrproducts: [1], xrops: [1, 5],
     "sesmax-core": [0, 3, 5], "sesmax-ocean": [3], "sesmax-atmos": [3], radtrax: [0, 1, 3, 4], plumax: [1, 3, 4, 5],
@@ -1788,10 +1783,9 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
     geophysix: "constants, the Earth's shape, Coriolis, thermodynamics, equations of state",
     gridax: "CRS-free grids: staggered, curvilinear, swath, vertical; metrics and masks",
     spectraldiffx: "spectral and spherical-harmonic derivatives and elliptic solvers",
-    diagnostix: "kinematics, mixed layers, columns and budgets",
+    diagnostix: "kinematics, columns, budgets, climatologies, spectra, EOFs, skill scores",
     radiomax: "viewing geometry, radiometry, empirical retrievals",
     finitevolX: "C-grid finite volumes, advection, elliptic solvers",
-    skillax: "spectra, EOFs, climatologies, skill scores",
     tracerax: "Lagrangian particles, FTLE, residence time, footprints",
     geoarray: "the carriers: GeoArray, GeoSwath, GeoPoints; grids with a CRS; windows; RasterSource",
     geocloud: "object storage: one client pool, file verbs, credentials, COG and HDF reads",
