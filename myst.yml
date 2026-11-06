@@ -56,6 +56,45 @@ project:
         - file: docs/design/package_layout.md
         - file: docs/design/stack_levels.md
         - file: docs/design/stack_layer_map.md
+        - title: Library designs
+          children:
+            - file: docs/design/libraries/libraries.md
+            - title: functax
+              children:
+                - file: docs/design/libraries/functax.md
+                - file: docs/design/libraries/functax_details.md
+            - title: integrix
+              children:
+                - file: docs/design/libraries/integrix.md
+                - file: docs/design/libraries/integrix_details.md
+            - title: argminax
+              children:
+                - file: docs/design/libraries/argminax.md
+                - file: docs/design/libraries/argminax_details.md
+            - title: geophysix
+              children:
+                - file: docs/design/libraries/geophysix.md
+                - file: docs/design/libraries/geophysix_details.md
+            - title: gridax
+              children:
+                - file: docs/design/libraries/gridax.md
+                - file: docs/design/libraries/gridax_details.md
+            - title: radiomax
+              children:
+                - file: docs/design/libraries/radiomax.md
+                - file: docs/design/libraries/radiomax_details.md
+            - title: diagnostix
+              children:
+                - file: docs/design/libraries/diagnostix.md
+                - file: docs/design/libraries/diagnostix_details.md
+            - title: tracerax
+              children:
+                - file: docs/design/libraries/tracerax.md
+                - file: docs/design/libraries/tracerax_details.md
+            - title: xrcf
+              children:
+                - file: docs/design/libraries/xrcf.md
+                - file: docs/design/libraries/xrcf_details.md
         - file: docs/design/esmax.md
         - file: docs/design/neural_fields.md
         - file: docs/design/decisions.md
