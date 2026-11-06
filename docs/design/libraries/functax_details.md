@@ -162,6 +162,9 @@ A stencil stores H row by row: S flat source indices, S weights, and whether the
 class Readout(eqx.Module):
     """c → f̂(X*): a Stencil, or a dense kernel read-out K(X*, X)."""
 
+    # False for a target outside the domain under the "nan" policy
+    valid: eqx.AbstractVar[Bool[Array, " target"]]
+
     @abc.abstractmethod
     def apply(
         self, coefficients: Float[Array, "*batch source"]
@@ -182,7 +185,7 @@ class Stencil(Readout):
 
     indices: Int[Array, "target tap"]
     weights: Float[Array, "target tap"]
-    # False where the outside policy applies
+    # False outside the domain; those rows have zero weights, so H and Hᵀ skip them
     valid: Bool[Array, " target"]
     n_source: int = eqx.field(static=True)
 
@@ -255,6 +258,11 @@ OUTSIDE_CHOICES = ("nan", "clamp", "extrapolate", "raise")
 # proposed (interp)
 class Policies(eqx.Module):
     """What happens outside the domain, at missing samples and at the edges.
+
+    The outside policy acts in two places. At plan time, "clamp" moves an outside
+    target onto the boundary and "extrapolate" keeps the scheme's weights there, so
+    both rows stay valid; "raise" raises if any target is outside. "nan" marks the
+    row invalid with zero weights, and the plan writes NaN there at apply time.
 
     Raises:
         PolicyError: An option that is not one of the listed choices.
@@ -360,7 +368,7 @@ Kernel and variational fits take one field; a batch goes through `jax.vmap`. The
 
 ### Scheme and plan
 
-A scheme is a recipe; a plan is the recipe frozen for one source and one target geometry. Building a plan may use NumPy and SciPy; applying it must trace.
+A scheme is configuration; a plan is that configuration frozen for one source and one target geometry. Building a plan may use NumPy and SciPy; applying it must trace.
 
 ```python
 # Shapes: N source values; M targets; J coefficients
@@ -387,6 +395,12 @@ class Plan(eqx.Module):
         coefficients = self.fit(data)  # (…, N) → (…, J)
         # f̂(X*) = H c
         values = self.read.apply(coefficients)  # (…, J) → (…, M)
+        # f̂ₖ = NaN outside the domain: never an extrapolated value under "nan"
+        if self.policies.outside == "nan":
+            fill = jnp.asarray(jnp.nan, dtype=values.dtype)
+            values = einx.where(  # (…, M) → (…, M)
+                "target, ... target, -> ... target", self.read.valid, values, fill
+            )
         return values
 
     def operator(self) -> Op:
@@ -398,7 +412,7 @@ class Plan(eqx.Module):
 
 # proposed (interp)
 class Scheme(eqx.Module):
-    """A recipe: configuration only, builds a Plan per pair of geometries."""
+    """Configuration only: builds a Plan per pair of geometries."""
 
     @abc.abstractmethod
     def plan(
@@ -917,6 +931,14 @@ weights = einx.rearrange(  # → (M, 3)
 indices = triangulation.simplices[simplex]  # → (M, 3)
 # inside the convex hull
 valid = simplex >= 0  # (M,) → (M,)
+# outside: simplex = −1 picked the last triangle, so zero its weights and point
+# its taps at vertex 0; the plan writes the outside fill there
+weights = einx.where(  # (M, 3) → (M, 3)
+    "target, target tap, -> target tap", valid, weights, 0.0
+)
+indices = einx.where(  # (M, 3) → (M, 3)
+    "target, target tap, -> target tap", valid, indices, 0
+)
 # proposed (interp)
 stencil = Stencil(indices=indices, weights=weights, valid=valid, n_source=n_sources)
 ```

@@ -124,7 +124,7 @@ I \approx \sum_{n=1}^{N} w_n f(x_n)
 ```
 
 1. Evaluate f at the rule's nodes, or take the values given.
-2. Contract the node axis with the weights (`einx.dot("... n, n -> ...", values, weights)`), over one axis or several at once for a tensor rule.
+2. Contract the node axis with the weights. A callable returns its values with the node axis first, (N, …), so the contraction is `einx.dot("n ..., n -> ...", values, weights)`: values `[[1, 10], [2, 20]]` with weights `[0.25, 0.75]` give `[1.75, 17.5]`. Values passed in directly name their integration axis (the last by default), which is moved first before the same contraction. A tensor rule contracts several axes at once.
 3. For a weighted mean (band radiance), divide by ∑ wₙ R(xₙ) computed with the same rule.
 
 Cost: N evaluations and one contraction. Pitfalls: build the weights in the input's dtype; sum in pairwise order, not left to right, so float32 sums over long spectra do not drift; on non-uniform nodes the trapezoid end weights are half-intervals, as radtrax's and plumax's SRF code already does.
