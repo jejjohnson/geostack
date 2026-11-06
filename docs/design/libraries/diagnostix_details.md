@@ -123,42 +123,42 @@ NaN is not a mask: a diagnostic that sees NaN in a valid cell returns NaN there,
 
 ### Geostrophy, vorticity, strain and Okubo–Weiss
 
-From sea-surface height η (or geopotential) to geostrophic velocity, then the velocity-gradient invariants.
+From sea-surface height η (or geopotential) to geostrophic velocity, then the velocity-gradient invariants. On a lon–lat grid, λ is longitude, φ latitude, R the Earth's radius, and u, v the eastward and northward components.
 
 ```{math}
 f = 2 \Omega \sin \varphi
 ```
 
 ```{math}
-u_g = -\frac{g}{f} \frac{\partial \eta}{\partial y}
+u_g = -\frac{g}{f R} \frac{\partial \eta}{\partial \varphi}
 ```
 
 ```{math}
-v_g = \frac{g}{f} \frac{\partial \eta}{\partial x}
+v_g = \frac{g}{f R \cos\varphi} \frac{\partial \eta}{\partial \lambda}
 ```
 
 ```{math}
-\zeta = \frac{\partial v}{\partial x} - \frac{\partial u}{\partial y}
+\zeta = \frac{1}{R \cos\varphi} \left( \frac{\partial v}{\partial \lambda} - \frac{\partial (u \cos\varphi)}{\partial \varphi} \right)
 ```
 
 ```{math}
-s_n = \frac{\partial u}{\partial x} - \frac{\partial v}{\partial y}
+s_n = \frac{1}{R \cos\varphi} \frac{\partial u}{\partial \lambda} - \frac{1}{R} \frac{\partial v}{\partial \varphi} - \frac{v \tan\varphi}{R}
 ```
 
 ```{math}
-s_s = \frac{\partial v}{\partial x} + \frac{\partial u}{\partial y}
+s_s = \frac{1}{R \cos\varphi} \frac{\partial v}{\partial \lambda} + \frac{1}{R} \frac{\partial u}{\partial \varphi} + \frac{u \tan\varphi}{R}
 ```
 
 ```{math}
 W = s_n^2 + s_s^2 - \zeta^2
 ```
 
-1. Take the derivatives with gridax's metric operators: on a lon–lat grid, ∂/∂x = (R cos φ)⁻¹ ∂/∂λ and ∂/∂y = R⁻¹ ∂/∂φ; on a curvilinear grid, the grid's own metric terms.
+1. Take the derivatives with gridax: ζ is gridax's spherical curl, and s\_n, s\_s are the covariant derivatives of the velocity, so they carry the tan φ connection terms, which scalar metric factors alone miss. On a Cartesian (projected) grid those terms vanish and the formulas reduce to ζ = ∂v/∂x − ∂u/∂y, s\_n = ∂u/∂x − ∂v/∂y, s\_s = ∂v/∂x + ∂u/∂y; on a curvilinear grid, use the grid's own metric terms.
 2. Centred differences on the A-grid inside the domain, one-sided at the edges, and NaN wherever the stencil touches an invalid cell.
 3. Mask geostrophy where |φ| is below a latitude cut (default 5°), where f → 0.
 4. Eddy cores are W < −W₀ with W₀ = 0.2 σ\_W, the standard deviation of W over valid cells.
 
-Cost: O(N) per field, one pass of stencils. Pitfalls: a stencil that reaches across a coast mixes land fill into the gradient (step 2 is the fix); spherical metric terms left out give wrong vorticity at high latitude; W₀ depends on the domain, so it is a parameter, not a constant.
+Cost: O(N) per field, one pass of stencils. Pitfalls: a stencil that reaches across a coast mixes land fill into the gradient (step 2 is the fix); the Cartesian formulas with only the scalar metric factors give solid-body rotation u = ωR cos φ a vorticity of ω sin φ, half the true 2ω sin φ, and a spurious shear strain, which then corrupts W; W₀ depends on the domain, so it is a parameter, not a constant.
 
 ### Boundary-layer height by the bulk Richardson number
 
@@ -308,7 +308,7 @@ Cost: O(N) for pointwise scores, O(N E log E) for CRPS. Pitfalls: averaging RMSE
 ## Testing
 
 - **xrops as the oracle.** Every diagnostic that xrops already has runs on the same arrays through both, inside the tolerance of float64: geostrophic velocities, vorticity, strain, Okubo–Weiss, KE, enstrophy, PBL height, climatology and anomaly, spectra (with the normalisation fixed), RMSE, CRPS, spread–skill.
-- **Closed forms.** A solid-body rotation has ζ = 2ω and zero strain; a pure strain field has ζ = 0 and W > 0; a Gaussian eddy has W < 0 at its core.
+- **Closed forms.** A solid-body rotation has ζ = 2ω and zero strain on a plane, and on the sphere ζ = 2ω sin φ with zero strain for rotation about the polar axis (u = ωR cos φ), the case that catches missing tan φ terms; rotation about any other axis gives ζ = 2ω · r̂ and zero strain too; a pure strain field has ζ = 0 and W > 0; a Gaussian eddy has W < 0 at its core.
 - **Conservation.** A tracer advected by a divergence-free field in a closed box has a budget residual at round-off; a box cut through the middle has nonzero boundary flux equal to the tendency.
 - **Parseval.** The binned spectrum integrates to the field's variance (taper-corrected).
 - **EOFs.** Weighted orthonormality of the modes; for a field made of two known patterns, the modes recover them up to sign; unweighted EOFs equal xrops' `eof`.

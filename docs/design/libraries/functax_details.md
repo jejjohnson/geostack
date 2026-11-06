@@ -536,7 +536,6 @@ class GridToPoints(eqx.Module):
 ```python
 import functax as fx
 import geoarray as ga
-import numpy as np
 import pipekit
 
 
@@ -562,8 +561,9 @@ class SampleAtPoints(pipekit.Operator):
         # proposed (functax)
         plan = scheme.plan(field.shape[-2:], pixel_rowcol)  # → plan (M, S)
         # proposed (functax)
-        # f̂(X*) = H y, on the bare array
-        values = plan(np.asarray(field))  # (T, Ny, Nx) → (T, M)
+        # f̂(X*) = H y, on the bare array: .data keeps the backend, so a JAX
+        # carrier stays a JAX array (np.asarray would fail on a tracer)
+        values = plan(field.data)  # (T, Ny, Nx) → (T, M)
         # today (geoarray)
         return ga.GeoPoints(  # → (T, M) points
             values,
