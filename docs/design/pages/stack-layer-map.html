@@ -456,6 +456,8 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
 .series-nav.bottom { padding: 0 16px 28px; }
 .series-nav a { color: var(--accent); text-decoration: none; }
 .series-nav a:hover, .series-nav a:focus-visible { text-decoration: underline; }
+/* running text fills the page column, as wide as the tables and figures */
+header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-width: none; }
 </style>
 </head>
 <body>
@@ -830,7 +832,7 @@ table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
 
   <section class="section" aria-labelledby="heat-title">
     <h2 id="heat-title">Which foundations each library leans on</h2>
-    <p style="max-width:68ch;color:var(--muted)">Each cell counts the import statements of that foundation in the library's source. lineax, optimistix and diffrax are core to the numerics and models; GeoStack lean on NumPy, rasterio, Shapely and pyproj instead. The functax row is the plan, not code.</p>
+    <p style="color:var(--muted)">Each cell counts the import statements of that foundation in the library's source. lineax, optimistix and diffrax are core to the numerics and models; GeoStack lean on NumPy, rasterio, Shapely and pyproj instead. The functax row is the plan, not code.</p>
     <div class="table-wrap">
       <table class="heat" id="heat"></table>
     </div>
