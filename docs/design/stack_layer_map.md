@@ -28,7 +28,8 @@ A proposal for how the libraries of the stack layer, drawn from an import scan o
 - **Layers, bottom up.** The third-party foundations (JAX, lineax, optimistix, diffrax, xarray, georeader, …); **Core**, maths and plumbing with no geography, where GeoML dissolves and three new libraries appear (functax for function approximation, integrix for integration of every kind, argminax for optimisation with uncertainty); **GeoNumerics**, geophysical maths on plain arrays, with five new libraries (geophysix, gridax, diagnostix, radiomax, tracerax); **GeoStack**, exactly geotoolz + xrtoolz, mirrored by role between observations on GeoArray and states on xarray; **GeoModels** (sesmax replacing somax, radtrax, plumax); **GeoBench** and **GeoApps**, planned.
 - **Kernels down, wrappers up.** Functions and Modules live as low as their imports allow, on plain arrays; Operators on carriers live where the carriers are. A carrier never goes below GeoStack, and a config never reaches a function.
 - **The objects in symbols.** A function $f(x;\theta)$ and an Operator that lifts it onto geographic data, $h[f,\theta](\hat{x};\alpha) = \iota_\alpha\big(f(\pi_\alpha(\hat{x});\theta), \hat{x}\big)$, where $\hat{x} = (x, d, c, g)$ is a carrier: an array with dim names, coordinates and a georeference.
-- **One vocabulary per axis.** Role ⓪ structure, ① primitive, ② strategy, ③ model, ④ recipe, ⑤ step (nouns, verbs, adverbs, noun phrases, sentences, paragraphs); kind ƒ function, ▣ Module, → Operator; data ▦ array, ▤ named array, ◆ carrier; layer by name; tier T0 to T4; processing level L0 to L4, for data only.
+- **One vocabulary per axis.** Role ⓪ structure, ① primitive, ② strategy, ③ model, ④ algorithm, ⑤ step, ⑥ recipe (nouns, verbs, adverbs, noun phrases, sentences, a sentence with its settings, paragraphs), with orchestration above the ladder and not a rung; kind ƒ function, ▣ Module, → Operator; data ▦ array, ▤ named array, ◆ carrier; layer by name; tier T0 to T4; processing level L0 to L4, for data only.
+- **Who works where.** Data engineers work at ⑥ and in orchestration, geoscience researchers at ⑤ and ⑥ (where carriers begin), ML researchers at ② to ④, numerics and CS at ⓪ to ④; each treats the rung below its band as its floor.
 - **Boundaries written down.** Each library has an "owns" and a "hands off" line, and three pairs get a section of their own: geoarray, gridax and functax; radiomax and radtrax; functax and geonnax.
 
 ## On the page
@@ -40,7 +41,7 @@ A proposal for how the libraries of the stack layer, drawn from an import scan o
 5. radiomax and radtrax: where the line is
 6. functax and geonnax: where the line is
 7. The four library layers, and the test for each
-8. Three kinds of function, three kinds of data: the problem, the objects in symbols, the role ladder, one vocabulary per axis, and the rules for who works with what
+8. Three kinds of function, three kinds of data: the problem, the objects in symbols, the role ladder (with steps, recipes and orchestration), who works where, one vocabulary per axis, and the rules for who works with what
 9. Boundaries, library by library
 10. Every library, today and proposed
 11. Which foundations each library leans on
