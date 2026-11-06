@@ -300,15 +300,18 @@ f_{t+1} = f_t + \eta (\tilde f_t - f_t)
 
 Here Φ is one solver step and sg is `stop_gradient`. For a Newton-like Φ, ∂Φ/∂ξ → 0 at the minimum, so the one-step derivative is first-order exact there [@bolte2023onestep].
 
-1. In `KStep.apply`, run the solve to the end under `stop_gradient`.
-2. From the stopped iterate, take k more `solver.step` calls, differentiably in θ.
-3. Return the plain solve's value with the k-step path's gradient (straight-through: value + (Φᵏ − sg(Φᵏ))), so the forward value does not change.
+1. In `KStep.apply`, run the solve to the end under `stop_gradient`, keeping the last k + 1 (iterate, solver state) pairs in a ring buffer in the loop carry, so ξ\_{T−k} and its state are at hand when the loop stops at a T known only then.
+2. From the buffered ξ\_{T−k} and its state, replay the final k `solver.step` calls, differentiably in θ.
+3. Return the replayed iterate. The replay repeats the solve's own last k steps, so its value is the plain solve's ξ\_T and needs no straight-through correction.
 
-**Cost.** k extra solver steps of compute and their memory; no linear solve.
+Taking k extra steps from ξ\_T instead is a different estimator whenever ξ\_T is not an exact fixed point, and a straight-through value + (Φᵏ − sg(Φᵏ)) keeps the value but not the gradient. Gradient descent on f(x, θ) = θx²/2 with unit step, x₀ = 1, θ = 0.5, T = 2 and k = 1 shows it: ξₜ₊₁ = (1 − θ) ξₜ, so the replayed last step gives ∂ξ\_T/∂θ = −ξ₁ = −0.5, while an extra step from ξ₂ gives −ξ₂ = −0.25.
+
+**Cost.** k solver steps of compute for the replay, and memory for k + 1 buffered iterates and states; no linear solve, and no second forward solve.
 
 **Pitfalls.**
 
 - `apply` has to reach the solver, its state and `args` through optimistix's `inputs` tuple, which is private; pin optimistix's minor version and test the layout.
+- `optx.minimise`'s own loop keeps only the current iterate, so the ring buffer means argminax drives `solver.init` / `solver.step` / `solver.terminate` in its own `lax.while_loop`; re-running the solve with a fixed T − k steps would avoid that at the cost of a second forward solve.
 - A line search inside `step` makes the k steps branchy; with k small, keep the search but expect a noisier gradient.
 - vardax's FourDVarNet unrolls its own inner solver and dispatches on `isinstance(adjoint, KStepAdjoint)`; that path keeps working, and the generic `apply` is new.
 
@@ -359,7 +362,7 @@ G = \operatorname{diag}(g'(\hat u))
 - **Dual against primal.** On a linear H, `dual_solve` and `GaussNewtonCG` give the same δx̂ to the CG tolerance.
 - **Hutchinson by its own distribution.** The estimate lies within four standard errors of the exact trace (a bound from its sampling distribution, stated in the test), and the reported stderr matches the spread over repeated keys.
 - **Sampling.** The sample covariance of perturbation draws matches Ŝ within its Wishart sampling bound.
-- **Adjoints.** `Implicit` against central finite differences and against `optx.RecursiveCheckpointAdjoint` on a converged problem; `KStep` leaves the forward value bit-identical, and `OneStep` on a quadratic with an exact Newton step equals the implicit gradient.
+- **Adjoints.** `Implicit` against central finite differences and against `optx.RecursiveCheckpointAdjoint` on a converged problem; `KStep` leaves the forward value bit-identical and, on gradient descent for θx²/2 (x₀ = 1, θ = 0.5, T = 2, k = 1), returns −0.5, the replayed last step, not −0.25, and `OneStep` on a quadratic with an exact Newton step equals the implicit gradient.
 - **The mapping.** Every pipekit-cycle spec maps to the documented optimistix adjoint; `Direct` and `Backsolve` raise a `ValueError` that names integrix.
 - **Ports.** Before deleting a copy, its results are reproduced: radtrax's and plumax's `run_gauss_newton` and `run_dual_psas`, plumax's `PosteriorCovariance`, vardax's `GaussNewtonHessian`, pyrox-gp's `GaussNewtonInference`; pyrox-lgm's R-INLA fixtures (slow tier) still pass after its inner and outer loops switch.
 - **Transforms.** One smoke test per public name under `jit`, `vmap` and `grad`, in the fast tier.
