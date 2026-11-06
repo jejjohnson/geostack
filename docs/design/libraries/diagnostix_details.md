@@ -206,9 +206,9 @@ Cost: O(N) per time. Pitfalls: xrops' `boundary_flux` sums φ u A over every fac
 
 Here d is the calendar day of a sample's (month, day) on a leap-year calendar, not its raw day of year: in a non-leap year 1 March is day 60 of the year but d = 61, the same slot as 1 March of a leap year, and d = 60 holds only 29 February.
 
-1. Map each sample's (month, day) to its calendar day d, on the host or with a 12-entry table of month offsets, then group by d (or by month) with `jax.ops.segment_sum` and a static number of segments (366 or 12), counting only valid samples. Grouping by the raw day of year would put 1 March of non-leap years with 29 February, and shift every date after it by one between leap and non-leap years.
+1. Map each sample's (month, day) to its calendar day d, on the host or with a 12-entry table of month offsets, then group with `jax.ops.segment_sum` and a static number of segments, counting only valid samples. The segment ID is zero-based, d − 1 ∈ [0, 366) (or month − 1 ∈ [0, 12)): `segment_sum` silently drops IDs outside [0, num\_segments), so grouping by d itself would lose 31 December and leave segment 0 empty. Grouping by the raw day of year would put 1 March of non-leap years with 29 February, and shift every date after it by one between leap and non-leap years.
 2. The smoothed climatology fits the first K harmonics (default 3) to the daily means by weighted least squares, the weights being the counts.
-3. The anomaly subtracts the climatology at each sample's day; adding it back is the inverse.
+3. The anomaly subtracts the climatology at each sample's day, looked up at the same zero-based ID d − 1; adding it back is the inverse.
 
 Cost: O(N) to group, O(K²) per pixel to fit. Pitfalls: 29 February is its own segment with a quarter of the samples, so smoothing matters most there; a climatology fitted on the evaluation period leaks into the anomaly scores, so the base period is an argument.
 
