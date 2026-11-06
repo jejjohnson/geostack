@@ -300,8 +300,8 @@ f_{t+1} = f_t + \eta (\tilde f_t - f_t)
 
 Here Φ is one solver step and sg is `stop_gradient`. For a Newton-like Φ, ∂Φ/∂ξ → 0 at the minimum, so the one-step derivative is first-order exact there [@bolte2023onestep].
 
-1. In `KStep.apply`, run the solve to the end under `stop_gradient`, keeping the last k + 1 (iterate, solver state) pairs in a ring buffer in the loop carry, so ξ\_{T−k} and its state are at hand when the loop stops at a T known only then.
-2. From the buffered ξ\_{T−k} and its state, replay the final k `solver.step` calls, differentiably in θ.
+1. In `KStep.apply`, run the solve to the end under `stop_gradient`, keeping the last k + 1 (iterate, solver state) pairs in a ring buffer in the loop carry, so the iterate and state at step T − k are at hand when the loop stops at a T known only then.
+2. From that buffered iterate and its state, replay the final k `solver.step` calls, differentiably in θ.
 3. Return the replayed iterate. The replay repeats the solve's own last k steps, so its value is the plain solve's ξ\_T and needs no straight-through correction.
 
 Taking k extra steps from ξ\_T instead is a different estimator whenever ξ\_T is not an exact fixed point, and a straight-through value + (Φᵏ − sg(Φᵏ)) keeps the value but not the gradient. Gradient descent on f(x, θ) = θx²/2 with unit step, x₀ = 1, θ = 0.5, T = 2 and k = 1 shows it: ξₜ₊₁ = (1 − θ) ξₜ, so the replayed last step gives ∂ξ\_T/∂θ = −ξ₁ = −0.5, while an extra step from ξ₂ gives −ξ₂ = −0.25.
