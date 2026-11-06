@@ -15,7 +15,7 @@ keywords:
 
 +++ {"part": "abstract"}
 
-A working page split from the [layer map](./stack_layer_map.md), which keeps the layers, the imports and the boundaries of each library. This page holds the two axes every name in the stack sits on: how its code is packaged and what data it sees. It starts from the silent failures of geo code, defines the objects in symbols with one running example (a cloud-masked NDVI time series from Sentinel-2, gap-filled and sampled at flux-tower sites), climbs the role ladder inside a library, and ends with the rules that decide where a name may live and what it may call.
+A working page split from the [layer map](./stack_layer_map.md), which keeps the layers, the imports and the boundaries of each library. This page holds the two axes every name in the stack sits on: how its code is packaged and what data it sees. It starts from the silent failures of geo code, defines the objects in symbols with one running example (a methane plume in an EMIT hyperspectral scene over an oil and gas field: a matched filter, a plume mask, and an emission rate from the integrated mass enhancement and the wind), climbs the role ladder inside a library, and ends with the rules that decide where a name may live and what it may call.
 
 +++
 
