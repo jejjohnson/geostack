@@ -217,19 +217,25 @@ Cost: O(N) to group, O(K²) per pixel to fit. Pitfalls: 29 February is its own s
 ```
 
 ```{math}
-P(k) = \frac{\Delta x \Delta y}{N_x N_y U} \sum_{k \le |\mathbf{k}| < k + \Delta k} |\hat{\phi}(\mathbf{k})|^2
+P_2(\mathbf{k}) = \frac{\Delta x \Delta y}{N_x N_y U} |\hat{\phi}(\mathbf{k})|^2
 ```
+
+```{math}
+P(k) = \frac{\Delta k_x \Delta k_y}{\Delta k} \sum_{k \le |\mathbf{k}| < k + \Delta k} P_2(\mathbf{k})
+```
+
+Here Δk\_x = 1 / (N\_x Δx) and Δk\_y = 1 / (N\_y Δy) are the spacings of the discrete wavenumbers, so P₂ is a 2-D density (Σ P₂ Δk\_x Δk\_y is the variance) and P is a 1-D density in |k| (Σ P(k) Δk is the same variance).
 
 ```{math}
 S(k) = 1 - \frac{P_{\hat{y} - y}(k)}{P_{y}(k)}
 ```
 
 1. Remove the mean (or a plane), multiply by a 2-D Hann taper w, and divide by its energy U = mean(w²) so the taper does not remove variance.
-2. `jnp.fft.fft2`, then |φ̂|² with the Δx Δy / (N\_x N\_y) density normalisation.
-3. Bin |k| into K annuli of width Δk = min(Δk\_x, Δk\_y) with `segment_sum` (K static), giving P(k).
+2. `jnp.fft.fft2`, then |φ̂|² with the Δx Δy / (N\_x N\_y U) normalisation, giving the 2-D density P₂.
+3. Bin |k| into K annuli of width Δk = min(Δk\_x, Δk\_y) with `segment_sum` (K static), and multiply each annulus sum by Δk\_x Δk\_y / Δk, the area of one wavenumber cell over the bin width. Without that factor P(k) is bin-integrated power, not a density, and its amplitude changes with the grid size and spacing.
 4. The PSD score S(k) uses the error's spectrum over the reference's; the resolved wavelength is 1 / k∗ at the first k where S falls below the level (default 0.5), interpolated in log k.
 
-Cost: O(N log N) per field. Pitfalls: the FFT needs a uniform Cartesian grid, so a lon–lat field is first put on a local tangent plane (gridax) or the domain kept small enough that cos φ barely changes; gaps cannot go through an FFT, so a field with invalid cells is filled (and the fraction reported) or refused; xrft and the numpy convention differ by the normalisation in step 2, so the oracle test fixes one; Parseval (Σ P(k) Δk = variance) is the check.
+Cost: O(N log N) per field. Pitfalls: the FFT needs a uniform Cartesian grid, so a lon–lat field is first put on a local tangent plane (gridax) or the domain kept small enough that cos φ barely changes; gaps cannot go through an FFT, so a field with invalid cells is filled (and the fraction reported) or refused; xrft and the numpy convention differ by the normalisation in step 2, so the oracle test fixes one; Parseval (Σ P(k) Δk = variance) is the check: on an 8 × 8 grid with unit spacing and Δk = 1/8, the factor is 1/8, and leaving it out integrates to eight times the taper-corrected mean square.
 
 ### Area-weighted EOFs
 
@@ -318,7 +324,7 @@ Cost: O(N) for pointwise scores, O(N E log E) for CRPS. Pitfalls: averaging RMSE
 | geophysix | constants, virtual potential temperature, f and β | yes |
 | gaussx | randomized SVD for large EOF problems | optional |
 | xrops (xrtoolz) | the oracle in tests; the xarray layer users call | test only |
-| finitevolX | C-grid stencils when the fields come from a finitevolX model | optional |
+| finitevolX | nothing: C-grid diagnostics stay in finitevolX (decision 4) | never imported; finitevolX sits at GeoNumerics tier 3, above diagnostix |
 
 pywt, xrft and sklearn are not dependencies: the routines that need them stay in xrops.
 
@@ -338,4 +344,4 @@ Read on 5 Nov 2026 at xrtoolz b3855d7, somax aea3a03 and finitevolX 82090a3 (0.1
 | `pca`, `eof`, `ica`, `nmf`, `kmeans` | xrops `transforms/decompose.py`, sklearn estimators | `eof` is unweighted PCA; area-weighted EOFs are new; the rest stay |
 | Pixel, probabilistic, distributional, spectral, physical, structural and instance metrics; `dm_test`, `rank_methods`, `segmented_psd` | xrops metrics | the pointwise and ensemble scores and `psd_score` / `resolved_scale` (level 0.5) are ported; the rest stay |
 | `rms_divergence`, `total_enstrophy`, `kinetic_energy`, `geostrophic_imbalance`, `qg_balance_residual`, `compute_eval_metrics` | somax `eval/metrics.py` | a third copy of KE and geostrophic imbalance; somax imports diagnostix instead |
-| `kinetic_energy`, `relative_vorticity_cgrid`, PV, strains, `okubo_weiss`, `enstrophy`, APE, `qg_potential_vorticity`, `coriolis_param`, `beta_param`; `Energetics2D`, `Strain2D`, `QGPotentialVorticity2D`; pipekit Operators | finitevolX `operators/diagnostics.py`, `diagnostic_operators.py`, `pipekit/diagnostics.py` | already JAX on the C-grid; diagnostix calls these for C-grid fields instead of re-deriving them |
+| `kinetic_energy`, `relative_vorticity_cgrid`, PV, strains, `okubo_weiss`, `enstrophy`, APE, `qg_potential_vorticity`, `coriolis_param`, `beta_param`; `Energetics2D`, `Strain2D`, `QGPotentialVorticity2D`; pipekit Operators | finitevolX `operators/diagnostics.py`, `diagnostic_operators.py`, `pipekit/diagnostics.py` | already JAX on the C-grid; they stay in finitevolX, a tier above, so diagnostix never calls them. A C-grid field reaches diagnostix interpolated to cell centres (gridax), or is diagnosed in finitevolX |

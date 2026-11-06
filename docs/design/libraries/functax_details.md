@@ -412,11 +412,11 @@ class Scheme(eqx.Module):
 
 ## Types to adhere to: pipekit and geoarray
 
-The package should not invent an operator, carrier, grid or dims vocabulary where pipekit and geoarray already define one. This section lists what they define and how each core type above maps onto it. Read from pipekit main (3b9582d) and geotoolz main (1e7308b) on 4 Nov 2026.
+The package should not invent an operator, carrier, grid or dims vocabulary where pipekit and geoarray already define one, but it may not import either: pipekit is Core tier 0, a peer of functax, and geoarray is GeoStack, above it. So functax follows their conventions without subclassing their types, and each consumer (geoops, xrops, the data-assimilation libraries) wraps functax's plans in its own Operator. This section lists what they define and how each core type above maps onto it. Read from pipekit main (3b9582d) and geotoolz main (1e7308b) on 4 Nov 2026.
 
 ### What pipekit defines
 
-pipekit owns how pieces compose, serialise and declare where they run. Its types are carrier-agnostic, so the package can use them without taking a geo dependency.
+pipekit owns how pieces compose, serialise and declare where they run. Its types are carrier-agnostic, but they are still an import, so functax mirrors them rather than using them.
 
 | Type | Package | What it is | The rule it brings |
 | --- | --- | --- | --- |
@@ -453,8 +453,8 @@ Most core types map onto an existing type; three need a decision. The table name
 
 | Core type | Adheres to | What changes |
 | --- | --- | --- |
-| `Scheme` | `pipekit.Operator` | a scheme is configuration only: keyword-only constructor, JSON config, `backends` declared. `Linear(outside="nan")` serialises |
-| `Plan` | `JaxOperator` | the plan is a fitted operator: `_apply(y)`; the stencil's `idx` and `w` are leaves, the geometry static. *Decision:* a separate plan object, or fit/transform on the scheme? Equinox modules are immutable, so `fit` returning `self` does not work; a separate plan does |
+| `Scheme` | `pipekit.Operator`'s conventions, not the class | a scheme is configuration only: static `eqx.Module` fields that round-trip through JSON. `Linear(outside="nan")` serialises; the consumer's Operator holds those settings as its config |
+| `Plan` | `JaxOperator`'s conventions, not the class | the plan is a fitted `eqx.Module` on plain arrays: `__call__(y)`; the stencil's `idx` and `w` are leaves, the geometry static. A separate plan object, because Equinox modules are immutable and `fit` cannot return `self` |
 | `Grid` (regular) | `geoarray.Grid` | use its fields and transform order instead of a tuple of axes; rectilinear axes are an extension geoarray does not have |
 | `Axis` (rectilinear) | the frozen, hashable style of `geoarray.coords` | keep a coordinate-values axis; datetimes follow `TimeAxis`: `datetime64[ns]`, converted to offsets before tracing |
 | `Points` | `GeoPoints` | the same field names: `xy` `(obs, 2)`, separate `z`, `valid`; fixed N by `pad_points`. The metric follows the CRS: geographic means chord or geodesic |
@@ -468,26 +468,70 @@ Most core types map onto an existing type; three need a decision. The table name
 | output dims | `compute_output_signature` | grid → points turns `"... y x"` into `"... obs"` |
 | NumPy-only schemes | `backends = ("numpy",)` | Clough–Tocher and natural neighbour refuse JAX carriers with `BackendError` |
 
-*Finding:* a `JaxOperator` holding a `Grid` field may not give a JSON `state`: `jsonable` takes builtins and arrays, and `Grid` serialises through its own `get_config`. Either `Grid` learns to go through `jsonable`, or the plan stores the transform, CRS and shape as plain fields.
+*Finding:* a `JaxOperator` holding a `Grid` field may not give a JSON `state`: `jsonable` takes builtins and arrays, and `Grid` serialises through its own `get_config`. Keeping the plan carrier-free sidesteps this in functax, since the plan holds no `Grid`; the question moves to the consumer's Operator, which should hold the transform, CRS and shape as plain fields.
 
 ### The grid-to-points plan, adhering
 
-The sketch below is the grid → points plan rewritten on these types. Symbols: T is time, Ny × Nx the source grid with N = Ny·Nx, M the points on `obs` and S the taps per point; A is the 2 × 2 part of the transform and (c, f) its origin.
+The sketch below is the grid → points plan rewritten on these types, split by owner. functax keeps the scheme and the fitted plan, on plain arrays and pixel coordinates, with no carrier and no pipekit type; geoops wraps them in an Operator on carriers. Symbols: T is time, Ny × Nx the source grid with N = Ny·Nx, M the points on `obs` and S the taps per point; A is the 2 × 2 part of the transform and (c, f) its origin.
 
 ```python
 # Shapes: T times; Ny × Nx source grid; N = Ny·Nx; M points (obs); S = 4 taps
 
 import einx
 import equinox as eqx
-import geoarray as ga
-import pipekit
-import pipekit_jax
 from jaxtyping import Array, Float
 
 
-# proposed (interp)
-class Linear(pipekit.Operator):
-    """A scheme: configuration only, so its state is strict JSON."""
+# --- functax: the scheme and the plan, on plain arrays ---
+
+
+# proposed (functax)
+class Linear(eqx.Module):
+    """A scheme: configuration only, so its config is strict JSON."""
+
+    outside: str = eqx.field(static=True, default="nan")
+    boundary: str = eqx.field(static=True, default="mirror")
+
+    def plan(
+        self, shape: tuple[int, int], pixel_rowcol: Float[Array, "obs 2"]
+    ) -> "GridToPoints":
+        # proposed (functax)
+        # Hₖₛ: 4 taps per point, bilinear weights
+        stencil = tensor_stencil_at(  # → Stencil (M, S)
+            shape, pixel_rowcol, scheme=self
+        )
+        return GridToPoints(stencil=stencil)
+
+
+# proposed (functax)
+class GridToPoints(eqx.Module):
+    """A fitted plan: the grid read at fixed points, f̂(X*) = H y."""
+
+    stencil: Stencil
+
+    def __call__(self, field: Float[Array, "*batch y x"]) -> Float[Array, "*batch obs"]:
+        # y ∈ ℝ^(T × N)
+        flat_field = einx.rearrange(  # (T, Ny, Nx) → (T, N)
+            "... y x -> ... (y x)", field
+        )
+        # f̂(X*) = H y
+        values = self.stencil.apply(flat_field)  # (T, N) → (T, M)
+        return values
+```
+
+```python
+import functax as fx
+import geoarray as ga
+import numpy as np
+import pipekit
+
+
+# --- geoops: the Operator on carriers, wrapping functax ---
+
+
+# proposed (geoops)
+class SampleAtPoints(pipekit.Operator):
+    """A grid read at points: unwrap, run functax's plan, rewrap as points."""
 
     backends = ("numpy", "jax")
 
@@ -495,48 +539,28 @@ class Linear(pipekit.Operator):
         self.outside = outside
         self.boundary = boundary
 
-    def plan(self, source: ga.Grid, target: ga.GeoPoints) -> GridToPoints:
+    def _apply(self, field: ga.GeoArray, points: ga.GeoPoints) -> ga.GeoPoints:
         # today (geoarray)
         # (row, col) = A⁻¹ (x − c, y − f) − ½
-        pixel_rowcol = ga.to_pixel(source.transform, target.xy)  # (M, 2) → (M, 2)
-        # proposed (interp)
-        # Hₖₛ: 4 taps per point, bilinear weights
-        stencil = tensor_stencil_at(  # → Stencil (M, S)
-            source, pixel_rowcol, scheme=self
-        )
-        # WKT, so the plan's state stays JSON
-        crs = source.crs.to_wkt()
-        # proposed (interp)
-        return GridToPoints(stencil=stencil, xy=target.xy, crs=crs)
-
-
-# proposed (interp)
-class GridToPoints(pipekit_jax.JaxOperator):
-    """A fitted plan: the grid read at fixed points, f̂(X*) = H y."""
-
-    backends = ("numpy", "jax")
-
-    stencil: Stencil
-    xy: Float[Array, "obs 2"]
-    crs: str = eqx.field(static=True)
-
-    def _apply(self, field: ga.GeoArray) -> ga.GeoPoints:
-        # y ∈ ℝ^(T × N)
-        flat_field = einx.rearrange(  # (T, Ny, Nx) → (T, N)
-            "time y x -> time (y x)", field.data
-        )
-        # f̂(X*) = H y
-        values = self.stencil.apply(flat_field)  # (T, N) → (T, M)
+        pixel_rowcol = ga.to_pixel(field.transform, points.xy)  # (M, 2) → (M, 2)
+        # proposed (functax)
+        scheme = fx.interp.Linear(outside=self.outside, boundary=self.boundary)
+        # proposed (functax)
+        plan = scheme.plan(field.shape[-2:], pixel_rowcol)  # → plan (M, S)
+        # proposed (functax)
+        # f̂(X*) = H y, on the bare array
+        values = plan(np.asarray(field))  # (T, Ny, Nx) → (T, M)
         # today (geoarray)
-        points = ga.GeoPoints(  # → (T, M) points
+        return ga.GeoPoints(  # → (T, M) points
             values,
-            xy=self.xy,
-            valid=self.stencil.valid,
+            xy=points.xy,
+            valid=plan.stencil.valid,
             dims="time obs",
-            crs=self.crs,
+            crs=field.crs,
         )
-        return points
 ```
+
+A pipeline that samples the same points every step builds the plan once: geoops can cache it on the grid and the points (pipekit's `Memoize`), or a model holds `GridToPoints` directly, since it is a plain `eqx.Module`.
 
 The gap under the block: `tensor_stencil_at`, `Stencil` and both classes are proposed; the plan does not yet check that a field is on its grid; and a field with dims other than `time y x` needs its dims carried through rather than fixed as `"time obs"`.
 

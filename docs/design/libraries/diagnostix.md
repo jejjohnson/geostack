@@ -212,7 +212,7 @@ Four decided, two leaning, one open. Each entry gives the position first, then t
 
 ### 4. Diagnostics on a model's own grid
 
-**Open.** finitevolX's `operators/diagnostics.py` computes kinetic energy, strain, Okubo–Weiss, enstrophy, QG potential vorticity and available potential energy in its C-grid staggering, as functions, as masked classes and as pipekit Operators, as a model steps. Leaning: those stay in finitevolX, because they are operators on the model's state; diagnostix's versions work on A-grid fields as they arrive from a model's output or a product. somax's evaluation metrics, which work on outputs, move here.
+**Open.** finitevolX's `operators/diagnostics.py` computes kinetic energy, strain, Okubo–Weiss, enstrophy, QG potential vorticity and available potential energy in its C-grid staggering, as functions, as masked classes and as pipekit Operators, as a model steps. Leaning: those stay in finitevolX, because they are operators on the model's state; diagnostix's versions work on A-grid fields as they arrive from a model's output or a product. somax's evaluation metrics, which work on outputs, move here. Either way diagnostix never imports finitevolX: finitevolX is GeoNumerics tier 3 and diagnostix tier 2, and an optional import still counts as an edge. If both come to need one kernel, it moves down into diagnostix (or gridax) and finitevolX imports it.
 
 ### 5. JAX kernels, SciPy where it must be
 
