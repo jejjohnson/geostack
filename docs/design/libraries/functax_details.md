@@ -1038,14 +1038,14 @@ The dense (M, N) matrix exists only on one axis and only at fit; the stencil kee
 Gaps on a grid are filled by solving an equation in the holes, with the known pixels as boundary values. Laplace fill and variational analysis both have this shape.
 
 ```{math}
-(P^\top R^{-1} P + \lambda L^\top L) x = P^\top R^{-1} y
+(P^\top R^{-1} P + \lambda D^\top D) x = P^\top R^{-1} y
 ```
 
-Here P selects the observed pixels, R is their error covariance, L a difference operator and λ its weight. With λ large and R small, this tends to the Laplace fill.
+Here P selects the observed pixels, R is their error covariance, D the first-difference (gradient) operator and λ its weight; with mirror edges DᵀD = −Δ, the negative five-point Laplacian. As R → 0 the observations are enforced exactly and the holes satisfy the discrete Laplace equation Δx = 0: this is the Laplace fill. Penalising curvature instead, LᵀL with L = Δ, makes the holes satisfy the biharmonic equation Δ²x = 0, a thin-plate fill: smoother, and a different method with different oracles. In 1-D, with samples [0, 1, ?, ?, 0] and mirror edges, the Laplace fill gives [2/3, 1/3] and the biharmonic fill [1, 1/2].
 
 - **JAX:** Gauss–Seidel is sequential, so use Jacobi sweeps, or better CG with matrix-free P and L. Fix the iteration cap, or use a `lax.while_loop` with a tolerance. Gradients go through the solve implicitly.
 
-Variational gap filling with matrix-free CG. Symbols: P selects the observed pixels, R = σ²I is their error covariance, L a Laplacian and λ its weight.
+Variational gap filling with matrix-free CG, the Laplace-fill form. Symbols: P selects the observed pixels, R = σ²I is their error covariance, D the first difference, so DᵀD = −Δ, and λ its weight.
 
 ```python
 # Shapes: Ny × Nx grid
@@ -1062,14 +1062,12 @@ def normal_matvec(field: Float[Array, "y x"]) -> Float[Array, "y x"]:
     # PᵀR⁻¹P x, with R = σ² I
     data_term = observed / noise_variance  # (Ny, Nx) → (Ny, Nx)
     # not pinned (finitevolX)
-    # L x, a five-point Laplacian with mirror edges
-    curvature = laplacian(field)  # (Ny, Nx) → (Ny, Nx)
-    # not pinned (finitevolX)
-    # LᵀL x, since L is symmetric
-    smoothness = laplacian(curvature)  # (Ny, Nx) → (Ny, Nx)
-    # λLᵀL x
+    # DᵀD x = −Δx, a five-point Laplacian with mirror edges; applying the
+    # Laplacian twice here would give the biharmonic fill instead
+    smoothness = -laplacian(field)  # (Ny, Nx) → (Ny, Nx)
+    # λDᵀD x
     penalty = smoothing_weight * smoothness  # (Ny, Nx) → (Ny, Nx)
-    # A x = (PᵀR⁻¹P + λLᵀL) x
+    # A x = (PᵀR⁻¹P + λDᵀD) x
     normal = data_term + penalty  # (Ny, Nx) → (Ny, Nx)
     return normal
 
@@ -1094,7 +1092,7 @@ filled = solution.value  # → (Ny, Nx)
 
 lineax differentiates the solve implicitly, so gradients with respect to the observations or λ cost one more solve, not a pass through every iteration.
 
-**Supporting libraries.** finitevolX supplies L (`Difference2D.laplacian`, `masked_laplacian`), `solve_cg` and spectral, Nyström and multigrid preconditioners. gaussx's `spde_precision_grid` gives a Matérn-type LᵀL, and its `MaskedOperator` handles the selection P. spectraldiffx's Helmholtz solvers fit the periodic case directly, and vardax's `OptimalInterpolation` is the same solve in observation space. geoops' `GapFillLaplacian`, xrtoolz's `fillnan_laplacian` and DIVAnd are the oracles.
+**Supporting libraries.** finitevolX supplies the Laplacian Δ = −DᵀD (`Difference2D.laplacian`, `masked_laplacian`), `solve_cg` and spectral, Nyström and multigrid preconditioners. gaussx's `spde_precision_grid` gives a Matérn-type LᵀL, and its `MaskedOperator` handles the selection P. spectraldiffx's Helmholtz solvers fit the periodic case directly, and vardax's `OptimalInterpolation` is the same solve in observation space. geoops' `GapFillLaplacian` and xrtoolz's `fillnan_laplacian` are the oracles for the Laplace fill; DIVAnd, whose norm mixes gradient and curvature terms, is the oracle for the higher-order fills, not for this one.
 
 #### 10. Spectral
 

@@ -99,7 +99,7 @@ Single-valued scores (RMSE, bias, correlation, CRPS) return plain arrays.
 | Fields | a product, a model's output, xrops' arrays | arrays on the A-grid with trailing `(y, x)` (or `(z, y, x)`) axes and any leading batch axes |
 | Weights | gridax cell areas, or the caller | `Float[Array, "y x"]`, non-negative, not necessarily normalised |
 | Validity | the caller | `Bool[Array, "y x"]` named `valid`, True = use the cell; xrops converts geoops' "True means drop" masks at its boundary |
-| Time | the caller | float seconds or days since an epoch, plus an integer day of year for climatologies; never `datetime` |
+| Time | the caller | float seconds or days since an epoch, plus an integer calendar day for climatologies, on a leap-year calendar (1–366, so 29 Feb is 60 and 1 Mar is 61 in every year); never `datetime` |
 | Constants | geophysix | g, ρ₀, f from the grid's latitudes |
 
 ```python
@@ -201,10 +201,12 @@ Cost: O(N) per time. Pitfalls: xrops' `boundary_flux` sums φ u A over every fac
 ```
 
 ```{math}
-\tilde{x}(d) = a_0 + \sum_{k=1}^{K} a_k \cos\left(\frac{2 \pi k d}{365.25}\right) + b_k \sin\left(\frac{2 \pi k d}{365.25}\right)
+\tilde{x}(d) = a_0 + \sum_{k=1}^{K} a_k \cos\left(\frac{2 \pi k d}{366}\right) + b_k \sin\left(\frac{2 \pi k d}{366}\right)
 ```
 
-1. Group by an integer day of year (or month) with `jax.ops.segment_sum` and a static number of segments (366 or 12), counting only valid samples.
+Here d is the calendar day of a sample's (month, day) on a leap-year calendar, not its raw day of year: in a non-leap year 1 March is day 60 of the year but d = 61, the same slot as 1 March of a leap year, and d = 60 holds only 29 February.
+
+1. Map each sample's (month, day) to its calendar day d, on the host or with a 12-entry table of month offsets, then group by d (or by month) with `jax.ops.segment_sum` and a static number of segments (366 or 12), counting only valid samples. Grouping by the raw day of year would put 1 March of non-leap years with 29 February, and shift every date after it by one between leap and non-leap years.
 2. The smoothed climatology fits the first K harmonics (default 3) to the daily means by weighted least squares, the weights being the counts.
 3. The anomaly subtracts the climatology at each sample's day; adding it back is the inverse.
 
@@ -338,7 +340,7 @@ Read on 5 Nov 2026 at xrtoolz b3855d7, somax aea3a03 and finitevolX 82090a3 (0.1
 | `column_integral`, `hypsometric_height`, `pbl_height_bulk_richardson` (Ri\_c = 0.25) | xrops `atm/_src/vertical.py` | ported; the PBL default is kept |
 | `wind_speed`, `wind_direction`, `wind_components` | xrops `atm/_src/wind.py` | trivial; stay in xrops or move with the rest |
 | `boundary_flux` and the heat, KE, salt and volume budget residuals, `control_volume_integral`, `budget_residual` | xrops budgets | `boundary_flux` sums over every face of the field, not a region's boundary; the true boundary flux is new |
-| `calculate_climatology` (with smoothed and seasonal variants), `remove_climatology`, `add_climatology`, `calculate_anomaly`, `remove_mean` | xrops `anomaly/detrend.py` | ported with a base period and day-of-year segments |
+| `calculate_climatology` (with smoothed and seasonal variants), `remove_climatology`, `add_climatology`, `calculate_anomaly`, `remove_mean` | xrops `anomaly/detrend.py` | ported with a base period and calendar-day segments (leap-year calendar) |
 | `power_spectrum`, `isotropic_power_spectrum`, KE and enstrophy spectral flux, `integral_scale`, `fit_spectral_slope`, `compensated_spectrum`, `cross_spectrum`, `coherence`, `rotary_spectrum`, `stft` | xrops `transforms/fourier.py`, on xrft | the spectra are ported to `jnp.fft`; xrft stays the oracle |
 | `cwt`, `dwt` | xrops `transforms/wavelet.py`, on pywt | stay host-only |
 | `pca`, `eof`, `ica`, `nmf`, `kmeans` | xrops `transforms/decompose.py`, sklearn estimators | `eof` is unweighted PCA; area-weighted EOFs are new; the rest stay |

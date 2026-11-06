@@ -81,7 +81,7 @@ The Okubo–Weiss parameter [@okubo1970; @weiss1991] W = σₙ² + σₛ² − �
 
 and the residual of that balance is the diagnostic. For a plume in steady state, the flux through the faces of a box around the source is the emission rate, Q = ∮ Ω' (u · n) dl, with Ω' the column enhancement.
 
-**Climate.** With q̄(d) the climatology at day of year d, the anomaly is q'(t) = q(t) − q̄(d(t)); trends, detrending and temporal filters act on q'.
+**Climate.** With q̄(d) the climatology at calendar day d (on a leap-year calendar, so each date keeps one slot in every year), the anomaly is q'(t) = q(t) − q̄(d(t)); trends, detrending and temporal filters act on q'.
 
 **Spectra.** With q̂(k) the Fourier transform of q, the power spectrum is P(k) = |q̂(k)|², the isotropic spectrum averages it over rings of |k|, and the spectral flux Π(k) sums the nonlinear transfer below k. Cross, coherence and rotary spectra and wavelets follow the same pattern.
 
