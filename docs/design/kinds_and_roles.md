@@ -35,7 +35,7 @@ A working page split from the [layer map](./stack_layer_map.md), which keeps the
 ## On the page
 
 1. The problem: why geo code is hard to write well
-2. The objects, in symbols: the data axis (plain array, named array, carrier) and the kind axis (function, Module, Operator), each with a worked example in code
+2. The objects, in symbols: the data axis (plain array, named array, carrier) and the kind axis (function, Module, Operator), each with a worked example in code, and a note on the parallels with operator learning (encoder, approximator, reconstructor), Lift & Learn and Koopman
 3. The running example, end to end, and the data axis in three lines
 4. Inside a library: the role ladder, with steps, recipes and orchestration
 5. Who works where: bands of the ladder
