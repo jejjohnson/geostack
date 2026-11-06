@@ -56,6 +56,7 @@ project:
         - file: docs/design/package_layout.md
         - file: docs/design/stack_levels.md
         - file: docs/design/stack_layer_map.md
+        - file: docs/design/kinds_and_roles.md
         - title: Library designs
           children:
             - file: docs/design/libraries/libraries.md

@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GeoStack Kinds and Roles</title>
+<meta name="description" content="Three kinds of function, three kinds of data, the objects in symbols, the seven-rung role ladder, who works where, one vocabulary per axis, and the rules that place any name in the GeoStack.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column; the figure is a stratigraphic column of the stack,
+   bedrock (Core) at the bottom, with a detail panel and the tables beneath it. */
+:root {
+  --bg: #f2f5f6;
+  --surface: #ffffff;
+  --ink: #1a2328;
+  --muted: #56656d;
+  --line: #d3dce0;
+  --accent: #0b6b83;
+  --edge: rgba(52, 70, 80, 0.30);
+  --edge-hot: #1a2328;
+  --node-ink: #ffffff;
+
+  --core: #2f4b5d;        --core-band: #e2e9ee;
+  --numerics: #23796d;    --numerics-band: #ddeeea;
+  --toolkits: #9c6318;    --toolkits-band: #f3e8d6;
+  --models: #557528;      --models-band: #e6eddb;
+  --apps-band: #eaeef0;
+  --geoml: #74569f;       --geostack: #9c6318;
+  --found: #5d6a72;       --found-band: #e8ecee;
+
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171b; --surface: #172026; --ink: #e2e9ed; --muted: #94a4ac;
+    --line: #2a363d; --accent: #45b8d4; --edge: rgba(170, 190, 200, 0.26);
+    --edge-hot: #e2e9ed; --node-ink: #0d1417;
+    --core: #7ea2b9; --core-band: #19252d;
+    --numerics: #55b9aa; --numerics-band: #142d29;
+    --toolkits: #d79f50; --toolkits-band: #2f2618;
+    --models: #96ba60; --models-band: #1f2918;
+    --apps-band: #182025; --geoml: #ae92d9; --geostack: #d79f50;
+    --found: #a3b1b9; --found-band: #191f23;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171b; --surface: #172026; --ink: #e2e9ed; --muted: #94a4ac;
+  --line: #2a363d; --accent: #45b8d4; --edge: rgba(170, 190, 200, 0.26);
+  --edge-hot: #e2e9ed; --node-ink: #0d1417;
+  --core: #7ea2b9; --core-band: #19252d;
+  --numerics: #55b9aa; --numerics-band: #142d29;
+  --toolkits: #d79f50; --toolkits-band: #2f2618;
+  --models: #96ba60; --models-band: #1f2918;
+  --apps-band: #182025; --geoml: #ae92d9; --geostack: #d79f50;
+  --found: #a3b1b9; --found-band: #191f23;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 72px;
+  display: grid;
+  gap: 40px;
+}
+header { display: grid; gap: 12px; max-width: 68ch; }
+.eyebrow {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 14px;
+  color: var(--muted);
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1;
+  margin: 0;
+  text-wrap: balance;
+}
+h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.1;
+  margin: 0;
+  text-wrap: balance;
+}
+p { margin: 0; }
+.lead { font-size: 17px; color: var(--ink); }
+.lead + .lead { color: var(--muted); font-size: 15px; }
+code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+/* ---------- figure ---------- */
+.figure {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: grid;
+  gap: 0;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button {
+  font: 500 13px/1 var(--body);
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button:focus-visible, .toggle input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.control-label { font-size: 13px; color: var(--muted); }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.legend i.dashed { background: transparent !important; border: 1.5px dashed var(--accent); }
+
+.canvas { overflow-x: auto; }
+svg.graph { display: block; width: 100%; min-width: 860px; height: auto; }
+.band { stroke: none; }
+.band-label {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.band-rule { font-family: var(--body); font-size: 11.5px; fill: var(--muted); }
+.tier-label { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.4; transition: stroke 120ms, opacity 120ms; }
+.edge.planned { stroke: var(--accent); stroke-dasharray: 5 4; opacity: 0.55; }
+.edge.hot { stroke: var(--edge-hot); stroke-width: 2; opacity: 1; }
+.edge.planned.hot { stroke: var(--accent); }
+.edge.found { stroke: var(--found); opacity: 0.35; }
+.edge.found.hot { stroke: var(--found); opacity: 0.9; }
+.edge.dim { opacity: 0.12; }
+.node.ext rect { fill: var(--surface) !important; stroke: var(--found) !important; }
+.node.ext text { fill: var(--ink); }
+.arrow-found { fill: var(--found); }
+
+/* ---------- foundations table ---------- */
+table.heat { min-width: 980px; font-size: 12.5px; }
+table.heat th.col { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; padding: 10px 6px; font-family: var(--mono); text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; color: var(--ink); }
+table.heat td { text-align: center; padding: 6px 4px; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+table.heat td.lib { text-align: left; padding-left: 12px; }
+table.heat td.zero { color: var(--line); }
+table.heat td.planned { outline: 1.5px dashed var(--accent); outline-offset: -4px; color: var(--accent); }
+table.heat th.group { text-align: center; border-bottom: 0; }
+.node { cursor: pointer; }
+.clean .node { cursor: default; }
+.node rect { stroke-width: 1.5; transition: opacity 120ms; }
+.node text { font-family: var(--mono); font-size: 13px; font-weight: 500; fill: var(--node-ink); pointer-events: none; }
+.edge.leaving { stroke: #b4583c; stroke-dasharray: 2 4; stroke-width: 1.4; opacity: .85; }
+.workspace { fill: none; stroke: var(--toolkits); stroke-opacity: .55; stroke-width: 1.2; stroke-dasharray: 5 4; }
+.workspace-label { font-family: var(--mono); font-size: 10.5px; fill: var(--toolkits); }
+table.kinds td.shared { text-align: center; background: var(--toolkits-band); }
+.node.third rect { fill: var(--surface) !important; stroke-dasharray: 3 3; }
+.node.third text { fill: var(--ink); }
+.node.proposed rect { stroke: var(--accent) !important; stroke-width: 2.5; stroke-dasharray: 6 3; }
+.node.dim rect, .node.dim text { opacity: 0.28; }
+.node.sel rect { stroke: var(--ink) !important; stroke-width: 3; }
+.node:focus { outline: none; }
+.node:focus-visible rect { stroke: var(--accent) !important; stroke-width: 3; }
+.arrow-default { fill: var(--edge); }
+.arrow-hot { fill: var(--edge-hot); }
+.arrow-planned { fill: var(--accent); }
+.apps-text { font-family: var(--mono); font-size: 13px; fill: var(--ink); }
+
+.panel {
+  border-top: 1px solid var(--line);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px 28px;
+}
+.panel h3 { margin: 0 0 4px; font-family: var(--mono); font-size: 18px; font-weight: 500; }
+.panel .k {
+  font-family: var(--display); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; font-size: 13px; color: var(--muted); margin-bottom: 4px;
+}
+.panel ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-family: var(--mono); font-size: 12.5px; padding: 3px 8px; border-radius: 3px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+}
+.chip.planned { border-style: dashed; border-color: var(--accent); color: var(--accent); }
+.empty { font-size: 13px; color: var(--muted); }
+.caption { padding: 0 16px 16px; font-size: 13px; color: var(--muted); max-width: 90ch; }
+.check { padding: 0 16px 16px; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13.5px; }
+.check b { font-variant-numeric: tabular-nums; }
+.ok { color: var(--numerics); }
+.warn { color: var(--toolkits); }
+
+/* ---------- layers ---------- */
+.section { display: grid; gap: 16px; }
+.layers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.layer {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--c);
+  border-radius: 4px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.layer h3 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 700; letter-spacing: 0.02em; }
+.layer .test { font-size: 14.5px; }
+.layer .meta { font-size: 13px; color: var(--muted); }
+.layer .meta b { color: var(--ink); font-weight: 600; }
+
+/* ---------- table ---------- */
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th {
+  font-family: var(--display); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; font-size: 13px; color: var(--muted);
+}
+tbody tr:last-child td { border-bottom: 0; }
+td.lib, td.layer-cell { font-family: var(--mono); white-space: nowrap; }
+td.layer-cell { font-family: var(--body); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; }
+.moved { font-size: 12px; color: var(--accent); margin-left: 6px; white-space: nowrap; }
+
+.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.notes ol, .notes ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.notes h3 { margin: 0 0 8px; font-family: var(--display); font-size: 20px; font-weight: 700; }
+footer { font-size: 12.5px; color: var(--muted); max-width: 90ch; }
+
+
+/* ---------- foundation map and reorganised core ---------- */
+.sub { max-width: 72ch; color: var(--muted); }
+.sub b { color: var(--ink); font-weight: 600; }
+.pill {
+  display: inline-block; font-family: var(--mono); font-size: 12.5px; font-weight: 500;
+  padding: 4px 9px; border-radius: 4px; border: 1.5px solid transparent; white-space: nowrap;
+}
+.pill.ext { background: var(--surface); border-color: var(--found); color: var(--ink); }
+.pill.c-core { background: var(--core); color: var(--node-ink); }
+.pill.c-toolkits { background: var(--toolkits); color: var(--node-ink); }
+.pill.c-numerics { background: var(--numerics); color: var(--node-ink); }
+.pill.c-models { background: var(--models); color: var(--node-ink); }
+.pill.new { outline: 2px dashed var(--accent); outline-offset: 2px; }
+.relmap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.rel-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1.3fr) 92px minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: 10px 14px; align-items: center; padding: 12px 16px;
+}
+.rel-row + .rel-row { border-top: 1px solid var(--line); }
+.rel-topic { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 13.5px; color: var(--muted); }
+.rel-from, .rel-to { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.rel-kind {
+  position: relative; text-align: center; font-size: 12px; font-weight: 600; padding: 3px 0;
+  color: var(--kc); border-bottom: 2px solid var(--kc);
+}
+.rel-kind::after {
+  content: ""; position: absolute; right: -6px; bottom: -6px;
+  border-left: 8px solid var(--kc); border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+}
+.k-extends { --kc: var(--numerics); }
+.k-replaces { --kc: var(--accent); }
+.k-wraps { --kc: var(--toolkits); }
+.rel-note { font-size: 13.5px; color: var(--muted); min-width: 0; }
+.tiers { background: var(--core-band); border-radius: 6px; padding: 8px; display: grid; gap: 8px; }
+.tier { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 12px; align-items: start; padding: 10px 8px; }
+.tier + .tier { border-top: 1px dashed var(--line); }
+.tier-name { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 5px; }
+.tier-libs { display: flex; flex-wrap: wrap; gap: 14px 22px; }
+.tlib { display: grid; gap: 4px; justify-items: start; }
+.tlib small { font-size: 12px; color: var(--muted); max-width: 22ch; line-height: 1.35; }
+h3.minor { margin: 8px 0 0; font-family: var(--display); font-size: 20px; font-weight: 700; }
+@media (max-width: 760px) {
+  .rel-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .rel-kind { justify-self: start; width: 92px; }
+  .rel-kind::after { right: auto; left: 40px; bottom: -9px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid var(--kc); border-bottom: 0; }
+  .tier { grid-template-columns: minmax(0, 1fr); }
+}
+
+.axes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 16px 0 8px; }
+.axis-col { display: grid; gap: 10px; align-content: start; }
+.axis-title { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+table.grid3 { min-width: 760px; }
+table.grid3 td { width: 30%; }
+table.grid3 td.lib { width: 10%; white-space: nowrap; }
+table.grid3 td.n { color: var(--muted); font-style: italic; }
+.where { display: block; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.where .pill { margin: 0 3px 0 0; }
+@media (max-width: 760px) { .axes { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- upper layers, reorganised ---------- */
+.band-core { background: var(--core-band); }
+.band-numerics { background: var(--numerics-band); }
+.chip.ext { border-color: var(--found); background: var(--found-band); }
+.chip.gone { text-decoration: line-through; color: var(--muted); background: transparent; }
+.band-toolkits { background: var(--toolkits-band); }
+.band-models { background: var(--models-band); }
+h3.layer-h { margin-top: 26px; padding-left: 12px; border-left: 5px solid var(--lc); font-size: 24px; }
+h3.minor.small { font-size: 17px; margin-top: 14px; }
+.tier-libs.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.lcard { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 6px; align-content: start; }
+.lcard .what { font-size: 12.5px; line-height: 1.4; }
+.lcard .rel { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 4px; font-size: 11px; color: var(--muted); align-items: start; }
+.lcard .rel .chips { display: flex; flex-wrap: wrap; gap: 3px; }
+.lcard .rel .chip { font-size: 10.5px; padding: 0 5px; }
+.lcard .rel .none { font-style: italic; }
+.lcard .tagline { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.legend-kinds { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); margin: 6px 0; }
+td.lib.out { color: var(--muted); }
+/* ---------- math ---------- */
+.mathgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 14px 0; }
+.mathcol { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; font-size: 14px; line-height: 1.55; }
+.mathcol p { margin: 8px 0; }
+.tex.display { display: block; margin: 10px 0; text-align: center; overflow-x: auto; overflow-y: hidden; }
+.tex math { font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", math; font-size: 1.08em; }
+.tex.display math { font-size: 1.12em; }
+@media (max-width: 860px) { .mathgrid { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- level ladder ---------- */
+.noun-rows { display: grid; gap: 6px; }
+.noun-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: start; }
+.noun-label { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding-top: 5px; }
+.data-nouns { background: color-mix(in srgb, var(--toolkits) 9%, var(--surface)); border: 1px dashed color-mix(in srgb, var(--toolkits) 55%, transparent); border-radius: 8px; padding: 6px 8px; }
+.data-nouns code { border-color: color-mix(in srgb, var(--toolkits) 45%, var(--line)); font-weight: 600; }
+@media (max-width: 860px) { .noun-row { grid-template-columns: minmax(0, 1fr); } }
+.gram { font-style: italic; font-size: 12.5px; color: var(--muted); order: 5; flex-basis: 100%; margin-top: -4px; }
+.rung-labels { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 4px; }
+.rchip { font-family: var(--mono); font-size: 10px; font-weight: 700; color: #fff; background: var(--c); border-radius: 999px; padding: 0 6px; line-height: 16px; }
+.ladder { display: grid; grid-template-columns: minmax(0, 1fr) 170px 250px; column-gap: 14px; row-gap: 8px; margin: 16px 0 10px; align-items: stretch; }
+.rung { grid-column: 1; border-radius: 10px; padding: 10px 14px; background: color-mix(in srgb, var(--c) 8%, var(--surface)); border: 1.5px solid color-mix(in srgb, var(--c) 60%, transparent); display: grid; gap: 8px; }
+.rung-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.lvl { font-family: var(--mono); font-size: 12px; font-weight: 700; color: #fff; background: var(--c); border-radius: 999px; padding: 2px 9px; }
+.rung-name { font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--c); }
+.rung-sub { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.ptag { display: none; font-family: var(--mono); font-size: 11px; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; }
+.rung-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rung-chips.col { flex-direction: column; align-items: flex-start; }
+.rung-chips code { font-family: var(--mono); font-size: 12px; padding: 3px 8px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.orch-bar { display: block; grid-column: 1; text-align: center; font-size: 13px; color: var(--muted); padding: 10px; border: 1.5px dashed var(--muted); border-radius: 10px; background: var(--surface); }
+.found-bar { display: block; background: var(--found-band); border: 1px solid var(--line); text-align: center; font-size: 13px; color: var(--muted); padding: 10px; }
+.rail { grid-column: 2; display: grid; align-content: center; gap: 2px; padding: 6px 12px; border-left: 3px solid var(--ink); }
+.rail-module { border-left-width: 6px; background: var(--surface); border-radius: 0 8px 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); }
+.rail-kind { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.rail-note { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.sidecar { grid-column: 3; align-self: center; position: relative; border: 1.5px dashed var(--muted); border-radius: 10px; padding: 12px 14px; background: var(--surface); display: grid; gap: 6px; }
+.sidecar::before { content: "←"; position: absolute; left: -22px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--muted); }
+.side-title { font-weight: 700; font-size: 15px; }
+.side-sub { font-size: 12px; color: var(--muted); }
+@media (max-width: 860px) {
+  .ladder { grid-template-columns: minmax(0, 1fr); }
+  .ladder > * { grid-row: auto !important; grid-column: 1 !important; }
+  .rail { display: none; }
+  .ptag { display: inline-block; }
+  .rung-sub { margin-left: 0; flex-basis: 100%; }
+  .sidecar::before { content: "↑"; left: 50%; top: -24px; transform: none; }
+  .sidecar { margin-top: 18px; }
+}
+/* ---------- object kinds ---------- */
+.kind-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 16px 0 8px; }
+.kind-card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.kind-name { font-family: var(--display); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.kglyph { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 6px; background: var(--ink); color: var(--surface); font-family: var(--mono); font-size: 14px; }
+.kind-test { margin: 6px 0 10px; font-weight: 600; font-size: 14px; }
+.kind-card dl { margin: 0; display: grid; gap: 4px; font-size: 13px; line-height: 1.45; }
+.kind-card dt { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 6px; }
+.kind-card dd { margin: 0; }
+ol.decide { max-width: 76ch; padding-left: 22px; display: grid; gap: 6px; }
+table.matrix td.y { color: var(--ink); }
+table.matrix td.n { color: var(--muted); }
+table.matrix td.u { color: var(--ink); font-style: italic; }
+table.matrix td.y::before { content: "✓ "; color: var(--numerics); font-weight: 700; }
+table.matrix td.n::before { content: "✕ "; }
+.flow-wrap { margin: 14px 0; }
+ol.flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; max-width: 560px; }
+ol.flow li:not(.f-arrow) { display: grid; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--ink); border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+ol.flow .f-op { border-left-color: var(--toolkits) !important; }
+ol.flow .f-mod, ol.flow .f-prim { border-left-color: var(--numerics) !important; }
+ol.flow .f-app { border-left-color: var(--found) !important; }
+.f-kind { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+ol.flow li.f-arrow { font-family: var(--mono); font-size: 11.5px; color: var(--muted); padding: 4px 0 4px 26px; position: relative; }
+ol.flow li.f-arrow::before { content: "↓"; position: absolute; left: 10px; color: var(--ink); }
+ol.flow li.f-arrow.up::before { content: "↑"; }
+.kinds-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.kchip { font-family: var(--mono); font-size: 10.5px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--bg); white-space: nowrap; font-weight: 400; }
+.kchip.geo { border-style: dashed; }
+@media (max-width: 1000px) { .kind-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .kind-cards { grid-template-columns: minmax(0, 1fr); } }
+table.kinds { min-width: 900px; }
+table.kinds td.topic { width: 46%; }
+table.kinds td { font-size: 13px; line-height: 1.45; }
+table.kinds td .pill { margin: 0 4px 6px 0; }
+table.kinds th .pill { margin-right: 6px; }
+table.kinds .pill.new { outline: 0; }
+.rule { min-width: 0; max-width: 76ch; margin: 22px 0 6px; padding: 14px 18px; background: var(--surface);
+        border: 1px solid var(--line); border-left: 4px solid var(--numerics); border-radius: 6px; }
+.rule h3 { margin: 0 0 8px; font-family: var(--display); font-size: 20px; font-weight: 700; }
+.rule p { margin: 0 0 10px; }
+.rule p:last-child { margin-bottom: 0; }
+.rule p.muted { color: var(--muted); margin-top: 12px; }
+.rule.wide { max-width: none; }
+table.vocab td:nth-child(3) { font-size: 13px; }
+
+/* ---------- boundaries table ---------- */
+table.bounds { min-width: 980px; }
+table.bounds td { font-size: 13px; line-height: 1.45; }
+table.bounds td.lib { white-space: nowrap; }
+table.bounds td.lib small { display: block; font-family: var(--body); font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+table.bounds tr.group td {
+  font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--gc); background: var(--gb); border-bottom: 1px solid var(--line); padding-block: 8px;
+}
+table.bounds .imports { display: flex; flex-wrap: wrap; gap: 4px; }
+table.bounds .chip { font-size: 11.5px; padding: 1px 6px; }
+.hand { color: var(--muted); }
+.hand b { color: var(--ink); font-weight: 500; font-family: var(--mono); font-size: 12px; }
+
+@media (max-width: 760px) {
+  .panel { grid-template-columns: minmax(0, 1fr); }
+  .layers, .notes { grid-template-columns: minmax(0, 1fr); }
+  .legend { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edge, .node rect { transition: none; }
+}
+
+/* series navigation, as on the other standalone design pages */
+.series-nav { max-width: 1240px; margin: 0 auto; padding: 14px 16px 0; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; font-family: var(--mono); font-size: 12.5px; }
+.series-nav.bottom { padding: 0 16px 28px; }
+.series-nav a { color: var(--accent); text-decoration: none; }
+.series-nav a:hover, .series-nav a:focus-visible { text-decoration: underline; }
+.obj { display: grid; gap: 12px; max-width: 80ch; min-width: 0; margin: 4px 0 18px; }
+.obj > * { min-width: 0; }
+.obj h4 { margin: 14px 0 0; font-family: var(--display); font-size: 21px; font-weight: 700; color: var(--ink); text-wrap: balance; }
+.obj p { margin: 0; }
+.shapes { margin: 0; padding-left: 20px; display: grid; gap: 3px; font-size: 14px; color: var(--muted); }
+.tag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-right: 6px; }
+pre.code { margin: 2px 0; overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; color: var(--ink); tab-size: 4; }
+pre.code code { font-family: inherit; }
+.code-note { font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<nav class="series-nav" aria-label="Docs navigation"><span class="crumbs"><a href="../">GeoStack docs</a> · Design</span><span><a href="../kinds-and-roles">← Landing page: abstract and contents</a> · <a href="../stack-layer-map">Layer map →</a></span></nav>
+<div class="page">
+  <header>
+    <div class="eyebrow">Working page · split from the GeoStack layer map · 6 November 2026</div>
+    <h1>Three kinds of function, three kinds of data</h1>
+    <p class="lead">How code in the stack is packaged (function, Module, Operator), what data it sees (array, named array, carrier), and the role each name plays in its library's API, from structures up to recipes. This page holds the problem, the objects in symbols, the role ladder, who works where, one vocabulary per axis, and the rules that follow. The <a href="../stack-layer-map">layer map</a> keeps the layers, the imports and the boundaries of each library, and links here.</p>
+  </header>
+
+  <section class="section" aria-labelledby="kinds-title">
+    <h3 class="minor">The problem: why geo code is hard to write well</h3>
+    <p class="sub">Take one running example: a cloud-masked NDVI time series from a stack of Sentinel-2 scenes, gap-filled, then sampled at flux-tower sites. Every step of it can go wrong in a way that raises no error.</p>
+    <div class="table-wrap">
+      <table class="kinds">
+        <thead><tr><th>Problem</th><th>What goes wrong, silently</th><th>What fixes it</th></tr></thead>
+        <tbody>
+          <tr><td class="lib">Axes by position</td><td>One reader returns <code>(band, y, x)</code>, another <code>(y, x, band)</code>; time is first in one file and last in the next. <code>mean(axis=0)</code> averages over the wrong thing and returns a plausible number.</td><td><b>named array</b>: dims by name, <code>mean("time")</code></td></tr>
+          <tr><td class="lib">Lost georeference</td><td><code>np.asarray(scene)[..., 100:200, 50:150]</code> keeps the pixels and drops the transform. Rewrapped with the scene's transform, the crop claims to start at the scene's corner, and the tower sites land on the wrong pixels.</td><td><b>carrier</b>: slicing moves the transform with the data</td></tr>
+          <tr><td class="lib">Mismatched grids</td><td>Two rasters with the same shape but a half-pixel shift, or another CRS, combine pixel by pixel into a smeared result.</td><td><b>carrier</b>: <code>require_grid_match</code> refuses</td></tr>
+          <tr><td class="lib">Nodata</td><td>A fill of <code>-9999</code> or <code>0</code> goes into the mean and the gap-fill as if it were data.</td><td><b>carrier</b>: <code>fill_value</code> and <code>valid_mask</code></td></tr>
+          <tr><td class="lib">Maths locked in a container</td><td>The gap-fill written against xarray can't run on a GeoArray, and neither can be jitted: a CRS is not something JAX can trace. Each container gets its own copy of the algorithm.</td><td><b>function</b> and <b>Module</b> on plain arrays; the container is unwrapped outside them</td></tr>
+          <tr><td class="lib">Setup that can't be traced</td><td>The k-NN graph or triangulation behind the gap-fill is rebuilt on every call, or forced under <code>jit</code> where it fails.</td><td><b>Module</b>: build once at <code>fit</code>, call jittably after</td></tr>
+          <tr><td class="lib">Pipelines held together by scripts</td><td>The chain of steps lives in one notebook; its settings can't be saved, swept or rerun exactly.</td><td><b>Operator</b>: config round-trip, <code>|</code>, <code>Graph</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub">The fixes split cleanly. The first four problems are about the <b>data</b>; the last three are about how the <b>code</b> is packaged. That is why the stack has two axes.</p>
+
+    <h3 class="minor">The objects, in symbols</h3>
+    <p class="sub">The whole stack rests on two ideas: <b>a function of arrays</b>, <span class="tex" data-tex="f(\vect{x}, \vect{u}; \gvect{\theta})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐮</mi><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">f(\vect{x}, \vect{u}; \gvect{\theta})</annotation></semantics></math></span></span>, and <b>an Operator that lifts that function onto geographic data</b>, <span class="tex" data-tex="\op{lift}_\alpha[f]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><mi>α</mi></msub><mo stretchy="false">[</mo><mi>f</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\op{lift}_\alpha[f]</annotation></semantics></math></span></span>. Everything else is bookkeeping about what <span class="tex" data-tex="\vect{x}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi></mrow><annotation encoding="application/x-tex">\vect{x}</annotation></semantics></math></span></span> knows and where <span class="tex" data-tex="\gvect{\theta}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi></mrow><annotation encoding="application/x-tex">\gvect{\theta}</annotation></semantics></math></span></span> and <span class="tex" data-tex="\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span></span> live. Two axes follow from those ideas: what the data knows, and how the code is packaged. Every symbol is defined, with its shape, before it is used.</p>
+    <p class="sub"><b>The running example</b> is a stack of Sentinel-2 scenes: <span class="tex" data-tex="N_\text{time}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>time</mtext></msub></mrow><annotation encoding="application/x-tex">N_\text{time}</annotation></semantics></math></span></span> acquisition dates, <span class="tex" data-tex="N_\text{band}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>band</mtext></msub></mrow><annotation encoding="application/x-tex">N_\text{band}</annotation></semantics></math></span></span> bands and <span class="tex" data-tex="N_\text{row} \times N_\text{col}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>row</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>col</mtext></msub></mrow><annotation encoding="application/x-tex">N_\text{row} \times N_\text{col}</annotation></semantics></math></span></span> pixels, turned into a cloud-masked NDVI time series, gap-filled, and sampled at flux-tower sites. Its dimension names follow geoarray, <code>("time", "band", "y", "x")</code>; the sizes are written <span class="tex" data-tex="N_\text{row}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>row</mtext></msub></mrow><annotation encoding="application/x-tex">N_\text{row}</annotation></semantics></math></span></span> and <span class="tex" data-tex="N_\text{col}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>col</mtext></msub></mrow><annotation encoding="application/x-tex">N_\text{col}</annotation></semantics></math></span></span> so that <span class="tex" data-tex="\vect{y}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐲</mi></mrow><annotation encoding="application/x-tex">\vect{y}</annotation></semantics></math></span></span> stays the output of a function.</p>
+
+    <h3 class="minor" id="data-axis">The data axis: what <span class="tex" data-tex="\vect{x}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi></mrow><annotation encoding="application/x-tex">\vect{x}</annotation></semantics></math></span></span> knows</h3>
+    <div class="obj">
+      <h4>▦ Plain array</h4>
+      <p>A block of numbers with a shape and nothing else:</p>
+      <div class="tex display" data-tex="\vect{x} \in \mathbb{R}^{N_1 \times \ldots \times N_{N_\text{ax}}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝐱</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>N</mi><mn>1</mn></msub><mo>×</mo><mo>…</mo><mo>×</mo><msub><mi>N</mi><msub><mi>N</mi><mtext>ax</mtext></msub></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\vect{x} \in \mathbb{R}^{N_1 \times \ldots \times N_{N_\text{ax}}}</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="N_\text{ax}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>ax</mtext></msub></mrow><annotation encoding="application/x-tex">N_\text{ax}</annotation></semantics></math></span></span>: the number of axes; <span class="tex" data-tex="a = 1, \ldots, N_\text{ax}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>N</mi><mtext>ax</mtext></msub></mrow><annotation encoding="application/x-tex">a = 1, \ldots, N_\text{ax}</annotation></semantics></math></span></span> indexes them.</li>
+        <li><span class="tex" data-tex="N_a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>a</mi></msub></mrow><annotation encoding="application/x-tex">N_a</annotation></semantics></math></span></span>: the length of axis <span class="tex" data-tex="a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></span>.</li>
+      </ul>
+      <p><span class="tag">Example</span> The scene stack is <span class="tex" data-tex="\vect{x} \in \mathbb{R}^{N_\text{time} \times N_\text{band} \times N_\text{row} \times N_\text{col}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>N</mi><mtext>time</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>band</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>row</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>col</mtext></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\vect{x} \in \mathbb{R}^{N_\text{time} \times N_\text{band} \times N_\text{row} \times N_\text{col}}</annotation></semantics></math></span></span>, so <span class="tex" data-tex="N_\text{ax} = 4"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>ax</mtext></msub><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">N_\text{ax} = 4</annotation></semantics></math></span></span>. Which axis is time is a convention the code has to remember: a mean over axis 1 is a mean over time only if every reader put time first. One reader returns <code>(band, y, x)</code>, another <code>(y, x, band)</code>, and the wrong mean runs without an error.</p>
+      <p><span class="tag">In code</span> a NumPy or JAX array. Its axis order lives in a jaxtyping annotation and in each einx pattern, so the convention is written down at every call, but nothing checks it against the data: a stack read as <code>(band, y, x, time)</code> passes the same call and averages over the wrong axis.</p>
+      <pre class="code"><code>import einx
+import jax.numpy as jnp
+import numpy as np
+from jaxtyping import Array, Float
+
+
+def time_mean(stack: Float[Array, "time band y x"]) -&gt; Float[Array, "band y x"]:
+    """Mean of a scene stack over its acquisition dates.
+
+    x̄ = (1 / N_time) ∑_t x_t
+    """
+    # the axis names live in this pattern and the annotation, not in the data
+    mean_scene = einx.mean("[time] band y x", stack)
+    return mean_scene
+
+
+# x ∈ ℝ^(N_time × N_band × N_row × N_col), on the host
+reflectance = np.zeros((4, 13, 600, 600), dtype=np.float32)
+# the same numbers on the device
+stack = jnp.asarray(reflectance)
+mean_scene = time_mean(stack)</code></pre>
+
+      <h4>▤ Named array</h4>
+      <p>The same numbers with a name <span class="tex" data-tex="d_a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>a</mi></msub></mrow><annotation encoding="application/x-tex">d_a</annotation></semantics></math></span></span> and a coordinate vector <span class="tex" data-tex="\vect{c}_a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐜</mi><mi>a</mi></msub></mrow><annotation encoding="application/x-tex">\vect{c}_a</annotation></semantics></math></span></span> for each axis:</p>
+      <div class="tex display" data-tex="\vect{x}_\text{named} = (\vect{x}, \vect{d}, \mathcal{C})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>𝐱</mi><mtext>named</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐝</mi><mo separator="true">,</mo><mi>𝒞</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{x}_\text{named} = (\vect{x}, \vect{d}, \mathcal{C})</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="\vect{d} = (d_1, \ldots, d_{N_\text{ax}})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝐝</mi><mo>=</mo><mo stretchy="false">(</mo><msub><mi>d</mi><mn>1</mn></msub><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>d</mi><msub><mi>N</mi><mtext>ax</mtext></msub></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{d} = (d_1, \ldots, d_{N_\text{ax}})</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="\mathcal{C} = (\vect{c}_1, \ldots, \vect{c}_{N_\text{ax}})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝒞</mi><mo>=</mo><mo stretchy="false">(</mo><msub><mi>𝐜</mi><mn>1</mn></msub><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>𝐜</mi><msub><mi>N</mi><mtext>ax</mtext></msub></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\mathcal{C} = (\vect{c}_1, \ldots, \vect{c}_{N_\text{ax}})</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="\vect{d}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐝</mi></mrow><annotation encoding="application/x-tex">\vect{d}</annotation></semantics></math></span></span>: one name per axis, all distinct.</li>
+        <li><span class="tex" data-tex="\vect{c}_a \in \mathbb{R}^{N_a}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐜</mi><mi>a</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><msub><mi>N</mi><mi>a</mi></msub></msup></mrow><annotation encoding="application/x-tex">\vect{c}_a \in \mathbb{R}^{N_a}</annotation></semantics></math></span></span>: the coordinates along axis <span class="tex" data-tex="a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></span> (dates, wavelengths, positions).</li>
+      </ul>
+      <p>An operation addresses an axis by name. The name's position is <span class="tex" data-tex="\op{pos}_{\vect{d}}(d_a) = a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi></mrow><mi>𝐝</mi></msub><mo stretchy="false">(</mo><msub><mi>d</mi><mi>a</mi></msub><mo stretchy="false">)</mo><mo>=</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\op{pos}_{\vect{d}}(d_a) = a</annotation></semantics></math></span></span>, and a reduction <span class="tex" data-tex="r_a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>a</mi></msub></mrow><annotation encoding="application/x-tex">r_a</annotation></semantics></math></span></span> over a name reduces over that position and drops the name and its coordinates:</p>
+      <div class="tex display" data-tex="r_{d_a}(\vect{x}_\text{named}) = (r_a(\vect{x}), \vect{d} \setminus d_a, \mathcal{C} \setminus \vect{c}_a)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>r</mi><msub><mi>d</mi><mi>a</mi></msub></msub><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>named</mtext></msub><mo stretchy="false">)</mo><mo>=</mo><mo stretchy="false">(</mo><msub><mi>r</mi><mi>a</mi></msub><mo stretchy="false">(</mo><mi>𝐱</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mi>𝐝</mi><mo>∖</mo><msub><mi>d</mi><mi>a</mi></msub><mo separator="true">,</mo><mi>𝒞</mi><mo>∖</mo><msub><mi>𝐜</mi><mi>a</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">r_{d_a}(\vect{x}_\text{named}) = (r_a(\vect{x}), \vect{d} \setminus d_a, \mathcal{C} \setminus \vect{c}_a)</annotation></semantics></math></span></div>
+      <p><span class="tag">Example</span> <span class="tex" data-tex="\vect{d} = (\texttt{time}, \texttt{band}, \texttt{y}, \texttt{x})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐝</mi><mo>=</mo><mo stretchy="false">(</mo><mtext>𝚝𝚒𝚖𝚎</mtext><mo separator="true">,</mo><mtext>𝚋𝚊𝚗𝚍</mtext><mo separator="true">,</mo><mtext>𝚢</mtext><mo separator="true">,</mo><mtext>𝚡</mtext><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{d} = (\texttt{time}, \texttt{band}, \texttt{y}, \texttt{x})</annotation></semantics></math></span></span>, with <span class="tex" data-tex="\vect{c}_1"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐜</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">\vect{c}_1</annotation></semantics></math></span></span> the acquisition dates. <code>mean("time")</code> finds axis 1 by name, whatever order the reader used.</p>
+      <p><span class="tag">In code</span> pipekit-array's <code>DimArray</code>: the data, one name per axis, and static labels on the dims that have them (here the band names), with no other coordinates. It is a JAX pytree whose only leaf is the data, so new values never recompile. An xarray <code>DataArray</code> is the same object with full coordinates, and pipekit's dim functions (<code>reduce</code>, <code>sel</code>, <code>isel</code>, <code>transpose</code>) run on both through their adapters.</p>
+      <pre class="code"><code>import numpy as np
+import pipekit_array as pa
+
+reflectance = np.zeros((4, 13, 600, 600), dtype=np.float32)
+
+SENTINEL2_BANDS = tuple("B01 B02 B03 B04 B05 B06 B07 B08 B8A B09 B10 B11 B12".split())
+
+# x_named = (x, d, C): one name per axis, static labels on the band dim
+stack = pa.DimArray(reflectance, ("time", "band", "y", "x"), {"band": SENTINEL2_BANDS})
+# r_time: the mean over the dim named "time", wherever it sits
+mean_scene = pa.reduce(stack, "mean", "time")
+# x at the label B04; a single label drops its dim
+red = pa.sel(stack, band="B04")</code></pre>
+
+      <h4>◆ Carrier</h4>
+      <p>A named array plus its georeference <span class="tex" data-tex="\Gamma"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Γ</mi></mrow><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math></span></span>:</p>
+      <div class="tex display" data-tex="\vect{x}_\text{geo} = (\vect{x}_\text{named}, \Gamma)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>named</mtext></msub><mo separator="true">,</mo><mi mathvariant="normal">Γ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{x}_\text{geo} = (\vect{x}_\text{named}, \Gamma)</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="\Gamma = (\op{crs}, \mat{A}, x_\text{fill}, \mathcal{M})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">Γ</mi><mo>=</mo><mo stretchy="false">(</mo><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">s</mi></mrow><mo separator="true">,</mo><mi>𝐀</mi><mo separator="true">,</mo><msub><mi>x</mi><mtext>fill</mtext></msub><mo separator="true">,</mo><mi>ℳ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Gamma = (\op{crs}, \mat{A}, x_\text{fill}, \mathcal{M})</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="\op{crs}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">s</mi></mrow><annotation encoding="application/x-tex">\op{crs}</annotation></semantics></math></span></span>: the coordinate reference system (an EPSG code or WKT).</li>
+        <li><span class="tex" data-tex="\mat{A} \in \mathbb{R}^{2 \times 3}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐀</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>2</mn><mo>×</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mat{A} \in \mathbb{R}^{2 \times 3}</annotation></semantics></math></span></span>: the affine transform from pixel to map coordinates.</li>
+        <li><span class="tex" data-tex="x_\text{fill} \in \mathbb{R}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mtext>fill</mtext></msub><mo>∈</mo><mi>ℝ</mi></mrow><annotation encoding="application/x-tex">x_\text{fill} \in \mathbb{R}</annotation></semantics></math></span></span>: the fill value, NaN allowed.</li>
+        <li><span class="tex" data-tex="\mathcal{M}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℳ</mi></mrow><annotation encoding="application/x-tex">\mathcal{M}</annotation></semantics></math></span></span>: the attributes (units, sensor, processing level). Band names and wavelengths are coordinates of the band axis, in <span class="tex" data-tex="\mathcal{C}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒞</mi></mrow><annotation encoding="application/x-tex">\mathcal{C}</annotation></semantics></math></span></span>.</li>
+      </ul>
+      <p>The transform says <i>where</i> each pixel is. The top-left corner of the pixel in row <span class="tex" data-tex="i"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span></span> and column <span class="tex" data-tex="j"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span></span> sits at map coordinates <span class="tex" data-tex="\vect{s}_{ij} \in \mathbb{R}^2"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐬</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∈</mo><msup><mi>ℝ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\vect{s}_{ij} \in \mathbb{R}^2</annotation></semantics></math></span></span>, and its centre at <span class="tex" data-tex="(j + 1/2, i + 1/2)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>j</mi><mo>+</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>2</mn><mo separator="true">,</mo><mi>i</mi><mo>+</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>2</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(j + 1/2, i + 1/2)</annotation></semantics></math></span></span> in pixel units:</p>
+      <div class="tex display" data-tex="\vect{s}_{ij} = \mat{A} \begin{pmatrix} j \\ i \\ 1 \end{pmatrix}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>𝐬</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mi>𝐀</mi><mrow><mo fence="true">(</mo><mtable rowspacing="0.16em" columnalign="center" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mi>j</mi></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mi>i</mi></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mn>1</mn></mstyle></mtd></mtr></mtable><mo fence="true">)</mo></mrow></mrow><annotation encoding="application/x-tex">\vect{s}_{ij} = \mat{A} \begin{pmatrix} j \\ i \\ 1 \end{pmatrix}</annotation></semantics></math></span></div>
+      <p>The fill value says <i>which</i> pixels are missing. A pixel is valid when every entry there, over all bands and dates, is finite and differs from the fill, which gives the valid mask <span class="tex" data-tex="\vect{m} \in \{0, 1\}^{N_\text{row} \times N_\text{col}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐦</mi><mo>∈</mo><mo stretchy="false">{</mo><mn>0</mn><mo separator="true">,</mo><mn>1</mn><msup><mo stretchy="false">}</mo><mrow><msub><mi>N</mi><mtext>row</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>col</mtext></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\vect{m} \in \{0, 1\}^{N_\text{row} \times N_\text{col}}</annotation></semantics></math></span></span>, with <span class="tex" data-tex="t"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span></span> indexing dates and <span class="tex" data-tex="b"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi></mrow><annotation encoding="application/x-tex">b</annotation></semantics></math></span></span> bands:</p>
+      <div class="tex display" data-tex="[\vect{m}]_{ij} = \prod_{t=1}^{N_\text{time}} \prod_{b=1}^{N_\text{band}} \mathbf{1}[x_{t,b,i,j} \neq x_\text{fill}] \mathbf{1}[x_{t,b,i,j} \text{ is finite}]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">[</mo><mi>𝐦</mi><msub><mo stretchy="false">]</mo><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><munderover><mo>∏</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mtext>time</mtext></msub></munderover><munderover><mo>∏</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mtext>band</mtext></msub></munderover><mn>𝟏</mn><mo stretchy="false">[</mo><msub><mi>x</mi><mrow><mi>t</mi><mo separator="true">,</mo><mi>b</mi><mo separator="true">,</mo><mi>i</mi><mo separator="true">,</mo><mi>j</mi></mrow></msub><mo mathvariant="normal">≠</mo><msub><mi>x</mi><mtext>fill</mtext></msub><mo stretchy="false">]</mo><mn>𝟏</mn><mo stretchy="false">[</mo><msub><mi>x</mi><mrow><mi>t</mi><mo separator="true">,</mo><mi>b</mi><mo separator="true">,</mo><mi>i</mi><mo separator="true">,</mo><mi>j</mi></mrow></msub><mtext> is finite</mtext><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[\vect{m}]_{ij} = \prod_{t=1}^{N_\text{time}} \prod_{b=1}^{N_\text{band}} \mathbf{1}[x_{t,b,i,j} \neq x_\text{fill}] \mathbf{1}[x_{t,b,i,j} \text{ is finite}]</annotation></semantics></math></span></div>
+      <p>For a swath or a curvilinear grid, <span class="tex" data-tex="\mat{A}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐀</mi></mrow><annotation encoding="application/x-tex">\mat{A}</annotation></semantics></math></span></span> is replaced by per-pixel coordinates <span class="tex" data-tex="\mat{S}_\text{lon}, \mat{S}_\text{lat} \in \mathbb{R}^{N_\text{row} \times N_\text{col}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐒</mi><mtext>lon</mtext></msub><mo separator="true">,</mo><msub><mi>𝐒</mi><mtext>lat</mtext></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>N</mi><mtext>row</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>col</mtext></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\mat{S}_\text{lon}, \mat{S}_\text{lat} \in \mathbb{R}^{N_\text{row} \times N_\text{col}}</annotation></semantics></math></span></span>; the rest is the same.</p>
+      <p><span class="tag">Example</span> The scene is a carrier on a UTM grid with <span class="tex" data-tex="x_\text{fill} = 0"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mtext>fill</mtext></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">x_\text{fill} = 0</annotation></semantics></math></span></span> and band names <code>B01</code> to <code>B12</code> in <span class="tex" data-tex="\mathcal{C}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒞</mi></mrow><annotation encoding="application/x-tex">\mathcal{C}</annotation></semantics></math></span></span>. A tower at map coordinates <span class="tex" data-tex="\vect{s}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐬</mi></mrow><annotation encoding="application/x-tex">\vect{s}</annotation></semantics></math></span></span> is found at pixel <span class="tex" data-tex="(i, j)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>i</mi><mo separator="true">,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(i, j)</annotation></semantics></math></span></span> by solving <span class="tex" data-tex="\vect{s} = \mat{A} (j, i, 1)^\top"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐬</mi><mo>=</mo><mi>𝐀</mi><mo stretchy="false">(</mo><mi>j</mi><mo separator="true">,</mo><mi>i</mi><mo separator="true">,</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mi mathvariant="normal">⊤</mi></msup></mrow><annotation encoding="application/x-tex">\vect{s} = \mat{A} (j, i, 1)^\top</annotation></semantics></math></span></span> for <span class="tex" data-tex="(i, j)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>i</mi><mo separator="true">,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(i, j)</annotation></semantics></math></span></span>, which is <code>to_pixel</code>. Slice the bare array instead, <code>np.asarray(scene)[..., 100:200, 50:150]</code>, and <span class="tex" data-tex="\mat{A}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐀</mi></mrow><annotation encoding="application/x-tex">\mat{A}</annotation></semantics></math></span></span> still describes the full scene: the crop claims to start at the scene's corner, and every tower lands on the wrong pixel.</p>
+      <p><span class="tag">In code</span> geotoolz-array's <code>GeoArray</code>: the data (NumPy or JAX), its dims ending in <code>("y", "x")</code>, coordinates for the other dims (<code>TimeAxis</code>, <code>SpectralAxis</code>), the transform, CRS, fill value and frozen attrs. Slicing, <code>crop</code> and <code>read_window</code> move the transform with the pixels. <code>GeoSwath</code> carries per-pixel latitude and longitude instead of a transform, and <code>GeoPoints</code> a set of points; xrops plays the same role for a <code>DataArray</code> whose coordinates and CRS mean geography.</p>
+      <pre class="code"><code>import numpy as np
+import pipekit_array as pa
+from geoarray import GeoArray, crop, to_pixel
+from geoarray.coords import SpectralAxis, TimeAxis
+
+reflectance = np.zeros((4, 13, 600, 600), dtype=np.float32)
+
+SENTINEL2_BANDS = tuple("B01 B02 B03 B04 B05 B06 B07 B08 B8A B09 B10 B11 B12".split())
+
+WAVELENGTHS_NM = (443, 490, 560, 665, 705, 740, 783, 842, 865, 945, 1375, 1610, 2190)
+
+# C: the acquisition dates, and the band names with their centre wavelengths
+dates = TimeAxis(
+    stamps=np.array(["2026-06-01", "2026-06-06", "2026-06-11", "2026-06-16"])
+)
+bands = SpectralAxis(names=SENTINEL2_BANDS, wavelength_nm=WAVELENGTHS_NM)
+# x_geo = (x_named, Γ), Γ = (crs, A, x_fill, M): a 10 m grid in UTM zone 30N
+scene = GeoArray(
+    reflectance,
+    (10.0, 0.0, 600000.0, 0.0, -10.0, 4400000.0),
+    "EPSG:32630",
+    fill_value=0.0,
+    dims="time band y x",
+    coords=(dates, bands),
+)
+# m: valid where every band on every date is finite and differs from the fill
+valid = scene.valid_mask()
+# the same named reduction as on a DimArray; the result keeps Γ
+mean_scene = pa.reduce(scene, "mean", "time")
+# s = A (j + ½, i + ½, 1)ᵀ, solved for the fractional (i, j) of each tower
+tower_xy = np.array([[600105.0, 4399895.0], [602340.0, 4398110.0]])
+tower_pixels = to_pixel(scene.transform, tower_xy)
+# a crop from row 100, column 50 moves A with the pixels
+window = crop(scene, (100, 50), (100, 100))</code></pre>
+    </div>
+
+    <h3 class="minor" id="kind-axis">The kind axis: how <span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span> is packaged</h3>
+    <div class="obj">
+      <h4>ƒ Function</h4>
+      <p>A pure function of arrays, with its parameters passed in on every call:</p>
+      <div class="tex display" data-tex="\vect{y} = f(\vect{x}, \vect{u}; \gvect{\theta})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝐲</mi><mo>=</mo><mi>f</mi><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐮</mi><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{y} = f(\vect{x}, \vect{u}; \gvect{\theta})</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="\vect{x}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi></mrow><annotation encoding="application/x-tex">\vect{x}</annotation></semantics></math></span></span>: the input array; <span class="tex" data-tex="\vect{y}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐲</mi></mrow><annotation encoding="application/x-tex">\vect{y}</annotation></semantics></math></span></span>: the output array.</li>
+        <li><span class="tex" data-tex="\vect{u}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐮</mi></mrow><annotation encoding="application/x-tex">\vect{u}</annotation></semantics></math></span></span>: the geometry the function needs, as plain arrays (cell areas, latitudes, a transform); empty for NDVI.</li>
+        <li><span class="tex" data-tex="\gvect{\theta} \in \mathbb{R}^{D_\theta}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi><mo>∈</mo><msup><mi>ℝ</mi><msub><mi>D</mi><mi>θ</mi></msub></msup></mrow><annotation encoding="application/x-tex">\gvect{\theta} \in \mathbb{R}^{D_\theta}</annotation></semantics></math></span></span>: parameters, constant over the call; integers when they are positions.</li>
+      </ul>
+      <p><span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span> never sees a name, a CRS or a fill value. That is what lets it run under <code>jit</code>, on any carrier, in any library below GeoStack.</p>
+      <p><span class="tag">Example</span> NDVI on the bare stack, with the band positions as parameters, <span class="tex" data-tex="\gvect{\theta} = (\theta_\text{red}, \theta_\text{nir}) \in \{1, \ldots, N_\text{band}\}^2"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi><mo>=</mo><mo stretchy="false">(</mo><msub><mi>θ</mi><mtext>red</mtext></msub><mo separator="true">,</mo><msub><mi>θ</mi><mtext>nir</mtext></msub><mo stretchy="false">)</mo><mo>∈</mo><mo stretchy="false">{</mo><mn>1</mn><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>N</mi><mtext>band</mtext></msub><msup><mo stretchy="false">}</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\gvect{\theta} = (\theta_\text{red}, \theta_\text{nir}) \in \{1, \ldots, N_\text{band}\}^2</annotation></semantics></math></span></span>:</p>
+      <div class="tex display" data-tex="f_\text{ndvi}(\vect{x}; \gvect{\theta}) = \frac{\vect{x}_{\theta_\text{nir}} - \vect{x}_{\theta_\text{red}}}{\vect{x}_{\theta_\text{nir}} + \vect{x}_{\theta_\text{red}}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>f</mi><mtext>ndvi</mtext></msub><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><msub><mi>𝐱</mi><msub><mi>θ</mi><mtext>nir</mtext></msub></msub><mo>−</mo><msub><mi>𝐱</mi><msub><mi>θ</mi><mtext>red</mtext></msub></msub></mrow><mrow><msub><mi>𝐱</mi><msub><mi>θ</mi><mtext>nir</mtext></msub></msub><mo>+</mo><msub><mi>𝐱</mi><msub><mi>θ</mi><mtext>red</mtext></msub></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">f_\text{ndvi}(\vect{x}; \gvect{\theta}) = \frac{\vect{x}_{\theta_\text{nir}} - \vect{x}_{\theta_\text{red}}}{\vect{x}_{\theta_\text{nir}} + \vect{x}_{\theta_\text{red}}}</annotation></semantics></math></span></div>
+      <p>Here <span class="tex" data-tex="\vect{x}_{\theta_\text{red}} \in \mathbb{R}^{N_\text{time} \times 1 \times N_\text{row} \times N_\text{col}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐱</mi><msub><mi>θ</mi><mtext>red</mtext></msub></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>N</mi><mtext>time</mtext></msub><mo>×</mo><mn>1</mn><mo>×</mo><msub><mi>N</mi><mtext>row</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>col</mtext></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\vect{x}_{\theta_\text{red}} \in \mathbb{R}^{N_\text{time} \times 1 \times N_\text{row} \times N_\text{col}}</annotation></semantics></math></span></span> is the stack at one band position, the division is element by element, and the output has one band.</p>
+      <pre class="code"><code>def ndvi(
+    reflectance: Float[Array, "*time band y x"],
+    *,
+    red: int,
+    nir: int,
+) -&gt; Float[Array, "*time 1 y x"]:
+    """Normalised difference vegetation index of a red and a near-infrared band.
+
+    NDVI = (x_nir − x_red) / (x_nir + x_red)
+    """
+    # x_red, keeping a singleton band axis
+    red_band = reflectance[..., red : red + 1, :, :]
+    # x_nir
+    nir_band = reflectance[..., nir : nir + 1, :, :]
+    # x_nir − x_red
+    difference = nir_band - red_band
+    # x_nir + x_red
+    total = nir_band + red_band
+    # (x_nir − x_red) / (x_nir + x_red)
+    index = difference / total
+    return index</code></pre>
+
+      <h4>▣ Module</h4>
+      <p>A function with state. A setup step builds the state <span class="tex" data-tex="\gvect{\psi}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi></mrow><annotation encoding="application/x-tex">\gvect{\psi}</annotation></semantics></math></span></span> once, from data <span class="tex" data-tex="\mat{X}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐗</mi></mrow><annotation encoding="application/x-tex">\mat{X}</annotation></semantics></math></span></span>, and may do work that cannot be traced (a k-NN graph, a triangulation, a factorisation). The call is then pure and jittable:</p>
+      <div class="tex display" data-tex="\gvect{\psi} = \op{setup}(\mat{X}; \gvect{\theta})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝝍</mi><mo>=</mo><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">p</mi></mrow><mo stretchy="false">(</mo><mi>𝐗</mi><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\gvect{\psi} = \op{setup}(\mat{X}; \gvect{\theta})</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="\vect{y} = f(\vect{x}, \vect{u}; \gvect{\theta}, \gvect{\psi})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝐲</mi><mo>=</mo><mi>f</mi><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐮</mi><mo separator="true">;</mo><mi>𝜽</mi><mo separator="true">,</mo><mi>𝝍</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{y} = f(\vect{x}, \vect{u}; \gvect{\theta}, \gvect{\psi})</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="\mat{X}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐗</mi></mrow><annotation encoding="application/x-tex">\mat{X}</annotation></semantics></math></span></span>: the data setup sees, one row per sample (for the gap-fill, the coordinates of the valid pixels).</li>
+        <li><span class="tex" data-tex="\gvect{\psi}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi></mrow><annotation encoding="application/x-tex">\gvect{\psi}</annotation></semantics></math></span></span>: the state, a pytree of arrays held as the Module's fields next to <span class="tex" data-tex="\gvect{\theta}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi></mrow><annotation encoding="application/x-tex">\gvect{\theta}</annotation></semantics></math></span></span>.</li>
+      </ul>
+      <p><span class="tag">Example</span> The gap-fill. With <span class="tex" data-tex="n = 1, \ldots, N_\text{row} N_\text{col}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>N</mi><mtext>row</mtext></msub><msub><mi>N</mi><mtext>col</mtext></msub></mrow><annotation encoding="application/x-tex">n = 1, \ldots, N_\text{row} N_\text{col}</annotation></semantics></math></span></span> indexing pixels and <span class="tex" data-tex="q = 1, \ldots, N_\text{nb}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>N</mi><mtext>nb</mtext></msub></mrow><annotation encoding="application/x-tex">q = 1, \ldots, N_\text{nb}</annotation></semantics></math></span></span> their neighbours, setup builds the neighbour map <span class="tex" data-tex="\op{nb}(n, q)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">b</mi></mrow><mo stretchy="false">(</mo><mi>n</mi><mo separator="true">,</mo><mi>q</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\op{nb}(n, q)</annotation></semantics></math></span></span> over the valid pixels and the weights <span class="tex" data-tex="\mat{W} \in \mathbb{R}^{N_\text{row} N_\text{col} \times N_\text{nb}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐖</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>N</mi><mtext>row</mtext></msub><msub><mi>N</mi><mtext>col</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>nb</mtext></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\mat{W} \in \mathbb{R}^{N_\text{row} N_\text{col} \times N_\text{nb}}</annotation></semantics></math></span></span>, rows summing to one. Each call is a weighted mean:</p>
+      <div class="tex display" data-tex="y_n = \sum_{q=1}^{N_\text{nb}} [\mat{W}]_{nq} x_{\op{nb}(n, q)}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>y</mi><mi>n</mi></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mtext>nb</mtext></msub></munderover><mo stretchy="false">[</mo><mi>𝐖</mi><msub><mo stretchy="false">]</mo><mrow><mi>n</mi><mi>q</mi></mrow></msub><msub><mi>x</mi><mrow><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">b</mi></mrow><mo stretchy="false">(</mo><mi>n</mi><mo separator="true">,</mo><mi>q</mi><mo stretchy="false">)</mo></mrow></msub></mrow><annotation encoding="application/x-tex">y_n = \sum_{q=1}^{N_\text{nb}} [\mat{W}]_{nq} x_{\op{nb}(n, q)}</annotation></semantics></math></span></div>
+      <pre class="code"><code>class NeighbourFill(eqx.Module):
+    """Fill every pixel with a weighted mean of its nearest valid pixels.
+
+    y_n = ∑_q W_nq x_nb(n,q), with the graph nb built once, outside jit.
+    """
+
+    neighbours: Int[Array, "pixel neighbour"]
+    weights: Float[Array, "pixel neighbour"]
+
+    @classmethod
+    def fit(
+        cls, valid_mask: Bool[np.ndarray, "y x"], *, n_neighbours: int
+    ) -&gt; "NeighbourFill":
+        # --- setup: host-side NumPy and SciPy, runs once ---
+        # (i, j) of every pixel, one row each
+        grid = np.indices(valid_mask.shape)
+        coordinates = einx.rearrange("two y x -&gt; (y x) two", grid)
+        # X: the coordinates of the valid pixels
+        is_valid = einx.rearrange("y x -&gt; (y x)", valid_mask)
+        valid_coordinates = coordinates[is_valid]
+        # nb(n, q): the n_neighbours nearest valid pixels of pixel n
+        tree = scipy.spatial.cKDTree(valid_coordinates)
+        distance, nearest = tree.query(coordinates, k=n_neighbours)
+        valid_index = np.flatnonzero(is_valid)
+        neighbours = valid_index[nearest]
+        # W_nq ∝ 1 / (1 + distance), each row summing to one
+        inverse = 1.0 / (1.0 + distance)
+        row_total = einx.sum("pixel [neighbour]", inverse)
+        weights = einx.divide(
+            "pixel neighbour, pixel -&gt; pixel neighbour", inverse, row_total
+        )
+        return cls(neighbours=jnp.asarray(neighbours), weights=jnp.asarray(weights))
+
+    def __call__(self, field: Float[Array, "y x"]) -&gt; Float[Array, "y x"]:
+        # --- every call: pure and jittable ---
+        flat = einx.rearrange("y x -&gt; (y x)", field)
+        # x_nb(n,q)
+        gathered = flat[self.neighbours]
+        # y_n = ∑_q W_nq x_nb(n,q)
+        filled = einx.dot(
+            "pixel neighbour, pixel neighbour -&gt; pixel", self.weights, gathered
+        )
+        return einx.rearrange("(y x) -&gt; y x", filled, y=field.shape[0])</code></pre>
+
+      <h4>→ Operator</h4>
+      <p>A pipeline step that lifts <span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span> onto carriers. It carries its own settings <span class="tex" data-tex="\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span></span>, a JSON record (which bands, which dimension, the fill policy). It unwraps the carrier with <span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span>, calls <span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span> on plain arrays, and rewraps with <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span>:</p>
+      <div class="tex display" data-tex="\pi_\alpha(\vect{x}_\text{geo}) = (\vect{x}, \vect{u})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo stretchy="false">)</mo><mo>=</mo><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐮</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\pi_\alpha(\vect{x}_\text{geo}) = (\vect{x}, \vect{u})</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="\op{lift}_\alpha[f](\vect{x}_\text{geo}; \gvect{\theta}) = \iota_\alpha(f(\pi_\alpha(\vect{x}_\text{geo}); \gvect{\theta}), \vect{x}_\text{geo})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><mi>α</mi></msub><mo stretchy="false">[</mo><mi>f</mi><mo stretchy="false">]</mo><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>ι</mi><mi>α</mi></msub><mo stretchy="false">(</mo><mi>f</mi><mo stretchy="false">(</mo><msub><mi>π</mi><mi>α</mi></msub><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo stretchy="false">)</mo><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\op{lift}_\alpha[f](\vect{x}_\text{geo}; \gvect{\theta}) = \iota_\alpha(f(\pi_\alpha(\vect{x}_\text{geo}); \gvect{\theta}), \vect{x}_\text{geo})</annotation></semantics></math></span></div>
+      <p>The unwrap hands down the array and the geometry <span class="tex" data-tex="\vect{u}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐮</mi></mrow><annotation encoding="application/x-tex">\vect{u}</annotation></semantics></math></span></span> that <span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span> needs, with every name in <span class="tex" data-tex="\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span></span> already resolved to a position. The rewrap builds the output carrier:</p>
+      <div class="tex display" data-tex="\iota_\alpha(\vect{y}, \vect{x}_\text{geo}) = \vect{y}_\text{geo} = ((\vect{y}, \vect{d}_y, \mathcal{C}_y), \Gamma_y)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub><mo stretchy="false">(</mo><mi>𝐲</mi><mo separator="true">,</mo><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo stretchy="false">)</mo><mo>=</mo><msub><mi>𝐲</mi><mtext>geo</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><mo stretchy="false">(</mo><mi>𝐲</mi><mo separator="true">,</mo><msub><mi>𝐝</mi><mi>y</mi></msub><mo separator="true">,</mo><msub><mi>𝒞</mi><mi>y</mi></msub><mo stretchy="false">)</mo><mo separator="true">,</mo><msub><mi mathvariant="normal">Γ</mi><mi>y</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\iota_\alpha(\vect{y}, \vect{x}_\text{geo}) = \vect{y}_\text{geo} = ((\vect{y}, \vect{d}_y, \mathcal{C}_y), \Gamma_y)</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="\Gamma_y = \begin{cases} \Gamma &amp; \text{same grid} \\ \op{regrid}_\alpha(\Gamma) &amp; \text{new grid} \end{cases}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi mathvariant="normal">Γ</mi><mi>y</mi></msub><mo>=</mo><mrow><mo fence="true">{</mo><mtable rowspacing="0.36em" columnalign="left left" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mi mathvariant="normal">Γ</mi></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mtext>same grid</mtext></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><mrow><msub><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">d</mi></mrow><mi>α</mi></msub><mo stretchy="false">(</mo><mi mathvariant="normal">Γ</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="false"><mtext>new grid</mtext></mstyle></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">\Gamma_y = \begin{cases} \Gamma &amp; \text{same grid} \\ \op{regrid}_\alpha(\Gamma) &amp; \text{new grid} \end{cases}</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span></span>: the config, names and settings only, so it round-trips through JSON.</li>
+        <li><span class="tex" data-tex="\vect{d}_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐝</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\vect{d}_y</annotation></semantics></math></span></span>, <span class="tex" data-tex="\mathcal{C}_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝒞</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\mathcal{C}_y</annotation></semantics></math></span></span>, <span class="tex" data-tex="\Gamma_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Γ</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\Gamma_y</annotation></semantics></math></span></span>: the output's names, coordinates and georeference.</li>
+        <li><span class="tex" data-tex="\op{regrid}_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">d</mi></mrow><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\op{regrid}_\alpha</annotation></semantics></math></span></span>: the input grid to the output grid, for a reprojection or a resampling.</li>
+      </ul>
+      <p>Operators compose: <span class="tex" data-tex="\op{lift}_{\alpha_2}[f_2] \circ \op{lift}_{\alpha_1}[f_1]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><msub><mi>α</mi><mn>2</mn></msub></msub><mo stretchy="false">[</mo><msub><mi>f</mi><mn>2</mn></msub><mo stretchy="false">]</mo><mo>∘</mo><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><msub><mi>α</mi><mn>1</mn></msub></msub><mo stretchy="false">[</mo><msub><mi>f</mi><mn>1</mn></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\op{lift}_{\alpha_2}[f_2] \circ \op{lift}_{\alpha_1}[f_1]</annotation></semantics></math></span></span> is what pipekit writes <code>step1 | step2</code>.</p>
+      <p><span class="tag">Example</span> The settings are band names, <span class="tex" data-tex="\alpha = \{\text{red}: \texttt{B04}, \text{nir}: \texttt{B08}\}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mo stretchy="false">{</mo><mtext>red</mtext><mo>:</mo><mtext>𝙱𝟶𝟺</mtext><mo separator="true">,</mo><mtext>nir</mtext><mo>:</mo><mtext>𝙱𝟶𝟾</mtext><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\alpha = \{\text{red}: \texttt{B04}, \text{nir}: \texttt{B08}\}</annotation></semantics></math></span></span>, and <span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span> turns them into the positions <span class="tex" data-tex="\gvect{\theta}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi></mrow><annotation encoding="application/x-tex">\gvect{\theta}</annotation></semantics></math></span></span> by looking them up in the band coordinate of <span class="tex" data-tex="\mathcal{C}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒞</mi></mrow><annotation encoding="application/x-tex">\mathcal{C}</annotation></semantics></math></span></span>. <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span> returns a carrier on the same grid, <span class="tex" data-tex="\Gamma_y = \Gamma"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Γ</mi><mi>y</mi></msub><mo>=</mo><mi mathvariant="normal">Γ</mi></mrow><annotation encoding="application/x-tex">\Gamma_y = \Gamma</annotation></semantics></math></span></span>, with one band named <code>ndvi</code> and NaN written where <span class="tex" data-tex="[\vect{m}]_{ij} = 0"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>𝐦</mi><msub><mo stretchy="false">]</mo><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">[\vect{m}]_{ij} = 0</annotation></semantics></math></span></span>. That is <code>geoops.indices.NDVI(red="B04", nir="B08")</code>.</p>
+      <pre class="code"><code>class NDVI(pipekit.Operator):
+    """NDVI on a carrier: unwrap, call ndvi on arrays, rewrap on the same grid."""
+
+    def __init__(self, *, red: str = "red", nir: str = "nir") -&gt; None:
+        # α: names only, so the config round-trips through JSON
+        self.red = red
+        self.nir = nir
+
+    def _apply(self, scene: GeoArray["*time band y x"]) -&gt; GeoArray["*time band y x"]:
+        # π_α: names in α → positions θ, through the band coordinate in C
+        red = resolve_band(scene, self.red)
+        nir = resolve_band(scene, self.nir)
+        # f on plain arrays
+        index = ndvi(np.asarray(scene), red=red, nir=nir)
+        # ι_α: same grid, one band named "ndvi", NaN where the scene was invalid
+        return wrap_like(scene, index, band_names=("ndvi",), fill_value=np.nan)</code></pre>
+      <p class="code-note">The sketches follow the house style: shapes as jaxtyping types, the equation above each line, einx for reshapes and contractions. The data-axis examples run as written against geotoolz-array and pipekit-array (checked on 6 Nov 2026). The function and the Module are illustrations; the Operator follows geoops' conventions (<code>resolve_band</code>, <code>wrap_like</code>), with signatures simplified.</p>
+    </div>
+
+    <div class="rule">
+      <h3>The running example, end to end</h3>
+      <p>Three steps, each a lifted function, in one recipe:</p>
+      <div class="tex display" data-tex="\vect{y}_\text{geo} = (\op{lift}_{\alpha_3}[f_\text{sample}] \circ \op{lift}_{\alpha_2}[f_\text{fill}] \circ \op{lift}_{\alpha_1}[f_\text{ndvi}])(\vect{x}_\text{geo})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>𝐲</mi><mtext>geo</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><msub><mi>α</mi><mn>3</mn></msub></msub><mo stretchy="false">[</mo><msub><mi>f</mi><mtext>sample</mtext></msub><mo stretchy="false">]</mo><mo>∘</mo><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><msub><mi>α</mi><mn>2</mn></msub></msub><mo stretchy="false">[</mo><msub><mi>f</mi><mtext>fill</mtext></msub><mo stretchy="false">]</mo><mo>∘</mo><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><msub><mi>α</mi><mn>1</mn></msub></msub><mo stretchy="false">[</mo><msub><mi>f</mi><mtext>ndvi</mtext></msub><mo stretchy="false">]</mo><mo stretchy="false">)</mo><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{y}_\text{geo} = (\op{lift}_{\alpha_3}[f_\text{sample}] \circ \op{lift}_{\alpha_2}[f_\text{fill}] \circ \op{lift}_{\alpha_1}[f_\text{ndvi}])(\vect{x}_\text{geo})</annotation></semantics></math></span></div>
+      <p><span class="tex" data-tex="f_\text{ndvi}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mtext>ndvi</mtext></msub></mrow><annotation encoding="application/x-tex">f_\text{ndvi}</annotation></semantics></math></span></span> is a function, <span class="tex" data-tex="f_\text{fill}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mtext>fill</mtext></msub></mrow><annotation encoding="application/x-tex">f_\text{fill}</annotation></semantics></math></span></span> a Module whose setup ran once on the valid mask, and <span class="tex" data-tex="f_\text{sample}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mtext>sample</mtext></msub></mrow><annotation encoding="application/x-tex">f_\text{sample}</annotation></semantics></math></span></span> reads the stack at the towers' pixels through <span class="tex" data-tex="\mat{A}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐀</mi></mrow><annotation encoding="application/x-tex">\mat{A}</annotation></semantics></math></span></span>. Only the three configs <span class="tex" data-tex="\alpha_1, \alpha_2, \alpha_3"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mn>1</mn></msub><mo separator="true">,</mo><msub><mi>α</mi><mn>2</mn></msub><mo separator="true">,</mo><msub><mi>α</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">\alpha_1, \alpha_2, \alpha_3</annotation></semantics></math></span></span> mention band names, dimensions or sites.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table class="kinds">
+        <thead><tr><th>Symbol</th><th>Is</th><th>Lives in</th></tr></thead>
+        <tbody>
+          <tr><td class="topic"><span class="tex" data-tex="\vect{x}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi></mrow><annotation encoding="application/x-tex">\vect{x}</annotation></semantics></math></span></span>, <span class="tex" data-tex="f(\vect{x}, \vect{u}; \gvect{\theta})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐮</mi><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">f(\vect{x}, \vect{u}; \gvect{\theta})</annotation></semantics></math></span></span></td><td>plain array; function</td><td><span class="pill c-core">Core</span> <span class="pill c-numerics">GeoNumerics</span> and up</td></tr>
+          <tr><td class="topic"><span class="tex" data-tex="\op{setup}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">p</mi></mrow><annotation encoding="application/x-tex">\op{setup}</annotation></semantics></math></span></span>, <span class="tex" data-tex="\gvect{\psi}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi></mrow><annotation encoding="application/x-tex">\gvect{\psi}</annotation></semantics></math></span></span></td><td>Module: setup runs once; <span class="tex" data-tex="\gvect{\theta}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi></mrow><annotation encoding="application/x-tex">\gvect{\theta}</annotation></semantics></math></span></span> and <span class="tex" data-tex="\gvect{\psi}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi></mrow><annotation encoding="application/x-tex">\gvect{\psi}</annotation></semantics></math></span></span> are its fields</td><td><span class="pill c-core">Core</span> <span class="pill c-numerics">GeoNumerics</span> and up</td></tr>
+          <tr><td class="topic"><span class="tex" data-tex="\vect{x}_\text{named} = (\vect{x}, \vect{d}, \mathcal{C})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐱</mi><mtext>named</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐝</mi><mo separator="true">,</mo><mi>𝒞</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{x}_\text{named} = (\vect{x}, \vect{d}, \mathcal{C})</annotation></semantics></math></span></span>, <span class="tex" data-tex="R_{d_j}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><msub><mi>d</mi><mi>j</mi></msub></msub></mrow><annotation encoding="application/x-tex">R_{d_j}</annotation></semantics></math></span></span></td><td>named array; operations by name</td><td><span class="pill c-core">Core</span> (pipekit-array) and up</td></tr>
+          <tr><td class="topic"><span class="tex" data-tex="\vect{x}_\text{geo} = (\vect{x}_\text{named}, \Gamma)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>named</mtext></msub><mo separator="true">,</mo><mi mathvariant="normal">Γ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{x}_\text{geo} = (\vect{x}_\text{named}, \Gamma)</annotation></semantics></math></span></span>, <span class="tex" data-tex="\vect{m}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐦</mi></mrow><annotation encoding="application/x-tex">\vect{m}</annotation></semantics></math></span></span>, <span class="tex" data-tex="\mat{A}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐀</mi></mrow><annotation encoding="application/x-tex">\mat{A}</annotation></semantics></math></span></span></td><td>carrier: CRS, transform, fill and attributes; valid mask</td><td><span class="pill c-toolkits">GeoStack</span> (geoarray; xarray on the states side)</td></tr>
+          <tr><td class="topic"><span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span>, <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span>, <span class="tex" data-tex="\op{lift}_\alpha[f]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><mi>α</mi></msub><mo stretchy="false">[</mo><mi>f</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\op{lift}_\alpha[f]</annotation></semantics></math></span></span></td><td>unwrap, rewrap, Operator on carriers; <span class="tex" data-tex="\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span></span> is its config</td><td><span class="pill c-toolkits">GeoStack</span>; GeoModels in a <code>geo</code> extra</td></tr>
+          <tr><td class="topic"><span class="tex" data-tex="\vect{u}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐮</mi></mrow><annotation encoding="application/x-tex">\vect{u}</annotation></semantics></math></span></span></td><td>geometry as plain arrays, handed down</td><td>computed by the GeoStack; consumed by <span class="pill c-core new">functax</span>, <span class="pill c-numerics new">gridax</span>, <span class="pill c-numerics new">geophysix</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub"><b>The three invariants, as equations.</b> Arrays go everywhere: every rung takes <span class="tex" data-tex="\vect{x}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi></mrow><annotation encoding="application/x-tex">\vect{x}</annotation></semantics></math></span></span>. Carriers stop at the GeoStack: nothing below sees <span class="tex" data-tex="\vect{x}_\text{geo}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐱</mi><mtext>geo</mtext></msub></mrow><annotation encoding="application/x-tex">\vect{x}_\text{geo}</annotation></semantics></math></span></span>, only <span class="tex" data-tex="\pi_\alpha(\vect{x}_\text{geo}) = (\vect{x}, \vect{u})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo stretchy="false">)</mo><mo>=</mo><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐮</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\pi_\alpha(\vect{x}_\text{geo}) = (\vect{x}, \vect{u})</annotation></semantics></math></span></span>. Configs stop at Operators: <span class="tex" data-tex="\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span></span> is consumed by <span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span> and <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span> and never reaches <span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span>, which takes only <span class="tex" data-tex="\gvect{\theta}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi></mrow><annotation encoding="application/x-tex">\gvect{\theta}</annotation></semantics></math></span></span>.</p>
+
+    <p class="sub">Code in the stack is packaged as one of three <b>kinds</b>: a function, a Module or an Operator. Each kind can work on one of three kinds of <b>data</b>: plain arrays, named arrays, or carriers. These are two separate axes. geoarray is not a fourth kind; it sits on the data axis. Names in <i>italics</i> are proposed.</p>
+
+    <div class="axes">
+      <div class="axis-col">
+        <div class="axis-title">Axis 1 · kind: how the code is packaged</div>
+        <div class="kind-card">
+          <div class="kind-name"><span class="kglyph">ƒ</span>function</div>
+          <p class="kind-test">A function. No state, no setup: inputs in, outputs out.</p>
+          <dl><dt>Named</dt><dd>for what it computes: <code>to_pixel</code>, <code>cell_area</code></dd></dl>
+        </div>
+        <div class="kind-card">
+          <div class="kind-name"><span class="kglyph">▣</span>Module</div>
+          <p class="kind-test">An <code>eqx.Module</code> with state. The expensive, untraceable setup runs once at construction or <code>fit</code> (a k-NN graph, a Delaunay triangulation, a factorisation); the call is then pure and jittable.</p>
+          <dl><dt>Named</dt><dd>for the object: <i><code>AffineGrid</code></i>, <i><code>BilinearPlan</code></i>, <code>Matern52</code>. <code>*Operator</code> only for a linear map or an observation operator H</dd></dl>
+        </div>
+        <div class="kind-card">
+          <div class="kind-name"><span class="kglyph">→</span>Operator</div>
+          <p class="kind-test">A <code>pipekit.Operator</code>: composes with <code>|</code>, runs in a <code>Graph</code>, round-trips its config through JSON. Any Module can become one by wrapping.</p>
+          <dl><dt>Named</dt><dd>for the action, no suffix: <code>Reproject</code>, <code>NDVI</code>. <code>*Op</code> only for an Operator that wraps a Module: <code>JaxModelOp</code>, <code>SomaxModelOp</code></dd></dl>
+        </div>
+      </div>
+      <div class="axis-col">
+        <div class="axis-title">Axis 2 · data: what flows through it</div>
+        <div class="kind-card">
+          <div class="kind-name"><span class="kglyph">▦</span>plain array</div>
+          <p class="kind-test">A NumPy or JAX array. Shapes live in jaxtyping annotations; geometry arrives as separate arguments.</p>
+          <dl><dt>Examples</dt><dd><code>Float[Array, "y x"]</code>, a transform passed alongside it</dd></dl>
+        </div>
+        <div class="kind-card">
+          <div class="kind-name"><span class="kglyph">▤</span>named array</div>
+          <p class="kind-test">An array whose dims have names and coordinates, but no georeference: no CRS, no fill semantics.</p>
+          <dl><dt>Examples</dt><dd>pipekit-array's <code>DimArray</code>; an <code>xarray.DataArray</code> used as a labelled array</dd></dl>
+        </div>
+        <div class="kind-card">
+          <div class="kind-name"><span class="kglyph">◆</span>carrier</div>
+          <p class="kind-test">A named array plus its georeference: a grid with a CRS, a fill value, attrs; or a lazy reader of one.</p>
+          <dl><dt>Examples</dt><dd><code>GeoArray</code>, <code>GeoSwath</code>, <code>GeoPoints</code>, <code>RasterSource</code>; a <code>DataArray</code> in xrops, where its coords and CRS mean geography</dd></dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule tldr">
+      <h3>The data axis in three lines</h3>
+      <p><b>▦ A plain array</b> <span class="tex" data-tex="\vect{x}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi></mrow><annotation encoding="application/x-tex">\vect{x}</annotation></semantics></math></span></span> knows its shape.</p>
+      <p><b>▤ A named array</b> <span class="tex" data-tex="\vect{x}_\text{named} = (\vect{x}, \vect{d}, \mathcal{C})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐱</mi><mtext>named</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">,</mo><mi>𝐝</mi><mo separator="true">,</mo><mi>𝒞</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{x}_\text{named} = (\vect{x}, \vect{d}, \mathcal{C})</annotation></semantics></math></span></span> knows which axis is which.</p>
+      <p><b>◆ A carrier</b> <span class="tex" data-tex="\vect{x}_\text{geo} = (\vect{x}_\text{named}, \Gamma)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>named</mtext></msub><mo separator="true">,</mo><mi mathvariant="normal">Γ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{x}_\text{geo} = (\vect{x}_\text{named}, \Gamma)</annotation></semantics></math></span></span> also knows where each pixel is (<span class="tex" data-tex="\mat{A}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐀</mi></mrow><annotation encoding="application/x-tex">\mat{A}</annotation></semantics></math></span></span>), and which pixels are missing (<span class="tex" data-tex="x_\text{fill}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mtext>fill</mtext></msub></mrow><annotation encoding="application/x-tex">x_\text{fill}</annotation></semantics></math></span></span>, <span class="tex" data-tex="\vect{m}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐦</mi></mrow><annotation encoding="application/x-tex">\vect{m}</annotation></semantics></math></span></span>).</p>
+      <p class="muted">So a carrier is a named array plus its georeference. The named array still earns its place: it is the protocol that lets one Operator (<code>Reduce(dim="time")</code>) run on <code>DimArray</code>, <code>DataArray</code> and <code>GeoArray</code> through their adapters, and it is the end product for data with dims but no geography: a DA ensemble <code>(member, time, state)</code>, a sweep, a posterior summary.</p>
+    </div>
+
+    <p class="sub">"Kicking a Module up a notch" is two separate steps. <b>Wrapping it in an Operator</b> adds composition: a config, <code>|</code>, graph mode. <b>Moving it to carriers</b> adds georeference: the CRS, the fill, the attrs. The steps are independent. <code>JaxModelOp</code> and a DA cycle take the first step without the second; geoarray's <code>crop</code> and <code>read_window</code> take the second without the first. geoops Operators take both.</p>
+
+    <h3 class="minor">Inside a library: the role ladder</h3>
+    <p class="sub">gaussx draws its API as a ladder: primitives, operators, strategies, distributions, recipes. The same ladder fits every library in the stack, and it sits <i>across</i> the three kinds rather than beside them. Read it as grammar, from ⓪ down: structures are the <b>nouns</b> (<code>Kronecker</code>, and the data itself: arrays, named arrays, carriers), primitives the <b>verbs</b> that act on them (<code>solve</code>), strategies the <b>adverbs</b> that say how (<code>CGSolver</code>), models the <b>noun phrases</b> (a Gaussian with this mean), algorithms the <b>sentences</b> (<code>kalman_filter</code>), steps (pipekit Operators) a sentence with its own settings, ready to chain (<code>NDVI</code>), and recipes the <b>paragraphs</b>: steps composed into one job, from source to product. Above the ladder, orchestration runs recipes; it is not a rung. <b>Module is not a rung; it is how three rungs are packaged</b>: ⓪ structures, ② strategies and ③ models. Its setup step <span class="tex" data-tex="S"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">S</annotation></semantics></math></span></span>, which builds state from data outside the jitted path, is what gaussx draws as the sidebar of tools that produce operators. Rungs are marked with circled digits, ⓪ to ⑥, so they cannot be confused with tiers (T) or processing levels (L); names in <i>italics</i> are proposed.</p>
+    <div class="ladder" role="figure" aria-label="The role ladder: seven rungs from structures to recipes, orchestration above them, the kind of each rung and the setup step that feeds structures and models">
+      <div class="rung found-bar" style="grid-row: 1;">built on <b>JAX</b> · <b>lineax</b> · <b>equinox</b> · <b>optimistix</b> · <b>diffrax</b> · <b>einx</b> · <b>xarray</b></div>
+      <div class="rung" style="--c: #2f6fb3; grid-row: 2;">
+        <div class="rung-head"><span class="lvl">⓪</span><span class="rung-name">Structures</span><span class="gram">nouns: what the verbs act on</span><span class="rung-sub">the nouns every later rung builds on</span><span class="ptag">▣ Module</span></div>
+        <div class="noun-rows">
+          <div class="noun-row data-nouns"><span class="noun-label">data nouns</span><div class="rung-chips"><code>▦ Array</code><code>▤ DimArray</code><code>▤ DataArray</code><code>◆ GeoArray</code><code>◆ GeoSwath</code><code>◆ GeoPoints</code></div></div>
+          <div class="noun-row"><span class="noun-label">domain nouns</span><div class="rung-chips"><code>Kronecker</code><code>BlockDiag</code><code>LowRankUpdate</code><code>Toeplitz</code><code>RBF</code><code><i>AffineGrid</i></code><code><i>Legendre</i></code></div></div>
+        </div>
+      </div>
+      <div class="rung" style="--c: var(--numerics); grid-row: 3;">
+        <div class="rung-head"><span class="lvl">①</span><span class="rung-name">Primitives</span><span class="gram">verbs: what you do to a noun</span><span class="rung-sub">one call, dispatched on the structure: <span class="tex" data-tex="f(\vect{x}; \gvect{\theta})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>𝐱</mi><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">f(\vect{x}; \gvect{\theta})</annotation></semantics></math></span></span></span><span class="ptag">ƒ function</span></div>
+        <div class="rung-chips"><code>solve</code><code>logdet</code><code>cholesky</code><code>diag</code><code>trace</code><code>to_pixel</code><code>crop</code></div>
+      </div>
+      <div class="rung" style="--c: #5457b8; grid-row: 4;">
+        <div class="rung-head"><span class="lvl">②</span><span class="rung-name">Strategies</span><span class="gram">adverbs: how the verb is done</span><span class="rung-sub">how to compute: settings only, no data</span><span class="ptag">▣ Module</span></div>
+        <div class="rung-chips"><code>AutoSolver</code><code>CGSolver</code><code>BBMMSolver</code><code>NystromPreconditioner</code><code>UnscentedIntegrator</code><code>diffrax.Tsit5</code></div>
+      </div>
+      <div class="rung" style="--c: #7a4fb4; grid-row: 5;">
+        <div class="rung-head"><span class="lvl">③</span><span class="rung-name">Models</span><span class="gram">noun phrases: nouns with meaning and state</span><span class="rung-sub">objects with meaning and fitted state</span><span class="ptag">▣ Module</span></div>
+        <div class="rung-chips"><code>MultivariateNormal</code><code>LGSSM</code><code>GaussianExpFam</code><code><i>BilinearPlan</i></code><code>sesmax models</code></div>
+      </div>
+      <div class="rung" style="--c: #b13f78; grid-row: 6;">
+        <div class="rung-head"><span class="lvl">④</span><span class="rung-name">Algorithms</span><span class="gram">sentences: do this, to that, this way</span><span class="rung-sub">methods over models, as functions</span><span class="ptag">ƒ function</span></div>
+        <div class="rung-chips"><code>kalman_filter</code><code>sparse_conditional</code><code>etkf_transform</code><code>inla</code></div>
+      </div>
+      <div class="rung" style="--c: var(--toolkits); grid-row: 7;">
+        <div class="rung-head"><span class="lvl">⑤</span><span class="rung-name">Steps</span><span class="gram">a sentence with its own settings: one transformation, ready to chain</span><span class="rung-sub">pipekit Operators, with a config: <span class="tex" data-tex="\op{lift}_\alpha[f]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><mi>α</mi></msub><mo stretchy="false">[</mo><mi>f</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\op{lift}_\alpha[f]</annotation></semantics></math></span></span></span><span class="ptag">→ Operator</span></div>
+        <div class="rung-chips"><code>NDVI</code><code>Reproject</code><code>RGBRecipe</code><code>JaxModelOp</code></div>
+      </div>
+      <div class="rung" style="--c: var(--accent); grid-row: 8;">
+        <div class="rung-head"><span class="lvl">⑥</span><span class="rung-name">Recipes</span><span class="gram">paragraphs: steps in order, with their settings, making one job</span><span class="rung-sub">steps composed, from source to product; in code or as data</span><span class="ptag">→ Operator</span></div>
+        <div class="noun-rows">
+          <div class="noun-row"><span class="noun-label">combinators</span><div class="rung-chips"><code>Sequential</code><code>Graph</code><code>Branch</code><code>Retry</code></div></div>
+          <div class="noun-row"><span class="noun-label">templates</span><div class="rung-chips"><code>DACycle</code><code>TrainingLoop</code><code>SpatialPatcher</code></div></div>
+          <div class="noun-row data-nouns"><span class="noun-label">as data</span><div class="rung-chips"><code>pipekit.dumps</code><code>pipekit.loads</code><code>loads_sandboxed</code><code>recipe.yaml</code></div></div>
+        </div>
+      </div>
+      <div class="rung orch-bar" style="grid-row: 9;"><b>Orchestration</b>, not a rung: runs recipes over many items, on a schedule, behind an API, with retries and storage · DVC · Airflow / Prefect · FastAPI · GeoApps</div>
+
+      <div class="rail rail-module" style="grid-row: 2;"><span class="rail-kind">▣ Module</span><span class="rail-note">or a third-party array</span></div>
+      <div class="rail" style="grid-row: 3;"><span class="rail-kind">ƒ function</span><span class="rail-note">takes a noun and, optionally, an adverb</span></div>
+      <div class="rail rail-module" style="grid-row: 4 / span 2;"><span class="rail-kind">▣ Module</span><span class="rail-note">fields <span class="tex" data-tex="\gvect{\theta}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi></mrow><annotation encoding="application/x-tex">\gvect{\theta}</annotation></semantics></math></span></span>, state <span class="tex" data-tex="\gvect{\psi}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi></mrow><annotation encoding="application/x-tex">\gvect{\psi}</annotation></semantics></math></span></span>; the call is pure and jittable</span></div>
+      <div class="rail" style="grid-row: 6;"><span class="rail-kind">ƒ function</span><span class="rail-note">takes models</span></div>
+      <div class="rail" style="grid-row: 8;"><span class="rail-kind">→ Operator</span><span class="rail-note">a Sequential or Graph of steps; its data form is YAML that pipekit loads</span></div>
+      <div class="rail" style="grid-row: 7;"><span class="rail-kind">→ Operator</span><span class="rail-note">config <span class="tex" data-tex="\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span></span>, JSON</span></div>
+
+      <div class="sidecar" style="grid-row: 4 / span 2;">
+        <div class="side-title">Setup <span class="tex" data-tex="\gvect{\psi} = \op{setup}(\mat{X}; \gvect{\theta})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi><mo>=</mo><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">p</mi></mrow><mo stretchy="false">(</mo><mi>𝐗</mi><mo separator="true">;</mo><mi>𝜽</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\gvect{\psi} = \op{setup}(\mat{X}; \gvect{\theta})</annotation></semantics></math></span></span></div>
+        <div class="side-sub">builds state from data, once, outside <code>jit</code>: a model's state (③), and structures (⓪) such as a low-rank factor</div>
+        <div class="rung-chips col"><code>randomized_svd</code><code>randomized_nystrom</code><code>rp_cholesky</code><code>SRHTSketch</code><code>k-NN graph</code><code>Delaunay</code></div>
+      </div>
+    </div>
+    <p class="sub"><b>Why structures sit below primitives.</b> In gaussx, <code>_primitives</code> imports <code>_operators</code> 76 times and <code>_operators</code> imports <code>_primitives</code> once: the verbs exist to dispatch on the nouns. With the nouns at the floor, the ladder is also the build order. One entanglement is left: a primitive takes a strategy argument (<code>solve(A, b, solver=CGSolver())</code>) and some strategies call primitives (<code>diag</code>, <code>trace</code>); <code>_primitives</code> and <code>_strategies</code> import each other eight times each way. That pair is gaussx's dispatch core, now its only documented exception.</p>
+    <p class="sub"><b>The data are nouns too.</b> ▦ arrays, ▤ named arrays and ◆ carriers are the ⓪ structures of the data axis: <code>DimArray</code> is pipekit-array's noun, <code>GeoArray</code>, <code>GeoSwath</code> and <code>GeoPoints</code> are geoarray's, and geoarray's own verbs (<code>crop</code>, <code>to_pixel</code>, <code>read_window</code>) are the ① primitives that act on them. The kind and data axes say how a noun is packaged and what it knows; the ladder says it is a noun.</p>
+    <p class="sub"><b>Steps and recipes.</b> The test between ⑤ and ⑥: does it do one thing to its input, or does it put steps (its own, or ones you pass in) in order to make a job? <code>NDVI</code> and <code>Reproject</code> are steps; load, reproject, patch, rescale and <code>NDVI</code>, from a Sentinel-2 L2A scene to an NDVI COG, is a recipe. What counts is how it is built, not its name or what it does inside: <code>Reproject</code> resamples and warps internally but is one closed class with settings, so it is a step, and so is <code>geoops.viz.RGBRecipe</code> despite its name (<code>RGBComposite</code> would say it better). Some recipes ship in libraries as templates, compositions with slots for your steps: <code>DACycle</code> (forecast then analysis, cycled), <code>TrainingLoop</code>, and the patcher's split, process and stitch. The combinators (<code>Sequential</code>, <code>Graph</code>, <code>Branch</code>, <code>Retry</code>) are the conjunctions that join steps, so they sit at ⑥ too.</p>
+    <p class="sub"><b>Composition is closed; running is not.</b> A recipe of recipes is a recipe, as a <code>Sequential</code> of <code>Sequential</code>s is a <code>Sequential</code>, so the ladder stops at ⑥. What sits above is not more composition but running it: which items, when, where, with what retries and storage. That is orchestration, the application's job (a DVC stage, an Airflow or Prefect flow, a FastAPI endpoint, GeoApps), and the same recipe should run unchanged in all of them. A recipe has two forms, code (a <code>Sequential</code> or <code>Graph</code> built in Python) and data (a YAML file that <code>pipekit.loads</code> reads back). The data form needs every step in it to round-trip (a strict-JSON <code>get_config</code>, <code>from_state</code>, no live objects), and a recipe that comes from a user goes through <code>loads_sandboxed</code> with an allowlist: a recipe that names classes is code. Settings composed with Hydra override values inside a recipe; they do not become a second recipe format.</p>
+    <p class="sub">Against gaussx's own numbering: its L1 operators become ⓪ structures and its L0 primitives ① primitives (the swap above); L1.5, L2 and L3 become ② strategy, ③ model (its "distributions", renamed so the rung reads the same in libraries with none: a functax plan, a kernellib estimator, a sesmax model) and ④ algorithm; ⑤ step and ⑥ recipe are pipekit's. gaussx's word "recipes" moves up the ladder: in the stack a recipe is a composition of steps, as in a kitchen, in Pangeo Forge's ETL recipes and in torchtune's training recipes. <code>UnscentedIntegrator</code> moves from gaussx's recipes to the strategies: it is a choice of how to integrate, like <code>CGSolver</code> is a choice of how to solve.</p>
+
+    <h3 class="minor">Who works where: bands of the ladder</h3>
+    <p class="sub">Each kind of user works in a band of the ladder and treats the rung below it as atomic: their <b>floor</b>. A geoscientist calls <code>NDVI</code> and never opens it; an ML researcher calls <code>solve</code> and never opens it. The word is <i>floor</i>, not <i>primitive</i>: ① stays one role, the same for everyone.</p>
+    <div class="table-wrap"><table class="kinds vocab">
+      <thead><tr><th>Who</th><th>Works at</th><th>Their floor</th><th>Data</th></tr></thead>
+      <tbody>
+        <tr><td class="lib">data engineers: ETL, APIs, research runs</td><td>orchestration, ⑥ recipes</td><td>⑥ recipes, often as data</td><td>◆ carriers and files</td></tr>
+        <tr><td class="lib">geoscience researchers</td><td>⑤ steps, ⑥ recipes (④ on the xarray side)</td><td>⑤ steps</td><td>◆ carriers, ▤ named arrays</td></tr>
+        <tr><td class="lib">ML researchers</td><td>② strategies, ③ models, ④ algorithms</td><td>① primitives</td><td>▦ arrays</td></tr>
+        <tr><td class="lib">numerics and CS</td><td>⓪ structures to ④ algorithms</td><td>JAX, lineax, diffrax</td><td>▦ arrays</td></tr>
+      </tbody>
+    </table></div>
+    <p class="sub"><b>Carriers start at ⑤, but ⑤ does not need carriers.</b> Nothing below ⑤ computes on a carrier: that is the second of the three invariants under rule 3, nothing below GeoStack sees <span class="tex" data-tex="\vect{x}_\text{geo}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐱</mi><mtext>geo</mtext></msub></mrow><annotation encoding="application/x-tex">\vect{x}_\text{geo}</annotation></semantics></math></span></span>, only <span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span>(<span class="tex" data-tex="\vect{x}_\text{geo}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐱</mi><mtext>geo</mtext></msub></mrow><annotation encoding="application/x-tex">\vect{x}_\text{geo}</annotation></semantics></math></span></span>). A step is exactly where <span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span> and <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span> happen, so geo territory begins there. The converse does not hold: <code>JaxModelOp</code>, a DA cycle and a training loop are steps and recipes on plain arrays. Geo territory is ⑤ and ⑥ with carrier data. geoarray's own nouns and verbs (<code>GeoArray</code>, <code>crop</code>, <code>to_pixel</code>) sit at ⓪ and ① but handle georeference only and compute no field. On the xarray side, geoscientists call functions on named arrays (xrops), so their floor is set by the data as much as by the rung.</p>
+    <p class="sub"><b>Floors leak, so design for one rung down.</b> When a step's settings fall short, a geoscientist should reach the algorithm it wraps without reading its source: every step's docstring names the function it calls (the <i>f</i> in lift<sub>α</sub>[<i>f</i>]). Errors speak the band's language: band names, CRS and fill at ⑤ and ⑥, shapes at ④ and below. Docs open by band, one entry point per kind of user, not one per library. And ⑤ and ⑥ are the API the most people touch, so they get the strictest deprecations.</p>
+
+    <div class="rule wide">
+      <h3>One vocabulary per axis</h3>
+      <p>Each axis gets its own words and its own mark, so no two axes share one. The letter L goes back to the axis that owns it in remote sensing: the processing levels of the data.</p>
+      <div class="table-wrap"><table class="kinds vocab">
+        <thead><tr><th>Axis</th><th>Asks</th><th>Vocabulary</th><th>Mark</th></tr></thead>
+        <tbody>
+          <tr><td class="lib">role</td><td>what job does it do in its library's API?</td><td>⓪ structure (noun) · ① primitive (verb) · ② strategy (adverb) · ③ model (noun phrase) · ④ algorithm (sentence) · ⑤ step (sentence with its settings) · ⑥ recipe (paragraph); orchestration above, not a rung</td><td>circled digit</td></tr>
+          <tr><td class="lib">kind</td><td>how is it packaged?</td><td>ƒ function · ▣ Module · → Operator</td><td>glyph</td></tr>
+          <tr><td class="lib">data</td><td>what does it see?</td><td>▦ array · ▤ named array · ◆ carrier</td><td>glyph</td></tr>
+          <tr><td class="lib">layer</td><td>where does it live?</td><td>Core · GeoNumerics · GeoStack (geotoolz + xrtoolz) · GeoModels · GeoBench · GeoApps</td><td>name</td></tr>
+          <tr><td class="lib">tier</td><td>what may it import?</td><td>T0 to T4, within a layer</td><td>T</td></tr>
+          <tr><td class="lib">level</td><td>how processed is the data? (data products, not code)</td><td>L0 raw · L1 calibrated · L2 geophysical · L3 gridded · L4 model output</td><td>L</td></tr>
+        </tbody>
+      </table></div>
+      <p><b>Two names on every axis.</b> <code>gaussx.CGSolver</code>: ② strategy · ▣ Module · ▦ array · Core T0. <code>geoops.indices.NDVI</code>: ⑤ step · → Operator · ◆ carrier · GeoStack T3; it turns an L2A scene into an L2 index product.</p>
+      <p><b>How the axes constrain each other.</b> The role fixes the kind: ① and ④ are functions, ⓪, ② and ③ are Modules (or, at ⓪, a third-party array), ⑤ and ⑥ are Operators (a recipe in code is a <code>Sequential</code> or <code>Graph</code>, itself an Operator; in data, the YAML that loads into one), so a library's chips only need the digit. The kind and the data fix the lowest layer. Inside one library, imports follow the roles upward, nouns first; the one entanglement left is between verbs and adverbs (a primitive takes a strategy; some strategies call primitives), which gaussx documents as its dispatch core.</p>
+      <p class="muted"><b>What this retires.</b> The kind once called "primitive" is now "function", so "primitive" names one role (①) only. geostack's <code>docs/design/stack_levels.md</code> L1 to L3 (primitives and machinery, operators on carriers, pipelines) were a mix of kind and data; the glyph pairs say the same without a number (ƒ ▣ on ▦; → on ◆; ⑤ steps composed into ⑥ recipes). Two words stay where the field uses them on purpose: "linear operator" (lineax's <code>AbstractLinearOperator</code>, a ⓪ structure) and "observation operator" (H). Capital-O <b>Operator</b> means pipekit's kind only.</p>
+    </div>
+
+    <h3 class="minor">Rule 1: the cell decides the layer</h3>
+    <p class="sub">Every public name sits in one cell of this grid, and each cell has a lowest layer it may live in.</p>
+    <div class="table-wrap">
+      <table class="kinds grid3">
+        <thead><tr><th></th><th>▦ plain array</th><th>▤ named array</th><th>◆ carrier</th></tr></thead>
+        <tbody>
+          <tr><td class="lib">ƒ function</td>
+            <td><code>einx.dot</code>, <i>a functax stencil's <code>apply</code></i>, <code>geoarray.to_pixel(transform, xy)</code>, <i><code>geophysix.coriolis(lat)</code></i><span class="where"><span class="pill c-core">Core</span> <span class="pill c-numerics">GeoNumerics</span> and up</span></td>
+            <td><code>pipekit_array.run_kernel</code><span class="where"><span class="pill c-core">Core</span> (pipekit-array) and up</span></td>
+            <td>geoarray's own verbs: <code>crop</code>, <code>pad</code>, <code>read_window</code>, <code>stack</code>. They move data and georeference together and never compute a new field<span class="where"><span class="pill c-toolkits">GeoStack</span> and up</span></td></tr>
+          <tr><td class="lib">▣ Module</td>
+            <td><i>functax plans</i>, <i>gridax grids</i>, gaussx and kernellib operators, finitevolX operators, the models<span class="where"><span class="pill c-core">Core</span> <span class="pill c-numerics">GeoNumerics</span> and up</span></td>
+            <td class="n">empty by design: a Module works on plain arrays, and an Operator puts the names on</td>
+            <td class="n">never: a Module never holds or takes a carrier</td></tr>
+          <tr><td class="lib">→ Operator</td>
+            <td><code>JaxModelOp</code>, <code>DACycle</code>, <code>TrainingLoop</code>, rollouts<span class="where"><span class="pill c-core">Core</span> <span class="pill c-models">GeoModels</span>; never GeoNumerics</span></td>
+            <td><code>ISel</code>, <code>Reduce</code>, <code>ArgReduce</code>, <code>MapOver</code>, <code>KernelOp</code> (pipekit-array)<span class="where"><span class="pill c-core">Core</span> (pipekit-array) and up</span></td>
+            <td>geoops, xrops; each model's <code>geo</code> extra<span class="where"><span class="pill c-toolkits">GeoStack</span>; GeoModels in the <code>geo</code> extra</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub"><b>GeoNumerics fills only the plain-array column, and only its first two rows.</b> Core adds Operators on plain arrays and, through pipekit-array, the named-array column. The carrier column starts at GeoStack. This also settles the xarray adapter in pipekit-array without an exception: there a <code>DataArray</code> is a named array, which Core may hold. As a carrier, with a CRS, it belongs to xrops.</p>
+
+    <h3 class="minor">Which cell is it?</h3>
+    <ol class="decide">
+      <li><b>Kind.</b> Does it subclass <code>pipekit.Operator</code>? Then it is an Operator, whatever else it inherits; <code>JaxOperator</code> is also an <code>eqx.Module</code> and is still an Operator. Else, is it a class whose setup does work before a pure call? A Module. Else it is a function.</li>
+      <li><b>Data.</b> Does it take or return a CRS, a fill or attrs? Carrier. Dims with names and coordinates, but no CRS? Named array. Neither? Plain array.</li>
+    </ol>
+
+    <h3 class="minor">Do we need a name change?</h3>
+    <p class="sub"><b>Not in code; in prose, yes.</b> In code the namespaces already separate the two kinds of operator (lineax calls its own <code>AbstractLinearOperator</code>), and renaming <code>pipekit.Operator</code> would touch pipekit, every geoops and xrops class, vardax, plumax and sesmax, all for a prose problem. "Observation operator" is the field's own word for H and stays. In prose: <b>function</b> for the kind (not "kernel", which kernellib uses for covariance functions, nor "primitive", which now names the ① role), <b>Module</b>, <b>Operator</b> with a capital O for pipekit's, and <b>carrier</b> for the data. The full vocabulary, one per axis, is in the box under the role ladder. The suffix rules on the library cards of the <a href="../stack-layer-map">layer map</a> keep the class names apart as well.</p>
+
+    <h3 class="minor">Rule 2: the tier decides what a library may import</h3>
+    <p class="sub">Unchanged: a library imports any lower layer, and lower tiers of its own layer. <b>A tier never changes which kinds a library may define.</b> pipekit and gaussx are both Core tier 0, yet one defines Operators and the other Modules; the cells come from the layer.</p>
+
+    <h3 class="minor">Rule 3: the kind and the data decide what a name may take and call</h3>
+    <div class="flow-wrap">
+      <ol class="flow" aria-label="What flows down and back up through the four kinds">
+        <li class="f-app"><span class="f-kind">app</span><span class="f-what">a <code>Sequential</code> or <code>Graph</code> from a Hydra config</span></li>
+        <li class="f-arrow">carrier down</li>
+        <li class="f-op"><span class="f-kind">→ Operator on carriers</span><span class="f-what"><i><code>geoops.SampleAt</code></i>: <code>_apply</code> reads <code>np.asarray(g)</code> and <code>g.grid</code></span></li>
+        <li class="f-arrow">arrays and a CRS-free grid down</li>
+        <li class="f-mod"><span class="f-kind">▣ Module</span><span class="f-what"><i><code>functax.BilinearPlan</code></i>, fitted on the grid and the points</span></li>
+        <li class="f-arrow">arrays down</li>
+        <li class="f-prim"><span class="f-kind">ƒ function</span><span class="f-what">gather and <code>einx.dot</code> with the stencil weights</span></li>
+        <li class="f-arrow up">arrays up</li>
+        <li class="f-op"><span class="f-kind">→ Operator on carriers</span><span class="f-what"><code>wrap_like(result, g)</code>: a carrier again</span></li>
+      </ol>
+    </div>
+    <div class="rule">
+      <h3>Three invariants</h3>
+      <p><b>Arrays go everywhere.</b> Every kind takes them.</p>
+      <p><b>Carriers stop at GeoStack.</b> An Operator on carriers unwraps before it calls down and rewraps on the way back; nothing below GeoStack takes a carrier as input, and that includes <code>xarray.DataArray</code>. One narrow exception, listed by name with its reason:</p>
+      <p><b>An export at the edge.</b> A method that only <i>returns</i> results as a labelled container (<code>to_xarray</code>), imports it lazily behind an extra, attaches no CRS, and is called by nothing else in the library. Carriers flowing out at the end couple nothing; carriers flowing in are what the rule stops.</p>
+      <p><b>Configs stop at Operators.</b> Hydra and JSON configs build Operators and apps; Modules and functions take plain values (numbers, arrays, other Modules), never a <code>DictConfig</code>.</p>
+    </div>
+
+    <h3 class="minor">Rule 4: each library declares its cells</h3>
+    <p class="sub">Every row of the boundaries table on the <a href="../stack-layer-map">layer map</a> carries the kinds and data that library exports. Each must be allowed in the library's layer (rule 1), and a public name sits in exactly one cell. "geo" marks Operators on carriers that live in a model's <code>geo</code> extra.</p>
+
+    <h3 class="minor">What enforces it, and where it breaks today</h3>
+    <p class="sub"><code>tests/test_dependency_graph.py</code> gets a list of forbidden imports per layer, counted in <code>src/</code> only (scripts and notebooks are exempt), with a <code>KNOWN</code> list that only shrinks:</p>
+    <div class="table-wrap">
+      <table class="kinds">
+        <thead><tr><th>Layer</th><th>Never imports</th><th>Breaks today</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td class="lib"><span class="pill c-numerics">GeoNumerics</span></td><td>pipekit*, pyproj, rasterio, xarray, geoarray, geoops, xrops, every GeoStack package</td><td>nothing in <code>src/</code>; xarray only in the scripts and notebooks of finitevolX and spectraldiffx</td><td>none needed</td></tr>
+          <tr><td class="lib"><span class="pill c-core">Core</span></td><td>pyproj, rasterio, xarray, geoarray, geoops, xrops, every GeoStack package</td><td><code>xtremax.extraction</code> and <code>xtremax.simulations</code> (7 modules); vardax <code>_src/utils/patches.py</code> and <code>masks.py</code>; pyrox-lgm's lazy <code>to_xarray</code> in <code>_result.py</code>; <code>pipekit_array.xarray</code></td><td><b>xtremax</b>: extraction and simulations on xarray move to xrtoolz; the extremes modelling stays.<br><b>vardax</b>: <code>extract_patches</code> and the three masks take Datasets, so their xarray halves move to xrtoolz; the array halves (masks from a shape and a key, window starts) stay in vardax as primitives; <code>trajectory_to_xr_dataset</code> stays as an export at the edge.<br><b>pyrox-lgm</b>: <code>to_xarray</code> stays as an export at the edge.<br><b>pipekit_array.xarray</b>: not a break. It adapts <code>DataArray</code> as a named array, which Core may hold; Dataset and DataTree dispatch is already in xrops (PK-P5)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub">The Operator contract itself is already enforced: <code>test_operator_contract.py</code> in geotoolz walks every geoops Operator, and <code>geoops.testing.check_operator</code> runs the same checks on Operators outside geotoolz, such as the models' <code>geo</code> extras.</p>
+
+    <h3 class="minor">geoarray, gridax and functax: geometry has no CRS below GeoStack</h3>
+    <p class="sub">geoarray stays a package of the geotoolz workspace and keeps every carrier. What moves out is the geometry maths it does today. <b>Each geoarray grid becomes a CRS-free grid from below, with a <code>pyproj.CRS</code> attached.</b> Affine raster grids are the CRS-free geometry functax already owns for interpolation; the grids that physics needs (curvilinear, swath, staggered, vertical) are gridax's; anything that knows the Earth's shape comes from geophysix.</p>
+    <div class="table-wrap">
+      <table class="kinds">
+        <thead><tr><th>Concept</th><th><span class="pill c-core new">functax</span> Core</th><th><span class="pill c-numerics new">gridax</span> GeoNumerics</th><th><span class="pill c-toolkits">geoarray</span> GeoStack</th></tr></thead>
+        <tbody>
+          <tr><td class="lib">Affine raster grid</td><td><i><code>AffineGrid(transform, shape)</code></i>: <code>res</code>, <code>bounds</code>, <code>shift</code>, <code>crop(window)</code>, <code>window(bounds)</code>, pixel centres</td><td>none</td><td><code>Grid</code> = an <code>AffineGrid</code> + a CRS; stays hashable, keeps <code>isclose</code> and <code>get_config</code> / <code>from_config</code></td></tr>
+          <tr><td class="lib">World to pixel</td><td><i><code>to_pixel(grid, xy)</code></i>: fractional indices, the "find" step of a plan</td><td>none</td><td>reprojects the points with pyproj, then calls functax</td></tr>
+          <tr><td class="lib">Pixel coordinates</td><td>pixel centres and corners of an <code>AffineGrid</code></td><td>none</td><td><code>pixel_coords(g)</code> reads the grid and calls functax</td></tr>
+          <tr><td class="lib">Pixel windows</td><td>none</td><td>none</td><td><code>PixelWindow</code> stays: it is the read contract of <code>RasterSource</code>. <code>read_window</code>, <code>write_window</code>, <code>crop</code>, <code>pad</code> move the data and call <code>AffineGrid.shift</code></td></tr>
+          <tr><td class="lib">Curvilinear and swath grids</td><td>none</td><td><i><code>CurvilinearGrid(lat, lon)</code></i>, swath geometry: cell corners and areas, neighbours, nearest cell</td><td><code>CurvilinearGrid</code> and <code>SwathGrid</code> add the CRS of lat/lon; <code>GeoSwath</code> keeps per-scene lat/lon as leaves</td></tr>
+          <tr><td class="lib">Physical grid structure</td><td>none</td><td>Arakawa staggering, metric arrays (<code>dx</code>, <code>dy</code>, areas), masks, vertical coordinates and remapping</td><td><code>Vertical</code>, <code>VerticalAxis</code>: labels only</td></tr>
+          <tr><td class="lib">Areas on the Earth</td><td>none</td><td>cell areas of any grid, on the ellipsoid from <span class="pill c-numerics new">geophysix</span></td><td><i><code>pixel_area</code></i> (designed): reads the CRS, picks planar or ellipsoidal, calls gridax</td></tr>
+          <tr><td class="lib">Footprint in another CRS</td><td><code>bounds</code> in grid coordinates</td><td>none</td><td><code>footprint</code>: a Shapely polygon, densified and reprojected with pyproj</td></tr>
+          <tr><td class="lib">CRS, fill, attrs, dims, readers, georeader interop</td><td>never</td><td>never</td><td>only here</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub"><b>A condition for the move:</b> geoarray installs and runs on NumPy alone, so the kernels it calls must too. functax and gridax take the array namespace (<code>xp</code>) in those kernels and import JAX only when a JAX array arrives. If that costs more than it saves, geoarray keeps its four affine helpers, and a test pins them equal to functax's.</p>
+  </section>
+</div>
+
+</body>
+</html>
