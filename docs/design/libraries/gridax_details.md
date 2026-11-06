@@ -127,7 +127,7 @@ Cost O(R C). Averaging in 3-D, not in degrees, is what keeps cells that straddle
 
 ### Area of a corner polygon
 
-Each cell is split into two triangles with great-circle edges. For unit vectors a, b, c the spherical excess of a triangle is (Van Oosterom and Strackee)
+Each cell is split into two triangles with great-circle edges. For unit vectors a, b, c the spherical excess of a triangle is [@vanoosterom1983]
 
 ```{math}
 \tan\frac{E}{2} = \frac{\mathbf{a} \cdot (\mathbf{b} \times \mathbf{c})}{1 + \mathbf{a} \cdot \mathbf{b} + \mathbf{b} \cdot \mathbf{c} + \mathbf{c} \cdot \mathbf{a}}
@@ -149,7 +149,7 @@ For derivative n at a point with neighbours at signed distances δ₀, …, δ\_
 
 1. Offsets from finitediffx's rules: forward 0, …, n + p − 1; backward its mirror; central ±⌊(n + p)/2⌋, built at accuracy p + 1.
 2. Uniform spacing: solve once on the host in float64 and cache (geoops' `difference_coeffs`).
-3. Uneven spacing: scale each row by its widest distance and solve the K × K system per point on the array namespace (geoops' `nonuniform_coeffs`), or use Fornberg's recursion, O(K²) per point and better conditioned for wide stencils.
+3. Uneven spacing: scale each row by its widest distance and solve the K × K system per point on the array namespace (geoops' `nonuniform_coeffs`), or use Fornberg's recursion [@fornberg1988], O(K²) per point and better conditioned for wide stencils.
 4. Edges: the stencil shifts one-sided and keeps its accuracy.
 5. Gaps: run candidate stencils widest first and keep, per point, the first that returns a finite value (xrops' `_difference_adaptive`), so a NaN coast costs one stencil width of accuracy rather than a strip of data.
 
@@ -254,7 +254,7 @@ Per library:
 
 ## Sources
 
-- Fornberg, B. (1988). Generation of finite difference formulas on arbitrarily spaced grids. *Mathematics of Computation* 51, 699–706.
-- Van Oosterom, A. and Strackee, J. (1983). The solid angle of a plane triangle. *IEEE Transactions on Biomedical Engineering* BME-30, 125–126.
-- Snyder, J. P. (1987). *Map Projections: A Working Manual*. USGS Professional Paper 1395 (authalic latitude).
-- Lin, S.-J. (2004). A vertically Lagrangian finite-volume dynamical core for global models. *Monthly Weather Review* 132, 2293–2307 (conservative vertical remapping).
+- @fornberg1988: stencil coefficients on arbitrarily spaced grids.
+- @vanoosterom1983: the solid angle of a plane triangle.
+- @snyder1987projections: the authalic latitude.
+- @lin2004vertical: conservative vertical remapping.

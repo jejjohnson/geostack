@@ -112,7 +112,7 @@ The test for every name: does it find a minimum, or say something about the curv
 | plumax `les_fvm/fourdvar.py` | `PosteriorCovariance`, `_gauss_newton_hessian` | argminax |
 | pyrox-gp | the iterations of `LaplaceInference`, `GaussNewtonInference`, `QuasiNewtonInference` and their Markov forms | argminax; pyrox-gp keeps the likelihoods and the GP algebra |
 | pyrox-lgm | the inner Newton fit and the outer search of `inla()` | argminax |
-| gaussx | the Newton loop in `laplace_mode`; gaussx keeps one step's algebra and its root finder | argminax |
+| gaussx | `laplace_mode`, the loop and its entry point; gaussx keeps one step's algebra and its root finder | argminax (`amx.solve.laplace_mode`); gaussx's copy is deprecated without forwarding |
 | pyrox (after pyrox#332, via pyrox-nn) | `last_layer_laplace`'s curvature, evidence and prior-precision search | argminax; pyrox-nn keeps the last-layer wrapper |
 
 ## In use
@@ -209,7 +209,7 @@ Five decided, three open. Each entry gives the position first, then the trade-of
 
 ### 4. gaussx keeps one step; argminax owns the loop
 
-**Decided (5 Nov 2026).** gaussx keeps `newton_update`, `gauss_newton_precision` and its Chandrupatla root finder, because they are single-step algebra a tier below. The Newton loop inside `laplace_mode` moves to argminax, and `laplace_mode` calls it.
+**Decided (5 Nov 2026; revised 6 Nov 2026).** gaussx keeps `newton_update`, `gauss_newton_precision` and its Chandrupatla root finder, because they are single-step algebra a tier below. `laplace_mode`, the loop that iterates them, moves to argminax whole, entry point included, and its callers (pyrox-gp, pyrox-lgm) import it from there. gaussx never calls argminax: a `laplace_mode` left in gaussx that forwarded to argminax would be an edge from Core tier 0 up to tier 1, and the repository fixes such an edge by moving code, never by a re-export (`AGENTS.md`, "Boundaries"). gaussx's own `laplace_mode` keeps its current loop for one release behind a `DeprecationWarning` that names `argminax.solve.laplace_mode`, then goes.
 
 ### 5. vardax's adjoint strategies move here
 
@@ -225,7 +225,7 @@ Five decided, three open. Each entry gives the position first, then the trade-of
 
 ### 8. Diagnostics: argminax or radtrax?
 
-**Open.** The averaging kernel, degrees of freedom and information content come from atmospheric retrieval (Rodgers, 2000), but they are properties of any linear-Gaussian posterior: the same A describes a 4D-Var analysis or a GP posterior. Leaning: argminax, with the retrieval vocabulary in its docstrings.
+**Open.** The averaging kernel, degrees of freedom and information content come from atmospheric retrieval [@rodgers2000], but they are properties of any linear-Gaussian posterior: the same A describes a 4D-Var analysis or a GP posterior. Leaning: argminax, with the retrieval vocabulary in its docstrings.
 
 ## Roadmap
 
@@ -244,8 +244,8 @@ Wave 4 is one issue per consumer, filed in that consumer's repository and linked
 ## Sources
 
 - [Optimistix documentation](https://docs.kidger.site/optimistix/): the solver and adjoint protocols argminax extends.
-- Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding: Theory and Practice.* World Scientific: the averaging kernel, degrees of freedom and information content.
-- Bolte, Pauwels and Vaiter (2023), one-step differentiation of iterative algorithms: the basis of vardax's k-step adjoint, as its docstring cites.
+- @rodgers2000: the averaging kernel, degrees of freedom and information content.
+- @bolte2023onestep: one-step differentiation of iterative algorithms, the basis of vardax's k-step adjoint, as its docstring cites.
 - [The GeoStack layer map](../stack_layer_map.md): argminax's layer, tier, imports and moves.
 - integrix: the adjoint boundary between the two.
 - [pyrox#332](https://github.com/jejjohnson/pyrox/issues/332): `last_layer_laplace` out of the pyrox core.

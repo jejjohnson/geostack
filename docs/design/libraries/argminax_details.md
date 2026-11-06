@@ -97,12 +97,13 @@ class KStep(optx.AbstractAdjoint):
 
 
 # proposed (argminax.adjoint)
-# k = 1 (Bolte, Pauwels and Vaiter 2023)
+# k = 1 (Bolte, Pauwels and Vaiter, 2023)
 class OneStep(KStep): ...
 
 
 # proposed (argminax.adjoint)
-# pipekit-cycle spec → optimistix adjoint
+# pipekit-cycle spec → optimistix adjoint, matched by class name;
+# pipekit-cycle (Core tier 2) is never imported
 def to_optimistix_adjoint(spec) -> optx.AbstractAdjoint: ...
 ```
 
@@ -125,7 +126,7 @@ def to_optimistix_adjoint(spec) -> optx.AbstractAdjoint: ...
 - **Linearised operators.** argminax takes a `jvp` / `vjp` pair or a residual function, never vardax's `ObservationOperator`; vardax's `obs_op.linearize` is turned into the pair on vardax's side, since vardax sits above.
 - **gaussx operators and strategies.** Every curvature is a lineax operator with `lx.positive_semidefinite_tag`; solves, log-determinants and Cholesky factors go through gaussx and respect a `solver=` strategy (default `gx.DenseSolver()`).
 - **gaussx single steps.** The damped Newton loop for a Gaussian prior and a factorised likelihood iterates `gx.newton_update`; the GGN low-rank form is `gx.gauss_newton_precision`.
-- **pipekit-cycle adjoint specs.** `Implicit`, `Truncated`, `RecursiveCheckpoint`, `Direct`, `Backsolve` from `pipekit_cycle.adjoints` are the vocabulary; `to_optimistix_adjoint` imports them lazily behind an extra.
+- **pipekit-cycle adjoint specs.** `Implicit`, `Truncated`, `RecursiveCheckpoint`, `Direct`, `Backsolve` from `pipekit_cycle.adjoints` are the vocabulary. `to_optimistix_adjoint` matches them structurally, by class name and fields, as integrix's `to_diffrax_adjoint` does, and never imports pipekit-cycle: it sits at Core tier 2, above argminax, and a lazy or optional import still counts as an edge.
 - **vardax's `Posterior`.** `Posterior(mean, cov, samples, provenance)` stays in vardax; vardax wraps a `Laplace` into it.
 
 ## Algorithms
@@ -219,7 +220,7 @@ d_s = \operatorname{tr}(A) = \sum_i \frac{\sigma_i^2}{1 + \sigma_i^2}
 H_{\mathrm{info}} = \frac{1}{2} \log |\hat H_\xi| = \frac{1}{2} \sum_i \log(1 + \sigma_i^2)
 ```
 
-Here σᵢ are the singular values of the whitened measurement Jacobian K̃ = Sε^(−1/2) K Sₐ^(1/2), so Ĥ\_ξ = I + K̃ᵀK̃ (Rodgers 2000, chapter 2).
+Here σᵢ are the singular values of the whitened measurement Jacobian K̃ = Sε^(−1/2) K Sₐ^(1/2), so Ĥ\_ξ = I + K̃ᵀK̃ [@rodgers2000, chapter 2].
 
 1. Exact path (small N): an SVD of K̃ or an `eigh` of Ĥ\_ξ gives A, d\_s and H\_info at once.
 2. Large N: d\_s = N − tr(Ĥ\_ξ⁻¹). Estimate the trace by Hutchinson with K Rademacher probes zₖ drawn from a JAX key, each a CG solve with Ĥ\_ξ: tr(Ĥ⁻¹) ≈ (1/K) Σ zₖᵀĤ⁻¹zₖ.
@@ -297,7 +298,7 @@ f_{t+1} = f_t + \eta (\tilde f_t - f_t)
 \hat \xi = \Phi^{k}(\bar \xi, \theta) \text{ with } \bar \xi = \mathrm{sg}(\xi_{T-k})
 ```
 
-Here Φ is one solver step and sg is `stop_gradient`. For a Newton-like Φ, ∂Φ/∂ξ → 0 at the minimum, so the one-step derivative is first-order exact there (Bolte, Pauwels and Vaiter 2023).
+Here Φ is one solver step and sg is `stop_gradient`. For a Newton-like Φ, ∂Φ/∂ξ → 0 at the minimum, so the one-step derivative is first-order exact there [@bolte2023onestep].
 
 1. In `KStep.apply`, run the solve to the end under `stop_gradient`.
 2. From the stopped iterate, take k more `solver.step` calls, differentiably in θ.
@@ -372,7 +373,7 @@ G = \operatorname{diag}(g'(\hat u))
 | gaussx | solves, `logdet`, `cholesky`, `inv`, `symmetrize`, `newton_update`, `gauss_newton_precision` | public API only; gaussx never imports argminax |
 | equinox, jax, jaxtyping | modules, transforms, shape annotations | — |
 | matfree | stochastic Lanczos quadrature for log-determinants | optional extra, imported lazily |
-| pipekit-cycle | the adjoint specs `to_optimistix_adjoint` maps | optional extra, imported lazily |
+| pipekit-cycle | nothing: `to_optimistix_adjoint` matches its adjoint specs by class name | never imported; it sits at Core tier 2, above argminax |
 | SciPy | reference solutions | tests only |
 
 ## Where it stands
@@ -388,9 +389,9 @@ Read on 5 Nov 2026 at geostack's submodule pins, except where noted.
 | radtrax `retrieval/var3d/diagnostics.py` | `ed04971` | `reduced_chi_squared`; `degrees_of_freedom_for_signal`, a Hutchinson estimate (32 probes) on `np.random.default_rng`; `posterior_covariance_proxy`, a CG matvec. No averaging-kernel function: A appears only in docstrings | `amx.diagnose` |
 | plumax `assimilation/solve.py` | `28f257e` | `run_lbfgs`, `run_gauss_newton`, `run_dual_psas`; `run_gauss_newton` is identical to radtrax's (empty diff) | deleted |
 | plumax `les_fvm/fourdvar.py` | `28f257e` | `solve_4dvar` by L-BFGS in whitened space; `_gauss_newton_hessian` dense by `jacrev` (diffrax's `custom_vjp` rejects `jacfwd`); `posterior_covariance` by `gx.inv` and symmetrise, P\_S = L P\_χ Lᵀ; `laplace_sample` | `amx.curvature`; plumax keeps the 4D-Var cost |
-| gaussx `_inference/_laplace.py` `laplace_mode` | `7fa1a38` | damped Newton loop, mode implicit through `jax.lax.custom_root`, tolerance floored at 64 eps; `newton_update` and `gauss_newton_precision` (a `LowRankUpdate`) are the single steps; Chandrupatla is already an optimistix root finder | the loop to `amx.solve`; the steps and Chandrupatla stay |
+| gaussx `_inference/_laplace.py` `laplace_mode` | `7fa1a38` | damped Newton loop, mode implicit through `jax.lax.custom_root`, tolerance floored at 64 eps; `newton_update` and `gauss_newton_precision` (a `LowRankUpdate`) are the single steps; Chandrupatla is already an optimistix root finder | `laplace_mode` to `amx.solve`, deprecated in gaussx without forwarding; the steps and Chandrupatla stay |
 | pyrox-gp `_inference_nongauss.py` | `94eef13` | `LaplaceInference`, `GaussNewtonInference` (`precision_floor=1e-3`, damping) as eager Python loops with `break`; `QuasiNewtonInference` by `optax.lbfgs` in a Python loop; hand-written `cho_solve`. `PosteriorLinearization` and EP are not Newton methods and stay | the loops to `amx.solve` |
-| pyrox-lgm `_inla.py` | `94eef13` | inner fit by `gx.laplace_mode`; outer `_theta_mode` by `optax.lbfgs` in a Python loop with host `float` checks; R-INLA's grid / CCD design stays | the outer search to `amx.solve` |
+| pyrox-lgm `_inla.py` | `94eef13` | inner fit by `gx.laplace_mode`; outer `_theta_mode` by `optax.lbfgs` in a Python loop with host `float` checks; R-INLA's grid / CCD design stays | the inner fit (`amx.solve.laplace_mode`) and the outer search to `amx.solve` |
 | pyrox `inference/_laplace.py` `LastLayerLaplace`, `last_layer_laplace` | `2ac68a5` (pyrox main, 24 Oct 2026; not at geostack's pin `94eef13`) | dense J by forward mode; GGN; diagonal or dense precision; `log_marginal_likelihood`; `optimize_prior_precision` on a 4097-point log λ grid, then golden section | `amx.curvature`, `amx.diagnose`, after pyrox#332 |
 
 Two facts set the order of work. vardax's adjoints are markers rather than working optimistix adjoints, so wave 1 must implement `apply`, not just move the files. And every 3D-Var retrieval leaves JAX at its last line, so the solvers and diagnostics need to return arrays and use keys before a plume model can differentiate through them.

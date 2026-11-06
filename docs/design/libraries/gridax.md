@@ -301,6 +301,6 @@ Waves 1, 2 and 3 can run side by side.
 ## Sources
 
 - [The GeoStack layer map](../stack_layer_map.md): gridax's layer, tier, imports and moves, and the section on geoarray, gridax and functax.
-- Fornberg, B. (1988). Generation of finite difference formulas on arbitrarily spaced grids. *Mathematics of Computation* 51, 699–706: a stable recurrence for stencil coefficients, the alternative to geoops' Vandermonde solve.
-- Arakawa, A. and Lamb, V. R. (1977). Computational design of the basic dynamical processes of the UCLA general circulation model. *Methods in Computational Physics* 17: the A to E staggerings, for the line with finitevolX.
+- @fornberg1988: a stable recurrence for stencil coefficients, the alternative to geoops' Vandermonde solve.
+- @arakawa1977: the A to E staggerings, for the line with finitevolX.
 - Code read on 5 Nov 2026: finitevolX `82090a3` (0.1.0) `_src/grid/`, `_src/mask/`, `_src/vertical/`, `_src/operators/reductions.py`, `_src/pipekit/base.py` and `AGENTS.md`; spectraldiffx `d68f8f6` `_src/fourier/grid.py`, `_src/chebyshev/grid.py`, `_src/spherical/grid.py` and `AGENTS.md`; sesmax-core `_src/domain/`, `_src/gfd/modal.py`; plumax `les_fvm/grid.py`; geotoolz `d2f53f4` geoarray `_src/coords.py`, geoops `geom/_src/stencils.py` and `operators.py`; xrtoolz `b3855d7` xrops `grad/_src/`, `transforms/_src/coord_remap.py`, `interpolate/operators.py`; geostack `scripts/capabilities.py` (`KNOWN_CLASHES`).

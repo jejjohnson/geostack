@@ -720,7 +720,7 @@ coefficients = 6.0 * anticausal  # (N,) → (N,)
 
 Both passes are linear in y, so `jax.linear_transpose` gives the prefilter's adjoint without extra code. Higher orders add one pole, and one pair of passes, per extra degree of two.
 
-**Supporting libraries.** `lax.linalg.tridiagonal_solve` covers 1-D cubic splines with any end condition, and spectraldiffx's FFT solvers cover periodic axes. interpax has JAX splines on grids up to 3-D. SciPy's `spline_filter` and `make_interp_spline` are the oracles; Unser (1999) gives the poles and the boundary sums.
+**Supporting libraries.** `lax.linalg.tridiagonal_solve` covers 1-D cubic splines with any end condition, and spectraldiffx's FFT solvers cover periodic axes. interpax has JAX splines on grids up to 3-D. SciPy's `spline_filter` and `make_interp_spline` are the oracles; @unser1999splines gives the poles and the boundary sums.
 
 #### 3. Data-dependent local
 

@@ -65,7 +65,7 @@ A diagnostic is a function of one or more fields on a grid that returns a smalle
 \sigma_s = \partial_x v + \partial_y u
 ```
 
-The Okubo–Weiss parameter W = σₙ² + σₛ² − ζ² separates strain-dominated from rotation-dominated flow, and the geostrophic velocity from sea-surface height η is u\_g = −(g / f) ∂ᵧη, v\_g = (g / f) ∂ₓη.
+The Okubo–Weiss parameter [@okubo1970; @weiss1991] W = σₙ² + σₛ² − ζ² separates strain-dominated from rotation-dominated flow, and the geostrophic velocity from sea-surface height η is u\_g = −(g / f) ∂ᵧη, v\_g = (g / f) ∂ₓη.
 
 **Columns.** The buoyancy frequency is N² = −(g / ρ₀) ∂ρ/∂z with ρ from geophysix's equation of state. The boundary-layer height is the lowest z where the bulk Richardson number reaches a critical value Ri\_c, with θ\_v the virtual potential temperature:
 
@@ -244,6 +244,6 @@ Waves 1, 2 and 3 can run side by side.
 ## Sources
 
 - [The GeoStack layer map](../stack_layer_map.md): diagnostix's layer, tier, imports and moves.
-- Okubo, A. (1970). Horizontal dispersion of floatable particles in the vicinity of velocity singularities such as convergences. *Deep-Sea Research* 17, 445–454; and Weiss, J. (1991). The dynamics of enstrophy transfer in two-dimensional hydrodynamics. *Physica D* 48, 273–294: the Okubo–Weiss parameter.
-- Vogelezang, D. H. P. and Holtslag, A. A. M. (1996). Evaluation and model impacts of alternative boundary-layer height formulations. *Boundary-Layer Meteorology* 81, 245–269: the bulk Richardson method.
+- @okubo1970 and @weiss1991: the Okubo–Weiss parameter.
+- @vogelezang1996: the bulk Richardson method.
 - Code read on 5 Nov 2026 at xrtoolz `b3855d7` and geostack's submodule pins: xrops `ocn/_src/kinematics.py`, `atm/_src/vertical.py`, `budgets/_src/`, `anomaly/_src/detrend.py`, `transforms/_src/` (`fourier.py`, `wavelet.py`, `decompose.py`), `wavelets/_src/`, `metrics/_src/`; somax `_src/eval/metrics.py`; finitevolX `_src/operators/diagnostics.py`.

@@ -292,8 +292,8 @@ Waves 2 and 3 can run side by side. Wave 4 is one issue per consumer, filed in t
 ## Sources
 
 - [The GeoStack layer map](../stack_layer_map.md): geophysix's layer, tier, imports and moves.
-- WGS84: National Geospatial-Intelligence Agency, *Department of Defense World Geodetic System 1984*, NGA.STND.0036: a, f and Ω.
+- @nga2014wgs84: WGS84's a, f and Ω.
 - [CODATA recommended values](https://physics.nist.gov/cuu/Constants/): k\_B, N\_A, R.
-- Karney, C. F. F. (2013). [Algorithms for geodesics](https://doi.org/10.1007/s00190-012-0578-z). *Journal of Geodesy* 87, 43–55: geodesics on the ellipsoid.
+- @karney2013geodesics: geodesics on the ellipsoid.
 - [TEOS-10](https://www.teos-10.org/): the thermodynamic equation of seawater, and the gsw reference code.
 - Code read on 5 Nov 2026 at geostack's submodule pins and sesmax `main`: finitevolX `_src/utils/constants.py`, `operators/diagnostics.py`, `operators/eos.py`; somax `_src/constants/`; sesmax-core `_src/constants.py`, `_src/scales.py`; xrops `grad/_src/constants.py`, `atm/_src/`, `atm/gas/ch4/_src/column.py`, `ocn/_src/kinematics.py`; geonnax `_frames.py`; kernellib `functional/_geo.py`; gaussx `_inference/_localization.py`; geoops `plume/_src/array.py`, `geom/_src/operators.py`; geoproducts `himawari/constants.py`; radtrax `atmosphere/gas.py`; plumax `coupled/rtm.py`, `hapi_lut/beers.py`, `met/wrf.py`.

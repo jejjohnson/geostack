@@ -258,7 +258,7 @@ Waves 2, 3 and 4 can run side by side. Wave 5 is one issue per consumer, filed i
 ## Sources
 
 - [The GeoStack layer map](../stack_layer_map.md): radiomax's layer, tier, imports and moves, and the section "radiomax and radtrax: where the line is".
-- Reda, I. and Andreas, A. (2004). Solar position algorithm for solar radiation applications. *Solar Energy* 76, 577–589: NREL's SPA.
-- NOAA and NASA, *GOES-R Series Product Definition and Users' Guide*, Volume 3 (Level 1b products): the Planck coefficients behind brightness temperature.
-- Lucht, W., Schaaf, C. B. and Strahler, A. H. (2000). An algorithm for the retrieval of albedo from space using semiempirical BRDF models. *IEEE Transactions on Geoscience and Remote Sensing* 38, 977–998: the Ross–Li kernels.
+- @reda2004spa: NREL's solar position algorithm.
+- @goesr_pug_l1b: the Planck coefficients behind brightness temperature.
+- @lucht2000brdf: the Ross–Li kernels.
 - Code read on 5 Nov 2026 at geotoolz `d2f53f4` and geostack's submodule pins: geoops `radiometry/_src/` (`array.py`, `solar.py`, `operators.py`), `geom/_src/array.py` and `operators.py`, `restore/_src/array.py`; geoproducts `himawari/reader.py`, `goes/l1b.py`, `_src/geostationary.py`; radtrax `atmosphere/geometry.py`, `slab/config.py`; plumax `hapi_lut/beers.py`, `radtran/config.py`.

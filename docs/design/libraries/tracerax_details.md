@@ -91,7 +91,7 @@ The bins keep plumax's (x, y, z) axis order so results compare directly with plu
 Callers pass three things in: a wind, a turbulence closure, and bin edges.
 
 - **The wind** is a function of positions and time, `wind(position, time) -> velocity`, with shapes (N, 3), () → (N, 3). A gridded wind is a functax interpolation plan closed over the field. plumax's wind today is a function of time only, t → (u, v, w), uniform in space; `trx.advect.uniform(wind_of_time)` adapts it.
-- **The closure** subclasses `TurbulenceModel`. plumax's `HomogeneousTurbulence` and `HannaTurbulence` already satisfy the shape of `at` as frozen dataclasses; under tracerax they become `eqx.Module` subclasses, or are wrapped, so that `jax.grad` of σ\_w² traces through them.
+- **The closure** subclasses `TurbulenceModel`. plumax's `HomogeneousTurbulence` and `HannaTurbulence` (the profiles of @hanna1982) already satisfy the shape of `at` as frozen dataclasses; under tracerax they become `eqx.Module` subclasses, or are wrapped, so that `jax.grad` of σ\_w² traces through them.
 - **The bins** are edge arrays per axis. They come from a gridax analysis geometry, from a finitevolX model grid for a model run, or are written by hand.
 
 ```python
@@ -156,7 +156,7 @@ Cost: O(N) per step, plus one gradient of σ\_w² per particle. Pitfalls:
 
 - The exact OU transition makes homogeneous runs well mixed for any Δt, but the drift term is first order, so Δt must stay small against τ\_L near the ground, where τ\_L is shortest.
 - Convective profiles carry a (z/h)^(2/3) factor whose derivative is singular at the ground; plumax floors z at 0.1 m before evaluating the closure.
-- Perfect reflection keeps the well-mixed state only when σ\_w is uniform near the wall (Wilson and Flesch, 1993); with strong gradients at the wall it biases the near-ground density, which is exactly where a footprint is counted.
+- Perfect reflection keeps the well-mixed state only when σ\_w is uniform near the wall [@wilson1993boundaries]; with strong gradients at the wall it biases the near-ground density, which is exactly where a footprint is counted.
 
 ### Binning by scatter-add
 
@@ -181,7 +181,7 @@ F_j = \frac{1}{N \rho h_s} \sum_p \sum_k \Delta t_k \mathbb{1}[x_p(t_k) \in j, z
 3. Run the Langevin step; accumulate residence of the particles below h\_s per surface cell.
 4. Divide by N ρ h\_s. There is no division by cell area: F pairs with a flux in kg m⁻² s⁻¹.
 
-Pitfall: reusing the forward integrator with the wind reversed is exact for the OU part when the turbulence is stationary, because that process is time-reversible. In inhomogeneous turbulence the backward-time drift is not the forward one with the wind reversed (Flesch, Wilson and Yee, 1995); this needs a test before the footprints are trusted near the ground.
+Pitfall: reusing the forward integrator with the wind reversed is exact for the OU part when the turbulence is stationary, because that process is time-reversible. In inhomogeneous turbulence the backward-time drift is not the forward one with the wind reversed [@flesch1995backward]; this needs a test before the footprints are trusted near the ground.
 
 ### Finite-time Lyapunov exponents
 
@@ -235,7 +235,7 @@ Precision: positions in metres far from the origin lose resolution in float32 (a
 
 - **plumax oracle.** For homogeneous and Hanna turbulence with a uniform wind and the same keys, the moved Langevin step, binning and footprint match plumax 28f257e to round-off. This test is deleted when plumax re-exports tracerax.
 - **Well-mixed stays well-mixed.** Particles started uniform in \[0, h\] with Hanna profiles stay uniform after many τ\_L: a Kolmogorov–Smirnov test on the heights, with the threshold from the KS statistic's sampling distribution at the chosen N, not a tuned tolerance.
-- **Taylor (1921).** In homogeneous turbulence, the variance of the displacement matches the closed form, within a few standard errors of the sample variance:
+- **@taylor1921.** In homogeneous turbulence, the variance of the displacement matches the closed form, within a few standard errors of the sample variance:
 
 ```{math}
 \mathrm{Var}[z(t)] = 2 \sigma^2 \tau_L \left( t - \tau_L (1 - e^{-t / \tau_L}) \right)
@@ -243,7 +243,7 @@ Precision: positions in metres far from the origin lose resolution in float32 (a
 
 - **Mass conservation.** With reflecting walls and a domain larger than the plume, total residence equals N times the horizon; with an open boundary it equals the sum over active particles.
 - **Forward and backward duality.** For a uniform wind and homogeneous turbulence, the forward concentration at a receptor from a unit surface source equals the backward footprint summed over that source's cells, within the Monte Carlo error.
-- **Deterministic advection.** Solid-body rotation returns particles to their start after one period; the double gyre's FTLE ridges match Shadden et al. (2005), and the `jacfwd` Jacobian matches central finite differences.
+- **Deterministic advection.** Solid-body rotation returns particles to their start after one period; the double gyre's FTLE ridges match @shadden2005lcs, and the `jacfwd` Jacobian matches central finite differences.
 - **Transforms.** Every public function gives the same result eagerly, under `jit` and under `vmap` over a batch of one; gradients with respect to closure parameters match finite differences at a fixed key.
 
 ## External dependencies

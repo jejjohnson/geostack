@@ -52,7 +52,7 @@ The state of a Lagrangian calculation is a set of N particles: positions xₚ, m
 
 **Deterministic advection.** Each particle follows the resolved wind, dxₚ/dt = u(xₚ, t), with u at the particle's position interpolated from a grid by functax and the step taken by an integrix stepper.
 
-**Stochastic advection.** Unresolved turbulence enters as a Markov-1 Langevin model for the velocity fluctuations: an Ornstein–Uhlenbeck update on all three components, as plumax does it, with the well-mixed drift of Thomson (1987) acting in the vertical, with σ\_w(z) the velocity standard deviation and τ\_L(z) the Lagrangian time scale supplied by a turbulence closure:
+**Stochastic advection.** Unresolved turbulence enters as a Markov-1 Langevin model for the velocity fluctuations: an Ornstein–Uhlenbeck update on all three components, as plumax does it, with the well-mixed drift of @thomson1987 acting in the vertical, with σ\_w(z) the velocity standard deviation and τ\_L(z) the Lagrangian time scale supplied by a turbulence closure:
 
 ```{math}
 du'_w = -\frac{u'_w}{\tau_L} dt + \frac{1}{2} \frac{\partial \sigma_w^2}{\partial z} \left( 1 + \frac{u_w'^2}{\sigma_w^2} \right) dt + \sqrt{\frac{2 \sigma_w^2}{\tau_L}} dW
@@ -235,7 +235,7 @@ Five waves, each a GitHub issue epic in the tracerax repository once it exists.
 ## Sources
 
 - [The GeoStack layer map](../stack_layer_map.md): tracerax's layer, tier, imports and moves.
-- Thomson, D. J. (1987). Criteria for the selection of stochastic models of particle trajectories in turbulent flows. *Journal of Fluid Mechanics* 180, 529–556: the well-mixed condition.
-- Lin, J. C. et al. (2003). A near-field tool for simulating the upstream influence of atmospheric observations: the Stochastic Time-Inverted Lagrangian Transport (STILT) model. *Journal of Geophysical Research* 108(D16), 4493: backward footprints.
-- Haller, G. (2015). Lagrangian coherent structures. *Annual Review of Fluid Mechanics* 47, 137–162: FTLE and transport barriers.
+- @thomson1987: the well-mixed condition.
+- @lin2003stilt: backward footprints.
+- @haller2015lcs: FTLE and transport barriers.
 - Code read on 5 Nov 2026 at geostack's submodule pins and xrtoolz `b3855d7`: plumax `lagrangian/` (`particles.py`, `concentration.py`, `footprint.py`, `turbulence.py`, `inversion.py`); xrops `metrics/_src/lagrangian.py`; finitevolX's semi-Lagrangian advection.

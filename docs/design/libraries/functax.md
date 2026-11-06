@@ -538,4 +538,4 @@ Waves 1 and 2 can run side by side. Wave 5 is one issue per consumer, filed in t
 - [lineax](https://github.com/patrick-kidger/lineax)
 - [Verde](https://www.fatiando.org/verde/)
 - [DIVAnd.jl](https://github.com/gher-uliege/DIVAnd.jl)
-- M. Unser, "Splines: a perfect fit for signal and image processing", IEEE Signal Processing Magazine, 1999: the B-spline prefilter.
+- @unser1999splines: the B-spline prefilter.

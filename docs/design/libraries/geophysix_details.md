@@ -165,7 +165,7 @@ N(\varphi) = \frac{a}{\sqrt{1 - e^2 \sin^2\varphi}}
 (X, Y, Z) = \left( (N + h) \cos\varphi \cos\lambda, (N + h) \cos\varphi \sin\lambda, (N (1 - e^2) + h) \sin\varphi \right)
 ```
 
-The inverse has no closed form in φ. geophysix uses Bowring's method, as geonnax does today:
+The inverse has no closed form in φ. geophysix uses Bowring's method [@bowring1976], as geonnax does today:
 
 1. λ = atan2(Y, X) and p = √(X² + Y²).
 2. Parametric latitude β₀ = atan2(a Z, b p).
@@ -243,7 +243,7 @@ with W the water-vapour column in kg m⁻²; molecules per m² are N\_A Ω\_mol,
 \rho = \rho_0 \left( 1 - \alpha (T - T_0) + \beta_S (S - S_0) \right)
 ```
 
-The linear form first, with finitevolX's defaults (ρ₀ = 1025 kg m⁻³, α = 2 × 10⁻⁴ K⁻¹, β\_S = 7 × 10⁻⁴, T₀ = 10 °C, S₀ = 35). TEOS-10 follows as the 75-term polynomial for specific volume of Roquet et al. (2015), which is differentiable and cheap, tested against gsw.
+The linear form first, with finitevolX's defaults (ρ₀ = 1025 kg m⁻³, α = 2 × 10⁻⁴ K⁻¹, β\_S = 7 × 10⁻⁴, T₀ = 10 °C, S₀ = 35). TEOS-10 follows as the 75-term polynomial for specific volume of @roquet2015teos10, which is differentiable and cheap, tested against gsw.
 
 ## JAX compatibility
 
@@ -252,7 +252,7 @@ The linear form first, with finitevolX's defaults (ρ₀ = 1025 kg m⁻³, α = 
 | `earth.geodetic_to_ecef` | ✓ | ✓ | ✓ | closed form |
 | `earth.ecef_to_geodetic` | ✓ | ✓ | ✓ | fixed Bowring steps; double `where` at the poles |
 | `earth.cell_area` | ✓ | ✓ | ✓ | double `where` at e = 0 |
-| `earth.geodesic` (decision 9) | ✓ | ✓ | to check | Karney's inverse iterates; a fixed count under `jit`, coincident and antipodal points to test |
+| `earth.geodesic` (decision 9) | ✓ | ✓ | to check | Karney's inverse [@karney2013geodesics] iterates; a fixed count under `jit`, coincident and antipodal points to test |
 | `rotation.coriolis`, `beta`, `beta_plane` | ✓ | ✓ | ✓ |  |
 | `thermo.*` | ✓ | ✓ | ✓ |  |
 | `seawater.linear_density` | ✓ | ✓ | ✓ |  |
@@ -322,7 +322,7 @@ The radii differ by up to 3 × 10⁻⁵ relative between mean radii and by 1.1 �
 
 ## Sources
 
-- Bowring, B. R. (1976). Transformation from spatial to geographical coordinates. *Survey Review* 23, 323–327.
-- Moritz, H. (2000). Geodetic Reference System 1980. *Journal of Geodesy* 74, 128–133: GRS80 and the IUGG mean radius R₁.
-- Roquet, F., Madec, G., McDougall, T. J. and Barker, P. M. (2015). Accurate polynomial expressions for the density and specific volume of seawater using the TEOS-10 standard. *Ocean Modelling* 90, 29–43.
-- Snyder, J. P. (1987). *Map Projections: A Working Manual*. USGS Professional Paper 1395: the authalic latitude and the ellipsoidal area formula.
+- @bowring1976: geocentric to geodetic coordinates.
+- @moritz2000grs80: GRS80 and the IUGG mean radius R₁.
+- @roquet2015teos10: the 75-term polynomial for the specific volume of seawater.
+- @snyder1987projections: the authalic latitude and the ellipsoidal area formula.
