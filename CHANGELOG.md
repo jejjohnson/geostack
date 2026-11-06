@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.5](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.4...geostack-v0.2.5) (2026-11-06)
+
+
+### Bug Fixes
+
+* **ci:** make the pixi lock satisfiable and allow the shared Estimator name ([#118](https://github.com/jejjohnson/geostack/issues/118)) ([f56cdaa](https://github.com/jejjohnson/geostack/commit/f56cdaa2eaf7497d792dce4b3df6693c6590ccb7))
+
+
+### Documentation
+
+* **design:** add design pages for the nine new libraries on the layer map ([#125](https://github.com/jejjohnson/geostack/issues/125)) ([7d2871a](https://github.com/jejjohnson/geostack/commit/7d2871aacde8c6fadeea5dd9244c71e63cb0c1c2))
+* **design:** add the operator coupling page ([#117](https://github.com/jejjohnson/geostack/issues/117)) ([ea94daa](https://github.com/jejjohnson/geostack/commit/ea94daa5912cb8f8853abb034c50f6ef28c36e1c))
+* **design:** add the stack layer map page ([#123](https://github.com/jejjohnson/geostack/issues/123)) ([ea6d0a3](https://github.com/jejjohnson/geostack/commit/ea6d0a3eb8436691d28bd40e740e00da3cc70344))
+* **design:** amend the stack layer map (diagnostix, pyrox siblings, tracerax) ([#124](https://github.com/jejjohnson/geostack/issues/124)) ([765d57e](https://github.com/jejjohnson/geostack/commit/765d57e0fbf79fd97303d09271850c1559e52182))
+* **design:** move H(x) and the named reductions to geoops (GA-B6) ([#121](https://github.com/jejjohnson/geostack/issues/121)) ([788bda7](https://github.com/jejjohnson/geostack/commit/788bda75ad5280dcde51fa76e5cbb189a93bbc44))
+* **design:** seven-rung role ladder with steps, recipes and orchestration ([#126](https://github.com/jejjohnson/geostack/issues/126)) ([19b3262](https://github.com/jejjohnson/geostack/commit/19b32624f51b862a20a7d73979e4ccf16f455067))
+
 ## [0.2.4](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.3...geostack-v0.2.4) (2026-10-30)
 
 
