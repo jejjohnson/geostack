@@ -568,27 +568,29 @@ details.raw summary { cursor: pointer; font-size: 13px; color: var(--muted); mar
       </ul>
       <p><span class="tag">Example</span> The scene is <span class="tex" data-tex="\vect{x} \in \mathbb{R}^{N_\text{band} \times N_\text{row} \times N_\text{col}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>N</mi><mtext>band</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>row</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>col</mtext></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\vect{x} \in \mathbb{R}^{N_\text{band} \times N_\text{row} \times N_\text{col}}</annotation></semantics></math></span></span>, so <span class="tex" data-tex="N_\text{ax} = 3"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>ax</mtext></msub><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">N_\text{ax} = 3</annotation></semantics></math></span></span>. Which axis is the band is a convention the code has to remember. EMIT's radiance file stores <code>(y, x, band)</code> and geoarray <code>(band, y, x)</code>; a mean over axis 0 meant as the mean spectrum averages down the rows instead, and runs without an error.</p>
       <p><span class="tag">In code</span> a NumPy or JAX array. Its axis order lives in a jaxtyping annotation and in each einx pattern, so the convention is written down at every call, but nothing checks it against the data: a scene read as <code>(y, x, band)</code> passes the same call and averages over the wrong axes.</p>
+      <p class="code-note"><b>Reading the sketches.</b> Each block opens with a <code># Shapes:</code> line naming its dimensions; the column on the right tracks shapes, <code>(B, R, C) → (B,)</code>, in those letters. A call into the stack has a marker above it: <code># today (pkg)</code> ships now, <code># proposed (pkg)</code> does not yet, and <code># user</code> is a function or class this page defines. The equation it computes sits above each line.</p>
       <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> einx
 <span class="hljs-keyword">import</span> jax.numpy <span class="hljs-keyword">as</span> jnp
 <span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
 <span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Float
 
+<span class="hljs-comment"># Shapes: B = N_band = 285 bands; R × C = N_row × N_col = 256 × 256 pixels</span>
+
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">mean_spectrum</span>(<span class="hljs-params">radiance: Float[Array, <span class="hljs-string">&quot;band y x&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot; band&quot;</span>]:
-    <span class="hljs-string">&quot;&quot;&quot;Mean radiance spectrum of a scene.
-
-    x̄ = (1 / N_row N_col) ∑_ij x_ij
-    &quot;&quot;&quot;</span>
-    <span class="hljs-comment"># the axis names live in this pattern and the annotation, not in the data</span>
-    spectrum = einx.mean(<span class="hljs-string">&quot;band [y x]&quot;</span>, radiance)
+    <span class="hljs-string">&quot;&quot;&quot;Mean radiance spectrum of a scene: x̄ = (1 / N_row N_col) ∑_ij x_ij.&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># x̄_b = (1 / R C) ∑_ij x_bij; the axis names live in this pattern only</span>
+    spectrum = einx.mean(<span class="hljs-string">&quot;band [y x]&quot;</span>, radiance)        <span class="hljs-comment"># (B, R, C) → (B,)</span>
     <span class="hljs-keyword">return</span> spectrum
 
 
-<span class="hljs-comment"># x ∈ ℝ^(N_band × N_row × N_col): a 256 × 256 crop of an EMIT scene, on the host</span>
-radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)
+<span class="hljs-comment"># x ∈ ℝ^(B × R × C): a crop of an EMIT scene, on the host</span>
+radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)  <span class="hljs-comment"># → (B, R, C)</span>
 <span class="hljs-comment"># the same numbers on the device</span>
-scene = jnp.asarray(radiance)
-spectrum = mean_spectrum(scene)</code></pre>
+scene = jnp.asarray(radiance)                           <span class="hljs-comment"># (B, R, C) → (B, R, C)</span>
+<span class="hljs-comment"># user</span>
+<span class="hljs-comment"># x̄</span>
+spectrum = mean_spectrum(scene)                         <span class="hljs-comment"># (B, R, C) → (B,)</span></code></pre>
 
       <h4>▤ Named array</h4>
       <p>The same numbers with a name <span class="tex" data-tex="d_a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>a</mi></msub></mrow><annotation encoding="application/x-tex">d_a</annotation></semantics></math></span></span> and a coordinate vector <span class="tex" data-tex="\vect{c}_a"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐜</mi><mi>a</mi></msub></mrow><annotation encoding="application/x-tex">\vect{c}_a</annotation></semantics></math></span></span> for each axis:</p>
@@ -613,18 +615,28 @@ spectrum = mean_spectrum(scene)</code></pre>
 <span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
 <span class="hljs-keyword">import</span> pipekit_array <span class="hljs-keyword">as</span> pa
 
-radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)
+<span class="hljs-comment"># Shapes: B = N_band = 285 bands; R × C = N_row × N_col = 256 × 256 pixels</span>
 
-WAVELENGTHS_NM = <span class="hljs-built_in">tuple</span>(np.linspace(<span class="hljs-number">381.0</span>, <span class="hljs-number">2493.0</span>, <span class="hljs-number">285</span>).<span class="hljs-built_in">round</span>(<span class="hljs-number">1</span>).tolist())
+radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)  <span class="hljs-comment"># → (B, R, C)</span>
+<span class="hljs-comment"># c_1: the centre wavelength of each band, nm</span>
+wavelengths = np.linspace(<span class="hljs-number">381.0</span>, <span class="hljs-number">2493.0</span>, <span class="hljs-number">285</span>)           <span class="hljs-comment"># → (B,)</span>
+rounded = np.<span class="hljs-built_in">round</span>(wavelengths, <span class="hljs-number">1</span>)                      <span class="hljs-comment"># (B,) → (B,)</span>
+WAVELENGTHS_NM = <span class="hljs-built_in">tuple</span>(rounded.tolist())                <span class="hljs-comment"># (B,) → B labels</span>
 
+<span class="hljs-comment"># today (pipekit-array)</span>
 <span class="hljs-comment"># x_named = (x, d, C): one name per axis, the band dim labelled by wavelength</span>
 scene = pa.DimArray(radiance, (<span class="hljs-string">&quot;band&quot;</span>, <span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-string">&quot;x&quot;</span>), {<span class="hljs-string">&quot;band&quot;</span>: WAVELENGTHS_NM})
-<span class="hljs-comment"># r over y, then x: the mean spectrum, found by name</span>
-spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (<span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-string">&quot;x&quot;</span>))
-<span class="hljs-comment"># the file&#x27;s own order, (y, x, band): the same call gives the same answer</span>
-as_stored = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;band y x -&gt; y x band&quot;</span>, radiance)
+<span class="hljs-comment"># today (pipekit-array)</span>
+<span class="hljs-comment"># r_y, then r_x: the mean spectrum, found by name</span>
+spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (<span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-string">&quot;x&quot;</span>))         <span class="hljs-comment"># (B, R, C) → (B,)</span>
+<span class="hljs-comment"># the file&#x27;s own order, (y, x, band)</span>
+as_stored = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;band y x -&gt; y x band&quot;</span>, radiance)   <span class="hljs-comment"># (B, R, C) → (R, C, B)</span>
+<span class="hljs-comment"># today (pipekit-array)</span>
+<span class="hljs-comment"># the same numbers, named in that order</span>
 stored = pa.DimArray(as_stored, (<span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-string">&quot;x&quot;</span>, <span class="hljs-string">&quot;band&quot;</span>), {<span class="hljs-string">&quot;band&quot;</span>: WAVELENGTHS_NM})
-same_spectrum = pa.reduce(stored, <span class="hljs-string">&quot;mean&quot;</span>, (<span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-string">&quot;x&quot;</span>))</code></pre>
+<span class="hljs-comment"># today (pipekit-array)</span>
+<span class="hljs-comment"># r_y, then r_x: the same call gives the same answer</span>
+same_spectrum = pa.reduce(stored, <span class="hljs-string">&quot;mean&quot;</span>, (<span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-string">&quot;x&quot;</span>))   <span class="hljs-comment"># (R, C, B) → (B,)</span></code></pre>
 
       <h4>◆ Carrier</h4>
       <p>A named array plus its georeference <span class="tex" data-tex="\Gamma"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Γ</mi></mrow><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math></span></span>:</p>
@@ -648,16 +660,21 @@ same_spectrum = pa.reduce(stored, <span class="hljs-string">&quot;mean&quot;</sp
 <span class="hljs-keyword">from</span> geoarray <span class="hljs-keyword">import</span> GeoArray, crop, to_pixel
 <span class="hljs-keyword">from</span> geoarray.coords <span class="hljs-keyword">import</span> SpectralAxis
 
-radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)
+<span class="hljs-comment"># Shapes: B = N_band = 285 bands; R × C = N_row × N_col = 256 × 256 pixels</span>
 
-WAVELENGTHS_NM = <span class="hljs-built_in">tuple</span>(np.linspace(<span class="hljs-number">381.0</span>, <span class="hljs-number">2493.0</span>, <span class="hljs-number">285</span>).<span class="hljs-built_in">round</span>(<span class="hljs-number">1</span>).tolist())
-
+radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)  <span class="hljs-comment"># → (B, R, C)</span>
+<span class="hljs-comment"># the centre wavelength of each band, nm, and a name for each</span>
+wavelengths = np.linspace(<span class="hljs-number">381.0</span>, <span class="hljs-number">2493.0</span>, <span class="hljs-number">285</span>)           <span class="hljs-comment"># → (B,)</span>
+rounded = np.<span class="hljs-built_in">round</span>(wavelengths, <span class="hljs-number">1</span>)                      <span class="hljs-comment"># (B,) → (B,)</span>
+WAVELENGTHS_NM = <span class="hljs-built_in">tuple</span>(rounded.tolist())                <span class="hljs-comment"># (B,) → B labels</span>
 BAND_NAMES = <span class="hljs-built_in">tuple</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">{wavelength:<span class="hljs-number">.1</span>f}</span>nm&quot;</span> <span class="hljs-keyword">for</span> wavelength <span class="hljs-keyword">in</span> WAVELENGTHS_NM)
 
+<span class="hljs-comment"># today (geoarray)</span>
 <span class="hljs-comment"># C: the band names with their centre wavelengths</span>
 bands = SpectralAxis(names=BAND_NAMES, wavelength_nm=WAVELENGTHS_NM)
-<span class="hljs-comment"># x_geo = (x_named, Γ), Γ = (crs, A, x_fill, M): a 60 m grid in UTM zone 13N</span>
-scene = GeoArray(
+<span class="hljs-comment"># today (geoarray)</span>
+<span class="hljs-comment"># x_geo = (x_named, Γ), Γ = (crs, A, x_fill, M): 60 m in UTM zone 13N</span>
+scene: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = GeoArray(                 <span class="hljs-comment"># (B, R, C) → (B, R, C)</span>
     radiance,
     (<span class="hljs-number">60.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">630000.0</span>, <span class="hljs-number">0.0</span>, -<span class="hljs-number">60.0</span>, <span class="hljs-number">3550000.0</span>),
     <span class="hljs-string">&quot;EPSG:32613&quot;</span>,
@@ -666,15 +683,20 @@ scene = GeoArray(
     coords=(bands,),
     attrs={<span class="hljs-string">&quot;solar_zenith_deg&quot;</span>: <span class="hljs-number">28.4</span>, <span class="hljs-string">&quot;view_zenith_deg&quot;</span>: <span class="hljs-number">6.1</span>},
 )
-<span class="hljs-comment"># m: valid where every band is finite and differs from the fill</span>
-valid = scene.valid_mask()
-<span class="hljs-comment"># s = A (j + ½, i + ½, 1)ᵀ, solved for the fractional (i, j) of the well pad</span>
-well_pad_xy = np.array([[<span class="hljs-number">637530.0</span>, <span class="hljs-number">3542210.0</span>]])
-well_pad_pixel = to_pixel(scene.transform, well_pad_xy)
-<span class="hljs-comment"># a 64 × 64 window from row 100, column 100 moves A with the pixels</span>
-window = crop(scene, (<span class="hljs-number">100</span>, <span class="hljs-number">100</span>), (<span class="hljs-number">64</span>, <span class="hljs-number">64</span>))
-<span class="hljs-comment"># with y and x reduced there is no grid left: a named array, not a carrier</span>
-spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (<span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-string">&quot;x&quot;</span>))</code></pre>
+<span class="hljs-comment"># today (geoarray)</span>
+<span class="hljs-comment"># m_ij = ∏_b 1[x_bij ≠ x_fill] 1[x_bij is finite]</span>
+valid = scene.valid_mask()                              <span class="hljs-comment"># (B, R, C) → (R, C)</span>
+<span class="hljs-comment"># s: the well pad in map coordinates, m</span>
+well_pad_xy = np.array([[<span class="hljs-number">637530.0</span>, <span class="hljs-number">3542210.0</span>]])         <span class="hljs-comment"># → (1, 2)</span>
+<span class="hljs-comment"># today (geoarray)</span>
+<span class="hljs-comment"># s = A (j + ½, i + ½, 1)ᵀ, solved for the fractional (i, j)</span>
+well_pad_pixel = to_pixel(scene.transform, well_pad_xy)  <span class="hljs-comment"># (1, 2) → (1, 2)</span>
+<span class="hljs-comment"># today (geoarray)</span>
+<span class="hljs-comment"># a 64 × 64 window from row 100, column 100; A moves with the pixels</span>
+window = crop(scene, (<span class="hljs-number">100</span>, <span class="hljs-number">100</span>), (<span class="hljs-number">64</span>, <span class="hljs-number">64</span>))              <span class="hljs-comment"># (B, R, C) → (B, 64, 64)</span>
+<span class="hljs-comment"># today (pipekit-array)</span>
+<span class="hljs-comment"># r_y, then r_x: no grid is left, so a named array comes back</span>
+spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (<span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-string">&quot;x&quot;</span>))         <span class="hljs-comment"># (B, R, C) → (B,)</span></code></pre>
     </div>
 
     <h3 class="minor" id="kind-axis">The kind axis: how <span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span> is packaged</h3>
@@ -704,6 +726,8 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
 <span class="hljs-keyword">import</span> lineax <span class="hljs-keyword">as</span> lx
 <span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Float
 
+<span class="hljs-comment"># Shapes: B = N_band bands; R × C = N_row × N_col pixels</span>
+
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">matched_filter</span>(<span class="hljs-params">
     radiance: Float[Array, <span class="hljs-string">&quot;band y x&quot;</span>],
@@ -717,20 +741,27 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
 
     y_n = tᵀ Σ⁻¹ (x_n − μ) / (tᵀ Σ⁻¹ t),  t = −M (k ⊙ μ)
     &quot;&quot;&quot;</span>
+    <span class="hljs-comment"># k ⊙ μ</span>
+    absorbed = unit_absorption * mean                   <span class="hljs-comment"># (B,), (B,) → (B,)</span>
     <span class="hljs-comment"># t = −M (k ⊙ μ): the radiance change for 1 ppm m of methane</span>
-    target = -air_mass * unit_absorption * mean
+    target = -air_mass * absorbed                       <span class="hljs-comment"># (B,) → (B,)</span>
     <span class="hljs-comment"># s = Σ⁻¹ t</span>
-    solution = lx.linear_solve(covariance, target)
-    filter_direction = solution.value
-    <span class="hljs-comment"># tᵀ Σ⁻¹ t</span>
-    normalisation = einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, filter_direction)
+    solution = lx.linear_solve(covariance, target)      <span class="hljs-comment"># (B, B) PSD op, (B,)</span>
+    filter_direction = solution.value                   <span class="hljs-comment"># → (B,)</span>
+    <span class="hljs-comment"># tᵀ s</span>
+    normalisation = einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, filter_direction)  <span class="hljs-comment"># → ()</span>
     <span class="hljs-comment"># r_n = x_n − μ</span>
-    residual = einx.subtract(<span class="hljs-string">&quot;band y x, band -&gt; band y x&quot;</span>, radiance, mean)
+    residual = einx.subtract(                           <span class="hljs-comment"># (B, R, C), (B,) → (B, R, C)</span>
+        <span class="hljs-string">&quot;band y x, band -&gt; band y x&quot;</span>, radiance, mean
+    )
     <span class="hljs-comment"># sᵀ r_n</span>
-    projection = einx.dot(<span class="hljs-string">&quot;band y x, band -&gt; y x&quot;</span>, residual, filter_direction)
-    <span class="hljs-comment"># y_n = sᵀ r_n / (tᵀ s), keeping a singleton band axis</span>
-    enhancement = projection / normalisation
-    <span class="hljs-keyword">return</span> einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, enhancement)</code></pre>
+    projection = einx.dot(                              <span class="hljs-comment"># (B, R, C), (B,) → (R, C)</span>
+        <span class="hljs-string">&quot;band y x, band -&gt; y x&quot;</span>, residual, filter_direction
+    )
+    <span class="hljs-comment"># y_n = sᵀ r_n / (tᵀ s)</span>
+    enhancement = projection / normalisation            <span class="hljs-comment"># (R, C) → (R, C)</span>
+    <span class="hljs-comment"># a singleton band axis</span>
+    <span class="hljs-keyword">return</span> einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, enhancement)         <span class="hljs-comment"># (R, C) → (1, R, C)</span></code></pre>
 
       <h4>▣ Module</h4>
       <p>A function with state. A setup step builds the state <span class="tex" data-tex="\gvect{\psi}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi></mrow><annotation encoding="application/x-tex">\gvect{\psi}</annotation></semantics></math></span></span> once, from data <span class="tex" data-tex="\mat{X}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐗</mi></mrow><annotation encoding="application/x-tex">\mat{X}</annotation></semantics></math></span></span> and what it needs to know about them, <span class="tex" data-tex="\vect{u}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐮</mi></mrow><annotation encoding="application/x-tex">\vect{u}</annotation></semantics></math></span></span>, and may do work that cannot be traced (a scikit-learn estimator, a k-NN graph, a factorisation). The call is then pure and jittable:</p>
@@ -750,11 +781,13 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
 <span class="hljs-keyword">import</span> sklearn.covariance
 <span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Float
 
+<span class="hljs-comment"># Shapes: B = N_band bands; R × C = N_row × N_col pixels; P = N_valid valid pixels</span>
+
 
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">MatchedFilter</span>(eqx.Module):
     <span class="hljs-string">&quot;&quot;&quot;Matched filter whose background is fitted once, from the scene&#x27;s own pixels.
 
-    y_n = sᵀ (x_n − μ) / (tᵀ s),  s = Σ⁻¹ t, with μ, Σ and s fixed at setup
+    y_n = sᵀ (x_n − μ) / (tᵀ s),  s = Σ⁻¹ t, with μ, s and tᵀ s fixed at setup
     &quot;&quot;&quot;</span>
 
     mean: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]
@@ -770,16 +803,20 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
     </span>) -&gt; <span class="hljs-string">&quot;MatchedFilter&quot;</span>:
         <span class="hljs-comment"># --- setup: host-side NumPy, SciPy and scikit-learn, runs once ---</span>
         <span class="hljs-comment"># μ, Σ: the background mean and a Ledoit–Wolf shrunk covariance</span>
-        background = sklearn.covariance.LedoitWolf().fit(spectra)
-        mean = background.location_
+        background = sklearn.covariance.LedoitWolf().fit(spectra)  <span class="hljs-comment"># (P, B) → fitted</span>
+        mean = background.location_                     <span class="hljs-comment"># → (B,)</span>
+        covariance = background.covariance_             <span class="hljs-comment"># → (B, B)</span>
+        <span class="hljs-comment"># k ⊙ μ</span>
+        absorbed = unit_absorption * mean               <span class="hljs-comment"># (B,), (B,) → (B,)</span>
         <span class="hljs-comment"># t = −M (k ⊙ μ)</span>
-        target = -air_mass * unit_absorption * mean
+        target = -air_mass * absorbed                   <span class="hljs-comment"># (B,) → (B,)</span>
         <span class="hljs-comment"># s = Σ⁻¹ t, solved once</span>
-        filter_direction = scipy.linalg.solve(
-            background.covariance_, target, assume_a=<span class="hljs-string">&quot;pos&quot;</span>
+        filter_direction = scipy.linalg.solve(          <span class="hljs-comment"># (B, B), (B,) → (B,)</span>
+            covariance, target, assume_a=<span class="hljs-string">&quot;pos&quot;</span>
         )
         <span class="hljs-comment"># tᵀ s</span>
-        normalisation = einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, filter_direction)
+        normalisation = einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, filter_direction)  <span class="hljs-comment"># → ()</span>
+        <span class="hljs-comment"># ψ = (μ, s, tᵀ s), as device arrays</span>
         <span class="hljs-keyword">return</span> cls(
             mean=jnp.asarray(mean),
             filter_direction=jnp.asarray(filter_direction),
@@ -789,14 +826,17 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">self, radiance: Float[Array, <span class="hljs-string">&quot;band y x&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot;1 y x&quot;</span>]:
         <span class="hljs-comment"># --- every call: two contractions, pure and jittable ---</span>
         <span class="hljs-comment"># r_n = x_n − μ</span>
-        residual = einx.subtract(<span class="hljs-string">&quot;band y x, band -&gt; band y x&quot;</span>, radiance, self.mean)
+        residual = einx.subtract(                       <span class="hljs-comment"># (B, R, C), (B,) → (B, R, C)</span>
+            <span class="hljs-string">&quot;band y x, band -&gt; band y x&quot;</span>, radiance, self.mean
+        )
         <span class="hljs-comment"># sᵀ r_n</span>
-        projection = einx.dot(
+        projection = einx.dot(                          <span class="hljs-comment"># (B, R, C), (B,) → (R, C)</span>
             <span class="hljs-string">&quot;band y x, band -&gt; y x&quot;</span>, residual, self.filter_direction
         )
         <span class="hljs-comment"># y_n = sᵀ r_n / (tᵀ s)</span>
-        enhancement = projection / self.normalisation
-        <span class="hljs-keyword">return</span> einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, enhancement)</code></pre>
+        enhancement = projection / self.normalisation   <span class="hljs-comment"># (R, C) → (R, C)</span>
+        <span class="hljs-comment"># a singleton band axis</span>
+        <span class="hljs-keyword">return</span> einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, enhancement)     <span class="hljs-comment"># (R, C) → (1, R, C)</span></code></pre>
 
       <h4>→ Operator</h4>
       <p>A pipeline step that lifts <span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span> onto carriers. The Operator <span class="tex" data-tex="h[f, \gvect{\theta}]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false">[</mo><mi>f</mi><mo separator="true">,</mo><mi>𝜽</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">h[f, \gvect{\theta}]</annotation></semantics></math></span></span> is built from the function and its parameters; it is called on a carrier with its config <span class="tex" data-tex="\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span></span>, a JSON record (which bands, which dimension, the fill policy). It unwraps the carrier with <span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span>, calls <span class="tex" data-tex="f"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span></span> on plain arrays, and rewraps with <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span>:</p>
@@ -820,8 +860,9 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
 <span class="hljs-keyword">from</span> geoops.carrier <span class="hljs-keyword">import</span> wrap_like
 <span class="hljs-keyword">from</span> radtrax.atmosphere <span class="hljs-keyword">import</span> air_mass_factor
 
-<span class="hljs-comment"># MatchedFilter is the Module above; ch4_unit_absorption stands for a lookup of</span>
-<span class="hljs-comment"># methane absorption per ppm m at given wavelengths, in radtrax</span>
+<span class="hljs-comment"># Shapes: B = N_band bands; W window bands; R × C = N_row × N_col pixels; P valid</span>
+
+<span class="hljs-comment"># MatchedFilter is the Module above; ch4_unit_absorption is proposed for radtrax</span>
 
 
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">MethaneEnhancement</span>(pipekit.Operator):
@@ -836,31 +877,48 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, scene: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>]</span>) -&gt; GeoArray[<span class="hljs-string">&quot;1 y x&quot;</span>]:
         <span class="hljs-comment"># --- π_α: the names in α, resolved against C and M ---</span>
-        <span class="hljs-comment"># the bands inside the SWIR window, by wavelength</span>
+        <span class="hljs-comment"># today (geoarray)</span>
+        <span class="hljs-comment"># the band coordinate: names and centre wavelengths</span>
         bands = scene.coord(self.dim)
         lower, upper = self.window_nm
+        <span class="hljs-comment"># the bands whose wavelengths fall inside the window</span>
         window = [
             name
             <span class="hljs-keyword">for</span> name, wavelength <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(bands.names, bands.wavelength_nm)
             <span class="hljs-keyword">if</span> lower &lt;= wavelength &lt;= upper
         ]
-        swir = scene.sel({self.dim: window})
-        <span class="hljs-comment"># u = (M, k): M from the angles in the attrs, k at the window&#x27;s wavelengths</span>
-        air_mass = air_mass_factor(
+        <span class="hljs-comment"># today (geoarray)</span>
+        swir = scene.sel({self.dim: window})            <span class="hljs-comment"># (B, R, C) → (W, R, C)</span>
+        <span class="hljs-comment"># today (radtrax)</span>
+        <span class="hljs-comment"># M = 1 / cos ϑ_sun + 1 / cos ϑ_view, from the angles in the attrs 𝓜</span>
+        air_mass = air_mass_factor(                     <span class="hljs-comment"># → ()</span>
             swir.attrs[<span class="hljs-string">&quot;solar_zenith_deg&quot;</span>], swir.attrs[<span class="hljs-string">&quot;view_zenith_deg&quot;</span>]
         )
-        unit_absorption = ch4_unit_absorption(swir.coord(self.dim).wavelength_nm)
+        <span class="hljs-comment"># today (geoarray)</span>
+        wavelengths = swir.coord(self.dim).wavelength_nm  <span class="hljs-comment"># → W labels</span>
+        <span class="hljs-comment"># proposed (radtrax)</span>
+        <span class="hljs-comment"># k: methane absorption per ppm m at each band&#x27;s wavelength</span>
+        unit_absorption = ch4_unit_absorption(wavelengths)  <span class="hljs-comment"># → (W,)</span>
+        <span class="hljs-comment"># today (geoarray)</span>
+        <span class="hljs-comment"># m: valid where every band is finite and differs from the fill</span>
+        valid = swir.valid_mask()                       <span class="hljs-comment"># (W, R, C) → (R, C)</span>
         <span class="hljs-comment"># X: the spectra of the valid pixels, one row each</span>
-        valid = swir.valid_mask()
-        pixels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;band y x -&gt; (y x) band&quot;</span>, np.asarray(swir))
-        is_valid = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, valid)
-        spectra = pixels[is_valid]
+        swir_values = np.asarray(swir)                  <span class="hljs-comment"># (W, R, C) → (W, R, C)</span>
+        pixels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;band y x -&gt; (y x) band&quot;</span>, swir_values)  <span class="hljs-comment"># → (R C, W)</span>
+        is_valid = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, valid)       <span class="hljs-comment"># (R, C) → (R C,)</span>
+        spectra = pixels[is_valid]                      <span class="hljs-comment"># (R C, W) → (P, W)</span>
         <span class="hljs-comment"># --- the Module: setup once, then a pure call on plain arrays ---</span>
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># ψ = setup(X, u)</span>
         matched_filter = MatchedFilter.fit(spectra, unit_absorption, air_mass)
-        enhancement = np.asarray(matched_filter(swir.data))
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># y = f(x; ψ)</span>
+        enhancement = matched_filter(swir.data)         <span class="hljs-comment"># (W, R, C) → (1, R, C)</span>
         <span class="hljs-comment"># --- ι_α: same grid, one band in ppm m, NaN where m = 0 ---</span>
-        enhancement = np.where(valid, enhancement, np.nan)
-        <span class="hljs-keyword">return</span> wrap_like(swir, enhancement, band_names=(<span class="hljs-string">&quot;ch4&quot;</span>,), fill_value=np.nan)</code></pre>
+        <span class="hljs-comment"># y_n = NaN where m_n = 0</span>
+        masked = np.where(valid, enhancement, np.nan)   <span class="hljs-comment"># (1, R, C) → (1, R, C)</span>
+        <span class="hljs-comment"># today (geoops)</span>
+        <span class="hljs-keyword">return</span> wrap_like(swir, masked, band_names=(<span class="hljs-string">&quot;ch4&quot;</span>,), fill_value=np.nan)</code></pre>
       <p class="code-note">The sketches follow the house style: shapes as jaxtyping types, the equation above each line, einx for reshapes and contractions. All six run as written (checked on 6 Nov 2026): the data-axis examples against geotoolz-array and pipekit-array, and the function, the Module and the Operator on a synthetic scene with lineax and scikit-learn. In the Operator, <code>air_mass_factor</code> is radtrax's (<code>radtrax.atmosphere</code>) and <code>ch4_unit_absorption</code> stands for a lookup table of methane absorption (radtrax, or plumax's <code>hapi_lut</code>); geoops ships the matching Operators, <code>matched_filter.MatchedFilter</code>, <code>plume.PlumeMask</code>, <code>plume.ColumnToMass</code> and <code>plume.IMEEstimate</code>.</p>
     </div>
 
@@ -1049,18 +1107,24 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
 <span class="hljs-keyword">from</span> geoarray <span class="hljs-keyword">import</span> GeoArray
 <span class="hljs-keyword">from</span> geoarray.coords <span class="hljs-keyword">import</span> SpectralAxis
 
-<span class="hljs-comment"># x: radiance from the orthorectified EMIT file, (band, y, x)</span>
-radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)
-<span class="hljs-comment"># v: ERA5 10 m wind speed around the field, one band on a 0.25° grid</span>
-wind_speed = np.full((<span class="hljs-number">1</span>, <span class="hljs-number">8</span>, <span class="hljs-number">8</span>), <span class="hljs-number">3.5</span>)
+<span class="hljs-comment"># Shapes: B = 285 bands; R × C = 256 × 256 pixels; G × H = 8 × 8 wind cells</span>
 
-WAVELENGTHS_NM = <span class="hljs-built_in">tuple</span>(np.linspace(<span class="hljs-number">381.0</span>, <span class="hljs-number">2493.0</span>, <span class="hljs-number">285</span>).<span class="hljs-built_in">round</span>(<span class="hljs-number">1</span>).tolist())
+<span class="hljs-comment"># x: radiance from the orthorectified EMIT file</span>
+radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)  <span class="hljs-comment"># → (B, R, C)</span>
+<span class="hljs-comment"># v: ERA5 10 m wind speed around the field, one band on a 0.25° grid</span>
+wind_speed = np.full((<span class="hljs-number">1</span>, <span class="hljs-number">8</span>, <span class="hljs-number">8</span>), <span class="hljs-number">3.5</span>)                    <span class="hljs-comment"># → (1, G, H)</span>
+<span class="hljs-comment"># the centre wavelength of each band, nm, and a name for each</span>
+wavelengths = np.linspace(<span class="hljs-number">381.0</span>, <span class="hljs-number">2493.0</span>, <span class="hljs-number">285</span>)           <span class="hljs-comment"># → (B,)</span>
+rounded = np.<span class="hljs-built_in">round</span>(wavelengths, <span class="hljs-number">1</span>)                      <span class="hljs-comment"># (B,) → (B,)</span>
+WAVELENGTHS_NM = <span class="hljs-built_in">tuple</span>(rounded.tolist())                <span class="hljs-comment"># (B,) → B labels</span>
 BAND_NAMES = <span class="hljs-built_in">tuple</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">{wavelength:<span class="hljs-number">.1</span>f}</span>nm&quot;</span> <span class="hljs-keyword">for</span> wavelength <span class="hljs-keyword">in</span> WAVELENGTHS_NM)
 
+<span class="hljs-comment"># today (geoarray)</span>
 <span class="hljs-comment"># C: the band names with their centre wavelengths</span>
 bands = SpectralAxis(names=BAND_NAMES, wavelength_nm=WAVELENGTHS_NM)
-<span class="hljs-comment"># x_geo: a 60 m grid in UTM zone 13N, the sun and view angles in M</span>
-scene = GeoArray(
+<span class="hljs-comment"># today (geoarray)</span>
+<span class="hljs-comment"># x_geo: a 60 m grid in UTM zone 13N, with the sun and view angles in 𝓜</span>
+scene: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = GeoArray(                 <span class="hljs-comment"># (B, R, C) → (B, R, C)</span>
     radiance,
     (<span class="hljs-number">60.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">630000.0</span>, <span class="hljs-number">0.0</span>, -<span class="hljs-number">60.0</span>, <span class="hljs-number">3550000.0</span>),
     <span class="hljs-string">&quot;EPSG:32613&quot;</span>,
@@ -1069,8 +1133,9 @@ scene = GeoArray(
     coords=(bands,),
     attrs={<span class="hljs-string">&quot;solar_zenith_deg&quot;</span>: <span class="hljs-number">28.4</span>, <span class="hljs-string">&quot;view_zenith_deg&quot;</span>: <span class="hljs-number">6.1</span>},
 )
+<span class="hljs-comment"># today (geoarray)</span>
 <span class="hljs-comment"># v_geo: the wind on its own grid, in longitude and latitude</span>
-wind_field = GeoArray(
+wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = GeoArray(            <span class="hljs-comment"># (1, G, H) → (1, G, H)</span>
     wind_speed, (<span class="hljs-number">0.25</span>, <span class="hljs-number">0.0</span>, -<span class="hljs-number">105.0</span>, <span class="hljs-number">0.0</span>, -<span class="hljs-number">0.25</span>, <span class="hljs-number">33.0</span>), <span class="hljs-string">&quot;EPSG:4326&quot;</span>, dims=<span class="hljs-string">&quot;band y x&quot;</span>
 )</code></pre>
 
@@ -1086,31 +1151,42 @@ wind_field = GeoArray(
 <span class="hljs-keyword">import</span> scipy.ndimage
 <span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Bool, Float
 
+<span class="hljs-comment"># Shapes: W = window bands; R × C = N_row × N_col pixels; K labelled components</span>
+
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">target_signature</span>(<span class="hljs-params">
     mean: Float[Array, <span class="hljs-string">&quot; band&quot;</span>], unit_absorption: Float[Array, <span class="hljs-string">&quot; band&quot;</span>], air_mass: <span class="hljs-built_in">float</span>
 </span>) -&gt; Float[Array, <span class="hljs-string">&quot; band&quot;</span>]:
+    <span class="hljs-string">&quot;&quot;&quot;The radiance change for 1 ppm m of methane: t = −M (k ⊙ μ).&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># k ⊙ μ</span>
+    absorbed = unit_absorption * mean                   <span class="hljs-comment"># (W,), (W,) → (W,)</span>
     <span class="hljs-comment"># t = −M (k ⊙ μ)</span>
-    <span class="hljs-keyword">return</span> -air_mass * unit_absorption * mean
+    target = -air_mass * absorbed                       <span class="hljs-comment"># (W,) → (W,)</span>
+    <span class="hljs-keyword">return</span> target
 
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">pixel_area</span>(<span class="hljs-params">transform: Float[np.ndarray, <span class="hljs-string">&quot; 6&quot;</span>]</span>) -&gt; <span class="hljs-built_in">float</span>:
-    <span class="hljs-comment"># a = |det A₂ₓ₂|, one area for every pixel of an affine grid</span>
-    <span class="hljs-keyword">return</span> <span class="hljs-built_in">abs</span>(transform[<span class="hljs-number">0</span>] * transform[<span class="hljs-number">4</span>] - transform[<span class="hljs-number">1</span>] * transform[<span class="hljs-number">3</span>])
+    <span class="hljs-string">&quot;&quot;&quot;The area of every pixel of an affine grid: a = |det A₂ₓ₂|.&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># det A₂ₓ₂ = a₀ a₄ − a₁ a₃</span>
+    determinant = transform[<span class="hljs-number">0</span>] * transform[<span class="hljs-number">4</span>] - transform[<span class="hljs-number">1</span>] * transform[<span class="hljs-number">3</span>]  <span class="hljs-comment"># → ()</span>
+    <span class="hljs-comment"># a = |det A₂ₓ₂|</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">abs</span>(determinant)
 
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">large_components</span>(<span class="hljs-params">
     mask: Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>], min_pixels: <span class="hljs-built_in">int</span>
 </span>) -&gt; Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>]:
-    <span class="hljs-comment"># the connected components of b, each labelled 1, 2, …; 0 off the mask</span>
-    labels, count = scipy.ndimage.label(mask)
-    <span class="hljs-comment"># the size of each component, in pixels</span>
-    flat_labels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, labels)
-    sizes = np.bincount(flat_labels, minlength=count + <span class="hljs-number">1</span>)
-    <span class="hljs-comment"># keep the components with at least N_min pixels</span>
-    keep = sizes &gt;= min_pixels
+    <span class="hljs-string">&quot;&quot;&quot;The connected components of b with at least N_min pixels.&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># the components of b, labelled 1, …, K; 0 off the mask</span>
+    labels, count = scipy.ndimage.label(mask)           <span class="hljs-comment"># (R, C) → (R, C), K</span>
+    <span class="hljs-comment"># |component k|, in pixels</span>
+    flat_labels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, labels)       <span class="hljs-comment"># (R, C) → (R C,)</span>
+    sizes = np.bincount(flat_labels, minlength=count + <span class="hljs-number">1</span>)  <span class="hljs-comment"># (R C,) → (K + 1,)</span>
+    <span class="hljs-comment"># 1[|component k| ≥ N_min], with the background never kept</span>
+    keep = sizes &gt;= min_pixels                          <span class="hljs-comment"># (K + 1,) → (K + 1,)</span>
     keep[<span class="hljs-number">0</span>] = <span class="hljs-literal">False</span>
-    <span class="hljs-keyword">return</span> keep[labels]</code></pre>
+    <span class="hljs-comment"># b_n = 1[the component of n is kept]</span>
+    <span class="hljs-keyword">return</span> keep[labels]                                 <span class="hljs-comment"># (K + 1,), (R, C) → (R, C)</span></code></pre>
 
       <h4>② Strategies and ③ models</h4>
       <p>The strategies say <i>how</i>: <code>LedoitWolf</code> fits a mean and a shrunk covariance, <code>SigmaThreshold</code> keeps the pixels above <span class="tex" data-tex="k"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span></span> noise levels. The model holds what was fitted: <code>Background</code> keeps <span class="tex" data-tex="\gvect{\mu}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝁</mi></mrow><annotation encoding="application/x-tex">\gvect{\mu}</annotation></semantics></math></span></span> and <span class="tex" data-tex="\gmat{\Sigma}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝚺</mi></mrow><annotation encoding="application/x-tex">\gmat{\Sigma}</annotation></semantics></math></span></span>, solves with <span class="tex" data-tex="\gmat{\Sigma}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝚺</mi></mrow><annotation encoding="application/x-tex">\gmat{\Sigma}</annotation></semantics></math></span></span>, and gives the matched filter's standard error, which the segmentation threshold uses:</p>
@@ -1129,14 +1205,17 @@ wind_field = GeoArray(
 <span class="hljs-keyword">import</span> sklearn.covariance
 <span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Bool, Float
 
+<span class="hljs-comment"># Shapes: W = window bands; P = valid pixels; R × C = N_row × N_col pixels</span>
+
 
 <span class="hljs-comment"># --- ② strategies: how a model is fitted, or a rule applied ---</span>
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">LedoitWolf</span>(eqx.Module):
     <span class="hljs-string">&quot;&quot;&quot;Background mean and a shrunk covariance; swap for another estimator.&quot;&quot;&quot;</span>
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">self, spectra: Float[np.ndarray, <span class="hljs-string">&quot;pixel band&quot;</span>]</span>) -&gt; <span class="hljs-built_in">tuple</span>:
-        estimate = sklearn.covariance.LedoitWolf().fit(spectra)
-        <span class="hljs-keyword">return</span> estimate.location_, estimate.covariance_
+        <span class="hljs-comment"># μ, Σ by Ledoit–Wolf shrinkage</span>
+        estimate = sklearn.covariance.LedoitWolf().fit(spectra)  <span class="hljs-comment"># (P, W) → fitted</span>
+        <span class="hljs-keyword">return</span> estimate.location_, estimate.covariance_  <span class="hljs-comment"># → (W,), (W, W)</span>
 
 
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">SigmaThreshold</span>(eqx.Module):
@@ -1147,8 +1226,10 @@ wind_field = GeoArray(
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">
         self, enhancement: Float[Array, <span class="hljs-string">&quot;y x&quot;</span>], noise: <span class="hljs-built_in">float</span>
     </span>) -&gt; Bool[Array, <span class="hljs-string">&quot;y x&quot;</span>]:
+        <span class="hljs-comment"># k σ_y</span>
+        level = self.k * noise                          <span class="hljs-comment"># → ()</span>
         <span class="hljs-comment"># b_n = 1[y_n &gt; k σ_y]</span>
-        <span class="hljs-keyword">return</span> enhancement &gt; self.k * noise
+        <span class="hljs-keyword">return</span> enhancement &gt; level                      <span class="hljs-comment"># (R, C) → (R, C)</span>
 
 
 <span class="hljs-comment"># --- ③ models: state fitted once ---</span>
@@ -1162,20 +1243,27 @@ wind_field = GeoArray(
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">fit</span>(<span class="hljs-params">
         cls, spectra: Float[np.ndarray, <span class="hljs-string">&quot;pixel band&quot;</span>], estimator=LedoitWolf(<span class="hljs-params"></span>)
     </span>) -&gt; <span class="hljs-string">&quot;Background&quot;</span>:
-        mean, covariance = estimator(spectra)
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># μ, Σ from the strategy</span>
+        mean, covariance = estimator(spectra)           <span class="hljs-comment"># (P, W) → (W,), (W, W)</span>
         <span class="hljs-comment"># Σ as a ⓪ structure: a PSD-tagged operator, so solves take the fast path</span>
-        operator = lx.MatrixLinearOperator(
+        operator = lx.MatrixLinearOperator(             <span class="hljs-comment"># (W, W) → (W, W) PSD op</span>
             jnp.asarray(covariance), lx.positive_semidefinite_tag
         )
         <span class="hljs-keyword">return</span> cls(mean=jnp.asarray(mean), covariance=operator)
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">solve</span>(<span class="hljs-params">self, vector: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot; band&quot;</span>]:
         <span class="hljs-comment"># Σ⁻¹ v</span>
-        <span class="hljs-keyword">return</span> lx.linear_solve(self.covariance, vector).value
+        solution = lx.linear_solve(self.covariance, vector)  <span class="hljs-comment"># (W, W) op, (W,)</span>
+        <span class="hljs-keyword">return</span> solution.value                           <span class="hljs-comment"># → (W,)</span>
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">noise</span>(<span class="hljs-params">self, target: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot;&quot;</span>]:
+        <span class="hljs-comment"># Σ⁻¹ t</span>
+        direction = self.solve(target)                  <span class="hljs-comment"># (W,) → (W,)</span>
+        <span class="hljs-comment"># tᵀ Σ⁻¹ t</span>
+        information = einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, direction)  <span class="hljs-comment"># → ()</span>
         <span class="hljs-comment"># σ_y = (tᵀ Σ⁻¹ t)^(−1/2), the matched filter&#x27;s standard error</span>
-        <span class="hljs-keyword">return</span> einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, self.solve(target)) ** -<span class="hljs-number">0.5</span></code></pre>
+        <span class="hljs-keyword">return</span> information**-<span class="hljs-number">0.5</span>                        <span class="hljs-comment"># () → ()</span></code></pre>
 
       <h4>④ Algorithms</h4>
       <p>Functions over models: the matched filter, the segmentation, and the emission rate from the integrated mass enhancement, with the plume length taken as the square root of the plume's area:</p>
@@ -1190,20 +1278,27 @@ wind_field = GeoArray(
 <span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
 <span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Bool, Float
 
+<span class="hljs-comment"># Shapes: W = window bands; R × C = N_row × N_col pixels</span>
+
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">matched_filter</span>(<span class="hljs-params">
     radiance: Float[Array, <span class="hljs-string">&quot;band y x&quot;</span>],
     background: Background,
     target: Float[Array, <span class="hljs-string">&quot; band&quot;</span>],
 </span>) -&gt; Float[Array, <span class="hljs-string">&quot;y x&quot;</span>]:
+    <span class="hljs-comment"># user</span>
     <span class="hljs-comment"># s = Σ⁻¹ t, through the model</span>
-    direction = background.solve(target)
+    direction = background.solve(target)                <span class="hljs-comment"># (W,) → (W,)</span>
     <span class="hljs-comment"># r_n = x_n − μ</span>
-    residual = einx.subtract(<span class="hljs-string">&quot;band y x, band -&gt; band y x&quot;</span>, radiance, background.mean)
+    residual = einx.subtract(                           <span class="hljs-comment"># (W, R, C), (W,) → (W, R, C)</span>
+        <span class="hljs-string">&quot;band y x, band -&gt; band y x&quot;</span>, radiance, background.mean
+    )
     <span class="hljs-comment"># sᵀ r_n</span>
-    projection = einx.dot(<span class="hljs-string">&quot;band y x, band -&gt; y x&quot;</span>, residual, direction)
+    projection = einx.dot(<span class="hljs-string">&quot;band y x, band -&gt; y x&quot;</span>, residual, direction)  <span class="hljs-comment"># → (R, C)</span>
+    <span class="hljs-comment"># tᵀ s</span>
+    normalisation = einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, direction)  <span class="hljs-comment"># → ()</span>
     <span class="hljs-comment"># y_n = sᵀ r_n / (tᵀ s)</span>
-    <span class="hljs-keyword">return</span> projection / einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, direction)
+    <span class="hljs-keyword">return</span> projection / normalisation                   <span class="hljs-comment"># (R, C) → (R, C)</span>
 
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">segment</span>(<span class="hljs-params">
@@ -1212,9 +1307,13 @@ wind_field = GeoArray(
     rule: SigmaThreshold,
     min_pixels: <span class="hljs-built_in">int</span>,
 </span>) -&gt; Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>]:
-    <span class="hljs-comment"># b: the rule&#x27;s pixels, in components of at least N_min pixels</span>
-    above = np.asarray(rule(enhancement, noise))
-    <span class="hljs-keyword">return</span> large_components(above, min_pixels)
+    <span class="hljs-comment"># user</span>
+    <span class="hljs-comment"># 1[y_n &gt; k σ_y], by the strategy</span>
+    above = rule(enhancement, noise)                    <span class="hljs-comment"># (R, C) → (R, C)</span>
+    above = np.asarray(above)                           <span class="hljs-comment"># (R, C) → (R, C)</span>
+    <span class="hljs-comment"># user</span>
+    <span class="hljs-comment"># b: the components of at least N_min pixels</span>
+    <span class="hljs-keyword">return</span> large_components(above, min_pixels)          <span class="hljs-comment"># (R, C) → (R, C)</span>
 
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">emission_rate</span>(<span class="hljs-params">
@@ -1224,13 +1323,21 @@ wind_field = GeoArray(
     wind: <span class="hljs-built_in">float</span>,
     kappa: <span class="hljs-built_in">float</span>,
 </span>) -&gt; <span class="hljs-built_in">float</span>:
-    <span class="hljs-comment"># IME = κ a ∑ b_n y_n, the mass of methane in the plume</span>
-    plume_enhancement = np.where(plume, enhancement, <span class="hljs-number">0.0</span>)
-    ime = kappa * area * <span class="hljs-built_in">float</span>(np.nansum(plume_enhancement))
-    <span class="hljs-comment"># L = (a ∑ b_n)^(1/2)</span>
-    length = <span class="hljs-built_in">float</span>(np.sqrt(area * plume.<span class="hljs-built_in">sum</span>()))
-    <span class="hljs-comment"># Q = U IME / L</span>
-    <span class="hljs-keyword">return</span> wind * ime / length <span class="hljs-keyword">if</span> length &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span></code></pre>
+    <span class="hljs-comment"># b_n y_n</span>
+    plume_enhancement = np.where(plume, enhancement, <span class="hljs-number">0.0</span>)  <span class="hljs-comment"># (R, C) → (R, C)</span>
+    <span class="hljs-comment"># ∑ b_n y_n, ppm m</span>
+    total = np.nansum(plume_enhancement)                <span class="hljs-comment"># (R, C) → ()</span>
+    <span class="hljs-comment"># IME = κ a ∑ b_n y_n, the mass of methane in the plume, kg</span>
+    ime = kappa * area * total                          <span class="hljs-comment"># → ()</span>
+    <span class="hljs-comment"># ∑ b_n, pixels</span>
+    plume_pixels = np.<span class="hljs-built_in">sum</span>(plume)                        <span class="hljs-comment"># (R, C) → ()</span>
+    <span class="hljs-comment"># L = (a ∑ b_n)^(1/2), m</span>
+    length = np.sqrt(area * plume_pixels)               <span class="hljs-comment"># → ()</span>
+    <span class="hljs-keyword">if</span> length == <span class="hljs-number">0</span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0.0</span>
+    <span class="hljs-comment"># Q = U IME / L, kg s⁻¹</span>
+    rate = wind * ime / length                          <span class="hljs-comment"># → ()</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">float</span>(rate)</code></pre>
 
       <h4>⑤ Steps</h4>
       <p>One Operator per stage, each a <span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span>, a call down the ladder and an <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span>. Retrieval writes <span class="tex" data-tex="\sigma_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_y</annotation></semantics></math></span></span> into the enhancement's attributes, so segmentation reads it from its input. Quantification is two steps, because the wind lives on another grid: <code>WindAt</code> reads <span class="tex" data-tex="U"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span></span> at the source's coordinates, and <code>EmissionRate</code> takes it as an input. In the four lifted functions <span class="tex" data-tex="U"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span></span> was the parameter of <span class="tex" data-tex="h[f_\text{ime}, U]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false">[</mo><msub><mi>f</mi><mtext>ime</mtext></msub><mo separator="true">,</mo><mi>U</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">h[f_\text{ime}, U]</annotation></semantics></math></span></span>; here it is wired, as geotoolz's rule wants: a second input is an argument of <code>_apply</code>, never a constructor field, so a Graph can connect it.</p>
@@ -1238,12 +1345,14 @@ wind_field = GeoArray(
 <span class="hljs-keyword">import</span> jax.numpy <span class="hljs-keyword">as</span> jnp
 <span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
 <span class="hljs-keyword">import</span> pipekit
-<span class="hljs-keyword">from</span> pipekit <span class="hljs-keyword">import</span> Signature
 <span class="hljs-keyword">from</span> geoarray <span class="hljs-keyword">import</span> GeoArray, GeoPoints, interp_at
 <span class="hljs-keyword">from</span> geoops.carrier <span class="hljs-keyword">import</span> wrap_like
+<span class="hljs-keyword">from</span> pipekit <span class="hljs-keyword">import</span> Signature
 <span class="hljs-keyword">from</span> radtrax.atmosphere <span class="hljs-keyword">import</span> air_mass_factor
 
-<span class="hljs-comment"># ch4_unit_absorption stands for a lookup of methane absorption per ppm m, in radtrax</span>
+<span class="hljs-comment"># Shapes: B = 285 bands; W window bands; R × C pixels; P valid; G × H wind cells</span>
+
+<span class="hljs-comment"># ch4_unit_absorption is proposed for radtrax: methane absorption per ppm m</span>
 
 
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">MethaneRetrieval</span>(pipekit.Operator):
@@ -1252,40 +1361,62 @@ wind_field = GeoArray(
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, window_nm: <span class="hljs-built_in">tuple</span>[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>] = (<span class="hljs-params"><span class="hljs-number">2122.0</span>, <span class="hljs-number">2488.0</span></span>)</span>) -&gt; <span class="hljs-literal">None</span>:
         self.window_nm = window_nm
 
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, scene: GeoArray</span>) -&gt; GeoArray:
-        <span class="hljs-comment"># π_α: the window&#x27;s bands, by wavelength</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, scene: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>]</span>) -&gt; GeoArray[<span class="hljs-string">&quot;1 y x&quot;</span>]:
+        <span class="hljs-comment"># --- π_α: the window&#x27;s bands, u = (M, k) and X ---</span>
+        <span class="hljs-comment"># today (geoarray)</span>
         bands = scene.coord(<span class="hljs-string">&quot;band&quot;</span>)
         lower, upper = self.window_nm
         names = [
             n <span class="hljs-keyword">for</span> n, w <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(bands.names, bands.wavelength_nm) <span class="hljs-keyword">if</span> lower &lt;= w &lt;= upper
         ]
-        swir = scene.sel(band=names)
-        <span class="hljs-comment"># u = (M, k), from the attrs and the wavelengths</span>
-        air_mass = air_mass_factor(
+        <span class="hljs-comment"># today (geoarray)</span>
+        swir = scene.sel(band=names)                    <span class="hljs-comment"># (B, R, C) → (W, R, C)</span>
+        <span class="hljs-comment"># today (radtrax)</span>
+        <span class="hljs-comment"># M = 1 / cos ϑ_sun + 1 / cos ϑ_view, from the attrs 𝓜</span>
+        air_mass = air_mass_factor(                     <span class="hljs-comment"># → ()</span>
             swir.attrs[<span class="hljs-string">&quot;solar_zenith_deg&quot;</span>], swir.attrs[<span class="hljs-string">&quot;view_zenith_deg&quot;</span>]
         )
-        absorption = ch4_unit_absorption(swir.coord(<span class="hljs-string">&quot;band&quot;</span>).wavelength_nm)
-        <span class="hljs-comment"># X: the spectra of the valid pixels</span>
-        valid = swir.valid_mask()
-        pixels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;band y x -&gt; (y x) band&quot;</span>, np.asarray(swir))
-        spectra = pixels[einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, valid)]
-        <span class="hljs-comment"># ③ fit the model, ① build t, ④ filter</span>
-        background = Background.fit(spectra)
-        target = target_signature(background.mean, jnp.asarray(absorption), air_mass)
-        enhancement = np.asarray(matched_filter(swir.data, background, target))
-        <span class="hljs-comment"># ι_α: one band in ppm m, NaN where m = 0, and σ_y carried in M</span>
-        enhancement = np.where(valid, enhancement, np.nan)
-        noise = <span class="hljs-built_in">float</span>(background.noise(target))
-        <span class="hljs-keyword">return</span> wrap_like(
+        <span class="hljs-comment"># today (geoarray)</span>
+        wavelengths = swir.coord(<span class="hljs-string">&quot;band&quot;</span>).wavelength_nm  <span class="hljs-comment"># → W labels</span>
+        <span class="hljs-comment"># proposed (radtrax)</span>
+        <span class="hljs-comment"># k at the window&#x27;s wavelengths</span>
+        absorption = ch4_unit_absorption(wavelengths)   <span class="hljs-comment"># → (W,)</span>
+        <span class="hljs-comment"># today (geoarray)</span>
+        <span class="hljs-comment"># m: the valid pixels</span>
+        valid = swir.valid_mask()                       <span class="hljs-comment"># (W, R, C) → (R, C)</span>
+        <span class="hljs-comment"># X: the spectra of the valid pixels, one row each</span>
+        swir_values = np.asarray(swir)                  <span class="hljs-comment"># (W, R, C) → (W, R, C)</span>
+        pixels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;band y x -&gt; (y x) band&quot;</span>, swir_values)  <span class="hljs-comment"># → (R C, W)</span>
+        is_valid = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, valid)       <span class="hljs-comment"># (R, C) → (R C,)</span>
+        spectra = pixels[is_valid]                      <span class="hljs-comment"># (R C, W) → (P, W)</span>
+        <span class="hljs-comment"># --- ③ fit the model, ① build t, ④ filter ---</span>
+        <span class="hljs-comment"># user</span>
+        background = Background.fit(spectra)            <span class="hljs-comment"># (P, W) → μ (W,), Σ (W, W)</span>
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># t = −M (k ⊙ μ)</span>
+        target = target_signature(                      <span class="hljs-comment"># (W,), (W,) → (W,)</span>
+            background.mean, jnp.asarray(absorption), air_mass
+        )
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># y_n = sᵀ (x_n − μ) / (tᵀ s)</span>
+        enhancement = matched_filter(swir.data, background, target)  <span class="hljs-comment"># → (R, C)</span>
+        <span class="hljs-comment"># --- ι_α: one band in ppm m, NaN where m = 0, σ_y carried in 𝓜 ---</span>
+        masked = np.where(valid, enhancement, np.nan)   <span class="hljs-comment"># (R, C) → (R, C)</span>
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># σ_y = (tᵀ Σ⁻¹ t)^(−1/2)</span>
+        noise = background.noise(target)                <span class="hljs-comment"># → ()</span>
+        <span class="hljs-comment"># today (geoops)</span>
+        <span class="hljs-keyword">return</span> wrap_like(                               <span class="hljs-comment"># (R, C) → (1, R, C)</span>
             swir,
-            einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, enhancement),
+            einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, masked),
             band_names=(<span class="hljs-string">&quot;ch4&quot;</span>,),
             fill_value=np.nan,
-            attrs={<span class="hljs-string">&quot;noise_ppm_m&quot;</span>: noise},
+            attrs={<span class="hljs-string">&quot;noise_ppm_m&quot;</span>: <span class="hljs-built_in">float</span>(noise)},
         )
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">compute_output_signature</span>(<span class="hljs-params">self, sig: Signature</span>) -&gt; Signature:
-        <span class="hljs-comment"># (band=N_band, y, x) → (band=1, y, x), for the summary, with no data</span>
+        <span class="hljs-comment"># today (pipekit)</span>
+        <span class="hljs-comment"># (band=B, y, x) → (band=1, y, x), for the summary, with no data</span>
         <span class="hljs-keyword">return</span> sig.replace_dims({<span class="hljs-string">&quot;band&quot;</span>: <span class="hljs-number">1</span>})
 
 
@@ -1296,14 +1427,18 @@ wind_field = GeoArray(
         self.k = k
         self.min_pixels = min_pixels
 
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, enhancement: GeoArray</span>) -&gt; GeoArray:
-        <span class="hljs-comment"># π_α: the map, and σ_y from the retrieval&#x27;s attrs</span>
-        values = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(enhancement))
-        noise = enhancement.attrs[<span class="hljs-string">&quot;noise_ppm_m&quot;</span>]
-        <span class="hljs-comment"># ② the rule, ④ the algorithm</span>
-        plume = segment(values, noise, SigmaThreshold(k=self.k), self.min_pixels)
-        <span class="hljs-comment"># ι_α: a boolean band on the same grid</span>
-        <span class="hljs-keyword">return</span> wrap_like(
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, enhancement: GeoArray[<span class="hljs-string">&quot;1 y x&quot;</span>]</span>) -&gt; GeoArray[<span class="hljs-string">&quot;1 y x&quot;</span>]:
+        <span class="hljs-comment"># --- π_α: the map, and σ_y from the retrieval&#x27;s attrs ---</span>
+        values = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(enhancement))  <span class="hljs-comment"># → (R, C)</span>
+        noise = enhancement.attrs[<span class="hljs-string">&quot;noise_ppm_m&quot;</span>]        <span class="hljs-comment"># → ()</span>
+        <span class="hljs-comment"># --- ② the rule, ④ the algorithm ---</span>
+        rule = SigmaThreshold(k=self.k)
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># b: components of 1[y_n &gt; k σ_y] with at least N_min pixels</span>
+        plume = segment(values, noise, rule, self.min_pixels)  <span class="hljs-comment"># (R, C) → (R, C)</span>
+        <span class="hljs-comment"># --- ι_α: a boolean band on the same grid ---</span>
+        <span class="hljs-comment"># today (geoops)</span>
+        <span class="hljs-keyword">return</span> wrap_like(                               <span class="hljs-comment"># (R, C) → (1, R, C)</span>
             enhancement,
             einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, plume),
             band_names=(<span class="hljs-string">&quot;plume&quot;</span>,),
@@ -1311,6 +1446,7 @@ wind_field = GeoArray(
         )
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">compute_output_signature</span>(<span class="hljs-params">self, sig: Signature</span>) -&gt; Signature:
+        <span class="hljs-comment"># today (pipekit)</span>
         <span class="hljs-comment"># same grid, one boolean band</span>
         <span class="hljs-keyword">return</span> Signature(dims=sig.dims, dtype=<span class="hljs-string">&quot;bool&quot;</span>)
 
@@ -1324,14 +1460,19 @@ wind_field = GeoArray(
         self.lon = lon
         self.lat = lat
 
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, wind_field: GeoArray</span>) -&gt; <span class="hljs-built_in">float</span>:
-        <span class="hljs-comment"># the source as a point, in the wind&#x27;s CRS</span>
-        source = GeoPoints(np.zeros(<span class="hljs-number">1</span>), xy=np.array([[self.lon, self.lat]]), dims=<span class="hljs-string">&quot;obs&quot;</span>)
-        <span class="hljs-comment"># ① geoarray&#x27;s bilinear read; one band, one point: U</span>
-        sampled = interp_at(wind_field, source)
-        <span class="hljs-keyword">return</span> <span class="hljs-built_in">float</span>(np.asarray(sampled).item())
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>]</span>) -&gt; <span class="hljs-built_in">float</span>:
+        <span class="hljs-comment"># the source, in the wind&#x27;s CRS</span>
+        source_xy = np.array([[self.lon, self.lat]])    <span class="hljs-comment"># → (1, 2)</span>
+        <span class="hljs-comment"># today (geoarray)</span>
+        source = GeoPoints(np.zeros(<span class="hljs-number">1</span>), xy=source_xy, dims=<span class="hljs-string">&quot;obs&quot;</span>)  <span class="hljs-comment"># → (1,)</span>
+        <span class="hljs-comment"># today (geoarray)</span>
+        <span class="hljs-comment"># U = v(s_source), bilinear</span>
+        sampled = interp_at(wind_field, source)         <span class="hljs-comment"># (1, G, H) → (1, 1)</span>
+        values = np.asarray(sampled)                    <span class="hljs-comment"># (1, 1) → (1, 1)</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">float</span>(values.item())                     <span class="hljs-comment"># (1, 1) → ()</span>
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">compute_output_signature</span>(<span class="hljs-params">self, sig: Signature</span>) -&gt; Signature:
+        <span class="hljs-comment"># today (pipekit)</span>
         <span class="hljs-comment"># one number: U, in m s⁻¹</span>
         <span class="hljs-keyword">return</span> Signature(dims=(), dtype=<span class="hljs-string">&quot;float64&quot;</span>)
 
@@ -1344,13 +1485,19 @@ wind_field = GeoArray(
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, kappa: <span class="hljs-built_in">float</span> = <span class="hljs-number">6.56e-7</span></span>) -&gt; <span class="hljs-literal">None</span>:
         self.kappa = kappa
 
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, enhancement: GeoArray, plume: GeoArray, wind: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">dict</span>:
-        <span class="hljs-comment"># π_α: u = a from A, and the two maps</span>
-        area = pixel_area(enhancement.transform)
-        values = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(enhancement))
-        mask = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(plume))
-        <span class="hljs-comment"># ④ the algorithm; terminal, so ι_α returns a table, not a carrier</span>
-        rate = emission_rate(values, mask, area, wind, self.kappa)
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">
+        self, enhancement: GeoArray[<span class="hljs-string">&quot;1 y x&quot;</span>], plume: GeoArray[<span class="hljs-string">&quot;1 y x&quot;</span>], wind: <span class="hljs-built_in">float</span>
+    </span>) -&gt; <span class="hljs-built_in">dict</span>:
+        <span class="hljs-comment"># --- π_α: u = a from A, and the two maps ---</span>
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># a = |det A₂ₓ₂|</span>
+        area = pixel_area(enhancement.transform)        <span class="hljs-comment"># (6,) → ()</span>
+        values = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(enhancement))  <span class="hljs-comment"># → (R, C)</span>
+        mask = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(plume))  <span class="hljs-comment"># → (R, C)</span>
+        <span class="hljs-comment"># --- ④ the algorithm; terminal, so ι_α returns a table, not a carrier ---</span>
+        <span class="hljs-comment"># user</span>
+        <span class="hljs-comment"># Q = U κ a ∑ b_n y_n / L</span>
+        rate = emission_rate(values, mask, area, wind, self.kappa)  <span class="hljs-comment"># → ()</span>
         <span class="hljs-keyword">return</span> {<span class="hljs-string">&quot;emission_rate_kg_s&quot;</span>: rate}</code></pre>
 
       <h4>⑥ Recipe, and orchestration</h4>
@@ -1362,37 +1509,51 @@ wind_field = GeoArray(
 
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">plume_recipe</span>(<span class="hljs-params">*, lon: <span class="hljs-built_in">float</span>, lat: <span class="hljs-built_in">float</span>, k: <span class="hljs-built_in">float</span> = <span class="hljs-number">3.0</span></span>) -&gt; pipekit.Graph:
     <span class="hljs-string">&quot;&quot;&quot;Retrieval, segmentation and quantification, wired into one Graph.&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># today (pipekit)</span>
     scene_in = pipekit.Input(<span class="hljs-string">&quot;scene&quot;</span>)
+    <span class="hljs-comment"># today (pipekit)</span>
     wind_in = pipekit.Input(<span class="hljs-string">&quot;wind&quot;</span>)
-    <span class="hljs-comment"># retrieval</span>
+    <span class="hljs-comment"># user</span>
+    <span class="hljs-comment"># retrieval: y_geo with σ_y</span>
     enhancement = MethaneRetrieval()(scene_in)
-    <span class="hljs-comment"># segmentation</span>
+    <span class="hljs-comment"># user</span>
+    <span class="hljs-comment"># segmentation: b_geo</span>
     plume = PlumeSegmentation(k=k)(enhancement)
-    <span class="hljs-comment"># quantification</span>
+    <span class="hljs-comment"># user</span>
+    <span class="hljs-comment"># quantification: U, then Q</span>
     wind = WindAt(lon=lon, lat=lat)(wind_in)
+    <span class="hljs-comment"># user</span>
     emission = EmissionRate()(enhancement, plume, wind)
+    <span class="hljs-comment"># today (pipekit)</span>
     <span class="hljs-keyword">return</span> pipekit.Graph(
         inputs={<span class="hljs-string">&quot;scene&quot;</span>: scene_in, <span class="hljs-string">&quot;wind&quot;</span>: wind_in}, outputs={<span class="hljs-string">&quot;emission&quot;</span>: emission}
     )
 
 
-<span class="hljs-comment"># --- orchestration: build, save, load and run; the recipe itself never changes ---</span>
+<span class="hljs-comment"># --- orchestration: build, summarise, save, load and run; the recipe never changes ---</span>
+<span class="hljs-comment"># user</span>
 recipe = plume_recipe(lon=-<span class="hljs-number">103.52</span>, lat=<span class="hljs-number">31.98</span>)
+<span class="hljs-comment"># today (pipekit)</span>
+<span class="hljs-comment"># the signatures of the data part&#x27;s carriers, with no data read</span>
+scene_sig = pipekit.signature_of(scene)        <span class="hljs-comment"># → (band=B, y=R, x=C)</span>
+<span class="hljs-comment"># today (pipekit)</span>
+wind_sig = pipekit.signature_of(wind_field)    <span class="hljs-comment"># → (band=1, y=G, x=H)</span>
+<span class="hljs-comment"># today (pipekit)</span>
+<span class="hljs-comment"># a Keras-style table, from signatures alone</span>
+<span class="hljs-built_in">print</span>(recipe.summary({<span class="hljs-string">&quot;scene&quot;</span>: scene_sig, <span class="hljs-string">&quot;wind&quot;</span>: wind_sig}))
+<span class="hljs-comment"># today (pipekit)</span>
 <span class="hljs-comment"># the recipe as data: JSON with the steps&#x27; configs, never the arrays</span>
 recipe_json = pipekit.dumps(recipe)
+<span class="hljs-comment"># today (pipekit)</span>
 <span class="hljs-comment"># loaded back, it runs on the carriers of the data part</span>
-result = pipekit.loads(recipe_json)(scene=scene, wind=wind_field)
+loaded = pipekit.loads(recipe_json)
+result = loaded(scene=scene, wind=wind_field)  <span class="hljs-comment"># → {emission: table}</span>
+<span class="hljs-comment"># user</span>
 <span class="hljs-comment"># a sweep over the threshold, as a DVC stage or an Airflow task would run it</span>
 sweep = {
     k: plume_recipe(lon=-<span class="hljs-number">103.52</span>, lat=<span class="hljs-number">31.98</span>, k=k)(scene=scene, wind=wind_field)
     <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> (<span class="hljs-number">2.0</span>, <span class="hljs-number">3.0</span>, <span class="hljs-number">4.0</span>)
-}
-<span class="hljs-comment"># a Keras-style table, from signatures alone: no data is read</span>
-<span class="hljs-built_in">print</span>(
-    recipe.summary(
-        {<span class="hljs-string">&quot;scene&quot;</span>: pipekit.signature_of(scene), <span class="hljs-string">&quot;wind&quot;</span>: pipekit.signature_of(wind_field)}
-    )
-)</code></pre>
+}</code></pre>
       <p><code>recipe.summary</code> prints the same signatures as a table, Keras-style, from signatures alone. A multi-input node shows <code>?</code>: pipekit's <code>compute_output_signature</code> takes one input, so <code>EmissionRate</code>'s output is not inferred.</p>
       <pre class="code-out">Node                             Input sig                                                                Output sig
 --------------------------------------------------------------------------------------------------------------------
