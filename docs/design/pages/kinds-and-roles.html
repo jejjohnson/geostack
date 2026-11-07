@@ -484,19 +484,9 @@ pre.code .hljs-title { color: var(--ink); font-weight: 600; }
 .code-note { font-size: 12.5px; color: var(--muted); }
 /* running text fills the page column, as wide as the tables and figures */
 header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-width: none; }
-/* tabs on the running example (radio buttons, no script) */
-.tabs { display: grid; gap: 0; }
-.tabs > input { position: absolute; opacity: 0; pointer-events: none; }
-.tabs > label { display: inline-block; justify-self: start; grid-row: 1; cursor: pointer; font-family: var(--mono); font-size: 12.5px; padding: 6px 12px; border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0; color: var(--muted); background: var(--bg); }
-.tabs > label + input + label { margin-left: 0; }
-.tabs { grid-template-columns: auto auto minmax(0, 1fr); }
-.tabs > input:checked + label { color: var(--ink); background: var(--surface); font-weight: 500; box-shadow: inset 0 2px 0 var(--accent); }
-.tabs > input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
-.tab-panel { display: none; grid-column: 1 / -1; grid-row: 2; border-top: 1px solid var(--line); padding-top: 12px; min-width: 0; }
-#run-tab-1:checked ~ #run-panel-1, #run-tab-2:checked ~ #run-panel-2 { display: block; }
-.tab-panel > * + * { margin-top: 10px; }
-.tab-h { margin: 18px 0 0; font-family: var(--display); font-size: 19px; font-weight: 700; }
 pre.diagram { margin: 6px 0; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.35; color: var(--ink); background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 12px 14px; }
+/* links in running text */
+.sub a, .obj a, .rule a { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -877,12 +867,8 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
       </ul>
     </details>
 
-    <div class="rule wide">
+    <div class="rule wide" id="running-example">
       <h3>The running example, end to end</h3>
-      <div class="tabs">
-        <input type="radio" name="run-tab" id="run-tab-1" checked><label for="run-tab-1">As four lifted functions</label>
-        <input type="radio" name="run-tab" id="run-tab-2"><label for="run-tab-2">Refactored up the ladder</label>
-        <div class="tab-panel" id="run-panel-1">
       <p>Four steps in one recipe, each a lifted function, in three stages: retrieval (the first line), segmentation (the second) and quantification (the last two).</p>
       <div class="tex display" data-tex="\vect{y}_\text{geo} = h[f_\text{mf}, \gvect{\psi}](\vect{x}_\text{geo}; \alpha_1)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>𝐲</mi><mtext>geo</mtext></msub><mo>=</mo><mi>h</mi><mo stretchy="false">[</mo><msub><mi>f</mi><mtext>mf</mtext></msub><mo separator="true">,</mo><mi>𝝍</mi><mo stretchy="false">]</mo><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mtext>geo</mtext></msub><mo separator="true">;</mo><msub><mi>α</mi><mn>1</mn></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{y}_\text{geo} = h[f_\text{mf}, \gvect{\psi}](\vect{x}_\text{geo}; \alpha_1)</annotation></semantics></math></span></div>
       <div class="tex display" data-tex="\vect{b}_\text{geo} = h[f_\text{mask}](\vect{y}_\text{geo}; \alpha_2)"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>𝐛</mi><mtext>geo</mtext></msub><mo>=</mo><mi>h</mi><mo stretchy="false">[</mo><msub><mi>f</mi><mtext>mask</mtext></msub><mo stretchy="false">]</mo><mo stretchy="false">(</mo><msub><mi>𝐲</mi><mtext>geo</mtext></msub><mo separator="true">;</mo><msub><mi>α</mi><mn>2</mn></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{b}_\text{geo} = h[f_\text{mask}](\vect{y}_\text{geo}; \alpha_2)</annotation></semantics></math></span></div>
@@ -891,352 +877,7 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
       <p>Here <span class="tex" data-tex="\vect{y}_\text{geo}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐲</mi><mtext>geo</mtext></msub></mrow><annotation encoding="application/x-tex">\vect{y}_\text{geo}</annotation></semantics></math></span></span> is the methane enhancement in ppm m and <span class="tex" data-tex="\vect{b}_\text{geo}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐛</mi><mtext>geo</mtext></msub></mrow><annotation encoding="application/x-tex">\vect{b}_\text{geo}</annotation></semantics></math></span></span> the plume mask, both on the scene's grid; <span class="tex" data-tex="\vect{v}_\text{geo}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐯</mi><mtext>geo</mtext></msub></mrow><annotation encoding="application/x-tex">\vect{v}_\text{geo}</annotation></semantics></math></span></span> is ERA5's 10 m wind speed on its own 0.25° grid, read at the source's coordinates to give the wind <span class="tex" data-tex="U"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span></span> in m s⁻¹; and <span class="tex" data-tex="Q"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span></span> is the emission rate in kg s⁻¹. <span class="tex" data-tex="f_\text{mf}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mtext>mf</mtext></msub></mrow><annotation encoding="application/x-tex">f_\text{mf}</annotation></semantics></math></span></span> is the Module above, with <span class="tex" data-tex="\gvect{\psi}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi></mrow><annotation encoding="application/x-tex">\gvect{\psi}</annotation></semantics></math></span></span> fitted on the scene; <span class="tex" data-tex="f_\text{mask}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mtext>mask</mtext></msub></mrow><annotation encoding="application/x-tex">f_\text{mask}</annotation></semantics></math></span></span> thresholds and keeps connected components; <span class="tex" data-tex="f_\text{ime}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mtext>ime</mtext></msub></mrow><annotation encoding="application/x-tex">f_\text{ime}</annotation></semantics></math></span></span> is the integrated mass enhancement method:</p>
       <div class="tex display" data-tex="Q = \frac{U}{L} \sum_{n=1}^{N_\text{row} N_\text{col}} b_n \kappa y_n a_n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Q</mi><mo>=</mo><mfrac><mi>U</mi><mi>L</mi></mfrac><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><msub><mi>N</mi><mtext>row</mtext></msub><msub><mi>N</mi><mtext>col</mtext></msub></mrow></munderover><msub><mi>b</mi><mi>n</mi></msub><mi>κ</mi><msub><mi>y</mi><mi>n</mi></msub><msub><mi>a</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">Q = \frac{U}{L} \sum_{n=1}^{N_\text{row} N_\text{col}} b_n \kappa y_n a_n</annotation></semantics></math></span></div>
       <p>with <span class="tex" data-tex="b_n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">b_n</annotation></semantics></math></span></span> the mask at pixel <span class="tex" data-tex="n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span></span>, <span class="tex" data-tex="a_n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">a_n</annotation></semantics></math></span></span> its area and <span class="tex" data-tex="L"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span></span> the plume length, both from <span class="tex" data-tex="\mat{A}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐀</mi></mrow><annotation encoding="application/x-tex">\mat{A}</annotation></semantics></math></span></span>, and <span class="tex" data-tex="\kappa"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi></mrow><annotation encoding="application/x-tex">\kappa</annotation></semantics></math></span></span> the mass of methane per square metre in one ppm m. The last step takes <span class="tex" data-tex="U"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span></span> as its parameter <span class="tex" data-tex="\gvect{\theta}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝜽</mi></mrow><annotation encoding="application/x-tex">\gvect{\theta}</annotation></semantics></math></span></span>, and it is terminal: <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span> returns a table (<span class="tex" data-tex="Q"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span></span> with its uncertainty), not a carrier. Only the four configs <span class="tex" data-tex="\alpha_1, \ldots, \alpha_4"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mn>1</mn></msub><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>α</mi><mn>4</mn></msub></mrow><annotation encoding="application/x-tex">\alpha_1, \ldots, \alpha_4</annotation></semantics></math></span></span> mention band names, windows, units, thresholds or the source's coordinates. In geoops the steps are <code>MatchedFilter</code>, <code>PlumeMask</code>, <code>interp_at</code> on the wind, and <code>ColumnToMass</code> followed by <code>IMEEstimate</code>.</p>
-        </div>
-        <div class="tab-panel" id="run-panel-2">
-        <p>The four lines are right, but each step owns everything it needs, so nothing is shared. Refactored, the same job is built bottom-up, the way a library is built: primitives first, then the strategies and models that use them, the algorithms over the models, the steps that wrap the algorithms, and a recipe that strings the steps together. The rungs ⓪ to ⑥ are named in the <a href="#ladder">role ladder</a> below; read them here as the order the pieces are written in. Each piece is written once, and most are used by more than one piece above.</p>
-        <div class="table-wrap"><table class="kinds vocab">
-          <thead><tr><th>Piece</th><th>Rung</th><th>Kind</th><th>Used by</th></tr></thead>
-          <tbody>
-            <tr><td class="lib">target_signature</td><td>① primitive</td><td>ƒ</td><td>the retrieval step, and through <span class="tex" data-tex="\vect{t}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐭</mi></mrow><annotation encoding="application/x-tex">\vect{t}</annotation></semantics></math></span></span> the background's noise</td></tr>
-            <tr><td class="lib">air_mass_factor</td><td>① primitive (radtrax)</td><td>ƒ</td><td>the retrieval step; any SWIR retrieval</td></tr>
-            <tr><td class="lib">valid_mask</td><td>① primitive (geoarray)</td><td>ƒ</td><td>the retrieval step; <code>interp_at</code>, which reads the wind</td></tr>
-            <tr><td class="lib">pixel_area</td><td>① primitive</td><td>ƒ</td><td><code>emission_rate</code>, twice: the plume's mass and its length</td></tr>
-            <tr><td class="lib">large_components</td><td>① primitive</td><td>ƒ</td><td><code>segment</code></td></tr>
-            <tr><td class="lib">LedoitWolf</td><td>② strategy</td><td>▣</td><td><code>Background.fit</code>; swap in an empirical, low-rank or clustered estimator</td></tr>
-            <tr><td class="lib">SigmaThreshold</td><td>② strategy</td><td>▣</td><td><code>segment</code>; swap in Otsu or a percentile</td></tr>
-            <tr><td class="lib">Background</td><td>③ model</td><td>▣</td><td><code>matched_filter</code> (its solve) and the noise <span class="tex" data-tex="\sigma_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_y</annotation></semantics></math></span></span>, which sets the segmentation threshold</td></tr>
-            <tr><td class="lib">matched_filter, segment, emission_rate</td><td>④ algorithm</td><td>ƒ</td><td>one step each</td></tr>
-            <tr><td class="lib">MethaneRetrieval, PlumeSegmentation, WindAt, EmissionRate</td><td>⑤ step</td><td>→</td><td>the recipe; each also runs alone, in a notebook or another recipe</td></tr>
-            <tr><td class="lib">recipe</td><td>⑥ recipe</td><td>→ Graph</td><td>a DVC stage, a GeoApps endpoint, a sweep over <span class="tex" data-tex="k"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span></span></td></tr>
-          </tbody>
-        </table></div>
-        <p>Three formulas are new, because the pieces now talk to each other. The background gives the matched filter's standard error, segmentation thresholds at <span class="tex" data-tex="k"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span></span> of them, and the plume's length comes from its area:</p>
-        <div class="tex display" data-tex="\sigma_y = (\vect{t}^\top \gmat{\Sigma}^{-1} \vect{t})^{-1/2}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub><mo>=</mo><mo stretchy="false">(</mo><msup><mi>𝐭</mi><mi mathvariant="normal">⊤</mi></msup><msup><mi>𝚺</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>𝐭</mi><msup><mo stretchy="false">)</mo><mrow><mo>−</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\sigma_y = (\vect{t}^\top \gmat{\Sigma}^{-1} \vect{t})^{-1/2}</annotation></semantics></math></span></div>
-        <div class="tex display" data-tex="b_n = \mathbf{1}[y_n > k \sigma_y]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>b</mi><mi>n</mi></msub><mo>=</mo><mn>𝟏</mn><mo stretchy="false">[</mo><msub><mi>y</mi><mi>n</mi></msub><mo>&gt;</mo><mi>k</mi><msub><mi>σ</mi><mi>y</mi></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">b_n = \mathbf{1}[y_n &gt; k \sigma_y]</annotation></semantics></math></span></div>
-        <div class="tex display" data-tex="L = (a \sum_{n} b_n)^{1/2}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>L</mi><mo>=</mo><mo stretchy="false">(</mo><mi>a</mi><munder><mo>∑</mo><mi>n</mi></munder><msub><mi>b</mi><mi>n</mi></msub><msup><mo stretchy="false">)</mo><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">L = (a \sum_{n} b_n)^{1/2}</annotation></semantics></math></span></div>
-        <div class="tex display" data-tex="Q = \frac{U \kappa a}{L} \sum_{n} b_n y_n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Q</mi><mo>=</mo><mfrac><mrow><mi>U</mi><mi>κ</mi><mi>a</mi></mrow><mi>L</mi></mfrac><munder><mo>∑</mo><mi>n</mi></munder><msub><mi>b</mi><mi>n</mi></msub><msub><mi>y</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">Q = \frac{U \kappa a}{L} \sum_{n} b_n y_n</annotation></semantics></math></span></div>
-        <ul class="shapes">
-          <li><span class="tex" data-tex="\sigma_y \in \mathbb{R}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub><mo>∈</mo><mi>ℝ</mi></mrow><annotation encoding="application/x-tex">\sigma_y \in \mathbb{R}</annotation></semantics></math></span></span>: the enhancement's standard error under a Gaussian background, in ppm m.</li>
-          <li><span class="tex" data-tex="k \in \mathbb{R}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>∈</mo><mi>ℝ</mi></mrow><annotation encoding="application/x-tex">k \in \mathbb{R}</annotation></semantics></math></span></span>: the threshold, in noise levels; components of <span class="tex" data-tex="\vect{b}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐛</mi></mrow><annotation encoding="application/x-tex">\vect{b}</annotation></semantics></math></span></span> smaller than <span class="tex" data-tex="N_\text{min}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mtext>min</mtext></msub></mrow><annotation encoding="application/x-tex">N_\text{min}</annotation></semantics></math></span></span> pixels are then removed.</li>
-          <li><span class="tex" data-tex="a \in \mathbb{R}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>∈</mo><mi>ℝ</mi></mrow><annotation encoding="application/x-tex">a \in \mathbb{R}</annotation></semantics></math></span></span>: the pixel area, <span class="tex" data-tex="|\det \mat{A}_{2 \times 2}|"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∣</mi><mi>det</mi><mo>⁡</mo><msub><mi>𝐀</mi><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow></msub><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">|\det \mat{A}_{2 \times 2}|</annotation></semantics></math></span></span>, one value on an affine grid; <span class="tex" data-tex="L"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span></span>: the plume length, taken as the square root of the plume's area.</li>
-        </ul>
-        <p><b>What the refactoring changed.</b></p>
-        <ul class="shapes">
-          <li><b>The Module splits.</b> The kind axis's <code>MatchedFilter</code> Module becomes state, <code>Background</code> (③), and an algorithm, <code>matched_filter</code> (④). Segmentation can then reuse the background's <span class="tex" data-tex="\sigma_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_y</annotation></semantics></math></span></span>, carried from step to step in <span class="tex" data-tex="\mathcal{M}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℳ</mi></mrow><annotation encoding="application/x-tex">\mathcal{M}</annotation></semantics></math></span></span>, instead of a percentile of the scene.</li>
-          <li><b>Estimators become strategies.</b> <code>LedoitWolf</code> and <code>SigmaThreshold</code> are arguments, so swapping the covariance estimator or the threshold rule touches no step.</li>
-          <li><b>The wind moves from a setting to an input.</b> <span class="tex" data-tex="U"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span></span> was the parameter of <span class="tex" data-tex="h[f_\text{ime}, U]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false">[</mo><msub><mi>f</mi><mtext>ime</mtext></msub><mo separator="true">,</mo><mi>U</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">h[f_\text{ime}, U]</annotation></semantics></math></span></span>; in a Graph it is the output of <code>WindAt</code>, wired into <code>EmissionRate</code> as a positional argument. That is geotoolz's rule: a second input is an argument of <code>_apply</code>, never a constructor field, so a Graph can connect it.</li>
-          <li><b>One step per stage, one recipe for the job.</b> Retrieval, segmentation and quantification are steps, and the recipe is a Graph of them, not a script.</li>
-        </ul>
-        <h4 class="tab-h">The recipe: retrieval, segmentation, quantification</h4>
-        <pre class="diagram" aria-label="The recipe as a graph of four ⑤ steps: the scene goes through MethaneRetrieval, then PlumeSegmentation; the wind field goes through WindAt; EmissionRate takes the enhancement, the plume mask and the wind and returns Q.">  scene: EMIT radiance              wind: ERA5 10 m speed
-          |                                  |
-  +-------v--------------+                   |
-  | MethaneRetrieval     |  retrieval        |
-  +-------+--------------+                   |
-          | y_geo, with sigma_y in attrs     |
-          +----------------+                 |
-          |                |                 |
-  +-------v--------------+ |         +-------v------+
-  | PlumeSegmentation    | |         | WindAt       |
-  +-------+--------------+ |         +-------+------+
-          | b_geo          |                 | U
-          |  segmentation  |                 |  quantification
-  +-------v----------------v-----------------v---+
-  | EmissionRate                                 |
-  +-------+--------------------------------------+
-          |  quantification
-          v
-          Q (kg/s)</pre>
-        <p class="code-note">Each box is a ⑤ step; the graph is the ⑥ recipe. The enhancement feeds both segmentation and quantification, and the wind enters on its own grid.</p>
-        <pre class="code"><code class="language-python hljs"><span class="hljs-string">&quot;&quot;&quot;The running example, refactored: every rung builds on the rungs below it.&quot;&quot;&quot;</span>
-
-<span class="hljs-keyword">import</span> einx
-<span class="hljs-keyword">import</span> equinox <span class="hljs-keyword">as</span> eqx
-<span class="hljs-keyword">import</span> jax.numpy <span class="hljs-keyword">as</span> jnp
-<span class="hljs-keyword">import</span> lineax <span class="hljs-keyword">as</span> lx
-<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
-<span class="hljs-keyword">import</span> pipekit
-<span class="hljs-keyword">import</span> scipy.ndimage
-<span class="hljs-keyword">import</span> sklearn.covariance
-<span class="hljs-keyword">from</span> geoarray <span class="hljs-keyword">import</span> GeoArray, GeoPoints, interp_at
-<span class="hljs-keyword">from</span> geoops.carrier <span class="hljs-keyword">import</span> wrap_like
-<span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Bool, Float
-<span class="hljs-keyword">from</span> radtrax.atmosphere <span class="hljs-keyword">import</span> air_mass_factor
-
-<span class="hljs-comment"># ch4_unit_absorption stands for a lookup of methane absorption per ppm m, in radtrax</span>
-
-
-<span class="hljs-comment"># ---------- ① primitives: functions on arrays ----------</span>
-<span class="hljs-keyword">def</span> <span class="hljs-title function_">target_signature</span>(<span class="hljs-params">
-    mean: Float[Array, <span class="hljs-string">&quot; band&quot;</span>], unit_absorption: Float[Array, <span class="hljs-string">&quot; band&quot;</span>], air_mass: <span class="hljs-built_in">float</span>
-</span>) -&gt; Float[Array, <span class="hljs-string">&quot; band&quot;</span>]:
-    <span class="hljs-comment"># t = −M (k ⊙ μ)</span>
-    <span class="hljs-keyword">return</span> -air_mass * unit_absorption * mean
-
-
-<span class="hljs-keyword">def</span> <span class="hljs-title function_">pixel_area</span>(<span class="hljs-params">transform: Float[np.ndarray, <span class="hljs-string">&quot; 6&quot;</span>]</span>) -&gt; <span class="hljs-built_in">float</span>:
-    <span class="hljs-comment"># a = |det A₂ₓ₂|, one area for every pixel of an affine grid</span>
-    <span class="hljs-keyword">return</span> <span class="hljs-built_in">abs</span>(transform[<span class="hljs-number">0</span>] * transform[<span class="hljs-number">4</span>] - transform[<span class="hljs-number">1</span>] * transform[<span class="hljs-number">3</span>])
-
-
-<span class="hljs-keyword">def</span> <span class="hljs-title function_">large_components</span>(<span class="hljs-params">
-    mask: Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>], min_pixels: <span class="hljs-built_in">int</span>
-</span>) -&gt; Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>]:
-    <span class="hljs-comment"># connected components of b with at least N_min pixels</span>
-    labels, count = scipy.ndimage.label(mask)
-    sizes = np.bincount(labels.ravel(), minlength=count + <span class="hljs-number">1</span>)
-    keep = sizes &gt;= min_pixels
-    keep[<span class="hljs-number">0</span>] = <span class="hljs-literal">False</span>
-    <span class="hljs-keyword">return</span> keep[labels]
-
-
-<span class="hljs-comment"># ---------- ② strategies: how, as small Modules ----------</span>
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">LedoitWolf</span>(eqx.Module):
-    <span class="hljs-string">&quot;&quot;&quot;Background mean and a shrunk covariance; swap for another estimator.&quot;&quot;&quot;</span>
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">self, spectra: Float[np.ndarray, <span class="hljs-string">&quot;pixel band&quot;</span>]</span>) -&gt; <span class="hljs-built_in">tuple</span>:
-        estimate = sklearn.covariance.LedoitWolf().fit(spectra)
-        <span class="hljs-keyword">return</span> estimate.location_, estimate.covariance_
-
-
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">SigmaThreshold</span>(eqx.Module):
-    <span class="hljs-string">&quot;&quot;&quot;Keep pixels above k noise levels; swap for Otsu or a percentile.&quot;&quot;&quot;</span>
-
-    k: <span class="hljs-built_in">float</span> = <span class="hljs-number">3.0</span>
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">
-        self, enhancement: Float[Array, <span class="hljs-string">&quot;y x&quot;</span>], noise: <span class="hljs-built_in">float</span>
-    </span>) -&gt; Bool[Array, <span class="hljs-string">&quot;y x&quot;</span>]:
-        <span class="hljs-comment"># b_n = 1[y_n &gt; k σ_y]</span>
-        <span class="hljs-keyword">return</span> enhancement &gt; self.k * noise
-
-
-<span class="hljs-comment"># ---------- ③ models: state fitted once ----------</span>
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">Background</span>(eqx.Module):
-    <span class="hljs-string">&quot;&quot;&quot;The scene&#x27;s background spectrum statistics, μ and Σ.&quot;&quot;&quot;</span>
-
-    mean: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]
-    covariance: lx.MatrixLinearOperator
-
-<span class="hljs-meta">    @classmethod</span>
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">fit</span>(<span class="hljs-params">cls, spectra: Float[np.ndarray, <span class="hljs-string">&quot;pixel band&quot;</span>], estimator=LedoitWolf(<span class="hljs-params"></span>)</span>):
-        mean, covariance = estimator(spectra)
-        operator = lx.MatrixLinearOperator(
-            jnp.asarray(covariance), lx.positive_semidefinite_tag
-        )
-        <span class="hljs-keyword">return</span> cls(mean=jnp.asarray(mean), covariance=operator)
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">solve</span>(<span class="hljs-params">self, vector: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot; band&quot;</span>]:
-        <span class="hljs-comment"># Σ⁻¹ v</span>
-        <span class="hljs-keyword">return</span> lx.linear_solve(self.covariance, vector).value
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">noise</span>(<span class="hljs-params">self, target: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot;&quot;</span>]:
-        <span class="hljs-comment"># σ_y = (tᵀ Σ⁻¹ t)^(−1/2), the matched filter&#x27;s standard error</span>
-        <span class="hljs-keyword">return</span> einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, self.solve(target)) ** -<span class="hljs-number">0.5</span>
-
-
-<span class="hljs-comment"># ---------- ④ algorithms: functions over models ----------</span>
-<span class="hljs-keyword">def</span> <span class="hljs-title function_">matched_filter</span>(<span class="hljs-params">
-    radiance: Float[Array, <span class="hljs-string">&quot;band y x&quot;</span>],
-    background: Background,
-    target: Float[Array, <span class="hljs-string">&quot; band&quot;</span>],
-</span>) -&gt; Float[Array, <span class="hljs-string">&quot;y x&quot;</span>]:
-    <span class="hljs-comment"># s = Σ⁻¹ t</span>
-    direction = background.solve(target)
-    <span class="hljs-comment"># r_n = x_n − μ</span>
-    residual = einx.subtract(<span class="hljs-string">&quot;band y x, band -&gt; band y x&quot;</span>, radiance, background.mean)
-    <span class="hljs-comment"># y_n = sᵀ r_n / (tᵀ s)</span>
-    projection = einx.dot(<span class="hljs-string">&quot;band y x, band -&gt; y x&quot;</span>, residual, direction)
-    <span class="hljs-keyword">return</span> projection / einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, direction)
-
-
-<span class="hljs-keyword">def</span> <span class="hljs-title function_">segment</span>(<span class="hljs-params">enhancement, noise, rule: SigmaThreshold, min_pixels: <span class="hljs-built_in">int</span></span>):
-    <span class="hljs-comment"># b = the large components of the thresholded enhancement</span>
-    above = np.asarray(rule(enhancement, noise))
-    <span class="hljs-keyword">return</span> large_components(above, min_pixels)
-
-
-<span class="hljs-keyword">def</span> <span class="hljs-title function_">emission_rate</span>(<span class="hljs-params">enhancement, plume, area: <span class="hljs-built_in">float</span>, wind: <span class="hljs-built_in">float</span>, kappa: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:
-    <span class="hljs-comment"># IME = κ ∑ b_n y_n a</span>
-    ime = kappa * area * <span class="hljs-built_in">float</span>(np.nansum(np.where(plume, enhancement, <span class="hljs-number">0.0</span>)))
-    <span class="hljs-comment"># L = (∑ b_n a)^(1/2)</span>
-    length = <span class="hljs-built_in">float</span>(np.sqrt(plume.<span class="hljs-built_in">sum</span>() * area))
-    <span class="hljs-comment"># Q = U IME / L</span>
-    <span class="hljs-keyword">return</span> wind * ime / length <span class="hljs-keyword">if</span> length &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span>
-
-
-<span class="hljs-comment"># ---------- ⑤ steps: Operators on carriers ----------</span>
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">MethaneRetrieval</span>(pipekit.Operator):
-    <span class="hljs-string">&quot;&quot;&quot;Retrieval: radiance → enhancement (ppm m), with its noise σ_y in the attrs.&quot;&quot;&quot;</span>
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, window_nm: <span class="hljs-built_in">tuple</span>[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>] = (<span class="hljs-params"><span class="hljs-number">2122.0</span>, <span class="hljs-number">2488.0</span></span>)</span>) -&gt; <span class="hljs-literal">None</span>:
-        self.window_nm = window_nm
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, scene: GeoArray</span>) -&gt; GeoArray:
-        <span class="hljs-comment"># π_α: the window&#x27;s bands, u = (M, k), and X from the valid pixels</span>
-        bands = scene.coord(<span class="hljs-string">&quot;band&quot;</span>)
-        lower, upper = self.window_nm
-        names = [
-            n <span class="hljs-keyword">for</span> n, w <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(bands.names, bands.wavelength_nm) <span class="hljs-keyword">if</span> lower &lt;= w &lt;= upper
-        ]
-        swir = scene.sel(band=names)
-        air_mass = air_mass_factor(
-            swir.attrs[<span class="hljs-string">&quot;solar_zenith_deg&quot;</span>], swir.attrs[<span class="hljs-string">&quot;view_zenith_deg&quot;</span>]
-        )
-        absorption = ch4_unit_absorption(swir.coord(<span class="hljs-string">&quot;band&quot;</span>).wavelength_nm)
-        valid = swir.valid_mask()
-        pixels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;band y x -&gt; (y x) band&quot;</span>, np.asarray(swir))
-        spectra = pixels[einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, valid)]
-        <span class="hljs-comment"># ③ then ①, ④: fit once, build t, filter</span>
-        background = Background.fit(spectra)
-        target = target_signature(background.mean, jnp.asarray(absorption), air_mass)
-        enhancement = np.asarray(matched_filter(swir.data, background, target))
-        <span class="hljs-comment"># ι_α: one band in ppm m, NaN where m = 0, σ_y carried in M</span>
-        enhancement = np.where(valid, enhancement, np.nan)[<span class="hljs-literal">None</span>]
-        noise = <span class="hljs-built_in">float</span>(background.noise(target))
-        <span class="hljs-keyword">return</span> wrap_like(
-            swir,
-            enhancement,
-            band_names=(<span class="hljs-string">&quot;ch4&quot;</span>,),
-            fill_value=np.nan,
-            attrs={<span class="hljs-string">&quot;noise_ppm_m&quot;</span>: noise},
-        )
-
-
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">PlumeSegmentation</span>(pipekit.Operator):
-    <span class="hljs-string">&quot;&quot;&quot;Segmentation: enhancement → plume mask, at k times the retrieval&#x27;s noise.&quot;&quot;&quot;</span>
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, k: <span class="hljs-built_in">float</span> = <span class="hljs-number">3.0</span>, min_pixels: <span class="hljs-built_in">int</span> = <span class="hljs-number">20</span></span>) -&gt; <span class="hljs-literal">None</span>:
-        self.k = k
-        self.min_pixels = min_pixels
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, enhancement: GeoArray</span>) -&gt; GeoArray:
-        noise = enhancement.attrs[<span class="hljs-string">&quot;noise_ppm_m&quot;</span>]
-        plume = segment(
-            np.asarray(enhancement)[<span class="hljs-number">0</span>], noise, SigmaThreshold(self.k), self.min_pixels
-        )
-        <span class="hljs-keyword">return</span> wrap_like(
-            enhancement, plume[<span class="hljs-literal">None</span>], band_names=(<span class="hljs-string">&quot;plume&quot;</span>,), fill_value=<span class="hljs-literal">False</span>
-        )
-
-
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">WindAt</span>(pipekit.Operator):
-    <span class="hljs-string">&quot;&quot;&quot;Quantification, part 1: the wind speed at the source, from a gridded field.&quot;&quot;&quot;</span>
-
-    _terminal = <span class="hljs-literal">True</span>
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, lon: <span class="hljs-built_in">float</span>, lat: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-literal">None</span>:
-        self.lon = lon
-        self.lat = lat
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, wind_field: GeoArray</span>) -&gt; <span class="hljs-built_in">float</span>:
-        source = GeoPoints(np.zeros(<span class="hljs-number">1</span>), xy=np.array([[self.lon, self.lat]]), dims=<span class="hljs-string">&quot;obs&quot;</span>)
-        sampled = interp_at(wind_field, source)
-        <span class="hljs-comment"># one band, one point: U</span>
-        <span class="hljs-keyword">return</span> <span class="hljs-built_in">float</span>(np.asarray(sampled).item())
-
-
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">EmissionRate</span>(pipekit.Operator):
-    <span class="hljs-string">&quot;&quot;&quot;Quantification, part 2: Q from the enhancement, the plume and the wind.&quot;&quot;&quot;</span>
-
-    _terminal = <span class="hljs-literal">True</span>
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, kappa: <span class="hljs-built_in">float</span> = <span class="hljs-number">6.56e-7</span></span>) -&gt; <span class="hljs-literal">None</span>:
-        self.kappa = kappa
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, enhancement: GeoArray, plume: GeoArray, wind: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">dict</span>:
-        area = pixel_area(enhancement.transform)
-        rate = emission_rate(
-            np.asarray(enhancement)[<span class="hljs-number">0</span>], np.asarray(plume)[<span class="hljs-number">0</span>], area, wind, self.kappa
-        )
-        <span class="hljs-keyword">return</span> {<span class="hljs-string">&quot;emission_rate_kg_s&quot;</span>: rate}
-
-
-<span class="hljs-comment"># ---------- ⑥ recipe: retrieval, segmentation, quantification ----------</span>
-scene = pipekit.Input(<span class="hljs-string">&quot;scene&quot;</span>)
-wind_field = pipekit.Input(<span class="hljs-string">&quot;wind&quot;</span>)
-enhancement = MethaneRetrieval()(scene)
-plume = PlumeSegmentation(k=<span class="hljs-number">3.0</span>)(enhancement)
-wind = WindAt(lon=-<span class="hljs-number">103.52</span>, lat=<span class="hljs-number">31.98</span>)(wind_field)
-emission = EmissionRate()(enhancement, plume, wind)
-recipe = pipekit.Graph(
-    inputs={<span class="hljs-string">&quot;scene&quot;</span>: scene, <span class="hljs-string">&quot;wind&quot;</span>: wind_field}, outputs={<span class="hljs-string">&quot;emission&quot;</span>: emission}
-)
-<span class="hljs-comment"># the same recipe as data: JSON that pipekit loads back into a Graph</span>
-recipe_json = pipekit.dumps(recipe)</code></pre>
-        <p>The same recipe as data: <code>pipekit.dumps(recipe)</code> gives the JSON below, and <code>pipekit.loads</code> builds the Graph back from it. Only the steps' configs travel; the arrays never do.</p>
-        <pre class="code"><code class="language-python hljs">{
-  <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;Graph&quot;</span>,
-  <span class="hljs-string">&quot;config&quot;</span>: {
-    <span class="hljs-string">&quot;inputs&quot;</span>: [<span class="hljs-string">&quot;scene&quot;</span>, <span class="hljs-string">&quot;wind&quot;</span>],
-    <span class="hljs-string">&quot;nodes&quot;</span>: [
-      {
-        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">0</span>,
-        <span class="hljs-string">&quot;parents&quot;</span>: [
-          { <span class="hljs-string">&quot;input&quot;</span>: <span class="hljs-string">&quot;scene&quot;</span> }
-        ]
-      },
-      {
-        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">1</span>,
-        <span class="hljs-string">&quot;parents&quot;</span>: [
-          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">0</span> }
-        ]
-      },
-      {
-        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">2</span>,
-        <span class="hljs-string">&quot;parents&quot;</span>: [
-          { <span class="hljs-string">&quot;input&quot;</span>: <span class="hljs-string">&quot;wind&quot;</span> }
-        ]
-      },
-      {
-        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">3</span>,
-        <span class="hljs-string">&quot;parents&quot;</span>: [
-          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">0</span> },
-          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">1</span> },
-          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">2</span> }
-        ]
-      }
-    ],
-    <span class="hljs-string">&quot;operators&quot;</span>: [
-      {
-        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;MethaneRetrieval&quot;</span>,
-        <span class="hljs-string">&quot;config&quot;</span>: {
-          <span class="hljs-string">&quot;window_nm&quot;</span>: [<span class="hljs-number">2122.0</span>, <span class="hljs-number">2488.0</span>]
-        },
-        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
-      },
-      {
-        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;PlumeSegmentation&quot;</span>,
-        <span class="hljs-string">&quot;config&quot;</span>: {
-          <span class="hljs-string">&quot;k&quot;</span>: <span class="hljs-number">3.0</span>,
-          <span class="hljs-string">&quot;min_pixels&quot;</span>: <span class="hljs-number">20</span>
-        },
-        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
-      },
-      {
-        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;WindAt&quot;</span>,
-        <span class="hljs-string">&quot;config&quot;</span>: {
-          <span class="hljs-string">&quot;lat&quot;</span>: <span class="hljs-number">31.98</span>,
-          <span class="hljs-string">&quot;lon&quot;</span>: -<span class="hljs-number">103.52</span>
-        },
-        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
-      },
-      {
-        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;EmissionRate&quot;</span>,
-        <span class="hljs-string">&quot;config&quot;</span>: { <span class="hljs-string">&quot;kappa&quot;</span>: <span class="hljs-number">6.56e-07</span> },
-        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
-      }
-    ],
-    <span class="hljs-string">&quot;outputs&quot;</span>: {
-      <span class="hljs-string">&quot;emission&quot;</span>: { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">3</span> }
-    }
-  },
-  <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;pipekit._base.graph&quot;</span>
-}</code></pre>
-        <p class="code-note">The module runs as written (checked on 7 Nov 2026) on a synthetic 64 × 64 scene with a 3000 ppm m disk and a uniform 3.5 m s⁻¹ wind, with stand-ins for radtrax's <code>air_mass_factor</code> and the absorption lookup: it returns <span class="tex" data-tex="Q"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span></span> = 4.4 kg s⁻¹ against 4.6 kg s⁻¹ from the true plume, and the Graph loaded back from JSON returns the same value. <span class="tex" data-tex="\kappa"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi></mrow><annotation encoding="application/x-tex">\kappa</annotation></semantics></math></span></span> = 6.56 × 10⁻⁷ kg m⁻² per ppm m is the near-surface value geoops' <code>ColumnToMass</code> uses.</p>
-
-        </div>
-      </div>
+      <p>Each line here owns everything it needs. The same job, refactored into pieces that are written once and reused, is worked through after the role ladder: <a href="#ladder-example">the running example, up the ladder</a>.</p>
     </div>
 
     <div class="table-wrap">
@@ -1358,6 +999,444 @@ recipe_json = pipekit.dumps(recipe)</code></pre>
         <div class="side-sub">builds state from data, once, outside <code>jit</code>: a model's state (③), and structures (⓪) such as a low-rank factor</div>
         <div class="rung-chips col"><code>randomized_svd</code><code>randomized_nystrom</code><code>rp_cholesky</code><code>SRHTSketch</code><code>k-NN graph</code><code>Delaunay</code></div>
       </div>
+    </div>
+    <h3 class="minor" id="ladder-example">The running example, up the ladder</h3>
+    <p class="sub">The <a href="#running-example">four lifted functions</a> of the running example are right, but each step owns everything it needs, so nothing is shared. Rebuilt the way a library is built, the same job climbs the ladder: the data, then primitives, the strategies and models that use them, the algorithms over the models, one step per stage, and a recipe that strings the steps together, which orchestration then runs. Each piece is written once, and most are used by more than one piece above it.</p>
+    <div class="table-wrap"><table class="kinds vocab">
+      <thead><tr><th>Piece</th><th>Rung</th><th>Kind</th><th>Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="lib">GeoArray, SpectralAxis, a PSD operator</td><td>⓪ structure</td><td>▣ / ◆</td><td>every rung above: the scene and the wind are carriers, <span class="tex" data-tex="\gmat{\Sigma}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝚺</mi></mrow><annotation encoding="application/x-tex">\gmat{\Sigma}</annotation></semantics></math></span></span> is a lineax operator</td></tr>
+        <tr><td class="lib">target_signature</td><td>① primitive</td><td>ƒ</td><td>the retrieval step, and through <span class="tex" data-tex="\vect{t}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐭</mi></mrow><annotation encoding="application/x-tex">\vect{t}</annotation></semantics></math></span></span> the background's noise</td></tr>
+        <tr><td class="lib">pixel_area</td><td>① primitive</td><td>ƒ</td><td><code>emission_rate</code>, twice: the plume's mass and its length</td></tr>
+        <tr><td class="lib">large_components</td><td>① primitive</td><td>ƒ</td><td><code>segment</code></td></tr>
+        <tr><td class="lib">air_mass_factor, valid_mask, interp_at</td><td>① primitive (radtrax, geoarray)</td><td>ƒ</td><td>the retrieval step and the wind step; any SWIR retrieval, any sampling</td></tr>
+        <tr><td class="lib">LedoitWolf, SigmaThreshold</td><td>② strategy</td><td>▣</td><td><code>Background.fit</code> and <code>segment</code>; swap in another estimator or rule</td></tr>
+        <tr><td class="lib">Background</td><td>③ model</td><td>▣</td><td><code>matched_filter</code> (its solve) and the noise <span class="tex" data-tex="\sigma_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_y</annotation></semantics></math></span></span>, which sets the segmentation threshold</td></tr>
+        <tr><td class="lib">matched_filter, segment, emission_rate</td><td>④ algorithm</td><td>ƒ</td><td>one step each</td></tr>
+        <tr><td class="lib">MethaneRetrieval, PlumeSegmentation, WindAt, EmissionRate</td><td>⑤ step</td><td>→</td><td>the recipe; each also runs alone, in a notebook or another recipe</td></tr>
+        <tr><td class="lib">plume_recipe</td><td>⑥ recipe</td><td>→ Graph</td><td>orchestration: a DVC stage, a GeoApps endpoint, a sweep over <span class="tex" data-tex="k"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span></span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="obj">
+      <h4>⓪ The data</h4>
+      <p>The scene and the wind are carriers, each on its own grid: the radiance on 60 m in UTM zone 13N with the sun and view angles in its attributes <span class="tex" data-tex="\mathcal{M}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℳ</mi></mrow><annotation encoding="application/x-tex">\mathcal{M}</annotation></semantics></math></span></span>, the wind on ERA5's 0.25° grid in longitude and latitude. Nothing in the rungs above builds a grid or reads a file.</p>
+      <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">from</span> geoarray <span class="hljs-keyword">import</span> GeoArray
+<span class="hljs-keyword">from</span> geoarray.coords <span class="hljs-keyword">import</span> SpectralAxis
+
+<span class="hljs-comment"># x: radiance from the orthorectified EMIT file, (band, y, x)</span>
+radiance = np.zeros((<span class="hljs-number">285</span>, <span class="hljs-number">256</span>, <span class="hljs-number">256</span>), dtype=np.float32)
+<span class="hljs-comment"># v: ERA5 10 m wind speed around the field, one band on a 0.25° grid</span>
+wind_speed = np.full((<span class="hljs-number">1</span>, <span class="hljs-number">8</span>, <span class="hljs-number">8</span>), <span class="hljs-number">3.5</span>)
+
+WAVELENGTHS_NM = <span class="hljs-built_in">tuple</span>(np.linspace(<span class="hljs-number">381.0</span>, <span class="hljs-number">2493.0</span>, <span class="hljs-number">285</span>).<span class="hljs-built_in">round</span>(<span class="hljs-number">1</span>).tolist())
+BAND_NAMES = <span class="hljs-built_in">tuple</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">{wavelength:<span class="hljs-number">.1</span>f}</span>nm&quot;</span> <span class="hljs-keyword">for</span> wavelength <span class="hljs-keyword">in</span> WAVELENGTHS_NM)
+
+<span class="hljs-comment"># C: the band names with their centre wavelengths</span>
+bands = SpectralAxis(names=BAND_NAMES, wavelength_nm=WAVELENGTHS_NM)
+<span class="hljs-comment"># x_geo: a 60 m grid in UTM zone 13N, the sun and view angles in M</span>
+scene = GeoArray(
+    radiance,
+    (<span class="hljs-number">60.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">630000.0</span>, <span class="hljs-number">0.0</span>, -<span class="hljs-number">60.0</span>, <span class="hljs-number">3550000.0</span>),
+    <span class="hljs-string">&quot;EPSG:32613&quot;</span>,
+    fill_value=-<span class="hljs-number">9999.0</span>,
+    dims=<span class="hljs-string">&quot;band y x&quot;</span>,
+    coords=(bands,),
+    attrs={<span class="hljs-string">&quot;solar_zenith_deg&quot;</span>: <span class="hljs-number">28.4</span>, <span class="hljs-string">&quot;view_zenith_deg&quot;</span>: <span class="hljs-number">6.1</span>},
+)
+<span class="hljs-comment"># v_geo: the wind on its own grid, in longitude and latitude</span>
+wind_field = GeoArray(
+    wind_speed, (<span class="hljs-number">0.25</span>, <span class="hljs-number">0.0</span>, -<span class="hljs-number">105.0</span>, <span class="hljs-number">0.0</span>, -<span class="hljs-number">0.25</span>, <span class="hljs-number">33.0</span>), <span class="hljs-string">&quot;EPSG:4326&quot;</span>, dims=<span class="hljs-string">&quot;band y x&quot;</span>
+)</code></pre>
+
+      <h4>① Primitives</h4>
+      <p>Functions on arrays that know nothing of methane plumes: the target signature, the area of a pixel of an affine grid, and the large connected components of a mask.</p>
+      <div class="tex display" data-tex="\vect{t} = -M (\vect{k} \odot \gvect{\mu})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝐭</mi><mo>=</mo><mo>−</mo><mi>M</mi><mo stretchy="false">(</mo><mi>𝐤</mi><mo>⊙</mo><mi>𝝁</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{t} = -M (\vect{k} \odot \gvect{\mu})</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="a = |\det \mat{A}_{2 \times 2}|"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>a</mi><mo>=</mo><mi mathvariant="normal">∣</mi><mi>det</mi><mo>⁡</mo><msub><mi>𝐀</mi><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow></msub><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">a = |\det \mat{A}_{2 \times 2}|</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="a \in \mathbb{R}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>∈</mo><mi>ℝ</mi></mrow><annotation encoding="application/x-tex">a \in \mathbb{R}</annotation></semantics></math></span></span>: the pixel area in m², one value on an affine grid; <span class="tex" data-tex="\mat{A}_{2 \times 2}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐀</mi><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow></msub></mrow><annotation encoding="application/x-tex">\mat{A}_{2 \times 2}</annotation></semantics></math></span></span> is the linear part of <span class="tex" data-tex="\mat{A}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐀</mi></mrow><annotation encoding="application/x-tex">\mat{A}</annotation></semantics></math></span></span>.</li>
+      </ul>
+      <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> einx
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">import</span> scipy.ndimage
+<span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Bool, Float
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">target_signature</span>(<span class="hljs-params">
+    mean: Float[Array, <span class="hljs-string">&quot; band&quot;</span>], unit_absorption: Float[Array, <span class="hljs-string">&quot; band&quot;</span>], air_mass: <span class="hljs-built_in">float</span>
+</span>) -&gt; Float[Array, <span class="hljs-string">&quot; band&quot;</span>]:
+    <span class="hljs-comment"># t = −M (k ⊙ μ)</span>
+    <span class="hljs-keyword">return</span> -air_mass * unit_absorption * mean
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">pixel_area</span>(<span class="hljs-params">transform: Float[np.ndarray, <span class="hljs-string">&quot; 6&quot;</span>]</span>) -&gt; <span class="hljs-built_in">float</span>:
+    <span class="hljs-comment"># a = |det A₂ₓ₂|, one area for every pixel of an affine grid</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">abs</span>(transform[<span class="hljs-number">0</span>] * transform[<span class="hljs-number">4</span>] - transform[<span class="hljs-number">1</span>] * transform[<span class="hljs-number">3</span>])
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">large_components</span>(<span class="hljs-params">
+    mask: Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>], min_pixels: <span class="hljs-built_in">int</span>
+</span>) -&gt; Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>]:
+    <span class="hljs-comment"># the connected components of b, each labelled 1, 2, …; 0 off the mask</span>
+    labels, count = scipy.ndimage.label(mask)
+    <span class="hljs-comment"># the size of each component, in pixels</span>
+    flat_labels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, labels)
+    sizes = np.bincount(flat_labels, minlength=count + <span class="hljs-number">1</span>)
+    <span class="hljs-comment"># keep the components with at least N_min pixels</span>
+    keep = sizes &gt;= min_pixels
+    keep[<span class="hljs-number">0</span>] = <span class="hljs-literal">False</span>
+    <span class="hljs-keyword">return</span> keep[labels]</code></pre>
+
+      <h4>② Strategies and ③ models</h4>
+      <p>The strategies say <i>how</i>: <code>LedoitWolf</code> fits a mean and a shrunk covariance, <code>SigmaThreshold</code> keeps the pixels above <span class="tex" data-tex="k"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span></span> noise levels. The model holds what was fitted: <code>Background</code> keeps <span class="tex" data-tex="\gvect{\mu}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝁</mi></mrow><annotation encoding="application/x-tex">\gvect{\mu}</annotation></semantics></math></span></span> and <span class="tex" data-tex="\gmat{\Sigma}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝚺</mi></mrow><annotation encoding="application/x-tex">\gmat{\Sigma}</annotation></semantics></math></span></span>, solves with <span class="tex" data-tex="\gmat{\Sigma}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝚺</mi></mrow><annotation encoding="application/x-tex">\gmat{\Sigma}</annotation></semantics></math></span></span>, and gives the matched filter's standard error, which the segmentation threshold uses:</p>
+      <div class="tex display" data-tex="\sigma_y = (\vect{t}^\top \gmat{\Sigma}^{-1} \vect{t})^{-1/2}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub><mo>=</mo><mo stretchy="false">(</mo><msup><mi>𝐭</mi><mi mathvariant="normal">⊤</mi></msup><msup><mi>𝚺</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>𝐭</mi><msup><mo stretchy="false">)</mo><mrow><mo>−</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\sigma_y = (\vect{t}^\top \gmat{\Sigma}^{-1} \vect{t})^{-1/2}</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="b_n = \mathbf{1}[y_n > k \sigma_y]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>b</mi><mi>n</mi></msub><mo>=</mo><mn>𝟏</mn><mo stretchy="false">[</mo><msub><mi>y</mi><mi>n</mi></msub><mo>&gt;</mo><mi>k</mi><msub><mi>σ</mi><mi>y</mi></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">b_n = \mathbf{1}[y_n &gt; k \sigma_y]</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="\sigma_y \in \mathbb{R}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub><mo>∈</mo><mi>ℝ</mi></mrow><annotation encoding="application/x-tex">\sigma_y \in \mathbb{R}</annotation></semantics></math></span></span>: the enhancement's standard error under a Gaussian background, in ppm m.</li>
+        <li><span class="tex" data-tex="k \in \mathbb{R}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>∈</mo><mi>ℝ</mi></mrow><annotation encoding="application/x-tex">k \in \mathbb{R}</annotation></semantics></math></span></span>: the threshold, in noise levels; <span class="tex" data-tex="\vect{b} \in \{0, 1\}^{N_\text{row} \times N_\text{col}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐛</mi><mo>∈</mo><mo stretchy="false">{</mo><mn>0</mn><mo separator="true">,</mo><mn>1</mn><msup><mo stretchy="false">}</mo><mrow><msub><mi>N</mi><mtext>row</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>col</mtext></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\vect{b} \in \{0, 1\}^{N_\text{row} \times N_\text{col}}</annotation></semantics></math></span></span>: the plume mask, with <span class="tex" data-tex="b_n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">b_n</annotation></semantics></math></span></span> its value at pixel <span class="tex" data-tex="n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span></span>.</li>
+      </ul>
+      <p>This is where the kind axis's <code>MatchedFilter</code> Module splits: its state becomes the model <code>Background</code>, and its call becomes the algorithm <code>matched_filter</code> below. The split is what lets segmentation reuse <span class="tex" data-tex="\sigma_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_y</annotation></semantics></math></span></span>.</p>
+      <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> einx
+<span class="hljs-keyword">import</span> equinox <span class="hljs-keyword">as</span> eqx
+<span class="hljs-keyword">import</span> jax.numpy <span class="hljs-keyword">as</span> jnp
+<span class="hljs-keyword">import</span> lineax <span class="hljs-keyword">as</span> lx
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">import</span> sklearn.covariance
+<span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Bool, Float
+
+
+<span class="hljs-comment"># --- ② strategies: how a model is fitted, or a rule applied ---</span>
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">LedoitWolf</span>(eqx.Module):
+    <span class="hljs-string">&quot;&quot;&quot;Background mean and a shrunk covariance; swap for another estimator.&quot;&quot;&quot;</span>
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">self, spectra: Float[np.ndarray, <span class="hljs-string">&quot;pixel band&quot;</span>]</span>) -&gt; <span class="hljs-built_in">tuple</span>:
+        estimate = sklearn.covariance.LedoitWolf().fit(spectra)
+        <span class="hljs-keyword">return</span> estimate.location_, estimate.covariance_
+
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">SigmaThreshold</span>(eqx.Module):
+    <span class="hljs-string">&quot;&quot;&quot;Keep pixels above k noise levels; swap for Otsu or a percentile.&quot;&quot;&quot;</span>
+
+    k: <span class="hljs-built_in">float</span> = <span class="hljs-number">3.0</span>
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">
+        self, enhancement: Float[Array, <span class="hljs-string">&quot;y x&quot;</span>], noise: <span class="hljs-built_in">float</span>
+    </span>) -&gt; Bool[Array, <span class="hljs-string">&quot;y x&quot;</span>]:
+        <span class="hljs-comment"># b_n = 1[y_n &gt; k σ_y]</span>
+        <span class="hljs-keyword">return</span> enhancement &gt; self.k * noise
+
+
+<span class="hljs-comment"># --- ③ models: state fitted once ---</span>
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">Background</span>(eqx.Module):
+    <span class="hljs-string">&quot;&quot;&quot;The scene&#x27;s background spectrum statistics, μ and Σ.&quot;&quot;&quot;</span>
+
+    mean: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]
+    covariance: lx.MatrixLinearOperator
+
+<span class="hljs-meta">    @classmethod</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">fit</span>(<span class="hljs-params">
+        cls, spectra: Float[np.ndarray, <span class="hljs-string">&quot;pixel band&quot;</span>], estimator=LedoitWolf(<span class="hljs-params"></span>)
+    </span>) -&gt; <span class="hljs-string">&quot;Background&quot;</span>:
+        mean, covariance = estimator(spectra)
+        <span class="hljs-comment"># Σ as a ⓪ structure: a PSD-tagged operator, so solves take the fast path</span>
+        operator = lx.MatrixLinearOperator(
+            jnp.asarray(covariance), lx.positive_semidefinite_tag
+        )
+        <span class="hljs-keyword">return</span> cls(mean=jnp.asarray(mean), covariance=operator)
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">solve</span>(<span class="hljs-params">self, vector: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot; band&quot;</span>]:
+        <span class="hljs-comment"># Σ⁻¹ v</span>
+        <span class="hljs-keyword">return</span> lx.linear_solve(self.covariance, vector).value
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">noise</span>(<span class="hljs-params">self, target: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot;&quot;</span>]:
+        <span class="hljs-comment"># σ_y = (tᵀ Σ⁻¹ t)^(−1/2), the matched filter&#x27;s standard error</span>
+        <span class="hljs-keyword">return</span> einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, self.solve(target)) ** -<span class="hljs-number">0.5</span></code></pre>
+
+      <h4>④ Algorithms</h4>
+      <p>Functions over models: the matched filter, the segmentation, and the emission rate from the integrated mass enhancement, with the plume length taken as the square root of the plume's area:</p>
+      <div class="tex display" data-tex="\vect{s} = \gmat{\Sigma}^{-1} \vect{t}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝐬</mi><mo>=</mo><msup><mi>𝚺</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>𝐭</mi></mrow><annotation encoding="application/x-tex">\vect{s} = \gmat{\Sigma}^{-1} \vect{t}</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="y_n = \frac{\vect{s}^\top (\vect{x}_n - \gvect{\mu})}{\vect{t}^\top \vect{s}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>y</mi><mi>n</mi></msub><mo>=</mo><mfrac><mrow><msup><mi>𝐬</mi><mi mathvariant="normal">⊤</mi></msup><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>−</mo><mi>𝝁</mi><mo stretchy="false">)</mo></mrow><mrow><msup><mi>𝐭</mi><mi mathvariant="normal">⊤</mi></msup><mi>𝐬</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">y_n = \frac{\vect{s}^\top (\vect{x}_n - \gvect{\mu})}{\vect{t}^\top \vect{s}}</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="L = (a \sum_{n} b_n)^{1/2}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>L</mi><mo>=</mo><mo stretchy="false">(</mo><mi>a</mi><munder><mo>∑</mo><mi>n</mi></munder><msub><mi>b</mi><mi>n</mi></msub><msup><mo stretchy="false">)</mo><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">L = (a \sum_{n} b_n)^{1/2}</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="Q = \frac{U \kappa a}{L} \sum_{n} b_n y_n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Q</mi><mo>=</mo><mfrac><mrow><mi>U</mi><mi>κ</mi><mi>a</mi></mrow><mi>L</mi></mfrac><munder><mo>∑</mo><mi>n</mi></munder><msub><mi>b</mi><mi>n</mi></msub><msub><mi>y</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">Q = \frac{U \kappa a}{L} \sum_{n} b_n y_n</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="L"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span></span>: the plume length in m; <span class="tex" data-tex="U"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span></span>: the wind speed at the source in m s⁻¹; <span class="tex" data-tex="\kappa"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi></mrow><annotation encoding="application/x-tex">\kappa</annotation></semantics></math></span></span>: the mass of methane per square metre in one ppm m; <span class="tex" data-tex="Q"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span></span>: the emission rate in kg s⁻¹.</li>
+      </ul>
+      <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> einx
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">from</span> jaxtyping <span class="hljs-keyword">import</span> Array, Bool, Float
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">matched_filter</span>(<span class="hljs-params">
+    radiance: Float[Array, <span class="hljs-string">&quot;band y x&quot;</span>],
+    background: Background,
+    target: Float[Array, <span class="hljs-string">&quot; band&quot;</span>],
+</span>) -&gt; Float[Array, <span class="hljs-string">&quot;y x&quot;</span>]:
+    <span class="hljs-comment"># s = Σ⁻¹ t, through the model</span>
+    direction = background.solve(target)
+    <span class="hljs-comment"># r_n = x_n − μ</span>
+    residual = einx.subtract(<span class="hljs-string">&quot;band y x, band -&gt; band y x&quot;</span>, radiance, background.mean)
+    <span class="hljs-comment"># sᵀ r_n</span>
+    projection = einx.dot(<span class="hljs-string">&quot;band y x, band -&gt; y x&quot;</span>, residual, direction)
+    <span class="hljs-comment"># y_n = sᵀ r_n / (tᵀ s)</span>
+    <span class="hljs-keyword">return</span> projection / einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, direction)
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">segment</span>(<span class="hljs-params">
+    enhancement: Float[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>],
+    noise: <span class="hljs-built_in">float</span>,
+    rule: SigmaThreshold,
+    min_pixels: <span class="hljs-built_in">int</span>,
+</span>) -&gt; Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>]:
+    <span class="hljs-comment"># b: the rule&#x27;s pixels, in components of at least N_min pixels</span>
+    above = np.asarray(rule(enhancement, noise))
+    <span class="hljs-keyword">return</span> large_components(above, min_pixels)
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">emission_rate</span>(<span class="hljs-params">
+    enhancement: Float[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>],
+    plume: Bool[np.ndarray, <span class="hljs-string">&quot;y x&quot;</span>],
+    area: <span class="hljs-built_in">float</span>,
+    wind: <span class="hljs-built_in">float</span>,
+    kappa: <span class="hljs-built_in">float</span>,
+</span>) -&gt; <span class="hljs-built_in">float</span>:
+    <span class="hljs-comment"># IME = κ a ∑ b_n y_n, the mass of methane in the plume</span>
+    plume_enhancement = np.where(plume, enhancement, <span class="hljs-number">0.0</span>)
+    ime = kappa * area * <span class="hljs-built_in">float</span>(np.nansum(plume_enhancement))
+    <span class="hljs-comment"># L = (a ∑ b_n)^(1/2)</span>
+    length = <span class="hljs-built_in">float</span>(np.sqrt(area * plume.<span class="hljs-built_in">sum</span>()))
+    <span class="hljs-comment"># Q = U IME / L</span>
+    <span class="hljs-keyword">return</span> wind * ime / length <span class="hljs-keyword">if</span> length &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span></code></pre>
+
+      <h4>⑤ Steps</h4>
+      <p>One Operator per stage, each a <span class="tex" data-tex="\pi_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\pi_\alpha</annotation></semantics></math></span></span>, a call down the ladder and an <span class="tex" data-tex="\iota_\alpha"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ι</mi><mi>α</mi></msub></mrow><annotation encoding="application/x-tex">\iota_\alpha</annotation></semantics></math></span></span>. Retrieval writes <span class="tex" data-tex="\sigma_y"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_y</annotation></semantics></math></span></span> into the enhancement's attributes, so segmentation reads it from its input. Quantification is two steps, because the wind lives on another grid: <code>WindAt</code> reads <span class="tex" data-tex="U"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span></span> at the source's coordinates, and <code>EmissionRate</code> takes it as an input. In the four lifted functions <span class="tex" data-tex="U"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">U</annotation></semantics></math></span></span> was the parameter of <span class="tex" data-tex="h[f_\text{ime}, U]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false">[</mo><msub><mi>f</mi><mtext>ime</mtext></msub><mo separator="true">,</mo><mi>U</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">h[f_\text{ime}, U]</annotation></semantics></math></span></span>; here it is wired, as geotoolz's rule wants: a second input is an argument of <code>_apply</code>, never a constructor field, so a Graph can connect it.</p>
+      <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> einx
+<span class="hljs-keyword">import</span> jax.numpy <span class="hljs-keyword">as</span> jnp
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">import</span> pipekit
+<span class="hljs-keyword">from</span> geoarray <span class="hljs-keyword">import</span> GeoArray, GeoPoints, interp_at
+<span class="hljs-keyword">from</span> geoops.carrier <span class="hljs-keyword">import</span> wrap_like
+<span class="hljs-keyword">from</span> radtrax.atmosphere <span class="hljs-keyword">import</span> air_mass_factor
+
+<span class="hljs-comment"># ch4_unit_absorption stands for a lookup of methane absorption per ppm m, in radtrax</span>
+
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">MethaneRetrieval</span>(pipekit.Operator):
+    <span class="hljs-string">&quot;&quot;&quot;Retrieval: radiance → enhancement (ppm m), with its noise σ_y in the attrs.&quot;&quot;&quot;</span>
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, window_nm: <span class="hljs-built_in">tuple</span>[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>] = (<span class="hljs-params"><span class="hljs-number">2122.0</span>, <span class="hljs-number">2488.0</span></span>)</span>) -&gt; <span class="hljs-literal">None</span>:
+        self.window_nm = window_nm
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, scene: GeoArray</span>) -&gt; GeoArray:
+        <span class="hljs-comment"># π_α: the window&#x27;s bands, by wavelength</span>
+        bands = scene.coord(<span class="hljs-string">&quot;band&quot;</span>)
+        lower, upper = self.window_nm
+        names = [
+            n <span class="hljs-keyword">for</span> n, w <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(bands.names, bands.wavelength_nm) <span class="hljs-keyword">if</span> lower &lt;= w &lt;= upper
+        ]
+        swir = scene.sel(band=names)
+        <span class="hljs-comment"># u = (M, k), from the attrs and the wavelengths</span>
+        air_mass = air_mass_factor(
+            swir.attrs[<span class="hljs-string">&quot;solar_zenith_deg&quot;</span>], swir.attrs[<span class="hljs-string">&quot;view_zenith_deg&quot;</span>]
+        )
+        absorption = ch4_unit_absorption(swir.coord(<span class="hljs-string">&quot;band&quot;</span>).wavelength_nm)
+        <span class="hljs-comment"># X: the spectra of the valid pixels</span>
+        valid = swir.valid_mask()
+        pixels = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;band y x -&gt; (y x) band&quot;</span>, np.asarray(swir))
+        spectra = pixels[einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; (y x)&quot;</span>, valid)]
+        <span class="hljs-comment"># ③ fit the model, ① build t, ④ filter</span>
+        background = Background.fit(spectra)
+        target = target_signature(background.mean, jnp.asarray(absorption), air_mass)
+        enhancement = np.asarray(matched_filter(swir.data, background, target))
+        <span class="hljs-comment"># ι_α: one band in ppm m, NaN where m = 0, and σ_y carried in M</span>
+        enhancement = np.where(valid, enhancement, np.nan)
+        noise = <span class="hljs-built_in">float</span>(background.noise(target))
+        <span class="hljs-keyword">return</span> wrap_like(
+            swir,
+            einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, enhancement),
+            band_names=(<span class="hljs-string">&quot;ch4&quot;</span>,),
+            fill_value=np.nan,
+            attrs={<span class="hljs-string">&quot;noise_ppm_m&quot;</span>: noise},
+        )
+
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">PlumeSegmentation</span>(pipekit.Operator):
+    <span class="hljs-string">&quot;&quot;&quot;Segmentation: enhancement → plume mask, at k times the retrieval&#x27;s noise.&quot;&quot;&quot;</span>
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, k: <span class="hljs-built_in">float</span> = <span class="hljs-number">3.0</span>, min_pixels: <span class="hljs-built_in">int</span> = <span class="hljs-number">20</span></span>) -&gt; <span class="hljs-literal">None</span>:
+        self.k = k
+        self.min_pixels = min_pixels
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, enhancement: GeoArray</span>) -&gt; GeoArray:
+        <span class="hljs-comment"># π_α: the map, and σ_y from the retrieval&#x27;s attrs</span>
+        values = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(enhancement))
+        noise = enhancement.attrs[<span class="hljs-string">&quot;noise_ppm_m&quot;</span>]
+        <span class="hljs-comment"># ② the rule, ④ the algorithm</span>
+        plume = segment(values, noise, SigmaThreshold(k=self.k), self.min_pixels)
+        <span class="hljs-comment"># ι_α: a boolean band on the same grid</span>
+        <span class="hljs-keyword">return</span> wrap_like(
+            enhancement,
+            einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;y x -&gt; 1 y x&quot;</span>, plume),
+            band_names=(<span class="hljs-string">&quot;plume&quot;</span>,),
+            fill_value=<span class="hljs-literal">False</span>,
+        )
+
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">WindAt</span>(pipekit.Operator):
+    <span class="hljs-string">&quot;&quot;&quot;Quantification: the wind speed U at the source, read from its own grid.&quot;&quot;&quot;</span>
+
+    _terminal = <span class="hljs-literal">True</span>
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, lon: <span class="hljs-built_in">float</span>, lat: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-literal">None</span>:
+        self.lon = lon
+        self.lat = lat
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, wind_field: GeoArray</span>) -&gt; <span class="hljs-built_in">float</span>:
+        <span class="hljs-comment"># the source as a point, in the wind&#x27;s CRS</span>
+        source = GeoPoints(np.zeros(<span class="hljs-number">1</span>), xy=np.array([[self.lon, self.lat]]), dims=<span class="hljs-string">&quot;obs&quot;</span>)
+        <span class="hljs-comment"># ① geoarray&#x27;s bilinear read; one band, one point: U</span>
+        sampled = interp_at(wind_field, source)
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">float</span>(np.asarray(sampled).item())
+
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">EmissionRate</span>(pipekit.Operator):
+    <span class="hljs-string">&quot;&quot;&quot;Quantification: Q from the enhancement, the plume and the wind.&quot;&quot;&quot;</span>
+
+    _terminal = <span class="hljs-literal">True</span>
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *, kappa: <span class="hljs-built_in">float</span> = <span class="hljs-number">6.56e-7</span></span>) -&gt; <span class="hljs-literal">None</span>:
+        self.kappa = kappa
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_apply</span>(<span class="hljs-params">self, enhancement: GeoArray, plume: GeoArray, wind: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">dict</span>:
+        <span class="hljs-comment"># π_α: u = a from A, and the two maps</span>
+        area = pixel_area(enhancement.transform)
+        values = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(enhancement))
+        mask = einx.<span class="hljs-built_in">id</span>(<span class="hljs-string">&quot;1 y x -&gt; y x&quot;</span>, np.asarray(plume))
+        <span class="hljs-comment"># ④ the algorithm; terminal, so ι_α returns a table, not a carrier</span>
+        rate = emission_rate(values, mask, area, wind, self.kappa)
+        <span class="hljs-keyword">return</span> {<span class="hljs-string">&quot;emission_rate_kg_s&quot;</span>: rate}</code></pre>
+
+      <h4>⑥ Recipe, and orchestration</h4>
+      <p>The recipe strings the steps into one job: retrieval, segmentation, quantification. The enhancement feeds both segmentation and quantification, and the wind enters on its own grid, so the recipe is a Graph rather than a Sequential:</p>
+      <pre class="diagram" aria-label="The recipe as a graph of four steps: the scene goes through MethaneRetrieval, then PlumeSegmentation; the wind field goes through WindAt; EmissionRate takes the enhancement, the plume mask and the wind, and returns Q.">  scene: EMIT radiance              wind: ERA5 10 m speed
+          |                                  |
+  +-------v--------------+                   |
+  | MethaneRetrieval     |  retrieval        |
+  +-------+--------------+                   |
+          | y_geo, with sigma_y in attrs     |
+          +----------------+                 |
+          |                |                 |
+  +-------v--------------+ |         +-------v------+
+  | PlumeSegmentation    | |         | WindAt       |
+  +-------+--------------+ |         +-------+------+
+          | b_geo          |                 | U
+          |  segmentation  |                 |  quantification
+  +-------v----------------v-----------------v---+
+  | EmissionRate                                 |
+  +-------+--------------------------------------+
+          |  quantification
+          v
+          Q (kg/s)</pre>
+      <p>Orchestration runs the recipe without changing it: built in Python, saved as JSON, loaded back, or swept over a setting. A DVC stage, an Airflow task and a GeoApps endpoint all do one of these.</p>
+      <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> pipekit
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">plume_recipe</span>(<span class="hljs-params">*, lon: <span class="hljs-built_in">float</span>, lat: <span class="hljs-built_in">float</span>, k: <span class="hljs-built_in">float</span> = <span class="hljs-number">3.0</span></span>) -&gt; pipekit.Graph:
+    <span class="hljs-string">&quot;&quot;&quot;Retrieval, segmentation and quantification, wired into one Graph.&quot;&quot;&quot;</span>
+    scene_in = pipekit.Input(<span class="hljs-string">&quot;scene&quot;</span>)
+    wind_in = pipekit.Input(<span class="hljs-string">&quot;wind&quot;</span>)
+    <span class="hljs-comment"># retrieval</span>
+    enhancement = MethaneRetrieval()(scene_in)
+    <span class="hljs-comment"># segmentation</span>
+    plume = PlumeSegmentation(k=k)(enhancement)
+    <span class="hljs-comment"># quantification</span>
+    wind = WindAt(lon=lon, lat=lat)(wind_in)
+    emission = EmissionRate()(enhancement, plume, wind)
+    <span class="hljs-keyword">return</span> pipekit.Graph(
+        inputs={<span class="hljs-string">&quot;scene&quot;</span>: scene_in, <span class="hljs-string">&quot;wind&quot;</span>: wind_in}, outputs={<span class="hljs-string">&quot;emission&quot;</span>: emission}
+    )
+
+
+<span class="hljs-comment"># --- orchestration: build, save, load and run; the recipe itself never changes ---</span>
+recipe = plume_recipe(lon=-<span class="hljs-number">103.52</span>, lat=<span class="hljs-number">31.98</span>)
+<span class="hljs-comment"># the recipe as data: JSON with the steps&#x27; configs, never the arrays</span>
+recipe_json = pipekit.dumps(recipe)
+<span class="hljs-comment"># loaded back, it runs on the carriers of the data part</span>
+result = pipekit.loads(recipe_json)(scene=scene, wind=wind_field)
+<span class="hljs-comment"># a sweep over the threshold, as a DVC stage or an Airflow task would run it</span>
+sweep = {
+    k: plume_recipe(lon=-<span class="hljs-number">103.52</span>, lat=<span class="hljs-number">31.98</span>, k=k)(scene=scene, wind=wind_field)
+    <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> (<span class="hljs-number">2.0</span>, <span class="hljs-number">3.0</span>, <span class="hljs-number">4.0</span>)
+}</code></pre>
+      <p>The JSON that <code>pipekit.dumps</code> writes holds the steps' configs and how they connect, never the arrays:</p>
+      <pre class="code"><code class="language-python hljs">{
+  <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;Graph&quot;</span>,
+  <span class="hljs-string">&quot;config&quot;</span>: {
+    <span class="hljs-string">&quot;inputs&quot;</span>: [<span class="hljs-string">&quot;scene&quot;</span>, <span class="hljs-string">&quot;wind&quot;</span>],
+    <span class="hljs-string">&quot;nodes&quot;</span>: [
+      {
+        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">0</span>,
+        <span class="hljs-string">&quot;parents&quot;</span>: [
+          { <span class="hljs-string">&quot;input&quot;</span>: <span class="hljs-string">&quot;scene&quot;</span> }
+        ]
+      },
+      {
+        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-string">&quot;parents&quot;</span>: [
+          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">0</span> }
+        ]
+      },
+      {
+        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">2</span>,
+        <span class="hljs-string">&quot;parents&quot;</span>: [
+          { <span class="hljs-string">&quot;input&quot;</span>: <span class="hljs-string">&quot;wind&quot;</span> }
+        ]
+      },
+      {
+        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">3</span>,
+        <span class="hljs-string">&quot;parents&quot;</span>: [
+          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">0</span> },
+          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">1</span> },
+          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">2</span> }
+        ]
+      }
+    ],
+    <span class="hljs-string">&quot;operators&quot;</span>: [
+      {
+        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;MethaneRetrieval&quot;</span>,
+        <span class="hljs-string">&quot;config&quot;</span>: {
+          <span class="hljs-string">&quot;window_nm&quot;</span>: [<span class="hljs-number">2122.0</span>, <span class="hljs-number">2488.0</span>]
+        },
+        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
+      },
+      {
+        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;PlumeSegmentation&quot;</span>,
+        <span class="hljs-string">&quot;config&quot;</span>: {
+          <span class="hljs-string">&quot;k&quot;</span>: <span class="hljs-number">3.0</span>,
+          <span class="hljs-string">&quot;min_pixels&quot;</span>: <span class="hljs-number">20</span>
+        },
+        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
+      },
+      {
+        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;WindAt&quot;</span>,
+        <span class="hljs-string">&quot;config&quot;</span>: {
+          <span class="hljs-string">&quot;lat&quot;</span>: <span class="hljs-number">31.98</span>,
+          <span class="hljs-string">&quot;lon&quot;</span>: -<span class="hljs-number">103.52</span>
+        },
+        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
+      },
+      {
+        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;EmissionRate&quot;</span>,
+        <span class="hljs-string">&quot;config&quot;</span>: { <span class="hljs-string">&quot;kappa&quot;</span>: <span class="hljs-number">6.56e-07</span> },
+        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
+      }
+    ],
+    <span class="hljs-string">&quot;outputs&quot;</span>: {
+      <span class="hljs-string">&quot;emission&quot;</span>: { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">3</span> }
+    }
+  },
+  <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;pipekit._base.graph&quot;</span>
+}</code></pre>
+      <p class="code-note">The six parts run as written, in order, as one module (checked on 7 Nov 2026), on a synthetic 64 × 64 scene with a 3000 ppm m disk and a uniform 3.5 m s⁻¹ wind, with stand-ins for radtrax's <code>air_mass_factor</code> and the absorption lookup. The recipe returns <span class="tex" data-tex="Q"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span></span> = 4.4 kg s⁻¹ against 4.6 kg s⁻¹ from the true plume, and the Graph loaded back from JSON returns the same. <span class="tex" data-tex="\kappa"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi></mrow><annotation encoding="application/x-tex">\kappa</annotation></semantics></math></span></span> = 6.56 × 10⁻⁷ kg m⁻² per ppm m is the near-surface value of geoops' <code>ColumnToMass</code>.</p>
     </div>
     <p class="sub"><b>Why structures sit below primitives.</b> In gaussx, <code>_primitives</code> imports <code>_operators</code> 76 times and <code>_operators</code> imports <code>_primitives</code> once: the verbs exist to dispatch on the nouns. With the nouns at the floor, the ladder is also the build order. One entanglement is left: a primitive takes a strategy argument (<code>solve(A, b, solver=CGSolver())</code>) and some strategies call primitives (<code>diag</code>, <code>trace</code>); <code>_primitives</code> and <code>_strategies</code> import each other eight times each way. That pair is gaussx's dispatch core, now its only documented exception.</p>
     <p class="sub"><b>The data are nouns too.</b> ▦ arrays, ▤ named arrays and ◆ carriers are the ⓪ structures of the data axis: <code>DimArray</code> is pipekit-array's noun, <code>GeoArray</code>, <code>GeoSwath</code> and <code>GeoPoints</code> are geoarray's, and geoarray's own verbs (<code>crop</code>, <code>to_pixel</code>, <code>read_window</code>) are the ① primitives that act on them. The kind and data axes say how a noun is packaged and what it knows; the ladder says it is a noun.</p>
