@@ -487,6 +487,24 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
 pre.diagram { margin: 6px 0; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.35; color: var(--ink); background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 12px 14px; }
 /* links in running text */
 .sub a, .obj a, .rule a { color: var(--accent); }
+/* the recipe figure: an inline SVG styled from the page tokens */
+.dg-fig { margin: 8px 0; }
+.dg { display: block; width: 100%; max-width: 720px; height: auto; margin: 0 auto; }
+.dg text { font-family: var(--body); font-size: 12.5px; fill: var(--ink); }
+.dg text.mono { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+.dg text.small { font-size: 11.5px; fill: var(--muted); }
+.dg text.strong { font-weight: 600; }
+.dg text.stage { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; fill: var(--toolkits); }
+.dg text.rung { font-size: 12px; fill: var(--toolkits); }
+.dg text.frame-title { font-family: var(--mono); font-size: 12.5px; fill: var(--accent); }
+.dg .dg-orch { fill: var(--found-band); stroke: var(--muted); stroke-dasharray: 5 4; }
+.dg .dg-frame { fill: color-mix(in srgb, var(--accent) 5%, var(--surface)); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 7 4; }
+.dg .dg-io { fill: var(--toolkits-band); stroke: var(--toolkits); }
+.dg .dg-step { fill: var(--surface); stroke: var(--toolkits); stroke-width: 1.5; }
+.dg .dg-json, .dg .dg-out { fill: var(--surface); stroke: var(--muted); }
+.dg .dg-out { stroke: var(--ink); }
+.dg .dg-edge { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.dg .dg-head { fill: var(--muted); }
 </style>
 </head>
 <body>
@@ -1317,25 +1335,7 @@ wind_field = GeoArray(
 
       <h4>⑥ Recipe, and orchestration</h4>
       <p>The recipe strings the steps into one job: retrieval, segmentation, quantification. The enhancement feeds both segmentation and quantification, and the wind enters on its own grid, so the recipe is a Graph rather than a Sequential:</p>
-      <pre class="diagram" aria-label="The recipe as a graph of four steps: the scene goes through MethaneRetrieval, then PlumeSegmentation; the wind field goes through WindAt; EmissionRate takes the enhancement, the plume mask and the wind, and returns Q.">  scene: EMIT radiance              wind: ERA5 10 m speed
-          |                                  |
-  +-------v--------------+                   |
-  | MethaneRetrieval     |  retrieval        |
-  +-------+--------------+                   |
-          | y_geo, with sigma_y in attrs     |
-          +----------------+                 |
-          |                |                 |
-  +-------v--------------+ |         +-------v------+
-  | PlumeSegmentation    | |         | WindAt       |
-  +-------+--------------+ |         +-------+------+
-          | b_geo          |                 | U
-          |  segmentation  |                 |  quantification
-  +-------v----------------v-----------------v---+
-  | EmissionRate                                 |
-  +-------+--------------------------------------+
-          |  quantification
-          v
-          Q (kg/s)</pre>
+      <figure class="dg-fig"><svg class="dg" viewBox="0 0 720 640" role="img" aria-label="The recipe as a pipekit Graph of four steps, inside the orchestration that builds and runs it. The EMIT scene goes through MethaneRetrieval; its enhancement, with the noise sigma_y in its attributes, goes to PlumeSegmentation and on to EmissionRate. The ERA5 wind goes through WindAt, which gives U at the source. EmissionRate takes the enhancement, the plume mask and U, and returns Q in kilograms per second. pipekit.dumps writes the recipe to JSON with the step configs and edges, never arrays, and pipekit.loads builds it back."><defs><marker id="dg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0 L10 5 L0 10 z"/></marker></defs><rect class="dg-orch" x="20" y="16" width="685" height="50" rx="10"/><text class="strong" x="362" y="37" text-anchor="middle">Orchestration</text><text class="small" x="362" y="55" text-anchor="middle">DVC stage · Airflow task · GeoApps endpoint · a sweep over k</text><polyline class="dg-edge" points="270,66 270,98" marker-end="url(#dg-arrow)"/><text class="small" x="280" y="86" text-anchor="start">builds and runs</text><rect class="dg-frame" x="20" y="100" width="500" height="530" rx="12"/><text class="frame-title" x="36" y="124" text-anchor="start">⑥ plume_recipe(lon, lat, k): a pipekit Graph</text><rect class="dg-io" x="40" y="140" width="210" height="40" rx="20"/><text x="145" y="165" text-anchor="middle">◆ scene: EMIT radiance</text><rect class="dg-io" x="290" y="140" width="210" height="40" rx="20"/><text x="395" y="165" text-anchor="middle">◆ wind: ERA5 10 m speed</text><rect class="dg-step" x="40" y="230" width="210" height="60" rx="8"/><text class="rung" x="50" y="246" text-anchor="start">⑤</text><text class="stage" x="145.0" y="252" text-anchor="middle">RETRIEVAL</text><text class="mono" x="145.0" y="274" text-anchor="middle">MethaneRetrieval</text><rect class="dg-step" x="290" y="230" width="210" height="60" rx="8"/><text class="rung" x="300" y="246" text-anchor="start">⑤</text><text class="stage" x="395.0" y="252" text-anchor="middle">QUANTIFICATION</text><text class="mono" x="395.0" y="274" text-anchor="middle">WindAt</text><rect class="dg-step" x="40" y="370" width="175" height="60" rx="8"/><text class="rung" x="50" y="386" text-anchor="start">⑤</text><text class="stage" x="127.5" y="392" text-anchor="middle">SEGMENTATION</text><text class="mono" x="127.5" y="414" text-anchor="middle">PlumeSegmentation</text><rect class="dg-step" x="165" y="500" width="210" height="60" rx="8"/><text class="rung" x="175" y="516" text-anchor="start">⑤</text><text class="stage" x="270.0" y="522" text-anchor="middle">QUANTIFICATION</text><text class="mono" x="270.0" y="544" text-anchor="middle">EmissionRate</text><rect class="dg-out" x="205" y="586" width="130" height="32" rx="16"/><text x="270" y="607" text-anchor="middle">Q, kg s⁻¹</text><polyline class="dg-edge" points="145,180 145,228" marker-end="url(#dg-arrow)"/><text class="small" x="153" y="209" text-anchor="start">radiance</text><polyline class="dg-edge" points="395,180 395,228" marker-end="url(#dg-arrow)"/><text class="small" x="403" y="209" text-anchor="start">speed field</text><polyline class="dg-edge" points="120,290 120,368" marker-end="url(#dg-arrow)"/><text class="small" x="128" y="333" text-anchor="start">y_geo + σ_y</text><polyline class="dg-edge" points="232,290 232,498" marker-end="url(#dg-arrow)"/><text class="small" x="240" y="405" text-anchor="start">y_geo</text><polyline class="dg-edge" points="120,430 120,470 195,470 195,498" marker-end="url(#dg-arrow)"/><text class="small" x="128" y="455" text-anchor="start">b_geo</text><polyline class="dg-edge" points="395,290 395,470 345,470 345,498" marker-end="url(#dg-arrow)"/><text class="small" x="403" y="385" text-anchor="start">U at the source</text><polyline class="dg-edge" points="270,560 270,584" marker-end="url(#dg-arrow)"/><rect class="dg-json" x="575" y="296" width="130" height="96" rx="8"/><text class="mono" x="640" y="324" text-anchor="middle">recipe.json</text><text class="small" x="640" y="344" text-anchor="middle">step configs</text><text class="small" x="640" y="360" text-anchor="middle">and edges,</text><text class="small" x="640" y="376" text-anchor="middle">never arrays</text><polyline class="dg-edge" points="520,322 573,322" marker-end="url(#dg-arrow)"/><text class="small" x="547" y="314" text-anchor="middle">dumps</text><polyline class="dg-edge" points="575,368 522,368" marker-end="url(#dg-arrow)"/><text class="small" x="547" y="386" text-anchor="middle">loads</text></svg><figcaption class="code-note">Each box is a ⑤ step; the dashed frame is the ⑥ recipe, a Graph because the enhancement feeds both segmentation and quantification and the wind enters on its own grid. Orchestration builds and runs the recipe without changing it, and the recipe travels as JSON.</figcaption></figure>
       <p>Orchestration runs the recipe without changing it: built in Python, saved as JSON, loaded back, or swept over a setting. A DVC stage, an Airflow task and a GeoApps endpoint all do one of these.</p>
       <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> pipekit
 
