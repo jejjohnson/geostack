@@ -773,6 +773,19 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
       </ul>
       <p><span class="tag">Example</span> The matched filter as it is used: the plume covers a small fraction of the pixels, so the scene is its own background. Setup estimates <span class="tex" data-tex="\gvect{\mu}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝁</mi></mrow><annotation encoding="application/x-tex">\gvect{\mu}</annotation></semantics></math></span></span> and a shrunk <span class="tex" data-tex="\gmat{\Sigma}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝚺</mi></mrow><annotation encoding="application/x-tex">\gmat{\Sigma}</annotation></semantics></math></span></span> from <span class="tex" data-tex="\mat{X}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐗</mi></mrow><annotation encoding="application/x-tex">\mat{X}</annotation></semantics></math></span></span> (Ledoit–Wolf, in scikit-learn), forms <span class="tex" data-tex="\vect{t}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐭</mi></mrow><annotation encoding="application/x-tex">\vect{t}</annotation></semantics></math></span></span>, and solves once for the filter direction <span class="tex" data-tex="\vect{s} = \gmat{\Sigma}^{-1} \vect{t}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐬</mi><mo>=</mo><msup><mi>𝚺</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>𝐭</mi></mrow><annotation encoding="application/x-tex">\vect{s} = \gmat{\Sigma}^{-1} \vect{t}</annotation></semantics></math></span></span>; the state is <span class="tex" data-tex="\gvect{\psi} = (\gvect{\mu}, \vect{s}, \vect{t}^\top \vect{s})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝝍</mi><mo>=</mo><mo stretchy="false">(</mo><mi>𝝁</mi><mo separator="true">,</mo><mi>𝐬</mi><mo separator="true">,</mo><msup><mi>𝐭</mi><mi mathvariant="normal">⊤</mi></msup><mi>𝐬</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\gvect{\psi} = (\gvect{\mu}, \vect{s}, \vect{t}^\top \vect{s})</annotation></semantics></math></span></span>. Each call is then two contractions:</p>
       <div class="tex display" data-tex="y_n = \frac{\vect{s}^\top (\vect{x}_n - \gvect{\mu})}{\vect{t}^\top \vect{s}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>y</mi><mi>n</mi></msub><mo>=</mo><mfrac><mrow><msup><mi>𝐬</mi><mi mathvariant="normal">⊤</mi></msup><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>−</mo><mi>𝝁</mi><mo stretchy="false">)</mo></mrow><mrow><msup><mi>𝐭</mi><mi mathvariant="normal">⊤</mi></msup><mi>𝐬</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">y_n = \frac{\vect{s}^\top (\vect{x}_n - \gvect{\mu})}{\vect{t}^\top \vect{s}}</annotation></semantics></math></span></div>
+      <p><b>What each method solves.</b> Both rest on one model of a pixel's spectrum, the background plus <span class="tex" data-tex="y_n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">y_n</annotation></semantics></math></span></span> ppm m of methane along <span class="tex" data-tex="\vect{t}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐭</mi></mrow><annotation encoding="application/x-tex">\vect{t}</annotation></semantics></math></span></span>:</p>
+      <div class="tex display" data-tex="\vect{x}_n = \gvect{\mu} + y_n \vect{t} + \gvect{\varepsilon}_n, \gvect{\varepsilon}_n \sim \mathcal{N}(\vect{0}, \gmat{\Sigma})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>𝐱</mi><mi>n</mi></msub><mo>=</mo><mi>𝝁</mi><mo>+</mo><msub><mi>y</mi><mi>n</mi></msub><mi>𝐭</mi><mo>+</mo><msub><mi>𝜺</mi><mi>n</mi></msub><mo separator="true">,</mo><msub><mi>𝜺</mi><mi>n</mi></msub><mo>∼</mo><mi>𝒩</mi><mo stretchy="false">(</mo><mn>𝟎</mn><mo separator="true">,</mo><mi>𝚺</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{x}_n = \gvect{\mu} + y_n \vect{t} + \gvect{\varepsilon}_n, \gvect{\varepsilon}_n \sim \mathcal{N}(\vect{0}, \gmat{\Sigma})</annotation></semantics></math></span></div>
+      <p><code>fit</code> solves for the background and the filter, once per scene and off the trace: a covariance shrunk towards a scaled identity by the amount that minimises its expected error, and the direction that maximises the signal-to-clutter ratio,</p>
+      <div class="tex display" data-tex="\hat{\gmat{\Sigma}} = (1 - \rho) \mat{S} + \rho \nu \mat{I}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mi>𝚺</mi><mo>^</mo></mover><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>ρ</mi><mo stretchy="false">)</mo><mi>𝐒</mi><mo>+</mo><mi>ρ</mi><mi>ν</mi><mi>𝐈</mi></mrow><annotation encoding="application/x-tex">\hat{\gmat{\Sigma}} = (1 - \rho) \mat{S} + \rho \nu \mat{I}</annotation></semantics></math></span></div>
+      <div class="tex display" data-tex="\vect{s} = \op{argmax}_{\vect{s}} \frac{(\vect{s}^\top \vect{t})^2}{\vect{s}^\top \hat{\gmat{\Sigma}} \vect{s}} \propto \hat{\gmat{\Sigma}}^{-1} \vect{t}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>𝐬</mi><mo>=</mo><msub><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">m</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">x</mi></mrow><mi>𝐬</mi></msub><mfrac><mrow><mo stretchy="false">(</mo><msup><mi>𝐬</mi><mi mathvariant="normal">⊤</mi></msup><mi>𝐭</mi><msup><mo stretchy="false">)</mo><mn>2</mn></msup></mrow><mrow><msup><mi>𝐬</mi><mi mathvariant="normal">⊤</mi></msup><mover accent="true"><mi>𝚺</mi><mo>^</mo></mover><mi>𝐬</mi></mrow></mfrac><mo>∝</mo><msup><mover accent="true"><mi>𝚺</mi><mo>^</mo></mover><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>𝐭</mi></mrow><annotation encoding="application/x-tex">\vect{s} = \op{argmax}_{\vect{s}} \frac{(\vect{s}^\top \vect{t})^2}{\vect{s}^\top \hat{\gmat{\Sigma}} \vect{s}} \propto \hat{\gmat{\Sigma}}^{-1} \vect{t}</annotation></semantics></math></span></div>
+      <p>The call solves for each pixel's enhancement with that state fixed. It is the generalised least-squares fit of the model, which is also the maximum-likelihood estimate under the Gaussian background:</p>
+      <div class="tex display" data-tex="y_n = \op{argmin}_{y} (\vect{x}_n - \gvect{\mu} - y \vect{t})^\top \gmat{\Sigma}^{-1} (\vect{x}_n - \gvect{\mu} - y \vect{t})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>y</mi><mi>n</mi></msub><mo>=</mo><msub><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">m</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">n</mi></mrow><mi>y</mi></msub><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>−</mo><mi>𝝁</mi><mo>−</mo><mi>y</mi><mi>𝐭</mi><msup><mo stretchy="false">)</mo><mi mathvariant="normal">⊤</mi></msup><msup><mi>𝚺</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>−</mo><mi>𝝁</mi><mo>−</mo><mi>y</mi><mi>𝐭</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">y_n = \op{argmin}_{y} (\vect{x}_n - \gvect{\mu} - y \vect{t})^\top \gmat{\Sigma}^{-1} (\vect{x}_n - \gvect{\mu} - y \vect{t})</annotation></semantics></math></span></div>
+      <ul class="shapes">
+        <li><span class="tex" data-tex="\gvect{\varepsilon}_n \in \mathbb{R}^{N_\text{band}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝜺</mi><mi>n</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><msub><mi>N</mi><mtext>band</mtext></msub></msup></mrow><annotation encoding="application/x-tex">\gvect{\varepsilon}_n \in \mathbb{R}^{N_\text{band}}</annotation></semantics></math></span></span>: the background's departure at pixel <span class="tex" data-tex="n"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span></span>, the clutter the filter suppresses.</li>
+        <li><span class="tex" data-tex="\mat{S} \in \mathbb{R}^{N_\text{band} \times N_\text{band}}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐒</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>N</mi><mtext>band</mtext></msub><mo>×</mo><msub><mi>N</mi><mtext>band</mtext></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\mat{S} \in \mathbb{R}^{N_\text{band} \times N_\text{band}}</annotation></semantics></math></span></span>: the sample covariance of <span class="tex" data-tex="\mat{X}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐗</mi></mrow><annotation encoding="application/x-tex">\mat{X}</annotation></semantics></math></span></span>; <span class="tex" data-tex="\nu = \op{tr}(\mat{S}) / N_\text{band}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ν</mi><mo>=</mo><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false">(</mo><mi>𝐒</mi><mo stretchy="false">)</mo><mi mathvariant="normal">/</mi><msub><mi>N</mi><mtext>band</mtext></msub></mrow><annotation encoding="application/x-tex">\nu = \op{tr}(\mat{S}) / N_\text{band}</annotation></semantics></math></span></span>; <span class="tex" data-tex="\rho \in [0, 1]"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>∈</mo><mo stretchy="false">[</mo><mn>0</mn><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\rho \in [0, 1]</annotation></semantics></math></span></span>: the Ledoit–Wolf shrinkage, the value that minimises <span class="tex" data-tex="\mathbb{E} \Vert \hat{\gmat{\Sigma}} - \gmat{\Sigma} \Vert_F^2"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mi mathvariant="normal">∥</mi><mover accent="true"><mi>𝚺</mi><mo>^</mo></mover><mo>−</mo><mi>𝚺</mi><msubsup><mi mathvariant="normal">∥</mi><mi>F</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">\mathbb{E} \Vert \hat{\gmat{\Sigma}} - \gmat{\Sigma} \Vert_F^2</annotation></semantics></math></span></span>.</li>
+        <li>The argmin has the closed form above, <span class="tex" data-tex="\vect{s}^\top (\vect{x}_n - \gvect{\mu}) / (\vect{t}^\top \vect{s})"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>𝐬</mi><mi mathvariant="normal">⊤</mi></msup><mo stretchy="false">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>−</mo><mi>𝝁</mi><mo stretchy="false">)</mo><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><msup><mi>𝐭</mi><mi mathvariant="normal">⊤</mi></msup><mi>𝐬</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\vect{s}^\top (\vect{x}_n - \gvect{\mu}) / (\vect{t}^\top \vect{s})</annotation></semantics></math></span></span>, with standard error <span class="tex" data-tex="\sigma_y = (\vect{t}^\top \vect{s})^{-1/2}"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>y</mi></msub><mo>=</mo><mo stretchy="false">(</mo><msup><mi>𝐭</mi><mi mathvariant="normal">⊤</mi></msup><mi>𝐬</mi><msup><mo stretchy="false">)</mo><mrow><mo>−</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\sigma_y = (\vect{t}^\top \vect{s})^{-1/2}</annotation></semantics></math></span></span> at every pixel.</li>
+      </ul>
+      <p>The docstrings below carry the same split: each method states its objective, its steps and its arguments.</p>
       <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> einx
 <span class="hljs-keyword">import</span> equinox <span class="hljs-keyword">as</span> eqx
 <span class="hljs-keyword">import</span> jax.numpy <span class="hljs-keyword">as</span> jnp
@@ -787,7 +800,12 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">MatchedFilter</span>(eqx.Module):
     <span class="hljs-string">&quot;&quot;&quot;Matched filter whose background is fitted once, from the scene&#x27;s own pixels.
 
-    y_n = sᵀ (x_n − μ) / (tᵀ s),  s = Σ⁻¹ t, with μ, s and tᵀ s fixed at setup
+    Model: a pixel&#x27;s spectrum is the background plus y ppm m of methane along t,
+
+        x_n = μ + y_n t + ε_n,  ε_n ~ 𝒩(0, Σ)
+
+    `fit` estimates the background and the filter that model implies; the call
+    estimates y_n at every pixel with them. The state is ψ = (μ, s, tᵀ s).
     &quot;&quot;&quot;</span>
 
     mean: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]
@@ -801,22 +819,49 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
         unit_absorption: Float[np.ndarray, <span class="hljs-string">&quot; band&quot;</span>],
         air_mass: <span class="hljs-built_in">float</span>,
     </span>) -&gt; <span class="hljs-string">&quot;MatchedFilter&quot;</span>:
+        <span class="hljs-string">&quot;&quot;&quot;Fit the background and the filter direction, once per scene.
+
+        Two objectives, solved in turn. The background covariance is shrunk
+        towards a scaled identity by the amount that minimises its expected
+        squared error,
+
+            Σ̂ = (1 − ρ) S + ρ ν I,  ρ = argmin_ρ 𝔼 ‖Σ̂ − Σ‖²_F
+
+        and the filter direction maximises the signal-to-clutter ratio,
+
+            s = argmax_s (sᵀ t)² / (sᵀ Σ̂ s) ∝ Σ̂⁻¹ t,  t = −M (k ⊙ μ̂)
+
+        Algorithm:
+            1. μ̂, Σ̂: the sample mean and the Ledoit–Wolf shrunk covariance of X.
+            2. t = −M (k ⊙ μ̂): the radiance change for 1 ppm m of methane.
+            3. s = Σ̂⁻¹ t, one solve, and the normalisation tᵀ s.
+
+        Args:
+            spectra: X, the spectra of the valid pixels, one row each; the plume
+                is a small fraction of them, so the scene is its own background.
+            unit_absorption: k, methane absorption per ppm m at each band.
+            air_mass: M, the geometric air-mass factor.
+
+        Returns:
+            The filter with its state ψ = (μ̂, s, tᵀ s); S is the sample
+            covariance, ν = tr(S) / B and ρ ∈ [0, 1] the shrinkage.
+        &quot;&quot;&quot;</span>
         <span class="hljs-comment"># --- setup: host-side NumPy, SciPy and scikit-learn, runs once ---</span>
-        <span class="hljs-comment"># μ, Σ: the background mean and a Ledoit–Wolf shrunk covariance</span>
+        <span class="hljs-comment"># μ̂, Σ̂ = (1 − ρ) S + ρ ν I</span>
         background = sklearn.covariance.LedoitWolf().fit(spectra)  <span class="hljs-comment"># (P, B) → fitted</span>
         mean = background.location_                     <span class="hljs-comment"># → (B,)</span>
         covariance = background.covariance_             <span class="hljs-comment"># → (B, B)</span>
-        <span class="hljs-comment"># k ⊙ μ</span>
+        <span class="hljs-comment"># k ⊙ μ̂</span>
         absorbed = unit_absorption * mean               <span class="hljs-comment"># (B,), (B,) → (B,)</span>
-        <span class="hljs-comment"># t = −M (k ⊙ μ)</span>
+        <span class="hljs-comment"># t = −M (k ⊙ μ̂)</span>
         target = -air_mass * absorbed                   <span class="hljs-comment"># (B,) → (B,)</span>
-        <span class="hljs-comment"># s = Σ⁻¹ t, solved once</span>
+        <span class="hljs-comment"># s = Σ̂⁻¹ t, solved once</span>
         filter_direction = scipy.linalg.solve(          <span class="hljs-comment"># (B, B), (B,) → (B,)</span>
             covariance, target, assume_a=<span class="hljs-string">&quot;pos&quot;</span>
         )
         <span class="hljs-comment"># tᵀ s</span>
         normalisation = einx.dot(<span class="hljs-string">&quot;band, band -&gt;&quot;</span>, target, filter_direction)  <span class="hljs-comment"># → ()</span>
-        <span class="hljs-comment"># ψ = (μ, s, tᵀ s), as device arrays</span>
+        <span class="hljs-comment"># ψ = (μ̂, s, tᵀ s), as device arrays</span>
         <span class="hljs-keyword">return</span> cls(
             mean=jnp.asarray(mean),
             filter_direction=jnp.asarray(filter_direction),
@@ -824,6 +869,27 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
         )
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">self, radiance: Float[Array, <span class="hljs-string">&quot;band y x&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot;1 y x&quot;</span>]:
+        <span class="hljs-string">&quot;&quot;&quot;Estimate the methane enhancement at every pixel, with ψ fixed.
+
+        The generalised least-squares fit of the model to each pixel, which is
+        the maximum-likelihood estimate under the Gaussian background:
+
+            y_n = argmin_y (x_n − μ − y t)ᵀ Σ⁻¹ (x_n − μ − y t)
+                = sᵀ (x_n − μ) / (tᵀ s)
+
+        with standard error σ_y = (tᵀ s)^(−1/2), the same at every pixel.
+
+        Algorithm:
+            1. r_n = x_n − μ: the departure from the background.
+            2. sᵀ r_n: its projection on the filter direction.
+            3. y_n = sᵀ r_n / (tᵀ s): scaled to ppm m.
+
+        Args:
+            radiance: x, the scene&#x27;s spectra, any number of pixels.
+
+        Returns:
+            y in ppm m, with a singleton band axis. Pure and jittable: no fit.
+        &quot;&quot;&quot;</span>
         <span class="hljs-comment"># --- every call: two contractions, pure and jittable ---</span>
         <span class="hljs-comment"># r_n = x_n − μ</span>
         residual = einx.subtract(                       <span class="hljs-comment"># (B, R, C), (B,) → (B, R, C)</span>
@@ -1234,7 +1300,11 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
 
 <span class="hljs-comment"># --- ③ models: state fitted once ---</span>
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">Background</span>(eqx.Module):
-    <span class="hljs-string">&quot;&quot;&quot;The scene&#x27;s background spectrum statistics, μ and Σ.&quot;&quot;&quot;</span>
+    <span class="hljs-string">&quot;&quot;&quot;The scene&#x27;s background: x_n = μ + ε_n, ε_n ~ 𝒩(0, Σ), off the plume.
+
+    `fit` estimates μ and Σ once; `solve` and `noise` use them, pure and
+    jittable, for every pixel and every target t.
+    &quot;&quot;&quot;</span>
 
     mean: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]
     covariance: lx.MatrixLinearOperator
@@ -1243,6 +1313,11 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">fit</span>(<span class="hljs-params">
         cls, spectra: Float[np.ndarray, <span class="hljs-string">&quot;pixel band&quot;</span>], estimator=LedoitWolf(<span class="hljs-params"></span>)
     </span>) -&gt; <span class="hljs-string">&quot;Background&quot;</span>:
+        <span class="hljs-string">&quot;&quot;&quot;Estimate μ and Σ from the valid pixels&#x27; spectra X, once per scene.
+
+        (μ̂, Σ̂) = estimator(X); with LedoitWolf, Σ̂ = (1 − ρ) S + ρ ν I, the
+        shrinkage that minimises 𝔼 ‖Σ̂ − Σ‖²_F. Σ̂ is kept as a PSD operator.
+        &quot;&quot;&quot;</span>
         <span class="hljs-comment"># user</span>
         <span class="hljs-comment"># μ, Σ from the strategy</span>
         mean, covariance = estimator(spectra)           <span class="hljs-comment"># (P, W) → (W,), (W, W)</span>
@@ -1253,11 +1328,13 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
         <span class="hljs-keyword">return</span> cls(mean=jnp.asarray(mean), covariance=operator)
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">solve</span>(<span class="hljs-params">self, vector: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot; band&quot;</span>]:
+        <span class="hljs-string">&quot;&quot;&quot;Σ⁻¹ v, by a solve with the PSD operator, never an inverse.&quot;&quot;&quot;</span>
         <span class="hljs-comment"># Σ⁻¹ v</span>
         solution = lx.linear_solve(self.covariance, vector)  <span class="hljs-comment"># (W, W) op, (W,)</span>
         <span class="hljs-keyword">return</span> solution.value                           <span class="hljs-comment"># → (W,)</span>
 
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">noise</span>(<span class="hljs-params">self, target: Float[Array, <span class="hljs-string">&quot; band&quot;</span>]</span>) -&gt; Float[Array, <span class="hljs-string">&quot;&quot;</span>]:
+        <span class="hljs-string">&quot;&quot;&quot;The matched filter&#x27;s standard error for target t: (tᵀ Σ⁻¹ t)^(−1/2).&quot;&quot;&quot;</span>
         <span class="hljs-comment"># Σ⁻¹ t</span>
         direction = self.solve(target)                  <span class="hljs-comment"># (W,) → (W,)</span>
         <span class="hljs-comment"># tᵀ Σ⁻¹ t</span>
