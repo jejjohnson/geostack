@@ -505,6 +505,13 @@ pre.diagram { margin: 6px 0; overflow-x: auto; font-family: var(--mono); font-si
 .dg .dg-out { stroke: var(--ink); }
 .dg .dg-edge { fill: none; stroke: var(--muted); stroke-width: 1.5; }
 .dg .dg-head { fill: var(--muted); }
+/* the recipe figure: cards with signatures, configs and state */
+.dg text.key { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+.dg text.val { font-family: var(--mono); font-size: 11px; fill: var(--ink); }
+.dg .dg-rule { stroke: var(--line); }
+pre.code-out { margin: 2px 0; overflow-x: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--ink); }
+pre.code-out.yaml { background: var(--surface); }
+details.raw summary { cursor: pointer; font-size: 13px; color: var(--muted); margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -1231,6 +1238,7 @@ wind_field = GeoArray(
 <span class="hljs-keyword">import</span> jax.numpy <span class="hljs-keyword">as</span> jnp
 <span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
 <span class="hljs-keyword">import</span> pipekit
+<span class="hljs-keyword">from</span> pipekit <span class="hljs-keyword">import</span> Signature
 <span class="hljs-keyword">from</span> geoarray <span class="hljs-keyword">import</span> GeoArray, GeoPoints, interp_at
 <span class="hljs-keyword">from</span> geoops.carrier <span class="hljs-keyword">import</span> wrap_like
 <span class="hljs-keyword">from</span> radtrax.atmosphere <span class="hljs-keyword">import</span> air_mass_factor
@@ -1276,6 +1284,10 @@ wind_field = GeoArray(
             attrs={<span class="hljs-string">&quot;noise_ppm_m&quot;</span>: noise},
         )
 
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">compute_output_signature</span>(<span class="hljs-params">self, sig: Signature</span>) -&gt; Signature:
+        <span class="hljs-comment"># (band=N_band, y, x) → (band=1, y, x), for the summary, with no data</span>
+        <span class="hljs-keyword">return</span> sig.replace_dims({<span class="hljs-string">&quot;band&quot;</span>: <span class="hljs-number">1</span>})
+
 
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">PlumeSegmentation</span>(pipekit.Operator):
     <span class="hljs-string">&quot;&quot;&quot;Segmentation: enhancement → plume mask, at k times the retrieval&#x27;s noise.&quot;&quot;&quot;</span>
@@ -1298,6 +1310,10 @@ wind_field = GeoArray(
             fill_value=<span class="hljs-literal">False</span>,
         )
 
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">compute_output_signature</span>(<span class="hljs-params">self, sig: Signature</span>) -&gt; Signature:
+        <span class="hljs-comment"># same grid, one boolean band</span>
+        <span class="hljs-keyword">return</span> Signature(dims=sig.dims, dtype=<span class="hljs-string">&quot;bool&quot;</span>)
+
 
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">WindAt</span>(pipekit.Operator):
     <span class="hljs-string">&quot;&quot;&quot;Quantification: the wind speed U at the source, read from its own grid.&quot;&quot;&quot;</span>
@@ -1314,6 +1330,10 @@ wind_field = GeoArray(
         <span class="hljs-comment"># ① geoarray&#x27;s bilinear read; one band, one point: U</span>
         sampled = interp_at(wind_field, source)
         <span class="hljs-keyword">return</span> <span class="hljs-built_in">float</span>(np.asarray(sampled).item())
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">compute_output_signature</span>(<span class="hljs-params">self, sig: Signature</span>) -&gt; Signature:
+        <span class="hljs-comment"># one number: U, in m s⁻¹</span>
+        <span class="hljs-keyword">return</span> Signature(dims=(), dtype=<span class="hljs-string">&quot;float64&quot;</span>)
 
 
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">EmissionRate</span>(pipekit.Operator):
@@ -1335,8 +1355,8 @@ wind_field = GeoArray(
 
       <h4>⑥ Recipe, and orchestration</h4>
       <p>The recipe strings the steps into one job: retrieval, segmentation, quantification. The enhancement feeds both segmentation and quantification, and the wind enters on its own grid, so the recipe is a Graph rather than a Sequential:</p>
-      <figure class="dg-fig"><svg class="dg" viewBox="0 0 720 640" role="img" aria-label="The recipe as a pipekit Graph of four steps, inside the orchestration that builds and runs it. The EMIT scene goes through MethaneRetrieval; its enhancement, with the noise sigma_y in its attributes, goes to PlumeSegmentation and on to EmissionRate. The ERA5 wind goes through WindAt, which gives U at the source. EmissionRate takes the enhancement, the plume mask and U, and returns Q in kilograms per second. pipekit.dumps writes the recipe to JSON with the step configs and edges, never arrays, and pipekit.loads builds it back."><defs><marker id="dg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0 L10 5 L0 10 z"/></marker></defs><rect class="dg-orch" x="20" y="16" width="685" height="50" rx="10"/><text class="strong" x="362" y="37" text-anchor="middle">Orchestration</text><text class="small" x="362" y="55" text-anchor="middle">DVC stage · Airflow task · GeoApps endpoint · a sweep over k</text><polyline class="dg-edge" points="270,66 270,98" marker-end="url(#dg-arrow)"/><text class="small" x="280" y="86" text-anchor="start">builds and runs</text><rect class="dg-frame" x="20" y="100" width="500" height="530" rx="12"/><text class="frame-title" x="36" y="124" text-anchor="start">⑥ plume_recipe(lon, lat, k): a pipekit Graph</text><rect class="dg-io" x="40" y="140" width="210" height="40" rx="20"/><text x="145" y="165" text-anchor="middle">◆ scene: EMIT radiance</text><rect class="dg-io" x="290" y="140" width="210" height="40" rx="20"/><text x="395" y="165" text-anchor="middle">◆ wind: ERA5 10 m speed</text><rect class="dg-step" x="40" y="230" width="210" height="60" rx="8"/><text class="rung" x="50" y="246" text-anchor="start">⑤</text><text class="stage" x="145.0" y="252" text-anchor="middle">RETRIEVAL</text><text class="mono" x="145.0" y="274" text-anchor="middle">MethaneRetrieval</text><rect class="dg-step" x="290" y="230" width="210" height="60" rx="8"/><text class="rung" x="300" y="246" text-anchor="start">⑤</text><text class="stage" x="395.0" y="252" text-anchor="middle">QUANTIFICATION</text><text class="mono" x="395.0" y="274" text-anchor="middle">WindAt</text><rect class="dg-step" x="40" y="370" width="175" height="60" rx="8"/><text class="rung" x="50" y="386" text-anchor="start">⑤</text><text class="stage" x="127.5" y="392" text-anchor="middle">SEGMENTATION</text><text class="mono" x="127.5" y="414" text-anchor="middle">PlumeSegmentation</text><rect class="dg-step" x="165" y="500" width="210" height="60" rx="8"/><text class="rung" x="175" y="516" text-anchor="start">⑤</text><text class="stage" x="270.0" y="522" text-anchor="middle">QUANTIFICATION</text><text class="mono" x="270.0" y="544" text-anchor="middle">EmissionRate</text><rect class="dg-out" x="205" y="586" width="130" height="32" rx="16"/><text x="270" y="607" text-anchor="middle">Q, kg s⁻¹</text><polyline class="dg-edge" points="145,180 145,228" marker-end="url(#dg-arrow)"/><text class="small" x="153" y="209" text-anchor="start">radiance</text><polyline class="dg-edge" points="395,180 395,228" marker-end="url(#dg-arrow)"/><text class="small" x="403" y="209" text-anchor="start">speed field</text><polyline class="dg-edge" points="120,290 120,368" marker-end="url(#dg-arrow)"/><text class="small" x="128" y="333" text-anchor="start">y_geo + σ_y</text><polyline class="dg-edge" points="232,290 232,498" marker-end="url(#dg-arrow)"/><text class="small" x="240" y="405" text-anchor="start">y_geo</text><polyline class="dg-edge" points="120,430 120,470 195,470 195,498" marker-end="url(#dg-arrow)"/><text class="small" x="128" y="455" text-anchor="start">b_geo</text><polyline class="dg-edge" points="395,290 395,470 345,470 345,498" marker-end="url(#dg-arrow)"/><text class="small" x="403" y="385" text-anchor="start">U at the source</text><polyline class="dg-edge" points="270,560 270,584" marker-end="url(#dg-arrow)"/><rect class="dg-json" x="575" y="296" width="130" height="96" rx="8"/><text class="mono" x="640" y="324" text-anchor="middle">recipe.json</text><text class="small" x="640" y="344" text-anchor="middle">step configs</text><text class="small" x="640" y="360" text-anchor="middle">and edges,</text><text class="small" x="640" y="376" text-anchor="middle">never arrays</text><polyline class="dg-edge" points="520,322 573,322" marker-end="url(#dg-arrow)"/><text class="small" x="547" y="314" text-anchor="middle">dumps</text><polyline class="dg-edge" points="575,368 522,368" marker-end="url(#dg-arrow)"/><text class="small" x="547" y="386" text-anchor="middle">loads</text></svg><figcaption class="code-note">Each box is a ⑤ step; the dashed frame is the ⑥ recipe, a Graph because the enhancement feeds both segmentation and quantification and the wind enters on its own grid. Orchestration builds and runs the recipe without changing it, and the recipe travels as JSON.</figcaption></figure>
-      <p>Orchestration runs the recipe without changing it: built in Python, saved as JSON, loaded back, or swept over a setting. A DVC stage, an Airflow task and a GeoApps endpoint all do one of these.</p>
+      <figure class="dg-fig"><svg class="dg" viewBox="0 0 720 760" role="img" aria-label="The plume recipe as a pipekit Graph of four steps, inside the orchestration that builds, summarises and runs it. Each step lists its input and output signature, its config alpha and its fitted state psi. MethaneRetrieval takes the scene, (band 285, y 256, x 256) float32, returns one band, and fits the background mean and covariance, 2,450 numbers, per scene. PlumeSegmentation returns a boolean band on the same grid. WindAt reads the ERA5 field, (band 1, y 8, x 8), and returns one number, U. EmissionRate takes the enhancement, the plume and U and returns a table with the emission rate in kilograms per second. The recipe is saved to and loaded from JSON with dumps and loads."><defs><marker id="dg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0 L10 5 L0 10 z"/></marker></defs><rect class="dg-orch" x="20" y="16" width="450" height="52" rx="10"/><text class="strong" x="245" y="37" text-anchor="middle">Orchestration</text><text class="small" x="245" y="56" text-anchor="middle">DVC stage · Airflow task · GeoApps endpoint · sweep over k</text><rect class="dg-json" x="530" y="16" width="170" height="52" rx="8"/><text class="mono" x="615" y="37" text-anchor="middle">recipe.json</text><text class="small" x="615" y="56" text-anchor="middle">configs and edges, no arrays</text><polyline class="dg-edge" points="470,32 528,32" marker-end="url(#dg-arrow)"/><text class="small" x="499" y="26" text-anchor="middle">dumps</text><polyline class="dg-edge" points="530,54 472,54" marker-end="url(#dg-arrow)"/><text class="small" x="501" y="72" text-anchor="middle">loads</text><polyline class="dg-edge" points="245,68 245,98" marker-end="url(#dg-arrow)"/><text class="small" x="255" y="88" text-anchor="start">builds, summarises, runs</text><rect class="dg-frame" x="20" y="100" width="680" height="640" rx="12"/><text class="frame-title" x="36" y="124" text-anchor="start">⑥ plume_recipe(lon, lat, k): a pipekit Graph</text><rect class="dg-io" x="30" y="138" width="300" height="46" rx="14"/><text x="180.0" y="157" text-anchor="middle">◆ scene: EMIT radiance</text><text class="val" x="180.0" y="174" text-anchor="middle">(band=285, y=256, x=256) float32</text><rect class="dg-io" x="390" y="138" width="300" height="46" rx="14"/><text x="540.0" y="157" text-anchor="middle">◆ wind: ERA5 10 m speed</text><text class="val" x="540.0" y="174" text-anchor="middle">(band=1, y=8, x=8) float64</text><rect class="dg-step" x="30" y="224" width="300" height="110" rx="8"/><text class="mono" x="42" y="246" text-anchor="start">⑤ MethaneRetrieval</text><text class="stage" x="318" y="245" text-anchor="end">RETRIEVAL</text><line class="dg-rule" x1="30" y1="256" x2="330" y2="256"/><text class="key" x="42" y="274" text-anchor="start">in</text><text class="val" x="74" y="274" text-anchor="start">(band=285, y=256, x=256) float32</text><text class="key" x="42" y="291" text-anchor="start">out</text><text class="val" x="74" y="291" text-anchor="start">(band=1, y=256, x=256) float32</text><text class="key" x="42" y="308" text-anchor="start">α</text><text class="val" x="74" y="308" text-anchor="start">window_nm = [2122, 2488]</text><text class="key" x="42" y="325" text-anchor="start">ψ</text><text class="val" x="74" y="325" text-anchor="start">μ, Σ: 2,450 numbers, fitted per scene</text><rect class="dg-step" x="390" y="224" width="300" height="110" rx="8"/><text class="mono" x="402" y="246" text-anchor="start">⑤ WindAt</text><text class="stage" x="678" y="245" text-anchor="end">QUANTIFICATION</text><line class="dg-rule" x1="390" y1="256" x2="690" y2="256"/><text class="key" x="402" y="274" text-anchor="start">in</text><text class="val" x="434" y="274" text-anchor="start">(band=1, y=8, x=8) float64</text><text class="key" x="402" y="291" text-anchor="start">out</text><text class="val" x="434" y="291" text-anchor="start">() float64</text><text class="key" x="402" y="308" text-anchor="start">α</text><text class="val" x="434" y="308" text-anchor="start">lon = −103.52, lat = 31.98</text><text class="key" x="402" y="325" text-anchor="start">ψ</text><text class="val" x="434" y="325" text-anchor="start">none</text><rect class="dg-step" x="30" y="384" width="300" height="110" rx="8"/><text class="mono" x="42" y="406" text-anchor="start">⑤ PlumeSegmentation</text><text class="stage" x="318" y="405" text-anchor="end">SEGMENTATION</text><line class="dg-rule" x1="30" y1="416" x2="330" y2="416"/><text class="key" x="42" y="434" text-anchor="start">in</text><text class="val" x="74" y="434" text-anchor="start">(band=1, y=256, x=256) float32</text><text class="key" x="42" y="451" text-anchor="start">out</text><text class="val" x="74" y="451" text-anchor="start">(band=1, y=256, x=256) bool</text><text class="key" x="42" y="468" text-anchor="start">α</text><text class="val" x="74" y="468" text-anchor="start">k = 3.0, min_pixels = 20</text><text class="key" x="42" y="485" text-anchor="start">ψ</text><text class="val" x="74" y="485" text-anchor="start">none</text><rect class="dg-step" x="210" y="566" width="300" height="110" rx="8"/><text class="mono" x="222" y="588" text-anchor="start">⑤ EmissionRate</text><text class="stage" x="498" y="587" text-anchor="end">QUANTIFICATION</text><line class="dg-rule" x1="210" y1="598" x2="510" y2="598"/><text class="key" x="222" y="616" text-anchor="start">in</text><text class="val" x="254" y="616" text-anchor="start">y_geo, b_geo, U</text><text class="key" x="222" y="633" text-anchor="start">out</text><text class="val" x="254" y="633" text-anchor="start">{emission_rate_kg_s}: a table</text><text class="key" x="222" y="650" text-anchor="start">α</text><text class="val" x="254" y="650" text-anchor="start">kappa = 6.56e-7</text><text class="key" x="222" y="667" text-anchor="start">ψ</text><text class="val" x="254" y="667" text-anchor="start">none</text><polyline class="dg-edge" points="180,184 180,222" marker-end="url(#dg-arrow)"/><text class="small" x="188" y="207" text-anchor="start">radiance</text><polyline class="dg-edge" points="540,184 540,222" marker-end="url(#dg-arrow)"/><text class="small" x="548" y="207" text-anchor="start">speed field</text><polyline class="dg-edge" points="180,334 180,382" marker-end="url(#dg-arrow)"/><text class="small" x="188" y="360" text-anchor="start">y_geo + σ_y</text><polyline class="dg-edge" points="310,334 310,344 360,344 360,564" marker-end="url(#dg-arrow)"/><text class="small" x="368" y="460" text-anchor="start">y_geo</text><polyline class="dg-edge" points="180,494 180,534 270,534 270,564" marker-end="url(#dg-arrow)"/><text class="small" x="188" y="527" text-anchor="start">b_geo</text><polyline class="dg-edge" points="540,334 540,534 450,534 450,564" marker-end="url(#dg-arrow)"/><text class="small" x="548" y="440" text-anchor="start">U at the source</text><polyline class="dg-edge" points="360,676 360,690" marker-end="url(#dg-arrow)"/><rect class="dg-out" x="300" y="692" width="120" height="32" rx="16"/><text x="360" y="713" text-anchor="middle">Q, kg s⁻¹</text></svg><figcaption class="code-note">Each card is a ⑤ step, read like a layer in Keras's <code>plot_model</code>: <b>in</b> and <b>out</b> are pipekit <code>Signature</code>s, the dims, sizes and dtype that <code>recipe.summary</code> propagates without data; <b>α</b> is the config <code>dumps</code> writes; <b>ψ</b> is the state fitted when the step runs. ψ plays the part of Keras's parameter count, with one difference: Keras's weights are trained once and saved, while the background is refitted on every scene and never enters the config. The dashed frame is the ⑥ recipe, a Graph because the enhancement feeds both segmentation and quantification and the wind enters on its own grid.</figcaption></figure>
+      <p>Orchestration runs the recipe without changing it: built in Python, summarised without data, saved as JSON, loaded back, or swept over a setting. A DVC stage, an Airflow task and a GeoApps endpoint all do one of these.</p>
       <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> pipekit
 
 
@@ -1366,77 +1386,113 @@ result = pipekit.loads(recipe_json)(scene=scene, wind=wind_field)
 sweep = {
     k: plume_recipe(lon=-<span class="hljs-number">103.52</span>, lat=<span class="hljs-number">31.98</span>, k=k)(scene=scene, wind=wind_field)
     <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> (<span class="hljs-number">2.0</span>, <span class="hljs-number">3.0</span>, <span class="hljs-number">4.0</span>)
-}</code></pre>
-      <p>The JSON that <code>pipekit.dumps</code> writes holds the steps' configs and how they connect, never the arrays:</p>
-      <pre class="code"><code class="language-python hljs">{
-  <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;Graph&quot;</span>,
-  <span class="hljs-string">&quot;config&quot;</span>: {
-    <span class="hljs-string">&quot;inputs&quot;</span>: [<span class="hljs-string">&quot;scene&quot;</span>, <span class="hljs-string">&quot;wind&quot;</span>],
-    <span class="hljs-string">&quot;nodes&quot;</span>: [
+}
+<span class="hljs-comment"># a Keras-style table, from signatures alone: no data is read</span>
+<span class="hljs-built_in">print</span>(
+    recipe.summary(
+        {<span class="hljs-string">&quot;scene&quot;</span>: pipekit.signature_of(scene), <span class="hljs-string">&quot;wind&quot;</span>: pipekit.signature_of(wind_field)}
+    )
+)</code></pre>
+      <p><code>recipe.summary</code> prints the same signatures as a table, Keras-style, from signatures alone. A multi-input node shows <code>?</code>: pipekit's <code>compute_output_signature</code> takes one input, so <code>EmissionRate</code>'s output is not inferred.</p>
+      <pre class="code-out">Node                             Input sig                                                                Output sig
+--------------------------------------------------------------------------------------------------------------------
+[0] MethaneRetrieval(scene)      (band=285, y=256, x=256) float32                                         (band=1, y=256, x=256) float32
+[1] PlumeSegmentation([0])       (band=1, y=256, x=256) float32                                           (band=1, y=256, x=256) bool
+[2] WindAt(wind)                 (band=1, y=8, x=8) float64                                               () float64
+[3] EmissionRate([0], [1], [2])  (band=1, y=256, x=256) float32, (band=1, y=256, x=256) bool, () float64  ?
+→ emission = [3]                                                                                          ?</pre>
+      <p>The recipe as data, read for people: the steps by name, each with what it takes and its config. This is the record <code>pipekit.dumps</code> writes, with the node numbers replaced by step names; pipekit itself writes and reads the JSON below it.</p>
+      <pre class="code-out yaml">inputs: [scene, wind]
+steps:
+  methane_retrieval:
+    op: MethaneRetrieval
+    in: [scene]
+    window_nm: [2122.0, 2488.0]
+  plume_segmentation:
+    op: PlumeSegmentation
+    in: [methane_retrieval]
+    k: 3.0
+    min_pixels: 20
+  wind_at:
+    op: WindAt
+    in: [wind]
+    lat: 31.98
+    lon: -103.52
+  emission_rate:
+    op: EmissionRate
+    in: [methane_retrieval, plume_segmentation, wind_at]
+    kappa: 6.56e-07
+outputs:
+  emission: emission_rate</pre>
+      <details class="raw"><summary>The JSON as <code>pipekit.dumps</code> writes it</summary><pre class="code-out">{
+  "class": "Graph",
+  "config": {
+    "inputs": ["scene", "wind"],
+    "nodes": [
       {
-        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">0</span>,
-        <span class="hljs-string">&quot;parents&quot;</span>: [
-          { <span class="hljs-string">&quot;input&quot;</span>: <span class="hljs-string">&quot;scene&quot;</span> }
+        "operator": 0,
+        "parents": [
+          { "input": "scene" }
         ]
       },
       {
-        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">1</span>,
-        <span class="hljs-string">&quot;parents&quot;</span>: [
-          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">0</span> }
+        "operator": 1,
+        "parents": [
+          { "node": 0 }
         ]
       },
       {
-        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">2</span>,
-        <span class="hljs-string">&quot;parents&quot;</span>: [
-          { <span class="hljs-string">&quot;input&quot;</span>: <span class="hljs-string">&quot;wind&quot;</span> }
+        "operator": 2,
+        "parents": [
+          { "input": "wind" }
         ]
       },
       {
-        <span class="hljs-string">&quot;operator&quot;</span>: <span class="hljs-number">3</span>,
-        <span class="hljs-string">&quot;parents&quot;</span>: [
-          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">0</span> },
-          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">1</span> },
-          { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">2</span> }
+        "operator": 3,
+        "parents": [
+          { "node": 0 },
+          { "node": 1 },
+          { "node": 2 }
         ]
       }
     ],
-    <span class="hljs-string">&quot;operators&quot;</span>: [
+    "operators": [
       {
-        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;MethaneRetrieval&quot;</span>,
-        <span class="hljs-string">&quot;config&quot;</span>: {
-          <span class="hljs-string">&quot;window_nm&quot;</span>: [<span class="hljs-number">2122.0</span>, <span class="hljs-number">2488.0</span>]
+        "class": "MethaneRetrieval",
+        "config": {
+          "window_nm": [2122.0, 2488.0]
         },
-        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
+        "module": "plume"
       },
       {
-        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;PlumeSegmentation&quot;</span>,
-        <span class="hljs-string">&quot;config&quot;</span>: {
-          <span class="hljs-string">&quot;k&quot;</span>: <span class="hljs-number">3.0</span>,
-          <span class="hljs-string">&quot;min_pixels&quot;</span>: <span class="hljs-number">20</span>
+        "class": "PlumeSegmentation",
+        "config": {
+          "k": 3.0,
+          "min_pixels": 20
         },
-        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
+        "module": "plume"
       },
       {
-        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;WindAt&quot;</span>,
-        <span class="hljs-string">&quot;config&quot;</span>: {
-          <span class="hljs-string">&quot;lat&quot;</span>: <span class="hljs-number">31.98</span>,
-          <span class="hljs-string">&quot;lon&quot;</span>: -<span class="hljs-number">103.52</span>
+        "class": "WindAt",
+        "config": {
+          "lat": 31.98,
+          "lon": -103.52
         },
-        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
+        "module": "plume"
       },
       {
-        <span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-string">&quot;EmissionRate&quot;</span>,
-        <span class="hljs-string">&quot;config&quot;</span>: { <span class="hljs-string">&quot;kappa&quot;</span>: <span class="hljs-number">6.56e-07</span> },
-        <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;recipe&quot;</span>
+        "class": "EmissionRate",
+        "config": { "kappa": 6.56e-07 },
+        "module": "plume"
       }
     ],
-    <span class="hljs-string">&quot;outputs&quot;</span>: {
-      <span class="hljs-string">&quot;emission&quot;</span>: { <span class="hljs-string">&quot;node&quot;</span>: <span class="hljs-number">3</span> }
+    "outputs": {
+      "emission": { "node": 3 }
     }
   },
-  <span class="hljs-string">&quot;module&quot;</span>: <span class="hljs-string">&quot;pipekit._base.graph&quot;</span>
-}</code></pre>
-      <p class="code-note">The six parts run as written, in order, as one module (checked on 7 Nov 2026), on a synthetic 64 × 64 scene with a 3000 ppm m disk and a uniform 3.5 m s⁻¹ wind, with stand-ins for radtrax's <code>air_mass_factor</code> and the absorption lookup. The recipe returns <span class="tex" data-tex="Q"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span></span> = 4.4 kg s⁻¹ against 4.6 kg s⁻¹ from the true plume, and the Graph loaded back from JSON returns the same. <span class="tex" data-tex="\kappa"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi></mrow><annotation encoding="application/x-tex">\kappa</annotation></semantics></math></span></span> = 6.56 × 10⁻⁷ kg m⁻² per ppm m is the near-surface value of geoops' <code>ColumnToMass</code>.</p>
+  "module": "pipekit._base.graph"
+}</pre></details>
+      <p class="code-note">The six parts run as written, in order, as one module (checked on 7 Nov 2026), on a synthetic 256 × 256 scene, the size the summary shows, with a 3000 ppm m disk and a uniform 3.5 m s⁻¹ wind, with stand-ins for radtrax's <code>air_mass_factor</code> and the absorption lookup. The recipe returns <span class="tex" data-tex="Q"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span></span> = 4.5 kg s⁻¹ against 4.6 kg s⁻¹ from the true plume, and the Graph loaded back from JSON returns the same. <span class="tex" data-tex="\kappa"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi></mrow><annotation encoding="application/x-tex">\kappa</annotation></semantics></math></span></span> = 6.56 × 10⁻⁷ kg m⁻² per ppm m is the near-surface value of geoops' <code>ColumnToMass</code>.</p>
     </div>
     <p class="sub"><b>Why structures sit below primitives.</b> In gaussx, <code>_primitives</code> imports <code>_operators</code> 76 times and <code>_operators</code> imports <code>_primitives</code> once: the verbs exist to dispatch on the nouns. With the nouns at the floor, the ladder is also the build order. One entanglement is left: a primitive takes a strategy argument (<code>solve(A, b, solver=CGSolver())</code>) and some strategies call primitives (<code>diag</code>, <code>trace</code>); <code>_primitives</code> and <code>_strategies</code> import each other eight times each way. That pair is gaussx's dispatch core, now its only documented exception.</p>
     <p class="sub"><b>The data are nouns too.</b> ▦ arrays, ▤ named arrays and ◆ carriers are the ⓪ structures of the data axis: <code>DimArray</code> is pipekit-array's noun, <code>GeoArray</code>, <code>GeoSwath</code> and <code>GeoPoints</code> are geoarray's, and geoarray's own verbs (<code>crop</code>, <code>to_pixel</code>, <code>read_window</code>) are the ① primitives that act on them. The kind and data axes say how a noun is packaged and what it knows; the ladder says it is a noun.</p>
