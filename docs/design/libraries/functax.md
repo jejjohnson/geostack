@@ -16,7 +16,7 @@ functax is the stack's function-approximation library: one representation, f̂(x
 |  |  |
 | --- | --- |
 | Layer, tier | Core, tier 0 |
-| Imports | JAX, Equinox, lineax, einx; a NumPy-only path for geoarray is open (decision 16) |
+| Imports | NumPy in the base install; JAX, Equinox, lineax and einx in the `functax[jax]` extra, which every module except the affine kernels needs (decisions 16 and 17) |
 | Imported by | every layer above: GeoStack, GeoNumerics, GeoModels, and Core libraries at tier 1 and up |
 | Replaces | interpax and orthax, outright; the stack's hand-rolled bilinear samplers |
 | Takes over | geonnax's bases, sphere grids, transforms and field derivatives |
@@ -364,7 +364,7 @@ Using one plan for both makes the transfer mass-consistent and gives deposition 
 
 ## Decisions and open questions
 
-The first pass through the questions (4 Nov 2026 for 1–12, 5 Nov from the layer map for 13–16) settles most of them and narrows the rest. Each entry gives the leaning first, then the trade-off.
+The first pass through the questions (4 Nov 2026 for 1–12, 5 Nov from the layer map for 13–16, 9 Nov for 17) settles most of them and narrows the rest. Each entry gives the leaning first, then the trade-off.
 
 ### 1. Backend: JAX first, SciPy until replaced, Rust at fit
 
@@ -512,7 +512,16 @@ The cache key hashes the scheme's config with the source and target geometries. 
 
 ### 16. geoarray's affine helpers
 
-**Open.** geoarray installs and runs on NumPy alone, so the affine kernels it calls (`to_pixel`, pixel centres, windows) must too. Either functax takes the array namespace (`xp`) in those kernels and imports JAX only when a JAX array arrives, or geoarray keeps its four helpers and a test pins them equal to functax's. The first removes a duplicate; the second keeps functax JAX-only.
+**Decided (9 Nov 2026): the array namespace.** geoarray installs and runs on NumPy alone, so the affine kernels it calls (`to_pixel`, pixel centres, windows) must too. functax's affine kernels take the namespace of their input, run on NumPy alone and import JAX only when a JAX array arrives, and geoarray deletes its four helpers and calls functax's. The rejected alternative was for geoarray to keep its helpers, with a test pinning them equal to functax's; that kept functax JAX-only but left the duplicate in place.
+
+### 17. Packaging for NumPy-only consumers
+
+**Decided (9 Nov 2026): a NumPy-only base install with a `functax[jax]` extra** ([functax#48](https://github.com/jejjohnson/functax/issues/48)). Decision 16 only holds at install time if installing functax does not install JAX. So the base distribution depends on `numpy>=1.26` alone and holds the affine kernels in `functax.geometry.affine`, while JAX, Equinox, lineax, einx and jaxtyping sit in the `functax[jax]` extra. Every other module needs the extra, and importing one without it raises an `ImportError` that names `functax[jax]`. geoarray, geoops and xrops keep their NumPy-only installs and still drop their duplicates; JAX consumers write `functax[jax]` in their dependencies.
+
+The rule to police is that only `functax.geometry.affine` and its backend helper may import without JAX. A CI job installs the base alone and imports `functax.geometry.affine`, so an accidental JAX import fails there. The geometry types (`AffineGrid` and the others) are Equinox modules, so they stay behind the extra; geoarray uses only the functions. The NumPy base may later grow to cover stencil apply and adjoint, which are a gather and a scatter-add on host-built arrays; that question belongs to the geoarray and geoops switches ([geotoolz#643](https://github.com/jejjohnson/geotoolz/issues/643), [geotoolz#644](https://github.com/jejjohnson/geotoolz/issues/644)).
+
+- **Rejected: JAX required, with consumers gating functax behind their own `jax` extras.** geoarray would keep its own `to_pixel` for NumPy-only installs, so the duplicate decision 16 removes would stay.
+- **Rejected: a separate `functax-core` distribution.** It means two packages to release for four functions.
 
 ## Roadmap
 
