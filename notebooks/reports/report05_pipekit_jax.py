@@ -49,7 +49,7 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 import pipekit_cycle as pc
-from pipekit import (
+from pipekit_ops import (
     Branch,
     Cache,
     Fanout,

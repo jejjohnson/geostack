@@ -50,7 +50,7 @@ from typing import Any
 import numpy as np
 import pipekit_cycle as pc
 import xarray as xr
-from pipekit import Lambda, Operator, StatefulOperator
+from pipekit_ops import Lambda, Operator, StatefulOperator
 from pipekit_evaluate.benchmark import (
     DEFAULT_STAGED,
     LEVEL_NAMES,
@@ -558,7 +558,7 @@ assert cells == {
 # %%
 root = Path(tempfile.mkdtemp(prefix="report17_"))
 (root / "r16ops.py").write_text(
-    "from pipekit import Operator\n\n\n"
+    "from pipekit_ops import Operator\n\n\n"
     "class Artifact(Operator):\n"
     "    def __init__(self, kind: str = '', config: dict | None = None,\n"
     "                 parents: list | None = None) -> None:\n"

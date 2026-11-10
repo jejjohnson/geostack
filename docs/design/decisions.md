@@ -115,7 +115,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | GA-Q6 | `map_over` on xarray | open |
 | GA-Q7 | Dim-name conventions | open |
 | GA-Q8 | The name of the curvilinear carrier | open |
-| GA-Q9 | `check_dims` on `pipekit.Signature` | decided 21 Oct 2026 |
+| GA-Q9 | `check_dims` on `pipekit_ops.Signature` | decided 21 Oct 2026 |
 | GA-Q10 | Edit geotoolz issues #511–#534 in place | open |
 
 ## Labeled lane (LL)

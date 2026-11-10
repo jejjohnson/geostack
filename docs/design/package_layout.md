@@ -27,7 +27,7 @@ We adopt geotoolz's split for xrtoolz: distributions by job, modules inside the 
 
 - **PL-A. xrtoolz becomes a meta package.** Today `xrtoolz` is both the ops code and the umbrella that hard-depends on every sibling, so we move its code to a new `xrtoolz-ops` (import `xrops`) and leave `xrtoolz` with no code, as `geotoolz` has.
 - **PL-B. Backend bridges stop being distributions.** `xreinx` and `xrsklearn` give way to one named-dims bridge each in pipekit-array (OP-O2, OP-O3), whereas `xrgrad` becomes `xrops.Gradient` over the geoops kernel (OP-O7).
-- **PL-C. One home for the xarray Operator base.** The `Operator` of `xrcore` (with its `DataTree` dispatch) folds into `xrops._src`, and its `Signature` is replaced by `pipekit.Signature`, with no re-export (PL-Q5; [pipekit kernels](./pipekit_kernels.md)).
+- **PL-C. One home for the xarray Operator base.** The `Operator` of `xrcore` (with its `DataTree` dispatch) folds into `xrops._src`, and its `Signature` is replaced by `pipekit_ops.Signature`, with no re-export (PL-Q5; [pipekit kernels](./pipekit_kernels.md)).
 - **PL-D. Matching family names.** geoops is organised by operation kind, whereas xrtoolz is organised by domain plus a `geo` grab-bag, so `xrops` takes the family names of geoops wherever the job is the same, keeps the state-physics families, and drops the empty `rs` and `ice` stubs.
 - **PL-E. Readers named as products.** `xrreader` (CMEMS, CDS, AEMET) is the xarray twin of `geoproducts`, so it becomes `xrtoolz-products` (import `xrproducts`).
 
@@ -62,7 +62,7 @@ Six mismatches need action. We read the `main` branches of geotoolz (umbrella 0.
 | Symbols | Defined in | Used by | Verdict |
 | --- | --- | --- | --- |
 | Umbrella | `geotoolz/__init__.py` (no code); `xrtoolz` (code + hard deps on all five siblings) | every install | **Split ownership.** `xrtoolz` is both the ops package and the meta package |
-| Operator base | `pipekit.Operator` + `geoops._src.contract`; `xrcore.operator.Operator` (DataTree dispatch) | all operators | **Split ownership.** Base lives in the ops package on one side, its own distribution on the other |
+| Operator base | `pipekit_ops.Operator` + `geoops._src.contract`; `xrcore.operator.Operator` (DataTree dispatch) | all operators | **Split ownership.** Base lives in the ops package on one side, its own distribution on the other |
 | einx bridge | `geoops.einx`; `xreinx` (dist), with a `xrtoolz.einx` shim | pipelines | **True duplicate.** Same job, module vs distribution |
 | sklearn bridge | `geoops.learn`; `xrsklearn` (dist) | pipelines | **True duplicate.** Module vs distribution, and `learn` vs `sklearn` |
 | Geometry | `geoops.geom` + `geoops._src.engine`; `xrtoolz.geo` (crs, mosaic, rasterize, vectorize, footprint, masks, wavelets, extremes, detrend, …) | both lanes | **Split ownership.** `xrtoolz.geo` mixes geometry with analysis |
@@ -83,7 +83,7 @@ Every job has the same distribution shape in both repos, and every ops family ha
 | --- | --- | --- | --- |
 | meta | `geotoolz` | `xrtoolz` (code + meta) | `xrtoolz` (no code) |
 | transform | `geoops`, slim base plus `[raster]`, `[vector]`, `[morph]`, `[sensors]` | `xrtoolz` | `xrops` |
-| Operator base | `pipekit.Operator` in geoops | `xrcore` | `xrops._src`; `pipekit.Signature` (PL-Q2) |
+| Operator base | `pipekit_ops.Operator` in geoops | `xrcore` | `xrops._src`; `pipekit_ops.Signature` (PL-Q2) |
 | tensor algebra | `geoops.einx` | `xreinx` | pipekit-array `[einx]`, shared (OP-O2) |
 | ML bridge | `geoops.learn` | `xrsklearn` | pipekit-array `to_rows` / `from_rows` and one estimator wrapper (OP-O3) |
 | calculus | `geoops.geom.Gradient` | `xrgrad` | `xrops.Gradient` over the geoops kernel (OP-O7) |
@@ -177,7 +177,7 @@ Each question has a recommendation and its alternative, and we can flip any of t
 | ID | Question | Recommended | Alternative | Status |
 | --- | --- | --- | --- | --- |
 | PL-Q1 | Backend bridges: extras or distributions? | Retire `xreinx` and `xrsklearn` in favour of pipekit-array's shared bridges (OP-O2, OP-O3); `xrgrad` becomes `xrops.Gradient` (OP-O7) | Fold them into `xrops` behind extras (the 21 Oct recommendation), or split `geoops.einx` and `geoops.learn` out into distributions | superseded by OP-O2, OP-O3, OP-O7 |
-| PL-Q2 | Where the xarray Operator base lives | **Decided 29 Oct 2026:** `xrcore` folds into `xrops._src`, as geoops keeps its base; `Signature` is `pipekit.Signature` | Keep `xrcore` if something outside xrtoolz needs the base without the ops | decided 29 Oct 2026 (`Signature` 21 Oct, GA-Q9) |
+| PL-Q2 | Where the xarray Operator base lives | **Decided 29 Oct 2026:** `xrcore` folds into `xrops._src`, as geoops keeps its base; `Signature` is `pipekit_ops.Signature` | Keep `xrcore` if something outside xrtoolz needs the base without the ops | decided 29 Oct 2026 (`Signature` 21 Oct, GA-Q9) |
 | PL-Q3 | Reader name | **Decided 29 Oct 2026:** `xrtoolz-products` (import `xrproducts`), matching `geoproducts` | Keep `xrreader` | decided 29 Oct 2026 |
 | PL-Q4 | How to split `xrtoolz.geo` | **Decided 29 Oct 2026:** geometry (crs, mosaic, rasterize, vectorize, footprint, subset) → `xrops.geom`; analysis (detrend, wavelets, extremes, regimes) into named families | Keep `geo` as the generic family and rename `geoops.geom` to match | decided 29 Oct 2026 |
 | PL-Q5 | Shim lifetime | **Decided 29 Oct 2026:** no shims; old import paths are removed outright in the release that moves them, and the stack's callers move in the same release, as in geotoolz | a one-release `DeprecationWarning` shim (the earlier recommendation), or shims through the whole 0.x series | decided 29 Oct 2026 |

@@ -82,7 +82,7 @@ Every piece of this ships in geotoolz, and pipekit's `Graph` composes them, beca
 :linenos:
 
 # Shapes: B = 60 bands; H = W = 64 pixels; ΔA = 3600 m²
-import pipekit as pk
+import pipekit_ops as pk
 import geotoolz as gz
 
 radiance = pk.Input("radiance")                          # Y: (B, H, W)          today
@@ -123,7 +123,7 @@ Running the original gallery against the pinned code leaves nine gaps ([](#tbl-r
 | **C** | `CatalogPipeline`, `CatalogReader` | `geocatalog.integrations.pipekit` | assumed by Reports [2](02_pipekit_surface.md#r2-group-j), [3](03_sister_libraries.md#r3-todos) and 6 and by cases 2, 10, 12 and 15; not built ([Report 6](06_geocatalog.md#r6-open-questions), question 4) |
 | **D** | `AssertValueRange`, `AssertNoNaN`, `AssertValidFraction` | pipekit-array phase C | promised there; not shipped anywhere |
 | **E** | `AssertCRSEquals`, `AssertResolutionWithin`, `AssertSchema` | `geotoolz.qa` (or a new `geotoolz.checks`) | `geotoolz.qa` holds QA-bit masks today, not assertions |
-| **F** | an allowlisted YAML loader | pipekit-experiment, beside `HydraConfigLoader` | `pipekit.loads_sandboxed` allowlists flat JSON only |
+| **F** | an allowlisted YAML loader | pipekit-experiment, beside `HydraConfigLoader` | `pipekit_ops.loads_sandboxed` allowlists flat JSON only |
 | **G** | `config_diff`, an A/B harness | pipekit-evaluate | `Benchmark` scores estimators on a task; it does not diff two pipelines |
 | **H** | `ActiveSampler` | `geotoolz.patch_ops` | the patcher and scorers exist; the selection loop does not |
 | **I** | SAR and fusion operators (`LinearToDB`, `AlignAndStack`) | geotoolz | despeckling ships (`restore.DespeckleLee`); dB conversion and grid alignment do not |
@@ -145,7 +145,7 @@ Running the original gallery against the pinned code leaves nine gaps ([](#tbl-r
 
 # Shapes: B bands (QA60 last), H × W pixels
 import numpy as np
-import pipekit as pk
+import pipekit_ops as pk
 import geotoolz as gz
 
 viz = pk.Sequential([
@@ -177,7 +177,7 @@ ndvi = viz(scene)                                   # GeoTensor          today
 # Shapes: N_scene scenes; each X_m: (B, H, W)
 from geocatalog import open_catalog
 from geocatalog.load import load_raster
-from pipekit import ProcessMap
+from pipekit_ops import ProcessMap
 from pipekit_experiment.adapters.hydra import HydraConfigLoader
 
 catalog = open_catalog("s3://bucket/s2_eu.parquet")      # N_scene rows, lazy today
@@ -192,7 +192,7 @@ CatalogPipeline(                                         # proposed (C)
 ).run()                                                  # arguments sketched
 ```
 
-**Library map.** geocatalog (iteration and loading), pipekit (parallelism), pipekit-experiment (the YAML loader) and geotoolz (the operators named in the YAML, ending in `geotoolz.io.WriteCOG`), with georeader underneath the loader. **Notes.** The YAML is the source of truth. A hand-written nested YAML with `_target_` keys loads today, but dumping a built nested pipeline does not round-trip (proposal A). Every step must pickle for `ProcessMap`, and `pipekit.check_pickleable(etl)` lists the operators that will not ([Report 2](02_pipekit_surface.md#r2-pickle)).
+**Library map.** geocatalog (iteration and loading), pipekit (parallelism), pipekit-experiment (the YAML loader) and geotoolz (the operators named in the YAML, ending in `geotoolz.io.WriteCOG`), with georeader underneath the loader. **Notes.** The YAML is the source of truth. A hand-written nested YAML with `_target_` keys loads today, but dumping a built nested pipeline does not round-trip (proposal A). Every step must pickle for `ProcessMap`, and `pipekit_ops.check_pickleable(etl)` lists the operators that will not ([Report 2](02_pipekit_surface.md#r2-pickle)).
 
 (r9-case-8)=
 ### Case 8 · Data validation as operators (pipekit → pipekit-array → geotoolz)
@@ -206,7 +206,7 @@ CatalogPipeline(                                         # proposed (C)
 :linenos:
 
 # Shapes: X: (B, H, W)
-import pipekit as pk
+import pipekit_ops as pk
 import geotoolz as gz
 
 qc = pk.Sequential([
@@ -251,7 +251,7 @@ etl = pk.Sequential([
 :linenos:
 
 # Shapes: B_o optical, B_s SAR bands; H × W the optical grid; C classes
-import pipekit as pk
+import pipekit_ops as pk
 import geotoolz as gz
 
 opt, sar, dem = pk.Input("optical"), pk.Input("sar"), pk.Input("dem")   # today
@@ -285,7 +285,7 @@ g = pk.Graph(inputs={"optical": opt, "sar": sar, "dem": dem},
 :linenos:
 
 # Shapes: B bands; chips 256 × 256; K training chips; N_patch inference patches
-import pipekit as pk
+import pipekit_ops as pk
 import geotoolz as gz
 import geopatcher as gp
 from geopatcher import spatial
@@ -344,7 +344,7 @@ The original also had `catalog.iter_random_slices`, which does not exist. Random
 # Shapes: N_patch patches of 256 × 256; 100 selected
 import heapq
 import numpy as np
-import pipekit as pk
+import pipekit_ops as pk
 import geopatcher as gp
 from geopatcher import spatial
 
@@ -456,7 +456,7 @@ def describe(name: str):
 :caption: Case 6. The allowlist ships for flat JSON; the YAML form is proposal F.
 :linenos:
 
-import pipekit as pk
+import pipekit_ops as pk
 import geotoolz as gz
 
 # 𝒜 = {operator classes users may instantiate}
@@ -805,7 +805,7 @@ if better(candidate, reg.load(reg.resolve_tag("plume-detector"))):  # user
 
 # Shapes: N_obs matched pairs; grid (time, lat, lon)
 import pandas as pd
-import pipekit as pk
+import pipekit_ops as pk
 from geocatalog.matchup import Intersects, NearestInTime, matchup
 from xrtoolz import geo, metrics
 
@@ -878,7 +878,7 @@ What the matrix ([](#tbl-r9-matrix)) says:
 |---|---|---|
 | Operators, composition, parallel maps, flat JSON, allowlist | pipekit | pipekit |
 | YAML loading | pipekit (`loads_yaml`) | pipekit-experiment (`HydraConfigLoader`) |
-| Content hashing | pipekit (`config_hash`) | pipekit-experiment (the registry), plus `pipekit.hashing` primitives |
+| Content hashing | pipekit (`config_hash`) | pipekit-experiment (the registry), plus `pipekit_ops.hashing` primitives |
 | Reproducibility artifacts | pipekit (`repro`) | pipekit-experiment (`InferenceArtifact`, `TrainingArtifact`) |
 | Diffing and A/B | pipekit (`diff`) | not built (proposal G, pipekit-evaluate) |
 | Training | — | pipekit-train |
@@ -911,10 +911,10 @@ Cases reach georeader in three ways ([](#tbl-r9-georeader)).
 
 | Deployment | Primitive | Cases |
 |---|---|---|
-| Catalog-driven ETL | `pipekit.ProcessMap` | 2 |
+| Catalog-driven ETL | `pipekit_ops.ProcessMap` | 2 |
 | Per-patch work inside a scene | `geopatcher.run.parallel_map` | 3, 10 |
 | GPU inference | none; the model batches | 4 |
-| Async I/O inside a server | `pipekit.AsyncMap.run` (not `__call__`) | 5, 7 |
+| Async I/O inside a server | `pipekit_ops.AsyncMap.run` (not `__call__`) | 5, 7 |
 | Across machines | the orchestrator | 12, 15 |
 :::
 
@@ -922,7 +922,7 @@ There is no automatic parallelism anywhere, by design, so each deployment picks 
 
 ### YAML is the lingua franca, read-only for now
 
-Cases 2, 4, 9, 12 and 13 load pipelines from YAML, and every library's operators are reconstructible from `_target_` paths because they all subclass `pipekit.Operator`. So a YAML can name `geotoolz.plume.IMEEstimate` and `xrtoolz.geo.RemoveClimatology` side by side. Today the YAML is written by hand or generated with hydra-zen, and turning a built nested pipeline back into YAML is proposal A.
+Cases 2, 4, 9, 12 and 13 load pipelines from YAML, and every library's operators are reconstructible from `_target_` paths because they all subclass `pipekit_ops.Operator`. So a YAML can name `geotoolz.plume.IMEEstimate` and `xrtoolz.geo.RemoveClimatology` side by side. Today the YAML is written by hand or generated with hydra-zen, and turning a built nested pipeline back into YAML is proposal A.
 
 (r9-jax)=
 ## Where JAX helps
@@ -950,7 +950,7 @@ The original gallery's verdict stands: JAX changes how fast the inference-heavy 
 - **Infrastructure code accretes.** It did, but in pipekit-experiment rather than pipekit core, which kept core small. Fallback: keep each concern in its own module (`adapters.hydra`, `registry`, `artifacts`), as today.
 - **Glue reinvented in each consumer.** `CatalogPipeline`-style glue (cases 2, 10, 12, 15) has no home, so every consumer writes its own loop. Recommended: proposal C, `geocatalog.integrations.pipekit`, mirroring geopatcher's integration module. Alternative: a small `pipekit-catalog` package.
 - **YAML that only loads one way.** A team that builds pipelines in Python cannot save them as YAML, which breaks cases 2, 5, 9 and 12 for nested pipelines. Fallback: keep the YAML as the source of truth until proposal A lands.
-- **Private API across packages.** geotoolz and geopatcher's pipekit bridge import `pipekit._base.operator` helpers, and making them public is [Report 16 §A](16_geo_data_stack.md#r16-ws-a).
+- **Private API across packages.** geotoolz and geopatcher's pipekit bridge import `pipekit_ops._base.operator` helpers, and making them public is [Report 16 §A](16_geo_data_stack.md#r16-ws-a).
 
 (r9-open-questions)=
 ## Open questions

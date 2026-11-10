@@ -489,7 +489,7 @@ On smooth grids it converges in two to four steps, and (ξ, η) then play the ro
 
 - **Config:** `ConfigMixin`'s `get_config` and `from_config`, so a scheme's config is strict JSON.
 - **Arrays:** pipekit-jax's `WeightsMixin` (`serialize_weights`, `with_weights`, `from_registry`) persists a plan's leaves as bytes.
-- **Keys:** `pipekit.hashing` (`stable_json`, `sha256_hex`, `pipeline_hash`) gives content hashes.
+- **Keys:** `pipekit_ops.hashing` (`stable_json`, `sha256_hex`, `pipeline_hash`) gives content hashes.
 - **Memoisation:** pipekit's `Cache` and `Memoize` operators.
 
 The cache key hashes the scheme's config with the source and target geometries. Consumers that import pipekit get caching for free.

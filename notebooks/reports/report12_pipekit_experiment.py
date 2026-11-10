@@ -41,7 +41,7 @@ from pathlib import Path
 import equinox as eqx
 import jax
 import numpy as np
-import pipekit
+import pipekit_ops
 from pipekit_experiment import (
     ExperimentTracker,
     InferenceArtifact,
@@ -60,7 +60,7 @@ root = Path(tempfile.mkdtemp(prefix="report12_"))
 # Scale lives in its own module, so its registry state names an importable
 # class (`r12ops.Scale`) for from_state, Hydra and the Metaflow subprocess.
 (root / "r12ops.py").write_text(
-    "from pipekit import Operator\n\n\n"
+    "from pipekit_ops import Operator\n\n\n"
     "class Scale(Operator):\n"
     "    def __init__(self, factor: float = 1.0, offset: float = 0.0) -> None:\n"
     "        self.factor = factor\n"
@@ -223,7 +223,7 @@ try:
 except RuntimeError as e:
     reload_model = f"RuntimeError: {e}"
 try:
-    pipekit.loads(art.training_pipeline_yaml)
+    pipekit_ops.loads(art.training_pipeline_yaml)
     loop_loads = "ok"
 except RuntimeError as e:
     loop_loads = f"RuntimeError: {e}"
@@ -264,7 +264,7 @@ from pipekit_experiment.adapters.dvc import DVCDatasetVersioning  # noqa: E402
 from pipekit_experiment.adapters.hydra import HydraConfigLoader as HL  # noqa: E402
 
 flat = HL.from_yaml(HL.to_yaml(Scale(2.0, 1.0)))(3.0)
-seq = pipekit.Sequential([Scale(2.0, 1.0), Scale(0.5, 0.0)])
+seq = pipekit_ops.Sequential([Scale(2.0, 1.0), Scale(0.5, 0.0)])
 nested_yaml = HL.to_yaml(seq)
 try:
     HL.from_yaml(nested_yaml)
@@ -272,7 +272,7 @@ try:
 except Exception as e:  # hydra raises InstantiationException
     nested = f"{type(e).__name__}: {e}"
 hand_written = HL.from_hydra_cfg({
-    "_target_": "pipekit.Sequential",
+    "_target_": "pipekit_ops.Sequential",
     "operators": [{"_target_": "r12ops.Scale", "factor": 2.0, "offset": 1.0},
                   {"_target_": "r12ops.Scale", "factor": 0.5}]})(3.0)
 
@@ -312,7 +312,7 @@ if __name__ == "__main__":
 from metaflow import FlowSpec, step
 from pipekit_experiment.adapters.metaflow import MetaflowStepAdapter
 from r12ops import Scale
-import pipekit
+import pipekit_ops
 class ManualFlow(FlowSpec):
     @step
     def start(self):
@@ -320,7 +320,7 @@ class ManualFlow(FlowSpec):
         self.next(self.scale)
     @step
     def scale(self):
-        seq = pipekit.Sequential([Scale(2.0, 1.0), Scale(0.5, 0.0)])
+        seq = pipekit_ops.Sequential([Scale(2.0, 1.0), Scale(0.5, 0.0)])
         MetaflowStepAdapter.run(seq, self, name="scaled", inputs=["raw"])
         self.next(self.end)
     @step

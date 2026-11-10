@@ -212,7 +212,7 @@ art.reload_models(reg)
 `pinned_model_hashes` takes any ref and `reload_models` resolves tags, so an artifact pinned to `"production"` drifts the next time the tag moves, which is the opposite of a pin. It also inherits stage 2's failure for models with weights. Workstream C2 only accepts hashes.
 
 :::{warning} Differs from the plan
-The scoping report made `InferenceArtifact` a subclass of `pipekit.repro.Artifact`, the regulatory snapshot of use case 9. However, there is no `pipekit.repro` module and no `Artifact` class in pipekit core, and `InferenceArtifact` and `TrainingArtifact` are dataclasses over a shared JSON base (`_JsonArtifact`). [Report 9](09_use_cases.md#r9-case-9)'s use case 9 builds its artifact from these.
+The scoping report made `InferenceArtifact` a subclass of `pipekit_ops.repro.Artifact`, the regulatory snapshot of use case 9. However, there is no `pipekit_ops.repro` module and no `Artifact` class in pipekit core, and `InferenceArtifact` and `TrainingArtifact` are dataclasses over a shared JSON base (`_JsonArtifact`). [Report 9](09_use_cases.md#r9-case-9)'s use case 9 builds its artifact from these.
 :::
 
 (r12-stage-5)=
@@ -508,7 +508,7 @@ Correctness first, then trackers, then round trips.
 
 1. **Should the registry hash include provenance?** The code identifies the model by its state and weights, whereas the scoping report wanted the training config and data too. This page keeps the code's choice and links provenance through metadata (C). Is a second, provenance-inclusive hash needed for regulatory use?
 2. **Where does a `like` skeleton come from at serving time?** A server that loads `production` needs the architecture. Is it in the deployment config, in `operator.json`, or in a model card stored beside the weights?
-3. **Does the stack need `pipekit.repro.Artifact`?** Two JSON dataclasses already cover training and inference. Is a core base class still wanted for other snapshots (use case 9's regulatory artifact)?
+3. **Does the stack need `pipekit_ops.repro.Artifact`?** Two JSON dataclasses already cover training and inference. Is a core base class still wanted for other snapshots (use case 9's regulatory artifact)?
 4. **Do tags carry stages?** The scoping report used `candidate` and `production` as plain tags. Should stages be a first-class field with allowed transitions, as MLflow has?
 5. **Should pipekit-train keep `_LocalArtifact`?** It lets `run()` work without pipekit-experiment, at the cost of a second artifact type which cannot be saved or reloaded. The alternative is to require the `[experiment]` extra for `run()` and only return `TrainingArtifact`.
 6. **A preview with each model.** The scoping report's `preview.json` held example inputs and outputs for sanity checks. Is it worth adding, and if so, does it belong in the registry or in the model card?

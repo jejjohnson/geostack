@@ -70,8 +70,8 @@ This is what exists on `main` (pipekit, xrtoolz, geotoolz, 21 Oct 2026):
 
 The design removes three duplicates:
 
-- **Three dim vocabularies.** These are `pipekit.Signature` (tuple of pairs), `xrcore.Signature` (a separate dict-keyed class in xrtoolz-core), and the dims of geoarray (`DIMS[-ndim:]`, soon stored).
-- **Two operator bases for labeled data.** These are `xrcore.Operator` (DataTree dispatch) and the geoops operators that subclass `pipekit.Operator` directly with their own carrier checks.
+- **Three dim vocabularies.** These are `pipekit_ops.Signature` (tuple of pairs), `xrcore.Signature` (a separate dict-keyed class in xrtoolz-core), and the dims of geoarray (`DIMS[-ndim:]`, soon stored).
+- **Two operator bases for labeled data.** These are `xrcore.Operator` (DataTree dispatch) and the geoops operators that subclass `pipekit_ops.Operator` directly with their own carrier checks.
 - **Positional axes everywhere.** 106 geoops kernel signatures default to `axis=-3`, the pipekit-array combinators take `axis=`, and xrtoolz wraps xarray by name, so each package translates between names and positions on its own.
 
 ## The named-array protocol
@@ -109,7 +109,7 @@ class NamedArrayAdapter(Protocol):
 
 # registration in pipekit core's registry, looked up along the carrier's MRO
 xarray_adapter: NamedArrayAdapter = XarrayAdapter()
-pipekit.register_adapter(xr.DataArray, xarray_adapter)
+pipekit_ops.register_adapter(xr.DataArray, xarray_adapter)
 ```
 
 | Carrier | Adapter lives in | Notes |
@@ -123,7 +123,7 @@ We prefer an adapter to a `typing.Protocol` on the carrier for three reasons: it
 
 ## One Signature
 
-`pipekit.Signature` is the only description of dims in the stack. `xrcore.Signature` is deleted (re-exported for one release), geoarray carriers produce it through their adapter, and dims checks and readable types are written in terms of it.
+`pipekit_ops.Signature` is the only description of dims in the stack. `xrcore.Signature` is deleted (re-exported for one release), geoarray carriers produce it through their adapter, and dims checks and readable types are written in terms of it.
 
 We add two methods to today's class:
 
@@ -397,10 +397,10 @@ alpha_map: GeoArray["y x"] = fitted(scene)
 
 | Package | Change |
 | --- | --- |
-| pipekit | `Signature.matches`, `Signature.from_pattern`; the adapter interface (`NamedArrayAdapter`) and its registry (`pipekit.register_adapter`), so `compute_output_signature` finds an adapter without importing pipekit-array |
+| pipekit | `Signature.matches`, `Signature.from_pattern`; the adapter interface (`NamedArrayAdapter`) and its registry (`pipekit_ops.register_adapter`), so `compute_output_signature` finds an adapter without importing pipekit-array |
 | pipekit-array | registers its adapters in pipekit's registry; `DimArray` (also the plain carrier for tests and for libraries with none of their own), the dim-level functions and operators, `KernelSpec`, `KernelOp`; `[xarray]` adapter; no JAX extra and no edge to pipekit-jax |
 | pipekit-jax | `to_jax(op)`, which builds a `JaxOperator` from a `KernelOp`; an `[array]` extra declares the pipekit-array edge it already has through pipekit-cycle |
-| xrtoolz | `xrcore.Signature` becomes a re-export of `pipekit.Signature` for one release, then goes |
+| xrtoolz | `xrcore.Signature` becomes a re-export of `pipekit_ops.Signature` for one release, then goes |
 | geoarray | registers its adapter (grid checks, an `isel` that slices coordinates and moves the transform origin, georeference-preserving `rewrap`, `map_over` over transform rows); stops opting out of `Signature` |
 | geoops | the 106 `axis=-3` kernels become `KernelOp`s with a core-dim mapping; geometry operators stay hand-written |
 

@@ -55,7 +55,9 @@ PACKAGE: str | None = None
 # {distribution: [public modules]}, with a one-line blurb each. UPSTREAM is the
 # GeoStack layer; NUMERICS, GEOML and GEOMODELS are the layers above it.
 UPSTREAM: dict[str, list[str]] = {
-    "pipekit": ["pipekit"],
+    "pipekit-ops": ["pipekit_ops"],
+    # the umbrella installs the seven workspace packages and holds no code
+    "pipekit": [],
     "pipekit-array": ["pipekit_array"],
     "pipekit-cycle": ["pipekit_cycle"],
     "pipekit-evaluate": ["pipekit_evaluate"],
@@ -79,7 +81,8 @@ UPSTREAM: dict[str, list[str]] = {
     "xrtoolz-products": ["xrproducts"],
 }
 UPSTREAM_BLURB: dict[str, str] = {
-    "pipekit": "Carrier-agnostic operator-graph framework for pipelines.",
+    "pipekit-ops": "The core: Operator, Graph and the ready-made operators.",
+    "pipekit": "The pipekit workspace in one install; an umbrella that holds no code.",
     "pipekit-array": "Array API operators (NumPy, JAX, CuPy, PyTorch).",
     "pipekit-cycle": "Time-stepping, data assimilation and observation operators.",
     "pipekit-evaluate": "Multidimensional evaluation (Unit x Lens x Stage).",
@@ -240,7 +243,7 @@ LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
 # Names two homes may share on purpose, and why: {name: reason}.
 ALLOWED_SHARED_NAMES: dict[str, str] = {
     "Operator": (
-        "pipekit.Operator is the base (geotoolz re-exports it); xrops.Operator"
+        "pipekit_ops.Operator is the base (geotoolz re-exports it); xrops.Operator"
         " subclasses it with xarray DataTree dispatch for the xrops operators."
     ),
     "stack": (
@@ -252,7 +255,7 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         " a weighted sum of losses."
     ),
     "register": (
-        "pipekit.register marks a class as loadable by loads_sandboxed;"
+        "pipekit_ops.register marks a class as loadable by loads_sandboxed;"
         " xrproducts.register adds a Variable to the CF variable registry."
     ),
     "Estimator": (

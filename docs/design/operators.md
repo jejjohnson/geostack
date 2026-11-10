@@ -162,7 +162,7 @@ clim: DataArray["month y x"] = climatology(cube)
 
 # the same as a pipekit pipeline
 monthly: Operator = xrops.Climatology(freq="month")
-pipe: pipekit.Pipeline = ndvi | monthly
+pipe: pipekit_ops.Pipeline = ndvi | monthly
 clim_2: DataArray["month y x"] = pipe(cube)
 ```
 
@@ -503,7 +503,7 @@ It sits one tier above geoops: it imports geoops for every kernel and geometry o
 | state-domain kernel operators (atmosphere, ocean, budgets, metrics, spectral transforms) | `KernelOp`, the dim-level functions (pipekit-array) |
 | value analysis: climatologies, anomalies, detrending, regimes, extremes | `groupby`, `resample`, `rolling`, `sel` by value (xarray) |
 | many-item geometry: lazy regrid of a cube, mosaics of many files, masks by region | `apply_ufunc`, dask (xarray) |
-| `Dataset` and `DataTree` dispatch: run an operator per variable or per node | `pipekit.Signature`, `Operator` |
+| `Dataset` and `DataTree` dispatch: run an operator per variable or per node | `pipekit_ops.Signature`, `Operator` |
 
 ### A state-domain kernel operator on both columns
 
@@ -660,6 +660,6 @@ Each step is a 0.X.0 bump. xrops now follows geoops instead of moving in paralle
 | OP-O3 | Two scikit-learn bridges (`geoops.learn`, `xrsklearn`) | **Decided 29 Oct 2026:** `to_rows(x, sample_dims, feature_dims)` → `(rows, layout)` and `from_rows(rows, layout)` as dim-level functions in pipekit-array on any carrier, and one `Estimator(estimator, sample_dims=…, nan_policy=…)` operator behind a `[sklearn]` extra that satisfies `FittableTransformer` (`fit`, `transform`, `inverse_transform`, `predict`; fitted state on the host), with xrsklearn's NaN policies (`propagate`, `raise`, `mask_features`, `mask_samples`). xrops keeps the `Dataset` / `DataTree` layouts and the `.sklearn` accessor in a thin `xrops.learn` (PK-P5); geoops keeps its nodata-to-NaN step, the `Pixelwise*` presets with named dims instead of positional modes, and its joblib state | keep both |
 | OP-O4 | Lifting geometry over cubes | **Decided 22 Oct 2026:** `xrops.lift(op, dim=...)` in xrops; geoops has no `[xarray]` extra | `geoops.lift` behind `geoops[xarray]` (not taken) |
 | OP-O5 | How operators use `KernelOp` | **Decided 29 Oct 2026:** by composition: an operator keeps its own config and calls a `KernelOp` inside, as built in geotoolz #582–#584 (`geoops._src.kernels`) | every kernel operator subclasses `KernelOp` |
-| OP-O6 | The `backends` vocabulary | **Decided 29 Oct 2026:** `"numpy"`, `"jax"`, `"dask"`; a `DataArray` reports the backend of its data (`pipekit.backend_of`), so there is no `"xarray"` entry, as the geoops contract test enforces (geotoolz #580) | backends and carrier families declared separately |
+| OP-O6 | The `backends` vocabulary | **Decided 29 Oct 2026:** `"numpy"`, `"jax"`, `"dask"`; a `DataArray` reports the backend of its data (`pipekit_ops.backend_of`), so there is no `"xarray"` entry, as the geoops contract test enforces (geotoolz #580) | backends and carrier families declared separately |
 | OP-O7 | Where grid calculus lives | **Decided 22 Oct 2026:** the diagnostic gradient kernel in geoops (`geoops/geom/_src/array.py`), wrapped by `geoops.geom.Gradient` and `xrops.Gradient` (today's `xrgrad`); pipekit-array keeps no domain kernels; model-grade calculus in finitevolX, wrapped by the GeoML or GeoModels package that uses it | kernel in pipekit-array (not taken) |
 | OP-O8 | Does an L3 algorithm call L3 algorithms inside a differentiated cost (the assimilator calling `simulate`)? | yes, while wrap and unwrap stay cheap under `grad`; measured in the spike | the cost calls the L1 loop directly, and only the outer call returns a `GeoMapSeries` |

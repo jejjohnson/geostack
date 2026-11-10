@@ -115,7 +115,7 @@ pipekit-array is planned in four phases (its `docs/design/boundaries.md`, §4), 
 :linenos:
 
 import numpy as np
-from pipekit import Signature
+from pipekit_ops import Signature
 from pipekit_array import ConcatenateAlong, MeanScalar, StackAlong, array_namespace
 
 x = np.arange(24.0).reshape(2, 3, 4)          # (band, y, x)
@@ -204,7 +204,7 @@ None of this has happened, because the pipekit-array side (phase C) does not exi
 
 ### Scope
 
-The proposal made geotoolz a thinner library focused on remote sensing over `georeader.GeoTensor`, with its old framework code (`geotoolz.core`) reduced to a shim that re-exports pipekit. However, the shipped geotoolz has **no `core` at all**: it depends on pipekit (`pipekit>=0.0.2`) and its top-level `__init__` re-exports 16 pipekit names directly ([](#tbl-r3-gz-reexports)), so `gz.Operator` is `pipekit.Operator`.
+The proposal made geotoolz a thinner library focused on remote sensing over `georeader.GeoTensor`, with its old framework code (`geotoolz.core`) reduced to a shim that re-exports pipekit. However, the shipped geotoolz has **no `core` at all**: it depends on pipekit (`pipekit>=0.0.2`) and its top-level `__init__` re-exports 16 pipekit names directly ([](#tbl-r3-gz-reexports)), so `gz.Operator` is `pipekit_ops.Operator`.
 
 :::{table} The pipekit names geotoolz re-exports at 0.10.2, all the same objects.
 :label: tbl-r3-gz-reexports
@@ -217,7 +217,7 @@ The proposal made geotoolz a thinner library focused on remote sensing over `geo
 geotoolz defines no class with the same name as a pipekit public name. It deliberately keeps `augment.Compose`, `io.SinkOperator` and `io.SourceOperator` out of its top level, so they cannot be confused with pipekit's `compose` and `Sink`. Its operators accept either a `GeoTensor` or a plain `np.ndarray` and return the same kind, which makes the carrier wider than the proposal assumed.
 
 :::{warning} Differs from the plan
-geotoolz imports three private helpers from pipekit (`require_operator`, `callable_name` and `nested_config` from `pipekit._base.operator`), and geopatcher imports `nested_config` too. pipekit can rename these without notice, so either they become public or geotoolz stops using them ([](#r3-todos)).
+geotoolz imports three private helpers from pipekit (`require_operator`, `callable_name` and `nested_config` from `pipekit_ops._base.operator`), and geopatcher imports `nested_config` too. pipekit can rename these without notice, so either they become public or geotoolz stops using them ([](#r3-todos)).
 :::
 
 ### Layout
@@ -322,7 +322,7 @@ The proposal made `xr_toolz` a focused xarray library, with its framework code r
 :caption: xrcore's Operator, from a real run.
 :linenos:
 
-import pipekit as pk
+import pipekit_ops as pk
 import xarray as xr
 import xrtoolz
 
@@ -346,7 +346,7 @@ A `Node` argument still builds a graph and plain data still runs `_apply`, where
 
 :::{warning} Differs from the plan
 - **xrtoolz has its own `Signature`.** xrcore's `Signature` is a separate frozen dataclass, not pipekit's and not a subclass of it. `scripts/capabilities.py` allow-lists the duplicate name. A pipekit `Sequential.summary` and an xrtoolz operator therefore speak different signature types.
-- **`xrtoolz.Operator` is not pipekit's `Operator`.** Code that checks `type(op) is pipekit.Operator` behaves differently; `isinstance` checks are unaffected.
+- **`xrtoolz.Operator` is not pipekit's `Operator`.** Code that checks `type(op) is pipekit_ops.Operator` behaves differently; `isinstance` checks are unaffected.
 :::
 
 xrtoolz re-exports `Graph`, `Input`, `Node`, `Sequential` and `Tap` from pipekit, all the same objects, and it defines no `Tap`, `Sequential`, `Graph`, `Identity`, `Fanout` or `Lambda` of its own.
@@ -447,17 +447,17 @@ The proposal flagged this as the most common confusion, so [](#tbl-r3-where) sho
 
 | Symbol | Defined in | Re-exported from | The proposal said |
 |---|---|---|---|
-| `Operator` | `pipekit._base.operator` | `pipekit`, `geotoolz`; subclassed by `xrcore.Operator` (re-exported by `xrtoolz`) | re-exported from both `core`s |
-| `Sequential`, `Graph`, `Input`, `Node` | `pipekit._base` | `pipekit`, `geotoolz`, `xrtoolz` | as shipped |
+| `Operator` | `pipekit_ops._base.operator` | `pipekit`, `geotoolz`; subclassed by `xrcore.Operator` (re-exported by `xrtoolz`) | re-exported from both `core`s |
+| `Sequential`, `Graph`, `Input`, `Node` | `pipekit_ops._base` | `pipekit`, `geotoolz`, `xrtoolz` | as shipped |
 | `Fanout`, `Identity`, `Const`, `Lambda`, `Sink` | `pipekit` | `pipekit`, `geotoolz` | both libraries |
-| `Tap` | `pipekit.observe` | `geotoolz`, `xrtoolz` | as shipped |
-| `Branch`, `Switch` | `pipekit.control` | `geotoolz` | both libraries |
-| `Try`, `Coalesce`, `Retry` | `pipekit.control` | `pipekit` only | both libraries |
-| `Snapshot`, `ShapeTrace` | `pipekit.observe` | `geotoolz` | both libraries |
+| `Tap` | `pipekit_ops.observe` | `geotoolz`, `xrtoolz` | as shipped |
+| `Branch`, `Switch` | `pipekit_ops.control` | `geotoolz` | both libraries |
+| `Try`, `Coalesce`, `Retry` | `pipekit_ops.control` | `pipekit` only | both libraries |
+| `Snapshot`, `ShapeTrace` | `pipekit_ops.observe` | `geotoolz` | both libraries |
 | `Profile`, `Cache`, `Quarantine`, `AssertShape`, `AssertDType`, the parallel maps, `pipe`, `compose`, `juxt`, `complement` | `pipekit` | `pipekit` only | both libraries |
-| `Signature` | `pipekit.signature`; a separate one in `xrcore` | `pipekit`; `xrtoolz` (xrcore's) | one, in `pipekit.signature` |
-| `Histogram` | `pipekit.observe` | `pipekit` only | `pipekit_array.observe` |
-| `BatchedMap` | `pipekit.parallel` | `pipekit` only | `pipekit_array.parallel` |
+| `Signature` | `pipekit_ops.signature`; a separate one in `xrcore` | `pipekit`; `xrtoolz` (xrcore's) | one, in `pipekit_ops.signature` |
+| `Histogram` | `pipekit_ops.observe` | `pipekit` only | `pipekit_array.observe` |
+| `BatchedMap` | `pipekit_ops.parallel` | `pipekit` only | `pipekit_array.parallel` |
 | `ApplyToBands`, `Subsample`, `Diff`, `AssertValueRange`, `AssertNoNaN`, `AssertValidFraction` | not shipped | — | `pipekit_array` |
 | `ModelOp` | `geotoolz.learn`; a separate one in `xrtoolz.inference` | each library | `pipekit_array.inference` |
 | `Augment`, `ApplyToEach` | `xrtoolz.combinators` | `xrtoolz` | as shipped |

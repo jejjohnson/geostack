@@ -385,9 +385,9 @@ Comparing each model with observations runs the other way, where the observation
 | `statecatalog`, `StateSlice`, `StateRow`, `StateCatalog` | not built; named only in pipekit-train's design docs (`architecture.md`, `api/datasets.md`) |
 | `InMemoryStateCatalog`, `DuckDBStateCatalog` | not built; geocatalog's `InMemoryGeoCatalog` and `DuckDBGeoCatalog` hold extra columns and filter them with `where` and `sql` |
 | `CycleStateWriter`, `CycleStateReader` | not built; see [](#r13-ws-d) |
-| `pk.config_hash(op)` | does not exist; `pipekit.hashing.sha256_hex(stable_json(op.get_config()))` computes it, and [Report 9](09_use_cases.md#r9-proposals) proposes `pipeline_hash(op)` (proposal B) |
+| `pk.config_hash(op)` | does not exist; `pipekit_ops.hashing.sha256_hex(stable_json(op.get_config()))` computes it, and [Report 9](09_use_cases.md#r9-proposals) proposes `pipeline_hash(op)` (proposal B) |
 | `georeader.read_from_url` | does not exist; states are xarray files, read with `xr.open_dataset` or geocatalog's `load_xarray` |
-| `pc.Sequential` | does not exist. `pipekit.Sequential` threads a carry state when it holds stateful steps, but it is not a `StatefulOperator`, so `Cycle(step_op=pk.Sequential([...]))` raises `TypeError: step_op must be a StatefulOperator or a ForwardModel` even then ([Report 10](10_pipekit_cycle.md#r10-stage-6)) |
+| `pc.Sequential` | does not exist. `pipekit_ops.Sequential` threads a carry state when it holds stateful steps, but it is not a `StatefulOperator`, so `Cycle(step_op=pk.Sequential([...]))` raises `TypeError: step_op must be a StatefulOperator or a ForwardModel` even then ([Report 10](10_pipekit_cycle.md#r10-stage-6)) |
 | `pc.EnsembleCycle(step_op, n_steps, n_members)` | exists, with that signature |
 | `pt.SimulationDataset` | exists, but simulates on the fly from a forward model and a prior; it reads no stored states |
 :::
@@ -420,7 +420,7 @@ proposed by this report's workstreams and 34 are code the reader writes
 | lead-time skill; `SkillByLeadTime`, `skill_by_lead_time` | `xrtoolz.metrics._src.forecast` | `viz.validation.LeadTimeSkillPanel`, `FacetPanel` | **Healthy.** Needs a reference aligned on `lead_dim`, or none on it |
 | ensemble scores; `CRPS`, `SpreadSkillRatio`, `RankHistogram`, `EnsembleCoverage` | `xrtoolz.metrics` (`ensemble_dim="member"`) | | **Healthy.** Pixel metrics such as `RMSE` cannot reduce over `member` when the reference lacks it |
 | trajectories; `Cycle.history`, `DACycle.history` | `pipekit_cycle.cycle`, `pipekit_cycle.da` | | **Split ownership.** In memory; `EnsembleCycle`, `EnsembleDACycle`, `SmootherCycle` and `WindowedCycle` keep none |
-| producer identity; `Run.pipeline_hash`, `ModelRegistry.store`, `sha256_hex` | `pipekit_experiment.run`, `.registry`; `pipekit.hashing` | `TrainingArtifact`, `InferenceArtifact` | **Healthy.** The hash a row's `producer` column records |
+| producer identity; `Run.pipeline_hash`, `ModelRegistry.store`, `sha256_hex` | `pipekit_experiment.run`, `.registry`; `pipekit_ops.hashing` | `TrainingArtifact`, `InferenceArtifact` | **Healthy.** The hash a row's `producer` column records |
 | lineage, forecast chains, typed state queries | | | **Missing.** Nothing anywhere |
 :::
 

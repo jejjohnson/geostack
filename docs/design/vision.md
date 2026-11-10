@@ -88,7 +88,7 @@ A user picks how much control to take, as in Keras's progressive disclosure (Seq
 | Stop | You call | You hold | Typing | Who |
 | --- | --- | --- | --- | --- |
 | 1. Packaged pipeline (L3) | `plumax.pipelines.emit_plumes.v1.run(...)` | readable geo types | checked on entry and exit | operations, production, benchmarks |
-| 2. Graph of operators (L2 + pipekit) | `pipekit.Graph(read=..., matched_filter=..., ...)` | named stages | dims, per stage | analysts building a new workflow |
+| 2. Graph of operators (L2 + pipekit) | `pipekit_ops.Graph(read=..., matched_filter=..., ...)` | named stages | dims, per stage | analysts building a new workflow |
 | 3. Operators (L2) | `SwathToGrid(...)(swath)`, your own `KernelOp` | a carrier with named dims | dims and grids | method developers adding a component |
 | 4. Primitives (L1) | `matched_filter_score(x, mu, sigma, t)` | `.data` and derived geometry | shapes | full control: new numerics, your own loop |
 
@@ -123,7 +123,7 @@ plumes: Detections = run.output
 This is the body of `emit_plumes`. Every stage is a named, built-in operator, so an analyst copies it, reorders or adds stages, and runs it.
 
 ```python
-def emit_plumes(scene_id: str) -> pipekit.Graph:
+def emit_plumes(scene_id: str) -> pipekit_ops.Graph:
     # → GeoSwath["band row col"], 285 bands; lat/lon and sun/view angles as leaves
     read: Operator = geoproducts.emit.ReadL1B(scene_id)
 
@@ -146,7 +146,7 @@ def emit_plumes(scene_id: str) -> pipekit.Graph:
     # mask → polygons; eager only (GDAL)
     vectorize: Operator = geoops.geom.Vectorize()
 
-    return pipekit.Graph(
+    return pipekit_ops.Graph(
         read=read,
         matched_filter=matched_filter,
         ortho=ortho,
@@ -156,7 +156,7 @@ def emit_plumes(scene_id: str) -> pipekit.Graph:
     )
 
 
-graph: pipekit.Graph = emit_plumes("EMIT_L1B_RAD_001_20260714T081512")
+graph: pipekit_ops.Graph = emit_plumes("EMIT_L1B_RAD_001_20260714T081512")
 plumes: Detections = graph.run()
 ```
 
@@ -398,14 +398,14 @@ Keras's weak spot was the drop from `fit()` to a custom loop, where past a point
 
 ```python
 # a pipeline is a pipekit graph of operators: pull one stage out
-pipe: pipekit.Graph = plumax.pipelines.emit_plumes.build(
+pipe: pipekit_ops.Graph = plumax.pipelines.emit_plumes.build(
     scene_id="EMIT_L1B_RAD_001_20260714T081512"
 )
 stage: radtrax.geo.MatchedFilter = pipe["matched_filter"]
 
 # swap it for your own operator, keep the rest of the pipeline
 mine: Operator = MyRetrieval(dim="band", fit_per="col")
-pipe_mine: pipekit.Graph = pipe.replace("matched_filter", mine)
+pipe_mine: pipekit_ops.Graph = pipe.replace("matched_filter", mine)
 
 # an operator exposes its primitive and spec
 kernel: Callable[..., Float[Array, "R"]] = stage.kernel  # matched_filter_score

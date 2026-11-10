@@ -324,7 +324,7 @@ The three compose into a sliding-window inference pipeline:
 :caption: Sliding-window inference as a pipekit pipeline (a sketch; needs the [pipekit] extra).
 :linenos:
 
-import pipekit as pk
+import pipekit_ops as pk
 from geopatcher.integrations.pipekit import ApplyToChips, GridSampler, MergePatches
 
 pipeline = pk.Sequential([
@@ -344,7 +344,7 @@ The scoping report gave three reasons for keeping the bridge in geopatcher rathe
 geotoolz's `patch_ops` re-exports the same three objects.
 
 :::{warning} Differs from the plan
-- **The bridge imports pipekit's private API.** It uses `nested_config` from `pipekit._base.operator`, the same private helper geotoolz imports ([Report 3](03_sister_libraries.md#r3-geotoolz)), and a private geopatcher helper (`_src.spatial.patcher.on_domain_grid`).
+- **The bridge imports pipekit's private API.** It uses `nested_config` from `pipekit_ops._base.operator`, the same private helper geotoolz imports ([Report 3](03_sister_libraries.md#r3-geotoolz)), and a private geopatcher helper (`_src.spatial.patcher.on_domain_grid`).
 - **The install note is stale.** The extra is `pipekit>=0.0.2`, but both the README and the module's import error still say pipekit is not on PyPI.
 - **There is only one integration.** The report's plural `integrations/` anticipated `pipekit_jax` and `dask` siblings, whereas Dask and JAX arrived through `geopatcher.run` and the `[dask]` / `[jax]` extras instead.
 - **`GridSampler` and `MergePatches` are `forbid_in_yaml`**, so a pipeline that contains them cannot round-trip through pipekit's loaders ([Report 2](02_pipekit_surface.md#r2-group-l)).

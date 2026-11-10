@@ -52,7 +52,7 @@ import numpyro
 import numpyro.distributions as dist
 import pipekit_cycle as pc
 import xarray as xr
-from pipekit import Operator
+from pipekit_ops import Operator
 from pipekit_experiment import LocalModelRegistry
 from pipekit_jax import JaxModelOp
 from pipekit_train import (

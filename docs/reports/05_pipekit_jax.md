@@ -384,7 +384,7 @@ Smaller findings:
 
 | Symbol | Change | Reason |
 |---|---|---|
-| `pipekit._base.tracing.is_traced(x)` | new, private | one check, no import of JAX |
+| `pipekit_ops._base.tracing.is_traced(x)` | new, private | one check, no import of JAX |
 | `Cache._apply` | raises `TypeError` on a traced input, naming `jit` and suggesting JAX's own compilation cache | A1: stage 3's wrong value |
 | `_SnapshotAt._apply`, `Sink._apply` | raise `TypeError` on a traced input | A2: a stored or written tracer is never what the user wanted |
 | `Tap._apply`, `_ProfileWrap._apply` | one `UserWarning` per instance when traced | A2: trace-time behaviour is legitimate for `Tap(print)`, not for timings |

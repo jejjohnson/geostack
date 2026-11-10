@@ -31,7 +31,7 @@ This is the pipeline behind {numref}`fig-methane-walkthrough`, where we catalog 
 :linenos:
 
 import jax
-import pipekit as pk                                         # today
+import pipekit_ops as pk                                         # today
 import pipekit_cycle as pc                                   # today
 import pipekit_train as pt                                   # today
 import pipekit_jax as pj                                     # today
@@ -306,7 +306,7 @@ Use the upstream operator. Only define a new one when the [capability index](api
 from typing import ClassVar
 
 import numpy as np
-from pipekit import Operator                           # today
+from pipekit_ops import Operator                           # today
 
 
 class PercentileClip(Operator):
