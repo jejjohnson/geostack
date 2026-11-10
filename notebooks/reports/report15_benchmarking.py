@@ -47,7 +47,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import xarray as xr
-from pipekit.hashing import sha256_hex, stable_json
+from pipekit_ops.hashing import sha256_hex, stable_json
 import scipy
 from scipy.ndimage import gaussian_filter
 from scipy.spatial import cKDTree

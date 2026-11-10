@@ -45,7 +45,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pipekit as pk
+import pipekit_ops as pk
 import rasterio
 import xarray as xr
 import xrcore
@@ -54,7 +54,7 @@ from geopatcher import SpatialPatcher, spatial
 from geoops import matched_filter as mf
 from geoops import plume
 from geoops.patch_ops import ApplyToChips, GridSampler, MergePatches
-from pipekit import Lambda, Sequential
+from pipekit_ops import Lambda, Sequential
 from pipekit_array import MeanScalar
 from rasterio.transform import from_origin
 from xrtoolz.atm import WindSpeed

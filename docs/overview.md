@@ -797,7 +797,7 @@ Each phase produces packages which are useful on their own ([](#tbl-phases)).
 | Item | Trigger |
 |---|---|
 | pipekit-jax's operator layer (operators as PyTrees; 0.0.2 ships only a model wrapper and a diffrax forward model, [Report 5](reports/05_pipekit_jax.md#r5-ws-b)) | the first project needing differentiable retrievals at scale or JIT-compiled inference |
-| Deployment adapters (`pipekit.deploy.fused`, `.litserve`, `.modal`) | the first deployment beyond hand-shimming |
+| Deployment adapters (`pipekit_ops.deploy.fused`, `.litserve`, `.modal`) | the first deployment beyond hand-shimming |
 | Slice Protocol refactor (`ProfileSlice`, `TrajectorySlice`) | the first project needing first-class in-situ catalogs (likely the BGC benchmark) |
 | More in-situ backends (Argo, ICOADS, SOCAT, …) | one per quarter, project-driven |
 :::

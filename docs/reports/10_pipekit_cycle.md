@@ -42,7 +42,7 @@ pipekit-cycle turns a one-step transition into a run over time. A `Cycle` repeat
 
 **Decision.** pipekit-cycle 0.0.2 stays as it is: a separate package beside pipekit-array, which depends only on pipekit and has no JAX and no domain code. Its protocols, cycles and helpers are the contract that algorithm libraries target. Two additions close the gaps the running example hits, and one more is already proposed in [Report 13](13_state_catalog.md#r13-ws-d).
 
-- **A. Stateful pipelines as cycle steps.** `pipekit.Sequential` threads a carry state when it holds a stateful step, but it is not a `StatefulOperator`, so `Cycle` and its siblings reject it with a `TypeError`. We would accept any stateful `Sequential` as a step.
+- **A. Stateful pipelines as cycle steps.** `pipekit_ops.Sequential` threads a carry state when it holds a stateful step, but it is not a `StatefulOperator`, so `Cycle` and its siblings reject it with a `TypeError`. We would accept any stateful `Sequential` as a step.
 - **B. Observation inputs on the cycle's clock.** `obs_source(i)` receives a call-local index that restarts at 0 on every call, and the observation-error covariance $\gmat{\Sigma}_\varepsilon$ only comes from the state. We would let the index follow `state.cycle_count` (B1), and let a source set $\gmat{\Sigma}_\varepsilon$ per step (B2, the overview's `obs_err_source`).
 - **Report 13 D1. Ensemble histories.** `EnsembleCycle` and `EnsembleDACycle` keep no trajectory, so [Report 13](13_state_catalog.md#r13-ws-d) adds `save_history` to both, which lets cycle outputs be written and indexed.
 
@@ -357,7 +357,7 @@ The restart silently re-assimilates the first five hours of observations and mis
 | `pc.Cycle`, `pc.EnsembleCycle`, `pc.WindowedCycle`, `pc.Recurrence`, `pc.DACycle`, `pc.EnsembleDACycle`, `pc.SmootherCycle` | exist; signatures in [](#r10-audit) |
 | `pc.NeuralForward(model_op=..., dt=...)` | exists, as a working wrapper |
 | `pc.Checkpoint(cycle_op)` | does not exist; pipekit-train has a training `Checkpoint` callback, and `CarryState.to_dict` serialises a state |
-| `pk.config_hash(da)` | does not exist; `pipekit.hashing.sha256_hex(stable_json(da.get_config()))`, or [Report 9](09_use_cases.md#r9-proposals)'s proposed `pipeline_hash` |
+| `pk.config_hash(da)` | does not exist; `pipekit_ops.hashing.sha256_hex(stable_json(da.get_config()))`, or [Report 9](09_use_cases.md#r9-proposals)'s proposed `pipeline_hash` |
 | `pk.qc.AssertCallable` as `condition_op` | exists, but raises instead of returning a boolean (stage 5) |
 | `gc.CatalogTimeQuery`, `gz.tropomi.LoadL2`, `gz.qa.AssertValidFraction` | do not exist at the pinned revisions |
 | `StateCatalog`, `state_cat.write(history, ...)` | not built; [Report 13](13_state_catalog.md) replaces them with a state profile in geocatalog |

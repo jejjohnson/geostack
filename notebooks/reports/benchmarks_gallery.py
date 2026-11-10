@@ -24,7 +24,7 @@
 # 3. every name marked `proposed` with a target module does not exist there yet,
 #    every split an entry declares has the stack piece that makes it (an
 #    unknown split kind fails), and every stratum of the score has its wrapper;
-# 4. each contract gets a content hash (`pipekit.hashing`), as Report 15's
+# 4. each contract gets a content hash (`pipekit_ops.hashing`), as Report 15's
 #    workstream A would give it, over every field but the stack references
 #    (the level transition and its operation included);
 # 5. the counts the page quotes about the contracts (tracks, variants, split
@@ -46,7 +46,7 @@ from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from pipekit.hashing import sha256_hex, stable_json
+from pipekit_ops.hashing import sha256_hex, stable_json
 
 
 # %% [markdown]

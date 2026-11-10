@@ -369,7 +369,7 @@ stack: GeoArray["time band y x"] = GeoArray.from_coords(
 ### Readable types (`geoarray.types`)
 
 A readable type is a name, a dims pattern and a geometry kind, not a subclass (GA-T5, decided 23 Oct 2026).
-Any carrier with a registered adapter matches it when the adapter reports that kind and a `pipekit.Signature` that fits the pattern: a `GeoArray`, or a lazy `DataArray` cube.
+Any carrier with a registered adapter matches it when the adapter reports that kind and a `pipekit_ops.Signature` that fits the pattern: a `GeoArray`, or a lazy `DataArray` cube.
 Slicing a `GeoImageSeries` at one date simply is a `GeoImage`, and `check_dims` verifies the dims at the call.
 
 | Type | Kind and dims (the geoarray carrier) | Typical data |
@@ -552,7 +552,7 @@ The rule for adding one is on the [pipekit kernels](./pipekit_kernels.md) page: 
 | the geoarray adapter: dims, data, labels, an `isel` that slices coordinates and moves the transform origin, a `rewrap` that keeps the georeference, a `check_compatible` that compares grids and raises `GridMismatchError`, `map_over` over data and transform rows together | geoarray |
 | geometry functions: windows that move the transform, `to_rows` / `from_rows` for pixels as rows, `to_pixel` | geoarray |
 | `interp_at` (H(x)) and the `InterpAt` operator | `geoops.geom` (GA-B6) |
-| type names and `check_dims`, built on `pipekit.Signature` patterns | geoarray (names), pipekit (rule) |
+| type names and `check_dims`, built on `pipekit_ops.Signature` patterns | geoarray (names), pipekit (rule) |
 
 The full operator surface is not shared, because the backends differ in four behaviours:
 
@@ -1154,7 +1154,7 @@ Settle these before the geotoolz issues #511–#534 are rewritten.
 | GA-Q6 | `map_over` on xarray | allowed via `apply_ufunc`, documented as per-item Python cost unless dask-parallelized | not shared on xarray |
 | GA-Q7 | Dim names: closed vocabulary or conventions? | free names; geoops and the converters rely on the conventions (`time`, `member`, `level`, `band`, `variable`, `patch`); `check_dims` enforces each signature | a closed list, validated at construction |
 | GA-Q8 | Curvilinear carrier name | `GeoSwath`, also used for fixed model grids | `GeoCurvilinear`, with `GeoSwath` an alias |
-| GA-Q9 | The dims checker | **Decided 21 Oct 2026:** `check_dims` on `pipekit.Signature` patterns, the single `Signature` | — |
+| GA-Q9 | The dims checker | **Decided 21 Oct 2026:** `check_dims` on `pipekit_ops.Signature` patterns, the single `Signature` | — |
 | GA-Q10 | The existing issues | edit #511–#534 in place (numbers and links survive); block themes B–D on the spike #516; add pipekit and pipekit-array issues for the shared machinery | close and recreate |
 
 Before the issues open:

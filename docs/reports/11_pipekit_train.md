@@ -639,7 +639,7 @@ Fixes first, then the missing features, then the backends.
 2. **Should a trained model's prior travel with it?** The emulator of stage 3 is only accurate inside its training prior. Should the artifact record the prior's hash, and should `NeuralForward` warn on inputs outside it?
 3. **Seeds across datasets.** Two `SimulationDataset`s with seeds 0 and 1 share all but one sample seed. Should the seeds be hashed into the sample seed rather than added?
 4. **One validation path or two?** The Equinox loop evaluates with the task's loss, whereas `ValidationStep` evaluates with arbitrary metrics. C3 makes the loop use `ValidationStep`, so is the task-loss path still needed?
-5. **Sweeps in parallel.** `HyperSweep` runs the trials one after another, and parallel trials and Optuna or Ray Tune samplers are deferred. Is `pipekit.parallel.ProcessMap` enough for the first parallel version?
+5. **Sweeps in parallel.** `HyperSweep` runs the trials one after another, and parallel trials and Optuna or Ray Tune samplers are deferred. Is `pipekit_ops.parallel.ProcessMap` enough for the first parallel version?
 6. **Online training.** `OnlineTrainer` is deferred to v0.3 (boundaries Q6), and the scoping report ruled online training out. Is it still wanted?
 
 (r11-todos)=

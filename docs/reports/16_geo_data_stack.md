@@ -53,7 +53,7 @@ geotoolz split twice after the first draft. Object storage left the patcher for 
 
 **Decision.** No package merges into another, and the lanes stay apart, so no GeoTensor package imports an xarray one or the reverse. Each overlap below gets one owner, every move but one leaves a deprecated alias for the 0.x series (the exception is the window dataset's old import, which does not work today), and the stack publishes under names which nobody else holds.
 
-- **A. pipekit owns the composition contract.** pipekit and xrtoolz-core each define a `Signature` with a different layout, so a pipekit-array operator placed after an xrtoolz one fails at `summary` time. We keep pipekit's, give it xrtoolz-core's mapping view, and make public the three helpers which geotoolz and geotoolz-patcher import from `pipekit._base`.
+- **A. pipekit owns the composition contract.** pipekit and xrtoolz-core each define a `Signature` with a different layout, so a pipekit-array operator placed after an xrtoolz one fails at `summary` time. We keep pipekit's, give it xrtoolz-core's mapping view, and make public the three helpers which geotoolz and geotoolz-patcher import from `pipekit_ops._base`.
 - **B. One model-operator family.** Eight classes wrap models for three backends, and two unrelated ones are both named `JaxModelOp`. Each lane keeps its carrier marshalling and each backend is wrapped once, so eight classes become five, with aliases.
 - **C. xrtoolz-core owns the shared xarray vocabulary.** The CF variable registry, the validators and the subset functions live in xrtoolz-reader, so a base install of xrtoolz pulls in the downloaders. We move them into xrtoolz-core, and xrtoolz-reader keeps its archives.
 - **D. geotoolz-patcher owns windows for every carrier.** pipekit-train's `XarrayWindowDataset` imports `geopatcher.time`, which no longer exists, and it is the only edge from pipekit into the geo stack. We fix the import first ([Report 11's A5](11_pipekit_train.md#r11-ws-a)), then we move the dataset into the patcher behind a `[train]` extra, and the xarray lane drops `xrpatcher` from its design.
@@ -181,7 +181,7 @@ $$ (r16-eq-ola)
 from geopatcher import SpatialPatcher, spatial
 from geotoolz import matched_filter as mf
 from geotoolz.patch_ops import ApplyToChips, GridSampler, MergePatches
-from pipekit import Sequential
+from pipekit_ops import Sequential
 
 patcher = SpatialPatcher(
     geometry=spatial.geometry.Rectangular(size=(128, 128)),
@@ -307,7 +307,7 @@ wind_mean = Sequential([WindSpeed(u="u10", v="v10", name="ws10"),
 # (a) two Signature classes                                           → workstream A
 wind_mean.summary(xrcore.Signature({"time": 24, "latitude": 5, "longitude": 5}))
 # → ValueError: too many values to unpack (expected 2)               today
-wind_mean.summary(pipekit.Signature(dims=(("time", 24), ("latitude", 5),
+wind_mean.summary(pipekit_ops.Signature(dims=(("time", 24), ("latitude", 5),
                                            ("longitude", 5))))
 # → last step: Signature((latitude=5, longitude=5) float64)           today
 
@@ -355,11 +355,11 @@ report's workstreams and 2 are code the reader writes (how to read it:
 | `open_emit_ch4_l2b`, `open_ghgsat_ch4_l2`, `open_tropomi_ch4_l2` · `goes`, `himawari`, `carbonmapper` readers | `xrreader/_src/local/openers/` (379 lines) · `geoproducts/` | xrreader users · geoproducts users | **Split ownership.** Two homes for mission readers, no rule between them ([Report 3, question 7](03_sister_libraries.md#r3-open-questions)) |
 | `exact_quotient` · `count_steps` | `geopatcher/_src/temporal/stencils.py:55` · `geocatalog.grid` | temporal stencils · `GeoSlice` alignment | **Healthy.** Named for what they do since #434; the draft's `divide_evenly` clash is gone |
 | obstore pool, `files`, `cache`, `cog`, `hdf` | `geocloud` | geocatalog staging, geopatcher `CogField`, geotoolz `io.ReadHDF` / `ReadNetCDF`, geoproducts HDF5 | **Healthy.** One pool per process, one home since #431 |
-| `pipekit.Cache` · `geopatcher.run.PatchCache` · `geocloud.cache` · xrreader `cache_path` | four packages | | **Healthy.** Operator results, patches across runs, local copies of remote objects, downloads: four jobs |
+| `pipekit_ops.Cache` · `geopatcher.run.PatchCache` · `geocloud.cache` · xrreader `cache_path` | four packages | | **Healthy.** Operator results, patches across runs, local copies of remote objects, downloads: four jobs |
 | `geoproducts.goes.TrueColor` · `geotoolz.viz.TrueColor` | `goes/presets.py:152` · `viz/_src/operators.py:124` | | **Healthy.** The preset binds ABI channels to the geotoolz operator and imports it lazily |
 | `geotoolz.einx` · `xreinx` | both lanes | | **Healthy.** Each speaks its carrier: transform survival on GeoTensor, dimension names on xarray |
 | geocatalog `Source` · xrreader `DataSource` | `geocatalog.sources` · `xrreader/_src/base.py` | | **Healthy.** File inventories with footprints against server-side subsets |
-| `pipekit.Retry` · `geocatalog.utils.retry_transient_io` | | | **Healthy.** Retry any operator in a graph against retry one remote read |
+| `pipekit_ops.Retry` · `geocatalog.utils.retry_transient_io` | | | **Healthy.** Retry any operator in a graph against retry one remote read |
 :::
 
 Smaller findings:
@@ -382,11 +382,11 @@ Smaller findings:
 
 | Symbol | Destination | Reason |
 |---|---|---|
-| `Signature` (ordered `(name, size)` pairs) | stays in `pipekit.signature` | positional operators (pipekit-array) need axis order |
-| `Signature(dims)` accepting a mapping as well as pairs, `Signature.from_sizes(mapping, dtype)`, `.sizes` (read-only mapping) | `pipekit.signature`, new | xrtoolz builds and compares signatures by name; a `dict`'s order is the axis order, so `xrcore.Signature({"time": 24, …})` keeps its call semantics, not only its import |
-| dtype canonicalisation without NumPy: a table of the accepted spellings, each mapped to the name `np.dtype(x).name` gives (`"f8"`, `"<f8"`, `"float64"`, `float` → `"float64"`; `"f4"`, `"<f4"` → `"float32"`; the integer, unsigned, bool and complex codes likewise, with any byte-order prefix); a dtype object gives its `.name` and a scalar type its `__name__`, both then looked up in the same table; anything else raises `TypeError` naming the input | `pipekit.signature` | xrcore's one behaviour pipekit lacks; pipekit-core stays dependency-free, and gate A1 checks the table against `np.dtype(x).name` for every entry, so equal dtypes give equal signatures |
-| `xrcore.Signature` | re-export of `pipekit.Signature` | `from xrcore import Signature` keeps working |
-| `nested_config`, `callable_name` | `pipekit.config` | used by geotoolz and geopatcher |
+| `Signature` (ordered `(name, size)` pairs) | stays in `pipekit_ops.signature` | positional operators (pipekit-array) need axis order |
+| `Signature(dims)` accepting a mapping as well as pairs, `Signature.from_sizes(mapping, dtype)`, `.sizes` (read-only mapping) | `pipekit_ops.signature`, new | xrtoolz builds and compares signatures by name; a `dict`'s order is the axis order, so `xrcore.Signature({"time": 24, …})` keeps its call semantics, not only its import |
+| dtype canonicalisation without NumPy: a table of the accepted spellings, each mapped to the name `np.dtype(x).name` gives (`"f8"`, `"<f8"`, `"float64"`, `float` → `"float64"`; `"f4"`, `"<f4"` → `"float32"`; the integer, unsigned, bool and complex codes likewise, with any byte-order prefix); a dtype object gives its `.name` and a scalar type its `__name__`, both then looked up in the same table; anything else raises `TypeError` naming the input | `pipekit_ops.signature` | xrcore's one behaviour pipekit lacks; pipekit-core stays dependency-free, and gate A1 checks the table against `np.dtype(x).name` for every entry, so equal dtypes give equal signatures |
+| `xrcore.Signature` | re-export of `pipekit_ops.Signature` | `from xrcore import Signature` keeps working |
+| `nested_config`, `callable_name` | `pipekit_ops.config` | used by geotoolz and geopatcher |
 | `require_operator` | `pipekit` | used by geotoolz `augment` |
 :::
 
@@ -406,8 +406,8 @@ wind_mean.summary(sig)                       # → ValueError               toda
 # {d: N} in insertion order ↦ ((d₁, N₁), …, (d_R, N_R))
 sig = xrcore.Signature({"time": 24, "latitude": 5,
                         "longitude": 5})     # the same call     proposed (A)
-xrcore.Signature is pipekit.Signature        # → True               proposed (A)
-sig == pipekit.Signature.from_sizes(sig.sizes)   # → True           proposed (A)
+xrcore.Signature is pipekit_ops.Signature        # → True               proposed (A)
+sig == pipekit_ops.Signature.from_sizes(sig.sizes)   # → True           proposed (A)
 wind_mean.summary(sig)                       # last: (latitude=5, longitude=5)  proposed (A)
 ```
 
@@ -633,7 +633,7 @@ Each workstream only merges when its gates pass ([](#tbl-r16-gates)). The K gate
 
 | Gate | Workstream | Passes when |
 |---|---|---|
-| A1 One Signature | A | `xrcore.Signature is pipekit.Signature`, and stage 6a's `summary` with a signature built by today's call, `xrcore.Signature({"time": 24, "latitude": 5, "longitude": 5})`, ends in `(latitude=5, longitude=5)` (today `ValueError`); and for every spelling in the dtype table (`"f8"`, `"<f4"`, `float`, `"i4"`, `"?"`, …), `Signature.from_sizes(sizes, dtype=x).dtype == np.dtype(x).name`, with NumPy used only by the test |
+| A1 One Signature | A | `xrcore.Signature is pipekit_ops.Signature`, and stage 6a's `summary` with a signature built by today's call, `xrcore.Signature({"time": 24, "latitude": 5, "longitude": 5})`, ends in `(latitude=5, longitude=5)` (today `ValueError`); and for every spelling in the dtype table (`"f8"`, `"<f4"`, `float`, `"i4"`, `"?"`, …), `Signature.from_sizes(sizes, dtype=x).dtype == np.dtype(x).name`, with NumPy used only by the test |
 | A2 Signature round-trip | A | every existing pipekit, pipekit-array and xrtoolz signature test passes against the merged class, with 0 failures |
 | A3 No private imports | A | `grep -r "pipekit\._" ` over geotoolz returns 0 lines (today 3) |
 | B1 One Equinox wrapper | B | pipekit-train's tests pass with the adapter returning `JaxModelOp`, and `pip install pipekit-jax` without extras installs no pipekit-cycle |
@@ -671,7 +671,7 @@ release.
 - **Ordered signatures break order-free comparisons.** xrcore's equality ignores the dimension order, whereas pipekit's does not, so tests that build signatures from differently ordered dicts start failing. Fallback: we rewrite those comparisons to `a.sizes == b.sizes` in the same PR, and gate A2 finds any that are left.
 - **Moved names break downstream code.** Every move in B, C and D leaves a deprecated alias or re-export for the 0.x series, except `pipekit_train.XarrayWindowDataset`, which cannot be imported today and whose re-export would undo D2. Fallback: if an alias cannot be kept (a class that changes base), we pin the old minor version in the dependent package until it migrates.
 - **The other `pipekit` shares the import name.** If its wheel also installs a top-level `pipekit` module, the two cannot share an environment. Fallback: we say so in the README, and renaming the import is not proposed.
-- **Caches keyed on the dataset could go stale.** A move which changed the content hash would orphan every cache built on it. However, it does not, because `content_hash` hashes the literal string `"XarrayWindowDataset"` and the dataset's own config (not its module), and gate D2 checks that the hash is unchanged. Serialised pipelines are not at risk either, because the dataset sets `forbid_in_yaml` and never round-trips through `pipekit.serial`.
+- **Caches keyed on the dataset could go stale.** A move which changed the content hash would orphan every cache built on it. However, it does not, because `content_hash` hashes the literal string `"XarrayWindowDataset"` and the dataset's own config (not its module), and gate D2 checks that the hash is unchanged. Serialised pipelines are not at risk either, because the dataset sets `forbid_in_yaml` and never round-trips through `pipekit_ops.serial`.
 - **Lazy imports hide a missing dependency.** D3 makes the raster domain load on first use, so an install without georeader fails later than it does today. Fallback: geotoolz-patcher's packaging test already installs with no extras, so we extend it to build each field once.
 - **The carrier rule meets a hybrid product.** A product shipped both as an orthorectified raster and as a swath (EMIT) gets a reader in each package. Fallback: that is simply the rule working, as the capability index shows both and gate E1 checks that they agree.
 

@@ -567,7 +567,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
         <div class="rel-topic">Neural networks</div>
         <div class="rel-from"><span class="pill ext">equinox</span></div>
         <div class="rel-kind k-extends">extends</div>
-        <div class="rel-to"><span class="pill c-core">geonnax</span><span class="pill c-core">pipekit</span></div>
+        <div class="rel-to"><span class="pill c-core">geonnax</span><span class="pill c-core">pipekit-ops</span></div>
         <div class="rel-note">geonnax's layer zoo; pipekit-jax's JaxOperator is an Equinox module that is also a pipekit operator</div>
       </div>
       <div class="rel-row">
@@ -912,7 +912,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     { id: "pipekit-jax",   layer: "core",     tier: 3, today: "geostack", ws: "pipekit", x: 0, y: 0, why: "pipekit-jax: JaxOperator, JaxModelOp, Rollout, DiffraxForwardModel; 1.8k lines" },
     { id: "pipekit-evaluate", layer: "core",  tier: 3, today: "geostack", ws: "pipekit", x: 0, y: 0, why: "pipekit-evaluate: Unit × Lens × Stage evaluation, scorers, benchmarks; 1.6k lines" },
     { id: "pipekit-experiment", layer: "bench", tier: 0, today: "geostack", ws: "pipekit", x: 505, y: 52, why: "pipekit-experiment: tracking adapters (MLflow, W&B, DVC, Hydra, Metaflow) and a model registry; 1.4k lines" },
-    { id: "pipekit",       layer: "core",     tier: 0, today: "geostack", ws: "pipekit", x: 865, y: 728, why: "pipekit: Operators, Sequential, Graph, configs, caching, control flow; no dependencies; 4.6k lines" },
+    { id: "pipekit-ops",   layer: "core",     tier: 0, today: "geostack", ws: "pipekit", x: 865, y: 728, why: "pipekit-ops: the core, Operators, Sequential, Graph, configs, caching, control flow; no dependencies; 4.6k lines" },
     { id: "optax_bayes",   layer: "core",     tier: 1, today: "geoml",    x: 205, y: 640, why: "Bayesian learning rules" },
     { id: "gauss_flows",   layer: "core",     tier: 1, today: "geoml",    x: 362, y: 640, why: "normalising flows" },
     { id: "kernellib",     layer: "core",     tier: 1, today: "geoml",    x: 511, y: 640, why: "kernels as operators" },
@@ -976,7 +976,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   const CORE_SHIFT = 474;
   const CORE_Y = { 0: 1210, 1: 1149, 2: 1088, 3: 1027, 4: 966 };
   const CORE_X = {
-    xtremax: 160, gaussx: 400, functax: 650, pipekit: 1045,
+    xtremax: 160, gaussx: 400, functax: 650, "pipekit-ops": 1045,
     pyrox: 53, geonnax: 141, optax_bayes: 254, gauss_flows: 383, kernellib: 504, filterax: 613, argminax: 718, integrix: 823,
     "pipekit-array": 965, "pipekit-train": 1125,
     "pyrox-gp": 150, "pyrox-nn": 290, "pyrox-lgm": 430, manipy: 570, vardax: 680, "pipekit-cycle": 1045,
@@ -1003,22 +1003,22 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     ["pyrox-gp", "pyrox"], ["pyrox-gp", "gaussx"], ["pyrox-gp", "kernellib"], ["pyrox-gp", "gauss_flows"],
     ["pyrox-lgm", "gaussx"], ["pyrox-lgm", "kernellib"],
     ["pyrox-nn", "pyrox"], ["pyrox-nn", "geonnax"],
-    ["vardax", "gaussx"], ["vardax", "pipekit"], ["vardax", "pipekit-cycle"], ["vardax", "pipekit-jax"], ["vardax", "pipekit-train"], ["vardax", "geonnax"],
+    ["vardax", "gaussx"], ["vardax", "pipekit-ops"], ["vardax", "pipekit-cycle"], ["vardax", "pipekit-jax"], ["vardax", "pipekit-train"], ["vardax", "geonnax"],
     ["optax_bayes", "gaussx"], ["gauss_flows", "gaussx"],
     ["spectraldiffx", "gaussx"],
     ["finitevolX", "spectraldiffx"], ["finitevolX", "gaussx"],
-    ["pipekit-array", "pipekit"], ["pipekit-train", "pipekit"], ["pipekit-cycle", "pipekit"], ["pipekit-cycle", "pipekit-array"],
-    ["pipekit-jax", "pipekit"], ["pipekit-jax", "pipekit-cycle"], ["pipekit-jax", "pipekit-array"],
-    ["pipekit-evaluate", "pipekit"], ["pipekit-evaluate", "pipekit-cycle"], ["pipekit-experiment", "pipekit"],
-    ["geoarray", "pipekit"], ["geoarray", "pipekit-array"], ["geocloud", "geoarray"],
-    ["geopatcher", "geoarray"], ["geopatcher", "geocloud"], ["geopatcher", "pipekit"], ["geopatcher", "pipekit-array"], ["geopatcher", "pipekit-train"],
-    ["geoops", "geoarray"], ["geoops", "geocloud"], ["geoops", "geopatcher"], ["geoops", "pipekit"], ["geoops", "pipekit-array"],
+    ["pipekit-array", "pipekit-ops"], ["pipekit-train", "pipekit-ops"], ["pipekit-cycle", "pipekit-ops"], ["pipekit-cycle", "pipekit-array"],
+    ["pipekit-jax", "pipekit-ops"], ["pipekit-jax", "pipekit-cycle"], ["pipekit-jax", "pipekit-array"],
+    ["pipekit-evaluate", "pipekit-ops"], ["pipekit-evaluate", "pipekit-cycle"], ["pipekit-experiment", "pipekit-ops"],
+    ["geoarray", "pipekit-ops"], ["geoarray", "pipekit-array"], ["geocloud", "geoarray"],
+    ["geopatcher", "geoarray"], ["geopatcher", "geocloud"], ["geopatcher", "pipekit-ops"], ["geopatcher", "pipekit-array"], ["geopatcher", "pipekit-train"],
+    ["geoops", "geoarray"], ["geoops", "geocloud"], ["geoops", "geopatcher"], ["geoops", "pipekit-ops"], ["geoops", "pipekit-array"],
     ["geocatalog", "geoarray"], ["geocatalog", "geocloud"], ["geocatalog", "geopatcher"],
-    ["geoproducts", "geoarray"], ["geoproducts", "geocloud"], ["geoproducts", "pipekit"],
-    ["xrops", "geoops"], ["xrops", "geoarray"], ["xrops", "xrproducts"], ["xrops", "pipekit"], ["xrops", "pipekit-array"],
-    ["plumax", "gaussx"], ["plumax", "finitevolX"], ["plumax", "pipekit"],
+    ["geoproducts", "geoarray"], ["geoproducts", "geocloud"], ["geoproducts", "pipekit-ops"],
+    ["xrops", "geoops"], ["xrops", "geoarray"], ["xrops", "xrproducts"], ["xrops", "pipekit-ops"], ["xrops", "pipekit-array"],
+    ["plumax", "gaussx"], ["plumax", "finitevolX"], ["plumax", "pipekit-ops"],
     ["radtrax", "gaussx"],
-    ["sesmax-core", "finitevolX"], ["sesmax-core", "spectraldiffx"], ["sesmax-core", "pipekit"], ["sesmax-core", "pipekit-cycle"], ["sesmax-core", "pipekit-jax"],
+    ["sesmax-core", "finitevolX"], ["sesmax-core", "spectraldiffx"], ["sesmax-core", "pipekit-ops"], ["sesmax-core", "pipekit-cycle"], ["sesmax-core", "pipekit-jax"],
     ["sesmax-core", "geonnax"], ["sesmax-core", "filterax"], ["sesmax-core", "vardax"],
     ["manipy", "kernellib"], ["manipy", "gaussx"]
   ];
@@ -1078,7 +1078,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     geoops: { numpy: 62, jaxtyping: 27, scipy: 17, georeader: 13, einx: 9, shapely: 6, rasterio: 6, pyproj: 6, xarray: 2, jax: 2 },
     geocatalog: { shapely: 30, pyproj: 17, numpy: 11, rasterio: 9, xarray: 4, georeader: 1 },
     geoproducts: { shapely: 13, numpy: 12, georeader: 11, rasterio: 9, pyproj: 1 },
-    pipekit: { numpy: 1 },
+    "pipekit-ops": { numpy: 1 },
     "pipekit-array": { numpy: 10, einx: 3, xarray: 2, jax: 2 },
     "pipekit-cycle": { scipy: 1 },
     "pipekit-jax": { jax: 12, equinox: 7, numpy: 3, diffrax: 2 },
@@ -1112,7 +1112,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
 
   // today's layer ranks and tiers, from scripts/dependency_graph.py
   const TODAY_RANK = { geostack: 0, numerics: 0, geoml: 1, models: 2 };
-  const TODAY_TIER = { xrcf: 0, pipekit: 0, "pipekit-array": 1, "pipekit-train": 1, "pipekit-cycle": 2, "pipekit-jax": 3, "pipekit-evaluate": 3, "pipekit-experiment": 1, geoarray: 1, geocloud: 1, geopatcher: 1, geoops: 1, geocatalog: 1, geoproducts: 1, xrproducts: 2, xrops: 2,
+  const TODAY_TIER = { xrcf: 0, "pipekit-ops": 0, "pipekit-array": 1, "pipekit-train": 1, "pipekit-cycle": 2, "pipekit-jax": 3, "pipekit-evaluate": 3, "pipekit-experiment": 1, geoarray: 1, geocloud: 1, geopatcher: 1, geoops: 1, geocatalog: 1, geoproducts: 1, xrproducts: 2, xrops: 2,
     gaussx: 0, spectraldiffx: 1, finitevolX: 2, functax: 0,
     geonnax: 0, gauss_flows: 0, kernellib: 1, optax_bayes: 1, xtremax: 1,
     filterax: 2, pyrox: 2, "pyrox-gp": 3, "pyrox-lgm": 3, "pyrox-nn": 4, vardax: 3, radtrax: 0, "sesmax-core": 0, plumax: 1, integrix: 0, argminax: 0 };
@@ -1407,7 +1407,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     "geonnax": ["networks: spectral and spherical layers, neural operators (FNO, SFNO, WNO, LNO, CNO), neural fields (SIREN, MFN, NeuralFieldMLP), SNGP and VSSGP cores, heads, encoders as thin Modules over functax features",
                 "bases, sphere grids and meshes, random-feature evaluation, <code>diffops</code>, spherical-harmonic transform, sphere geometry → <b>functax</b>; WGS84 → <b>geophysix</b>; frequency draws from spectral densities → <b>kernellib</b>"],
     "xtremax": ["extreme-value distributions and models", "data wrangling stays in <b>xrops</b>"],
-    "pipekit": ["Operators, Sequential and Graph, configs and serialisation (dumps, loads, sandboxed loads), hashing and caching, control flow (Retry, Try, Branch, Coalesce), taps and QC, parallel maps, carry state, the adapter registry; no runtime dependencies",
+    "pipekit-ops": ["the core of the pipekit workspace (the pipekit distribution is now a code-free umbrella): Operators, Sequential and Graph, configs and serialisation (dumps, loads, sandboxed loads), hashing and caching, control flow (Retry, Try, Branch, Coalesce), taps and QC, parallel maps, carry state, the adapter registry; no runtime dependencies",
                 "named arrays → <b>pipekit-array</b>; carriers → <b>geoarray</b>"],
     "pipekit-array": ["the named-array protocol (DimArray), dim Operators (ISel, Sel, Reduce, ArgReduce, TakeAlong, MapOver, Combine), KernelOp and run_kernel over the array API (NumPy, JAX, CuPy, torch, dask), the lazy xarray DataArray adapter, an sklearn estimator bridge",
                       "Dataset and DataTree dispatch → <b>xrops</b> (PK-P5); the GeoArray adapter → <b>geoarray</b>"],
@@ -1430,7 +1430,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     return all.length ? `<div class="imports">${all.join("")}</div>` : `<span class="empty">nothing in the stack</span>`;
   };
   const KINDS = {
-    xtremax: ["P", "M"], geonnax: ["P", "M"], gaussx: ["P", "M"], functax: ["P", "M"], pipekit: ["Oa"],
+    xtremax: ["P", "M"], geonnax: ["P", "M"], gaussx: ["P", "M"], functax: ["P", "M"], "pipekit-ops": ["Oa"],
     optax_bayes: ["P", "M"], gauss_flows: ["M"], kernellib: ["P", "M"], filterax: ["P", "M"],
     vardax: ["P", "M", "Oa"], "pipekit-array": ["Oa", "P"], "pipekit-cycle": ["Oa"], "pipekit-jax": ["Oa"], "pipekit-train": ["Oa"], "pipekit-evaluate": ["Oa", "P"], argminax: ["P", "M"], integrix: ["P", "M"], pyrox: ["P", "M"], "pyrox-gp": ["P", "M"], "pyrox-lgm": ["P", "M"], "pyrox-nn": ["M"], manipy: ["P", "M"],
     geophysix: ["P"], gridax: ["P", "M"], spectraldiffx: ["P", "M"], diagnostix: ["P"], radiomax: ["P", "M"],
@@ -1441,7 +1441,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     radtrax: ["P", "M", "Oc:geo"], plumax: ["P", "M", "Oa", "Oc:geo"],
   };
   const RUNGS = {
-    gaussx: [0, 1, 2, 3, 4], functax: [0, 1, 2, 3], geonnax: [0, 3], xtremax: [1, 3, 4], pipekit: [5, 6],
+    gaussx: [0, 1, 2, 3, 4], functax: [0, 1, 2, 3], geonnax: [0, 3], xtremax: [1, 3, 4], "pipekit-ops": [5, 6],
     "pipekit-array": [0, 1, 5], "pipekit-train": [6], "pipekit-cycle": [6], "pipekit-jax": [5], "pipekit-evaluate": [4, 5],
     optax_bayes: [2], gauss_flows: [0, 3, 4], kernellib: [0, 1, 2, 3, 4], filterax: [2, 3, 4], argminax: [2, 4], integrix: [0, 2, 4],
     pyrox: [0, 4], "pyrox-gp": [0, 3, 4], "pyrox-lgm": [0, 3, 4], "pyrox-nn": [0, 3], manipy: [3, 4], vardax: [0, 3, 4, 5],
@@ -1490,7 +1490,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     gaussx: "structured linear algebra, Gaussians, Gaussian integrals, one Newton step",
     geonnax: "networks: layers, neural operators, neural fields, encoders",
     xtremax: "extreme-value distributions and models",
-    pipekit: "Operators, Sequential, Graph, configs, caching, control flow; no dependencies",
+    "pipekit-ops": "the core: Operators, Sequential, Graph, configs, caching, control flow; no dependencies",
     "pipekit-array": "named arrays, dim Operators, KernelOp over the array API",
     "pipekit-train": "training loops, datasets, losses, sweeps",
     "pipekit-cycle": "DA cycles, forward-model and observation protocols, adjoint specs",

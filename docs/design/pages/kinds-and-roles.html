@@ -969,7 +969,7 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
 <span class="hljs-comment"># MatchedFilter is the Module above; ch4_unit_absorption is proposed for radtrax</span>
 
 
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">MethaneEnhancement</span>(pipekit.Operator):
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">MethaneEnhancement</span>(pipekit_ops.Operator):
     <span class="hljs-string">&quot;&quot;&quot;CH₄ enhancement on a carrier: the MatchedFilter Module lifted onto GeoArrays.
 
         h[f, ψ](x_geo; α) = ι_α(f(π_α(x_geo); ψ), x_geo)
@@ -1131,7 +1131,7 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
         </div>
         <div class="kind-card">
           <div class="kind-name"><span class="kglyph">→</span>Operator</div>
-          <p class="kind-test">A <code>pipekit.Operator</code>: composes with <code>|</code>, runs in a <code>Graph</code>, round-trips its config through JSON. Any Module can become one by wrapping.</p>
+          <p class="kind-test">A <code>pipekit_ops.Operator</code>: composes with <code>|</code>, runs in a <code>Graph</code>, round-trips its config through JSON. Any Module can become one by wrapping.</p>
           <dl><dt>Named</dt><dd>for the action, no suffix: <code>Reproject</code>, <code>PlumeMask</code>. <code>*Op</code> only for an Operator that wraps a Module: <code>JaxModelOp</code>, <code>SomaxModelOp</code></dd></dl>
         </div>
       </div>
@@ -1201,7 +1201,7 @@ spectrum = pa.reduce(scene, <span class="hljs-string">&quot;mean&quot;</span>, (
         <div class="noun-rows">
           <div class="noun-row"><span class="noun-label">combinators</span><div class="rung-chips"><code>Sequential</code><code>Graph</code><code>Branch</code><code>Retry</code></div></div>
           <div class="noun-row"><span class="noun-label">templates</span><div class="rung-chips"><code>DACycle</code><code>TrainingLoop</code><code>SpatialPatcher</code></div></div>
-          <div class="noun-row data-nouns"><span class="noun-label">as data</span><div class="rung-chips"><code>pipekit.dumps</code><code>pipekit.loads</code><code>loads_sandboxed</code><code>recipe.yaml</code></div></div>
+          <div class="noun-row data-nouns"><span class="noun-label">as data</span><div class="rung-chips"><code>pipekit_ops.dumps</code><code>pipekit_ops.loads</code><code>loads_sandboxed</code><code>recipe.yaml</code></div></div>
         </div>
       </div>
       <div class="rung orch-bar" style="grid-row: 9;"><b>Orchestration</b>, not a rung: runs recipes over many items, on a schedule, behind an API, with retries and storage · DVC · Airflow / Prefect · FastAPI · GeoApps</div>
@@ -1667,7 +1667,7 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
 <span class="hljs-comment"># ch4_unit_absorption is proposed for radtrax: methane absorption per ppm m</span>
 
 
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">MethaneRetrieval</span>(pipekit.Operator):
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">MethaneRetrieval</span>(pipekit_ops.Operator):
     <span class="hljs-string">&quot;&quot;&quot;Retrieval: radiance → methane enhancement, with its noise σ_y in the attrs.
 
         y_geo = ι_α(matched_filter(π_α(x_geo); Background.fit(X)), x_geo)
@@ -1757,7 +1757,7 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
         <span class="hljs-keyword">return</span> sig.replace_dims({<span class="hljs-string">&quot;band&quot;</span>: <span class="hljs-number">1</span>})
 
 
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">PlumeSegmentation</span>(pipekit.Operator):
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">PlumeSegmentation</span>(pipekit_ops.Operator):
     <span class="hljs-string">&quot;&quot;&quot;Segmentation: enhancement → plume mask, at k times the retrieval&#x27;s noise.
 
         b_geo = ι_α(segment(y, σ_y; k, N_min), y_geo)
@@ -1808,7 +1808,7 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
         <span class="hljs-keyword">return</span> Signature(dims=sig.dims, dtype=<span class="hljs-string">&quot;bool&quot;</span>)
 
 
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">WindAt</span>(pipekit.Operator):
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">WindAt</span>(pipekit_ops.Operator):
     <span class="hljs-string">&quot;&quot;&quot;Quantification: the wind speed U at the source, read from its own grid.
 
         U = v(s_source), bilinear in the wind&#x27;s grid
@@ -1849,7 +1849,7 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
         <span class="hljs-keyword">return</span> Signature(dims=(), dtype=<span class="hljs-string">&quot;float64&quot;</span>)
 
 
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">EmissionRate</span>(pipekit.Operator):
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">EmissionRate</span>(pipekit_ops.Operator):
     <span class="hljs-string">&quot;&quot;&quot;Quantification: Q from the enhancement, the plume and the wind.
 
         Q = emission_rate(y, b; a, U, κ),  a = |det A₂ₓ₂|
@@ -1900,7 +1900,7 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
       <pre class="code"><code class="language-python hljs"><span class="hljs-keyword">import</span> pipekit
 
 
-<span class="hljs-keyword">def</span> <span class="hljs-title function_">plume_recipe</span>(<span class="hljs-params">*, lon: <span class="hljs-built_in">float</span>, lat: <span class="hljs-built_in">float</span>, k: <span class="hljs-built_in">float</span> = <span class="hljs-number">3.0</span></span>) -&gt; pipekit.Graph:
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">plume_recipe</span>(<span class="hljs-params">*, lon: <span class="hljs-built_in">float</span>, lat: <span class="hljs-built_in">float</span>, k: <span class="hljs-built_in">float</span> = <span class="hljs-number">3.0</span></span>) -&gt; pipekit_ops.Graph:
     <span class="hljs-string">&quot;&quot;&quot;Retrieval, segmentation and quantification, wired into one Graph.
 
         y_geo = h[f_ret](x_geo; α₁),  b_geo = h[f_seg](y_geo; α₂)
@@ -1913,12 +1913,12 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
 
     Returns:
         A Graph with inputs scene and wind and the output emission. It holds
-        configs only, so pipekit.dumps writes it and pipekit.loads rebuilds it.
+        configs only, so pipekit_ops.dumps writes it and pipekit_ops.loads rebuilds it.
     &quot;&quot;&quot;</span>
     <span class="hljs-comment"># today (pipekit)</span>
-    scene_in = pipekit.Input(<span class="hljs-string">&quot;scene&quot;</span>)
+    scene_in = pipekit_ops.Input(<span class="hljs-string">&quot;scene&quot;</span>)
     <span class="hljs-comment"># today (pipekit)</span>
-    wind_in = pipekit.Input(<span class="hljs-string">&quot;wind&quot;</span>)
+    wind_in = pipekit_ops.Input(<span class="hljs-string">&quot;wind&quot;</span>)
     <span class="hljs-comment"># user</span>
     <span class="hljs-comment"># retrieval: y_geo with σ_y</span>
     enhancement = MethaneRetrieval()(scene_in)
@@ -1931,7 +1931,7 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
     <span class="hljs-comment"># user</span>
     emission = EmissionRate()(enhancement, plume, wind)
     <span class="hljs-comment"># today (pipekit)</span>
-    <span class="hljs-keyword">return</span> pipekit.Graph(
+    <span class="hljs-keyword">return</span> pipekit_ops.Graph(
         inputs={<span class="hljs-string">&quot;scene&quot;</span>: scene_in, <span class="hljs-string">&quot;wind&quot;</span>: wind_in}, outputs={<span class="hljs-string">&quot;emission&quot;</span>: emission}
     )
 
@@ -1941,18 +1941,18 @@ wind_field: GeoArray[<span class="hljs-string">&quot;band y x&quot;</span>] = Ge
 recipe = plume_recipe(lon=-<span class="hljs-number">103.52</span>, lat=<span class="hljs-number">31.98</span>)
 <span class="hljs-comment"># today (pipekit)</span>
 <span class="hljs-comment"># the signatures of the data part&#x27;s carriers, with no data read</span>
-scene_sig = pipekit.signature_of(scene)        <span class="hljs-comment"># → (band=B, y=R, x=C)</span>
+scene_sig = pipekit_ops.signature_of(scene)        <span class="hljs-comment"># → (band=B, y=R, x=C)</span>
 <span class="hljs-comment"># today (pipekit)</span>
-wind_sig = pipekit.signature_of(wind_field)    <span class="hljs-comment"># → (band=1, y=G, x=H)</span>
+wind_sig = pipekit_ops.signature_of(wind_field)    <span class="hljs-comment"># → (band=1, y=G, x=H)</span>
 <span class="hljs-comment"># today (pipekit)</span>
 <span class="hljs-comment"># a Keras-style table, from signatures alone</span>
 <span class="hljs-built_in">print</span>(recipe.summary({<span class="hljs-string">&quot;scene&quot;</span>: scene_sig, <span class="hljs-string">&quot;wind&quot;</span>: wind_sig}))
 <span class="hljs-comment"># today (pipekit)</span>
 <span class="hljs-comment"># the recipe as data: JSON with the steps&#x27; configs, never the arrays</span>
-recipe_json = pipekit.dumps(recipe)
+recipe_json = pipekit_ops.dumps(recipe)
 <span class="hljs-comment"># today (pipekit)</span>
 <span class="hljs-comment"># loaded back, it runs on the carriers of the data part</span>
-loaded = pipekit.loads(recipe_json)
+loaded = pipekit_ops.loads(recipe_json)
 result = loaded(scene=scene, wind=wind_field)  <span class="hljs-comment"># → {emission: table}</span>
 <span class="hljs-comment"># user</span>
 <span class="hljs-comment"># a sweep over the threshold, as a DVC stage or an Airflow task would run it</span>
@@ -1968,7 +1968,7 @@ sweep = {
 [2] WindAt(wind)                 (band=1, y=8, x=8) float64                                               () float64
 [3] EmissionRate([0], [1], [2])  (band=1, y=256, x=256) float32, (band=1, y=256, x=256) bool, () float64  ?
 → emission = [3]                                                                                          ?</pre>
-      <p>The recipe as data, read for people: the steps by name, each with what it takes and its config. This is the record <code>pipekit.dumps</code> writes, with the node numbers replaced by step names; pipekit itself writes and reads the JSON below it.</p>
+      <p>The recipe as data, read for people: the steps by name, each with what it takes and its config. This is the record <code>pipekit_ops.dumps</code> writes, with the node numbers replaced by step names; pipekit itself writes and reads the JSON below it.</p>
       <pre class="code-out yaml">inputs: [scene, wind]
 steps:
   methane_retrieval:
@@ -1991,7 +1991,7 @@ steps:
     kappa: 6.56e-07
 outputs:
   emission: emission_rate</pre>
-      <details class="raw"><summary>The JSON as <code>pipekit.dumps</code> writes it</summary><pre class="code-out">{
+      <details class="raw"><summary>The JSON as <code>pipekit_ops.dumps</code> writes it</summary><pre class="code-out">{
   "class": "Graph",
   "config": {
     "inputs": ["scene", "wind"],
@@ -2057,14 +2057,14 @@ outputs:
       "emission": { "node": 3 }
     }
   },
-  "module": "pipekit._base.graph"
+  "module": "pipekit_ops._base.graph"
 }</pre></details>
       <p class="code-note">The six parts run as written, in order, as one module (checked on 7 Nov 2026), on a synthetic 256 × 256 scene, the size the summary shows, with a 3000 ppm m disk and a uniform 3.5 m s⁻¹ wind, with stand-ins for radtrax's <code>air_mass_factor</code> and the absorption lookup. The recipe returns <span class="tex" data-tex="Q"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math></span></span> = 4.5 kg s⁻¹ against 4.6 kg s⁻¹ from the true plume, and the Graph loaded back from JSON returns the same. <span class="tex" data-tex="\kappa"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi></mrow><annotation encoding="application/x-tex">\kappa</annotation></semantics></math></span></span> = 6.56 × 10⁻⁷ kg m⁻² per ppm m is the near-surface value of geoops' <code>ColumnToMass</code>.</p>
     </div>
     <p class="sub"><b>Why structures sit below primitives.</b> In gaussx, <code>_primitives</code> imports <code>_operators</code> 76 times and <code>_operators</code> imports <code>_primitives</code> once: the verbs exist to dispatch on the nouns. With the nouns at the floor, the ladder is also the build order. One entanglement is left: a primitive takes a strategy argument (<code>solve(A, b, solver=CGSolver())</code>) and some strategies call primitives (<code>diag</code>, <code>trace</code>); <code>_primitives</code> and <code>_strategies</code> import each other eight times each way. That pair is gaussx's dispatch core, now its only documented exception.</p>
     <p class="sub"><b>The data are nouns too.</b> ▦ arrays, ▤ named arrays and ◆ carriers are the ⓪ structures of the data axis: <code>DimArray</code> is pipekit-array's noun, <code>GeoArray</code>, <code>GeoSwath</code> and <code>GeoPoints</code> are geoarray's, and geoarray's own verbs (<code>crop</code>, <code>to_pixel</code>, <code>read_window</code>) are the ① primitives that act on them. The kind and data axes say how a noun is packaged and what it knows; the ladder says it is a noun.</p>
     <p class="sub"><b>Steps and recipes.</b> The test between ⑤ and ⑥: does it do one thing to its input, or does it put steps (its own, or ones you pass in) in order to make a job? <code>MatchedFilter</code> and <code>Reproject</code> are steps; load, orthorectify, matched filter, plume mask and emission estimate, from an EMIT L1B scene to an emission rate, is a recipe. What counts is how it is built, not its name or what it does inside: <code>Reproject</code> resamples and warps internally but is one closed class with settings, so it is a step, and so is <code>geoops.viz.RGBRecipe</code> despite its name (<code>RGBComposite</code> would say it better). Some recipes ship in libraries as templates, compositions with slots for your steps: <code>DACycle</code> (forecast then analysis, cycled), <code>TrainingLoop</code>, and the patcher's split, process and stitch. The combinators (<code>Sequential</code>, <code>Graph</code>, <code>Branch</code>, <code>Retry</code>) are the conjunctions that join steps, so they sit at ⑥ too.</p>
-    <p class="sub"><b>Composition is closed; running is not.</b> A recipe of recipes is a recipe, as a <code>Sequential</code> of <code>Sequential</code>s is a <code>Sequential</code>, so the ladder stops at ⑥. What sits above is not more composition but running it: which items, when, where, with what retries and storage. That is orchestration, the application's job (a DVC stage, an Airflow or Prefect flow, a FastAPI endpoint, GeoApps), and the same recipe should run unchanged in all of them. A recipe has two forms, code (a <code>Sequential</code> or <code>Graph</code> built in Python) and data (a YAML file that <code>pipekit.loads</code> reads back). The data form needs every step in it to round-trip (a strict-JSON <code>get_config</code>, <code>from_state</code>, no live objects), and a recipe that comes from a user goes through <code>loads_sandboxed</code> with an allowlist: a recipe that names classes is code. Settings composed with Hydra override values inside a recipe; they do not become a second recipe format.</p>
+    <p class="sub"><b>Composition is closed; running is not.</b> A recipe of recipes is a recipe, as a <code>Sequential</code> of <code>Sequential</code>s is a <code>Sequential</code>, so the ladder stops at ⑥. What sits above is not more composition but running it: which items, when, where, with what retries and storage. That is orchestration, the application's job (a DVC stage, an Airflow or Prefect flow, a FastAPI endpoint, GeoApps), and the same recipe should run unchanged in all of them. A recipe has two forms, code (a <code>Sequential</code> or <code>Graph</code> built in Python) and data (a YAML file that <code>pipekit_ops.loads</code> reads back). The data form needs every step in it to round-trip (a strict-JSON <code>get_config</code>, <code>from_state</code>, no live objects), and a recipe that comes from a user goes through <code>loads_sandboxed</code> with an allowlist: a recipe that names classes is code. Settings composed with Hydra override values inside a recipe; they do not become a second recipe format.</p>
     <p class="sub">Against gaussx's own numbering: its L1 operators become ⓪ structures and its L0 primitives ① primitives (the swap above); L1.5, L2 and L3 become ② strategy, ③ model (its "distributions", renamed so the rung reads the same in libraries with none: a functax plan, a kernellib estimator, a sesmax model) and ④ algorithm; ⑤ step and ⑥ recipe are pipekit's. gaussx's word "recipes" moves up the ladder: in the stack a recipe is a composition of steps, as in a kitchen, in Pangeo Forge's ETL recipes and in torchtune's training recipes. <code>UnscentedIntegrator</code> moves from gaussx's recipes to the strategies: it is a choice of how to integrate, like <code>CGSolver</code> is a choice of how to solve.</p>
 
     <h3 class="minor">Who works where: bands of the ladder</h3>
@@ -2125,12 +2125,12 @@ outputs:
 
     <h3 class="minor">Which cell is it?</h3>
     <ol class="decide">
-      <li><b>Kind.</b> Does it subclass <code>pipekit.Operator</code>? Then it is an Operator, whatever else it inherits; <code>JaxOperator</code> is also an <code>eqx.Module</code> and is still an Operator. Else, is it a class whose setup does work before a pure call? A Module. Else it is a function.</li>
+      <li><b>Kind.</b> Does it subclass <code>pipekit_ops.Operator</code>? Then it is an Operator, whatever else it inherits; <code>JaxOperator</code> is also an <code>eqx.Module</code> and is still an Operator. Else, is it a class whose setup does work before a pure call? A Module. Else it is a function.</li>
       <li><b>Data.</b> Does it take or return a CRS, a fill or attrs? Carrier. Dims with names and coordinates, but no CRS? Named array. Neither? Plain array.</li>
     </ol>
 
     <h3 class="minor">Do we need a name change?</h3>
-    <p class="sub"><b>Not in code; in prose, yes.</b> In code the namespaces already separate the two kinds of operator (lineax calls its own <code>AbstractLinearOperator</code>), and renaming <code>pipekit.Operator</code> would touch pipekit, every geoops and xrops class, vardax, plumax and sesmax, all for a prose problem. "Observation operator" is the field's own word for H and stays. In prose: <b>function</b> for the kind (not "kernel", which kernellib uses for covariance functions, nor "primitive", which now names the ① role), <b>Module</b>, <b>Operator</b> with a capital O for pipekit's, and <b>carrier</b> for the data. The full vocabulary, one per axis, is in the box under the role ladder. The suffix rules on the library cards of the <a href="../stack-layer-map">layer map</a> keep the class names apart as well.</p>
+    <p class="sub"><b>Not in code; in prose, yes.</b> In code the namespaces already separate the two kinds of operator (lineax calls its own <code>AbstractLinearOperator</code>), and renaming <code>pipekit_ops.Operator</code> would touch pipekit, every geoops and xrops class, vardax, plumax and sesmax, all for a prose problem. "Observation operator" is the field's own word for H and stays. In prose: <b>function</b> for the kind (not "kernel", which kernellib uses for covariance functions, nor "primitive", which now names the ① role), <b>Module</b>, <b>Operator</b> with a capital O for pipekit's, and <b>carrier</b> for the data. The full vocabulary, one per axis, is in the box under the role ladder. The suffix rules on the library cards of the <a href="../stack-layer-map">layer map</a> keep the class names apart as well.</p>
 
     <h3 class="minor">Rule 2: the tier decides what a library may import</h3>
     <p class="sub">Unchanged: a library imports any lower layer, and lower tiers of its own layer. <b>A tier never changes which kinds a library may define.</b> pipekit and gaussx are both Core tier 0, yet one defines Operators and the other Modules; the cells come from the layer.</p>

@@ -149,7 +149,7 @@ What the user writes:
 
 ```python
 # the ETL: a packaged pipeline with a concurrent runner
-runner: Runner = pipekit.runners.Concurrent()
+runner: Runner = pipekit_ops.runners.Concurrent()
 patches: GeoArray["patch band y x"]
 labels: GeoArray["patch y x"]
 patches, labels = pipelines.plume_training_set(
@@ -302,11 +302,11 @@ def cycle(
 
 
 # 52 seven-day windows over 2025
-windows: Windows = pipekit.windows("2025-01-01", "2025-12-31", length="7D")
+windows: Windows = pipekit_ops.windows("2025-01-01", "2025-12-31", length="7D")
 # where each window's series is appended
 out: Zarr = Zarr("gulfstream_sla_2025.zarr")
 # the runner owns the loop, the state and the append ← CS-F4
-runner: Runner = pipekit.runners.Cycling(windows=windows)
+runner: Runner = pipekit_ops.runners.Cycling(windows=windows)
 run: CyclingRun = runner.run(cycle, init=None, out=out, append_dim="time")
 
 # the analysis cube, lazy
@@ -358,7 +358,7 @@ anom: DataArray["time lat lon"] = to_anom(mld)
 anom.to_zarr("na_mld_anomaly.zarr")
 
 # the same as a graph of the named operators, so it can be versioned ← CS-F7, CS-F14
-graph: pipekit.Graph = pipekit.Graph(
+graph: pipekit_ops.Graph = pipekit_ops.Graph(
     sigma0=to_sigma0, mld=to_mld, clim=to_clim, anom=xrops.Anomaly.from_stage("clim")
 )
 ```
@@ -380,7 +380,7 @@ The case starts at L3, steps down to L1 for one stage, and comes back up, which 
 What `emit_plumes` builds inside:
 
 ```python
-def emit_plumes(scene_id: str) -> pipekit.Graph:
+def emit_plumes(scene_id: str) -> pipekit_ops.Graph:
     # → GeoSwath["band row col"], 285 bands; lat/lon and sun/view angles as leaves
     read: Operator = geoproducts.emit.ReadL1B(scene_id)
     # GeoSwath["band row col"] → GeoSwath["band row col"], 2100 to 2450 nm only
@@ -390,10 +390,10 @@ def emit_plumes(scene_id: str) -> pipekit.Graph:
     # α = tᵀΣ⁻¹(x − μ) / tᵀΣ⁻¹t, μ and Σ fitted per column → GeoSwath["row col"]
     mf: Operator = geoops.MatchedFilter(target=target, dim="band", fit_per="col")
     # the slot declares that it holds a fitted operator ← CS-F9
-    mf_slot: pipekit.Slot = pipekit.Slot(mf, fitted=True)
+    mf_slot: pipekit_ops.Slot = pipekit_ops.Slot(mf, fitted=True)
     # ΔXCH₄ = α · scale, ppb → GeoSwath["row col"]
     to_ppb: Operator = plumes.ScaleToPPB()
-    return pipekit.Graph(
+    return pipekit_ops.Graph(
         read=read, window=window, matched_filter=mf_slot, to_ppb=to_ppb
     )
 ```
@@ -402,7 +402,7 @@ What the user writes:
 
 ```python
 # the packaged pipeline as a graph, and its baseline output
-pipe: pipekit.Graph = pipelines.emit_plumes.build(
+pipe: pipekit_ops.Graph = pipelines.emit_plumes.build(
     scene_id="EMIT_L1B_RAD_001_20260714T081512"
 )
 baseline: GeoSwath["row col"] = pipe.run()  # ΔXCH₄, ppb
@@ -456,11 +456,11 @@ target: Float[Array, "C"] = plumes.ch4_unit_spectrum()
 new_stage: Operator = MatchedFilterAMF(t=target)
 
 # the same pipeline with one stage replaced
-candidate_pipe: pipekit.Graph = pipe.replace("matched_filter", new_stage)
+candidate_pipe: pipekit_ops.Graph = pipe.replace("matched_filter", new_stage)
 candidate: GeoSwath["row col"] = candidate_pipe.run()
 
 # score both against controlled releases
-report: Comparison = pipekit.evaluate.compare(
+report: Comparison = pipekit_ops.evaluate.compare(
     baseline, candidate, truth="controlled_releases_2026.parquet"
 )
 ```
@@ -570,7 +570,7 @@ What the scheduler calls:
 
 ```python
 # 16 concurrent workers
-runner: Runner = pipekit.runners.Concurrent(max_workers=16)
+runner: Runner = pipekit_ops.runners.Concurrent(max_workers=16)
 # the versioned pipeline, run for one date ← CS-F11
 pipeline: Pipeline = pipelines.tropomi_hotspots.v3
 run: PipelineRun = pipeline.run(
@@ -720,7 +720,7 @@ class MyMapper:
 
 
 # score the submission with the task's own runner
-runner: Runner = pipekit.runners.Local()
+runner: Runner = pipekit_ops.runners.Local()
 task: Task = geobench.tasks.ssh_mapping_osse.v1
 scores: Scores = task.evaluate(MyMapper(), runner=runner)
 ```
@@ -763,7 +763,7 @@ index: Operator = FlareIndex()  # → GeoArray["y x"]
 threshold: Operator = geoops.Threshold(0.15)  # → GeoArray["y x"], bool
 vectorize: Operator = geoops.geom.Vectorize()  # → Detections; eager only ← CS-F8
 
-graph: pipekit.Graph = pipekit.Graph(
+graph: pipekit_ops.Graph = pipekit_ops.Graph(
     read=read, mask=mask, index=index, threshold=threshold, vectorize=vectorize
 )
 flares: Detections = graph.run(scene_ids)
@@ -839,7 +839,7 @@ This is the top centre: a packaged runner over a built-in model (somax), compile
 What the runner does inside:
 
 ```python
-# pipekit.runners.Ensemble - sketch of its internals. pipekit sits below geoarray,
+# pipekit_ops.runners.Ensemble - sketch of its internals. pipekit sits below geoarray,
 # so the runner sees raw arrays only; the caller's sink rewraps and writes.
 def run_ensemble(
     model: Algorithm,
@@ -892,7 +892,7 @@ sink: Sink = geoarray.sinks.append_members(
 )
 
 # 32 members in chunks of 8, one seed for the run
-runner: Runner = pipekit.runners.Ensemble(members=32, chunk=8, seed=20261022)
+runner: Runner = pipekit_ops.runners.Ensemble(members=32, chunk=8, seed=20261022)
 ens: EnsembleRun = runner.run(
     model, x0=analysis_today.data, perturb=perturb, times=forecast_times, sink=sink
 )

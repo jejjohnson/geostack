@@ -31,9 +31,9 @@
 from __future__ import annotations
 
 import numpy as np
-import pipekit as pk
+import pipekit_ops as pk
 import pipekit_cycle as pc
-from pipekit import Lambda, StatefulOperator
+from pipekit_ops import Lambda, StatefulOperator
 
 # Shapes: N = 40 cells, p = 10 observed cells, T = 10 hourly cycles
 N, T, c = 40, 10, 0.4

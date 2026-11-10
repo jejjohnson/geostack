@@ -467,7 +467,7 @@ Most core types map onto an existing type; three need a decision. The table name
 
 | Core type | Adheres to | What changes |
 | --- | --- | --- |
-| `Scheme` | `pipekit.Operator`'s conventions, not the class | a scheme is configuration only: static `eqx.Module` fields that round-trip through JSON. `Linear(outside="nan")` serialises; the consumer's Operator holds those settings as its config |
+| `Scheme` | `pipekit_ops.Operator`'s conventions, not the class | a scheme is configuration only: static `eqx.Module` fields that round-trip through JSON. `Linear(outside="nan")` serialises; the consumer's Operator holds those settings as its config |
 | `Plan` | `JaxOperator`'s conventions, not the class | the plan is a fitted `eqx.Module` on plain arrays: `__call__(y)`; the stencil's `idx` and `w` are leaves, the geometry static. A separate plan object, because Equinox modules are immutable and `fit` cannot return `self` |
 | `Grid` (regular) | `geoarray.Grid` | use its fields and transform order instead of a tuple of axes; rectilinear axes are an extension geoarray does not have |
 | `Axis` (rectilinear) | the frozen, hashable style of `geoarray.coords` | keep a coordinate-values axis; datetimes follow `TimeAxis`: `datetime64[ns]`, converted to offsets before tracing |
@@ -536,14 +536,14 @@ class GridToPoints(eqx.Module):
 ```python
 import functax as fx
 import geoarray as ga
-import pipekit
+import pipekit_ops
 
 
 # --- geoops: the Operator on carriers, wrapping functax ---
 
 
 # proposed (geoops)
-class SampleAtPoints(pipekit.Operator):
+class SampleAtPoints(pipekit_ops.Operator):
     """A grid read at points: unwrap, run functax's plan, rewrap as points."""
 
     backends = ("numpy", "jax")

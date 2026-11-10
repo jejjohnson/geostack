@@ -144,7 +144,7 @@ which is the hash of its JSON encoding with sorted keys. So two contracts with t
 
 # Shapes: input the s2, s3 obs binned to the grid (1,095, 32, 32), NaN off-track;
 #         output (364, 32, 32) maps of 2025
-from pipekit.hashing import sha256_hex, stable_json
+from pipekit_ops.hashing import sha256_hex, stable_json
 contract = {
     "task": "L1->L2", "operation": "gap filling", "variant": "deterministic",
     "input": {"carrier": "sparse grid", "sources": ["s2", "s3"], "units": "m",
@@ -380,7 +380,7 @@ In [](#tbl-r15-names), we set every name that the scoping report uses against th
 
 | Scoping report | At the pinned revisions |
 |---|---|
-| `BenchmarkContract`, `content_hash`, `to_yaml`, `from_yaml` | do not exist; `pipekit.hashing.stable_json` and `sha256_hex` hash any mapping today (stage 1) |
+| `BenchmarkContract`, `content_hash`, `to_yaml`, `from_yaml` | do not exist; `pipekit_ops.hashing.stable_json` and `sha256_hex` hash any mapping today (stage 1) |
 | task `Literal["discretization", …, "representation"]` | pipekit-evaluate's `LEVEL_NAMES` (L0 to L4) name the same carriers; representation has no level |
 | `Metric.differentiable`, `stage_compatibility`, `variant` | do not exist; [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s A1 proposes unit, lens, stage and differentiable tags on `Scorer` |
 | `pipekit_train.splitters` (`SpatioTemporalBlockSplit`, `LeaveOnePlatformOut`, `CausalTemporalSplit`, `LeaveOneRegionOut`) | do not exist; `XarrayWindowDataset` and `SimulationDataset` split 80/10/10 in fixed tenths, the first with a guard band |
@@ -442,7 +442,7 @@ Smaller findings:
 | Symbol | Destination | Reason |
 |---|---|---|
 | `BenchmarkContract(name, version, task, operation, input, output, variant, splits, references, data, scorers, baselines, submission, status)` | `pipekit_evaluate.benchmark.contract` | the scoping report's artifact; `task` is a level transition (`"L1->L2"`) and `operation` what it does (`"gap filling"`); `data` holds the content hashes of the inputs and references (or, for an OSSE, the generator and its seed); each baseline lists every setting that changes its score and its code revision; `status` is `"pre-registered"` or `"exploratory"` |
-| `content_hash`, `to_yaml`, `from_yaml` | the same module, over `pipekit.hashing` | stage 1's hash, with YAML for people and JSON for the hash |
+| `content_hash`, `to_yaml`, `from_yaml` | the same module, over `pipekit_ops.hashing` | stage 1's hash, with YAML for people and JSON for the hash |
 | `contract_hash` on `BenchmarkReport` (and [Report 14](14_pipekit_evaluate.md#r14-ws-a)'s `EvaluationReport`), and `model_hash` on each of its results | `benchmark/run.py`, `report.py` | stage 1: a report names nothing it scored; one run scores several entries (stage 6 runs three), so the model identity belongs to the row, not the report |
 | `Benchmark.from_contract(contract, estimators)` | `benchmark/run.py` | sets the level, the scorers and the references from the contract (stage 6) |
 | templates per task | `pipekit_evaluate.benchmark.templates` | the scoping report's mitigation for long contracts |
