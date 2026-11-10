@@ -1,7 +1,7 @@
 ---
 title: "integrix: integrals over space"
 short_title: "integrix over space"
-description: "What integrix needs to integrate over areas, cells and lines as well as it integrates over time: the weights of a grid rule, masks and NaNs, weight functions with their own batch axes, and line integrals and fluxes. Four decisions, each with a recommendation; all open."
+description: "What integrix needs to integrate over areas, cells and lines as well as it integrates over time: the weights of a grid rule, masks and NaNs, weight functions with their own batch axes, and line integrals and fluxes. Four decisions, all decided on 10 Nov 2026 as recommended."
 date: 2026-11-10
 keywords:
   - integrix
@@ -10,7 +10,7 @@ keywords:
   - GeoStack
 ---
 
-integrix computes one integral, $I = \int_\Omega f \mathrm{d}\mu$, as a rule, a scan or a march, and Waves 0 to 4 built all three. The steppers and their adjoints took the most work, so the library reads as a time library, but only `ix.march` and `ix.adjoint` are about time: `ix.rule`, `ix.scan`, `ix.adapt` and `ix.expect` integrate over whatever axis they are given. This note asks what is still missing when that axis is space: an area, a set of cells, or a line across a plume. It records four decisions (10 to 13, after the nine in the [integrix design](integrix.md)), each with a recommendation; all four are open until the maintainer settles them.
+integrix computes one integral, $I = \int_\Omega f \mathrm{d}\mu$, as a rule, a scan or a march, and Waves 0 to 4 built all three. The steppers and their adjoints took the most work, so the library reads as a time library, but only `ix.march` and `ix.adjoint` are about time: `ix.rule`, `ix.scan`, `ix.adapt` and `ix.expect` integrate over whatever axis they are given. This note asks what is still missing when that axis is space: an area, a set of cells, or a line across a plume. It records four decisions (10 to 13, after the nine in the [integrix design](integrix.md)). The maintainer settled all four on 10 Nov 2026, each as recommended ([integrix#47](https://github.com/jejjohnson/integrix/issues/47)).
 
 ## Summary
 
@@ -105,7 +105,7 @@ ime = ix.rule.integrate(pixel_rule, enhancement, axis=(-2, -1)).value
 | Scattered points (no grid) | the same rule with one node axis | the same |
 | Spherical cells | yes, weights in m² on a sphere of radius $a$ | yes |
 
-Recommended: A. The rule's `weights` keep the grid's shape and its `nodes` gain a trailing coordinate axis. A rule over scattered points keeps one node axis, as now. Alternative: B, if functax wants every rule to have exactly one node axis; integrix would then flatten the values' integrated axes in row-major order.
+**Decided (10 Nov 2026): A**, as recommended. The rule's `weights` keep the grid's shape and its `nodes` gain a trailing coordinate axis. A rule over scattered points keeps one node axis, as now. Alternative: B, if functax wants every rule to have exactly one node axis; integrix would then flatten the values' integrated axes in row-major order.
 
 ## Decision 11: masks and NaNs, with `where=` and `nan_policy=`
 
@@ -147,7 +147,7 @@ ime = ix.rule.integrate(pixel_rule, safe).value
 | `weighted_mean` renormalisation | built in | the caller divides by a second masked sum |
 | `jit` / `vmap` | yes: static shapes, the mask is data | yes |
 
-Recommended: A, on `ix.rule.integrate` and `ix.rule.weighted_mean`. Alternative: B, with a documented recipe in integrix's guide. `ix.scan.cumulative` is left out: a running integral with skipped samples has no single obvious meaning, so a caller who needs it can ask.
+**Decided (10 Nov 2026): A**, as recommended, on `ix.rule.integrate` and `ix.rule.weighted_mean`; it shipped in integrix 0.0.4. Alternative: B, with a documented recipe in integrix's guide. `ix.scan.cumulative` is left out: a running integral with skipped samples has no single obvious meaning, so a caller who needs it can ask.
 
 ## Decision 12: a weight function with its own batch axes
 
@@ -180,7 +180,7 @@ bands = jax.vmap(lambda r: ix.rule.weighted_mean(rule, radiance, weight=r), out_
 | Ambiguity with the per-sample weight | resolved by shape: a per-sample weight has the values' shape | none |
 | Cost | one contraction, $O(PBG)$ | the same under `vmap` |
 
-Recommended: A, in `ix.rule.weighted_mean` only. Alternative: B, with `vmap` documented in the guide; it already works.
+**Decided (10 Nov 2026): A**, as recommended, in `ix.rule.weighted_mean` only; it shipped in integrix 0.0.4. Alternative: B, with `vmap` documented in the guide; it already works.
 
 ## Decision 13: line integrals and fluxes
 
@@ -221,7 +221,7 @@ flux = ix.rule.flux(transect, enhancement, wind, grid=plume_grid)
 | Reuse by tracerax and radiomax (line-of-sight and pixel-footprint integrals) | the same curve rule | a second entry point |
 | plumax's strip form | `where=` from Decision 11 | still needs `where=` |
 
-Recommended: A. functax adds rules on curves, a `Rule` whose nodes lie on a polyline and whose weights are arc lengths, with the unit normals alongside (functax decides whether the normals are a field of the rule or a separate return). integrix adds nothing line-specific, and its guide shows both forms. Alternative: B, if the same three-step composition turns up in several consumers.
+**Decided (10 Nov 2026): A**, as recommended. functax adds rules on curves, a `Rule` whose nodes lie on a polyline and whose weights are arc lengths, with the unit normals alongside (functax decides whether the normals are a field of the rule or a separate return). integrix adds nothing line-specific, and its guide shows both forms. Alternative: B, if the same three-step composition turns up in several consumers.
 
 ## Out of scope
 
@@ -244,7 +244,7 @@ Recommended: A. functax adds rules on curves, a `Rule` whose nodes lie on a poly
 
 These become Wave 6 of integrix, an epic in integrix under [geostack#136](https://github.com/jejjohnson/geostack/issues/136), with one issue per decision that needs code:
 
-- `[Design]` spatial integrals: grid-rule weights, masks and NaNs, batched weights and line integrals (this note's four decisions, for the maintainer to settle);
+- `[Design]` spatial integrals: grid-rule weights, masks and NaNs, batched weights and line integrals (this note's four decisions, settled in integrix#47 on 10 Nov 2026);
 - `feat(rule)`: `where=` and `nan_policy=` on `integrate` and `weighted_mean` (Decision 11);
 - `feat(rule)`: weight functions with their own batch axes in `weighted_mean` (Decision 12);
 - `docs(guide)`: spatial integrals, with the IME, the cross-sectional flux in both forms, and a NaN-propagating column (Decisions 11 and 13);
