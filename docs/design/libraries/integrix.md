@@ -202,6 +202,8 @@ The class keeps its diffrax interface, so call sites do not change; finitevolX k
 
 Seven decided, two open. Each entry gives the position first, then the trade-off.
 
+Decisions 10 to 13, on integrals over space, are in [integrix: integrals over space](integrix_spatial.md); all four were decided on 10 Nov 2026.
+
 ### 1. Name: integrix
 
 **Decided (5 Nov 2026).** `integrix`, free on PyPI when checked. `integrax` is taken; `quadrax`, `marchax`, `cumulax` and `evolvax` were the other candidates.
