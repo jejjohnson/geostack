@@ -68,6 +68,7 @@ project:
               children:
                 - file: docs/design/libraries/integrix.md
                 - file: docs/design/libraries/integrix_details.md
+                - file: docs/design/libraries/integrix_spatial.md
             - title: argminax
               children:
                 - file: docs/design/libraries/argminax.md
