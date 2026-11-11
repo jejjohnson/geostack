@@ -102,6 +102,9 @@ UPSTREAM_BLURB: dict[str, str] = {
     "gaussx": "Structured linear algebra and Gaussian primitives on lineax.",
     "finitevolx": "Arakawa C-grid finite-volume operators.",
     "spectraldiffx": "Pseudospectral differentiation, filters and PDE solvers.",
+    "functax": "Function approximation: bases, quadrature rules, interpolation.",
+    "argminax": "Optimisation with uncertainty at the minimum: solvers, curvature.",
+    "integrix": "Integration: rules, cumulative scans, time marching, expectations.",
     # GeoML
     "geonnax": "Basis functions, neural layers and coordinate transforms in Equinox.",
     "kernellib": "Covariance kernels and scalable kernel methods on gaussx.",
@@ -114,16 +117,47 @@ UPSTREAM_BLURB: dict[str, str] = {
     "pyrox-gp": "Gaussian processes for pyrox.",
     "pyrox-lgm": "Latent Gaussian models for pyrox.",
     "pyrox-nn": "Bayesian neural networks for pyrox.",
+    "manipy-jax": "Manifold learning and alignment, and hyperspectral workflows.",
     # GeoModels
     "plumax": "Plume transport: Gaussian plume and puff, Lagrangian and LES.",
     "somax": "Simple ocean and atmosphere models in JAX.",
     "radtrax": "Differentiable radiative transfer for methane remote sensing.",
+    "sesmax": "The sesmax workspace in one install; an umbrella that holds no code.",
+    "sesmax-core": "Simple Earth-system models: state, terms, steppers, forcing.",
 }
 
 NUMERICS: dict[str, list[str]] = {
     "gaussx": ["gaussx"],
     "finitevolx": ["finitevolx"],
     "spectraldiffx": ["spectraldiffx"],
+    # functax, argminax and integrix export only their errors at the top
+    # level, so their public submodules are listed
+    "functax": [
+        "functax",
+        *(
+            f"functax.{sub}"
+            for sub in (
+                "basis",
+                "diffops",
+                "geometry",
+                "interp",
+                "project",
+                "quad",
+                "transform",
+            )
+        ),
+    ],
+    "argminax": [
+        "argminax",
+        *(f"argminax.{sub}" for sub in ("adjoint", "curvature", "diagnose", "solve")),
+    ],
+    "integrix": [
+        "integrix",
+        *(
+            f"integrix.{sub}"
+            for sub in ("adapt", "adjoint", "expect", "march", "rule", "scan")
+        ),
+    ],
 }
 GEOML: dict[str, list[str]] = {
     "geonnax": ["geonnax"],
@@ -154,6 +188,9 @@ GEOML: dict[str, list[str]] = {
     "pyrox-gp": ["pyrox_gp"],
     "pyrox-lgm": ["pyrox_lgm"],
     "pyrox-nn": ["pyrox_nn"],
+    # manipy.sklearn needs scikit-learn (manipy's sklearn extra), which no
+    # environment installs
+    "manipy-jax": ["manipy", "manipy.datasets", "manipy.hsi", "manipy.metrics"],
 }
 # The GeoModels export their APIs from subpackages, which are listed one by one.
 GEOMODELS: dict[str, list[str]] = {
@@ -209,6 +246,30 @@ GEOMODELS: dict[str, list[str]] = {
                 "slab",
                 "retrieval",
                 "geo",
+            )
+        ),
+    ],
+    # the umbrella installs the workspace packages and holds no code
+    "sesmax": [],
+    "sesmax-core": [
+        "sesmax_core",
+        *(
+            f"sesmax_core.{sub}"
+            for sub in (
+                "checkpoint",
+                "da",
+                "domain",
+                "flows",
+                "forcing",
+                "gfd",
+                "io",
+                "monitor",
+                "operators",
+                "scales",
+                "solvers",
+                "terms",
+                "testing",
+                "train",
             )
         ),
     ],
@@ -273,6 +334,15 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         " map axes; finitevolx.Divergence2D is the finite-volume divergence on"
         " an Arakawa C-grid. GeoStack may not import GeoNumerics."
     ),
+    "ValidationError": (
+        "functax, argminax and integrix each raise their own ValidationError,"
+        " a subclass of the library's base error, so a caller can catch one"
+        " library's failures without the others'."
+    ),
+    "MissingExtraError": (
+        "functax and argminax each raise their own MissingExtraError, naming"
+        " the extra of that library to install."
+    ),
 }
 
 # Name clashes the layers above GeoStack ship today, as {layer: {name: why}}.
@@ -280,6 +350,22 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
 # implementations. The check fails on a clash missing from this list and on an
 # entry that no longer clashes, so the list can only shrink.
 _PORTED = "ported from plumax to radtrax; leaves plumax with plumax#133"
+# the pins of finitevolX and spectraldiffx predate the moves; their main already
+# re-exports integrix's steppers and functax's transforms, so these go when the
+# pins move
+_FX_KERNELS = "functax.interp's RBF kernels beside kernellib's covariance kernels"
+_FX_DIFFOPS = "functax.diffops on fields beside kernellib's operators on kernels"
+_PIPEKIT_JAX = (
+    "moved from pipekit-jax to integrix.adjoint (pipekit#226); the pipekit pin"
+    " predates it"
+)
+_TOY_MODELS = "toy models in both sesmax_core.testing and vardax"
+_SESMAX_IMEX = (
+    "moved from sesmax-core to integrix.march (sesmax#116); somax keeps its copy"
+)
+_SESMAX = "sesmax-core is somax's successor; somax keeps its copy until it is archived"
+_STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
+_TRANSFORMS = "moved from spectraldiffx to functax.transform (spectraldiffx#166)"
 _KERNELS = "kernels in both kernellib and pyrox-gp"
 _LIKELIHOODS = "likelihoods in both gaussx and pyrox-gp"
 _NN_LAYERS = "layers in both geonnax and pyrox-nn"
@@ -291,23 +377,54 @@ _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
 
 KNOWN_CLASHES: dict[str, dict[str, str]] = {
     "numerics": {
+        "AB2Solver": _STEPPERS,
         "CapacitanceSolver": _NUMERICS,
+        "ChebyshevTransform1D": _TRANSFORMS,
+        "ChebyshevTransform2D": _TRANSFORMS,
+        "ForwardEulerDfx": _STEPPERS,
+        "IMEX_SSP2": _STEPPERS,
+        "LeapfrogRAFSolver": _STEPPERS,
+        "RK2Heun": _STEPPERS,
+        "RK3SSP": _STEPPERS,
+        "RK4Classic": _STEPPERS,
+        "SSP_RK104": _STEPPERS,
+        "SSP_RK2": _STEPPERS,
         "SphericalGrid2D": _NUMERICS,
+        "SphericalHarmonicTransform": _TRANSFORMS,
+        "SplitExplicitRKSolver": _STEPPERS,
+        "ab2_step": _STEPPERS,
+        "ab3_step": _STEPPERS,
         "build_capacitance_solver": _NUMERICS,
+        "euler_step": _STEPPERS,
+        "heun_step": _STEPPERS,
+        "imex_ssp2_step": _STEPPERS,
+        "laplace_mode": (
+            "the loop moved to argminax.solve; gaussx deprecates its own copy"
+            " without forwarding and removes it a release later (gaussx#814)"
+        ),
+        "leapfrog_raf_step": _STEPPERS,
+        "rk3_ssp_step": _STEPPERS,
+        "rk4_step": _STEPPERS,
+        "split_explicit_step": _STEPPERS,
     },
     "geoml": {
         "Augment": "different objects in gauss_flows and xrtoolz",
+        "Axis": "functax.geometry.Axis beside pipekit-evaluate's evaluation Axis",
         "BernoulliLikelihood": _LIKELIHOODS,
         "Constant": _KERNELS,
         "Cosine": _KERNELS,
+        "Cubic": _FX_KERNELS,
         "DenseRank1": _NN_LAYERS,
         "GaussianLikelihood": _LIKELIHOODS,
         "Graph": "kernellib's Graph beside pipekit's operator Graph",
         "HeteroscedasticGaussianLikelihood": _LIKELIHOODS,
+        "Identity": "functax.interp.Identity beside geoops' Identity operator",
         "ImplicitAdjoint": _VARDAX,
+        "Kernel": "functax.interp's RBF kernel protocol beside pyrox-gp's Kernel",
         "Kronecker": "Kronecker structures in both gaussx and pyrox-lgm",
         "LayerNormEnsemble": _NN_LAYERS,
         "Linear": _KERNELS,
+        "LinearBasis": "functax.interp.LinearBasis beside vardax's LinearBasis",
         "LinearObs": _VARDAX,
         "MCSigmoidDenseFA": _NN_LAYERS,
         "MCSoftmaxDenseFA": _NN_LAYERS,
@@ -326,47 +443,149 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "SoftmaxLikelihood": _LIKELIHOODS,
         "SphericalHarmonicTransform": "spherical harmonics, geonnax and spectraldiffx",
         "StudentTLikelihood": _LIKELIHOODS,
+        "Wendland": _FX_KERNELS,
         "White": _KERNELS,
+        "divergence": _FX_DIFFOPS,
         "funk_hecke_coefficients": _KERNELS,
         "gaussian_entropy": _DIVERGENCES,
+        "gradient": _FX_DIFFOPS,
         "kl_divergence": _DIVERGENCES,
+        "laplacian": _FX_DIFFOPS,
+        "to_diffrax_adjoint": _PIPEKIT_JAX,
+        "to_optimistix_adjoint": (
+            "moved from vardax to argminax.adjoint (vardax#278); the vardax pin"
+            " predates it"
+        ),
+        "to_pixel": (
+            "geoarray's grid is to move onto functax's affine kernels (geotoolz#643)"
+        ),
+        "truncated_scan": _PIPEKIT_JAX,
     },
     "geomodels": {
         "ATM_TO_PA": _PORTED,
         "BOLTZMANN_J_PER_K": _PORTED,
+        "BaseMonitor": _SESMAX,
+        "BasisForcing": _SESMAX,
+        "Burgers2DOp": _SESMAX,
         "CM3_PER_M3": _PORTED,
+        "ChunkInfo": _SESMAX,
+        "Compose": _SESMAX,
+        "ConservationDriftMonitor": _SESMAX,
+        "ConstantForcing": _SESMAX,
+        "ConstantInTime": _SESMAX,
         "Diagnostics": _SOMAX,
+        "Diffusion2D": (
+            "sesmax_core.testing's toy model beside finitevolX's diffusion operator"
+        ),
         "Domain": _SOMAX,
+        "EnergyGrowthMonitor": _SESMAX,
+        "ForcingProtocol": _SESMAX,
+        "ForcingTerm": _SESMAX,
         "ForwardResult": _PORTED,
+        "FourierInTime": _SESMAX,
+        "GaussianWindowsInTime": _SESMAX,
         "GroundSamplingDistance": _PORTED,
         "InstrumentSpec": _PORTED,
+        "InterpolatedForcing": _SESMAX,
+        "Lorenz63": _TOY_MODELS,
+        "Lorenz96": _TOY_MODELS,
+        "ModalTransform": _SESMAX,
+        "ModelOp": "geoops' ModelOp beside sesmax_core.operators' ModelOp",
+        "Monitor": _SESMAX,
+        "MonitorVerdict": _SESMAX,
         "NBLookup": _PORTED,
+        "NoForcing": _SESMAX,
+        "NonFiniteMonitor": _SESMAX,
         "ObservationGeometry": _PORTED,
+        "Params": _SESMAX,
+        "PhysConsts": _SESMAX,
         "PointSpreadFunction": _PORTED,
+        "PosteriorCovariance": (
+            "functax.interp's kriging covariance beside plumax.les_fvm's"
+        ),
         "STABILITY_CLASSES": _PLUME_PUFF,
         "Scaled": _SOMAX,
+        "ScaledModel": _SESMAX,
+        "Scales": _SESMAX,
+        "SeasonalWindForcing": _SESMAX,
+        "SimulationCheckpointer": _SESMAX,
+        "SolverHealthMonitor": _SESMAX,
+        "SpatialBasis": _SESMAX,
         "SpectralResponseFunction": _PORTED,
+        "State": _SESMAX,
+        "StateAffine": _SESMAX,
+        "StateAffineBijection": _SESMAX,
+        "StratificationProfile": _SESMAX,
+        "SubsampleObs": _SESMAX,
         "Sum": _SOMAX,
+        "TemporalBasis": _SESMAX,
+        "Term": _SESMAX,
+        "TermFn": _SESMAX,
+        "TermModel": _SESMAX,
+        "ThroughputMonitor": _SESMAX,
+        "TimeDomain": _SESMAX,
+        "TransformedForcing": _SESMAX,
+        "VectorBasisForcing": _SESMAX,
+        "VectorSpatialBasis": _SESMAX,
+        "WatchdogMonitor": _SESMAX,
         "absorption_coefficient": _PORTED,
+        "add_to": _SESMAX,
+        "add_vector_to": _SESMAX,
         "air_mass_factor": _PORTED,
+        "append_to_dataset": _SESMAX,
+        "apply_scale_metadata": _SESMAX,
+        "as_parameter": _SESMAX,
         "beers_law_from_lut": _PORTED,
+        "build_diffrax_terms": _SESMAX,
         "build_nb_lut": _PORTED,
+        "control_filter": _SESMAX,
+        "dataset_to_state": _SESMAX,
+        "default_monitors": _SESMAX,
+        "explicit": _SESMAX,
         "forward_maclaurin": _PORTED,
         "forward_maclaurin_normalized": _PORTED,
         "forward_nonlinear": _PORTED,
         "forward_nonlinear_normalized": _PORTED,
         "forward_taylor": _PORTED,
         "forward_taylor_normalized": _PORTED,
+        "frozen": _SESMAX,
+        "imex_solver": _SESMAX_IMEX,
+        "imex_stepsize_controller": _SESMAX_IMEX,
+        "implicit": _SESMAX,
         "infer_emission_rate": _PLUME_PUFF,
         "inject_plume": _PORTED,
         "interpolate_cross_section": _PORTED,
+        "interval": _SESMAX,
         "kinetic_energy": _SOMAX,
+        "learned_prior": _SESMAX,
+        "load_dataset": _SESMAX,
         "lookup_nb": _PORTED,
+        "make_ensemble": _SESMAX,
         "matched_filter_snr": "plumax's two matched filters; plumax#131 retires one",
+        "matern_spectral_density": _SESMAX,
         "number_density": _PORTED,
         "number_density_cm3": _PORTED,
+        "partition": _SESMAX,
         "plume_ratio_spectrum": _PORTED,
+        "positive": _SESMAX,
+        "save_dataset": _SESMAX,
+        "scales_attrs": _SESMAX,
+        "snapshots_to_dataset": _SESMAX,
+        "spatial_from_divfree": _SESMAX,
+        "spatial_from_eof": _SESMAX,
+        "spatial_from_fourier": _SESMAX,
+        "spatial_from_gabor": _SESMAX,
+        "spatial_from_graph_laplacian": _SESMAX,
+        "spatial_from_rbf": _SESMAX,
+        "spatial_from_spherical_rbf": _SESMAX,
+        "spatial_from_wavelet": _SESMAX,
+        "state_to_dataset": _SESMAX,
+        "state_to_vector": _SESMAX,
+        "tile_in_time": _SESMAX,
+        "to_flowjax": _SESMAX,
         "total_enstrophy": _SOMAX,
+        "trainable_mask": _SESMAX,
+        "transform_attrs": _SESMAX,
         "transmittance": _PORTED,
     },
 }

@@ -2126,6 +2126,7 @@ environments:
       - pypi: ./references/geoml/gauss_flows
       - pypi: ./references/geoml/geonnax
       - pypi: ./references/geoml/kernellib
+      - pypi: ./references/geoml/manipy
       - pypi: ./references/geoml/optax_bayes
       - pypi: ./references/geoml/pyrox/packages/pyrox
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
@@ -2151,8 +2152,11 @@ environments:
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
+      - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
+      - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/spectraldiffx
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
@@ -2560,6 +2564,7 @@ environments:
       - pypi: ./references/geoml/gauss_flows
       - pypi: ./references/geoml/geonnax
       - pypi: ./references/geoml/kernellib
+      - pypi: ./references/geoml/manipy
       - pypi: ./references/geoml/optax_bayes
       - pypi: ./references/geoml/pyrox/packages/pyrox
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
@@ -2585,8 +2590,11 @@ environments:
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
+      - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
+      - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/spectraldiffx
       - pypi: https://files.pythonhosted.org/packages/01/b9/41642877fe741db56d240833c8822188b663c4c5d52beb087964774035d4/wrapt-2.5.1-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
@@ -3057,6 +3065,7 @@ environments:
       - pypi: ./references/geoml/gauss_flows
       - pypi: ./references/geoml/geonnax
       - pypi: ./references/geoml/kernellib
+      - pypi: ./references/geoml/manipy
       - pypi: ./references/geoml/optax_bayes
       - pypi: ./references/geoml/pyrox/packages/pyrox
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
@@ -3066,6 +3075,8 @@ environments:
       - pypi: ./references/geoml/xtremax
       - pypi: ./references/geomodels/plumax
       - pypi: ./references/geomodels/radtrax
+      - pypi: ./references/geomodels/sesmax/packages/sesmax
+      - pypi: ./references/geomodels/sesmax/packages/sesmax-core
       - pypi: ./references/geomodels/somax
       - pypi: ./references/geostack/georeader
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
@@ -3085,8 +3096,11 @@ environments:
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
+      - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
+      - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/spectraldiffx
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
@@ -3496,6 +3510,7 @@ environments:
       - pypi: ./references/geoml/gauss_flows
       - pypi: ./references/geoml/geonnax
       - pypi: ./references/geoml/kernellib
+      - pypi: ./references/geoml/manipy
       - pypi: ./references/geoml/optax_bayes
       - pypi: ./references/geoml/pyrox/packages/pyrox
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
@@ -3505,6 +3520,8 @@ environments:
       - pypi: ./references/geoml/xtremax
       - pypi: ./references/geomodels/plumax
       - pypi: ./references/geomodels/radtrax
+      - pypi: ./references/geomodels/sesmax/packages/sesmax
+      - pypi: ./references/geomodels/sesmax/packages/sesmax-core
       - pypi: ./references/geomodels/somax
       - pypi: ./references/geostack/georeader
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
@@ -3524,8 +3541,11 @@ environments:
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
+      - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
+      - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/spectraldiffx
       - pypi: https://files.pythonhosted.org/packages/01/b9/41642877fe741db56d240833c8822188b663c4c5d52beb087964774035d4/wrapt-2.5.1-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
@@ -6047,8 +6067,11 @@ environments:
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
+      - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
+      - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/spectraldiffx
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
@@ -6465,8 +6488,11 @@ environments:
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
       - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
+      - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
+      - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/spectraldiffx
       - pypi: https://files.pythonhosted.org/packages/01/b9/41642877fe741db56d240833c8822188b663c4c5d52beb087964774035d4/wrapt-2.5.1-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
@@ -19204,6 +19230,22 @@ packages:
   - scikit-learn>=1.6 ; extra == 'sklearn'
   - pynndescent>=0.5.13 ; extra == 'neighbors'
   requires_python: '>=3.12'
+- pypi: ./references/geoml/manipy
+  name: manipy-jax
+  requires_dist:
+  - jax>=0.10
+  - jaxlib>=0.10
+  - equinox>=0.13.8
+  - jaxtyping>=0.3
+  - einx>=0.4.3
+  - lineax>=0.1.1
+  - scipy>=1.11
+  - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.18
+  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.6.5
+  - scikit-learn>=1.6 ; extra == 'sklearn'
+  - pooch>=1.8 ; extra == 'data'
+  - scipy>=1.11 ; extra == 'data'
+  requires_python: '>=3.12'
 - pypi: ./references/geoml/optax_bayes
   name: optax-bayes
   requires_dist:
@@ -19362,6 +19404,37 @@ packages:
   - openpyxl>=3.1 ; extra == 'geo'
   - tqdm>=4 ; extra == 'geo'
   - typing-extensions>=4 ; extra == 'geo'
+  requires_python: '>=3.12'
+- pypi: ./references/geomodels/sesmax/packages/sesmax
+  name: sesmax
+  requires_dist:
+  - sesmax-core @ ./references/geomodels/sesmax/packages/sesmax-core
+  requires_python: '>=3.12'
+- pypi: ./references/geomodels/sesmax/packages/sesmax-core
+  name: sesmax-core
+  requires_dist:
+  - jax>=0.10.2
+  - jaxlib>=0.11.1
+  - jaxtyping>=0.3.9
+  - equinox>=0.13.8
+  - diffrax>=0.7.2
+  - lineax>=0.1.1
+  - optimistix>=0.1
+  - einops>=0.8.2
+  - paramax>=0.0.5
+  - finitevolx[pipekit] @ git+https://github.com/jejjohnson/finitevolX.git@v0.1.0
+  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.1
+  - pipekit @ git+https://github.com/jejjohnson/pipekit.git@pipekit-v0.1.4#subdirectory=packages/pipekit
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-cycle-v0.0.3#subdirectory=packages/pipekit-cycle
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit.git@pipekit-jax-v0.0.6#subdirectory=packages/pipekit-jax
+  - geonnax @ git+https://github.com/jejjohnson/geonnax.git@v0.0.11
+  - integrix @ git+https://github.com/jejjohnson/integrix.git@v0.0.3
+  - filterax @ git+https://github.com/jejjohnson/filterax@v0.0.6 ; extra == 'da'
+  - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.0 ; extra == 'da'
+  - flowjax ; extra == 'flows'
+  - xarray>=2026.4.0 ; extra == 'xarray'
+  - zarr>=3.1.6 ; extra == 'xarray'
+  - orbax-checkpoint>=0.11.37 ; extra == 'checkpoint'
   requires_python: '>=3.12'
 - pypi: ./references/geomodels/somax
   name: somax
@@ -19709,6 +19782,19 @@ packages:
   - netcdf4>=1.6 ; extra == 'aemet'
   - netcdf4>=1.6 ; extra == 'local'
   requires_python: '>=3.12'
+- pypi: ./references/numerics/argminax
+  name: argminax
+  requires_dist:
+  - equinox>=0.13.8
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.13
+  - jax>=0.10
+  - jaxlib>=0.10
+  - jaxtyping>=0.3
+  - lineax>=0.1.1
+  - optimistix>=0.1.0,<0.2
+  - matfree>=0.6.2 ; extra == 'matfree'
+  - numpyro>=0.21 ; extra == 'numpyro'
+  requires_python: '>=3.12'
 - pypi: ./references/numerics/finitevolX
   name: finitevolx
   requires_dist:
@@ -19749,6 +19835,17 @@ packages:
   - mkdocstrings[python]>=0.25.0 ; extra == 'docs'
   - mkdocs-jupyter>=0.24.0 ; extra == 'docs'
   requires_python: '>=3.12,<3.14'
+- pypi: ./references/numerics/functax
+  name: functax
+  requires_dist:
+  - numpy>=1.26
+  - jax>=0.4.35 ; extra == 'jax'
+  - equinox ; extra == 'jax'
+  - lineax ; extra == 'jax'
+  - einx ; extra == 'jax'
+  - jaxtyping ; extra == 'jax'
+  - scipy>=1.14 ; extra == 'scipy'
+  requires_python: '>=3.12'
 - pypi: ./references/numerics/gaussx
   name: gaussx
   requires_dist:
@@ -19761,6 +19858,20 @@ packages:
   - einx>=0.4.3
   - optimistix>=0.1.0
   - numpyro>=0.21 ; extra == 'numpyro'
+  requires_python: '>=3.12'
+- pypi: ./references/numerics/integrix
+  name: integrix
+  requires_dist:
+  - jax>=0.10
+  - jaxlib>=0.10
+  - equinox>=0.13.8
+  - jaxtyping>=0.3
+  - einx>=0.4.3
+  - lineax>=0.1.1
+  - optimistix>=0.1.0
+  - diffrax>=0.7.2,<0.8
+  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.6
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   requires_python: '>=3.12'
 - pypi: ./references/numerics/spectraldiffx
   name: spectraldiffx

@@ -17,7 +17,7 @@ This page is the GeoML layer. It may import GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at geonnax 0.0.9, kernellib 0.0.21, optax-bayes 0.0.3, filterax 0.0.5, vardax 0.1.9, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.1.1, pyrox-gp 0.1.9, pyrox-lgm 0.1.2, pyrox-nn 0.1.0.
+Listed at geonnax 0.0.9, kernellib 0.0.21, optax-bayes 0.0.3, filterax 0.0.5, vardax 0.1.9, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.1.1, pyrox-gp 0.1.9, pyrox-lgm 0.1.2, pyrox-nn 0.1.0, manipy-jax 0.1.0.
 
 ## Upstream: `geonnax`
 
@@ -892,3 +892,55 @@ Bayesian neural networks for pyrox.
 | `spherical_harmonic_encode` | function | Re-exported from `geonnax`. |
 | `standardize` | function | Re-exported from `geonnax`. |
 | `unstandardize` | function | Re-exported from `geonnax`. |
+
+## Upstream: `manipy-jax`
+
+Manifold learning and alignment, and hyperspectral workflows.
+
+### `manipy`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `DiffusionMaps` | class | Diffusion maps (Coifman & Lafon, 2006). |
+| `Isomap` | class | Isomap: classical MDS of geodesic distances on a k-NN graph. |
+| `LocallyLinearEmbedding` | class | Locally linear embedding (LLE), modified LLE, Hessian LLE and LTSA. |
+| `ManifoldAlignment` | class | Semi-supervised linear manifold alignment of several domains. |
+| `NystromExtension` | class | Nyström extension of a fitted spectral embedding to new points. |
+
+### `manipy.datasets`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `indian_pines` | function | AVIRIS Indian Pines: 145 x 145 pixels, 200 bands, 16 crop classes. |
+| `pavia_university` | function | ROSIS Pavia University: 610 x 340 pixels, 103 bands, 9 urban classes. |
+| `s_curve` | function | The S-curve: a 2-D sheet bent into an S in 3-D. |
+| `salinas` | function | AVIRIS Salinas: 512 x 217 pixels, 204 bands, 16 crop classes. |
+| `severed_sphere` | function | A unit sphere with both polar caps severed and a meridian strip cut. |
+| `swiss_roll` | function | The Swiss roll: a 2-D sheet rolled up in 3-D. |
+
+### `manipy.hsi`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `array_to_image` | function | Invert `image_to_array`: fold pixel rows back into an image. |
+| `image_to_array` | function | Flatten an image to one row per pixel, in row-major order. |
+| `partial_label_potential` | function | The potential that links pixels sharing a known label. |
+| `pixel_coordinates` | function | The ``(row, column)`` of every pixel, in row-major order. |
+| `pixel_graph` | function | The pixel-adjacency graph of an image (wraps `kernellib.grid_graph`). |
+| `spatial_spectral_potential_image` | function | The spatial-spectral Schrödinger potential of a hyperspectral cube. |
+| `stratified_split` | function | Split the labelled pixels into train and test, per class. |
+
+### `manipy.metrics`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `average_accuracy` | function | Average accuracy (AA): the mean of `per_class_accuracy` over the classes present in ``y_true``. |
+| `cohen_kappa` | function | Cohen's kappa: agreement beyond chance. |
+| `cohen_kappa_variance` | function | Large-sample variance of `cohen_kappa` (Congalton & Green, 2009). |
+| `confusion_matrix` | function | The confusion matrix ``C``, with ``C[i, j]`` the pixels of true class ``i`` predicted as class ``j``. |
+| `continuity` | function | Continuity of an embedding (Venna & Kaski, 2001). |
+| `knn_preservation` | function | Mean fraction of each point's $k$ nearest neighbours kept by the embedding. |
+| `lcmc` | function | Local continuity meta-criterion (Chen & Buja, 2009). |
+| `overall_accuracy` | function | Overall accuracy (OA): the fraction of correctly classified pixels. |
+| `per_class_accuracy` | function | Producer's accuracy of each class: its recall, ``C[i, i] / sum_j C[i, j]``. |
+| `trustworthiness` | function | Trustworthiness of an embedding (Venna & Kaski, 2001). |
