@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.6.5, finitevolx 0.0.47, spectraldiffx 0.1.1.
+Listed at gaussx 0.6.5, finitevolx 0.0.47, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.6, integrix 0.0.5.
 
 ## Upstream: `gaussx`
 
@@ -785,3 +785,324 @@ Pseudospectral differentiation, filters and PDE solvers.
 | `clenshaw_curtis_integrate_1d` | function | Integrate a 1D nodal field over [−L, L] using Clenshaw–Curtis. |
 | `clenshaw_curtis_integrate_2d` | function | Integrate a 2D nodal field over [−Lx, Lx] × [−Ly, Ly]. |
 | `clenshaw_curtis_weights` | function | Clenshaw–Curtis quadrature weights on Gauss–Lobatto nodes of [−L, L]. |
+
+## Upstream: `functax`
+
+Function approximation: bases, quadrature rules, interpolation.
+
+### `functax`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `FunctaxError` | class | Base class for every exception raised by ``functax``. |
+| `GeometryError` | class | Raised when an axis, grid or point set is malformed. |
+| `MissingExtraError` | class | Raised when a module needs the ``functax[jax]`` extra and it is missing. |
+| `NonlinearSchemeError` | class | Raised when a linear-only operation meets a plan whose fit is nonlinear in y. |
+| `OutsideDomainError` | class | Raised under ``outside="raise"`` when a target lies outside the domain. |
+| `PolicyError` | class | Raised when an interpolation policy names an option that does not exist. |
+| `ValidationError` | class | Raised when an argument fails validation. |
+
+### `functax.diffops`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `curl2d` | function | The scalar curl (vorticity) ∂_x u_y − ∂_y u_x of a planar field. |
+| `divergence` | function | The divergence ∇ · u = ∑_d ∂u_d/∂x_d of a vector field. |
+| `gradient` | function | The gradient ∇f of a scalar field. |
+| `jacobian_field` | function | The Jacobian J_kd = ∂u_k/∂x_d of a vector field. |
+| `laplace_beltrami` | function | The Laplace–Beltrami operator Δ_S f of a field on the unit sphere. |
+| `laplacian` | function | The Laplacian Δf = ∑_d ∂²f/∂x_d² of a scalar field. |
+| `surface_grad` | function | The surface gradient ∇_S f of a field on the unit sphere. |
+| `surface_grad_enu` | function | The east and north components of the surface gradient, at a (λ, φ). |
+
+### `functax.geometry`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AffineGrid` | class | A regular 2-D grid given by an affine transform and a shape. |
+| `Axis` | class | One strictly monotone coordinate axis, optionally periodic or in time. |
+| `CurvilinearGrid` | class | A 2-D grid whose node coordinates are given per node, such as a swath. |
+| `Metric` | constant | `Metric` |
+| `Points` | class | Scattered sites, with the metric their distances use. |
+| `RectilinearGrid` | class | A tensor-product grid with one `Axis` per dimension. |
+| `cartesian_to_tangent` | function | 3-D vectors to their east and north components (v · ê, v · n̂). |
+| `chebyshev_nodes` | function | The Chebyshev nodes of degree N on [a, b], from b down to a. |
+| `chord_distance` | function | The straight-line distance through the sphere between every pair. |
+| `ecef_to_lonlat` | function | Earth-centred, Earth-fixed coordinates to geodetic (λ, φ) and height. |
+| `enu_basis` | function | The local east, north and up unit vectors at each point. |
+| `fibonacci_sphere` | function | The Fibonacci lattice: n near-uniform points on the unit sphere. |
+| `from_pixel` | function | Map fractional pixel (row, col) to coordinates (x, y): the inverse of `to_pixel`. |
+| `gauss_legendre_grid` | function | The Gauss–Legendre grid on the sphere, with its quadrature weights. |
+| `geodesic_distance` | function | The great-circle distance between every pair. |
+| `healpix_grid` | function | HEALPix pixel centres, each weighted by the equal pixel area. |
+| `icosphere` | function | The subdivided icosahedron, a quasi-uniform triangle mesh of the sphere. |
+| `latlon_grid` | function | The regular cell-centred lon/lat grid, weighted by exact cell areas. |
+| `local_tangent_plane` | function | Project points onto the tangent plane at ``origin``, as (east, north). |
+| `lonlat_to_ecef` | function | Geodetic (λ, φ) and height to Earth-centred, Earth-fixed coordinates. |
+| `lonlat_to_unit` | function | Lift longitude and latitude onto the unit sphere. |
+| `mesh_vertex_areas` | function | The lumped (barycentric) vertex areas of a triangle mesh. |
+| `pairwise_distance` | function | The distance from every source to every target, in their shared metric. |
+| `pixel_centres` | function | The x and y of every pixel centre of a grid, each of shape (rows, cols). |
+| `rotation_to_pole` | function | The rotation R with R û(centre) = (0, 0, 1). |
+| `spherical_polygon_area` | function | The signed area of a spherical polygon with great-circle edges. |
+| `tangent_to_cartesian` | function | East and north components (u, v) to the 3-D tangent vector u ê + v n̂. |
+| `to_pixel` | function | Map coordinates (x, y) to fractional pixel (row, col), centres at integers. |
+| `unit_to_lonlat` | function | Longitude and latitude of vectors on (or off) the unit sphere. |
+| `window` | function | The row and column slices of the pixels that cover ``bounds``. |
+
+### `functax.interp`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Akima` | class | Akima's local cubic, as SciPy's ``Akima1DInterpolator(method="akima")``. |
+| `BSpline` | class | A B-spline of order k on every axis: (k + 1)ᴰ taps, after the prefilter. |
+| `BSplineBasis` | class | The centred B-spline of order k (degree k): k + 1 taps per axis. |
+| `BandedPrefilter` | class | c = B⁻¹ y per axis: the B-spline prefilter, separable on a grid. |
+| `Basis` | class | A local basis on one axis: S relative taps, and weights from the offsets. |
+| `Binning` | class | Aggregate scattered samples into grid cells: Hᵀ y, normalised for the mean. |
+| `BinningPlan` | class | A plan from N samples to M cells: the sums, means or counts per cell. |
+| `BrownianBridge` | class | The Brownian bridge between the knots of one axis, cell by cell. |
+| `Chebyshev` | class | The Chebyshev series of samples on Chebyshev nodes, read at arbitrary points. |
+| `ChebyshevFit` | class | c = P C y: the first K Chebyshev coefficients of samples on Chebyshev nodes. |
+| `ChebyshevInterpolant` | class | A fitted Chebyshev series f̂(x) = ∑ₖ cₖ Tₖ(ξ(x)), read at targets by `clenshaw`. |
+| `ComposedPlan` | class | ``outer @ inner``: H_outer H_inner 𝒮_inner, one plan with the product stencil. |
+| `Conservative` | class | First-order conservative remapping: each target cell's area-weighted mean. |
+| `Cubic` | class | Keys cubic convolution on every axis: 4ᴰ taps per target, no prefilter. |
+| `CubicBasis` | class | Keys cubic convolution: taps i − 1 … i + 2, weights W(1 + t) … W(2 − t). |
+| `CubicSpline` | class | The interpolating C² cubic spline, as ``scipy.interpolate.CubicSpline``. |
+| `Delaunay` | class | Linear interpolation on a triangulation of the sources: D + 1 taps per target. |
+| `DerivativePlan` | class | A plan whose read-out holds basis derivatives: ∂ᵐf̂/∂x_cᵐ at the targets. |
+| `Fit` | class | c = 𝒮(y), applied once per field before the read-out. |
+| `Fourier` | class | Band-limited Fourier resampling from N to M nodes of one periodic axis. |
+| `FourierReadout` | class | H y = (M/N) Re F⁻¹_M[S F_N y], band-limited resampling by two FFTs. |
+| `GaussianPlan` | class | A plan read as a Gaussian posterior: f(X*) ∣ y ~ 𝒩(H 𝒮(y), Σ*). |
+| `HermiteFit` | class | [y; m] from y: the values in increasing-knot order and their slopes. |
+| `Identity` | class | The fit of every local scheme: c = y. |
+| `Interpolant` | class | A fitted field f̂(x) = ∑ₛ wₛ(t(x)) c_{iₛ(x)}, read at any targets. |
+| `InverseDistance` | class | Inverse-distance weighting of the Q nearest scattered sources. |
+| `Kernel` | class | k(x, x′): the (M, N) cross-kernel of M targets and N sources. |
+| `KernelCovariance` | class | Σ*(x, x′) = k(x, x′) − h(x)ᵀ A⁻¹ h(x′), the posterior covariance of a kernel fit. |
+| `KernelReadout` | class | The dense read-out of a kernel scheme: f̂(X*) = K* c + P* b. |
+| `KernelSolve` | class | [c; b] = A⁻¹ [y; 0], the saddle-point system of a kernel and a tail. |
+| `Kriging` | class | Kriging: the best linear unbiased predictor under a covariance k and a drift. |
+| `Linear` | class | Linear on every axis: 2ᴰ taps per target, weights ∏_d (1 − t_d or t_d). |
+| `LinearBasis` | class | Linear: taps i and i + 1, with weights 1 − t and t. |
+| `LocalGeometry` | class | What a local plan was built from: the source, the target coordinates, the bases. |
+| `LocalScheme` | class | A scheme with one local basis per axis and the identity fit. |
+| `Nearest` | class | Nearest neighbour on every axis: one tap per target, weight 1. |
+| `NearestBasis` | class | Nearest neighbour: one tap, the closer of i and i + 1, with weight 1. |
+| `NonlinearPlan` | class | A plan whose fit depends on y: no fixed operator or adjoint, but `linearize`. |
+| `Pchip` | class | Monotone piecewise cubic Hermite (Fritsch-Carlson), as SciPy's PCHIP. |
+| `Plan` | class | f̂(X*) = H 𝒮(y), fitted once, applied to many fields. |
+| `Policies` | class | Outside the domain, at missing samples, and at the edges. |
+| `Polyharmonic` | class | The polyharmonic spline φ(r) = ±rᵏ for odd k, ±rᵏ log r for even k. |
+| `PosteriorCovariance` | class | Σ*, the (M, M) posterior covariance of the field at M targets. |
+| `RBF` | class | Radial basis function interpolation: f̂(x) = ∑ⱼ cⱼ k(x, xⱼ) + ∑ₚ bₚ pₚ(x). |
+| `RadialKernel` | class | k(x, x′) = φ(‖x − x′‖), Euclidean in the coordinates as given. |
+| `Readout` | class | c → f̂(X*): the read-out of a plan, from coefficients to target values. |
+| `Scheme` | class | An interpolation scheme: configuration, frozen into a `Plan` by `plan`. |
+| `SeriesInterpolant` | class | A 1-D series field f̂ read at targets chosen inside the trace. |
+| `SeriesScheme` | class | A scheme on one axis with a cubic Hermite read-out and its own slopes. |
+| `Steffen` | class | Steffen's monotone cubic: no overshoot between knots, by construction. |
+| `Stencil` | class | A sparse read-out H: row k reads S source values at flat indices. |
+| `Tensor` | class | One local scheme per source axis, as one tensor stencil. |
+| `TransposedStencil` | class | f̂ = diag(s) Hᵀ y: a sampling stencil H used backwards, scaled per cell. |
+| `Wendland` | class | The compact Wendland kernel φ(r) = ψ(r/ρ), zero for r ≥ ρ. |
+| `WindowedPlan` | class | ``plan[window]``: the rows of a grid target inside a window, sources unchanged. |
+| `bspline` | function | The centred B-spline βᵏ of degree k at x. |
+| `check_outside` | function | Enforce ``outside="raise"`` on the host; no-op for every other policy. |
+| `clenshaw` | function | The Chebyshev series f(x) = ∑ₖ aₖ Tₖ(ξ(x)) by Clenshaw's recurrence. |
+| `compose` | function | H = H_outer H_inner: apply ``inner`` first, then ``outer``, as one stencil. |
+| `index_positions` | function | The fractional index position u of each target, so node j sits at u = j. |
+| `locate` | function | The cell index i, the offset t ∈ [0, 1) and the inside flag of each target. |
+| `locate_curvilinear` | function | The cell (r, c), the offset (s, t) and the inside flag of targets on a swath. |
+| `overlap_weights_1d` | function | The (M, N) overlap lengths \|cⱼ ∩ Cᵢ\| of every target and source cell. |
+| `plan_key` | function | sha256 hex of the scheme, the policies and both geometries' bytes. |
+| `remap_taps` | function | Bring tap indices back onto [0, N − 1] by a boundary rule. |
+| `spline_poles` | function | The poles zₚ of the order-k B-spline prefilter, as in ``scipy.ndimage``. |
+| `tensor_stencil` | function | H = H₁ ⊗ … ⊗ H_D: one local basis per source axis, read at the targets. |
+
+### `functax.project`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Variational` | class | x = argmin (Hx − y)ᵀR⁻¹(Hx − y) + λ‖Lx‖², the variational smoothing fit. |
+| `fill_gaps` | function | The image with its holes filled: Δx = 0 (Laplace) or Δ²x = 0 (biharmonic). |
+| `galerkin` | function | c = (ΦᵀWΦ)⁻¹ ΦᵀW y, the Galerkin projection with quadrature weights W. |
+| `least_squares` | function | c = argmin ‖Φc − y‖² + α‖c‖², the ridge least-squares coefficients. |
+
+### `functax.quad`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `CurveRule` | class | A rule on a curve L: ∫_L c dℓ ≈ ∑ₖ Δsₖ c(xₖ), with the unit normal nₖ. |
+| `Rule` | class | A quadrature rule as data: nodes xₙ and weights wₙ, ∫ g dx ≈ ∑ₙ wₙ g(xₙ). |
+| `SphereRule` | class | A rule on a sphere of radius a: ∫_{S²} g dA ≈ ∑_q w_q g(u_q). |
+| `cell_area` | function | The cell-area rule of a grid: ∫ g dA ≈ ∑ₖ \|Cₖ\| g(xₖ) over its cells Cₖ. |
+| `clenshaw_curtis` | function | The n-point Clenshaw–Curtis rule on [a, b], at the Chebyshev extreme points. |
+| `gauss_legendre` | function | The n-point Gauss–Legendre rule on an interval [a, b]. |
+| `polyline` | function | A rule along a polyline: n nodes per segment, arc-length weights and normals. |
+| `simpson` | function | The composite Simpson rule on given nodes, as ``scipy.integrate.simpson``. |
+| `sphere_fibonacci` | function | The Fibonacci rule: n near-uniform points of equal weight 4πa²/n. |
+| `sphere_gauss_legendre` | function | The Gauss–Legendre × uniform-longitude rule on the sphere, exact to a degree. |
+| `sphere_healpix` | function | The HEALPix rule: 12 N_side² pixel centres of equal weight 4πa²/Q. |
+| `sphere_latlon` | function | The cell-centred lon/lat rule: equiangular cells weighted by their exact areas. |
+| `trapezoid` | function | The composite trapezoid rule on given nodes, uniform or not. |
+
+### `functax.transform`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ChebyshevTransform1D` | class | The forward and inverse Chebyshev transform on N Chebyshev nodes. |
+| `ChebyshevTransform2D` | class | The tensor-product Chebyshev transform on an (N_y, N_x) grid of nodes. |
+| `SphericalHarmonicTransform` | class | Dense, differentiable spherical-harmonic analysis and synthesis on a grid. |
+| `nonuniform_irfft` | function | A truncated real Fourier series evaluated at points of [0, 1)^d. |
+| `nonuniform_rfft` | function | The truncated Fourier coefficients of a field sampled at points of [0, 1)^d. |
+
+## Upstream: `argminax`
+
+Optimisation with uncertainty at the minimum: solvers, curvature.
+
+### `argminax`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ArgminaxError` | class | Base class for every exception raised by ``argminax``. |
+| `MissingExtraError` | class | Raised when a function needs an optional extra that is not installed. |
+| `ValidationError` | class | Raised when an argument fails validation. |
+
+### `argminax.adjoint`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `KStep` | class | Differentiate a minimiser through its last k iterate updates only. |
+| `OneStep` | class | Differentiate a minimiser through its last iterate update only. |
+| `to_optimistix_adjoint` | function | Return the optimistix adjoint that implements an adjoint spec. |
+
+### `argminax.curvature`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Laplace` | class | The Gaussian N(x̂, Ŝ) at a minimum, with Ŝ = Ĥ⁻¹ never formed. |
+| `VarianceEstimate` | class | A probed estimate of the marginal variances, with its standard error. |
+| `gauss_newton` | function | Build the Laplace posterior at a minimum from whitened residuals. |
+| `low_rank` | function | Return a low-rank form of the covariance of a whitened posterior. |
+| `marginal_variance` | function | Return the marginal variances diag(Ŝ) of a Laplace posterior. |
+| `push_forward` | function | Map a posterior in whitened coordinates back to physical ones. |
+| `sample_by_perturbation` | function | Draw from a Gauss–Newton posterior by perturbing its residuals. |
+
+### `argminax.diagnose`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `TraceEstimate` | class | A scalar diagnostic and its standard error. |
+| `averaging_kernel` | function | Return the averaging kernel A = ∂x̂/∂x of a Laplace posterior, lazily. |
+| `degrees_of_freedom` | function | Return the degrees of freedom for signal, the trace of the averaging kernel. |
+| `evidence` | function | Return the Laplace evidence log p(y) at a minimum. |
+| `information_content` | function | Return the information content of the measurement, in nats. |
+| `optimize_prior_precision` | function | Return the isotropic prior precision λ that maximises the Laplace evidence. |
+
+### `argminax.solve`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `CovarianceLaplaceResult` | class | The Gaussian at the mode of a GP with prior covariance K. |
+| `DualSolution` | class | The result of an observation-space solve. |
+| `GaussNewtonCG` | class | Gauss–Newton or Levenberg–Marquardt, each step by a matrix-free inner CG. |
+| `LaplaceModeResult` | class | The Gaussian N(x̂, Λ_x\|y⁻¹) at the mode, with gaussx's `LaplaceResult` fields. |
+| `Reparametrised` | class | A bound on the state, imposed by solving in an unconstrained variable u. |
+| `SiteLaplaceResult` | class | The mode of a latent GP and the Newton site naturals there. |
+| `dual_solve` | function | Solve the 3D-Var increment in observation space. |
+| `incremental_dual_solve` | function | Incremental 3D-Var in observation space, for a nonlinear forward model. |
+| `laplace_mode` | function | Mode and Gaussian approximation of a latent Gaussian model, in precision form. |
+| `laplace_mode_covariance` | function | Laplace approximation of a GP with prior covariance K, by damped Newton. |
+| `laplace_mode_sites` | function | Laplace approximation by damping the site naturals, given a posterior-mean map. |
+
+## Upstream: `integrix`
+
+Integration: rules, cumulative scans, time marching, expectations.
+
+### `integrix`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `IntegrixError` | class | Base class for every exception raised by ``integrix``. |
+| `ValidationError` | class | Raised when an argument fails validation. |
+
+### `integrix.adapt`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `GaussKronrod` | class | Adaptive Gauss–Kronrod quadrature to a tolerance, with an error estimate. |
+| `Romberg` | class | Romberg integration of a smooth integrand on a finite interval. |
+| `TanhSinh` | class | Tanh–sinh (double-exponential) quadrature, for singular ends and infinite limits. |
+| `cumulative_adaptive` | function | ∫ from x₀ to each node xₖ of f, each interval integrated adaptively. |
+
+### `integrix.adjoint`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Checkpointed` | class | The checkpointed adjoint: store every k-th state, recompute between them. |
+| `Truncated` | class | The truncated adjoint: gradients flow through the carry of the last k steps. |
+| `checkpointed_scan` | function | `jax.lax.scan` that stores the carry only every k steps for reverse mode. |
+| `to_diffrax_adjoint` | function | Map an adjoint spec onto a `diffrax.AbstractAdjoint`. |
+| `truncated_scan` | function | `jax.lax.scan` with gradients truncated to the trailing k steps. |
+
+### `integrix.expect`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Expectation` | class | An estimate of 𝔼[f] with its standard error. |
+| `effective_sample_size` | function | ESS = (∑ₛ wₛ)² / ∑ₛ wₛ² from log weights, along the last axis. |
+| `importance` | function | Self-normalised importance sampling: Î = ∑ₛ wₛ f(xₛ) / ∑ₛ wₛ, xₛ ~ q. |
+| `log_gauss_hermite` | function | log 𝔼[f(Q)] for a lognormal Q, by Gauss–Hermite quadrature in log Q. |
+| `log_simpson` | function | log ∫ₐᵇ f(q) dq by composite Simpson on a uniform grid in u = log q. |
+| `monte_carlo` | function | Plain Monte Carlo: Î = (1/S) ∑ₛ f(xₛ), with standard error σ̂/√S. |
+| `pareto_smoothed_log_weights` | function | Pareto-smoothed log importance weights and the tail shape k̂. |
+| `qmc` | function | Randomised quasi-Monte Carlo over [0, 1)^D, with an error from random shifts. |
+
+### `integrix.march`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AB2Solver` | class | Second-order Adams–Bashforth, run by `integrix.march.run`. |
+| `AB3Solver` | class | Third-order Adams–Bashforth as a diffrax solver, with an SSP-RK3 start. |
+| `AbstractStepper` | class | A fixed-step scheme whose history lives in the loop carry. |
+| `ForwardEulerDfx` | class | Forward Euler as a diffrax solver: yₙ₊₁ = yₙ + h F(tₙ, yₙ). |
+| `IMEX_SSP2` | class | IMEX-SSP2(2,2,2) for a `diffrax.MultiTerm` of an explicit and an implicit term. |
+| `LeapfrogRAFSolver` | class | Leapfrog with a Robert–Asselin filter, run by `integrix.march.run`. |
+| `RK2Heun` | class | Heun's method (RK2), with an embedded forward-Euler error estimate. |
+| `RK3SSP` | class | Third-order strong-stability-preserving Runge–Kutta (Shu–Osher). |
+| `RK4Classic` | class | The classical fourth-order Runge–Kutta method, fixed steps only. |
+| `SSP_RK104` | class | Ketcheson's ten-stage, fourth-order SSP Runge–Kutta, fixed steps only. |
+| `SSP_RK2` | class | Second-order SSP Runge–Kutta, the same scheme as `RK2Heun`. |
+| `SplitExplicitRKSolver` | class | Split-explicit stepping as an `AbstractStepper`, for `integrix.march.run`. |
+| `SplitExplicitTerms` | class | The vector fields of a split-explicit model, passed to `run` as ``rhs``. |
+| `ab2_step` | function | One second-order Adams–Bashforth step. |
+| `ab3_step` | function | One third-order Adams–Bashforth step. |
+| `euler_step` | function | One forward-Euler step: yₙ₊₁ = yₙ + h f(yₙ). |
+| `heun_step` | function | One Heun (RK2) step, order 2, SSP with C = 1. |
+| `imex_solver` | function | A ``KenCarp3`` IMEX solver whose implicit stage is matrix-free. |
+| `imex_ssp2_step` | function | One IMEX-SSP2(2,2,2) step, with the caller's implicit solve. |
+| `imex_stepsize_controller` | function | An adaptive PID step-size controller for an IMEX solve. |
+| `leapfrog_raf_step` | function | One leapfrog step with a Robert–Asselin filter on the middle level. |
+| `rk3_ssp_step` | function | One third-order SSP Runge–Kutta step in Shu–Osher form, C = 1. |
+| `rk4_step` | function | One classical fourth-order Runge–Kutta step. |
+| `run` | function | March y₀ through ``n_steps`` constant steps of h from t₀. |
+| `split_explicit_step` | function | One split-explicit barotropic/baroclinic step. |
+| `stable_step` | function | The largest stable forward-Euler step for advection and diffusion together. |
+
+### `integrix.rule`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Integral` | class | The result of an integral: its value, an error estimate and diagnostics. |
+| `integrate` | function | Integrate values, or an integrand, against a rule's weights. |
+| `log_integrate` | function | log I from log f: the log-sum-exp twin of `integrate`. |
+| `weighted_mean` | function | The mean of the values under a weight function, with one rule for both sums. |
+
+### `integrix.scan`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `cumulative` | function | The running trapezoid integral of samples along one axis. |

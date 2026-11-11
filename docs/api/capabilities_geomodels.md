@@ -17,7 +17,7 @@ This page is the GeoModels layer. It may import GeoML, GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at plumax 0.1.2, somax 0.0.15, radtrax 0.0.0.
+Listed at plumax 0.1.2, somax 0.0.15, radtrax 0.0.0, sesmax 0.0.0, sesmax-core 0.1.0.
 
 ## Upstream: `plumax`
 
@@ -548,3 +548,226 @@ Differentiable radiative transfer for methane remote sensing.
 | Name | Kind | What it does |
 |---|---|---|
 | `sentinel2_srf` | function | Build a Sentinel-2 SRF from the agency table georeader bundles. |
+
+## Upstream: `sesmax`
+
+The sesmax workspace in one install; an umbrella that holds no code.
+
+## Upstream: `sesmax-core`
+
+Simple Earth-system models: state, terms, steppers, forcing.
+
+### `sesmax_core`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BasisForcing` | class | Reduced-order forcing: a fixed space-time frame driven by a coefficient vector. |
+| `Compose` | class | Operator composition: ``Compose(outer, inner)(state) = outer(inner(state))``. |
+| `ConstantForcing` | class | Time-independent forcing field. |
+| `ConstantInTime` | class | Time-independent gate: ``b(t) = ones(m)`` (the ``Phi_t = I`` case). |
+| `Diagnostics` | class | Base class for on-demand diagnostic quantities. |
+| `ForcingProtocol` | class | Base class for forcing terms. |
+| `ForcingTerm` | class | Lift a :class:`ForcingProtocol` field into the term algebra as a tendency. |
+| `FourierInTime` | class | Cosine temporal gate ``b_a(t) = cos(omega_a t + phase_a)``. |
+| `GaussianWindowsInTime` | class | Localized temporal gate ``b_a(t) = exp(-(t - tau_a)^2 / (2 T_a^2))``. |
+| `HatInTime` | class | Piecewise-linear gate on knots, so the coefficients are values at the knots. |
+| `InterpolatedForcing` | class | Data-driven forcing via diffrax path interpolation. |
+| `ModalTransform` | class | Precomputed layer-to-mode and mode-to-layer transforms. |
+| `Model` | class | Abstract base class defining the sesmax model contract. |
+| `NoForcing` | class | Zero forcing (free evolution). |
+| `OperatorTerm` | class | Lift a pipekit operator into the :class:`Term` algebra. |
+| `Params` | class | Base class for differentiable model parameters. |
+| `PhysConsts` | class | Base class for frozen physical constants. |
+| `Scaled` | class | A term multiplied by a scalar coefficient. |
+| `ScaledModel` | class | Integrate ``inner`` in transformed coordinates. |
+| `Scales` | class | Characteristic scales of a run. |
+| `SeasonalWindForcing` | class | Sinusoidal wind forcing with learnable amplitude. |
+| `SimulationCheckpointer` | class | Manages periodic checkpointing during long simulations. |
+| `SpatialBasis` | class | A precomputed spatial dictionary plus the per-mode prior std. |
+| `State` | class | Base class for model state vectors. |
+| `StateAffine` | class | Per-leaf affine map on a ``State`` pytree: ``y = (x - loc) / scale``. |
+| `StratificationProfile` | class | Discrete vertical stratification for a layered ocean model. |
+| `Sum` | class | Additive composition of terms: ``sum_i terms[i](t, state, args)``. |
+| `TemporalBasis` | class | Maps a scalar time to per-atom temporal weights ``b(t)``. |
+| `Term` | class | A single additive contribution to a model right-hand side. |
+| `TermFn` | class | Adapt a plain callable into a :class:`Term`. |
+| `TermModel` | class | A :class:`Model` whose RHS is an assembled :class:`Term` tree. |
+| `TransformedForcing` | class | Apply a pointwise transform to a base forcing (e.g. log-space synthesis). |
+| `VectorBasisForcing` | class | Reduced-order *vector* forcing: a fixed vector frame driven by coeffs. |
+| `VectorSpatialBasis` | class | A precomputed vector dictionary plus the per-mode prior std. |
+| `add_to` | function | Build a placement that adds a field onto one named state component. |
+| `add_vector_to` | function | Build a placement that adds a component-major field onto named components. |
+| `append_to_dataset` | function | Append a Dataset to an existing zarr store along a dimension. |
+| `apply_scale_metadata` | function | Attach scale / transform metadata to an exported Dataset. |
+| `as_parameter` | function | Coerce a factory argument into a ``Params`` leaf. |
+| `build_diffrax_terms` | function | Build the diffrax term object for ``term``, IMEX-aware. |
+| `control_filter` | function | Boolean filter selecting only ``coeffs`` for gradient updates. |
+| `dataset_to_state` | function | Reconstruct a single State from an xarray Dataset. |
+| `explicit` | function | Tag ``term`` for the explicit stage of an IMEX integrator. |
+| `frozen` | function | Hide a parameter from gradients while keeping it a runtime value. |
+| `implicit` | function | Tag ``term`` for the implicit stage of an IMEX integrator. |
+| `interval` | function | Constrain a parameter to the open interval ``(lower, upper)``. |
+| `load_dataset` | function | Open a zarr store as an xarray Dataset. |
+| `matern_spectral_density` | function | Matérn power spectral density ``S(omega)`` at ``omega = sqrt_lambda``. |
+| `partition` | function | Split ``term`` into ``(explicit, implicit)`` sub-terms by kind. |
+| `positive` | function | Constrain a parameter to be strictly positive. |
+| `save_dataset` | function | Persist a Dataset to a zarr store. |
+| `scales_attrs` | function | Flat Dataset attrs describing the scale set a run used. |
+| `snapshots_to_dataset` | function | Convert a time-stacked PyTree of states to an xarray Dataset. |
+| `spatial_from_divfree` | function | Build a :class:`VectorSpatialBasis` of divergence-free velocity atoms. |
+| `spatial_from_eof` | function | Build a :class:`SpatialBasis` from empirical orthogonal functions (PCA). |
+| `spatial_from_fourier` | function | Build a :class:`SpatialBasis` from the box-Laplacian (HSGP) eigenbasis. |
+| `spatial_from_gabor` | function | Build a :class:`SpatialBasis` from a geonnax dyadic radial-Gabor frame. |
+| `spatial_from_graph_laplacian` | function | Build a :class:`SpatialBasis` from graph-Laplacian eigenvectors. |
+| `spatial_from_rbf` | function | Build a :class:`SpatialBasis` from a geonnax placeable radial basis. |
+| `spatial_from_spherical_rbf` | function | Build a :class:`SpatialBasis` from a geodesic (on-sphere) radial basis. |
+| `spatial_from_wavelet` | function | Build a :class:`SpatialBasis` from the orthonormal 2D wavelet basis. |
+| `stable_step` | function | Re-exported from `integrix`. |
+| `state_to_dataset` | function | Convert a single model State to an xarray Dataset. |
+| `tile_in_time` | function | Lift a spatial dictionary into a separable space-time frame. |
+| `trainable_mask` | function | Boolean pytree marking which leaves an optimiser may update. |
+| `transform_attrs` | function | Per-variable ``loc`` / ``scale`` attrs for an affine transform. |
+
+### `sesmax_core.da`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `FilteraxDynamics` | class | Adapt a sesmax forward model to filterax's flat-vector dynamics. |
+| `SubsampleObs` | class | Linear sub-sampling observation operator ``H(x) = x[indices]``. |
+| `VardaxForwardModel` | class | Adapt a sesmax model to vardax's flat-vector ``ForwardModel``. |
+| `WindowOperator` | class | A control through a whole model run to the stacked observations. |
+| `make_ensemble` | function | Build a Gaussian-perturbed flat ensemble around a base state. |
+| `state_to_vector` | function | Flatten a state pytree to a 1-D vector plus its inverse. |
+
+### `sesmax_core.domain`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Domain` | class | Domain class for a rectangular domain |
+| `TimeDomain` | class | TimeDomain(tmin, tmax, dt) |
+
+### `sesmax_core.flows`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `StateAffineBijection` | class | A :class:`StateAffine` as a flat flowjax bijection. |
+| `learned_prior` | function | Compose a fixed physical scaling with a learned flow into a prior. |
+| `to_flowjax` | function | Adapt a :class:`StateAffine` to the flowjax bijection interface. |
+
+### `sesmax_core.monitor`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BaseMonitor` | class | Inert base monitor — override only the hooks you care about. |
+| `ChunkInfo` | class | Context handed to a monitor at a diagnostic-chunk boundary. |
+| `ConservationDriftMonitor` | class | MONITOR (optionally FAIL-HARD): track drift of conserved invariants. |
+| `EnergyGrowthMonitor` | class | MONITOR (optionally FAIL-HARD): flag large energy jumps between chunks. |
+| `Monitor` | class | Structural protocol for a simulation monitor. |
+| `MonitorVerdict` | class | A monitor's response to a chunk. |
+| `NonFiniteMonitor` | class | FAIL-HARD: terminate the run if any state field holds NaN/Inf. |
+| `SolverHealthMonitor` | class | MONITOR: surface diffrax per-chunk solver statistics. |
+| `ThroughputMonitor` | class | MONITOR: report simulated seconds per wallclock second per chunk. |
+| `WatchdogMonitor` | class | FAIL-HARD: terminate if cumulative wallclock exceeds a ceiling. |
+| `default_monitors` | function | The runner's default monitor set — preserves legacy behavior. |
+
+### `sesmax_core.operators`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ModelOp` | class | A pipekit Operator wrapping *any* built sesmax forward model. |
+
+### `sesmax_core.solvers`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `imex_solver` | function | Re-exported from `integrix`. |
+| `imex_stepsize_controller` | function | Re-exported from `integrix`. |
+
+### `sesmax_core.testing`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Burgers1D` | class | 1D Burgers equation on an Arakawa C-grid. |
+| `Burgers1DDiagnostics` | class | Diagnostics for 1D Burgers equation. |
+| `Burgers1DParams` | class | Differentiable parameters for 1D Burgers equation. |
+| `Burgers1DState` | class | State for 1D Burgers equation. |
+| `Burgers2D` | class | 2D Burgers equation on an Arakawa C-grid. |
+| `Burgers2DAdvection` | class | Advective tendency kernel ``-(u·∂x + v·∂y)`` for both velocities. |
+| `Burgers2DDiagnostics` | class | Diagnostics for 2D Burgers equation. |
+| `Burgers2DDiffusion` | class | Diffusive tendency kernel ``laplacian(·)`` for both velocities. |
+| `Burgers2DOp` | class | Serializable pipekit Operator for the term-based 2D Burgers model. |
+| `Burgers2DParams` | class | Differentiable parameters for 2D Burgers equation. |
+| `Burgers2DState` | class | State for 2D Burgers equation. |
+| `Burgers2DTermModel` | class | 2D Burgers model assembled from composable term kernels. |
+| `Diffusion1D` | class | 1D diffusion equation on an Arakawa C-grid. |
+| `Diffusion1DDiagnostics` | class | Diagnostics for 1D diffusion. |
+| `Diffusion1DParams` | class | Differentiable parameters for 1D diffusion. |
+| `Diffusion1DState` | class | State for 1D diffusion. |
+| `Diffusion2D` | class | 2D diffusion equation on an Arakawa C-grid. |
+| `Diffusion2DDiagnostics` | class | Diagnostics for 2D diffusion. |
+| `Diffusion2DParams` | class | Differentiable parameters for 2D diffusion. |
+| `Diffusion2DState` | class | State for 2D diffusion. |
+| `HelmholtzSolver2D` | class | Solve the 2D Helmholtz equation: :math:`(\nabla^2 - \lambda) \phi = f`. |
+| `IncompressibleNS2D` | class | 2D incompressible Navier-Stokes (vorticity-streamfunction). |
+| `L63Diagnostics` | class | On-demand diagnostics for the Lorenz '63 system. |
+| `L63Params` | class | Differentiable parameters for the Lorenz '63 system. |
+| `L63State` | class | State vector for the Lorenz '63 system. |
+| `L96Diagnostics` | class | On-demand diagnostics for the Lorenz '96 system. |
+| `L96Params` | class | Differentiable parameters for the Lorenz '96 system. |
+| `L96State` | class | State vector for the Lorenz '96 system. |
+| `L96TParams` | class | Differentiable parameters for the two-tier Lorenz '96 system. |
+| `L96TState` | class | State vector for the two-tier Lorenz '96 system. |
+| `LaplaceSolver2D` | class | Solve the 2D Laplace equation: :math:`\nabla^2 \phi = 0`. |
+| `LinearConvection1D` | class | 1D linear convection equation on an Arakawa C-grid. |
+| `LinearConvection1DDiagnostics` | class | Diagnostics for 1D linear convection. |
+| `LinearConvection1DParams` | class | Differentiable parameters for 1D linear convection. |
+| `LinearConvection1DState` | class | State for 1D linear convection. |
+| `LinearConvection2D` | class | 2D linear convection on an Arakawa C-grid. |
+| `LinearConvection2DDiagnostics` | class | Diagnostics for 2D linear convection. |
+| `LinearConvection2DParams` | class | Differentiable parameters for 2D linear convection. |
+| `LinearConvection2DState` | class | State for 2D linear convection. |
+| `LinearSW1DDiagnostics` | class | Diagnostics for the 1D linear shallow water model. |
+| `LinearSW1DParams` | class | Differentiable parameters for the 1D linear shallow water model. |
+| `LinearSW1DPhysConsts` | class | Frozen physical constants for the 1D linear shallow water model. |
+| `LinearSW1DState` | class | State for the 1D linear shallow water model. |
+| `LinearSW2DDiagnostics` | class | Diagnostics for the 2D linear shallow water model. |
+| `LinearSW2DParams` | class | Differentiable parameters for the 2D linear shallow water model. |
+| `LinearSW2DPhysConsts` | class | Frozen physical constants for the 2D linear shallow water model. |
+| `LinearSW2DState` | class | State for the 2D linear shallow water model. |
+| `LinearSWM2DTermModel` | class | 2D linear shallow water assembled from composable term kernels. |
+| `LinearSWMCoriolis` | class | Coriolis kernel: ``du/dt += f*v``, ``dv/dt -= f*u`` (no height term). |
+| `LinearSWMDiffusion` | class | Lateral diffusion kernel: ``laplacian(u)``, ``laplacian(v)``. |
+| `LinearSWMDrag` | class | Linear bottom-drag kernel returning ``(0, u, v)``. |
+| `LinearSWMGravityWave` | class | Gravity-wave / pressure kernel of the linear shallow water RHS. |
+| `LinearShallowWater1D` | class | 1D linear shallow water model on an Arakawa C-grid. |
+| `LinearShallowWater2D` | class | 2D linear shallow water model on an Arakawa C-grid. |
+| `Lorenz63` | class | Lorenz '63 three-variable chaotic system. |
+| `Lorenz96` | class | Lorenz '96 periodic 1D chaotic system. |
+| `Lorenz96t` | class | Lorenz '96 two-tier (slow-fast) coupled system. |
+| `NSDiagnostics` | class | Diagnostics for incompressible Navier-Stokes. |
+| `NSParams` | class | Differentiable parameters for incompressible Navier-Stokes. |
+| `NSVorticityState` | class | State for the vorticity-streamfunction NS formulation. |
+| `NonlinearConvection1D` | class | 1D nonlinear convection (inviscid Burgers) on an Arakawa C-grid. |
+| `NonlinearConvection1DDiagnostics` | class | Diagnostics for 1D nonlinear convection. |
+| `NonlinearConvection1DState` | class | State for 1D nonlinear convection. |
+| `NonlinearConvection2D` | class | 2D nonlinear convection on an Arakawa C-grid. |
+| `NonlinearConvection2DDiagnostics` | class | Diagnostics for 2D nonlinear convection. |
+| `NonlinearConvection2DState` | class | State for 2D nonlinear convection. |
+| `NonlinearSW1DDiagnostics` | class | Diagnostics for the 1D nonlinear shallow water model. |
+| `NonlinearSW1DParams` | class | Differentiable parameters for the 1D nonlinear shallow water model. |
+| `NonlinearSW1DPhysConsts` | class | Frozen physical constants for the 1D nonlinear shallow water model. |
+| `NonlinearSW1DState` | class | State for the 1D nonlinear shallow water model. |
+| `NonlinearShallowWater1D` | class | 1D nonlinear shallow water model on an Arakawa C-grid. |
+| `PoissonSolver2D` | class | Solve the 2D Poisson equation: :math:`\nabla^2 \phi = f`. |
+| `geostrophic_adjustment_2d` | function | 2D geostrophic adjustment: step-function height perturbation. |
+| `gravity_wave_1d` | function | 1D gravity wave: Gaussian height perturbation, no rotation. |
+| `inertial_oscillation_1d` | function | 1D inertial oscillation: uniform initial u, period = 2*pi/f0. |
+
+### `sesmax_core.train`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ModelStep` | class | One model step as a carrier-only operator: ``(t, s) ↦ (t + Δt, step(s))``. |
+| `rollout` | function | Step ``model`` ``n_steps`` times in one ``jax.lax.scan``. |
+| `rollout_loss` | function | Mean per-snapshot loss of a rollout against a reference trajectory. |
+| `state_mse` | function | l(s, sʳᵉᶠ) = ∑_fields mean((s - sʳᵉᶠ)²) over the array leaves. |
