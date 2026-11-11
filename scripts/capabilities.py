@@ -102,6 +102,9 @@ UPSTREAM_BLURB: dict[str, str] = {
     "gaussx": "Structured linear algebra and Gaussian primitives on lineax.",
     "finitevolx": "Arakawa C-grid finite-volume operators.",
     "spectraldiffx": "Pseudospectral differentiation, filters and PDE solvers.",
+    "functax": "Function approximation: bases, quadrature rules, interpolation.",
+    "argminax": "Optimisation with uncertainty at the minimum: solvers, curvature.",
+    "integrix": "Integration: rules, cumulative scans, time marching, expectations.",
     # GeoML
     "geonnax": "Basis functions, neural layers and coordinate transforms in Equinox.",
     "kernellib": "Covariance kernels and scalable kernel methods on gaussx.",
@@ -114,16 +117,47 @@ UPSTREAM_BLURB: dict[str, str] = {
     "pyrox-gp": "Gaussian processes for pyrox.",
     "pyrox-lgm": "Latent Gaussian models for pyrox.",
     "pyrox-nn": "Bayesian neural networks for pyrox.",
+    "manipy-jax": "Manifold learning and alignment, and hyperspectral workflows.",
     # GeoModels
     "plumax": "Plume transport: Gaussian plume and puff, Lagrangian and LES.",
     "somax": "Simple ocean and atmosphere models in JAX.",
     "radtrax": "Differentiable radiative transfer for methane remote sensing.",
+    "sesmax": "The sesmax workspace in one install; an umbrella that holds no code.",
+    "sesmax-core": "Simple Earth-system models: state, terms, steppers, forcing.",
 }
 
 NUMERICS: dict[str, list[str]] = {
     "gaussx": ["gaussx"],
     "finitevolx": ["finitevolx"],
     "spectraldiffx": ["spectraldiffx"],
+    # functax, argminax and integrix export only their errors at the top
+    # level, so their public submodules are listed
+    "functax": [
+        "functax",
+        *(
+            f"functax.{sub}"
+            for sub in (
+                "basis",
+                "diffops",
+                "geometry",
+                "interp",
+                "project",
+                "quad",
+                "transform",
+            )
+        ),
+    ],
+    "argminax": [
+        "argminax",
+        *(f"argminax.{sub}" for sub in ("adjoint", "curvature", "diagnose", "solve")),
+    ],
+    "integrix": [
+        "integrix",
+        *(
+            f"integrix.{sub}"
+            for sub in ("adapt", "adjoint", "expect", "march", "rule", "scan")
+        ),
+    ],
 }
 GEOML: dict[str, list[str]] = {
     "geonnax": ["geonnax"],
@@ -154,6 +188,9 @@ GEOML: dict[str, list[str]] = {
     "pyrox-gp": ["pyrox_gp"],
     "pyrox-lgm": ["pyrox_lgm"],
     "pyrox-nn": ["pyrox_nn"],
+    # manipy.sklearn needs scikit-learn (manipy's sklearn extra), which no
+    # environment installs
+    "manipy-jax": ["manipy", "manipy.datasets", "manipy.hsi", "manipy.metrics"],
 }
 # The GeoModels export their APIs from subpackages, which are listed one by one.
 GEOMODELS: dict[str, list[str]] = {
@@ -209,6 +246,30 @@ GEOMODELS: dict[str, list[str]] = {
                 "slab",
                 "retrieval",
                 "geo",
+            )
+        ),
+    ],
+    # the umbrella installs the workspace packages and holds no code
+    "sesmax": [],
+    "sesmax-core": [
+        "sesmax_core",
+        *(
+            f"sesmax_core.{sub}"
+            for sub in (
+                "checkpoint",
+                "da",
+                "domain",
+                "flows",
+                "forcing",
+                "gfd",
+                "io",
+                "monitor",
+                "operators",
+                "scales",
+                "solvers",
+                "terms",
+                "testing",
+                "train",
             )
         ),
     ],

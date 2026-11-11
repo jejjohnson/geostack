@@ -76,6 +76,9 @@ xrtoolz-products = { path = "references/geostack/xrtoolz/packages/xrtoolz-produc
 gaussx = { path = "references/numerics/gaussx", editable = true }
 finitevolx = { path = "references/numerics/finitevolX", editable = true }
 spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
+functax = { path = "references/numerics/functax", editable = true }
+argminax = { path = "references/numerics/argminax", editable = true }
+integrix = { path = "references/numerics/integrix", editable = true }
 geonnax = { path = "references/geoml/geonnax", editable = true }
 kernellib = { path = "references/geoml/kernellib", editable = true }
 optax-bayes = { path = "references/geoml/optax_bayes", editable = true }
@@ -87,9 +90,12 @@ pyrox = { path = "references/geoml/pyrox/packages/pyrox", editable = true }
 pyrox-gp = { path = "references/geoml/pyrox/packages/pyrox-gp", editable = true }
 pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = true }
 pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
+manipy-jax = { path = "references/geoml/manipy", editable = true }
 plumax = { path = "references/geomodels/plumax", editable = true }
 somax = { path = "references/geomodels/somax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
+sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
+sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
 
 [feature.dev.dependencies]
 pytest = ">=8"
@@ -146,6 +152,12 @@ gaussx = { path = "references/numerics/gaussx", editable = true }
 numpyro = ">=0.21"
 finitevolx = { path = "references/numerics/finitevolX", editable = true }
 spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
+# integrix asks for functax[jax] and functax's quadrature plans want SciPy; the
+# override replaces the requirement, extras included, so they come in through
+# integrix's and gaussx's own dependencies and SciPy is a conda dependency
+functax = { path = "references/numerics/functax", editable = true }
+argminax = { path = "references/numerics/argminax", editable = true }
+integrix = { path = "references/numerics/integrix", editable = true }
 # scikit-image (for the GeoModels notebooks) is listed here, not in geomodels:
 # the geo solve group puts it in every geo environment's lock, and
 # `pixi install --locked` rejects lock packages an environment does not require.
@@ -163,11 +175,14 @@ pyrox = { path = "references/geoml/pyrox/packages/pyrox", editable = true }
 pyrox-gp = { path = "references/geoml/pyrox/packages/pyrox-gp", editable = true }
 pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = true }
 pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
+manipy-jax = { path = "references/geoml/manipy", editable = true }
 
 [feature.geomodels.pypi-dependencies]
 plumax = { path = "references/geomodels/plumax", editable = true }
 somax = { path = "references/geomodels/somax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
+sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
+sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
 # what the GeoModels notebooks import beyond the libraries
 optax = "*"
 openpyxl = "*"

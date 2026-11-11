@@ -70,3 +70,23 @@
 	path = references/geoml/optax_bayes
 	url = https://github.com/jejjohnson/optax_bayes.git
 	branch = main
+[submodule "references/numerics/functax"]
+	path = references/numerics/functax
+	url = https://github.com/jejjohnson/functax.git
+	branch = main
+[submodule "references/numerics/argminax"]
+	path = references/numerics/argminax
+	url = https://github.com/jejjohnson/argminax.git
+	branch = main
+[submodule "references/numerics/integrix"]
+	path = references/numerics/integrix
+	url = https://github.com/jejjohnson/integrix.git
+	branch = main
+[submodule "references/geoml/manipy"]
+	path = references/geoml/manipy
+	url = https://github.com/jejjohnson/manipy.git
+	branch = main
+[submodule "references/geomodels/sesmax"]
+	path = references/geomodels/sesmax
+	url = https://github.com/jejjohnson/sesmax.git
+	branch = main

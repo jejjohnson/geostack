@@ -53,7 +53,14 @@ TITLES = {
 #: within a layer, a repository may import only repositories of a lower tier
 TIERS: dict[str, dict[str, int]] = {
     "geostack": {"pipekit": 0, "georeader": 0, "geotoolz": 1, "xrtoolz": 2},
-    "numerics": {"gaussx": 0, "spectraldiffx": 1, "finitevolX": 2},
+    "numerics": {
+        "gaussx": 0,
+        "functax": 0,
+        "argminax": 1,
+        "integrix": 1,
+        "spectraldiffx": 1,
+        "finitevolX": 2,
+    },
     "geoml": {
         "geonnax": 0,
         "gauss_flows": 0,
@@ -62,9 +69,10 @@ TIERS: dict[str, dict[str, int]] = {
         "xtremax": 1,
         "filterax": 2,
         "pyrox": 2,
+        "manipy": 2,
         "vardax": 3,
     },
-    "geomodels": {"radtrax": 0, "somax": 0, "plumax": 1},
+    "geomodels": {"radtrax": 0, "somax": 0, "sesmax": 0, "plumax": 1},
 }
 #: what each tier holds, for the page
 TIER_ROLES = {
@@ -73,15 +81,19 @@ TIER_ROLES = {
         "operators on arrays and geoarray carriers",
         "operators on xarray, lifting geoops over cubes",
     ),
-    "numerics": ("linear algebra and Gaussians", "spectral", "finite volume"),
+    "numerics": (
+        "linear algebra, Gaussians and function approximation",
+        "optimisation, integration and spectral methods",
+        "finite volume",
+    ),
     "geoml": (
         "layers and flows",
         "kernels, optimisers and extremes",
-        "ensemble filters and probabilistic models",
+        "ensemble filters, probabilistic models and manifold learning",
         "variational assimilation (may build on filterax)",
     ),
     "geomodels": (
-        "radiative transfer and dynamics",
+        "radiative transfer and Earth-system dynamics",
         "plume models, which may build on radtrax",
     ),
 }

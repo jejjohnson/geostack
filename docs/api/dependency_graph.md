@@ -64,12 +64,14 @@ flowchart TB
     direction LR
     plumax["plumax"]
     radtrax["radtrax"]
+    sesmax["sesmax"]
     somax["somax"]
   end
   subgraph geoml["GeoML"]
     direction LR
     vardax["vardax"]
     filterax["filterax"]
+    manipy["manipy"]
     pyrox["pyrox"]
     kernellib["kernellib"]
     optax_bayes["optax_bayes"]
@@ -80,7 +82,10 @@ flowchart TB
   subgraph numerics["GeoNumerics"]
     direction LR
     finitevolX["finitevolX"]
+    argminax["argminax"]
+    integrix["integrix"]
     spectraldiffx["spectraldiffx"]
+    functax["functax"]
     gaussx["gaussx"]
   end
   subgraph geostack["GeoStack"]
@@ -90,13 +95,17 @@ flowchart TB
     georeader["georeader (third party)"]
     pipekit["pipekit"]
   end
+  argminax --> gaussx
   filterax --> gaussx
   finitevolX --> spectraldiffx
   gauss_flows --> gaussx
   geotoolz --> georeader
   geotoolz --> pipekit
+  integrix --> functax
+  integrix --> gaussx
   kernellib --> gaussx
   kernellib --> geonnax
+  manipy --> kernellib
   optax_bayes -.-> gaussx
   plumax --> finitevolX
   plumax --> pipekit
@@ -104,6 +113,12 @@ flowchart TB
   pyrox --> kernellib
   radtrax --> gaussx
   radtrax -.-> georeader
+  sesmax -.-> filterax
+  sesmax --> finitevolX
+  sesmax --> geonnax
+  sesmax --> integrix
+  sesmax --> pipekit
+  sesmax -.-> vardax
   somax --> filterax
   somax --> finitevolX
   somax --> geonnax
@@ -116,7 +131,7 @@ flowchart TB
 ```
 :::
 
-18 repositories, 35 packages and 29 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+23 repositories, 41 packages and 41 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -190,14 +205,14 @@ is the rule's name in [](#tbl-dg-violations).
 | Layer | Tier | Repositories | Holds |
 |---|---|---|---|
 | GeoModels | 1 | plumax | plume models, which may build on radtrax |
-| GeoModels | 0 | radtrax, somax | radiative transfer and dynamics |
+| GeoModels | 0 | radtrax, sesmax, somax | radiative transfer and Earth-system dynamics |
 | GeoML | 3 | vardax | variational assimilation (may build on filterax) |
-| GeoML | 2 | filterax, pyrox | ensemble filters and probabilistic models |
+| GeoML | 2 | filterax, manipy, pyrox | ensemble filters, probabilistic models and manifold learning |
 | GeoML | 1 | kernellib, optax_bayes, xtremax | kernels, optimisers and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
 | GeoNumerics | 2 | finitevolX | finite volume |
-| GeoNumerics | 1 | spectraldiffx | spectral |
-| GeoNumerics | 0 | gaussx | linear algebra and Gaussians |
+| GeoNumerics | 1 | argminax, integrix, spectraldiffx | optimisation, integration and spectral methods |
+| GeoNumerics | 0 | functax, gaussx | linear algebra, Gaussians and function approximation |
 | GeoStack | 2 | xrtoolz | operators on xarray, lifting geoops over cubes |
 | GeoStack | 1 | geotoolz | operators on arrays and geoarray carriers |
 | GeoStack | 0 | georeader, pipekit | pipelines and readers |
@@ -290,6 +305,13 @@ cannot import, so most of its tests could no longer be collected.
 | plumax | pipekit | base | `plumax → pipekit` |
 | radtrax | gaussx | base | `radtrax → gaussx` |
 | radtrax | georeader | extra | `radtrax → georeader-spaceml` |
+| sesmax | filterax | extra | `sesmax-core → filterax` |
+| sesmax | finitevolX | base | `sesmax-core → finitevolx` |
+| sesmax | geonnax | base | `sesmax-core → geonnax` |
+| sesmax | integrix | base | `sesmax-core → integrix` |
+| sesmax | pipekit | base | `sesmax-core → pipekit` |
+| sesmax | spectraldiffx | base | `sesmax-core → spectraldiffx` |
+| sesmax | vardax | extra | `sesmax-core → vardax` |
 | somax | filterax | import | `somax → filterax` |
 | somax | finitevolX | base | `somax → finitevolx` |
 | somax | geonnax | base | `somax → geonnax` |
@@ -299,6 +321,8 @@ cannot import, so most of its tests could no longer be collected.
 | gauss_flows | gaussx | import | `gauss-flows → gaussx` |
 | kernellib | gaussx | base | `kernellib → gaussx` |
 | kernellib | geonnax | base | `kernellib → geonnax` |
+| manipy | gaussx | base | `manipy-jax → gaussx` |
+| manipy | kernellib | base | `manipy-jax → kernellib` |
 | optax_bayes | gaussx | extra | `optax-bayes → gaussx` |
 | pyrox | gauss_flows | extra | `pyrox-gp → gauss-flows` |
 | pyrox | gaussx | base | `pyrox-gp → gaussx` |
@@ -307,8 +331,11 @@ cannot import, so most of its tests could no longer be collected.
 | vardax | gaussx | base | `vardax → gaussx` |
 | vardax | geonnax | base | `vardax → geonnax` |
 | vardax | pipekit | base | `vardax → pipekit` |
+| argminax | gaussx | base | `argminax → gaussx` |
 | finitevolX | gaussx | base | `finitevolx → gaussx` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
+| integrix | functax | base | `integrix → functax` |
+| integrix | gaussx | base | `integrix → gaussx` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
 | geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
 | geotoolz | pipekit | base | `geotoolz-array → pipekit` |

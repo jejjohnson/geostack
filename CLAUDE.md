@@ -13,10 +13,11 @@ specific to Claude Code.
 - **No local package.** Reusable code goes upstream, not into `src/`: to the
   library that owns it, in the lowest layer that may hold it. The layers are
   GeoStack (pipekit, geotoolz, xrtoolz, georeader), GeoNumerics (gaussx,
-  finitevolX, spectraldiffx), GeoML (geonnax, kernellib, optax_bayes,
-  filterax, vardax, gauss_flows, xtremax, pyrox) and GeoModels (plumax,
-  somax, radtrax), under `references/<layer>/`; edges between layers point
-  down ("The layers" in `AGENTS.md`).
+  functax, argminax, integrix, finitevolX, spectraldiffx), GeoML (geonnax,
+  kernellib, optax_bayes, filterax, vardax, gauss_flows, xtremax, pyrox,
+  manipy) and GeoModels (plumax, somax, radtrax, sesmax), under
+  `references/<layer>/`; edges between layers point down ("The layers" in
+  `AGENTS.md`).
 - **georeader is not ours.** It is spaceml-org's: read it, never write it,
   commit or push in it, or open issues and PRs on its repository.
   `.claude/settings.json` denies edits there and its PreToolUse hook

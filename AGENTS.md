@@ -19,7 +19,7 @@ Standing instructions for **every** coding agent working in this repository
 The GeoStack umbrella repository: the design, the experiments and the
 write-up for a JAX-native research stack for geophysical modeling,
 inference and data assimilation. **It has no package of its own.** The
-reusable code lives in the libraries it builds on, eighteen of them in four
+reusable code lives in the libraries it builds on, twenty-three of them in four
 layers (GeoStack, GeoNumerics, GeoML, GeoModels; see "The layers" below); thin
 scripts and notebooks here compose them, Hydra
 configs hold every setting, a DVC pipeline ties data, code, configs and
@@ -43,9 +43,9 @@ not into a local package.
 | Layer | `references/…` | Libraries | pixi environment | Capability index |
 |---|---|---|---|---|
 | GeoStack | `geostack/` | pipekit, geotoolz, xrtoolz (uv workspaces; members under `packages/`), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
-| GeoNumerics | `numerics/` | gaussx, finitevolX, spectraldiffx | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
-| GeoML | `geoml/` | geonnax, kernellib, optax_bayes, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn) | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
-| GeoModels | `geomodels/` | plumax, somax, radtrax | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
+| GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, finitevolX, spectraldiffx | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
+| GeoML | `geoml/` | geonnax, kernellib, optax_bayes, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
+| GeoModels | `geomodels/` | plumax, somax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
 
 Edges between layers point down: GeoModels may import GeoML, GeoNumerics and
 GeoStack; GeoML may import GeoNumerics and GeoStack; GeoNumerics and GeoStack import

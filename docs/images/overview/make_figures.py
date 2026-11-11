@@ -1410,7 +1410,7 @@ DG_LAYERS = [
         STATE,
         0.0,
         1.0,
-        [[("plumax", 0.58)], [("radtrax", 0.22), ("somax", 0.66)]],
+        [[("plumax", 0.58)], [("radtrax", 0.22), ("somax", 0.5), ("sesmax", 0.8)]],
     ),
     (
         "GeoML",
@@ -1419,7 +1419,7 @@ DG_LAYERS = [
         1.0,
         [
             [("vardax", 0.84)],
-            [("pyrox", 0.2), ("filterax", 0.42)],
+            [("pyrox", 0.2), ("filterax", 0.42), ("manipy", 0.64)],
             [("optax_bayes", 0.06), ("kernellib", 0.28), ("xtremax", 0.95)],
             [("gauss_flows", 0.12), ("geonnax", 0.47)],
         ],
@@ -1429,7 +1429,11 @@ DG_LAYERS = [
         NUMERICS,
         0.0,
         0.49,
-        [[("finitevolX", 0.38)], [("spectraldiffx", 0.28)], [("gaussx", 0.16)]],
+        [
+            [("finitevolX", 0.38)],
+            [("spectraldiffx", 0.08), ("argminax", 0.2), ("integrix", 0.32)],
+            [("gaussx", 0.12), ("functax", 0.3)],
+        ],
     ),
     (
         "GeoStack",
