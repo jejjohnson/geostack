@@ -334,6 +334,15 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         " map axes; finitevolx.Divergence2D is the finite-volume divergence on"
         " an Arakawa C-grid. GeoStack may not import GeoNumerics."
     ),
+    "ValidationError": (
+        "functax, argminax and integrix each raise their own ValidationError,"
+        " a subclass of the library's base error, so a caller can catch one"
+        " library's failures without the others'."
+    ),
+    "MissingExtraError": (
+        "functax and argminax each raise their own MissingExtraError, naming"
+        " the extra of that library to install."
+    ),
 }
 
 # Name clashes the layers above GeoStack ship today, as {layer: {name: why}}.
@@ -341,6 +350,11 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
 # implementations. The check fails on a clash missing from this list and on an
 # entry that no longer clashes, so the list can only shrink.
 _PORTED = "ported from plumax to radtrax; leaves plumax with plumax#133"
+# the pins of finitevolX and spectraldiffx predate the moves; their main already
+# re-exports integrix's steppers and functax's transforms, so these go when the
+# pins move
+_STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
+_TRANSFORMS = "moved from spectraldiffx to functax.transform (spectraldiffx#166)"
 _KERNELS = "kernels in both kernellib and pyrox-gp"
 _LIKELIHOODS = "likelihoods in both gaussx and pyrox-gp"
 _NN_LAYERS = "layers in both geonnax and pyrox-nn"
@@ -352,9 +366,35 @@ _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
 
 KNOWN_CLASHES: dict[str, dict[str, str]] = {
     "numerics": {
+        "AB2Solver": _STEPPERS,
         "CapacitanceSolver": _NUMERICS,
+        "ChebyshevTransform1D": _TRANSFORMS,
+        "ChebyshevTransform2D": _TRANSFORMS,
+        "ForwardEulerDfx": _STEPPERS,
+        "IMEX_SSP2": _STEPPERS,
+        "LeapfrogRAFSolver": _STEPPERS,
+        "RK2Heun": _STEPPERS,
+        "RK3SSP": _STEPPERS,
+        "RK4Classic": _STEPPERS,
+        "SSP_RK104": _STEPPERS,
+        "SSP_RK2": _STEPPERS,
         "SphericalGrid2D": _NUMERICS,
+        "SphericalHarmonicTransform": _TRANSFORMS,
+        "SplitExplicitRKSolver": _STEPPERS,
+        "ab2_step": _STEPPERS,
+        "ab3_step": _STEPPERS,
         "build_capacitance_solver": _NUMERICS,
+        "euler_step": _STEPPERS,
+        "heun_step": _STEPPERS,
+        "imex_ssp2_step": _STEPPERS,
+        "laplace_mode": (
+            "the loop moved to argminax.solve; gaussx deprecates its own copy"
+            " without forwarding and removes it a release later (gaussx#814)"
+        ),
+        "leapfrog_raf_step": _STEPPERS,
+        "rk3_ssp_step": _STEPPERS,
+        "rk4_step": _STEPPERS,
+        "split_explicit_step": _STEPPERS,
     },
     "geoml": {
         "Augment": "different objects in gauss_flows and xrtoolz",
