@@ -48,7 +48,7 @@ The two carrier families:
 
 | Family | Carriers | Good at |
 | --- | --- | --- |
-| geoarray | `GeoArray`, `GeoSwath`, `GeoPoints` | one item or a fixed batch: strict grids, compiles, \~1–10 µs per op |
+| geoarray | `GeoArray`, `GeoSwath`, `GeoPoints` | one item or a fixed batch: strict grids, compiles, \~35–250 µs per op on a patch, under 10 µs batched ([GA-G22](#design-measured-costs)) |
 | xarray | `DataArray`, `Dataset`, `DataTree` | many items: selection by value, laziness, out-of-core, variables with different dims |
 
 The five kinds of operation and their owners:
