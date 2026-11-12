@@ -57,7 +57,7 @@ RESET  := \033[0m
 .PHONY: help install lint format typecheck test test-cov \
 	precommit clean version docs docs-serve docs-deploy \
 	init gh-labels gh-sub gh-block gh-show capabilities \
-	dependency-graph
+	dependency-graph skill-shelves
 
 .DEFAULT_GOAL := help
 
@@ -172,6 +172,9 @@ capabilities: ## Regenerate the capability indexes, one per layer (docs/api/capa
 dependency-graph: ## Regenerate the dependency graph in README.md, docs/api/dependency_graph.md and its figure
 	uv run python scripts/dependency_graph.py
 	uv run --no-project python docs/images/overview/make_figures.py
+
+skill-shelves: ## Regenerate the measured tables of the skill-shelf pages (docs/design/skill_tree_*.md)
+	uv run python scripts/skill_shelf.py
 
 docs-deploy: ## Deploy documentation to GitHub Pages
 	BASE_URL=/geostack uv run --group docs myst build --html

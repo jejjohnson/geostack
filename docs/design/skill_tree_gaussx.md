@@ -40,46 +40,54 @@ One skill covers a ladder of five rungs, and no dependent uses all of it.
 
 gaussx @ `7fa1a38` exports 352 names in `gaussx.__all__` without the numpyro extra, and seven more with it.
 Its one skill, `structured-gaussian-linalg`, is 156 lines and costs about 2.1k tokens to load.
-[](#tbl-sg-rungs) counts the names by rung, from the subpackage each one is imported from in `src/gaussx/__init__.py`.
+Every count on this page comes from `scripts/skill_shelf.py`, which reads the submodules at the pins of this commit; `tests/test_skill_shelf.py` fails when a table here is stale.
+[](#tbl-sg-units) counts the public names by unit, from the subpackage each one is imported from in `src/gaussx/__init__.py`.
 
-:::{table} gaussx's public names by rung. The rung of each subpackage follows `AGENTS.md` @ `7fa1a38` and the ladder of the [kinds-and-roles](./kinds_and_roles.md) page.
-:label: tbl-sg-rungs
+:::{table} gaussx's public names by unit. A unit groups subpackages that the same dependents use; its rungs follow `AGENTS.md` @ `7fa1a38` and the ladder of the [kinds-and-roles](./kinds_and_roles.md) page, and its band is that page's.
+:label: tbl-sg-units
 
-| Rung | Subpackages | Names |
-| --- | --- | --- |
-| ⓪ structures | `_operators` 38, `_tags` 24, `_gmrf` 12, `_sparse` 4 | 78 |
-| ① primitives | `_primitives` 29, `_linalg` 20 | 49 |
-| ② strategies | `_strategies` 20, `_preconditioners` 5, `_solve_frontend` 2 | 27 |
-| setup (beside the ladder) | `_randomized` 10, `_sketching` 7 | 17 |
-| ③ models | `_expfam` 16, `_distributions` 11 | 27 |
-| ④ algorithms | `_ssm` 53, `_gp` 29, `_inference` 28 | 110 |
-| ② to ④, mixed | `_quadrature` 44: integrators, likelihoods and expectations | 44 |
+<!-- shelf:units:begin -->
+| Unit | Rungs | Home band | Subpackages | Names |
+|---|---|---|---|---|
+| Structures and primitives | ⓪ ① | numerics | `gaussx._operators` 38, `gaussx._primitives` 29, `gaussx._tags` 24, `gaussx._linalg` 20, `gaussx._gmrf` 12, `gaussx._sparse` 4 | 127 |
+| Strategies | ②, setup | numerics, ML | `gaussx._strategies` 20, `gaussx._randomized` 10, `gaussx._sketching` 7, `gaussx._preconditioners` 5, `gaussx._solve_frontend` 2 | 44 |
+| Gaussians | ③ | ML | `gaussx._expfam` 16, `gaussx._distributions` 11 | 27 |
+| Gaussian processes | ④ | ML | `gaussx._gp` 29 | 29 |
+| State space | ④ | ML | `gaussx._ssm` 53 | 53 |
+| Quadrature | ② to ④ | ML | `gaussx._quadrature` 44 | 44 |
+| Inference and ensembles | ④ | ML | `gaussx._inference` 28 | 28 |
+| **All** | | | | **352** |
+<!-- shelf:units:end -->
 :::
 
-[](#tbl-sg-consumers) counts the distinct gaussx names each dependent calls in its own source, at its default branch.
+[](#tbl-sg-consumers) counts the distinct gaussx names each dependent package takes, from its imports and its attribute accesses on `gaussx`.
 
-:::{table} Which part of gaussx each dependent uses. integrix declares gaussx and calls no name from it.
+:::{table} Which part of gaussx each dependent package uses. A package that declares gaussx and takes no public name from it is not listed.
 :label: tbl-sg-consumers
 
-| Dependent | Names used | ⓪ ① | ② and setup | ③ | GP | State space | Quadrature | Inference |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| pyrox | 96 | 25 | 8 | 13 | 8 | 12 | 23 | 7 |
-| filterax | 32 | 6 | 2 | 3 | 0 | 6 | 1 | 14 |
-| kernellib | 28 | 19 | 9 | 0 | 0 | 0 | 0 | 0 |
-| argminax | 23 | 9 | 7 | 1 | 0 | 0 | 1 | 5 |
-| finitevolX | 17 | 10 | 7 | 0 | 0 | 0 | 0 | 0 |
-| vardax | 15 | 12 | 1 | 1 | 0 | 0 | 0 | 1 |
-| radtrax | 12 | 7 | 2 | 3 | 0 | 0 | 0 | 0 |
-| gauss_flows | 9 | 0 | 0 | 2 | 0 | 4 | 2 | 1 |
-| optax_bayes | 7 | 4 | 3 | 0 | 0 | 0 | 0 | 0 |
+<!-- shelf:uses:begin -->
+| Dependent package | Names used | Structures and primitives | Strategies | Gaussians | Gaussian processes | State space | Quadrature | Inference and ensembles |
+|---|---|---|---|---|---|---|---|---|
+| pyrox-gp | 51 | 9 | 6 | 3 | 9 | 14 | 6 | 4 |
+| kernellib | 25 | 16 | 9 | 0 | 0 | 0 | 0 | 0 |
+| pyrox-lgm | 23 | 16 | 0 | 0 | 0 | 0 | 7 | 0 |
+| argminax | 17 | 9 | 6 | 0 | 0 | 0 | 0 | 2 |
+| filterax | 17 | 3 | 1 | 1 | 0 | 1 | 0 | 11 |
+| plumax | 12 | 8 | 1 | 2 | 0 | 1 | 0 | 0 |
+| gauss-flows | 7 | 0 | 0 | 0 | 0 | 4 | 2 | 1 |
+| radtrax | 7 | 5 | 1 | 1 | 0 | 0 | 0 | 0 |
 | spectraldiffx | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 |
-| manipy | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
+| optax-bayes | 4 | 3 | 1 | 0 | 0 | 0 | 0 | 0 |
+| manipy-jax | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
+| vardax | 3 | 2 | 0 | 0 | 0 | 0 | 0 | 1 |
+| finitevolx | 2 | 0 | 2 | 0 | 0 | 0 | 0 | 0 |
+<!-- shelf:uses:end -->
 :::
 
 Three groups stand out.
-kernellib, finitevolX, spectraldiffx, optax_bayes and manipy stay at structures, primitives and strategies.
-filterax and gauss_flows mostly call algorithms.
-pyrox uses everything, and its most-used family is quadrature.
+kernellib, spectraldiffx, optax-bayes and manipy stay at structures, primitives and strategies.
+filterax and gauss-flows mostly call algorithms: inference and ensembles for one, state space for the other.
+pyrox-gp uses every unit, and pyrox-lgm only structures, primitives and quadrature.
 
 (sg-example)=
 ## Running example: two callers
@@ -89,7 +97,7 @@ The same two tasks are followed through every option.
 **TL;DR.** An agent writing kernel ridge regression needs to know how to pass a solver; an agent writing a Poisson GP needs the integrator interface. Neither needs the other's part of gaussx.
 
 1. **kernellib, kernel ridge regression at N = 10⁵.** The agent builds `K + σ²I` as an operator and solves it by preconditioned conjugate gradients. It needs the operator rules (⓪, ①) and the strategies (②).
-2. **pyrox, a sparse GP with a Poisson likelihood.** The agent needs an expected log-likelihood under a Gaussian, so it needs an integrator and a likelihood (quadrature), the Gaussian helpers (③) and a `solver=` to pass down.
+2. **pyrox-gp, a sparse GP with a Poisson likelihood.** The agent needs an expected log-likelihood under a Gaussian, so it needs an integrator and a likelihood (quadrature), the Gaussian helpers (③) and a `solver=` to pass down.
 
 :::{table} What each caller's skill carries about gaussx.
 :label: tbl-sg-example
@@ -97,7 +105,7 @@ The same two tasks are followed through every option.
 | Caller | Today | Proposed |
 | --- | --- | --- |
 | kernellib | prose mentions; to learn more it loads the whole gaussx skill, about 2.1k tokens | two cards (structures and primitives; strategies), at most 30 lines; it loads `solvers-and-preconditioners` only to tune the preconditioner |
-| pyrox | prose mentions; the whole gaussx skill | cards for the units it uses; it loads `gaussians-and-recipes` and its quadrature reference only to write a new likelihood |
+| pyrox-gp | prose mentions; the whole gaussx skill | cards for the units it uses; it loads `gaussians-and-recipes` and its quadrature reference only to write a new likelihood |
 :::
 
 (sg-shelf)=
@@ -229,19 +237,7 @@ Both follow the role, not the subpackage, as jejjohnson/geostack#122 proposes fo
 A unit is a group of shelf entries that the same dependents use together. It is what a card describes and what a dependent's edge points at.
 gaussx has seven, grouped by the band that works there.
 
-:::{table} gaussx's units. The band names are those of the kinds-and-roles page.
-:label: tbl-sg-units
-
-| Unit | Rungs | Subpackages | Names | Home band |
-| --- | --- | --- | --- | --- |
-| Structures and primitives | ⓪ ① | `_operators`, `_tags`, `_gmrf`, `_sparse`, `_primitives`, `_linalg` | 127 | numerics |
-| Strategies | ②, setup | `_strategies`, `_preconditioners`, `_solve_frontend`, `_randomized`, `_sketching` | 44 | numerics, ML |
-| Gaussians | ③ | `_distributions`, `_expfam` | 27 | ML |
-| Gaussian processes | ④ | `_gp` | 29 | ML |
-| State space | ④ | `_ssm` | 53 | ML |
-| Quadrature | ② to ④ | `_quadrature` | 44 | ML |
-| Inference and ensembles | ④ | `_inference` | 28 | ML |
-:::
+[](#tbl-sg-units) lists them with their rungs, bands and subpackages.
 
 Inside gaussx the units are read in ladder order: nouns, verbs, adverbs, then models and algorithms.
 Two import tangles do not change that order.
@@ -265,7 +261,7 @@ A unit is listed when someone would ask for it without mentioning the rest.
 What each skill's body holds:
 
 1. **`structured-gaussian-linalg`.** The three rules that are gaussx's own (operators not arrays, say what the structure is, never materialise to solve), the nouns and verbs a caller starts from, the "don't write it" table for ⓪ and ①, and an "enter at" table that routes to the other two skills.
-2. **`solvers-and-preconditioners`.** How to choose between `AutoSolver`, `DenseSolver`, `CGSolver`, `PreconditionedCGSolver`, `BBMMSolver` and `SparseCholeskySolver`; which strategies take a `key=`; `linear_solve` for a bare `v ↦ A v`; and how a library above gaussx passes a strategy through, typed as `AbstractSolverStrategy`. pyrox names that type 19 times and filterax 5.
+2. **`solvers-and-preconditioners`.** How to choose between `AutoSolver`, `DenseSolver`, `CGSolver`, `PreconditionedCGSolver`, `BBMMSolver` and `SparseCholeskySolver`; which strategies take a `key=`; `linear_solve` for a bare `v ↦ A v`; and how a library above gaussx passes a strategy through, typed as `AbstractSolverStrategy`. pyrox-gp, kernellib and argminax all take strategies from gaussx.
 3. **`gaussians-and-recipes`.** The Gaussian helpers (`gaussian_log_prob`, `gaussian_kl`, `conditional`, `sample_mvn`), the natural and expectation parameter conversions, that the distribution objects need the numpyro extra, and one "enter a family" table that points at the shelf entries.
 
 ### Seven cards
@@ -283,40 +279,35 @@ The card for structures and primitives:
 - **One rung down.** Open `gaussx:structured-gaussian-linalg` to build a new structure or to see which verb has a fast path for which noun.
 ```
 
-A dependent receives the card of each unit it uses.
-The generator reads that from the dependent's imports, as [](#tbl-sg-consumers) does, with a threshold of three names (proposed).
-Below the threshold the names are listed on one "also uses" line.
+A dependent package receives the card of each unit it uses.
+The script reads that from the package's imports, with a threshold of three names (proposed, `CARD_THRESHOLD`).
+Below the threshold the unit is named on an "also uses" line.
 
-:::{table} The cards each dependent would receive at a threshold of three names.
+:::{table} The cards each dependent package would receive, and the units it uses fewer than three names of.
 :label: tbl-sg-cards
 
-| Dependent | Cards |
-| --- | --- |
-| spectraldiffx, manipy, vardax | structures and primitives |
-| kernellib, finitevolX, optax_bayes | structures and primitives; strategies |
-| radtrax | structures and primitives; Gaussians |
-| argminax | structures and primitives; strategies; inference and ensembles |
-| filterax | structures and primitives; Gaussians; state space; inference and ensembles |
-| gauss_flows | state space |
-| pyrox, counted as one repository | all seven; by package in [](#tbl-sg-pyrox) |
+<!-- shelf:cards:begin -->
+| Dependent package | Cards | Also uses |
+|---|---|---|
+| pyrox-gp | Structures and primitives; Strategies; Gaussians; Gaussian processes; State space; Quadrature; Inference and ensembles |  |
+| kernellib | Structures and primitives; Strategies |  |
+| pyrox-lgm | Structures and primitives; Quadrature |  |
+| argminax | Structures and primitives; Strategies | Inference and ensembles (2) |
+| filterax | Structures and primitives; Inference and ensembles | Strategies (1); Gaussians (1); State space (1) |
+| plumax | Structures and primitives | Strategies (1); Gaussians (2); State space (1) |
+| gauss-flows | State space | Quadrature (2); Inference and ensembles (1) |
+| radtrax | Structures and primitives | Strategies (1); Gaussians (1) |
+| spectraldiffx | Structures and primitives |  |
+| optax-bayes | Structures and primitives | Strategies (1) |
+| manipy-jax | Structures and primitives |  |
+| vardax | none | Structures and primitives (2); Inference and ensembles (1) |
+| finitevolx | none | Strategies (2) |
+<!-- shelf:cards:end -->
 :::
 
-pyrox receiving seven cards looks too heavy, and it is an artefact of counting by repository.
-The node is the package: pyrox is a workspace of five, and each uses a different part of gaussx.
-
-:::{table} gaussx names used by each pyrox package, and the cards it would receive at a threshold of three names.
-:label: tbl-sg-pyrox
-
-| Package | Names used | Cards |
-| --- | --- | --- |
-| pyrox (core) | 4 | quadrature |
-| pyrox-nn | 8 | structures and primitives |
-| pyrox-lgm | 26 | structures and primitives; quadrature |
-| pyrox-ssm | 29 | structures and primitives; Gaussians; state space; quadrature |
-| pyrox-gp | 45 | all but state space |
-:::
-
-Only pyrox-gp stays heavy, and it is the GP modelling shell that reaches into most of gaussx.
+The node is the package, not the repository.
+pyrox is a workspace of four packages at this pin, and they differ: pyrox-lgm needs two cards, pyrox-nn and the core take no gaussx name, and pyrox-gp needs all seven.
+pyrox-gp is the GP modelling shell and, at this pin, also holds the state-space models, which pyrox's default branch has since moved to a package of their own.
 A workspace is then a small tree of its own: pyrox-gp builds on pyrox core, as gaussx's units build on each other.
 
 ### The extend skills
@@ -415,6 +406,7 @@ plugins/gaussx/skills/                                                proposed (
 
 | Gate | Passes when |
 | --- | --- |
+| GX-0 Current | `python scripts/skill_shelf.py --check` exits 0: the three generated tables match the submodules |
 | GX-1 Covered | every name in `gaussx.__all__` is named by exactly one shelf entry, and every entry declares one role |
 | GX-2 Cards name real symbols | every backticked `gaussx.<name>` in a card is in `gaussx.__all__` |
 | GX-3 Budget | each `SKILL.md` at most 150 lines, each card at most 15 lines, each shelf entry at most 120 lines (proposed) |
@@ -429,7 +421,7 @@ plugins/gaussx/skills/                                                proposed (
 - **The front door stops triggering for recipes.** Today one description covers Kalman filters and GPs. Fallback: `gaussians-and-recipes` takes those phrases into its own description, and GX-5 checks it.
 - **The unit boundaries move.** jejjohnson/geostack#122 asks whether the Kalman scans move to filterax and whether `UnscentedIntegrator` is a strategy. Fallback: units follow subpackages, so a move changes one row of [](#tbl-sg-units) and regenerates the cards.
 - **The import threshold hides a dependency that matters.** One name can be the whole reason for a dependency. Fallback: the "also uses" line names it, and a repository can pin a card in its shelf.
-- **The counts go stale.** They were read at each dependent's default branch, not at geostack's pins. Fallback: the generator recomputes them from the submodules.
+- **The counts undercount.** Only names in the static `__all__` of the package root are counted, so the seven names behind the numpyro extra and anything reached through a submodule are missed. Fallback: the gap is one direction only, so a card is never given for a unit a package does not use.
 - **`role-ladder` drifts from its page.** Fallback: its vocabulary table is generated from the page's.
 
 (sg-pattern)=
@@ -438,9 +430,9 @@ plugins/gaussx/skills/                                                proposed (
 gaussx's shelf was derived in six steps, and each uses data the stack already has.
 
 1. List the contributor skills. Each `add-<thing>` names something the library lets you add, so it names a rung the shelf must cover: gaussx's four are an operator, a dispatch path, a solver strategy and a recipe.
-2. Count the public names by subpackage, and give each subpackage its role.
+2. Count the public names by subpackage (`scripts/skill_shelf.py`), and give each subpackage its role.
 3. Write the shelf: one entry per job a caller comes with, tagged with its role, following the role where it disagrees with the subpackage.
-4. Count which names each dependent calls, by package, and group the entries into units where the dependents split.
+4. Count which names each dependent package takes (the same script), and group the entries into units where the dependents split.
 5. List a unit when someone would ask for it alone.
 6. Link each contributor skill to the entries it extends and to its role file, and give a third-party library a card only where its types surface.
 
