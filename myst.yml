@@ -60,6 +60,7 @@ project:
         - file: docs/design/skill_tree.md
         - file: docs/design/skill_tree_gaussx.md
         - file: docs/design/skill_tree_kernellib.md
+        - file: docs/design/skill_tree_geotoolz.md
         - title: Library designs
           children:
             - file: docs/design/libraries/libraries.md

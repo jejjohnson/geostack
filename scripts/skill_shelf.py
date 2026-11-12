@@ -131,6 +131,74 @@ SHELVES: dict[str, Shelf] = {
             Unit("Dependence measures", "④", "ML", ("kernellib._dependence",)),
         ),
     ),
+    "geotoolz": Shelf(
+        page="docs/design/skill_tree_geotoolz.md",
+        packages=(
+            "geotoolz",
+            "geotoolz-array",
+            "geotoolz-ops",
+            "geotoolz-patcher",
+            "geotoolz-catalog",
+            "geotoolz-cloud",
+            "geotoolz-products",
+        ),
+        units=(
+            Unit("Carriers and grids", "⓪ ①", "geoscience", ("geoarray",)),
+            Unit(
+                "Operator framework",
+                "⑤ ⑥",
+                "geoscience",
+                (
+                    "geoops",
+                    "geoops.carrier",
+                    "geoops.einx",
+                    "geoops.patch_ops",
+                    "geoops.testing",
+                ),
+            ),
+            Unit("Geometry and I/O", "⑤", "geoscience", ("geoops.geom", "geoops.io")),
+            Unit(
+                "Radiometry and spectra",
+                "⑤",
+                "geoscience",
+                (
+                    "geoops.radiometry",
+                    "geoops.spectral",
+                    "geoops.indices",
+                    "geoops.normalize",
+                ),
+            ),
+            Unit("Masks and quality", "⑤", "geoscience", ("geoops.qa", "geoops.mask")),
+            Unit(
+                "Image processing",
+                "⑤",
+                "geoscience",
+                (
+                    "geoops.restore",
+                    "geoops.feature",
+                    "geoops.segment",
+                    "geoops.measure",
+                ),
+            ),
+            Unit(
+                "Detection and plumes",
+                "⑤",
+                "geoscience",
+                ("geoops.matched_filter", "geoops.plume"),
+            ),
+            Unit(
+                "Display and composites",
+                "⑤",
+                "geoscience",
+                ("geoops.viz", "geoops.compositing"),
+            ),
+            Unit("Learning", "⑤", "geoscience, ML", ("geoops.learn", "geoops.augment")),
+            Unit("Patching", "⑥, ②", "geoscience, data", ("geopatcher",)),
+            Unit("Catalogs", "⓪ ①", "data", ("geocatalog",)),
+            Unit("Cloud storage", "①", "data", ("geocloud",)),
+            Unit("Product readers", "⓪", "data, geoscience", ("geoproducts",)),
+        ),
+    ),
 }
 
 
