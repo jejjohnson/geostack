@@ -69,10 +69,10 @@ flowchart TB
   end
   subgraph geoml["GeoML"]
     direction LR
+    pyrox["pyrox"]
     vardax["vardax"]
     filterax["filterax"]
     manipy["manipy"]
-    pyrox["pyrox"]
     kernellib["kernellib"]
     optax_bayes["optax_bayes"]
     xtremax["xtremax"]
@@ -206,8 +206,8 @@ is the rule's name in [](#tbl-dg-violations).
 |---|---|---|---|
 | GeoModels | 1 | plumax | plume models, which may build on radtrax |
 | GeoModels | 0 | radtrax, sesmax, somax | radiative transfer and Earth-system dynamics |
-| GeoML | 3 | vardax | variational assimilation (may build on filterax) |
-| GeoML | 2 | filterax, manipy, pyrox | ensemble filters, probabilistic models and manifold learning |
+| GeoML | 3 | pyrox, vardax | probabilistic models and variational assimilation (may build on filterax) |
+| GeoML | 2 | filterax, manipy | ensemble filters and manifold learning |
 | GeoML | 1 | kernellib, optax_bayes, xtremax | kernels, optimisers and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
 | GeoNumerics | 2 | finitevolX | finite volume |
@@ -273,9 +273,7 @@ cannot import, so most of its tests could no longer be collected.
    may import which. Moving the shared types into filterax is the smallest
    step; a separate package is worth it only if a third library (somax's
    `da` module, a future smoother) needs them without either engine.
-2. **May pyrox and filterax import each other?** They share tier 2. A
-   GP-based observation model in filterax, or an ensemble likelihood in
-   pyrox, would need one of them moved; no code asks for it today.
+2. **May pyrox and filterax import each other?** Decided on 10 Nov 2026 ([geostack#147](https://github.com/jejjohnson/geostack/issues/147)): pyrox may import filterax, and not the other way round. pyrox moved to tier 3, beside vardax, so that pyrox-ssm's ensemble likelihood can wrap `filterax.differentiable_assimilate` behind its `[ensemble]` extra ([pyrox#369](https://github.com/jejjohnson/pyrox/issues/369)). Nothing imported pyrox, so no edge broke; pyrox and vardax, now sharing tier 3, may not import each other.
 
 (dg-todos)=
 ## Upcoming work

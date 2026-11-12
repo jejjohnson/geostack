@@ -68,8 +68,8 @@ TIERS: dict[str, dict[str, int]] = {
         "optax_bayes": 1,
         "xtremax": 1,
         "filterax": 2,
-        "pyrox": 2,
         "manipy": 2,
+        "pyrox": 3,
         "vardax": 3,
     },
     "geomodels": {"radtrax": 0, "somax": 0, "sesmax": 0, "plumax": 1},
@@ -89,8 +89,8 @@ TIER_ROLES = {
     "geoml": (
         "layers and flows",
         "kernels, optimisers and extremes",
-        "ensemble filters, probabilistic models and manifold learning",
-        "variational assimilation (may build on filterax)",
+        "ensemble filters and manifold learning",
+        "probabilistic models and variational assimilation (may build on filterax)",
     ),
     "geomodels": (
         "radiative transfer and Earth-system dynamics",
