@@ -97,6 +97,40 @@ SHELVES: dict[str, Shelf] = {
             Unit("Inference and ensembles", "④", "ML", ("gaussx._inference",)),
         ),
     ),
+    "kernellib": Shelf(
+        page="docs/design/skill_tree_kernellib.md",
+        packages=("kernellib",),
+        units=(
+            Unit(
+                "Kernels",
+                "⓪ ①",
+                "ML",
+                (
+                    "kernellib",
+                    "kernellib._kernels",
+                    "kernellib.functional",
+                    "kernellib._derivatives",
+                    "kernellib._heuristics",
+                ),
+            ),
+            Unit("Geostatistical kernels", "⓪", "ML, geoscience", ("kernellib._geo",)),
+            Unit(
+                "Operators and feature maps",
+                "⓪, setup",
+                "numerics, ML",
+                ("kernellib._operators", "kernellib._spectral"),
+            ),
+            Unit("Graphs", "⓪ ①", "ML", ("kernellib._graph",)),
+            Unit(
+                "Estimators",
+                "③ ④",
+                "ML",
+                ("kernellib._regression", "kernellib.sklearn"),
+            ),
+            Unit("Decomposition", "③", "ML", ("kernellib._decomposition",)),
+            Unit("Dependence measures", "④", "ML", ("kernellib._dependence",)),
+        ),
+    ),
 }
 
 
@@ -127,25 +161,40 @@ def _origin(module: str, node: ast.ImportFrom, top: str) -> str | None:
     return f"{module}.{parts[0] if parts else '.'}"
 
 
+def _static_all(tree: ast.Module) -> list[str] | None:
+    """The names of a module's ``__all__`` when it is a literal list, else ``None``."""
+    for node in tree.body:
+        if (
+            isinstance(node, ast.Assign)
+            and any(getattr(t, "id", "") == "__all__" for t in node.targets)
+            and isinstance(node.value, (ast.List, ast.Tuple))
+        ):
+            return [
+                e.value
+                for e in node.value.elts
+                if isinstance(e, ast.Constant) and isinstance(e.value, str)
+            ]
+    return None
+
+
 def exports(pkg: dg.Package) -> dict[str, str]:
     """A package's public names, each with the ``module.subpackage`` it comes from.
 
     The public names are the static ``__all__`` of each import root's
-    ``__init__.py``; a name added to ``__all__`` at run time (behind an extra)
-    is not counted. Without a static ``__all__``, every imported name that does
-    not start with an underscore counts.
+    ``__init__.py``, then the static ``__all__`` of each public submodule (one
+    whose name has no leading underscore) for names the root does not export.
+    A name added to ``__all__`` at run time (behind an extra) is not counted.
+    Without a static ``__all__``, every name the root imports that does not
+    start with an underscore counts.
     """
     out: dict[str, str] = {}
     for root in pkg.modules:
         init = root / "__init__.py"
-        if not init.exists():
-            continue
-        module = dg._module_name(root)
-        tree = _parse(init.read_text(encoding="utf-8"))
+        tree = _parse(init.read_text(encoding="utf-8")) if init.exists() else None
         if tree is None:
             continue
+        module = dg._module_name(root)
         origin: dict[str, str] = {}
-        public: list[str] | None = None
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 where = _origin(module, node, module)
@@ -153,20 +202,18 @@ def exports(pkg: dg.Package) -> dict[str, str]:
                     continue
                 for alias in node.names:
                     origin[alias.asname or alias.name] = where
-        for node in tree.body:
-            if (
-                isinstance(node, ast.Assign)
-                and any(getattr(t, "id", "") == "__all__" for t in node.targets)
-                and isinstance(node.value, (ast.List, ast.Tuple))
-            ):
-                public = [
-                    e.value
-                    for e in node.value.elts
-                    if isinstance(e, ast.Constant) and isinstance(e.value, str)
-                ]
+        public = _static_all(tree)
         names = public if public is not None else [n for n in origin if n[:1] != "_"]
         for name in names:
             out[name] = origin.get(name, f"{module}..")
+        for child in sorted(root.iterdir()):
+            sub = child.stem if child.suffix == ".py" else child.name
+            source = child if child.suffix == ".py" else child / "__init__.py"
+            if sub[:1] == "_" or not source.is_file():
+                continue
+            subtree = _parse(source.read_text(encoding="utf-8"))
+            for name in (subtree and _static_all(subtree)) or []:
+                out.setdefault(name, f"{module}.{sub}")
     return out
 
 
@@ -174,7 +221,7 @@ def uses(source: str, modules: set[str], names: set[str]) -> set[str]:
     """The names of ``names`` that ``source`` takes from one of ``modules``.
 
     Counts ``from module import name``, ``from module.sub import name`` and
-    ``alias.name`` for every alias of a module or of one of its submodules.
+    ``alias.name`` or ``alias.sub.name`` for every alias of a module.
     """
     tree = _parse(source)
     if tree is None:
@@ -194,11 +241,12 @@ def uses(source: str, modules: set[str], names: set[str]) -> set[str]:
         ):
             found |= {alias.name for alias in node.names}
     for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Attribute)
-            and isinstance(node.value, ast.Name)
-            and node.value.id in aliases
-        ):
+        if not isinstance(node, ast.Attribute):
+            continue
+        base: ast.expr = node.value
+        while isinstance(base, ast.Attribute):
+            base = base.value
+        if isinstance(base, ast.Name) and base.id in aliases:
             found.add(node.attr)
     return found & names
 
