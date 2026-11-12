@@ -62,6 +62,7 @@ project:
         - file: docs/design/skill_tree_kernellib.md
         - file: docs/design/skill_tree_geotoolz.md
         - file: docs/design/skill_tree_pipekit.md
+        - file: docs/design/skill_tree_argminax.md
         - title: Library designs
           children:
             - file: docs/design/libraries/libraries.md

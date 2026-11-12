@@ -238,6 +238,20 @@ SHELVES: dict[str, Shelf] = {
             ),
         ),
     ),
+    "argminax": Shelf(
+        page="docs/design/skill_tree_argminax.md",
+        packages=("argminax",),
+        units=(
+            Unit(
+                "Solvers and adjoints",
+                "② ④",
+                "ML",
+                ("argminax", "argminax.solve", "argminax.adjoint"),
+            ),
+            Unit("Curvature", "⓪ ③", "numerics, ML", ("argminax.curvature",)),
+            Unit("Diagnostics", "④", "ML", ("argminax.diagnose",)),
+        ),
+    ),
 }
 
 
