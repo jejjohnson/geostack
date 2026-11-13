@@ -375,7 +375,7 @@ plugins/gaussx/skills/                                                proposed (
   structured-gaussian-linalg/    SKILL.md  cards/*.md  references/*.md
 ```
 
-:::{table} The options on the running example. The always-on cost uses the measured 170 tokens of today's listing.
+:::{table} The options on the running example. The always-on cost uses the 170 tokens that `claude plugin details` projects for today's listing (see [the skill tree](skill_tree.md)).
 :label: tbl-sg-options
 
 | Criterion | A | B | C |
