@@ -63,6 +63,12 @@ project:
         - file: docs/design/skill_tree_geotoolz.md
         - file: docs/design/skill_tree_pipekit.md
         - file: docs/design/skill_tree_argminax.md
+        - title: Storage and catalogs
+          children:
+            - file: docs/design/storage_formats.md
+            - file: docs/design/l2_collections.md
+            - file: docs/design/product_catalog.md
+            - file: docs/design/recipe_registries.md
         - title: Library designs
           children:
             - file: docs/design/libraries/libraries.md
