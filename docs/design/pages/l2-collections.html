@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>GeoStack Level 2 Collections</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: one reading column (~900px); wide figures and code scroll sideways in their own frames.
+   Ice-blue accent = the new surface (Icechunk); amber = a verified gap; repo hues tag packages. */
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --sunk: #eef2f6;
+  --fg: #16202b;
+  --fg2: #4a5866;
+  --fg3: #7a8794;
+  --line: #c9d3dd;
+  --accent: #1a6fc2;
+  --accent-soft: #e3effa;
+  --warn: #b86a0a;
+  --warn-soft: #fbefdc;
+  --c-geotoolz: #2f7d6a;
+  --c-xrtoolz: #a2541e;
+  --c-pipekit: #6b4fb0;
+  --c-ext: #8a96a3;
+  --code-bg: #f0f4f8;
+  --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141b; --surface: #151d26; --sunk: #1b2530; --fg: #e3e9ef; --fg2: #a8b4c0; --fg3: #7d8a97;
+    --line: #2f3c49; --accent: #6cb0f0; --accent-soft: #15293d; --warn: #e7a24a; --warn-soft: #33260f;
+    --c-geotoolz: #5cc0a6; --c-xrtoolz: #e0904f; --c-pipekit: #a68ee8; --c-ext: #8f9caa; --code-bg: #111a22;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141b; --surface: #151d26; --sunk: #1b2530; --fg: #e3e9ef; --fg2: #a8b4c0; --fg3: #7d8a97;
+  --line: #2f3c49; --accent: #6cb0f0; --accent-soft: #15293d; --warn: #e7a24a; --warn-soft: #33260f;
+  --c-geotoolz: #5cc0a6; --c-xrtoolz: #e0904f; --c-pipekit: #a68ee8; --c-ext: #8f9caa; --code-bg: #111a22;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15.5px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 72px;
+}
+main { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+section { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; margin-top: 8px; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); }
+code { font-family: var(--font-mono); font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); }
+.byline { color: var(--fg2); font-size: 14px; }
+.lede { font-size: 17px; }
+header { display: flex; flex-direction: column; gap: 14px; }
+
+.pins { display: flex; flex-wrap: wrap; gap: 8px; }
+.pin { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--surface); color: var(--fg2); }
+.pin b { font-weight: 500; }
+.pin.geotoolz b { color: var(--c-geotoolz); } .pin.xrtoolz b { color: var(--c-xrtoolz); }
+.pin.pipekit b { color: var(--c-pipekit); } .pin.geostack b { color: var(--fg); }
+
+.summary { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; }
+.summary li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: baseline; }
+.summary .tag { font-family: var(--font-mono); font-weight: 500; color: var(--accent); }
+
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.figwrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 12px; -webkit-overflow-scrolling: touch; }
+.figwrap svg { display: block; width: 100%; min-width: 640px; max-width: 820px; margin: 0 auto; height: auto; }
+figcaption { font-size: 14px; color: var(--fg2); max-width: 70ch; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--fg2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+.dot { width: 14px; height: 14px; border-radius: 50%; display: inline-grid; place-items: center; font: 600 9px var(--font-mono); color: var(--bg); }
+
+/* SVG (page CSS, theme tokens) */
+svg text { font-family: var(--font-body); fill: var(--fg); }
+svg .t-h { font-size: 13.5px; font-weight: 600; }
+svg .t-m { font-family: var(--font-mono); font-size: 11.5px; fill: var(--fg2); }
+svg .t-b { font-size: 12px; fill: var(--fg2); }
+svg .t-tier { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; fill: var(--fg3); }
+svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+svg .band { fill: var(--sunk); stroke: var(--line); stroke-width: 1; }
+svg .item { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+svg .new { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 5 3; }
+svg .repo { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+svg .warnbox { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.4; stroke-dasharray: 5 3; }
+svg .new-t { fill: var(--accent); }
+svg .muted { opacity: 0.45; }
+svg .s-geotoolz { fill: var(--c-geotoolz); } svg .s-xrtoolz { fill: var(--c-xrtoolz); }
+svg .s-pipekit { fill: var(--c-pipekit); } svg .s-ext { fill: var(--c-ext); }
+svg .edge { stroke: var(--fg3); stroke-width: 1.4; fill: none; }
+svg .edge-a { stroke: var(--accent); stroke-width: 1.8; fill: none; }
+svg .dash { stroke-dasharray: 4 3; }
+svg .head { fill: var(--fg3); }
+svg .head-a { fill: var(--accent); }
+svg .lbl { font-family: var(--font-mono); font-size: 10.5px; fill: var(--fg2); }
+svg .lbl-a { font-family: var(--font-mono); font-size: 10.5px; fill: var(--accent); }
+svg .gap-c { fill: var(--warn); }
+svg .ws-c { fill: var(--accent); }
+svg .mark-t { fill: var(--bg); font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg3); background: var(--sunk); }
+tr:last-child td { border-bottom: none; }
+td code { white-space: nowrap; }
+.repo-t { font-family: var(--font-mono); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.repo-t.geotoolz { color: var(--c-geotoolz); } .repo-t.xrtoolz { color: var(--c-xrtoolz); } .repo-t.pipekit { color: var(--c-pipekit); }
+.path { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg3); word-break: break-all; }
+
+.gaps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.gaps li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; }
+.gaps.risk li { background: var(--accent-soft); }
+.num { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--bg); background: var(--warn); }
+.num.ws { background: var(--accent); }
+.gaps li p { max-width: none; }
+
+pre { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; color: var(--fg); tab-size: 4; }
+pre .c { color: var(--fg3); }
+pre .st-t { color: var(--c-geotoolz); font-weight: 500; }
+pre .st-p { color: var(--accent); font-weight: 500; }
+pre .st-u { color: var(--c-xrtoolz); font-weight: 500; }
+pre .kw { color: var(--c-pipekit); }
+pre .eq { color: var(--fg2); font-style: italic; }
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { font-family: var(--font-mono); font-size: 13px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg2); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.markers { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14px; color: var(--fg2); }
+.markers code { justify-self: start; }
+.note { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--fg2); font-size: 14.5px; }
+.decide { display: grid; gap: 8px; }
+.decide div { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
+.decide b { font-family: var(--font-mono); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg3); padding-top: 2px; }
+@media (max-width: 560px) { .decide div { grid-template-columns: 1fr; gap: 2px; } }
+.sources { font-size: 14px; color: var(--fg2); display: grid; gap: 4px; padding-left: 18px; margin: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="eyebrow">Design note · catalog storage</div>
+  <h1>Level 2 collections in GeoStack</h1>
+  <div class="byline">12 Nov 2026 · J. Emmanuel Johnson</div>
+  <p class="lede">The CNG Forum 2026 talk by Tom Nicholas (Earthmover) and Sean Harkins (Development Seed) keeps a STAC-like catalog inside the same Zarr store as the scenes it indexes, so Icechunk can commit data and metadata together. This page checks what GeoStack already does against the code, then shows the smallest change that brings that idea in.</p>
+  <div class="pins">
+    <span class="pin geostack"><b>geostack</b> 343d60e</span>
+    <span class="pin geotoolz"><b>geotoolz</b> 640670c</span>
+    <span class="pin xrtoolz"><b>xrtoolz</b> 995a151</span>
+    <span class="pin pipekit"><b>pipekit</b> 9e86a56</span>
+  </div>
+  <p class="byline">All four read from <code>main</code> on 12 Nov 2026. Nothing in them mentions Icechunk, VirtualiZarr or kerchunk. Background first: <a href="./storage-formats.html">cloud-native raster formats</a> (COG, GeoParquet, Zarr, kerchunk, VirtualiZarr, Icechunk). One of three pages: this one (A–E), <a href="./product-catalog.html">GeoStack product catalog</a> (F, K, L) and <a href="./recipe-registries.html">pipekit recipe registries</a> (G–J).</p>
+</header>
+
+<section>
+  <h2>Summary</h2>
+  <p>The carriers and lanes stay as they are. geocatalog already holds a table catalog, and geoarray and xrops already speak <code>DataTree</code>. The change is in where the catalog table lives and how products get written into it.</p>
+  <ul class="summary">
+    <li><span class="tag">A.</span><span><b>An Icechunk catalog backend.</b> Today the table is a GeoParquet file sitting beside the files it points at. A third <code>GeoCatalog</code> backend keeps the table as columns in a <code>meta/</code> group inside the repo, at a pinned snapshot.</span></li>
+    <li><span class="tag">B.</span><span><b>A write half for the protocol.</b> <code>GeoCatalog</code> is read-only, and registering a product is a second step after writing it. A transaction writes the product group and its row, then commits both or neither.</span></li>
+    <li><span class="tag">C.</span><span><b>A scene-per-node raster loader.</b> <code>load_raster</code> always mosaics onto the query grid. <code>load_scenes</code> returns one <code>DataTree</code> node per scene, each on its own grid, through the existing <code>to_datatree</code>.</span></li>
+    <li><span class="tag">D.</span><span><b>One Zarr georeferencing convention.</b> <code>WriteZarr</code> writes <code>crs</code> and <code>transform</code> attributes, while <code>to_xarray</code> writes a CF <code>spatial_ref</code>. Products in a shared repo should use one.</span></li>
+    <li><span class="tag">E.</span><span><b>Virtual ingest of archives.</b> Rows now name whole files. VirtualiZarr references would make a scene a group of virtual chunks, read like any Zarr array, with no copy.</span></li>
+    <li><span class="tag">F.</span><span><b>A product catalog.</b> Where products are recorded for others to find, in which database, and how pgstac fits: its own design doc, <a href="./product-catalog.html">GeoStack product catalog</a>.</span></li>
+  </ul>
+  <p><b>End state.</b> geocatalog owns the catalog on any of three backends and the write path; geoarray keeps its carriers and converters; geoops, xrops and pipekit do not change; the repo holds scenes, products and their index, versioned together, and is the truth that the <a href="./product-catalog.html">product catalog</a> is built from.</p>
+</section>
+
+<section id="current">
+  <div class="eyebrow">Current state · verified in code</div>
+  <h2>How a scene moves through the stack today</h2>
+  <p>Two layers. The top one is the work you do: find, load, compute, write. The bottom one is what persists between tasks: the catalogs you search and the storage you read and write. Every arrow between the layers is a separate I/O call, and nothing ties one call to another.</p>
+
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 800 440" role="img" aria-label="Current GeoStack layout in two layers. The work layer runs from a working catalog through load, compute and write. Below it, public source catalogs are read, and object storage holds the scene files, outputs and the catalog Parquet file, written apart from each other.">
+      <defs>
+        <marker id="h1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="t-tier" transform="translate(20 103) rotate(-90)" text-anchor="middle">WORK</text>
+      <text class="t-tier" transform="translate(20 330) rotate(-90)" text-anchor="middle">PERSIST</text>
+
+      <!-- WORK -->
+      <rect class="box" x="40" y="60" width="170" height="86" rx="7"/>
+      <rect class="s-geotoolz" x="40" y="60" width="4" height="86" rx="2"/>
+      <text class="t-h" x="56" y="84">Working catalog</text>
+      <text class="t-m" x="56" y="106">InMemory · DuckDB</text>
+      <text class="t-b" x="56" y="126">query · matchup</text>
+      <circle class="gap-c" cx="196" cy="76" r="9"/><text class="mark-t" x="196" y="80" text-anchor="middle">5</text>
+      <circle class="gap-c" cx="196" cy="102" r="9"/><text class="mark-t" x="196" y="106" text-anchor="middle">2</text>
+      <line class="edge" x1="212" y1="103" x2="257" y2="103" marker-end="url(#h1)"/>
+
+      <rect class="box" x="260" y="60" width="140" height="86" rx="7"/>
+      <rect class="s-geotoolz" x="260" y="60" width="4" height="86" rx="2"/>
+      <text class="t-h" x="276" y="84">Load</text>
+      <text class="t-m" x="276" y="106">load_raster</text>
+      <text class="t-m" x="276" y="124">load_xarray</text>
+      <circle class="gap-c" cx="386" cy="76" r="9"/><text class="mark-t" x="386" y="80" text-anchor="middle">3</text>
+      <line class="edge" x1="402" y1="103" x2="417" y2="103" marker-end="url(#h1)"/>
+
+      <rect class="box" x="420" y="60" width="140" height="86" rx="7"/>
+      <rect class="s-geotoolz" x="420" y="60" width="4" height="86" rx="2"/>
+      <text class="t-h" x="436" y="84">Compute</text>
+      <text class="t-b" x="436" y="106">geoarray ⇄ xarray</text>
+      <text class="t-b" x="436" y="124">geoops · xrops</text>
+      <line class="edge" x1="562" y1="103" x2="607" y2="103" marker-end="url(#h1)"/>
+
+      <rect class="box" x="610" y="60" width="180" height="86" rx="7"/>
+      <rect class="s-geotoolz" x="610" y="60" width="4" height="86" rx="2"/>
+      <text class="t-h" x="626" y="84">Write</text>
+      <text class="t-m" x="626" y="106">write_cog</text>
+      <text class="t-m" x="626" y="124">WriteZarr · to_zarr</text>
+      <circle class="gap-c" cx="776" cy="76" r="9"/><text class="mark-t" x="776" y="80" text-anchor="middle">4</text>
+
+      <!-- vertical links -->
+      <line class="edge" x1="125" y1="278" x2="125" y2="149" marker-end="url(#h1)"/>
+      <text class="lbl" x="133" y="216">STACSource</text>
+      <line class="edge" x1="330" y1="278" x2="330" y2="149" marker-end="url(#h1)"/>
+      <text class="lbl" x="338" y="216">reads files</text>
+      <path class="edge" d="M700 146 L700 232 L500 232 L500 275" marker-end="url(#h1)"/>
+      <text class="lbl" x="600" y="225" text-anchor="middle">writes files</text>
+
+      <!-- PERSIST -->
+      <rect class="band" x="40" y="280" width="170" height="100" rx="7"/>
+      <rect class="s-ext" x="40" y="280" width="4" height="100" rx="2"/>
+      <text class="t-h" x="56" y="304">Source catalogs</text>
+      <text class="t-b" x="56" y="326">Earth Search · PC</text>
+      <text class="t-b" x="56" y="344">CMR</text>
+      <text class="t-b" x="56" y="364">public, read only</text>
+
+      <rect class="band" x="260" y="280" width="530" height="100" rx="7"/>
+      <rect class="s-geotoolz" x="260" y="280" width="4" height="100" rx="2"/>
+      <text class="t-h" x="276" y="304">Object storage</text>
+      <text class="t-m" x="276" y="326">scene files · cubes · outputs</text>
+      <text class="t-b" x="276" y="346">COG · JP2 · NetCDF · Zarr</text>
+      <text class="t-b" x="276" y="366">geocloud.store (obstore)</text>
+      <line class="edge dash" x1="540" y1="296" x2="540" y2="368"/>
+      <text class="t-m" x="560" y="314">catalog.parquet</text>
+      <text class="t-b" x="560" y="334">the catalog table, written</text>
+      <text class="t-b" x="560" y="352">apart from the files it lists</text>
+      <circle class="gap-c" cx="776" cy="296" r="9"/><text class="mark-t" x="776" y="300" text-anchor="middle">1</text>
+
+              </svg>
+    </div>
+    <figcaption>The catalog table and the files it lists are separate objects in the same bucket, written by separate calls. Amber numbers mark the five gaps below; the stripe on each box names its repo. Where products are recorded for others is the <a href="./product-catalog.html">product catalog</a> doc.</figcaption>
+  </figure>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--c-geotoolz)"></i>geotoolz</span>
+    <span><i class="sw" style="background:var(--c-xrtoolz)"></i>xrtoolz</span>
+    <span><i class="sw" style="background:var(--c-pipekit)"></i>pipekit</span>
+    <span><i class="sw" style="background:var(--c-ext)"></i>third party</span>
+    <span><i class="dot" style="background:var(--warn)">1</i>verified gap</span>
+  </div>
+
+  <h3>The components, and where each one lives</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Component</th><th>Repo</th><th>What it does</th><th>Read in</th></tr></thead>
+    <tbody>
+      <tr><td><code>geocatalog.sources</code></td><td class="repo-t geotoolz">geotoolz-catalog</td><td>Discovers items from STAC, CMR, earthaccess and GEE. These feed a catalog; they are not the catalog.</td><td class="path">geocatalog/__init__.py</td></tr>
+      <tr><td><code>geocatalog.build</code></td><td class="repo-t geotoolz">geotoolz-catalog</td><td><code>build_raster_catalog</code> and its xarray, vector and state siblings index files into rows; <code>append_files</code> adds files to an existing GeoParquet catalog.</td><td class="path">geocatalog/build/__init__.py</td></tr>
+      <tr><td><code>GeoCatalog</code></td><td class="repo-t geotoolz">geotoolz-catalog</td><td>The protocol: <code>query</code>, <code>intersect</code>, <code>union</code>, <code>iter_rows</code>, <code>iter_slices</code>, extents. A query returns a new catalog; there is no append or commit.</td><td class="path">_src/base.py:204</td></tr>
+      <tr><td><code>CatalogRow</code></td><td class="repo-t geotoolz">geotoolz-catalog</td><td>One row: <code>filepath</code>, footprint, time interval, CRS and extras (state rows add run, member and producer).</td><td class="path">_src/base.py:88</td></tr>
+      <tr><td><code>InMemoryGeoCatalog</code>, <code>DuckDBGeoCatalog</code></td><td class="repo-t geotoolz">geotoolz-catalog</td><td>The two backends. <code>open_catalog</code> picks DuckDB when the extra is installed, else memory.</td><td class="path">_src/factory.py</td></tr>
+      <tr><td><code>geocatalog.storage</code></td><td class="repo-t geotoolz">geotoolz-catalog</td><td>GeoParquet in and out, STAC export, <code>CatalogBundle</code>, <code>StreamingParquetWriter</code>.</td><td class="path">geocatalog/storage/__init__.py</td></tr>
+      <tr><td><code>load_raster</code></td><td class="repo-t geotoolz">geotoolz-catalog</td><td>Reads every overlapping row and mosaics it onto the slice grid: the result's grid equals <code>slice_.grid</code>.</td><td class="path">_src/formats/raster.py:494</td></tr>
+      <tr><td><code>load_xarray</code>, <code>load_states</code></td><td class="repo-t geotoolz">geotoolz-catalog</td><td>Cubes from many files. <code>load_states(group_by=…)</code> already returns a <code>DataTree</code>, one leaf per grid.</td><td class="path">_src/formats/states.py:424</td></tr>
+      <tr><td><code>geoarray</code></td><td class="repo-t geotoolz">geotoolz-array</td><td><code>GeoArray</code>, <code>GeoSwath</code>, <code>GeoPoints</code>, <code>RasterSource</code>, and the converters <code>to_xarray</code>, <code>to_dataset</code> and <code>to_datatree</code> with their inverses (LL-F3: one node per grid).</td><td class="path">geoarray/_src/xarray.py:695</td></tr>
+      <tr><td><code>geocloud</code></td><td class="repo-t geotoolz">geotoolz-cloud</td><td>The obstore client pool, sync and async COG reads (<code>CogSource</code>, <code>AsyncCogReader</code>), <code>write_cog</code>, a local cache.</td><td class="path">geocloud/cog.py</td></tr>
+      <tr><td><code>geoops</code></td><td class="repo-t geotoolz">geotoolz-ops</td><td>Per-item operators on carriers, including <code>matched_filter</code> and the <code>io</code> sinks such as <code>WriteZarr</code>.</td><td class="path">geoops/io/_src/operators.py:1181</td></tr>
+      <tr><td><code>xrops.Operator</code></td><td class="repo-t xrtoolz">xrtoolz-ops</td><td>Maps any operator over every <code>DataTree</code> node with <code>xr.map_over_datasets</code>; <code>lift(op, dim)</code> runs a geoops operator per item of a cube.</td><td class="path">xrops/_src/operator.py:1</td></tr>
+      <tr><td><code>pipekit-ops</code>, <code>pipekit-array</code></td><td class="repo-t pipekit">pipekit</td><td>The <code>Operator</code> base every geoops and xrops operator subclasses; <code>DimArray</code>, <code>KernelOp</code> and the dim-level functions.</td><td class="path">packages/pipekit-array</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Five verified gaps</h3>
+  <ul class="gaps">
+    <li><span class="num">1</span><p><b>The table and the data are separate artifacts.</b> <code>catalog.parquet</code> and the scene files are written by different calls. A crash between them leaves a file with no row, or a row with no file, and nothing records which version of the table matched which files.</p></li>
+    <li><span class="num">2</span><p><b>Rows point at whole files.</b> <code>CatalogRow.filepath</code> names a COG or NetCDF file, so each read opens a file through rasterio or obstore. A row cannot point at a group of chunks.</p></li>
+    <li><span class="num">3</span><p><b>No raster loader keeps scenes apart.</b> <code>load_raster</code> always mosaics onto the query grid. Keeping each row on its own grid exists only for model states, through <code>load_states(group_by=)</code>.</p></li>
+    <li><span class="num">4</span><p><b>Two Zarr georeferencing conventions.</b> <code>WriteZarr</code> stores <code>crs</code> as a string and <code>transform</code> as six numbers in group attributes; <code>geoarray.to_xarray</code> writes a CF <code>spatial_ref</code> with <code>crs_wkt</code> and <code>GeoTransform</code>. A reader of a shared repo would need both.</p></li>
+    <li><span class="num">5</span><p><b>The protocol has no write half.</b> <code>GeoCatalog</code> reads and combines catalogs; writing happens in <code>build</code> and <code>storage</code> functions outside it, so no backend can make a write atomic.</p></li>
+  </ul>
+  <p class="note">One doc lag found on the way: <code>labeled_lane.md</code> still lists LL-F3 as open, while <code>to_datatree</code> ships in geoarray 0.4.1.</p>
+</section>
+
+<section id="target">
+  <div class="eyebrow">Revised target</div>
+  <h2>The same flow with the catalog inside the repo</h2>
+  <p>Every box and every line of text from the current diagram is still here, in the same place. Blue text marks what each box gains, with the letter of the workstream that adds it. Compute is faded because it does not change. One box in the persist layer is new: Icechunk repos, beside object storage, which stays.</p>
+
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 800 430" role="img" aria-label="Target GeoStack layout. The working catalog gains an Icechunk backend, Load gains load_scenes, Write gains a transaction. Object storage stays, and a new Icechunk repos box beside it holds meta, scenes and products, written in one commit and read as chunks.">
+      <defs>
+        <marker id="h2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="h2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head-a" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="t-tier" transform="translate(20 112) rotate(-90)" text-anchor="middle">WORK</text>
+      <text class="t-tier" transform="translate(20 350) rotate(-90)" text-anchor="middle">PERSIST</text>
+
+      <!-- WORK: same four boxes, current lines kept, additions in blue -->
+      <rect class="box" x="40" y="60" width="170" height="104" rx="7"/>
+      <rect class="s-geotoolz" x="40" y="60" width="4" height="104" rx="2"/>
+      <text class="t-h" x="56" y="84">Working catalog</text>
+      <text class="t-m" x="56" y="106">InMemory · DuckDB</text>
+      <text class="t-b" x="56" y="124">query · matchup</text>
+      <text class="t-m new-t" x="56" y="148">+ Icechunk</text>
+      <circle class="ws-c" cx="196" cy="144" r="9"/><text class="mark-t" x="196" y="148" text-anchor="middle">A</text>
+      <line class="edge" x1="212" y1="112" x2="257" y2="112" marker-end="url(#h2)"/>
+
+      <rect class="box" x="260" y="60" width="140" height="104" rx="7"/>
+      <rect class="s-geotoolz" x="260" y="60" width="4" height="104" rx="2"/>
+      <text class="t-h" x="276" y="84">Load</text>
+      <text class="t-m" x="276" y="106">load_raster</text>
+      <text class="t-m" x="276" y="124">load_xarray</text>
+      <text class="t-m new-t" x="276" y="148">+ load_scenes</text>
+      <circle class="ws-c" cx="386" cy="76" r="9"/><text class="mark-t" x="386" y="80" text-anchor="middle">C</text>
+      <line class="edge" x1="402" y1="112" x2="417" y2="112" marker-end="url(#h2)"/>
+
+      <g class="muted">
+        <rect class="box" x="420" y="60" width="140" height="104" rx="7"/>
+        <rect class="s-geotoolz" x="420" y="60" width="4" height="104" rx="2"/>
+        <text class="t-h" x="436" y="84">Compute</text>
+        <text class="t-b" x="436" y="106">geoarray ⇄ xarray</text>
+        <text class="t-b" x="436" y="124">geoops · xrops</text>
+        <text class="t-b" x="436" y="148">unchanged</text>
+      </g>
+      <line class="edge" x1="562" y1="112" x2="607" y2="112" marker-end="url(#h2)"/>
+
+      <rect class="box" x="610" y="60" width="180" height="104" rx="7"/>
+      <rect class="s-geotoolz" x="610" y="60" width="4" height="104" rx="2"/>
+      <text class="t-h" x="626" y="84">Write</text>
+      <text class="t-m" x="626" y="106">write_cog</text>
+      <text class="t-m" x="626" y="124">WriteZarr · to_zarr</text>
+      <text class="t-m new-t" x="626" y="148">+ transaction</text>
+      <circle class="ws-c" cx="776" cy="120" r="9"/><text class="mark-t" x="776" y="124" text-anchor="middle">D</text>
+      <circle class="ws-c" cx="776" cy="144" r="9"/><text class="mark-t" x="776" y="148" text-anchor="middle">B</text>
+
+      <!-- links between the layers -->
+      <line class="edge" x1="125" y1="287" x2="125" y2="167" marker-end="url(#h2)"/>
+      <text class="lbl" x="133" y="230">STACSource</text>
+      <line class="edge" x1="300" y1="287" x2="300" y2="167" marker-end="url(#h2)"/>
+      <text class="lbl" x="308" y="214">reads files</text>
+      <path class="edge" d="M630 164 L630 236 L345 236 L345 287" marker-end="url(#h2)"/>
+      <text class="lbl" x="560" y="230" text-anchor="middle">writes files</text>
+      <path d="M495 288 L495 252 L385 252 L385 170" style="fill:none;stroke:var(--surface);stroke-width:7"/>
+      <path class="edge-a" d="M495 288 L495 252 L385 252 L385 167" marker-end="url(#h2a)"/>
+      <text class="lbl-a" x="440" y="248" text-anchor="middle">chunks</text>
+      <path class="edge-a" d="M710 164 L710 287" marker-end="url(#h2a)"/>
+      <text class="lbl-a" x="718" y="257">1 commit</text>
+
+      <!-- PERSIST: the three current boxes, plus Icechunk repos -->
+      <rect class="band" x="40" y="290" width="170" height="120" rx="7"/>
+      <rect class="s-ext" x="40" y="290" width="4" height="120" rx="2"/>
+      <text class="t-h" x="56" y="314">Source catalogs</text>
+      <text class="t-b" x="56" y="336">Earth Search · PC</text>
+      <text class="t-b" x="56" y="354">CMR</text>
+      <text class="t-b" x="56" y="372">public, read only</text>
+      <text class="t-b new-t" x="56" y="396">+ your mirror, optional</text>
+
+      <rect class="band" x="260" y="290" width="130" height="120" rx="7"/>
+      <rect class="s-geotoolz" x="260" y="290" width="4" height="120" rx="2"/>
+      <text class="t-h" x="276" y="314">Object storage</text>
+      <text class="t-b" x="276" y="336">scene files · cubes</text>
+      <text class="t-b" x="276" y="354">COG · NetCDF · Zarr</text>
+      <text class="t-b" x="276" y="372">obstore pool</text>
+      <text class="t-b" x="276" y="396">unchanged</text>
+      <line class="edge-a" x1="392" y1="380" x2="427" y2="380" marker-end="url(#h2a)"/>
+      <text class="lbl-a" x="410" y="371" text-anchor="middle" style="font-size:9.5px">virtual</text>
+      <circle class="ws-c" cx="410" cy="398" r="8"/><text class="mark-t" x="410" y="402" text-anchor="middle" style="font-size:10px">E</text>
+
+      <rect class="repo" x="430" y="290" width="360" height="120" rx="7"/>
+      <text class="t-h new-t" x="446" y="314">Icechunk repos</text>
+      <text class="t-m" x="446" y="336">meta/ · scenes/</text>
+      <text class="t-m" x="446" y="354">products/</text>
+      <text class="t-b" x="446" y="372">index and data</text>
+      <text class="t-b" x="446" y="390">in one commit</text>
+      <text class="t-m" x="610" y="336">products/&lt;algo&gt;/&lt;id&gt;/</text>
+      <text class="t-b" x="610" y="354">with a meta/ row each</text>
+      <text class="t-b" x="610" y="390">→ product catalog doc</text>
+      <circle class="ws-c" cx="776" cy="306" r="9"/><text class="mark-t" x="776" y="310" text-anchor="middle">A</text>
+
+        </svg>
+    </div>
+    <figcaption>One repository holds the index, the scenes and your products, and a query, a read and a write all name the same snapshot. Publishing a tagged commit to a product catalog is the <a href="./product-catalog.html">product catalog</a> doc.</figcaption>
+  </figure>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--accent-soft);border:1.5px dashed var(--accent)"></i>new surface</span>
+    <span><i class="dot" style="background:var(--accent)">A</i>workstream</span>
+    <span><i class="sw" style="background:var(--sunk);opacity:.6;border:1px solid var(--line)"></i>unchanged</span>
+  </div>
+
+  <h3>What each workstream adds</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Symbol</th><th>Destination</th><th>Reason</th><th>Closes</th></tr></thead>
+    <tbody>
+      <tr><td><code>IcechunkGeoCatalog</code></td><td><span class="repo-t geotoolz">geocatalog.backends</span>, extra <code>[icechunk]</code></td><td>A third backend with the same protocol; its table lives in <code>meta/</code> at one snapshot.</td><td>A · gaps 1, 2</td></tr>
+      <tr><td><code>GeoCatalogWriter</code>, <code>CatalogTransaction</code></td><td><span class="repo-t geotoolz">geocatalog</span> root</td><td>The write half of the protocol. DuckDB implements <code>append</code> by wrapping <code>append_files</code>; Icechunk implements both.</td><td>B · gaps 1, 5</td></tr>
+      <tr><td><code>load_scenes</code></td><td><span class="repo-t geotoolz">geocatalog.load</span></td><td>One node per row on its own grid, built with <code>geoarray.to_datatree</code>. Works on all three backends.</td><td>C · gap 3</td></tr>
+      <tr><td><code>WriteZarr</code> attributes</td><td><span class="repo-t geotoolz">geoops.io</span></td><td>Write the CF <code>spatial_ref</code> that <code>geoarray.to_xarray</code> writes, so one reader opens every product.</td><td>D · gap 4</td></tr>
+      <tr><td><code>ingest_virtual</code></td><td><span class="repo-t geotoolz">geocatalog.build</span>, extra <code>[virtual]</code></td><td>VirtualiZarr references for COG and NetCDF/HDF5 scenes, written as <code>scenes/&lt;id&gt;/</code> plus a <code>meta/</code> row.</td><td>E · gap 2</td></tr>
+      <tr><td colspan="3">The product catalog: <code>ProductCatalog</code>, <code>publish</code>, the record and pgstac sync, in <a href="./product-catalog.html">GeoStack product catalog</a>.</td><td>F, K, L</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="api">
+  <div class="eyebrow">API sketch</div>
+  <h2>Under the hood</h2>
+  <p>The sketches follow the code-sketch standard. Each opens with a shapes header; a status marker sits on its own line above every call into the stack; a unicode equation sits above every mathematical line; bare assignments end with their shape in one column.</p>
+  <div class="markers">
+    <code>today (pkg)</code><span>ships at the pinned commit, name and arguments checked in the repo</span>
+    <code>today* (pkg)</code><span>ships, but some arguments are sketched</span>
+    <code>proposed (X)</code><span>not shipped; X is the workstream that adds it</span>
+    <code>user</code><span>a function the reader writes, not a stack name</span>
+  </div>
+  <p class="note">The <code>today</code> names were checked against the pinned commits. The blocks were not run: they need a catalog of real scenes, which this session does not have.</p>
+
+  <h3>Repository layout</h3>
+  <p>One repository per collection. Every array in <code>meta/</code> has shape (R,) for R rows and shares one chunking, so a chunk index acts like a Parquet row group.</p>
+  <pre>s2-l2a-site.icechunk/
+├── meta/                    <span class="c"># the catalog table, R rows</span>
+│   ├── id                   <span class="c"># str</span>
+│   ├── start_time           <span class="c"># datetime64[ms]</span>
+│   ├── end_time             <span class="c"># datetime64[ms]</span>
+│   ├── geometry             <span class="c"># bytes, WKB in EPSG:4326</span>
+│   ├── crs                  <span class="c"># str, the scene's native CRS</span>
+│   ├── key                  <span class="c"># str, the group path, e.g. scenes/S2A_20260601_T30SYJ</span>
+│   └── cloud_cover          <span class="c"># float32, any extra column</span>
+├── indexes/geometry         <span class="c"># optional R-tree over meta/geometry</span>
+├── scenes/&lt;id&gt;/              <span class="c"># bands (C, H, W) + CF spatial_ref; virtual or real chunks</span>
+├── products/&lt;algo&gt;/&lt;id&gt;/      <span class="c"># outputs, same convention, each with a meta/ row</span>
+└── cubes/&lt;name&gt;/             <span class="c"># aligned L3/L4 Datasets</span></pre>
+
+  <h3>How <code>meta/</code> maps onto <code>CatalogRow</code></h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>meta/ column</th><th>Zarr dtype</th><th>CatalogRow field</th></tr></thead>
+    <tbody>
+      <tr><td><code>key</code></td><td>variable-length str</td><td><code>filepath = "icechunk://&lt;repo&gt;@&lt;snapshot&gt;/&lt;key&gt;"</code></td></tr>
+      <tr><td><code>geometry</code></td><td>variable-length bytes (WKB)</td><td><code>geometry</code>, decoded with shapely</td></tr>
+      <tr><td><code>start_time</code>, <code>end_time</code></td><td><code>datetime64[ms]</code></td><td><code>interval</code>, closed on both ends</td></tr>
+      <tr><td><code>crs</code></td><td>variable-length str</td><td><code>crs</code></td></tr>
+      <tr><td>everything else</td><td>any fixed or string dtype</td><td><code>extras</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>The backend</h3>
+  <p>The catalog is host-side and never traced, so it is a frozen dataclass rather than an Equinox module. A query keeps a row when its footprint meets the slice bounds B and its interval [t₀, t₁] meets the slice interval T.</p>
+<pre data-hl># geocatalog/_src/backends/icechunk.py
+"""A GeoCatalog whose table is the meta/ group of an Icechunk repository."""
+
+import dataclasses
+from collections.abc import Iterator
+from typing import Any
+
+import icechunk
+import numpy as np
+import pandas as pd
+from jaxtyping import Bool
+
+from geocatalog._src.base import CatalogRow
+from geocatalog._src.geoslice import GeoSlice
+
+# Shapes: R rows in meta/; K ≤ R rows kept by queries
+
+
+@dataclasses.dataclass(frozen=True)
+class IcechunkGeoCatalog:
+    """Catalog rows read from meta/ at one snapshot.
+
+    Args:
+        repo: The repository holding meta/, the scenes and the products.
+        uri: Where the repository lives, used to build each row's filepath.
+        snapshot: The snapshot every read of this catalog names.
+        keep: Rows kept by earlier queries; None keeps all R rows.
+    """
+
+    repo: icechunk.Repository
+    uri: str
+    snapshot: str
+    keep: Bool[np.ndarray, "row"] | None = None
+
+    def query(
+        self,
+        slice_: GeoSlice | None = None,
+        *,
+        bounds: tuple[float, float, float, float] | None = None,
+        crs: Any | None = None,
+        time: tuple[Any, Any] | pd.Interval | None = None,
+    ) -> "IcechunkGeoCatalog":
+        # proposed (A)
+        meta_table = read_meta(self.repo, self.snapshot)            # → (R,) table
+        # keep ⇔ footprint ∩ B ≠ ∅ ∧ [t₀, t₁] ∩ T ≠ ∅
+        # proposed (A)
+        overlaps = filter_rows(meta_table, slice_, bounds, crs, time)  # (R,) → (R,)
+        # keep ← keep ∧ overlaps
+        kept = overlaps if self.keep is None else self.keep &amp; overlaps  # (R,) → (R,)
+        return dataclasses.replace(self, keep=kept)
+
+    def iter_rows(self, *, batch_size: int = 1024) -> Iterator[CatalogRow]:
+        # proposed (A)
+        records = kept_records(self, batch_size=batch_size)          # → (K,)
+        for record in records:
+            filepath = f"icechunk://{self.uri}@{self.snapshot}/{record.key}"
+            # today (geocatalog)
+            yield CatalogRow(
+                filepath=filepath,
+                geometry=record.geometry,
+                interval=record.interval,
+                crs=record.crs,
+                extras=record.extras,
+            )</pre>
+
+  <h3>The write half</h3>
+  <p>Two protocols, kept small. DuckDB satisfies the first by wrapping <code>append_files</code>; only Icechunk satisfies the second.</p>
+<pre data-hl># geocatalog/_src/base.py
+"""The write half of the catalog protocol."""
+
+from collections.abc import Mapping, Sequence
+from typing import Any, Protocol
+
+from geoarray import GeoArray
+
+
+class GeoCatalogWriter(Protocol):
+    """A catalog that can take new rows."""
+
+    def append(self, rows: Sequence[CatalogRow]) -> None: ...
+
+
+class CatalogTransaction(Protocol):
+    """Writes carriers and their rows, visible only after commit.
+
+    Raises:
+        CatalogTransactionError: If the commit conflicts with another writer.
+    """
+
+    def put(
+        self,
+        key: str,
+        carrier: GeoArray["band y x"],
+        row: Mapping[str, Any],
+    ) -> CatalogRow: ...
+
+    def commit(self, message: str) -> str: ...
+
+
+# proposed (B)
+class CatalogTransactionError(GeoCatalogError, RuntimeError):
+    """A commit lost a race with another writer on the same branch."""</pre>
+
+  <h3>The scene loader</h3>
+<pre data-hl># geocatalog/_src/formats/raster.py
+import geoarray
+import xarray as xr
+from geoarray import GeoArray
+
+from geocatalog._src.base import GeoCatalog
+from geocatalog._src.geoslice import GeoSlice
+
+# Shapes: K rows kept; per scene C bands on its own H × W grid
+
+
+def load_scenes(
+    catalog: GeoCatalog,
+    slice_: GeoSlice,
+    *,
+    group_by: str = "id",
+) -> xr.DataTree:
+    """One DataTree node per row, each on the row's own grid.
+
+    Algorithm:
+        1. Open each kept row as a RasterSource: a file or an icechunk:// group.
+        2. Read the slice's bounds on the row's native grid, with no reprojection.
+        3. Put each carrier on its own node with geoarray.to_datatree.
+
+    Args:
+        catalog: The rows to load, usually the result of a query.
+        slice_: The bounds to read from each scene.
+        group_by: The row column whose value names each node.
+    """
+    scenes: dict[str, GeoArray] = {}
+    # today (geocatalog)
+    for row in catalog.iter_rows():                                 # (K,)
+        # proposed (C)
+        source = open_source(row.filepath)                          # → RasterSource
+        # proposed (C)
+        scene = read_bounds(source, slice_)                         # → (C, H, W)
+        scenes[row.extras[group_by]] = scene
+    # today (geoarray)
+    tree = geoarray.to_datatree(scenes)                             # K → K nodes
+    return tree</pre>
+
+</section>
+
+<section id="action">
+  <div class="eyebrow">API sketch</div>
+  <h2>In action: matched filter over a month of scenes</h2>
+  <p>The task: run the matched filter on every Sentinel-2 scene over a site in June 2026, keep the outputs, and make them findable. For each pixel, <i>y</i> ∈ ℝᶜ is its spectrum over C bands, μ ∈ ℝᶜ the background mean, Σ ∈ ℝᶜˣᶜ the background covariance, <i>t</i> ∈ ℝᶜ the methane target signature, and α̂ the enhancement. With <code>fit_on_call=True</code>, geoops fits μ and Σ on each scene. <code>site_june</code> is a <code>GeoSlice</code> over the site for June, and <code>extract_row</code> is the reader's own function that turns a file into a row.</p>
+
+  <div class="tabs" role="tablist" aria-label="Choose a version">
+    <button role="tab" id="tab-today" aria-selected="true" aria-controls="panel-today">Today</button>
+    <button role="tab" id="tab-target" aria-selected="false" aria-controls="panel-target">Target</button>
+  </div>
+
+  <div id="panel-today" role="tabpanel" aria-labelledby="tab-today">
+<pre data-hl>from pathlib import Path
+
+import geocatalog
+import geocloud.cog
+import geoops.matched_filter
+
+# Shapes: R rows in the catalog; S scenes kept; C bands; H × W pixels per scene
+
+# today (geocatalog)
+catalog = geocatalog.open_catalog("s3://bkt/s2_site.parquet")   # → R rows
+# today (geocatalog)
+june = catalog.query(site_june)                                 # R → S rows
+# today (geoops)
+matched_filter = geoops.matched_filter.MatchedFilter(
+    target=methane_target,
+    fit_on_call=True,
+)
+
+product_paths: list[str] = []
+# today (geocatalog)
+for row in june.iter_rows():                                    # (S,)
+    # today (geocloud)
+    source = geocloud.cog.CogSource.open(row.filepath)
+    # today (geocloud)
+    scene = source.load()                                       # → (C, H, W)
+    # α̂ = tᵀ Σ⁻¹ (y − μ) / (tᵀ Σ⁻¹ t)
+    # today (geoops)
+    enhancement = matched_filter(scene)                         # → (1, H, W)
+    scene_id = Path(row.filepath).stem
+    product_path = f"s3://bkt/products/mf/{scene_id}.tif"
+    # today (geocloud)
+    geocloud.cog.write_cog(enhancement, product_path)
+    product_paths.append(product_path)
+
+# second write: a crash before this line leaves COGs that no row points at
+# today* (geocatalog)
+geocatalog.build.append_files(
+    "s3://bkt/mf_catalog/",
+    product_paths,
+    extract_row,
+    crs="EPSG:4326",
+    kind="raster",
+    partition_by=[],
+)</pre>
+  </div>
+
+  <div id="panel-target" role="tabpanel" aria-labelledby="tab-target" hidden>
+<pre data-hl>import geoarray
+import geocatalog
+import geoops.matched_filter
+
+# Shapes: R rows in meta/; S scenes kept; C bands; H × W pixels per scene
+
+# proposed (A)
+catalog = geocatalog.open_catalog("icechunk://s3://bkt/s2_site")  # → R rows
+# proposed (A)
+june = catalog.query(site_june)                                 # R → S rows
+# proposed (C)
+scene_tree = geocatalog.load.load_scenes(june, site_june)        # → S nodes
+# today (geoarray)
+scenes_by_node = geoarray.from_datatree(scene_tree)             # S nodes → S
+# today (geoops)
+matched_filter = geoops.matched_filter.MatchedFilter(
+    target=methane_target,
+    fit_on_call=True,
+)
+
+# proposed (B)
+with catalog.transaction(branch="mf-v0.3") as transaction:
+    for node_path, carriers in scenes_by_node.items():          # (S,)
+        scene_id = node_path.strip("/")
+        scene = carriers[scene_id]                              # (C, H, W)
+        # α̂ = tᵀ Σ⁻¹ (y − μ) / (tᵀ Σ⁻¹ t)
+        # today (geoops)
+        enhancement = matched_filter(scene)                     # → (1, H, W)
+        # the row also takes a recipe stamp (G, pipekit Recipe Registries)
+        # proposed (B)
+        transaction.put(                                        # → 1 row
+            f"products/mf/{scene_id}",
+            enhancement,
+            row={"algo": "mf", "parent": node_path},
+        )
+    # proposed (B)
+    snapshot_id = transaction.commit("MF v0.3 on the site, June 2026")
+
+# proposed (B)
+catalog.tag("mf-v0.3-2026-06", snapshot_id)
+# next: publish the tag to the product catalog (F, product catalog doc)</pre>
+  </div>
+
+  <h3>The diff</h3>
+  <p>Only the lines that change, current code first. The matched filter call does not change.</p>
+<pre data-hl># Today:
+# today (geocatalog)
+catalog = geocatalog.open_catalog("s3://bkt/s2_site.parquet")   # → R rows
+# today (geocloud)
+geocloud.cog.write_cog(enhancement, product_path)
+# today* (geocatalog)
+geocatalog.build.append_files(archive, product_paths, extract_row, ...)
+
+# After:
+# proposed (A)
+catalog = geocatalog.open_catalog("icechunk://s3://bkt/s2_site")  # → R rows
+# proposed (B)
+transaction.put(f"products/mf/{scene_id}", enhancement, row=row)  # → 1 row
+# proposed (B)
+snapshot_id = transaction.commit(message)</pre>
+
+  <h3>What the difference is</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Concern</th><th>Today</th><th>Target</th></tr></thead>
+    <tbody>
+      <tr><td>Where the index lives</td><td>A GeoParquet file beside the data</td><td><code>meta/</code> inside the repo</td></tr>
+      <tr><td>Registering a product</td><td><code>write_cog</code>, then <code>append_files</code>: two steps</td><td><code>put</code>, then one <code>commit</code></td></tr>
+      <tr><td>A crash halfway</td><td>Files with no rows, or rows with no files</td><td>Nothing visible; the branch is unchanged</td></tr>
+      <tr><td>Pinning a training set</td><td>Copy the Parquet file and hope the files stay</td><td>Keep the snapshot id</td></tr>
+      <tr><td>Reading a scene</td><td>Open a file per row (rasterio, obstore)</td><td>Read Zarr chunks, real or virtual</td></tr>
+      <tr><td>Many scenes in xarray</td><td>Mosaic onto one grid, or <code>load_states</code> for states only</td><td><code>load_scenes</code> → <code>DataTree</code> for any raster rows</td></tr>
+      <tr><td>A new algorithm version</td><td>A new folder by convention</td><td>A branch; merge it or drop it</td></tr>
+      <tr><td>Carriers, geoops, xrops, pipekit</td><td colspan="2">Unchanged.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="gates">
+  <h2>Testing gates</h2>
+  <p>Each workstream merges only when its gate passes.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Gate</th><th>Workstream</th><th>Passes when</th></tr></thead>
+    <tbody>
+      <tr><td>A1 Query parity</td><td>A</td><td>On the same rows, <code>IcechunkGeoCatalog.query</code> and <code>DuckDBGeoCatalog.query</code> return identical ids for 100 random <code>GeoSlice</code>s, including slices in another CRS.</td></tr>
+      <tr><td>B1 Atomicity</td><td>B</td><td>A transaction that raises before <code>commit</code> leaves <code>main</code> at the same snapshot id, with no new group and no new row.</td></tr>
+      <tr><td>B2 Reproducibility</td><td>B</td><td>After 10 later commits, opening the first snapshot returns the same rows and bit-identical arrays.</td></tr>
+      <tr><td>C1 Scene parity</td><td>C</td><td>Each <code>load_scenes</code> node equals the direct <code>CogSource</code> read of its file bit for bit, and <code>from_datatree</code> returns a <code>Grid</code> equal to the source's.</td></tr>
+      <tr><td>D1 One convention</td><td>D</td><td><code>WriteZarr</code> output opens through <code>geoarray.from_xarray</code> with the transform equal to 1e-9 and an equal CRS.</td></tr>
+      <tr><td>E1 Virtual parity</td><td>E</td><td>A virtual scene group reads bit-identical to its source COG or NetCDF on every band.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="sequencing">
+  <h2>Sequencing and risks</h2>
+  <p>Products first, because that is where the two-step write hurts today and where the scale is small. Source collections and virtual ingest follow once the backend has proven itself.</p>
+  <pre><span class="c">  D  one Zarr convention         B  write half (DuckDB append)</span>
+      │                              │
+      ◆ D1                           ◆ B1
+      └──────────────┬───────────────┘
+                     │
+  A  IcechunkGeoCatalog  ┃  C  load_scenes        <span class="c">(parallel)</span>
+                     │
+                     ◆ A1 · B2 · C1
+                     │
+  E  virtual ingest of source scenes
+                     │
+                     ◆ E1</pre>
+  <ul class="gaps risk">
+    <li><span class="num ws">!</span><p><b>Node count at mission scale.</b> A year of HLS came to about 318 M nodes, and Icechunk's commit memory grows with the total node count (icechunk#2449). Fallback: one repo per collection and year, or keep GeoParquet as the index for source scenes and use Icechunk for products only.</p></li>
+    <li><span class="num ws">!</span><p><b>The query engine is a prototype.</b> zarr-datafusion-search is early. Fallback: read <code>meta/</code> into Arrow and filter with DuckDB, which geocatalog already depends on.</p></li>
+    <li><span class="num ws">!</span><p><b>Some formats do not virtualize well.</b> Sentinel-2 JP2 tiles and EMIT's GLT geolocation are poor fits. Fallback: write those scenes as real Zarr chunks.</p></li>
+    <li><span class="num ws">!</span><p><b>Two indexes drift during migration.</b> Fallback: the GeoParquet export of an Icechunk catalog is derived on demand and never edited by hand.</p></li>
+  </ul>
+  <div class="decide">
+    <div><b>Recommended</b><span>Do D and B first, then A and C for products and derived collections. Keep source-scene catalogs on GeoParquet and DuckDB for now.</span></div>
+    <div><b>Alternative</b><span>Move source catalogs too, through E. It gives one index for everything but takes on the node-count risk on day one.</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <ul class="sources">
+    <li><a href="https://slides.earthmover.io/main/cng-forum-2026-level2-datacollections/1">Level 2 Data Collections in Zarr</a>, CNG Forum 2026 (abstract; the slides need a browser)</li>
+    <li><a href="https://developmentseed.org/zarr-datafusion-search/">zarr-datafusion-search</a> and its <a href="https://developmentseed.org/zarr-datafusion-search/architecture/zarr/">Zarr structure</a> page</li>
+    <li><a href="https://github.com/earth-mover/icechunk/issues/2449">icechunk#2449</a>: commit memory grows with node count</li>
+    <li><a href="https://github.com/zarr-conventions/stac">STAC Zarr convention</a></li>
+    <li>GeoStack code at the commits pinned above; geostack <code>docs/design/labeled_lane.md</code> and <code>package_layout.md</code></li>
+    <li><a href="./product-catalog.html">GeoStack product catalog</a> and <a href="./recipe-registries.html">pipekit recipe registries</a>, the companion pages</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(function () {
+  var tabs = [document.getElementById('tab-today'), document.getElementById('tab-target')];
+  function select(t) {
+    tabs.forEach(function (b) {
+      var on = b === t;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+      document.getElementById(b.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(function (b, i) {
+    b.addEventListener('click', function () { select(b); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        var n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        select(n); n.focus();
+      }
+    });
+  });
+  select(tabs[0]);
+
+  // Light highlighting for the sketches: comments, status markers, equations, keywords.
+  var KW = /\b(import|from|class|def|return|for|in|with|as|yield|if|else|is|None|True|False)\b/g;
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function comment(text) {
+    var t = esc(text);
+    if (/^#\s*(today\*?|proposed|user)\b/.test(text)) {
+      t = t.replace(/(today\*?\s*\([^)]*\))/, '<span class="st-t">$1</span>')
+           .replace(/(proposed\s*\([^)]*\))/, '<span class="st-p">$1</span>')
+           .replace(/^(#\s*)(user)\b/, '$1<span class="st-u">$2</span>');
+      return '<span class="c">' + t + '</span>';
+    }
+    if (/[α-ωΑ-Ωᵀ⁻¹∩∧∅⇔←Σμ]/.test(text) && !/Shapes:/.test(text)) {
+      return '<span class="c eq">' + t + '</span>';
+    }
+    return '<span class="c">' + t + '</span>';
+  }
+  document.querySelectorAll('pre[data-hl]').forEach(function (pre) {
+    var lines = pre.textContent.split('\n');
+    var inDoc = false;
+    pre.innerHTML = lines.map(function (line) {
+      var tq = (line.match(/"""/g) || []).length;
+      if (inDoc || tq) {
+        var out = '<span class="c">' + esc(line) + '</span>';
+        if (tq === 1) inDoc = !inDoc;
+        return out;
+      }
+      var i = -1, q = null;
+      for (var k = 0; k < line.length; k++) {
+        var ch = line[k];
+        if (q) { if (ch === q) q = null; }
+        else if (ch === '"' || ch === "'") q = ch;
+        else if (ch === '#') { i = k; break; }
+      }
+      var code = i < 0 ? line : line.slice(0, i);
+      var rest = i < 0 ? '' : line.slice(i);
+      return esc(code).replace(KW, '<span class="kw">$1</span>') + (rest ? comment(rest) : '');
+    }).join('\n');
+  });
+})();
+</script>
+</body>
+</html>
