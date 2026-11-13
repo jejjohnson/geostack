@@ -59,6 +59,7 @@ project:
         - file: docs/design/kinds_and_roles.md
         - title: Storage and catalogs
           children:
+            - file: docs/design/parallelism.md
             - file: docs/design/storage_formats.md
             - file: docs/design/l2_collections.md
             - file: docs/design/product_catalog.md
