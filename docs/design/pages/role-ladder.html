@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>The Role Ladder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none',
+    macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one 46rem reading column, GeoStack hydrographic palette (from the esmax ocean pages).
+   New in this kit: --unit (units chip + units-check box) and --ex (running-example card). */
+:root {
+  --paper: #F1F5F6; --panel: #E4ECEF; --ink: #0E1E28; --muted: #4E616C; --rule: #C6D3D9;
+  --sea: #0A6B68; --sea-soft: #D3E7E5; --oracle: #985710; --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1; --unit: #5B4A9A; --unit-soft: #E6E2F3; --ex: #2F5E8C; --ex-soft: #DCE7F2;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+/* kit annotation: names each component so it can be referred to in review */
+.kit { margin-top: 3.4rem; padding-top: 0.6rem; border-top: 2px solid var(--ink); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.kit .id { font-family: var(--mono); font-size: 0.82rem; font-weight: 500; color: var(--unit); }
+.kit .what { font-family: var(--display); font-size: 0.86rem; color: var(--muted); }
+.kit + h2, .kit + .tldr, .kit + h3 { margin-top: 0.9rem; }
+.kitnote { font-family: var(--display); font-size: 0.82rem; color: var(--muted); border: 1px dashed var(--rule); border-radius: 6px; padding: 0.5rem 0.75rem; margin: 0.6rem 0 1rem; }
+.kitnote b { color: var(--unit); font-weight: 600; }
+
+/* C1 TL;DR */
+.tldr { border-top: 2px solid var(--ink); padding-top: 1rem; margin-top: 2rem; }
+.tldr ul { margin: 0.6rem 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+
+/* C2 pipeline chart */
+.chart { display: grid; }
+.box { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 0 0.9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--sea); line-height: 1.25; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .sub { color: var(--muted); font-size: 0.95rem; }
+.box.focus { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.focus .num { color: var(--oracle); }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.box .sig .n { white-space: nowrap; }
+.box .sig .s { display: flex; flex-wrap: wrap; gap: 0.2rem 0.4rem; align-items: center; min-width: 0; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.link { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; }
+svg.g { width: 1.15rem; height: 1.15rem; color: var(--sea); flex: none; }
+
+/* units chip (new) */
+.u { display: inline-block; font-family: var(--mono); font-size: 0.74rem; line-height: 1.5; padding: 0 0.4rem; border-radius: 4px; background: var(--unit-soft); color: var(--unit); white-space: nowrap; }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+td.gl { width: 1.6rem; }
+td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+td code { font-size: 0.8rem; white-space: nowrap; }
+
+/* C4 running-example card (new) */
+.ex { border: 1px solid var(--ex); border-radius: 6px; overflow: hidden; margin: 1rem 0 1.4rem; }
+.ex-h { background: var(--ex-soft); padding: 0.6rem 1rem; display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; border-bottom: 1px solid var(--ex); }
+.ex-h .tag { color: var(--ex); }
+.ex-h strong { font-family: var(--display); font-weight: 600; }
+.ex-b { padding: 0.7rem 1rem 0.3rem; font-size: 0.95rem; }
+.ex-b .tbl { margin: 0.4rem 0 0.6rem; border-top: 0; }
+.ex.mini { border-left: 3px solid var(--ex); border-top: 0; border-right: 0; border-bottom: 0; border-radius: 0 6px 6px 0; background: var(--ex-soft); padding: 0.7rem 1rem; font-size: 0.96rem; }
+.ex.mini .tag { color: var(--ex); display: block; margin-bottom: 0.25rem; }
+.ex.mini p:last-child { margin-bottom: 0; }
+
+/* C6 concept box */
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.def h3 { margin: 0 0 0.6rem; }
+.def p:last-child { margin-bottom: 0; }
+.where { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 0.3rem 0.8rem; align-items: baseline; margin: 0.4rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px dashed var(--rule); font-size: 0.92rem; }
+.where .wl { grid-column: 1 / -1; font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+/* C7 operator card */
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.phase { font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.phase.train { background: var(--oracle-soft); color: var(--oracle); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io .sh { display: grid; justify-items: end; gap: 0.15rem; padding-top: 0.15rem; }
+.io .sh code { font-size: 0.8rem; text-align: right; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io .sh { grid-column: 2; justify-items: start; padding-top: 0; }
+  .where { grid-template-columns: max-content minmax(0, 1fr); }
+  .where .u { grid-column: 2; justify-self: start; }
+}
+
+/* C8 units check (new) */
+.uc { border: 1px solid var(--unit); border-radius: 6px; margin: 1rem 0 1.4rem; overflow: hidden; }
+.uc-h { background: var(--unit-soft); padding: 0.55rem 1rem; border-bottom: 1px solid var(--unit); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.uc-h .tag { color: var(--unit); }
+.uc-h strong { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.uc-rows { padding: 0.4rem 1rem 0.6rem; display: grid; }
+.uc-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.2rem 1rem; align-items: center; padding: 0.35rem 0; border-bottom: 1px dashed var(--rule); font-size: 0.93rem; }
+.uc-row:last-child { border-bottom: 0; }
+.uc-row > div { min-width: 0; overflow-x: auto; }
+.uc-row .r { color: var(--muted); }
+.uc-row.ok .r { color: var(--sea); font-weight: 600; font-family: var(--display); font-size: 0.86rem; }
+@media (max-width: 560px) { .uc-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* C9 code sketch */
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+pre .mk { color: var(--oracle); }
+pre .un { color: var(--unit); }
+pre.diagram { background: var(--paper); }
+
+/* C10 two cases */
+.case { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.8rem; margin: 1rem 0 1.4rem; }
+.case > div { border: 1px solid var(--rule); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.94rem; min-width: 0; overflow-x: auto; }
+.case .lin { border-top: 3px solid var(--sea); }
+.case .non { border-top: 3px solid var(--oracle); }
+.case .tag { display: block; margin-bottom: 0.2rem; }
+
+/* C11 watch-out */
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.note p:last-child { margin-bottom: 0; }
+
+/* C12 series nav */
+.series { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--display); font-size: 0.82rem; color: var(--muted); margin-bottom: 1.4rem; }
+.series a { text-decoration: none; }
+footer { margin-top: 3rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 1rem; }
+
+/* v2: role rows in signatures — in / u / θ / est / out */
+.box .sig .d.par, .io-l.par { color: var(--oracle); }
+.box .sig .d.exo, .io-l.exo { color: var(--ex); }
+.box .sig .d.est, .io-l.est { color: var(--muted); font-style: italic; }
+.box .sig .none, .io .none { color: var(--muted); font-style: italic; font-size: 0.86rem; }
+.box .sig .rule { grid-column: 1 / -1; border-top: 1px dotted var(--rule); margin: 0.15rem 0; }
+.io-group.par { background: var(--oracle-soft); }
+.io-group.exo { background: var(--ex-soft); }
+.io-group.est { border-top: 1px dotted var(--rule); }
+.io-group + .io-group { border-top: 1px solid var(--rule); }
+.where { grid-template-columns: max-content minmax(0, 1fr) max-content max-content; }
+.where .sh { font-size: 0.86rem; }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .sh, .where .u { grid-column: 2; justify-self: start; } }
+
+/* v3: numbered equation stack inside boxes and operator arrows */
+.eqs { display: grid; gap: 0.2rem; margin-top: 0.35rem; font-size: 0.95rem; min-width: 0; }
+.eqs > div { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr); align-items: baseline; min-width: 0; overflow-x: auto; overflow-y: hidden; }
+.eqs .ln { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.op-arrow .eqs { margin-top: 0; }
+.box .sig .d.cst, .io-l.cst { color: var(--muted); }
+.box .sig .s .none { font-size: 0.78rem; }
+
+/* v4: model box steps, assumptions, compact Where grid */
+.mstep { display: flex; align-items: baseline; gap: 0.5rem; margin: 1.3rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px solid var(--rule); }
+.mstep:first-of-type { border-top: 0; padding-top: 0; margin-top: 0.6rem; }
+.mstep .mn { font-family: var(--display); font-weight: 700; color: var(--sea); font-size: 0.95rem; }
+.mstep .ml { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.mstep .mu { font-family: var(--mono); font-size: 0.72rem; color: var(--oracle); }
+.asm { display: grid; gap: 0.55rem; margin: 0.4rem 0 0.6rem; }
+.asm .a { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 0.5rem; align-items: start; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 0.55rem 0.75rem; }
+.asm .a > div { min-width: 0; }
+.asm .aid { font-family: var(--mono); font-weight: 500; font-size: 0.82rem; color: var(--oracle); padding-top: 0.15rem; }
+.asm small { display: block; color: var(--muted); font-size: 0.84rem; line-height: 1.45; margin-top: 0.2rem; }
+.asm mjx-container[display="true"] { margin: 0.35rem 0 !important; }
+.where { grid-template-columns: max-content minmax(0, 1fr); column-gap: 0.8rem; row-gap: 0.45rem; align-items: baseline; }
+.where .me { min-width: 0; }
+.where .meta { display: inline-flex; flex-wrap: wrap; gap: 0.25rem 0.45rem; align-items: baseline; margin-left: 0.5rem; }
+.where .meta .sh { font-size: 0.86rem; color: var(--muted); }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .meta { display: flex; margin-left: 0; margin-top: 0.1rem; } }
+
+/* visual figures */
+figure.viz { margin: 1.4rem 0 1.6rem; }
+.vwrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; }
+.vwrap svg.v { display: block; width: 100%; min-width: 560px; height: auto; }
+figure.viz figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.5rem; }
+svg.v text { font-family: var(--display); font-size: 13px; fill: var(--ink); }
+svg.v .h { font-weight: 600; font-size: 13.5px; }
+svg.v .mono { font-family: var(--mono); font-size: 11.5px; }
+svg.v .muted { fill: var(--muted); }
+svg.v .o { fill: var(--oracle); }
+svg.v .s { fill: var(--sea); }
+svg.v .e { fill: var(--ex); }
+svg.v .tile { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+svg.v .hit { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.4; }
+svg.v .skip { fill: var(--paper); stroke: var(--rule); stroke-dasharray: 3 3; }
+svg.v .win { fill: var(--oracle); }
+svg.v .hdr { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .ovr { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ref { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.3; }
+svg.v .keybox { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .panelbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .repobox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.4; }
+svg.v .file { fill: var(--panel); stroke: var(--rule); }
+svg.v .snap { fill: var(--paper); stroke: var(--sea); stroke-width: 2; }
+svg.v .snap.now { fill: var(--sea); }
+svg.v .step { fill: var(--sea); }
+svg.v .stepn { fill: var(--paper); font-weight: 700; font-size: 14px; }
+svg.v .stepbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .who { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ln { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+svg.v .ln-o { stroke: var(--oracle); stroke-width: 1.6; fill: none; }
+svg.v .ln-s { stroke: var(--sea); stroke-width: 1.6; fill: none; }
+svg.v .ln-e { stroke: var(--ex); stroke-width: 1.6; fill: none; }
+svg.v .dash { stroke-dasharray: 4 3; }
+ol.steps { margin: 0 0 1.2rem; padding-left: 1.3rem; display: grid; gap: 0.3rem; }
+details.maths { border: 1px solid var(--rule); border-radius: 6px; margin: 1rem 0 1.6rem; background: var(--paper); }
+details.maths > summary { cursor: pointer; padding: 0.6rem 1rem; font-family: var(--display); font-weight: 600; font-size: 0.92rem; color: var(--unit); }
+details.maths > summary:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+details.maths .dbody { padding: 0 1rem 0.6rem; }
+
+.uses { border-left: 3px solid var(--sea); background: var(--sea-soft); border-radius: 0 6px 6px 0; padding: 0.85rem 1rem; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.uses .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.uses ul { margin: 0.2rem 0 0.6rem; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.uses p { margin-bottom: 0.5rem; }
+.uses p.less { color: var(--muted); margin-bottom: 0; }
+ul.verdicts { padding-left: 1.2rem; display: grid; gap: 0.45rem; margin: 0.4rem 0 1.2rem; }
+svg.v .cogbox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .zarrbox { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.2; }
+svg.v .wait { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1; }
+svg.v .cpu { fill: var(--oracle); }
+svg.v .no { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg.v .lane { stroke: var(--rule); stroke-width: 1; }
+svg.v .tick { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg.v .bar { fill: var(--sea); }
+svg.v .bar.slow { fill: var(--oracle); }
+svg.v .yes { fill: var(--sea); font-weight: 600; }
+svg.v .cell { fill: var(--paper); stroke: var(--rule); }
+svg.v .cellh { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .pt { fill: var(--oracle); stroke: var(--paper); stroke-width: 1.5; }
+svg.v .w { fill: var(--paper); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="a-s" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--sea)"/></marker>
+<marker id="a-o" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--oracle)"/></marker>
+<marker id="a-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker>
+<marker id="a-e" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--ex)"/></marker>
+</defs></svg>
+<main>
+
+<nav class="series" aria-label="Series"><span>GeoStack · design</span><span>›</span><span>background</span><a href="./geo-pipeline.html">The geo pipeline →</a><a href="./kinds-and-roles.html">Kinds and roles →</a></nav>
+<div class="eyebrow">GeoStack · background · noun → paragraph</div>
+<h1>Where does a piece of code belong?</h1>
+<p class="lede">Pictures first. A library is a small language: it has things, actions on things, ways of acting, and whole jobs built from them. The role ladder names seven levels of that language, from the data at the bottom to a complete recipe at the top, and says what each level may use. This page teaches the ladder with one job, a methane emission rate from a satellite scene, written first as a notebook cell and then rung by rung.</p>
+
+<section class="tldr" aria-label="TL;DR">
+  <span class="tag">TL;DR</span>
+  <h2>Seven rungs, one direction</h2>
+  <ul>
+    <li><strong>The ladder is grammar.</strong> ⓪ structures are nouns, ① primitives verbs, ② strategies adverbs, ③ models noun phrases, ④ algorithms sentences, ⑤ steps sentences with their own settings, ⑥ recipes paragraphs.</li>
+    <li><strong>Calls go down only.</strong> A rung is written with the rungs below it and knows nothing of those above, so the ladder is also the order to build and test in.</li>
+    <li><strong>The lower five compute on plain arrays.</strong> Geographic data and saved settings enter at ⑤, where a step unwraps the data, calls down, and wraps the result.</li>
+    <li><strong>Composition stops at ⑥.</strong> A recipe of recipes is a recipe. Running one (when, where, on what) is orchestration, which is not a rung.</li>
+    <li><strong>It pays three ways:</strong> reuse a piece, swap a method, save a job. Here: one fitted background serves two stages; a different estimator is a one-word change; the recipe saved as JSON and loaded back returns the same 5.68 kg s⁻¹.</li>
+  </ul>
+</section>
+
+<h2>The running example</h2>
+<div class="ex">
+  <div class="ex-h"><span class="tag">Running example</span><strong>A methane plume: radiance in, emission rate out</strong></div>
+  <div class="ex-b">
+    <p>The job from the <a href="./kinds-and-roles.html">kinds and roles</a> design page, at a size that runs in a second. A hyperspectral scene holds a methane plume. A matched filter turns radiance into a methane enhancement, a threshold masks the plume, and the plume's mass and the wind give an emission rate. The scene is synthetic, so the true answer is known.</p>
+    <div class="tbl"><table><thead><tr><th>Quantity</th><th>Symbol</th><th>Value</th><th>Unit</th></tr></thead><tbody><tr><td>Scene</td><td>\(\mathbf{{x}}\)</td><td>40 × 96 × 96</td><td>band × row × col</td></tr><tr><td>Pixel size</td><td>\(\Delta s\)</td><td>60</td><td>m</td></tr><tr><td>True plume</td><td>—</td><td>197 pixels at 3 000</td><td>ppm m</td></tr><tr><td>Filter noise</td><td>\(\sigma_y\)</td><td>435</td><td>ppm m</td></tr><tr><td>Wind speed</td><td>\(U\)</td><td>3.5</td><td>m s⁻¹</td></tr><tr><td>True emission rate</td><td>\(Q\)</td><td>5.80</td><td>kg s⁻¹</td></tr><tr><td>Recovered emission rate</td><td>\(\hat{{Q}}\)</td><td>5.68</td><td>kg s⁻¹</td></tr></tbody></table></div>
+  </div>
+</div>
+
+<h2 id="problem">The problem: code with no address</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 214" role="img" aria-label="A single notebook cell does the whole job; reusing a piece, swapping a method and saving the settings all require copying or editing the cell."><text class="h" x="20" y="20">One notebook cell, radiance in, emission rate out</text><rect class="file" x="20" y="32" width="250" height="170" rx="6"/><text class="mono" x="34" y="54">read the scene</text><text class="mono" x="34" y="75">fit mean and covariance</text><text class="mono" x="34" y="96">build the methane signature</text><text class="mono" x="34" y="117">filter every pixel</text><text class="mono" x="34" y="138">threshold at 3 σ</text><text class="mono" x="34" y="159">drop small blobs</text><text class="mono" x="34" y="180">pixel area × mass × wind</text><rect class="no" x="300" y="32" width="360" height="50" rx="6"/><text class="h" x="314" y="52">Reuse</text><text x="372" y="52">another script needs σ, the filter's noise.</text><text class="o" x="372" y="70">Copy the cell.</text><rect class="no" x="300" y="90" width="360" height="50" rx="6"/><text class="h" x="314" y="110">Swap</text><text x="372" y="110">try a different covariance estimator.</text><text class="o" x="372" y="128">Edit the middle of the cell.</text><rect class="no" x="300" y="148" width="360" height="50" rx="6"/><text class="h" x="314" y="168">Save</text><text x="372" y="168">rerun last month's settings exactly.</text><text class="o" x="372" y="186">Which version of the cell?</text></svg></div><figcaption>The job is right and the code works. What is missing is any answer to “where does each piece belong?”, so every piece belongs to this one cell.</figcaption></figure>
+<pre><span class="c"># Shapes: B = 40 bands; R × C = 96 × 96 pixels; P = R C pixels</span>
+spectra = radiance.reshape(40, -1).T
+mean = spectra.mean(axis=0)
+covariance = sklearn.covariance.LedoitWolf().fit(spectra).covariance_
+target = -air_mass * absorption * mean
+direction = np.linalg.solve(covariance, target)
+enhancement = np.tensordot(direction, radiance - mean[:, None, None], axes=1)
+enhancement /= target @ direction
+noise = (target @ direction) ** -0.5
+labels, count = scipy.ndimage.label(enhancement &gt; 3 * noise)
+...
+emission = 3.5 * 6.56e-7 * 3600 * enhancement[plume].sum() / length</pre>
+<p>Every line is fine. The trouble is structural: the covariance estimator, the filter, the threshold rule and the settings are fused, so none can be used, replaced or recorded alone. The ladder is the fix: give every piece a level, and a rule for what each level may touch.</p>
+
+<h2 id="ladder">The ladder</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 394" role="img" aria-label="The role ladder from structures at the bottom to recipes at the top, with orchestration above it and not part of it."><rect class="ref" x="20" y="12" width="640" height="34" rx="6"/><text class="h" x="34" y="34">Orchestration</text><text class="tick" x="150" y="34">not a rung: runs recipes on a schedule, behind an API, over many scenes</text><rect class="stepbox" x="20" y="322" width="640" height="36" rx="6"/><text class="h" x="40" y="346" text-anchor="middle">⓪</text><text class="h" x="60" y="338">Structure</text><text class="tick" x="60" y="352">noun</text><text x="200" y="338">a thing the others act on</text><text class="mono" x="200" y="352">Scene, Σ as a matrix</text><text class="h" x="640" y="345" text-anchor="middle">▣</text><rect class="hdr" x="20" y="278" width="640" height="36" rx="6"/><text class="h" x="40" y="302" text-anchor="middle">①</text><text class="h" x="60" y="294">Primitive</text><text class="tick" x="60" y="308">verb</text><text x="200" y="294">one call on a noun</text><text class="mono" x="200" y="308">target_signature, pixel_area</text><text class="h" x="640" y="301" text-anchor="middle">ƒ</text><rect class="stepbox" x="20" y="234" width="640" height="36" rx="6"/><text class="h" x="40" y="258" text-anchor="middle">②</text><text class="h" x="60" y="250">Strategy</text><text class="tick" x="60" y="264">adverb</text><text x="200" y="250">how to do it: settings, no data</text><text class="mono" x="200" y="264">LedoitWolf, SigmaThreshold</text><text class="h" x="640" y="257" text-anchor="middle">▣</text><rect class="stepbox" x="20" y="190" width="640" height="36" rx="6"/><text class="h" x="40" y="214" text-anchor="middle">③</text><text class="h" x="60" y="206">Model</text><text class="tick" x="60" y="220">noun phrase</text><text x="200" y="206">a noun with meaning and fitted state</text><text class="mono" x="200" y="220">Background (μ, Σ)</text><text class="h" x="640" y="213" text-anchor="middle">▣</text><rect class="hdr" x="20" y="146" width="640" height="36" rx="6"/><text class="h" x="40" y="170" text-anchor="middle">④</text><text class="h" x="60" y="162">Algorithm</text><text class="tick" x="60" y="176">sentence</text><text x="200" y="162">a method over models, as a function</text><text class="mono" x="200" y="176">matched_filter, segment</text><text class="h" x="640" y="169" text-anchor="middle">ƒ</text><rect class="hit" x="20" y="102" width="640" height="36" rx="6"/><text class="h" x="40" y="126" text-anchor="middle">⑤</text><text class="h" x="60" y="118">Step</text><text class="tick" x="60" y="132">sentence + settings</text><text x="200" y="118">one transformation, ready to chain</text><text class="mono" x="200" y="132">MethaneRetrieval</text><text class="h" x="640" y="125" text-anchor="middle">→</text><rect class="hit" x="20" y="58" width="640" height="36" rx="6"/><text class="h" x="40" y="82" text-anchor="middle">⑥</text><text class="h" x="60" y="74">Recipe</text><text class="tick" x="60" y="88">paragraph</text><text x="200" y="74">steps in order, making one job</text><text class="mono" x="200" y="88">plume_recipe</text><text class="h" x="640" y="81" text-anchor="middle">→</text><text class="muted" x="20" y="382">Each rung is written with the rungs below it, and knows nothing of the rungs above.</text></svg></div><figcaption>Read it from the bottom: nouns, the verbs that act on them, the adverbs that say how, and so on up to a paragraph that does a whole job. The mark on the right is how the rung is packaged: ▣ a Module (an object that holds state), ƒ a function, → an Operator (a configurable, chainable block).</figcaption></figure>
+<p>Two things on the ladder are easy to miss. <b>Orchestration is not a rung</b>: it does not compose anything, it runs what has been composed. And <b>a Module is not a rung</b> either; it is a way of packaging (an object whose setup runs once and whose call is fast afterwards), used by three rungs: ⓪, ② and ③.</p>
+
+<h2 id="rungs">Part 1 · The rungs, one at a time</h2>
+
+<h3>⓪ Structures: the nouns</h3>
+<p>A <b>structure</b> is a thing: the data, or a mathematical object with a shape worth knowing (a diagonal matrix, a grid). It does nothing by itself. Here the noun is the scene: an array with its pixel size and attributes. In the stack it is a <code>GeoArray</code>; the small stand-in below keeps the page runnable.</p>
+<pre><span class="c"># Shapes: B = 40 bands; R × C = 96 × 96 pixels; P = R C pixels</span>
+
+
+<span class="mk"># user</span>
+@dataclasses.dataclass(frozen=True)
+class Scene:
+    """A small carrier: the numbers, the pixel size and the attributes."""
+
+    data: np.ndarray
+    pixel_m: float
+    attrs: dict</pre>
+
+<h3>① Primitives: the verbs</h3>
+<p>A <b>primitive</b> is one call on a noun, a plain function of arrays and numbers. It knows nothing of methane plumes or satellites: the area of a pixel, the connected pieces of a mask.</p>
+<pre><span class="mk"># user</span>
+def target_signature(
+    mean: Float[np.ndarray, " band"],
+    absorption: Float[np.ndarray, " band"],
+    air_mass: float,
+) -&gt; Float[np.ndarray, " band"]:
+    """Radiance change per ppm m of methane: t = −M (k ⊙ μ)."""
+<span class="c">    # t = −M (k ⊙ μ)</span>
+    target = -air_mass * absorption * mean                    # (B,), (B,) → (B,)
+    return target
+
+
+<span class="mk"># user</span>
+def pixel_area(pixel_m: float) -&gt; float:
+    """Area of one square pixel in m²: a = Δs²."""
+<span class="c">    # a = Δs²</span>
+    area = pixel_m * pixel_m                                  # → ()
+    return area
+
+
+<span class="mk"># user</span>
+def large_components(
+    mask: Bool[np.ndarray, "y x"], min_pixels: int
+) -&gt; Bool[np.ndarray, "y x"]:
+    """Keep connected pieces of at least N_min pixels: b_n = c_n 1[|K(n)| ≥ N_min]."""
+<span class="c">    # K(n): the connected piece that holds pixel n</span>
+    labels, count = scipy.ndimage.label(mask)                 # (R, C) → (R, C)
+    sizes = np.bincount(labels.ravel(), minlength=count + 1)  # (R, C) → (K + 1,)
+    keep = sizes &gt;= min_pixels                                # (K + 1,) → (K + 1,)
+<span class="c">    # label 0 is the background, never a plume</span>
+    keep[0] = False
+<span class="c">    # b_n = c_n 1[|K(n)| ≥ N_min]</span>
+    plume = keep[labels]                                      # (R, C) → (R, C)
+    return plume</pre>
+
+<h3>② Strategies: the adverbs</h3>
+<p>A <b>strategy</b> says <em>how</em> something is done and holds settings only, never data: which covariance estimator, which threshold rule. Two strategies that answer the same question are interchangeable, which is the point.</p>
+<pre><span class="mk"># user</span>
+@dataclasses.dataclass(frozen=True)
+class LedoitWolf:
+    """How to estimate Σ: shrink the sample covariance towards a scaled identity."""
+
+    def __call__(
+        self, spectra: Float[np.ndarray, "pixel band"]
+    ) -&gt; Float[np.ndarray, "band band"]:
+        estimator = sklearn.covariance.LedoitWolf()
+        fitted = estimator.fit(spectra)
+        return fitted.covariance_                             # (P, B) → (B, B)
+
+
+<span class="mk"># user</span>
+@dataclasses.dataclass(frozen=True)
+class SampleCovariance:
+    """How to estimate Σ: the plain sample covariance."""
+
+    def __call__(
+        self, spectra: Float[np.ndarray, "pixel band"]
+    ) -&gt; Float[np.ndarray, "band band"]:
+        return np.cov(spectra, rowvar=False)                  # (P, B) → (B, B)
+
+
+<span class="mk"># user</span>
+@dataclasses.dataclass(frozen=True)
+class SigmaThreshold:
+    """How to pick candidate pixels: above k noise levels."""
+
+    k: float = 3.0
+
+    def __call__(
+        self, values: Float[np.ndarray, "y x"], noise: float
+    ) -&gt; Bool[np.ndarray, "y x"]:
+<span class="c">        # c_n = 1[y_n &gt; k σ_y]</span>
+        return values &gt; self.k * noise                        # (R, C) → (R, C)</pre>
+
+<h3>③ Models: the noun phrases</h3>
+<p>A <b>model</b> is a noun with meaning and fitted state: not “a matrix” but “this scene's background”, with its mean and covariance and the things only it can answer (solve with Σ, the noise of a filter built on it).</p>
+<pre><span class="mk"># user</span>
+@dataclasses.dataclass(frozen=True)
+class Background:
+    """What was fitted: the scene's mean spectrum μ and covariance Σ."""
+
+    mean: np.ndarray
+    covariance: np.ndarray
+
+    @classmethod
+    def fit(
+        cls,
+        spectra: Float[np.ndarray, "pixel band"],
+        estimator: LedoitWolf | SampleCovariance = LedoitWolf(),
+    ) -&gt; Background:
+<span class="c">        # μ_b = (1 / P) ∑_n x_nb</span>
+        mean = einx.mean("[pixel] band", spectra)             # (P, B) → (B,)
+<span class="c">        # Σ, by the chosen strategy</span>
+        covariance = estimator(spectra)                       # (P, B) → (B, B)
+        return cls(mean, covariance)
+
+    def solve(self, vector: Float[np.ndarray, " band"]) -&gt; Float[np.ndarray, " band"]:
+<span class="c">        # s = Σ⁻¹ t</span>
+        return np.linalg.solve(self.covariance, vector)       # (B,) → (B,)
+
+    def noise(self, target: Float[np.ndarray, " band"]) -&gt; float:
+<span class="c">        # σ_y = (tᵀ Σ⁻¹ t)^(−1/2)</span>
+        direction = self.solve(target)                        # (B,) → (B,)
+        precision = einx.dot("band, band -&gt;", target, direction)  # → ()
+        return float(precision) ** -0.5</pre>
+
+<h3>④ Algorithms: the sentences</h3>
+<p>An <b>algorithm</b> is a method over models, written as a function: do this, to that, in this way. It takes the model as an argument, so it never refits anything.</p>
+<pre><span class="mk"># user</span>
+def matched_filter(
+    radiance: Float[np.ndarray, "band y x"],
+    background: Background,
+    target: Float[np.ndarray, " band"],
+) -&gt; Float[np.ndarray, "y x"]:
+    """Methane enhancement per pixel: y_n = sᵀ (x_n − μ) / (tᵀ s), s = Σ⁻¹ t."""
+<span class="c">    # s = Σ⁻¹ t</span>
+    direction = background.solve(target)                      # (B,) → (B,)
+<span class="c">    # tᵀ s</span>
+    normalisation = einx.dot("band, band -&gt;", target, direction)  # → ()
+<span class="c">    # r_n = x_n − μ</span>
+    residual = einx.subtract(                                 # (B, R, C) → (B, R, C)
+        "band y x, band -&gt; band y x", radiance, background.mean
+    )
+<span class="c">    # sᵀ r_n</span>
+    projection = einx.dot("band, band y x -&gt; y x", direction, residual)  # → (R, C)
+<span class="c">    # y_n = sᵀ r_n / (tᵀ s)</span>
+    enhancement = projection / normalisation                  # (R, C) → (R, C)
+    return enhancement
+
+
+<span class="mk"># user</span>
+def segment(
+    values: Float[np.ndarray, "y x"],
+    noise: float,
+    rule: SigmaThreshold,
+    min_pixels: int,
+) -&gt; Bool[np.ndarray, "y x"]:
+    """Plume mask: candidates by the rule, then only the large pieces."""
+<span class="c">    # c_n = 1[y_n &gt; k σ_y]</span>
+    candidates = rule(values, noise)                          # (R, C) → (R, C)
+<span class="c">    # b_n = c_n 1[|K(n)| ≥ N_min]</span>
+    plume = large_components(candidates, min_pixels)          # (R, C) → (R, C)
+    return plume
+
+
+<span class="mk"># user</span>
+def emission_rate(
+    values: Float[np.ndarray, "y x"],
+    plume: Bool[np.ndarray, "y x"],
+    area: float,
+    wind: float,
+    kappa: float,
+) -&gt; float:
+    """Emission rate from the plume's mass and the wind: Q = U κ a ∑ b y / L."""
+<span class="c">    # L = (a ∑_n b_n)^(1/2)</span>
+    length = (area * np.count_nonzero(plume)) ** 0.5          # → ()
+<span class="c">    # ∑_n b_n y_n</span>
+    total = float(np.sum(values, where=plume))                # (R, C) → ()
+<span class="c">    # Q = U κ a ∑_n b_n y_n / L</span>
+    rate = wind * kappa * area * total / length               # → ()
+    return rate</pre>
+<div class="uses"><span class="tag">The test for rungs ⓪ to ④</span><p>They all work on plain arrays, so they can be tested with a few random numbers, traced by JAX, and reused by any container.</p><ul><li><b>② or ③?</b> If it holds only settings it is a strategy; once it holds something fitted to data it is a model.</li><li><b>① or ④?</b> A primitive acts on a noun; an algorithm takes a model. <code>pixel_area</code> is ①, <code>matched_filter</code> is ④.</li><li><b>None of them</b> reads a file, a config or a coordinate reference system.</li></ul><p class="less">When one object both fits and applies (a matched filter class that refits its background on every call), split it: the state becomes a model, the call becomes an algorithm. That split is what let segmentation reuse σ.</p></div>
+
+<h3>⑤ Steps: a sentence with its own settings</h3>
+<p>A <b>step</b> does one transformation of real data and is ready to chain. It has three parts: unwrap the carrier into arrays, call down the ladder, wrap the result as a carrier again. Its constructor arguments are its settings, and they are plain values, so they can be written to JSON.</p>
+<pre>ESTIMATORS = {"ledoit_wolf": LedoitWolf, "sample": SampleCovariance}
+
+
+<span class="mk"># user</span>
+class MethaneRetrieval(pipekit_ops.Operator):
+    """Step: radiance scene → enhancement scene, with its noise in the attrs."""
+
+    def __init__(self, *, estimator: str = "ledoit_wolf") -&gt; None:
+        self.estimator = estimator
+
+    def _apply(self, scene: Scene) -&gt; Scene:
+<span class="c">        # --- unwrap: arrays and numbers out of the carrier ---</span>
+        spectra = einx.id("band y x -&gt; (y x) band", scene.data)   # (B, R, C) → (P, B)
+        absorption = scene.attrs["absorption"]
+        air_mass = scene.attrs["air_mass"]
+<span class="c">        # --- compute: ② strategy, ③ model, ① primitive, ④ algorithm ---</span>
+        strategy = ESTIMATORS[self.estimator]()
+        background = Background.fit(spectra, strategy)
+        target = target_signature(background.mean, absorption, air_mass)
+        values = matched_filter(scene.data, background, target)   # → (R, C)
+<span class="c">        # --- rewrap: a carrier again, σ_y carried for the next step ---</span>
+        attrs = {"noise_ppm_m": background.noise(target)}
+        return Scene(values, scene.pixel_m, attrs)
+
+
+<span class="mk"># user</span>
+class PlumeSegmentation(pipekit_ops.Operator):
+    """Step: enhancement scene → plume mask."""
+
+    def __init__(self, *, k: float = 3.0, min_pixels: int = 20) -&gt; None:
+        self.k = k
+        self.min_pixels = min_pixels
+
+    def _apply(self, enhancement: Scene) -&gt; Scene:
+        noise = enhancement.attrs["noise_ppm_m"]
+        rule = SigmaThreshold(self.k)
+        plume = segment(enhancement.data, noise, rule, self.min_pixels)
+        return Scene(plume, enhancement.pixel_m, {})
+
+
+<span class="mk"># user</span>
+class EmissionRate(pipekit_ops.Operator):
+    """Step: enhancement and mask → emission rate in kg s⁻¹."""
+
+    def __init__(self, *, wind_m_s: float = 3.5, kappa: float = 6.56e-7) -&gt; None:
+        self.wind_m_s = wind_m_s
+        self.kappa = kappa
+
+    def _apply(self, enhancement: Scene, plume: Scene) -&gt; float:
+        area = pixel_area(enhancement.pixel_m)
+        return emission_rate(
+            enhancement.data, plume.data, area, self.wind_m_s, self.kappa
+        )</pre>
+
+<h3>⑥ Recipes: the paragraphs</h3>
+<p>A <b>recipe</b> puts steps in order to make one job, from source to product. It contains no computation of its own. Because it holds only steps and their settings, it exists in two forms: code, and data.</p>
+<pre><span class="mk"># user</span>
+def plume_recipe(
+    *, k: float = 3.0, estimator: str = "ledoit_wolf"
+) -&gt; pipekit_ops.Graph:
+    """Recipe: retrieval, segmentation and quantification, wired into one job."""
+<span class="mk">    # today (pipekit)</span>
+    scene_in = pipekit_ops.Input("scene")
+    enhancement = MethaneRetrieval(estimator=estimator)(scene_in)
+    plume = PlumeSegmentation(k=k)(enhancement)
+    emission = EmissionRate()(enhancement, plume)
+<span class="mk">    # today (pipekit)</span>
+    return pipekit_ops.Graph(
+        inputs={"scene": scene_in}, outputs={"emission": emission}
+    )</pre>
+<div class="uses"><span class="tag">The test between ⑤ and ⑥</span><ul><li><b>Step</b>: does one thing to its input. It may be complicated inside; <code>Reproject</code> resamples and warps and is still one closed block with settings.</li><li><b>Recipe</b>: puts steps (its own, or ones you hand it) in order. The combinators that join steps (<code>Sequential</code>, <code>Graph</code>, <code>Branch</code>) live here too.</li></ul><p class="less">Names can mislead: geoops' <code>RGBRecipe</code> is a step, not a recipe. Ask how it is built.</p></div>
+
+<h2 id="example">Part 2 · The example on the ladder</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 342" role="img" aria-label="The pieces of the methane example placed on their rungs in three columns; the Background model feeds both the matched filter and the segmentation."><text class="muted" x="230" y="20" text-anchor="middle">retrieval</text><text class="muted" x="402" y="20" text-anchor="middle">segmentation</text><text class="muted" x="574" y="20" text-anchor="middle">quantification</text><text class="h" x="40" y="316" text-anchor="middle">⓪</text><text class="muted" x="60" y="316">Structure</text><rect class="stepbox" x="150" y="294" width="504" height="32" rx="6"/><text class="mono" x="402.0" y="315" text-anchor="middle">Scene (the carrier) · arrays</text><text class="h" x="40" y="272" text-anchor="middle">①</text><text class="muted" x="60" y="272">Primitive</text><rect class="hdr" x="150" y="250" width="160" height="32" rx="6"/><text class="mono" x="230" y="271" text-anchor="middle">target_signature</text><rect class="hdr" x="322" y="250" width="160" height="32" rx="6"/><text class="mono" x="402" y="271" text-anchor="middle">large_components</text><rect class="hdr" x="494" y="250" width="160" height="32" rx="6"/><text class="mono" x="574" y="271" text-anchor="middle">pixel_area</text><text class="h" x="40" y="228" text-anchor="middle">②</text><text class="muted" x="60" y="228">Strategy</text><rect class="stepbox" x="150" y="206" width="160" height="32" rx="6"/><text class="mono" x="230" y="227" text-anchor="middle">LedoitWolf</text><rect class="stepbox" x="322" y="206" width="160" height="32" rx="6"/><text class="mono" x="402" y="227" text-anchor="middle">SigmaThreshold</text><text class="h" x="40" y="184" text-anchor="middle">③</text><text class="muted" x="60" y="184">Model</text><rect class="stepbox" x="150" y="162" width="160" height="32" rx="6"/><text class="mono" x="230" y="183" text-anchor="middle">Background</text><text class="h" x="40" y="140" text-anchor="middle">④</text><text class="muted" x="60" y="140">Algorithm</text><rect class="hdr" x="150" y="118" width="160" height="32" rx="6"/><text class="mono" x="230" y="139" text-anchor="middle">matched_filter</text><rect class="hdr" x="322" y="118" width="160" height="32" rx="6"/><text class="mono" x="402" y="139" text-anchor="middle">segment</text><rect class="hdr" x="494" y="118" width="160" height="32" rx="6"/><text class="mono" x="574" y="139" text-anchor="middle">emission_rate</text><text class="h" x="40" y="96" text-anchor="middle">⑤</text><text class="muted" x="60" y="96">Step</text><rect class="hit" x="150" y="74" width="160" height="32" rx="6"/><text class="mono" x="230" y="95" text-anchor="middle">MethaneRetrieval</text><rect class="hit" x="322" y="74" width="160" height="32" rx="6"/><text class="mono" x="402" y="95" text-anchor="middle">PlumeSegmentation</text><rect class="hit" x="494" y="74" width="160" height="32" rx="6"/><text class="mono" x="574" y="95" text-anchor="middle">EmissionRate</text><text class="h" x="40" y="52" text-anchor="middle">⑥</text><text class="muted" x="60" y="52">Recipe</text><rect class="hit" x="150" y="30" width="504" height="32" rx="6"/><text class="mono" x="402.0" y="51" text-anchor="middle">plume_recipe</text><path class="ln-o" d="M310 178 H402 V152" marker-end="url(#a-o)"/><text class="o" x="410" y="183">σ, the filter's noise: fitted once, used twice</text></svg></div><figcaption>The same notebook, with each piece on its rung. Columns are the three stages; rows are the rungs. The orange arrow is what the cell could not do: the background is fitted once and its noise level sets the segmentation threshold.</figcaption></figure>
+<pre><span class="mk"># user</span>
+recipe = plume_recipe()
+result = recipe(scene=scene)                    # → {"emission": Q}
+<span class="c"># swap one strategy; nothing else changes</span>
+swapped = plume_recipe(estimator="sample")(scene=scene)
+<span class="mk"># today (pipekit)</span>
+<span class="c"># the recipe as data: class names and settings, never arrays</span>
+recipe_json = pipekit_ops.dumps(recipe)
+<span class="mk"># today (pipekit)</span>
+loaded = pipekit_ops.loads(recipe_json)
+again = loaded(scene=scene)                     # the same Q</pre>
+<div class="tbl"><table><thead><tr><th>What the ladder bought</th><th>How</th><th>Measured</th></tr></thead><tbody><tr><td>Reuse</td><td><code>Background</code> is fitted once; the filter uses its solve and segmentation uses its noise</td><td>mask: 197 of 197 true pixels</td></tr><tr><td>Swap</td><td><code>estimator="sample"</code> picks another ② strategy; no other line changes</td><td>Q̂ 5.683 → 5.678 kg s⁻¹</td></tr><tr><td>Save</td><td><code>dumps</code> writes the recipe as JSON; <code>loads</code> rebuilds it</td><td>Q̂ 5.683 kg s⁻¹, identical</td></tr><tr><td>Check</td><td>the truth is known for the synthetic scene</td><td>Q̂ 5.68 against 5.80 kg s⁻¹</td></tr></tbody></table></div>
+<p>The recipe as data is short, because everything below ⑤ is code and only settings are saved:</p>
+<pre>[
+  {
+    "class": "MethaneRetrieval",
+    "config": {
+      "estimator": "ledoit_wolf"
+    }
+  },
+  {
+    "class": "PlumeSegmentation",
+    "config": {
+      "k": 3.0,
+      "min_pixels": 20
+    }
+  },
+  {
+    "class": "EmissionRate",
+    "config": {
+      "kappa": 6.56e-07,
+      "wind_m_s": 3.5
+    }
+  }
+]</pre>
+
+<h2 id="rules">Part 3 · The rules that make it a ladder</h2>
+<div class="tbl"><table><thead><tr><th>Rule</th><th>What it means</th><th>Why</th></tr></thead><tbody><tr><td>Calls go down</td><td>a rung uses the rungs below it, never those above</td><td>anything can be tested without what is built on it; the ladder is the build order</td></tr><tr><td>Arrays below ⑤</td><td>rungs ⓪ to ④ take arrays and numbers, never a georeferenced container</td><td>the maths runs on any container, under <code>jit</code>, in any library</td></tr><tr><td>Settings stop at ⑤</td><td>configs build steps and recipes; lower rungs take plain values</td><td>one place where settings are named and saved</td></tr><tr><td>Composition is closed</td><td>a recipe of recipes is a recipe, so the ladder ends at ⑥</td><td>what lies above is running, not composing</td></tr><tr><td>One name, one rung</td><td>a public name has exactly one role</td><td>the docs, the tests and the reader all know where to look</td></tr></tbody></table></div>
+<p>The role also fixes the packaging: ① and ④ are functions, ⓪, ② and ③ are Modules, ⑤ and ⑥ are Operators. One entanglement is allowed and documented: a verb may take an adverb (<code>solve(A, b, solver=CGSolver())</code>), and some adverbs call verbs.</p>
+
+<h2 id="place">Placing a new name</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 376" role="img" aria-label="Seven questions asked from the top of the ladder down decide which rung a new name belongs to."><rect class="stepbox" x="20" y="12" width="400" height="36" rx="6"/><text x="34" y="35">Does it put steps in order to make a job?</text><path class="ln-s" d="M420 30 H482" marker-end="url(#a-s)"/><text class="yes" x="451" y="24" text-anchor="middle">yes</text><rect class="hit" x="490" y="12" width="170" height="36" rx="6"/><text class="h" x="504" y="35">⑥ Recipe</text><path class="ln" d="M220 48 V62" marker-end="url(#a-m)"/><text class="tick" x="230" y="61">no</text><rect class="stepbox" x="20" y="64" width="400" height="36" rx="6"/><text x="34" y="87">One transformation of a carrier, with settings that save?</text><path class="ln-s" d="M420 82 H482" marker-end="url(#a-s)"/><text class="yes" x="451" y="76" text-anchor="middle">yes</text><rect class="hit" x="490" y="64" width="170" height="36" rx="6"/><text class="h" x="504" y="87">⑤ Step</text><path class="ln" d="M220 100 V114" marker-end="url(#a-m)"/><text class="tick" x="230" y="113">no</text><rect class="stepbox" x="20" y="116" width="400" height="36" rx="6"/><text x="34" y="139">A method that takes models and returns a result?</text><path class="ln-s" d="M420 134 H482" marker-end="url(#a-s)"/><text class="yes" x="451" y="128" text-anchor="middle">yes</text><rect class="hdr" x="490" y="116" width="170" height="36" rx="6"/><text class="h" x="504" y="139">④ Algorithm</text><path class="ln" d="M220 152 V166" marker-end="url(#a-m)"/><text class="tick" x="230" y="165">no</text><rect class="stepbox" x="20" y="168" width="400" height="36" rx="6"/><text x="34" y="191">An object with meaning and fitted state?</text><path class="ln-s" d="M420 186 H482" marker-end="url(#a-s)"/><text class="yes" x="451" y="180" text-anchor="middle">yes</text><rect class="stepbox" x="490" y="168" width="170" height="36" rx="6"/><text class="h" x="504" y="191">③ Model</text><path class="ln" d="M220 204 V218" marker-end="url(#a-m)"/><text class="tick" x="230" y="217">no</text><rect class="stepbox" x="20" y="220" width="400" height="36" rx="6"/><text x="34" y="243">A choice of how, holding settings and no data?</text><path class="ln-s" d="M420 238 H482" marker-end="url(#a-s)"/><text class="yes" x="451" y="232" text-anchor="middle">yes</text><rect class="stepbox" x="490" y="220" width="170" height="36" rx="6"/><text class="h" x="504" y="243">② Strategy</text><path class="ln" d="M220 256 V270" marker-end="url(#a-m)"/><text class="tick" x="230" y="269">no</text><rect class="stepbox" x="20" y="272" width="400" height="36" rx="6"/><text x="34" y="295">One call that acts on a noun?</text><path class="ln-s" d="M420 290 H482" marker-end="url(#a-s)"/><text class="yes" x="451" y="284" text-anchor="middle">yes</text><rect class="hdr" x="490" y="272" width="170" height="36" rx="6"/><text class="h" x="504" y="295">① Primitive</text><path class="ln" d="M220 308 V322" marker-end="url(#a-m)"/><text class="tick" x="230" y="321">no</text><rect class="stepbox" x="20" y="324" width="400" height="36" rx="6"/><text x="34" y="347">A thing the others act on?</text><path class="ln-s" d="M420 342 H482" marker-end="url(#a-s)"/><text class="yes" x="451" y="336" text-anchor="middle">yes</text><rect class="stepbox" x="490" y="324" width="170" height="36" rx="6"/><text class="h" x="504" y="347">⓪ Structure</text></svg></div><figcaption>Ask from the top. The first yes is the rung. What a name is called, or how much happens inside it, does not count; how it is built and what it takes does.</figcaption></figure>
+<div class="tbl"><table><thead><tr><th>Name</th><th>Rung</th><th>Because</th></tr></thead><tbody><tr><td><code>Reproject</code></td><td>⑤ step</td><td>complex inside, but one closed block with settings</td></tr><tr><td><code>RGBRecipe</code></td><td>⑤ step</td><td>despite its name, it does one thing to its input</td></tr><tr><td><code>UnscentedIntegrator</code></td><td>② strategy</td><td>a choice of how to integrate, like <code>CGSolver</code> is a choice of how to solve</td></tr><tr><td><code>DACycle</code>, <code>TrainingLoop</code></td><td>⑥ recipe</td><td>templates: compositions with slots for your steps</td></tr><tr><td><code>GeoArray.crop</code></td><td>① primitive</td><td>a verb on a data noun; it moves data and georeference, and computes no new field</td></tr><tr><td>An Airflow task that runs a recipe nightly</td><td>not a rung</td><td>orchestration: it decides when and on what</td></tr></tbody></table></div>
+
+<h2 id="who">Who works where</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 406" role="img" aria-label="Four bands of users beside the ladder: data engineers at orchestration and recipes, geoscience researchers at steps and recipes, ML researchers at strategies to algorithms, numerics and computer science from structures to algorithms."><rect class="stepbox" x="20" y="324" width="150" height="34" rx="6"/><text class="h" x="38" y="346" text-anchor="middle">⓪</text><text x="58" y="346">Structure</text><rect class="stepbox" x="20" y="280" width="150" height="34" rx="6"/><text class="h" x="38" y="302" text-anchor="middle">①</text><text x="58" y="302">Primitive</text><rect class="stepbox" x="20" y="236" width="150" height="34" rx="6"/><text class="h" x="38" y="258" text-anchor="middle">②</text><text x="58" y="258">Strategy</text><rect class="stepbox" x="20" y="192" width="150" height="34" rx="6"/><text class="h" x="38" y="214" text-anchor="middle">③</text><text x="58" y="214">Model</text><rect class="stepbox" x="20" y="148" width="150" height="34" rx="6"/><text class="h" x="38" y="170" text-anchor="middle">④</text><text x="58" y="170">Algorithm</text><rect class="stepbox" x="20" y="104" width="150" height="34" rx="6"/><text class="h" x="38" y="126" text-anchor="middle">⑤</text><text x="58" y="126">Step</text><rect class="stepbox" x="20" y="60" width="150" height="34" rx="6"/><text class="h" x="38" y="82" text-anchor="middle">⑥</text><text x="58" y="82">Recipe</text><rect class="ref" x="20" y="16" width="150" height="34" rx="6"/><text x="34" y="38">Orchestration</text><rect class="hdr" x="196" y="16" width="104" height="78" rx="6"/><text class="h" x="248" y="36" text-anchor="middle">data</text><text class="h" x="248" y="51" text-anchor="middle">engineers</text><text class="tick" x="248" y="108" text-anchor="middle">recipes</text><rect class="hit" x="316" y="60" width="104" height="78" rx="6"/><text class="h" x="368" y="80" text-anchor="middle">geoscience</text><text class="h" x="368" y="95" text-anchor="middle">researchers</text><text class="tick" x="368" y="152" text-anchor="middle">steps</text><rect class="hdr" x="436" y="148" width="104" height="122" rx="6"/><text class="h" x="488" y="168" text-anchor="middle">ML</text><text class="h" x="488" y="183" text-anchor="middle">researchers</text><text class="tick" x="488" y="284" text-anchor="middle">primitives</text><rect class="hit" x="556" y="148" width="104" height="210" rx="6"/><text class="h" x="608" y="168" text-anchor="middle">numerics</text><text class="h" x="608" y="183" text-anchor="middle">and</text><text class="h" x="608" y="198" text-anchor="middle">CS</text><text class="tick" x="608" y="372" text-anchor="middle">JAX, lineax</text><text class="muted" x="196" y="394">Below each band: its floor, the rung it calls and never opens.</text></svg></div><figcaption>Nobody works on the whole ladder. Each kind of user works in a band and treats the rung under it as solid ground. The ladder tells a library which names to put in front of whom.</figcaption></figure>
+<p>This is why the top two rungs get the strictest stability promises and the friendliest errors: they are the surface most people touch. And since floors leak, every step's documentation names the algorithm it wraps, so a user can go one rung down without reading source.</p>
+
+<h2 id="elsewhere">The same ladder in libraries you know</h2>
+<div class="tbl"><table><thead><tr><th>Rung</th><th>In libraries you know</th><th>In the stack</th></tr></thead><tbody><tr><td>⓪ Structure</td><td><code>np.ndarray</code>, <code>xr.DataArray</code>, a SciPy sparse matrix</td><td><code>GeoArray</code>, <code>DimArray</code>, gaussx <code>Kronecker</code></td></tr><tr><td>① Primitive</td><td><code>np.linalg.solve</code>, <code>scipy.ndimage.label</code></td><td>gaussx <code>solve</code>, <code>logdet</code>; geoarray <code>crop</code></td></tr><tr><td>② Strategy</td><td><code>method="L-BFGS-B"</code> in SciPy, an optax optimiser, <code>diffrax.Tsit5</code></td><td><code>CGSolver</code>, <code>NystromPreconditioner</code></td></tr><tr><td>③ Model</td><td>a fitted scikit-learn estimator, a <code>torch.nn.Module</code> with weights</td><td><code>MultivariateNormal</code>, <code>LGSSM</code>, a sesmax model</td></tr><tr><td>④ Algorithm</td><td><code>scipy.optimize.minimize</code>, a training function</td><td><code>kalman_filter</code>, <code>etkf_transform</code></td></tr><tr><td>⑤ Step</td><td>a scikit-learn transformer, a Keras layer, a torchvision transform</td><td>geoops <code>MatchedFilter</code>, <code>Reproject</code></td></tr><tr><td>⑥ Recipe</td><td>a scikit-learn <code>Pipeline</code>, a Keras <code>Sequential</code>, a Pangeo Forge recipe</td><td>pipekit <code>Sequential</code>, <code>Graph</code>; <code>DACycle</code></td></tr><tr><td>Orchestration</td><td>Airflow, Prefect, a DVC pipeline, a FastAPI service</td><td>DVC stages, GeoApps</td></tr></tbody></table></div>
+<p>The correspondences in the middle column are analogies, not claims about how those libraries describe themselves. The pattern is common; what the stack adds is naming the rungs and holding every library to them.</p>
+
+<h2>Where this goes next</h2>
+<div class="tbl"><table><thead><tr><th>Idea here</th><th>In the design pages</th></tr></thead><tbody><tr><td>The ladder</td><td>defined for the whole stack, with the full EMIT example and each library's rungs (<a href="./kinds-and-roles.html">kinds and roles</a>)</td></tr><tr><td>Function, Module, Operator</td><td>the kind axis: how each rung is packaged, in symbols (kinds and roles)</td></tr><tr><td>Arrays below ⑤, carriers above</td><td>the data axis and the rule that carriers stop at GeoStack (kinds and roles, rule 3)</td></tr><tr><td>Which library may hold which rung</td><td>layers and tiers (<a href="./stack-layer-map.html">layer map</a>)</td></tr></tbody></table></div>
+
+<footer>Source: the role ladder on the <a href="./kinds-and-roles.html">kinds and roles</a> design page (6 November 2026), which this page introduces and does not replace. The code on this page is one file of 317 lines, run as shown on a synthetic scene with NumPy, SciPy, scikit-learn, einx and pipekit-ops at <code>9e86a56</code>; its strategies and model are plain dataclasses so that it runs without JAX, where the stack uses equinox Modules, and <code>Scene</code> stands in for <code>GeoArray</code>. The library names in the stack column are from the design page and were not re-checked for this page.</footer>
+
+</main>
+</body>
+</html>
