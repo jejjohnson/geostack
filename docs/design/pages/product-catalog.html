@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>GeoStack Product Catalog</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: one reading column (~900px); wide figures and code scroll sideways in their own frames.
+   Ice-blue accent = the new surface (Icechunk); amber = a verified gap; repo hues tag packages. */
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --sunk: #eef2f6;
+  --fg: #16202b;
+  --fg2: #4a5866;
+  --fg3: #7a8794;
+  --line: #c9d3dd;
+  --accent: #1a6fc2;
+  --accent-soft: #e3effa;
+  --warn: #b86a0a;
+  --warn-soft: #fbefdc;
+  --c-geotoolz: #2f7d6a;
+  --c-xrtoolz: #a2541e;
+  --c-pipekit: #6b4fb0;
+  --c-ext: #8a96a3;
+  --code-bg: #f0f4f8;
+  --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141b; --surface: #151d26; --sunk: #1b2530; --fg: #e3e9ef; --fg2: #a8b4c0; --fg3: #7d8a97;
+    --line: #2f3c49; --accent: #6cb0f0; --accent-soft: #15293d; --warn: #e7a24a; --warn-soft: #33260f;
+    --c-geotoolz: #5cc0a6; --c-xrtoolz: #e0904f; --c-pipekit: #a68ee8; --c-ext: #8f9caa; --code-bg: #111a22;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141b; --surface: #151d26; --sunk: #1b2530; --fg: #e3e9ef; --fg2: #a8b4c0; --fg3: #7d8a97;
+  --line: #2f3c49; --accent: #6cb0f0; --accent-soft: #15293d; --warn: #e7a24a; --warn-soft: #33260f;
+  --c-geotoolz: #5cc0a6; --c-xrtoolz: #e0904f; --c-pipekit: #a68ee8; --c-ext: #8f9caa; --code-bg: #111a22;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15.5px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 72px;
+}
+main { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+section { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; margin-top: 8px; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); }
+code { font-family: var(--font-mono); font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); }
+.byline { color: var(--fg2); font-size: 14px; }
+.lede { font-size: 17px; }
+header { display: flex; flex-direction: column; gap: 14px; }
+
+.pins { display: flex; flex-wrap: wrap; gap: 8px; }
+.pin { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--surface); color: var(--fg2); }
+.pin b { font-weight: 500; }
+.pin.geotoolz b { color: var(--c-geotoolz); } .pin.xrtoolz b { color: var(--c-xrtoolz); }
+.pin.pipekit b { color: var(--c-pipekit); } .pin.geostack b { color: var(--fg); }
+
+.summary { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; }
+.summary li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: baseline; }
+.summary .tag { font-family: var(--font-mono); font-weight: 500; color: var(--accent); }
+
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.figwrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 12px; -webkit-overflow-scrolling: touch; }
+.figwrap svg { display: block; width: 100%; min-width: 640px; max-width: 820px; margin: 0 auto; height: auto; }
+figcaption { font-size: 14px; color: var(--fg2); max-width: 70ch; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--fg2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+.dot { width: 14px; height: 14px; border-radius: 50%; display: inline-grid; place-items: center; font: 600 9px var(--font-mono); color: var(--bg); }
+
+/* SVG (page CSS, theme tokens) */
+svg text { font-family: var(--font-body); fill: var(--fg); }
+svg .t-h { font-size: 13.5px; font-weight: 600; }
+svg .t-m { font-family: var(--font-mono); font-size: 11.5px; fill: var(--fg2); }
+svg .t-b { font-size: 12px; fill: var(--fg2); }
+svg .t-tier { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; fill: var(--fg3); }
+svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+svg .band { fill: var(--sunk); stroke: var(--line); stroke-width: 1; }
+svg .item { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+svg .new { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 5 3; }
+svg .repo { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+svg .warnbox { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.4; stroke-dasharray: 5 3; }
+svg .new-t { fill: var(--accent); }
+svg .muted { opacity: 0.45; }
+svg .s-geotoolz { fill: var(--c-geotoolz); } svg .s-xrtoolz { fill: var(--c-xrtoolz); }
+svg .s-pipekit { fill: var(--c-pipekit); } svg .s-ext { fill: var(--c-ext); }
+svg .edge { stroke: var(--fg3); stroke-width: 1.4; fill: none; }
+svg .edge-a { stroke: var(--accent); stroke-width: 1.8; fill: none; }
+svg .dash { stroke-dasharray: 4 3; }
+svg .head { fill: var(--fg3); }
+svg .head-a { fill: var(--accent); }
+svg .lbl { font-family: var(--font-mono); font-size: 10.5px; fill: var(--fg2); }
+svg .lbl-a { font-family: var(--font-mono); font-size: 10.5px; fill: var(--accent); }
+svg .gap-c { fill: var(--warn); }
+svg .ws-c { fill: var(--accent); }
+svg .mark-t { fill: var(--bg); font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg3); background: var(--sunk); }
+tr:last-child td { border-bottom: none; }
+td code { white-space: nowrap; }
+.repo-t { font-family: var(--font-mono); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.repo-t.geotoolz { color: var(--c-geotoolz); } .repo-t.xrtoolz { color: var(--c-xrtoolz); } .repo-t.pipekit { color: var(--c-pipekit); }
+.path { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg3); word-break: break-all; }
+
+.gaps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.gaps li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; }
+.gaps.risk li { background: var(--accent-soft); }
+.num { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--bg); background: var(--warn); }
+.num.ws { background: var(--accent); }
+.gaps li p { max-width: none; }
+
+pre { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; color: var(--fg); tab-size: 4; }
+pre .c { color: var(--fg3); }
+pre .st-t { color: var(--c-geotoolz); font-weight: 500; }
+pre .st-p { color: var(--accent); font-weight: 500; }
+pre .st-u { color: var(--c-xrtoolz); font-weight: 500; }
+pre .kw { color: var(--c-pipekit); }
+pre .eq { color: var(--fg2); font-style: italic; }
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { font-family: var(--font-mono); font-size: 13px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg2); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.markers { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14px; color: var(--fg2); }
+.markers code { justify-self: start; }
+.note { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--fg2); font-size: 14.5px; }
+.decide { display: grid; gap: 8px; }
+.decide div { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
+.decide b { font-family: var(--font-mono); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg3); padding-top: 2px; }
+@media (max-width: 560px) { .decide div { grid-template-columns: 1fr; gap: 2px; } }
+.sources { font-size: 14px; color: var(--fg2); display: grid; gap: 4px; padding-left: 18px; margin: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.math { overflow-x: auto; padding: 6px 0; font-size: 17px; }
+.math math { font-size: 1.1em; }
+.stage-tldr { font-size: 15.5px; }
+.problem { display: flex; flex-direction: column; gap: 10px; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="eyebrow">Design doc · product catalog</div>
+  <h1>GeoStack product catalog</h1>
+  <div class="byline">12 Nov 2026 · J. Emmanuel Johnson</div>
+  <p class="lede">A product catalog records what you made, from which inputs, with which code, in a database other people and apps can search. This doc fixes its record, its write path and its backends, and keeps the database itself a deployment choice.</p>
+  <div class="pins">
+    <span class="pin geotoolz"><b>geotoolz</b> 640670c</span>
+    <span class="pin pipekit"><b>pipekit</b> 9e86a56</span>
+    <span class="pin geostack"><b>geostack</b> 343d60e</span>
+  </div>
+  <p class="byline">One of three pages: <a href="./l2-collections.html">Level 2 collections in GeoStack</a> (the repo, its <code>meta/</code> index and transactions, A–E), this page (F, K, L), and <a href="./recipe-registries.html">pipekit recipe registries</a> (G–J). Letters never repeat across them.</p>
+</header>
+
+<section>
+  <h2>Summary</h2>
+  <p>Products are recorded in a catalog that is a protocol, not a particular database. geocatalog owns the record and the path that writes it; which store holds it (PostGIS, pgstac, GeoParquet or another) is chosen per deployment. Nothing on the data path changes: the Icechunk repo stays the truth, and the catalog can be rebuilt from its tags.</p>
+  <ul class="summary">
+    <li><span class="tag">F.</span><span><b>Publish to a product catalog.</b> geocatalog reads source catalogs and can export a STAC collection, but nothing writes products into a database others can search. <code>publish</code> upserts one STAC-shaped record per product of a tagged snapshot, through a <code>ProductCatalog</code> adapter.</span></li>
+    <li><span class="tag">K.</span><span><b>One record, three encodings.</b> The same product appears as a GeoParquet row, a PostGIS row and a STAC item, and nothing keeps their fields aligned. The core fields are defined once and each encoding is generated from them; an ORM maps only that core, so apps can add their own columns.</span></li>
+    <li><span class="tag">L.</span><span><b>pgstac as a synced index.</b> pgstac stores items dehydrated in partitioned tables, so an ORM cannot write to it. Your own PostGIS table is the catalog of record, and pgstac, when you want STAC search, is fed from it with <code>upsert_items</code>.</span></li>
+  </ul>
+  <p><b>End state.</b> The Icechunk repo holds data and its <code>meta/</code> rows; geocatalog holds the record definition, <code>ProductCatalog</code>, <code>publish</code> and one adapter per backend, each behind its own extra; your apps own the table's DDL and any extra columns; pgstac, if used, is a disposable search index; pipekit-experiment supplies the recipe stamp each record carries.</p>
+</section>
+
+<section id="ownership">
+  <h2>Ownership rules</h2>
+  <p>The catalog is always derived: data flows down from the repo, and search flows back up to the next task.</p>
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 800 470" role="img" aria-label="Product catalog ownership. The Icechunk repo publishes tagged snapshots through geocatalog into your products table, which apps extend with their own columns; an optional sync feeds pgstac behind a STAC API; geocatalog searches either and returns a working catalog for the next task.">
+      <defs>
+        <marker id="o1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="o1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head-a" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <rect class="box" x="40" y="30" width="430" height="64" rx="7"/>
+      <rect class="s-geotoolz" x="40" y="30" width="4" height="64" rx="2"/>
+      <text class="t-h" x="56" y="54">Icechunk repo</text>
+      <text class="t-b" x="56" y="76">data and meta/ rows; the truth (L2 page, A, B)</text>
+      <line class="edge-a" x1="255" y1="94" x2="255" y2="133" marker-end="url(#o1a)"/>
+      <text class="lbl-a" x="264" y="119">publish(tag), after the commit</text>
+
+      <rect class="new" x="40" y="136" width="430" height="74" rx="7"/>
+      <text class="t-h new-t" x="56" y="160">geocatalog: record + ProductCatalog</text>
+      <text class="t-m" x="56" y="181">CORE_FIELDS · publish · search</text>
+      <text class="t-b" x="56" y="199">adapters: PostGIS · pgstac · STAC API · GeoParquet</text>
+      <circle class="ws-c" cx="456" cy="152" r="9"/><text class="mark-t" x="456" y="156" text-anchor="middle">F</text>
+      <circle class="ws-c" cx="434" cy="152" r="9"/><text class="mark-t" x="434" y="156" text-anchor="middle">K</text>
+      <line class="edge-a" x1="255" y1="210" x2="255" y2="249" marker-end="url(#o1a)"/>
+      <text class="lbl-a" x="264" y="235">upsert, by id</text>
+
+      <rect class="box" x="40" y="252" width="430" height="64" rx="7"/>
+      <text class="t-h" x="56" y="276">Products table (PostGIS)</text>
+      <text class="t-b" x="56" y="298">catalog of record; DDL owned by your app</text>
+      <line class="edge-a dash" x1="255" y1="316" x2="255" y2="355" marker-end="url(#o1a)"/>
+      <text class="lbl-a" x="264" y="341">sync: upsert_items (optional)</text>
+      <circle class="ws-c" cx="456" cy="336" r="9"/><text class="mark-t" x="456" y="340" text-anchor="middle">L</text>
+
+      <rect class="box" x="40" y="358" width="430" height="64" rx="7"/>
+      <text class="t-h" x="56" y="382">pgstac behind stac-fastapi</text>
+      <text class="t-b" x="56" y="404">STAC search index; rebuildable from the table</text>
+
+      <rect class="band" x="520" y="252" width="260" height="64" rx="7"/>
+      <rect class="s-ext" x="520" y="252" width="4" height="64" rx="2"/>
+      <text class="t-h" x="536" y="276">Your apps</text>
+      <text class="t-b" x="536" y="298">add columns: alerts, labels, notes</text>
+      <line class="edge" x1="518" y1="284" x2="473" y2="284" marker-end="url(#o1)"/>
+
+      <rect class="band" x="520" y="30" width="260" height="64" rx="7"/>
+      <rect class="s-pipekit" x="520" y="30" width="4" height="64" rx="2"/>
+      <text class="t-h" x="536" y="54">pipekit-experiment</text>
+      <text class="t-b" x="536" y="76">the recipe stamp (G)</text>
+      <path class="edge" d="M650 94 L650 120 L475 160" marker-end="url(#o1)"/>
+
+      <path class="edge" d="M40 390 L24 390 L24 173 L37 173" marker-end="url(#o1)"/>
+      <text class="lbl" transform="translate(16 290) rotate(-90)" text-anchor="middle">search → next task</text>
+    </svg>
+    </div>
+    <figcaption>Blue boxes and arrows are what this doc adds. Writes go down and are idempotent; searches go back up through the same protocol and return a working catalog.</figcaption>
+  </figure>
+  <ol class="ws-list" style="list-style:none;padding:0;margin:0">
+    <li><span class="num ws">1</span><p><b>The Icechunk repo</b> owns the data and its <code>meta/</code> rows and is the only source of truth. It never reads the catalog.</p></li>
+    <li><span class="num ws">2</span><p><b>geocatalog</b> owns the record (<code>CORE_FIELDS</code>), the <code>ProductCatalog</code> protocol, <code>publish</code> and the adapters. It never imports a database driver outside an adapter's extra, and never creates or alters a table.</p></li>
+    <li><span class="num ws">3</span><p><b>Your app</b> owns the products table's DDL, through one migration tool, and its extra columns. It never writes the core columns except through <code>publish</code>.</p></li>
+    <li><span class="num ws">4</span><p><b>pgstac</b>, when used, owns STAC search. It is fed by a sync through its own functions, never by an ORM, and holds nothing that cannot be rebuilt from the table.</p></li>
+    <li><span class="num ws">5</span><p><b>pipekit-experiment</b> owns the recipe stamp each record carries (<a href="./recipe-registries.html">recipe registries</a>, G). It never imports geocatalog.</p></li>
+  </ol>
+</section>
+
+<section id="example">
+  <h2>How it composes: one running example</h2>
+  <p>A month of matched-filter products over one site. S Sentinel-2 scenes over the site in June 2026 have each been filtered and committed into the repo <code>s3://bkt/s2_site</code>, on branch <code>mf-v0.3</code>, and the commit tagged <code>mf-v0.3-2026-06</code> (L2 page, B). Each product is one group <code>products/mf/&lt;scene id&gt;</code> with one <code>meta/</code> row.</p>
+
+  <h3>Stage 1: publish the month (Icechunk → geocatalog → products table)</h3>
+  <p class="stage-tldr"><b>TL;DR.</b> Turn every product row of the tagged snapshot into one catalog record, written so that running it twice changes nothing.</p>
+  <div class="problem">
+    <p><b>Problem.</b> Let ρ₁, …, ρ_S be the product rows of <code>meta/</code> at the tag's snapshot σ. Each record carries an id, a footprint g ⊂ ℝ² in EPSG:4326, a time interval [t₀, t₁], a location (the <code>icechunk://</code> group at σ), and properties. Publishing writes one record per row and is idempotent: upserting the same set twice leaves the catalog unchanged.</p>
+    <div class="math" data-tex="r_s = \big(\mathrm{id}_s,\ g_s,\ [t_{0,s}, t_{1,s}],\ \texttt{icechunk://}\,\mathrm{repo}@\sigma/\mathrm{key}_s,\ \pi_s\big), \qquad s = 1, \dots, S">r_s = (id, g, [t0, t1], href@σ, properties)</div>
+    <div class="math" data-tex="\mathrm{upsert}(\mathcal{C}, \{r_s\}) = \mathrm{upsert}\big(\mathrm{upsert}(\mathcal{C}, \{r_s\}), \{r_s\}\big)">upsert(C, R) = upsert(upsert(C, R), R)</div>
+  </div>
+<pre data-hl>import geocatalog
+import geocatalog.storage
+
+# Shapes: R rows in meta/ at the tag; S of them are products
+
+# proposed (A)
+catalog = geocatalog.open_catalog("icechunk://s3://bkt/s2_site")  # → R rows
+# proposed (F)
+products = geocatalog.storage.PostGISCatalog(dsn, table="products")
+# r_s = (id, g, [t₀, t₁], href@σ, π), s = 1 … S
+# proposed (F)
+published = geocatalog.storage.publish(                         # → S records
+    catalog,
+    products,
+    tag="mf-v0.3-2026-06",
+    collection_id="products-mf",
+)</pre>
+  <p>Today the closest thing is <code>geocatalog.build.append_files</code>, which appends rows to a GeoParquet file and knows nothing about snapshots. The payoff of F is that the record names σ, so it can never point at data that changes under it.</p>
+
+  <h3>Stage 2: find them next month (products table → geocatalog)</h3>
+  <p class="stage-tldr"><b>TL;DR.</b> Search the catalog for products over the site, and get back the same kind of working catalog a source search returns.</p>
+  <div class="problem">
+    <p><b>Problem.</b> For a query with bounds B ⊂ ℝ² and interval T, keep every record whose footprint meets B and whose interval meets T, with the same rule the working catalog uses for its <code>query</code>.</p>
+    <div class="math" data-tex="\mathrm{keep}(r) \iff g_r \cap B \neq \varnothing \ \wedge\ [t_{0,r}, t_{1,r}] \cap T \neq \varnothing">keep(r) ⇔ g ∩ B ≠ ∅ ∧ [t0, t1] ∩ T ≠ ∅</div>
+  </div>
+<pre data-hl>import geocatalog.load
+
+# Shapes: K records kept; per product 1 band on its own H × W grid
+
+# keep(r) ⇔ g ∩ B ≠ ∅ ∧ [t₀, t₁] ∩ T ≠ ∅
+# proposed (F)
+found = products.search(site_june)                              # → K rows
+# proposed (C)
+tree = geocatalog.load.load_scenes(found, site_june)            # → K nodes</pre>
+  <p><code>search</code> returns a <code>GeoCatalog</code>, so everything downstream (<code>load_scenes</code>, <code>matchup</code>, a training dataset) works unchanged. A product made last month is found exactly like a public scene.</p>
+
+  <h3>Stage 3: trace a map back (catalog → sources, recipe)</h3>
+  <p class="stage-tldr"><b>TL;DR.</b> From one product, recover the scenes it came from and the code that made it.</p>
+  <div class="problem">
+    <p><b>Problem.</b> A product α was made by recipe R from inputs x. Its record names x through <code>derived_from</code> links and R through its recipe stamp, so both can be followed without reading any code or folder names.</p>
+    <div class="math" data-tex="\alpha = R(x), \qquad x = \{\text{source items}\} \text{ via derived\_from}, \qquad R = \mathrm{registry.load}(h_R)">α = R(x)</div>
+  </div>
+<pre data-hl>import pipekit_experiment
+
+# Shapes: one record; N input items
+
+# proposed (F)
+record = products.get("mf-v0.3/S2A_20260601_T30SYJ")
+# proposed (F)
+inputs = record.links_of("derived_from")                         # → N items
+# today* (pipekit-experiment)
+recipes = pipekit_experiment.S3ModelRegistry("s3://bkt/recipes/")
+# R = registry.load(h_R)
+# today (pipekit-experiment)
+recipe = recipes.load(record.properties["pipekit:pipeline_hash"])</pre>
+  <p>The stamp is defined on the <a href="./recipe-registries.html">recipe registries</a> page (G). With inputs at their snapshot and the recipe by hash, the product can be rebuilt and compared, which is that page's gate G1.</p>
+</section>
+
+<section id="audit">
+  <h2>Current-state audit</h2>
+  <p>No product catalog exists today; the five pieces it builds on are healthy. Read on <code>main</code> on 12 Nov 2026 at geotoolz <code>640670c</code>.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Symbols</th><th>Defined in</th><th>Used by</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td><code>STACSource</code></td><td class="path">geocatalog/_src/sources/stac.py</td><td>the source layer (<code>_stac_item.py</code>, <code>gee.py</code>, <code>_extras.py</code>)</td><td><b>Healthy.</b> Reads any STAC API, so it reads a pgstac index back with no new code.</td></tr>
+      <tr><td><code>to_stac_collection</code></td><td class="path">geocatalog/_src/storage/stac.py:205</td><td>no internal callers; public export</td><td><b>Healthy.</b> Groups rows into items; the base <code>publish</code> builds on.</td></tr>
+      <tr><td><code>append_files</code></td><td class="path">_src/storage/streaming.py:838, exported from <code>geocatalog.build</code></td><td>no internal callers; public export</td><td><b>Healthy.</b> Appends to GeoParquet; becomes the GeoParquet adapter's <code>upsert</code>.</td></tr>
+      <tr><td><code>RESERVED_COLUMNS</code></td><td class="path">geocatalog/_src/_schema.py:19</td><td>both backends, the storage writers</td><td><b>Healthy.</b> <code>filepath</code>, <code>start_time</code>, <code>end_time</code>, <code>geometry</code>, <code>bbox</code>: almost the core K needs.</td></tr>
+      <tr><td><code>DuckDBGeoCatalog</code>, <code>from_geoparquet</code></td><td class="path">_src/backends/duckdb_backend.py, _src/storage/parquet.py</td><td><code>open_catalog</code>, staging, vector loading</td><td><b>Healthy.</b> The query engine a GeoParquet-backed catalog already has.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Smaller findings:</p>
+  <ul class="gaps">
+    <li><span class="num">1</span><p><b>No write to a catalog service.</b> Nothing in geocatalog's <code>src/</code> writes to a STAC API or a database: no pgstac, no Transactions extension, no SQLAlchemy.</p></li>
+    <li><span class="num">2</span><p><b>Two CRSs.</b> geocatalog stores footprints in the catalog's CRS; a cross-repo catalog wants EPSG:4326 plus the native CRS as a field.</p></li>
+    <li><span class="num">3</span><p><b>Names differ at the STAC edge.</b> <code>filepath</code> vs <code>assets.data.href</code>, <code>start_time</code> vs <code>start_datetime</code>. K keeps geocatalog's names and maps them once.</p></li>
+  </ul>
+</section>
+
+<section id="ws-f">
+  <div class="eyebrow">Workstream F</div>
+  <h2>Publish to a product catalog behind one protocol</h2>
+  <p>geocatalog writes product records through <code>ProductCatalog</code>, and never through a database driver directly.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Symbol</th><th>Destination</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td><code>ProductCatalog</code></td><td><code>geocatalog.storage</code></td><td>The protocol: <code>upsert</code>, <code>set_collection</code>, <code>search</code>, <code>get</code>.</td></tr>
+      <tr><td><code>publish</code></td><td><code>geocatalog.storage</code></td><td>Tagged snapshot to records; builds on <code>to_stac_collection</code>.</td></tr>
+      <tr><td><code>PostGISCatalog</code></td><td><code>geocatalog.storage</code>, extra <code>[postgis]</code></td><td>Uses K's <code>ProductRecord</code> over your table.</td></tr>
+      <tr><td><code>PgstacCatalog</code>, <code>StacApiCatalog</code></td><td><code>geocatalog.storage</code>, extra <code>[stac]</code></td><td><code>upsert_items</code> and search, or the Transactions extension over HTTP (L).</td></tr>
+      <tr><td><code>GeoParquetCatalog</code></td><td><code>geocatalog.storage</code></td><td>stac-geoparquet files; <code>upsert</code> wraps <code>append_files</code>. No server.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <ol class="ws-list" style="list-style:none;padding:0;margin:0">
+    <li><span class="num ws">1</span><p><b>Define the protocol and the GeoParquet adapter.</b> It needs no server, so the whole path can be tested in CI.</p></li>
+    <li><span class="num ws">2</span><p><b>Write <code>publish</code>.</b> Refuse untagged snapshots, stamp each item with repo, key, snapshot and lineage, upsert by id.</p></li>
+    <li><span class="num ws">3</span><p><b>Add the PostGIS adapter</b> once K's record exists, then the pgstac and STAC API adapters with L.</p></li>
+  </ol>
+  <p>The refactor, as the user sees it:</p>
+<pre data-hl># Today:
+# today* (geocatalog)
+geocatalog.build.append_files(archive, product_paths, extract_row, ...)
+# After:
+# proposed (F)
+geocatalog.storage.publish(catalog, products, tag=tag, collection_id=collection)</pre>
+  <p>Publishing reuses the STAC export that ships today and adds the snapshot stamp, the lineage links and the upsert. The backend hides behind <code>ProductCatalog</code>, whose <code>search</code> returns a working catalog, which closes the loop. Each row's <code>parent</code> extra names the source item it came from.</p>
+<pre data-hl># geocatalog/_src/storage/products.py
+"""Publish a tagged Icechunk snapshot to a product catalog, whatever its backend."""
+
+from collections.abc import Sequence
+from typing import Protocol
+
+import pystac
+
+from geocatalog._src.backends.icechunk import IcechunkGeoCatalog
+from geocatalog._src.base import GeoCatalog
+from geocatalog._src.geoslice import GeoSlice
+from geocatalog._src.storage.stac import to_stac_collection
+
+# Shapes: R rows in meta/ at the tag
+
+
+class ProductCatalog(Protocol):
+    """Where products are recorded: one STAC-shaped record per product.
+
+    Adapters, each behind its own extra: PostGISCatalog (ProductRecord over
+    your own table), PgstacCatalog (upsert_items and search), StacApiCatalog
+    (a STAC API with Transactions) and GeoParquetCatalog (stac-geoparquet).
+    """
+
+    def upsert(self, items: Sequence[pystac.Item]) -> int: ...
+
+    def set_collection(self, collection: pystac.Collection) -> None: ...
+
+    def search(self, slice_: GeoSlice) -> GeoCatalog: ...
+
+
+def publish(
+    catalog: IcechunkGeoCatalog,
+    products: ProductCatalog,
+    *,
+    tag: str,
+    collection_id: str,
+) -> int:
+    """Upsert one record per meta/ row of a tagged snapshot.
+
+    Algorithm:
+        1. Refuse an untagged snapshot, since only a tag is safe from expiry.
+        2. Build the collection and its items from the rows at the tag.
+        3. Stamp each item with the repo, key, snapshot and derived_from links.
+        4. Upsert the items by id, so a rerun changes nothing.
+        5. Point the collection-level asset at repo@tag.
+
+    Args:
+        catalog: The repository's catalog.
+        products: The product catalog to record into, any backend.
+        tag: The Icechunk tag to publish.
+        collection_id: The product collection, e.g. "products-mf".
+
+    Returns:
+        The number of records upserted.
+
+    Raises:
+        ProductCatalogError: If the tag does not exist or the backend refuses
+            a write.
+    """
+    # proposed (F)
+    tagged = catalog.at_tag(tag)                                    # → R rows
+    # today (geocatalog)
+    collection = to_stac_collection(                                # → R items
+        tagged,
+        collection_id=collection_id,
+    )
+    # proposed (F)
+    stamped = stamp_items(                                          # R → R items
+        collection,
+        uri=catalog.uri,
+        snapshot=tagged.snapshot,
+    )
+    # proposed (F)
+    upserted = products.upsert(stamped)                             # R → ()
+    # proposed (F)
+    tag_asset = with_tag_asset(collection, uri=catalog.uri, tag=tag)
+    # proposed (F)
+    products.set_collection(tag_asset)
+    return upserted</pre>
+
+  <h3>Which database, and how many</h3>
+  <p>The product catalog is a protocol, not a product. Its record is STAC-shaped (geometry, time, properties, links, assets), so any store that holds a geometry and some JSON can back it. geocatalog talks to an adapter and never to a driver.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Backend</th><th>Good for</th><th>Costs</th></tr></thead>
+    <tbody>
+      <tr><td><b>PostgreSQL + PostGIS</b>, your own table</td><td>Joins with your other tables (alerts, labels, watchlists); spatial SQL; a schema you own</td><td>You write the search API yourself</td></tr>
+      <tr><td><b>pgstac</b> behind stac-fastapi</td><td>STAC search for free; <code>STACSource</code> reads it back with no new code</td><td>STAC's schema, and a service to run</td></tr>
+      <tr><td><b>GeoParquet</b> (stac-geoparquet)</td><td>No server; DuckDB queries; lives next to the repos</td><td>No live search; a write rewrites a file</td></tr>
+      <tr><td><b>Other stores</b></td><td>A warehouse or search index your platform already runs</td><td>One more adapter to maintain</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>How many: two catalogs do not need two servers. One PostgreSQL instance can hold a source family (your mirror) and a product family (<code>products/mf</code>, <code>products/plumes</code>, …) as separate collections or tables. Split them when access or lifetime differ, for example private products beside a public mirror; the <code>derived_from</code> links still work across them, since they are URLs.</p>
+  <div class="decide">
+    <div><b>Recommended</b><span>Keep the record STAC-shaped and the backend behind <code>ProductCatalog</code>. Pick the store per deployment: GeoParquet while it is just you, PostGIS or pgstac once apps or other people need live search.</span></div>
+    <div><b>Alternative</b><span>Commit to one backend in the code (say, pgstac) and skip the protocol. Less code now, but every other store becomes a rewrite.</span></div>
+  </div>
+
+  <h3>Rules that keep the product catalog honest</h3>
+  <ul class="gaps risk">
+    <li><span class="num ws">1</span><p><b>Commit first, publish second.</b> The product catalog never points at data that is not committed. If a publish fails, rerun it: items are upserted by id, so a rerun changes nothing.</p></li>
+    <li><span class="num ws">2</span><p><b>Publish tags, not branch heads.</b> Every item names a snapshot id, and a tag keeps that snapshot from being expired. The collection-level asset follows the latest tag.</p></li>
+    <li><span class="num ws">3</span><p><b>Every product links to its sources.</b> A <code>derived_from</code> link per input item, plus the code that made it (<code>processing:software</code>), so "which scenes and which version made this map" is one lookup.</p></li>
+    <li><span class="num ws">4</span><p><b>Mirror sources only when you must.</b> Query the public catalogs directly; mirror into your own catalog only the subset you need offline, behind your own credentials, or virtualized into a repo (E).</p></li>
+    <li><span class="num ws">5</span><p><b>Write through the protocol, not a driver.</b> <code>publish</code> talks to a <code>ProductCatalog</code>; each adapter brings its own driver behind its own extra (an HTTP client for a STAC API, psycopg for PostGIS, pyarrow for GeoParquet). Running the database is deployment, beside your apps.</p></li>
+  </ul>
+
+  <h3>What one record looks like</h3>
+  <pre>{
+  "type": "Feature",
+  "id": "mf-v0.3/S2A_20260601_T30SYJ",
+  "collection": "products-mf",
+  "geometry": { … },                          <span class="c">from meta/geometry</span>
+  "properties": {
+    "datetime": "2026-06-01T11:03:21Z",       <span class="c">from meta/start_time</span>
+    "processing:software": { "geotoolz-ops": "0.12" },
+    "icechunk:repo": "s3://bkt/s2_site",
+    "icechunk:snapshot": "&lt;snapshot id&gt;",
+    "icechunk:key": "products/mf/S2A_20260601_T30SYJ"
+  },
+  "links": [
+    { "rel": "derived_from",
+      "href": "&lt;source catalog&gt;/collections/sentinel-2-l2a/items/S2A_…" }
+  ],
+  "assets": {
+    "data": {
+      "href": "icechunk://s3://bkt/s2_site@&lt;snapshot id&gt;/products/mf/S2A_…",
+      "roles": ["data"]
+    }
+  }
+}</pre>
+  <p class="byline">The same record whatever the backend: a pgstac item, a PostGIS row (a geometry column plus JSONB), or a stac-geoparquet row. The <code>icechunk:</code> fields are a small extension namespace this design would define; <code>processing:software</code> comes from the STAC Processing extension.</p>
+</section>
+
+<section id="ws-k">
+  <div class="eyebrow">Workstream K</div>
+  <h2>One record, three encodings</h2>
+  <p>The core fields are defined once, and the GeoParquet schema, the SQL table and the STAC mapping are generated from them.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Symbol</th><th>Destination</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td><code>CoreField</code>, <code>CORE_FIELDS</code></td><td><code>geocatalog.storage</code></td><td>One definition of the core, by name, Arrow type, SQL type and STAC path.</td></tr>
+      <tr><td><code>core_table</code>, <code>ProductRecord</code></td><td><code>geocatalog.storage</code>, extra <code>[postgis]</code></td><td>The SQLAlchemy mapping of the core; maps a subset of the real table.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>A product record has a small core that every encoding shares. geocatalog's GeoParquet already reserves <code>filepath</code>, <code>start_time</code>, <code>end_time</code>, <code>geometry</code> and <code>bbox</code>, and treats every other column as an extra; that is almost the same core a PostGIS table or a STAC item needs.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Field</th><th>geocatalog GeoParquet</th><th>PostGIS table</th><th>STAC item</th></tr></thead>
+    <tbody>
+      <tr><td>identity</td><td><code>id</code> extra</td><td><code>id</code>, primary key</td><td><code>id</code></td></tr>
+      <tr><td>grouping</td><td>one file per collection</td><td><code>collection</code></td><td><code>collection</code></td></tr>
+      <tr><td>where</td><td><code>filepath</code></td><td><code>filepath</code></td><td><code>assets.data.href</code></td></tr>
+      <tr><td>footprint</td><td><code>geometry</code>, WKB</td><td><code>geometry</code>, SRID 4326, GIST index</td><td><code>geometry</code></td></tr>
+      <tr><td>time</td><td><code>start_time</code>, <code>end_time</code></td><td>two <code>timestamptz</code></td><td><code>start_datetime</code>, <code>end_datetime</code></td></tr>
+      <tr><td>native CRS</td><td>file metadata</td><td><code>crs</code></td><td><code>proj:code</code></td></tr>
+      <tr><td>everything else</td><td>flat extra columns</td><td><code>properties</code> JSONB, plus promoted columns</td><td><code>properties</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Keep geocatalog's names everywhere it owns the storage (GeoParquet and your table) and rename only at the STAC edge. They are already in a versioned on-disk schema, so renaming them would need a migration for no gain.</p>
+
+  <h3>An ORM that maps only the core</h3>
+  <p>A SQLAlchemy model reads and writes only the columns it declares. geocatalog can therefore map the core while your apps add their own columns to the same table (alert status, labels, reviewer notes) without geocatalog knowing they exist. Three conditions make that safe:</p>
+  <ul class="gaps risk">
+    <li><span class="num ws">1</span><p><b>Unmapped columns are nullable or have a server default.</b> The ORM never sends a value for them, so a <code>NOT NULL</code> column without a default makes every insert fail.</p></li>
+    <li><span class="num ws">2</span><p><b>One owner for the DDL.</b> The full table is defined by one migration tool (Alembic in your app, say). geocatalog maps the core and never calls <code>create_all</code>, which would build a table with only the core.</p></li>
+    <li><span class="num ws">3</span><p><b>Promote what you filter on.</b> Fields queried often (<code>algo</code>, <code>version</code>, <code>cloud_cover</code>) become real indexed columns; the rest stay in JSONB, with a GIN index for the odd ad-hoc filter.</p></li>
+  </ul>
+  <p>Defining the core once, and generating both the table and the Arrow schema from it, keeps the encodings aligned by construction.</p>
+<pre data-hl># geocatalog/_src/storage/record.py
+"""The catalog record's core fields, defined once for SQL, Arrow and STAC."""
+
+import dataclasses
+
+import pyarrow as pa
+import sqlalchemy as sa
+import sqlalchemy.orm as orm
+from geoalchemy2 import Geometry
+from sqlalchemy.dialects.postgresql import JSONB
+
+
+@dataclasses.dataclass(frozen=True)
+class CoreField:
+    """One core field and its type or path in each encoding.
+
+    Args:
+        name: The column name, in GeoParquet and in the table.
+        arrow: Its Arrow type in GeoParquet.
+        sql: Its SQL type in the table.
+        stac: Where it lives in a STAC item.
+    """
+
+    name: str
+    arrow: pa.DataType
+    sql: sa.types.TypeEngine
+    stac: str
+
+
+# proposed (F)
+CORE_FIELDS = (
+    CoreField("id", pa.string(), sa.Text(), "id"),
+    CoreField("collection", pa.string(), sa.Text(), "collection"),
+    CoreField("filepath", pa.string(), sa.Text(), "assets.data.href"),
+    CoreField(
+        "geometry",
+        pa.binary(),
+        Geometry("GEOMETRY", srid=4326),
+        "geometry",
+    ),
+    CoreField(
+        "start_time",
+        pa.timestamp("ms"),
+        sa.DateTime(timezone=True),
+        "properties.start_datetime",
+    ),
+    CoreField(
+        "end_time",
+        pa.timestamp("ms"),
+        sa.DateTime(timezone=True),
+        "properties.end_datetime",
+    ),
+    CoreField("crs", pa.string(), sa.Text(), "properties.proj:code"),
+)
+
+
+# proposed (F)
+def core_table(name: str, metadata: sa.MetaData) -> sa.Table:
+    """The columns geocatalog maps; the real table may hold more."""
+    columns = [
+        sa.Column(field.name, field.sql, primary_key=field.name == "id")
+        for field in CORE_FIELDS
+    ]
+    properties = sa.Column("properties", JSONB)
+    return sa.Table(name, metadata, *columns, properties)
+
+
+# not pinned (sqlalchemy)
+class Base(orm.DeclarativeBase):
+    pass
+
+
+# proposed (F)
+class ProductRecord(Base):
+    """A row of your products table, as far as geocatalog is concerned."""
+
+    __table__ = core_table("products", Base.metadata)</pre>
+  <p>Moving between encodings is one query. DuckDB with its <code>postgres</code> and <code>spatial</code> extensions can <code>COPY</code> the table to GeoParquet, and geopandas does the same with <code>read_postgis</code> and <code>to_parquet</code>. A GeoParquet file is then a dated snapshot of the table, or the seed that fills it.</p>
+</section>
+
+<section id="ws-l">
+  <div class="eyebrow">Workstream L</div>
+  <h2>pgstac as a synced index</h2>
+  <p>Your own PostGIS table is the catalog of record; pgstac is an optional search index fed from it.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Symbol</th><th>Destination</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td><code>sync_to_pgstac</code></td><td><code>geocatalog.storage</code>, extra <code>[stac]</code></td><td>Renders records as STAC items and calls <code>pgstac.upsert_items</code>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>pgstac does not fit the ORM pattern. Its <code>items</code> table is partitioned by collection and stores items "dehydrated", with the parts shared by a collection stripped out, so a row is not a plain STAC item and should not be written row by row. Writes go through its SQL functions (<code>upsert_items</code> and friends, which pypgstac and stac-fastapi call) and reads through its search. Objects of your own also belong outside the <code>pgstac</code> schema, since its migrations may remove them.</p>
+  <p>The way out is to decide which table is the catalog of record. Make it your own PostGIS table, and treat pgstac as a search index fed from it:</p>
+  <pre>  Icechunk repo     meta/ + products/        <span class="c">truth for the data</span>
+      │  publish(tag), after the commit
+      ▼
+  products table    PostGIS, your schema     <span class="c">catalog of record</span>
+      │  ProductRecord maps the core; apps add their own columns
+      │  sync: render STAC items, call pgstac.upsert_items   <span class="c">optional</span>
+      ▼
+  pgstac            STAC search index        <span class="c">rebuildable from the table</span>
+      │  stac-fastapi
+      ▼
+  STAC API          STACSource reads it back, other tools find your products</pre>
+<pre data-hl># geocatalog/_src/storage/pgstac_sync.py
+"""Copy product records into pgstac as STAC items, after they are committed."""
+
+import json
+
+import sqlalchemy as sa
+import sqlalchemy.orm as orm
+
+# Shapes: N records in one collection
+
+
+def sync_to_pgstac(session: orm.Session, engine: sa.Engine, collection: str) -> int:
+    """Upsert every record of a collection into pgstac; a rerun changes nothing."""
+    # proposed (F)
+    query = sa.select(ProductRecord).where(ProductRecord.collection == collection)
+    # not pinned (sqlalchemy)
+    records = session.scalars(query).all()                         # → (N,)
+    # proposed (F)
+    items = [to_stac_item(record) for record in records]           # (N,) → (N,)
+    payload = json.dumps(items)
+    # not pinned (pgstac): its SQL function, never row INSERTs
+    statement = sa.text("SELECT pgstac.upsert_items(CAST(:items AS jsonb))")
+    with engine.begin() as connection:
+        connection.execute(statement, {"items": payload})
+    return len(items)</pre>
+  <div class="decide">
+    <div><b>Recommended</b><span>Your PostGIS table is the catalog of record, mapped by <code>ProductRecord</code>; pgstac, if you want STAC search, is an index synced from it with <code>upsert_items</code>. One ORM, one schema owner, and pgstac stays disposable.</span></div>
+    <div><b>Alternative</b><span>pgstac alone, with no table of your own: <code>PgstacCatalog</code> writes with <code>upsert_items</code> and reads with search. Simpler to run, but your apps' extra fields must live inside the STAC item, and there is no ORM.</span></div>
+  </div>
+  <p class="byline">The CAST form avoids SQLAlchemy reading <code>::jsonb</code> as a bind parameter. The pgstac function name is from its client libraries and was not checked against a running database here.</p>
+</section>
+
+<section id="gates">
+  <h2>Testing gates</h2>
+  <p>Each workstream merges only when its gate passes. This corrects two ids from the L2 page: its F4 and F5 belong to the new workstreams, so they are K1 and L1 here.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Gate</th><th>Workstream</th><th>Passes when</th></tr></thead>
+    <tbody>
+      <tr><td>F1 Rebuild</td><td>F</td><td>Dropping a product collection and publishing every tag again gives the same record ids, geometries, hrefs and links.</td></tr>
+      <tr><td>F2 Commit first</td><td>F</td><td>A publish that fails after the commit leaves the repo valid, and a rerun gives the same catalog as an uninterrupted run.</td></tr>
+      <tr><td>F3 Round trip</td><td>F</td><td>On every adapter, <code>products.search</code> over the site returns rows whose filepaths open the same groups that <code>load_scenes</code> reads, and every <code>derived_from</code> link resolves in the source catalog.</td></tr>
+      <tr><td>K1 Encodings</td><td>K</td><td>A record written through <code>ProductRecord</code>, exported to GeoParquet, rendered as a STAC item and loaded back keeps every core field: equal strings, equal times, geometries equal to 1e-9 degrees.</td></tr>
+      <tr><td>L1 Index parity</td><td>L</td><td>After <code>sync_to_pgstac</code>, a pgstac search over the site returns the same ids as a PostGIS query on the products table; rerunning the sync changes no row.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="sequencing">
+  <h2>Sequencing and risks</h2>
+  <p>The record first, because every adapter depends on it; then publishing with the server-free adapter; then the databases.</p>
+  <pre>  K  one record, three encodings
+      │
+      ◆ K1
+      │
+  F  publish: GeoParquet adapter, then PostGIS
+      │
+      ◆ F1 · F2 · F3
+      │
+  L  pgstac sync                 <span class="c">optional</span>
+      │
+      ◆ L1</pre>
+  <ul class="gaps risk">
+    <li><span class="num ws">!</span><p><b>Records outlive their snapshots.</b> Expiring snapshots would leave records pointing at nothing. Fallback: publish tags only, and never delete a tag the catalog references; deleting one first removes its records.</p></li>
+    <li><span class="num ws">!</span><p><b>Encodings drift.</b> A field added to one encoding but not the others. Fallback: every encoding is generated from <code>CORE_FIELDS</code>, and K1 runs in CI.</p></li>
+    <li><span class="num ws">!</span><p><b>Two writers to one table.</b> Your app and <code>publish</code> both write rows. Fallback: <code>publish</code> owns the core columns, apps own theirs, and upserts touch only the columns they map.</p></li>
+    <li><span class="num ws">!</span><p><b>pgstac's function names are unverified here.</b> <code>upsert_items</code> comes from its client libraries, not a running database. Fallback: go through stac-fastapi's Transactions extension until L1 has run against a real instance.</p></li>
+  </ul>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <ul class="sources">
+    <li>geotoolz at <code>640670c</code>: <code>geocatalog/_src/_schema.py</code>, <code>storage/stac.py</code>, <code>storage/streaming.py</code>, <code>sources/stac.py</code></li>
+    <li><a href="https://postgis.net/">PostGIS</a>, <a href="https://github.com/stac-utils/stac-geoparquet">stac-geoparquet</a>, <a href="https://github.com/stac-utils/pgstac">pgstac</a> and its <a href="https://stac-utils.github.io/pgstac/pgstac/">docs</a>, <a href="https://github.com/stac-utils/stac-fastapi-pgstac">stac-fastapi-pgstac</a>, the <a href="https://github.com/stac-api-extensions/transaction">STAC API Transactions extension</a></li>
+    <li><a href="./l2-collections.html">Level 2 collections in GeoStack</a> and <a href="./recipe-registries.html">pipekit recipe registries</a>, the companion pages</li>
+  </ul>
+</section>
+
+</main>
+<script>
+(function () {
+  var tabs = [];
+  function select(t) {
+    tabs.forEach(function (b) {
+      var on = b === t;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+      document.getElementById(b.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(function (b, i) {
+    b.addEventListener('click', function () { select(b); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        var n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        select(n); n.focus();
+      }
+    });
+  });
+
+
+  // Light highlighting for the sketches: comments, status markers, equations, keywords.
+  var KW = /\b(import|from|class|def|return|for|in|with|as|yield|if|else|is|None|True|False)\b/g;
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function comment(text) {
+    var t = esc(text);
+    if (/^#\s*(today\*?|proposed|user)\b/.test(text)) {
+      t = t.replace(/(today\*?\s*\([^)]*\))/, '<span class="st-t">$1</span>')
+           .replace(/(proposed\s*\([^)]*\))/, '<span class="st-p">$1</span>')
+           .replace(/^(#\s*)(user)\b/, '$1<span class="st-u">$2</span>');
+      return '<span class="c">' + t + '</span>';
+    }
+    if (/[α-ωΑ-Ωᵀ⁻¹∩∧∅⇔←Σμ]/.test(text) && !/Shapes:/.test(text)) {
+      return '<span class="c eq">' + t + '</span>';
+    }
+    return '<span class="c">' + t + '</span>';
+  }
+  document.querySelectorAll('pre[data-hl]').forEach(function (pre) {
+    var lines = pre.textContent.split('\n');
+    var inDoc = false;
+    pre.innerHTML = lines.map(function (line) {
+      var tq = (line.match(/"""/g) || []).length;
+      if (inDoc || tq) {
+        var out = '<span class="c">' + esc(line) + '</span>';
+        if (tq === 1) inDoc = !inDoc;
+        return out;
+      }
+      var i = -1, q = null;
+      for (var k = 0; k < line.length; k++) {
+        var ch = line[k];
+        if (q) { if (ch === q) q = null; }
+        else if (ch === '"' || ch === "'") q = ch;
+        else if (ch === '#') { i = k; break; }
+      }
+      var code = i < 0 ? line : line.slice(0, i);
+      var rest = i < 0 ? '' : line.slice(i);
+      return esc(code).replace(KW, '<span class="kw">$1</span>') + (rest ? comment(rest) : '');
+    }).join('\n');
+  });
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script>
+(function () {
+  if (!window.katex) return;
+  document.querySelectorAll('.math[data-tex]').forEach(function (el) {
+    try { katex.render(el.getAttribute('data-tex'), el, {displayMode: true, output: 'mathml', throwOnError: false}); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
