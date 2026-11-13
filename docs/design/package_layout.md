@@ -170,6 +170,86 @@ Alternatives considered:
 
 When to leave a carrier for xarray is the subject of [the crossover](#design-crossover).
 
+(design-one-workspace)=
+## One workspace for both lanes
+
+xrtoolz's three packages move into the geotoolz repository as workspace members, so that one uv workspace, one lock and one CI hold both lanes (PL-Q10, decided 13 Nov 2026). The workstream is PL-F. It changes where the packages live and how their releases are cut, but it changes none of the ownership rules above: xrops still sits one tier above geoops, geoops still never imports xarray, and every distribution and import name stays as it is. The summary's "no code moves between the two repos" is about which package owns a job, and it still holds, because no module changes package.
+
+### Why one workspace
+
+We read the `main` branches of geotoolz and xrtoolz on 12 Nov 2026.
+
+- **xrops already builds on geoops.** `geotoolz-ops` and `geotoolz-array` are base dependencies of `xrtoolz-ops`, not extras. OP-O1 (xrops never re-implements a geoops kernel), OP-O4 (`xrops.lift`) and gate D1 (`scripts/family_parity.py` in xrtoolz) tie the two packages together, so a change to a geoops kernel or family name usually needs a change in xrops as well.
+- **Two repos cost a sync step each time.** xrtoolz's root `pyproject.toml` takes `geotoolz-ops` and `geotoolz-array` from git with no tag, so the commit it tests against moves whenever someone relocks. Its pipekit override still names the pre-0.2.0 `packages/pipekit`, and its migration to pipekit-ops (xrtoolz#400) waited on geotoolz#651. A break in xrops caused by a geoops change surfaces only in xrtoolz's CI, after the geoops release.
+- **geotoolz already has the machinery.** Its CI runs one test job per package, only for the packages a change reaches, through the `RUNTIME` map in `ci.yml` (geotoolz#659). Its generated `test_dependency_rules.py` already checks every package's imports. Both repos are uv workspaces over `packages/*` with one release-please component per package, both pin functax at `v0.0.6`, and both build their docs with mkdocs.
+- **The size is modest.** geotoolz has about 105,000 lines of source in seven packages and xrtoolz about 45,000 in three. In the month to 12 Nov 2026, xrtoolz had 35 commits on `main` and geotoolz 97.
+
+### What stays the same
+
+- **Names.** `xrtoolz`, `xrtoolz-ops` (import `xrops`) and `xrtoolz-products` (import `xrproducts`) keep their distribution and import names, and their version series continue from `xrtoolz` 0.4.1, `xrtoolz-ops` 0.5.1 and `xrtoolz-products` 0.5.0. No Python import anywhere in the stack changes.
+- **Two umbrellas.** `geotoolz` stays the meta package of the array lane and `xrtoolz` the meta package of the labeled lane, each with no code.
+- **The lanes and their tiers.** The xarray lane stays one tier above the array lane, now as a rule between packages rather than between repositories (see below).
+- **The slim bases.** A fresh `pip install geotoolz-ops` still installs no xarray, and the base-install workflow keeps checking it.
+
+### What changes
+
+| | Today | After PL-F |
+| --- | --- | --- |
+| Where xrops gets geoops | git source on geotoolz `main`, no tag; the lock holds whichever commit was current at the last relock | workspace member, always the same commit |
+| A PR that changes a geoops kernel | runs geoops tests only; xrops breaks later, in xrtoolz | runs the xrops tests too, through the `RUNTIME` map |
+| pipekit and functax pins | set and bumped in each repo | set once in the geotoolz root |
+| Releases | release-please in each repo | one release-please config with ten components |
+| Docs | two mkdocs sites | one site with a section for the xarray lane |
+| Issues | two trackers | one tracker; xrtoolz is archived |
+| geostack | two submodules, `TIERS` lists both repos | one submodule, package tiers inside geotoolz |
+
+### The tier inside one repository
+
+geostack's `scripts/dependency_graph.py` gives each repository one tier (`TIERS`), and between the packages of one workspace it checks only for cycles. A cycle check catches geoops importing xrops, because xrops already imports geoops, but it misses geocatalog or geoproducts importing xrops or xrproducts, since xrops depends on neither of them. The tier therefore has to move from the repository to the package.
+
+1. **Package tiers.** A new `PACKAGE_TIERS` table in `scripts/dependency_graph.py` gives a tier to the packages of a repository that do not take the repository's own: `{"geotoolz": {"xrtoolz": 2, "xrtoolz-ops": 2, "xrtoolz-products": 2}}`. Every other geotoolz package takes geotoolz's tier, 1, and `xrtoolz` leaves `TIERS`.
+2. **A check between packages.** An edge between two packages of one repository must point down a package tier or stay level, and a new violation kind, `package-tier`, reports one that points up. The edges between repositories keep using each package's tier, so pipekit (tier 0) still may not import xrops.
+3. **The generated guard.** `python scripts/dependency_graph.py --guard geotoolz` then writes the rule into geotoolz's `test_dependency_rules.py` ("no `geotoolz-*` package imports or depends on `xrtoolz`, `xrtoolz-ops` or `xrtoolz-products`"), and xrtoolz's own guard test is deleted.
+4. **The page and the tests.** The tier table on [the dependency graph](../api/dependency_graph.md) lists the xrtoolz packages at GeoStack tier 2 under geotoolz, and `tests/test_dependency_graph.py` states its two xrtoolz tests (the hypothetical cycle through xrtoolz, geotoolz and pipekit, and "xrtoolz may import geotoolz but not the reverse") over packages instead of repositories. The rule in `AGENTS.md` that "each repository has a tier" becomes "each repository, or a group of packages inside one, has a tier".
+
+### Migration steps
+
+Each step is one PR unless it says otherwise, and the geotoolz steps land as a stack.
+
+1. **Clear the way (done 13 Nov 2026).** xrtoolz#400 (pipekit-ops) merged first as xrtoolz#407, so the move carries no pin change. The two draft PRs on xrtoolz (#212 and #213, opened by the Copilot agent on 22 May 2026) were closed, since a pull request cannot be transferred. Only dependabot PRs remain open on xrtoolz, and dependabot opens their equivalents in geotoolz after the move.
+2. **Rewrite xrtoolz's history for the move.** In a scratch clone, `git filter-repo` keeps `packages/xrtoolz*` where they are, moves `docs/` to `docs/xarray/`, `notebooks/` to `notebooks/xarray/` and `scripts/family_parity.py` to `scripts/`, and drops the root files whose content is merged by hand in step 4 (`pyproject.toml`, `uv.lock`, `AGENTS.md`, `CLAUDE.md`, `mkdocs.yml`, `Makefile`, `.github/`). The rewrite carries the `xrtoolz*-v*` tags along to the rewritten commits.
+3. **Merge the history into geotoolz.** On a geotoolz branch, `git merge --allow-unrelated-histories` brings in the rewritten history, and the rewritten tags are pushed with it, so that `git log --follow` and blame reach back past the move and release-please finds each xrtoolz component's last release.
+4. **Join the workspace.** The geotoolz root `pyproject.toml` gains `{ workspace = true }` sources for the three packages and their dev dependencies (dask, xarray, rioxarray, regionmask, xrft, xskillscore, netcdf4, scikit-learn and the test fixtures), and the git sources of geotoolz that xrtoolz carried go away. The xrtoolz root `AGENTS.md` becomes `packages/xrtoolz-ops/AGENTS.md`, as each geotoolz package has its own. One relock produces one `uv.lock` for ten packages.
+5. **Releases.** `release-please-config.json` and `.release-please-manifest.json` gain the three components at their current versions. The first release of each from geotoolz is a patch with no API change.
+6. **CI.** `ci.yml` gains a path filter per xrtoolz package and `RUNTIME` entries for them: `xrtoolz-ops` is reached by `geotoolz-array`, `geotoolz-ops` and their closure, and by `xrtoolz-products`. `base-install.yml` gains a job per xrtoolz package, and xrtoolz's `tests-extended.yml` merges into geotoolz's.
+7. **The tier rule.** The geostack changes of the section above land, and the regenerated guard is committed to geotoolz in the same stack.
+8. **Docs.** geotoolz's `mkdocs.yml` gains an "xarray lane" section for `docs/xarray/`, and the xrtoolz site keeps a single page that points to it.
+9. **Issues.** The open xrtoolz issues (53 on 13 Nov 2026) move with `gh issue transfer`, after a trial on one issue confirms that its GeoStack project (#13) fields and its sub-issue and blocked-by links survive the transfer. Closed issues stay in the archived repository.
+10. **geostack.** The `references/geostack/xrtoolz` submodule is removed, the six xrtoolz paths in `pixi.toml` point into `references/geostack/geotoolz/packages/`, `scripts/capabilities.py` keeps its two xrtoolz entries unchanged (it names distributions, which pixi now installs from the geotoolz submodule), and `make capabilities` and `make dependency-graph` regenerate the indexes and the graph.
+11. **Downstream.** plumax's `io` extra still names `xrtoolz` and `xrtoolz-reader` at rev `a94d9a1` of the six-package layout, which predates PL-A to PL-E, so it moves to `xrtoolz-products` from the geotoolz repository as part of plumax#249. A search of the stack for `jejjohnson/xrtoolz` finds any other git source.
+12. **Archive.** xrtoolz's README points to geotoolz, and the repository is archived, which can be undone; it is not deleted.
+
+### Gates
+
+| Gate | Passes when |
+| --- | --- |
+| F1 History | `git log --follow` on a moved file in geotoolz lists its commits from before the move |
+| F2 One lock | one `uv.lock` resolves all ten packages, with `geotoolz-ops` and `geotoolz-array` from the workspace |
+| F3 Test parity | each xrtoolz package collects as many tests in geotoolz as it did on xrtoolz `main` before the move |
+| F4 Tier | the guard test fails on a seeded `import xrops` in geoops, and geostack's graph reports it as `package-tier` |
+| F5 CI reach | a PR that touches only `packages/geotoolz-ops/src` runs the `xrtoolz-ops` tests |
+| F6 Release | release-please proposes `xrtoolz-ops` 0.5.2 for a fix, from the geotoolz repository |
+| F7 Slim base | a fresh `pip install geotoolz-ops` still installs no xarray |
+
+### Risks
+
+- **The name covers more than geo arrays.** The geotoolz repository would hold ocean, atmosphere and budget physics under `xrops`. We keep the repository name, because renaming it touches every git source in the stack for no gain in function, and the README and docs say that the repository holds both lanes.
+- **A heavier dev environment.** The dev group gains the xarray stack listed in step 4. Base installs do not change, because each package's install is checked on its own.
+- **Issue numbers change.** A transferred issue gets a new number, and GitHub redirects its old URL, but a reference written as plain text, such as "xrtoolz#355" in another issue body, still points at the archived repository.
+- **xrops may shrink later.** The diagnostix design (proposed) moves the state-physics maths that xrops wraps into a GeoNumerics library. That would make xrops thinner, and it neither blocks nor depends on PL-F.
+
+The alternative is to keep two repositories and pin xrtoolz's geotoolz sources to a tag, bumped by hand after each geotoolz release. That removes the moving lock, but not the late breakage or the second set of pins, CI and release configuration.
+
 ## Open questions
 
 Each question has a recommendation and its alternative, and we can flip any of them before the issues open.
@@ -185,6 +265,9 @@ Each question has a recommendation and its alternative, and we can flip any of t
 | PL-Q7 | geoproducts versus xrproducts | **Decided 29 Oct 2026:** what one read returns: one acquisition → geoproducts; a cube or a station series → xrproducts | Strict provenance (observations versus model output), splitting each provider's reader across both | decided 29 Oct 2026 |
 | PL-Q8 | Who assembles state cubes | **Decided 29 Oct 2026:** `load_states` stays in geocatalog, which already serves both lanes; xrproducts hands off rows | Move cube assembly into xrproducts and keep geocatalog index-only | decided 29 Oct 2026 |
 | PL-Q9 | Point carriers | CF DSG `Dataset` in the labeled lane, `GeoPoints` in the array lane | One table carrier for both lanes, or xvec for points | `GeoPoints` decided (geoarray page); DSG open |
+| PL-Q10 | One repository or two for the two lanes | **Decided 13 Nov 2026:** xrtoolz's three packages join the geotoolz workspace, with the xarray lane at package tier 2 ([one workspace](#design-one-workspace)) | Keep two repositories and pin xrtoolz's geotoolz sources to a tag | decided 13 Nov 2026 |
+| PL-Q11 | One products package for both lanes | geoproducts absorbs xrproducts, and each reader returns the carrier its geometry needs ([products](./products.md)) | Keep the two packages, split by what one read returns (PL-Q7) | open |
+| PL-Q12 | xrops as the xarray layer | kernels run through `KernelOp` and move to the libraries below, and xrops keeps the work that needs labels ([xrops layer](./xrops_layer.md)) | Keep state-domain kernels in xrops (OP-O1) | open |
 
 ## Gates, sequencing and risks
 

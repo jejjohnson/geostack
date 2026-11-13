@@ -54,6 +54,8 @@ project:
         - file: docs/design/operators.md
         - file: docs/design/operator_coupling.md
         - file: docs/design/package_layout.md
+        - file: docs/design/products.md
+        - file: docs/design/xrops_layer.md
         - file: docs/design/stack_levels.md
         - file: docs/design/stack_layer_map.md
         - file: docs/design/kinds_and_roles.md
