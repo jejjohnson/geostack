@@ -212,7 +212,9 @@ def exports(pkg: dg.Package) -> dict[str, str]:
             if sub[:1] == "_" or not source.is_file():
                 continue
             subtree = _parse(source.read_text(encoding="utf-8"))
-            for name in (subtree and _static_all(subtree)) or []:
+            if subtree is None:
+                continue
+            for name in _static_all(subtree) or []:
                 out.setdefault(name, f"{module}.{sub}")
     return out
 
