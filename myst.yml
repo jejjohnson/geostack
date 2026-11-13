@@ -59,6 +59,7 @@ project:
         - file: docs/design/kinds_and_roles.md
         - file: docs/design/skill_tree.md
         - file: docs/design/skill_tree_gaussx.md
+        - file: docs/design/skill_tree_kernellib.md
         - title: Storage and catalogs
           children:
             - file: docs/design/storage_formats.md
