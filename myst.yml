@@ -60,7 +60,10 @@ project:
         - title: Storage and catalogs
           children:
             - file: docs/design/parallelism.md
+            - file: docs/design/object_storage.md
             - file: docs/design/storage_formats.md
+            - file: docs/design/databases_catalogs.md
+            - file: docs/design/versions_identity.md
             - file: docs/design/l2_collections.md
             - file: docs/design/product_catalog.md
             - file: docs/design/recipe_registries.md
