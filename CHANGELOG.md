@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.2.5](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.4...geostack-v0.2.5) (2026-11-13)
+
+
+### Bug Fixes
+
+* **ci:** make the pixi lock satisfiable and allow the shared Estimator name ([#118](https://github.com/jejjohnson/geostack/issues/118)) ([f56cdaa](https://github.com/jejjohnson/geostack/commit/f56cdaa2eaf7497d792dce4b3df6693c6590ccb7))
+
+
+### Documentation
+
+* **design:** add design pages for the nine new libraries on the layer map ([#125](https://github.com/jejjohnson/geostack/issues/125)) ([7d2871a](https://github.com/jejjohnson/geostack/commit/7d2871aacde8c6fadeea5dd9244c71e63cb0c1c2))
+* **design:** add integrix's design note for integrals over space ([#141](https://github.com/jejjohnson/geostack/issues/141)) ([3bd1e5c](https://github.com/jejjohnson/geostack/commit/3bd1e5ca9a9d46a5421ebcdd2a64829345d1a48a))
+* **design:** add storage formats, level 2 collections, product catalog and recipe registry pages ([#164](https://github.com/jejjohnson/geostack/issues/164)) ([ba791a5](https://github.com/jejjohnson/geostack/commit/ba791a55f33fd53f15419fcfb77827480db05f7f))
+* **design:** add the operator coupling page ([#117](https://github.com/jejjohnson/geostack/issues/117)) ([ea94daa](https://github.com/jejjohnson/geostack/commit/ea94daa5912cb8f8853abb034c50f6ef28c36e1c))
+* **design:** add the stack layer map page ([#123](https://github.com/jejjohnson/geostack/issues/123)) ([ea6d0a3](https://github.com/jejjohnson/geostack/commit/ea6d0a3eb8436691d28bd40e740e00da3cc70344))
+* **design:** amend the stack layer map (diagnostix, pyrox siblings, tracerax) ([#124](https://github.com/jejjohnson/geostack/issues/124)) ([765d57e](https://github.com/jejjohnson/geostack/commit/765d57e0fbf79fd97303d09271850c1559e52182))
+* **design:** move H(x) and the named reductions to geoops (GA-B6) ([#121](https://github.com/jejjohnson/geostack/issues/121)) ([788bda7](https://github.com/jejjohnson/geostack/commit/788bda75ad5280dcde51fa76e5cbb189a93bbc44))
+* **design:** record functax decisions 16 and 17 as decided ([#133](https://github.com/jejjohnson/geostack/issues/133)) ([8a365cc](https://github.com/jejjohnson/geostack/commit/8a365ccede5dac1a89d22526a8f36ab3262b9828))
+* **design:** record integrix's spatial decisions 10 to 13 as decided ([#142](https://github.com/jejjohnson/geostack/issues/142)) ([9644d19](https://github.com/jejjohnson/geostack/commit/9644d19d7ed7a4ce4f14210787cc555beb12810d))
+* **design:** record the functax Wave 1 module layout ([#138](https://github.com/jejjohnson/geostack/issues/138)) ([d396cc6](https://github.com/jejjohnson/geostack/commit/d396cc6b19953c2a7b43b1950d42f1eaa100ec67))
+* **design:** seven-rung role ladder with steps, recipes and orchestration ([#126](https://github.com/jejjohnson/geostack/issues/126)) ([19b3262](https://github.com/jejjohnson/geostack/commit/19b32624f51b862a20a7d73979e4ccf16f455067))
+* **design:** split kinds and roles out of the stack layer map ([#127](https://github.com/jejjohnson/geostack/issues/127)) ([8d609dc](https://github.com/jejjohnson/geostack/commit/8d609dc089e402fe7e36127b74eb1ac396053f17))
+* rename the pipekit core to pipekit-ops in docs, notebooks and the capability index ([#140](https://github.com/jejjohnson/geostack/issues/140)) ([dd76078](https://github.com/jejjohnson/geostack/commit/dd76078fa3b143949fe8299f043f3f4473a0e1c9)), closes [#139](https://github.com/jejjohnson/geostack/issues/139)
+
 ## [0.2.4](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.3...geostack-v0.2.4) (2026-10-30)
 
 
