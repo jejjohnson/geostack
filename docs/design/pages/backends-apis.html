@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Backends and APIs</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none',
+    macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one 46rem reading column, GeoStack hydrographic palette (from the esmax ocean pages).
+   New in this kit: --unit (units chip + units-check box) and --ex (running-example card). */
+:root {
+  --paper: #F1F5F6; --panel: #E4ECEF; --ink: #0E1E28; --muted: #4E616C; --rule: #C6D3D9;
+  --sea: #0A6B68; --sea-soft: #D3E7E5; --oracle: #985710; --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1; --unit: #5B4A9A; --unit-soft: #E6E2F3; --ex: #2F5E8C; --ex-soft: #DCE7F2;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+/* kit annotation: names each component so it can be referred to in review */
+.kit { margin-top: 3.4rem; padding-top: 0.6rem; border-top: 2px solid var(--ink); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.kit .id { font-family: var(--mono); font-size: 0.82rem; font-weight: 500; color: var(--unit); }
+.kit .what { font-family: var(--display); font-size: 0.86rem; color: var(--muted); }
+.kit + h2, .kit + .tldr, .kit + h3 { margin-top: 0.9rem; }
+.kitnote { font-family: var(--display); font-size: 0.82rem; color: var(--muted); border: 1px dashed var(--rule); border-radius: 6px; padding: 0.5rem 0.75rem; margin: 0.6rem 0 1rem; }
+.kitnote b { color: var(--unit); font-weight: 600; }
+
+/* C1 TL;DR */
+.tldr { border-top: 2px solid var(--ink); padding-top: 1rem; margin-top: 2rem; }
+.tldr ul { margin: 0.6rem 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+
+/* C2 pipeline chart */
+.chart { display: grid; }
+.box { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 0 0.9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--sea); line-height: 1.25; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .sub { color: var(--muted); font-size: 0.95rem; }
+.box.focus { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.focus .num { color: var(--oracle); }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.box .sig .n { white-space: nowrap; }
+.box .sig .s { display: flex; flex-wrap: wrap; gap: 0.2rem 0.4rem; align-items: center; min-width: 0; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.link { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; }
+svg.g { width: 1.15rem; height: 1.15rem; color: var(--sea); flex: none; }
+
+/* units chip (new) */
+.u { display: inline-block; font-family: var(--mono); font-size: 0.74rem; line-height: 1.5; padding: 0 0.4rem; border-radius: 4px; background: var(--unit-soft); color: var(--unit); white-space: nowrap; }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+td.gl { width: 1.6rem; }
+td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+td code { font-size: 0.8rem; white-space: nowrap; }
+
+/* C4 running-example card (new) */
+.ex { border: 1px solid var(--ex); border-radius: 6px; overflow: hidden; margin: 1rem 0 1.4rem; }
+.ex-h { background: var(--ex-soft); padding: 0.6rem 1rem; display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; border-bottom: 1px solid var(--ex); }
+.ex-h .tag { color: var(--ex); }
+.ex-h strong { font-family: var(--display); font-weight: 600; }
+.ex-b { padding: 0.7rem 1rem 0.3rem; font-size: 0.95rem; }
+.ex-b .tbl { margin: 0.4rem 0 0.6rem; border-top: 0; }
+.ex.mini { border-left: 3px solid var(--ex); border-top: 0; border-right: 0; border-bottom: 0; border-radius: 0 6px 6px 0; background: var(--ex-soft); padding: 0.7rem 1rem; font-size: 0.96rem; }
+.ex.mini .tag { color: var(--ex); display: block; margin-bottom: 0.25rem; }
+.ex.mini p:last-child { margin-bottom: 0; }
+
+/* C6 concept box */
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.def h3 { margin: 0 0 0.6rem; }
+.def p:last-child { margin-bottom: 0; }
+.where { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 0.3rem 0.8rem; align-items: baseline; margin: 0.4rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px dashed var(--rule); font-size: 0.92rem; }
+.where .wl { grid-column: 1 / -1; font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+/* C7 operator card */
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.phase { font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.phase.train { background: var(--oracle-soft); color: var(--oracle); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io .sh { display: grid; justify-items: end; gap: 0.15rem; padding-top: 0.15rem; }
+.io .sh code { font-size: 0.8rem; text-align: right; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io .sh { grid-column: 2; justify-items: start; padding-top: 0; }
+  .where { grid-template-columns: max-content minmax(0, 1fr); }
+  .where .u { grid-column: 2; justify-self: start; }
+}
+
+/* C8 units check (new) */
+.uc { border: 1px solid var(--unit); border-radius: 6px; margin: 1rem 0 1.4rem; overflow: hidden; }
+.uc-h { background: var(--unit-soft); padding: 0.55rem 1rem; border-bottom: 1px solid var(--unit); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.uc-h .tag { color: var(--unit); }
+.uc-h strong { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.uc-rows { padding: 0.4rem 1rem 0.6rem; display: grid; }
+.uc-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.2rem 1rem; align-items: center; padding: 0.35rem 0; border-bottom: 1px dashed var(--rule); font-size: 0.93rem; }
+.uc-row:last-child { border-bottom: 0; }
+.uc-row > div { min-width: 0; overflow-x: auto; }
+.uc-row .r { color: var(--muted); }
+.uc-row.ok .r { color: var(--sea); font-weight: 600; font-family: var(--display); font-size: 0.86rem; }
+@media (max-width: 560px) { .uc-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* C9 code sketch */
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+pre .mk { color: var(--oracle); }
+pre .un { color: var(--unit); }
+pre.diagram { background: var(--paper); }
+
+/* C10 two cases */
+.case { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.8rem; margin: 1rem 0 1.4rem; }
+.case > div { border: 1px solid var(--rule); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.94rem; min-width: 0; overflow-x: auto; }
+.case .lin { border-top: 3px solid var(--sea); }
+.case .non { border-top: 3px solid var(--oracle); }
+.case .tag { display: block; margin-bottom: 0.2rem; }
+
+/* C11 watch-out */
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.note p:last-child { margin-bottom: 0; }
+
+/* C12 series nav */
+.series { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--display); font-size: 0.82rem; color: var(--muted); margin-bottom: 1.4rem; }
+.series a { text-decoration: none; }
+footer { margin-top: 3rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 1rem; }
+
+/* v2: role rows in signatures — in / u / θ / est / out */
+.box .sig .d.par, .io-l.par { color: var(--oracle); }
+.box .sig .d.exo, .io-l.exo { color: var(--ex); }
+.box .sig .d.est, .io-l.est { color: var(--muted); font-style: italic; }
+.box .sig .none, .io .none { color: var(--muted); font-style: italic; font-size: 0.86rem; }
+.box .sig .rule { grid-column: 1 / -1; border-top: 1px dotted var(--rule); margin: 0.15rem 0; }
+.io-group.par { background: var(--oracle-soft); }
+.io-group.exo { background: var(--ex-soft); }
+.io-group.est { border-top: 1px dotted var(--rule); }
+.io-group + .io-group { border-top: 1px solid var(--rule); }
+.where { grid-template-columns: max-content minmax(0, 1fr) max-content max-content; }
+.where .sh { font-size: 0.86rem; }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .sh, .where .u { grid-column: 2; justify-self: start; } }
+
+/* v3: numbered equation stack inside boxes and operator arrows */
+.eqs { display: grid; gap: 0.2rem; margin-top: 0.35rem; font-size: 0.95rem; min-width: 0; }
+.eqs > div { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr); align-items: baseline; min-width: 0; overflow-x: auto; overflow-y: hidden; }
+.eqs .ln { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.op-arrow .eqs { margin-top: 0; }
+.box .sig .d.cst, .io-l.cst { color: var(--muted); }
+.box .sig .s .none { font-size: 0.78rem; }
+
+/* v4: model box steps, assumptions, compact Where grid */
+.mstep { display: flex; align-items: baseline; gap: 0.5rem; margin: 1.3rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px solid var(--rule); }
+.mstep:first-of-type { border-top: 0; padding-top: 0; margin-top: 0.6rem; }
+.mstep .mn { font-family: var(--display); font-weight: 700; color: var(--sea); font-size: 0.95rem; }
+.mstep .ml { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.mstep .mu { font-family: var(--mono); font-size: 0.72rem; color: var(--oracle); }
+.asm { display: grid; gap: 0.55rem; margin: 0.4rem 0 0.6rem; }
+.asm .a { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 0.5rem; align-items: start; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 0.55rem 0.75rem; }
+.asm .a > div { min-width: 0; }
+.asm .aid { font-family: var(--mono); font-weight: 500; font-size: 0.82rem; color: var(--oracle); padding-top: 0.15rem; }
+.asm small { display: block; color: var(--muted); font-size: 0.84rem; line-height: 1.45; margin-top: 0.2rem; }
+.asm mjx-container[display="true"] { margin: 0.35rem 0 !important; }
+.where { grid-template-columns: max-content minmax(0, 1fr); column-gap: 0.8rem; row-gap: 0.45rem; align-items: baseline; }
+.where .me { min-width: 0; }
+.where .meta { display: inline-flex; flex-wrap: wrap; gap: 0.25rem 0.45rem; align-items: baseline; margin-left: 0.5rem; }
+.where .meta .sh { font-size: 0.86rem; color: var(--muted); }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .meta { display: flex; margin-left: 0; margin-top: 0.1rem; } }
+
+/* visual figures */
+figure.viz { margin: 1.4rem 0 1.6rem; }
+.vwrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; }
+.vwrap svg.v { display: block; width: 100%; min-width: 560px; height: auto; }
+figure.viz figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.5rem; }
+svg.v text { font-family: var(--display); font-size: 13px; fill: var(--ink); }
+svg.v .h { font-weight: 600; font-size: 13.5px; }
+svg.v .mono { font-family: var(--mono); font-size: 11.5px; }
+svg.v .muted { fill: var(--muted); }
+svg.v .o { fill: var(--oracle); }
+svg.v .s { fill: var(--sea); }
+svg.v .e { fill: var(--ex); }
+svg.v .tile { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+svg.v .hit { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.4; }
+svg.v .skip { fill: var(--paper); stroke: var(--rule); stroke-dasharray: 3 3; }
+svg.v .win { fill: var(--oracle); }
+svg.v .hdr { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .ovr { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ref { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.3; }
+svg.v .keybox { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .panelbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .repobox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.4; }
+svg.v .file { fill: var(--panel); stroke: var(--rule); }
+svg.v .snap { fill: var(--paper); stroke: var(--sea); stroke-width: 2; }
+svg.v .snap.now { fill: var(--sea); }
+svg.v .step { fill: var(--sea); }
+svg.v .stepn { fill: var(--paper); font-weight: 700; font-size: 14px; }
+svg.v .stepbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .who { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ln { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+svg.v .ln-o { stroke: var(--oracle); stroke-width: 1.6; fill: none; }
+svg.v .ln-s { stroke: var(--sea); stroke-width: 1.6; fill: none; }
+svg.v .ln-e { stroke: var(--ex); stroke-width: 1.6; fill: none; }
+svg.v .dash { stroke-dasharray: 4 3; }
+ol.steps { margin: 0 0 1.2rem; padding-left: 1.3rem; display: grid; gap: 0.3rem; }
+details.maths { border: 1px solid var(--rule); border-radius: 6px; margin: 1rem 0 1.6rem; background: var(--paper); }
+details.maths > summary { cursor: pointer; padding: 0.6rem 1rem; font-family: var(--display); font-weight: 600; font-size: 0.92rem; color: var(--unit); }
+details.maths > summary:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+details.maths .dbody { padding: 0 1rem 0.6rem; }
+
+.uses { border-left: 3px solid var(--sea); background: var(--sea-soft); border-radius: 0 6px 6px 0; padding: 0.85rem 1rem; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.uses .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.uses ul { margin: 0.2rem 0 0.6rem; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.uses p { margin-bottom: 0.5rem; }
+.uses p.less { color: var(--muted); margin-bottom: 0; }
+ul.verdicts { padding-left: 1.2rem; display: grid; gap: 0.45rem; margin: 0.4rem 0 1.2rem; }
+svg.v .cogbox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .zarrbox { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.2; }
+svg.v .wait { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1; }
+svg.v .cpu { fill: var(--oracle); }
+svg.v .no { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg.v .lane { stroke: var(--rule); stroke-width: 1; }
+svg.v .tick { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg.v .bar { fill: var(--sea); }
+svg.v .bar.slow { fill: var(--oracle); }
+svg.v .yes { fill: var(--sea); font-weight: 600; }
+svg.v .cell { fill: var(--paper); stroke: var(--rule); }
+svg.v .cellh { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .pt { fill: var(--oracle); stroke: var(--paper); stroke-width: 1.5; }
+svg.v .w { fill: var(--paper); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="a-s" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--sea)"/></marker>
+<marker id="a-o" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--oracle)"/></marker>
+<marker id="a-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker>
+<marker id="a-e" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--ex)"/></marker>
+</defs></svg>
+<main>
+
+<nav class="series" aria-label="Series"><span>GeoStack · design</span><span>›</span><span>background</span><a href="./geo-pipeline.html">← The geo pipeline</a><a href="./product-catalog.html">Product catalog →</a></nav>
+<div class="eyebrow">GeoStack · background · request → response</div>
+<h1>How does a request from outside become a product?</h1>
+<p class="lede">Pictures first. A backend is the part of a system other programs talk to. This page covers the conventions it speaks (HTTP and REST), the Python library most geo services are written in (FastAPI), the model-serving layer built on it (LitServe), and where each meets the stack. It builds one small service on the NDVI pipeline of the last page and measures it. One distinction runs through it: the catalogs we <em>query</em> are not the catalog we <em>serve</em>.</p>
+
+<section class="tldr" aria-label="TL;DR">
+  <span class="tag">TL;DR</span>
+  <h2>A thin, typed, forgetful layer over the pipeline</h2>
+  <ul>
+    <li><strong>REST</strong> is a convention: things have addresses, a handful of verbs act on them, answers are JSON with a status code, and the server remembers nothing between requests.</li>
+    <li><strong>Two STACs.</strong> Upstream, we are a client of other people's STAC APIs. Downstream, our pipeline writes a product database, which is mirrored into a product catalog that we serve as STAC to others.</li>
+    <li><strong>FastAPI</strong> turns a typed Python function into an endpoint: it parses, validates, serialises and documents from the type hints.</li>
+    <li><strong>Long work is a job.</strong> Accept the request, return an id at once (4 ms here), let the client check back. Make the id a hash of the request, so a retry cannot run it twice.</li>
+    <li><strong>The blocking trap is real:</strong> one blocking call in an async endpoint turned 20 concurrent requests from 0.22 s into 4.03 s and held an unrelated health check for 4.0 s.</li>
+    <li><strong>LitServe</strong> is FastAPI plus what model serving needs: load once, batch, spread over GPUs. It belongs at one endpoint, predict.</li>
+  </ul>
+</section>
+
+<h2>The running example</h2>
+<div class="ex">
+  <div class="ex-h"><span class="tag">Running example</span><strong>The NDVI pipeline, behind an API</strong></div>
+  <div class="ex-b">
+    <p>The ten-stage pipeline of <a href="./geo-pipeline.html">the geo pipeline</a> page (NDVI over a site for June, from a 24-scene archive), wrapped in a FastAPI service of 261 lines. A client asks for a run, the service runs the pipeline as a job, commits the product to Icechunk and adds a row to a product table; the client then finds the product by place and time. SQLite stands in for the product database.</p>
+    <div class="tbl"><table><thead><tr><th>Quantity</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td>Endpoints</td><td>8: health, search, get, start job, job status, three read variants</td><td>the service</td></tr><tr><td>Start-a-job response</td><td>202 in 4.4 ms</td><td>measured</td></tr><tr><td>Job finished after</td><td>205 ms, 4 polls</td><td>measured</td></tr><tr><td>Same request again</td><td>200, same job id</td><td>measured</td></tr><tr><td>Search our products</td><td>1.8 ms, 1 hit; 0 hits for a box elsewhere</td><td>measured</td></tr><tr><td>Malformed request</td><td>422: “Field required” at <code>body.bounds.3</code></td><td>measured</td></tr><tr><td>Unknown product</td><td>404: “no such product”</td><td>measured</td></tr></tbody></table></div>
+  </div>
+</div>
+
+<h2 id="rest">HTTP and REST</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 234" role="img" aria-label="An HTTP request with a method, path, header and JSON body, and the response with a status code, header and JSON body."><text class="h" x="20" y="20">One request, one response</text><rect class="who" x="20" y="32" width="300" height="150" rx="6"/><text class="h" x="34" y="54">request</text><text class="mono" x="34" y="74">POST /jobs</text><text class="mono" x="34" y="89">Content-Type: application/json</text><text class="mono" x="34" y="104"></text><text class="mono" x="34" y="119">{"bounds": [723000, 4375000,</text><text class="mono" x="34" y="134">            728000, 4379000],</text><text class="mono" x="34" y="149"> "start": "2026-06-01",</text><text class="mono" x="34" y="164"> "end": "2026-06-30", "recipe": "ndvi"}</text><rect class="repobox" x="360" y="32" width="300" height="150" rx="6"/><text class="h" x="374" y="54">response</text><text class="mono" x="374" y="74">202 Accepted</text><text class="mono" x="374" y="89">Content-Type: application/json</text><text class="mono" x="374" y="104"></text><text class="mono" x="374" y="119">{"id": "35d3ee9cf866",</text><text class="mono" x="374" y="134"> "status": "queued",</text><text class="mono" x="374" y="149"> "product_id": null}</text><path class="ln-s" d="M320 100 H352" marker-end="url(#a-s)"/><text class="muted" x="20" y="204">method and path: what to do, to what · headers: how the body is written · body: the details</text><text class="muted" x="20" y="222">status: how it went · the server keeps no memory of the conversation</text></svg></div><figcaption>The actual first exchange with the page's service. Everything a web API does is this, repeated: text in, text out, one status number.</figcaption></figure>
+<p><b>HTTP</b> is the request-and-response exchange above. <b>REST</b> is a set of habits for using it: every thing the service knows about (a product, a job) is a <b>resource</b> with an address, and the HTTP verbs say what to do with it. You met the same verbs on the <a href="./object-storage.html">object storage</a> page; a bucket is a REST service.</p>
+<div class="tbl"><table><thead><tr><th>Request</th><th>Means</th><th>Safe to repeat?</th><th>In the demo</th></tr></thead><tbody><tr><td><code>GET /products?bbox=…&amp;start=…</code></td><td>list the products that match</td><td>yes: reads change nothing</td><td>1.8 ms</td></tr><tr><td><code>GET /products/{id}</code></td><td>one product's record</td><td>yes</td><td>200, or 404</td></tr><tr><td><code>POST /jobs</code></td><td>create a run</td><td>only if you make it so</td><td>202, then 200 for the same request</td></tr><tr><td><code>GET /jobs/{id}</code></td><td>how is the run going</td><td>yes</td><td>queued → running → done</td></tr><tr><td><code>PUT</code>, <code>DELETE</code></td><td>replace, remove</td><td>yes by definition</td><td>not used</td></tr></tbody></table></div>
+<div class="tbl"><table><thead><tr><th>Status</th><th>Says</th></tr></thead><tbody><tr><td>200 OK</td><td>here is what you asked for</td></tr><tr><td>202 Accepted</td><td>I have taken the request; the work is not done yet</td></tr><tr><td>404 Not Found</td><td>no such resource</td></tr><tr><td>422 Unprocessable</td><td>the request is well-formed but its contents are wrong (FastAPI's validation answer)</td></tr><tr><td>5xx</td><td>the server failed; a client may retry, which is why repeating must be safe</td></tr></tbody></table></div>
+<p>Two properties matter more than the rest. A service is <b>stateless</b> when each request carries everything needed to answer it. A request is <b>idempotent</b> when sending it twice has the same effect as sending it once. Both come back below.</p>
+
+<h2 id="two">Two STACs: the one we query and the one we serve</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 300" role="img" aria-label="On the left, a provider&#x27;s STAC API and data, which our pipeline queries as a client. On the right, our product database written by the pipeline, mirrored into a product catalog, and served through our own STAC API to other clients."><text class="h" x="20" y="20">Upstream: catalogs we query</text><text class="h" x="360" y="20">Downstream: what we serve</text><rect class="ref" x="20" y="32" width="280" height="58" rx="6"/><text class="h" x="34" y="54">Their STAC API</text><text class="tick" x="34" y="74">Earth Search, Planetary Computer, CMR</text><rect class="file" x="20" y="100" width="280" height="40" rx="6"/><text x="34" y="124">their scenes, in their buckets</text><path class="ln" d="M160 140 V172" marker-end="url(#a-m)"/><text class="muted" x="170" y="162">we are the client</text><rect class="hdr" x="20" y="180" width="280" height="58" rx="6"/><text class="h" x="34" y="202">Our pipeline</text><text class="tick" x="34" y="222">search → … → write → commit → publish</text><path class="ln-o" d="M300 209 H352" marker-end="url(#a-o)"/><text class="o" x="326" y="200" text-anchor="middle">publish</text><rect class="hit" x="360" y="180" width="300" height="58" rx="6"/><text class="h" x="374" y="202">Product database</text><text class="tick" x="374" y="222">our table; only the pipeline writes it</text><path class="ln-o" d="M510 180 V148" marker-end="url(#a-o)"/><text class="o" x="520" y="168">mirror</text><rect class="hit" x="360" y="90" width="300" height="58" rx="6"/><text class="h" x="374" y="112">Product catalog</text><text class="tick" x="374" y="132">the same products, as STAC items, read-only</text><path class="ln" d="M510 90 V70" marker-end="url(#a-m)"/><rect class="ref" x="360" y="32" width="300" height="38" rx="6"/><text class="h" x="374" y="56">Our STAC API</text><text class="tick" x="488" y="56">others are the clients</text><rect class="repobox" x="360" y="248" width="300" height="40" rx="6"/><text x="374" y="272">products in Icechunk, named by snapshot</text><path class="ln dash" d="M510 238 V248"/></svg></div><figcaption>Two different STACs. Blue boxes speak the STAC protocol: on the left someone else's server and we call it; on the right our server and others call it. Orange is what we own and write. The pipeline in the middle is a client on one side and the only writer on the other.</figcaption></figure>
+<p>STAC is a vocabulary and a REST API for catalogs of geospatial data (see <a href="./databases-catalogs.html">databases and catalogs</a>). The word appears on both sides of the stack, and they are different things with different owners.</p>
+<div class="tbl"><table><thead><tr><th></th><th>Upstream STAC</th><th>Product database</th><th>Product catalog</th></tr></thead><tbody><tr><td>What it lists</td><td>a provider's scenes (Sentinel-2, Landsat, EMIT)</td><td>what our pipelines produced</td><td>the same products, as STAC</td></tr><tr><td>Who owns it</td><td>the provider</td><td>us</td><td>us</td></tr><tr><td>Who writes it</td><td>the provider</td><td>the pipeline's publish stage, and nothing else</td><td>a sync from the product database</td></tr><tr><td>Shape</td><td>STAC items</td><td>our own table: the core fields plus whatever we need (recipe, snapshot, quality flags, job)</td><td>STAC items: the core fields under agreed names</td></tr><tr><td>We are</td><td>a client</td><td>the only writer</td><td>the server</td></tr><tr><td>Reached by</td><td><code>pystac-client</code>, geocatalog's <code>from_stac_search</code></td><td>SQL, from our services</td><td>a STAC API (stac-fastapi over pgstac), by anyone we allow</td></tr><tr><td>Pipeline stage</td><td>1 · search</td><td>10 · publish</td><td>after publish</td></tr><tr><td>Status in the stack</td><td>ships</td><td>proposed (K, F)</td><td>proposed (F, L)</td></tr></tbody></table></div>
+<pre>import geocatalog as gc
+import pystac_client
+
+<span class="c"># someone else's catalog: we send a search, they answer with STAC items</span>
+client = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
+<span class="mk"># today* (geocatalog)</span>
+scenes = gc.sources.from_stac_search(                 # → a GeoCatalog of their scenes
+    client, collections=["sentinel-2-l2a"], bounds=site.bounds,
+    datetime="2026-06-01/2026-06-30", asset_key="B04",
+)</pre>
+<p>Why two stores downstream and not one? The product database is ours to shape: it changes with our pipelines and holds things no outside client needs. The product catalog is a promise to others: standard names, read-only, searchable by any STAC tool. Keeping the database as the source of truth and mirroring it outward means the public face can be rebuilt at any time and never has to be written by hand. In code, the <a href="./product-catalog.html">product catalog</a> design puts one interface over both, so <code>publish</code> does not care which it is talking to.</p>
+<div class="uses"><span class="tag">Which one am I talking to?</span><ul><li><b>Looking for input scenes</b>: an upstream STAC. You cannot write to it and should not mirror it wholesale; catalog only the hits.</li><li><b>Recording what a run made</b>: the product database, through publish.</li><li><b>Letting someone else find our products</b>: the product catalog, through our STAC API.</li><li><b>A later pipeline of ours looking for earlier products</b>: either; the database if it needs our extra columns, the catalog if it should work like any other archive.</li></ul><p class="less">The demo's <code>/products</code> endpoint is the product database answered directly, with a small search of its own. It is not a STAC API; in production stac-fastapi provides that, with paging, filters and the standard item shape.</p></div>
+
+<h2 id="fastapi">FastAPI: a typed function becomes an endpoint</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 252" role="img" aria-label="FastAPI routes a request, parses its JSON, validates it against the declared type, calls your function, serialises the result and documents the endpoint."><rect class="stepbox" x="20" y="12" width="640" height="30" rx="6"/><text class="h" x="34" y="32">route</text><text class="mono" x="170" y="32">POST /jobs → start_job</text><text class="tick" x="650" y="32" text-anchor="end">FastAPI, from the type hints</text><rect class="stepbox" x="20" y="52" width="640" height="30" rx="6"/><text class="h" x="34" y="72">parse</text><text class="mono" x="170" y="72">JSON text → Python values</text><text class="tick" x="650" y="72" text-anchor="end">FastAPI, from the type hints</text><rect class="stepbox" x="20" y="92" width="640" height="30" rx="6"/><text class="h" x="34" y="112">validate</text><text class="mono" x="170" y="112">values → RunRequest, or 422</text><text class="tick" x="650" y="112" text-anchor="end">FastAPI, from the type hints</text><rect class="hit" x="20" y="132" width="640" height="30" rx="6"/><text class="h" x="34" y="152">your function</text><text class="mono" x="170" y="152">start_job(request) → Job</text><text class="tick" x="650" y="152" text-anchor="end">you write this</text><rect class="stepbox" x="20" y="172" width="640" height="30" rx="6"/><text class="h" x="34" y="192">serialise</text><text class="mono" x="170" y="192">Job → JSON text</text><text class="tick" x="650" y="192" text-anchor="end">FastAPI, from the type hints</text><rect class="stepbox" x="20" y="212" width="640" height="30" rx="6"/><text class="h" x="34" y="232">document</text><text class="mono" x="170" y="232">all of it → /openapi.json, /docs</text><text class="tick" x="650" y="232" text-anchor="end">FastAPI, from the type hints</text></svg></div><figcaption>You write one typed function. The five steps around it come from its signature, which is why a wrong request is refused before your code runs. The demo service has 8 paths and 3 data models, all documented without a line of documentation code.</figcaption></figure>
+<p>The types are <b>pydantic</b> models: classes whose fields are declared with types and checked when an instance is built. They are the service's seams, in the sense of the pipeline page: a <code>RunRequest</code> is a <code>GeoSlice</code> that arrived as JSON; a <code>Product</code> is a product record on its way out.</p>
+<pre>class RunRequest(pydantic.BaseModel):
+    """What a client sends to start a job: a site, a period and a recipe."""
+
+    bounds: tuple[float, float, float, float]
+    start: datetime.date
+    end: datetime.date
+    recipe: Literal["ndvi"] = "ndvi"
+
+
+class Product(pydantic.BaseModel):
+    """One row of our product database, as the API returns it."""
+
+    id: str
+    start_time: datetime.date
+    end_time: datetime.date
+    bbox: tuple[float, float, float, float]
+    href: str
+    snapshot_id: str
+    recipe_hash: str
+
+
+class Job(pydantic.BaseModel):
+    """A run in progress or finished; product_id is set once it is done."""
+
+    id: str
+    status: Literal["queued", "running", "done", "failed"]
+    product_id: str | None = None</pre>
+<pre>@app.get("/products")
+def search_products(
+    bbox: str | None = None, start: datetime.date | None = None,
+    end: datetime.date | None = None,
+) -&gt; list[Product]:
+    """Our products that touch a box and a period: a query on our own table."""
+    clauses, values = ["1 = 1"], []
+    if bbox is not None:
+        x0, y0, x1, y1 = (float(part) for part in bbox.split(","))
+        clauses.append("x0 &lt;= ? AND x1 &gt;= ? AND y0 &lt;= ? AND y1 &gt;= ?")
+        values += [x1, x0, y1, y0]
+    if start is not None:
+        clauses.append("end_time &gt;= ?")
+        values.append(str(start))
+    if end is not None:
+        clauses.append("start_time &lt;= ?")
+        values.append(str(end))
+    query = f"SELECT * FROM products WHERE {' AND '.join(clauses)} ORDER BY id"
+    with database() as db:
+        return [product_from_row(row) for row in db.execute(query, values)]
+
+
+@app.get("/products/{product_id}")
+def get_product(product_id: str) -&gt; Product:
+    with database() as db:
+        row = db.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+    if row is None:
+        raise fastapi.HTTPException(status_code=404, detail="no such product")
+    return product_from_row(row)</pre>
+<p>The record that comes back is the one the pipeline published:</p>
+<pre>{
+  "id": "ndvi_35d3ee9cf866",
+  "start_time": "2026-06-01",
+  "end_time": "2026-06-30",
+  "bbox": [
+    723000.0,
+    4375000.0,
+    728000.0,
+    4379000.0
+  ],
+  "href": "products.icechunk#ndvi_35d3ee9cf866",
+  "snapshot_id": "WSC679JCC053K2EZF7X0",
+  "recipe_hash": "4b8c154a8762594f\u2026"
+}</pre>
+
+<h2 id="kinds">Four kinds of endpoint</h2>
+<div class="tbl"><table><thead><tr><th>Kind</th><th>Does</th><th>Takes</th><th>Ready-made</th><th>On this page</th></tr></thead><tbody><tr><td>Search</td><td>which products match a place and time</td><td>milliseconds</td><td>stac-fastapi over pgstac</td><td><code>GET /products</code>, built small</td></tr><tr><td>Read</td><td>pixels for a window or a map tile</td><td>tens of milliseconds, mostly waiting on storage</td><td>TiTiler</td><td>named, not built</td></tr><tr><td>Run</td><td>start a pipeline</td><td>seconds to hours</td><td>none: this is yours</td><td><code>POST /jobs</code>, built</td></tr><tr><td>Predict</td><td>a model on one patch</td><td>milliseconds on a GPU, batched</td><td>LitServe</td><td>explained, not built</td></tr></tbody></table></div>
+<p>They differ in how long they take and what they wait on, so they should not share a design. Search and read answer inside the request. Run cannot. Predict needs hardware the others do not.</p>
+
+<h2 id="jobs">Long work is a job</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 276" role="img" aria-label="A client posts a job and gets a job id at once; a worker runs the pipeline; the client polls the job until it is done, then fetches the product record."><rect class="who" x="20" y="14" width="110" height="250" rx="6"/><text class="h" x="75" y="36" text-anchor="middle">client</text><rect class="repobox" x="285" y="14" width="110" height="250" rx="6"/><text class="h" x="340" y="36" text-anchor="middle">API</text><rect class="hdr" x="550" y="14" width="110" height="250" rx="6"/><text class="h" x="605" y="36" text-anchor="middle">worker</text><path class="ln-s" d="M130 62 H277" marker-end="url(#a-s)"/><text class="mono" x="140" y="57">POST /jobs</text><path class="ln-o" d="M285 76 H138" marker-end="url(#a-o)"/><text class="tick" x="275" y="89" text-anchor="end">202 · job 35d3ee… · 4 ms</text><path class="ln-s" d="M130 118 H277" marker-end="url(#a-s)"/><text class="mono" x="140" y="113">GET /jobs/{id}</text><path class="ln-o" d="M285 132 H138" marker-end="url(#a-o)"/><text class="tick" x="275" y="145" text-anchor="end">200 · running</text><path class="ln-s" d="M130 174 H277" marker-end="url(#a-s)"/><text class="mono" x="140" y="169">GET /jobs/{id}</text><path class="ln-o" d="M285 188 H138" marker-end="url(#a-o)"/><text class="tick" x="275" y="201" text-anchor="end">200 · done · product id</text><path class="ln-s" d="M130 230 H277" marker-end="url(#a-s)"/><text class="mono" x="140" y="225">GET /products/{id}</text><path class="ln-o" d="M285 244 H138" marker-end="url(#a-o)"/><text class="tick" x="275" y="257" text-anchor="end">200 · the record</text><path class="ln-s" d="M395 70 H542" marker-end="url(#a-s)"/><text class="tick" x="405" y="64">queue the run</text><rect class="hit" x="560" y="82" width="90" height="96" rx="4"/><text x="605" y="112" text-anchor="middle">ten stages</text><text class="tick" x="605" y="130" text-anchor="middle">commit</text><text class="tick" x="605" y="146" text-anchor="middle">publish</text><path class="ln-o" d="M550 172 H403" marker-end="url(#a-o)"/><text class="tick" x="540" y="166" text-anchor="end">job row: done</text></svg></div><figcaption>Measured: the POST answered in 4 ms; the job finished 205 ms after it was sent, 4 polls later. Sending the same POST again returned the same job with status 200, and started nothing.</figcaption></figure>
+<pre>@app.post("/jobs", status_code=202)
+def start_job(
+    request: RunRequest, http: fastapi.Request, response: fastapi.Response
+) -&gt; Job:
+    """Accept a run and answer at once; the same request always gives the same job."""
+<span class="c">    # job id = SHA-256(request ‖ recipe hash): a retry cannot start a second run</span>
+    payload = request.model_dump_json() + RECIPE_HASH
+    job_id = hashlib.sha256(payload.encode()).hexdigest()[:12]
+    with database() as db:
+        row = db.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+        if row is not None:
+            response.status_code = 200
+            return job_from_row(row)
+        db.execute("INSERT INTO jobs VALUES (?, 'queued', NULL)", (job_id,))
+    http.app.state.workers.submit(run_recipe, job_id, request, http.app.state.catalog)
+    return Job(id=job_id, status="queued")
+
+
+@app.get("/jobs/{job_id}")
+def get_job(job_id: str) -&gt; Job:
+    with database() as db:
+        row = db.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+    if row is None:
+        raise fastapi.HTTPException(status_code=404, detail="no such job")
+    return job_from_row(row)</pre>
+<p>Three things make this safe. The response returns before the work starts, so no connection is held open. The job id is a hash of the request and the recipe, so the same request finds the existing job instead of starting another (the <b>idempotency key</b>). And the worker ends with commit and publish, so a finished job is an ordinary product record: nothing about the result lives in the web service.</p>
+<div class="uses"><span class="tag">When to make an endpoint a job</span><ul><li><b>Answer in the request</b> when the work is reliably under a second or two: search, a record, a small window.</li><li><b>Make it a job</b> when it may take longer than a client or a proxy will wait (often 30 to 60 s), or when it must survive a dropped connection.</li><li><b>Let users send a recipe</b> only as data, loaded through pipekit's <code>loads_sandboxed</code> with an allowlist: a recipe names classes, so a recipe from outside is code.</li></ul><p class="less">Polling is the simplest way to report progress. Webhooks, server-sent events and websockets push instead of being asked; they are refinements of the same idea.</p></div>
+
+<h2 id="trap">The blocking trap, measured</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 290" role="img" aria-label="Twenty concurrent requests take 4.03 s when an async endpoint makes a blocking call, 0.81 s when it hands the call to a thread, and 0.22 s as a plain function; a health check waits 3.98 s in the first case and about 2 ms in the others."><text class="h" x="20" y="20">20 requests at once, each a 200 ms blocking read</text><text x="212" y="50" text-anchor="end">async def + blocking call</text><rect class="bar slow" x="220" y="38" width="300.0" height="16" rx="2"/><text class="mono" x="526.0" y="51">4.03 s</text><text x="212" y="84" text-anchor="end">async def + to_thread</text><rect class="bar" x="220" y="72" width="60.3" height="16" rx="2"/><text class="mono" x="286.3" y="85">0.81 s</text><text x="212" y="118" text-anchor="end">plain def</text><rect class="bar" x="220" y="106" width="16.4" height="16" rx="2"/><text class="mono" x="242.4" y="119">0.22 s</text><text class="h" x="20" y="164">…and how long a /health check sent during the burst had to wait</text><text x="212" y="194" text-anchor="end">async def + blocking call</text><rect class="bar slow" x="220" y="182" width="300.0" height="16" rx="2"/><text class="mono" x="526.0" y="195">3983 ms</text><text x="212" y="228" text-anchor="end">async def + to_thread</text><rect class="bar" x="220" y="216" width="3" height="16" rx="2"/><text class="mono" x="229" y="229">2.7 ms</text><text x="212" y="262" text-anchor="end">plain def</text><rect class="bar" x="220" y="250" width="3" height="16" rx="2"/><text class="mono" x="229" y="263">2.2 ms</text></svg></div><figcaption>Measured on the demo service. The first endpoint is not slow, it is serial: one blocking call holds the event loop, so 20 requests queue and an unrelated health check waits behind them all.</figcaption></figure>
+<pre>def read_window() -&gt; dict[str, float]:
+    """Stand-in for a 200 ms blocking read (GDAL, NumPy, a database driver)."""
+    time.sleep(0.2)
+    return {"mean": 0.41}
+
+
+@app.get("/read/blocking")
+async def read_blocking() -&gt; dict[str, float]:
+<span class="c">    # async def + a blocking call: the event loop stops for every client</span>
+    return read_window()
+
+
+@app.get("/read/plain")
+def read_plain() -&gt; dict[str, float]:
+<span class="c">    # plain def: FastAPI runs it on a worker thread</span>
+    return read_window()
+
+
+@app.get("/read/offloaded")
+async def read_offloaded() -&gt; dict[str, float]:
+<span class="c">    # async def that hands the blocking call to a thread</span>
+    return await asyncio.to_thread(read_window)</pre>
+<p>FastAPI runs on an event loop (see <a href="./parallelism.html">parallelism</a>). An <code>async def</code> endpoint runs on that loop, so anything in it that blocks stops every other request. A plain <code>def</code> endpoint is run on a worker thread for you, which is why it is the fastest here. The middle bar is slower only because <code>asyncio.to_thread</code> uses a smaller pool (6 threads on this 2-core machine) than the one FastAPI uses for plain functions (40 by default).</p>
+<div class="uses"><span class="tag">Which to write</span><ul><li><b>Plain <code>def</code></b> when the body calls blocking libraries: GDAL, rasterio, NumPy, a synchronous database driver. This is most geo code.</li><li><b><code>async def</code></b> when everything inside is awaited: an async HTTP client, obstore, an async database driver.</li><li><b>A worker process or a job</b> when the body computes for long in Python or holds a lot of memory: threads share one interpreter.</li></ul><p class="less">geocloud already guards the other direction: its helper for running a coroutine from blocking code checks for a running loop, the situation a FastAPI handler is in.</p></div>
+
+<h2 id="state">Stateless services</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 218" role="img" aria-label="Clients reach any of three identical copies of the API; all three read and write the same product database, Icechunk repository and job queue."><text class="h" x="20" y="20">The service holds nothing, so there can be many of it</text><rect class="who" x="280" y="32" width="120" height="30" rx="6"/><text x="340" y="52" text-anchor="middle">clients</text><path class="ln" d="M340 62 L200 88" marker-end="url(#a-m)"/><rect class="ref" x="140" y="92" width="120" height="36" rx="6"/><text class="h" x="200" y="115" text-anchor="middle">API copy 1</text><path class="ln" d="M200 128 V156"/><path class="ln" d="M340 62 L340 88" marker-end="url(#a-m)"/><rect class="ref" x="280" y="92" width="120" height="36" rx="6"/><text class="h" x="340" y="115" text-anchor="middle">API copy 2</text><path class="ln" d="M340 128 V156"/><path class="ln" d="M340 62 L480 88" marker-end="url(#a-m)"/><rect class="ref" x="420" y="92" width="120" height="36" rx="6"/><text class="h" x="480" y="115" text-anchor="middle">API copy 3</text><path class="ln" d="M480 128 V156"/><rect class="hit" x="60" y="160" width="180" height="46" rx="6"/><text class="h" x="150" y="180" text-anchor="middle">product database</text><text class="tick" x="150" y="196" text-anchor="middle">records, jobs</text><rect class="hit" x="260" y="160" width="180" height="46" rx="6"/><text class="h" x="350" y="180" text-anchor="middle">Icechunk</text><text class="tick" x="350" y="196" text-anchor="middle">the products</text><rect class="hit" x="460" y="160" width="180" height="46" rx="6"/><text class="h" x="550" y="180" text-anchor="middle">a queue</text><text class="tick" x="550" y="196" text-anchor="middle">runs waiting</text><path class="ln" d="M150 156 H530"/></svg></div><figcaption>Any copy can answer any request, because everything that must be remembered lives below the line. The demo cuts one corner: its worker is a thread inside the web process, so a restart loses queued runs. A real service puts the queue outside.</figcaption></figure>
+
+<h2 id="litserve">LitServe: FastAPI for models</h2>
+<p>Serving a model has needs a plain endpoint does not: the weights must load once and stay loaded, requests that arrive together should run as one batch, and work should spread over the GPUs or processes available. <b>LitServe</b>, from Lightning AI, is a server built on FastAPI that provides those. You write a class with two required parts, <code>setup</code> (run once per worker) and <code>predict</code> (run per request or per batch), and it supplies the endpoint, the batching queue, the workers and streaming. Its own page reports at least twice the throughput of plain FastAPI on its benchmarks.</p>
+<pre>import litserve as ls
+
+<span class="mk"># not pinned (litserve)</span>
+class PlumeDetector(ls.LitAPI):
+    def setup(self, device):
+<span class="c">        # once per worker: load the weights onto the device</span>
+        self.model = load_model(device)
+
+    def predict(self, request):
+<span class="c">        # per request, or per batch when batching is on</span>
+        patch = decode(request["patch"])              # → (band, h, w)
+        return {"mask": encode(self.model(patch))}    # → (h, w)
+
+<span class="mk"># not pinned (litserve)</span>
+server = ls.LitServer(PlumeDetector(max_batch_size=16), accelerator="auto")
+server.run(port=8000)</pre>
+<div class="uses"><span class="tag">When LitServe, and where in the stack</span><ul><li><b>Use it</b> for the predict kind of endpoint: a segmentation network, a retrieval emulator, anything on a GPU that benefits from batching.</li><li><b>In the pipeline</b> it sits inside Apply: the patcher splits a field, each patch goes to the model server, the results are combined as usual.</li><li><b>Do not use it</b> for search, read or run. None of them loads weights or batches, and each has a better-fitting tool.</li></ul><p class="less">The code above follows LitServe's published quick-start and was not run for this page; <code>load_model</code>, <code>decode</code> and <code>encode</code> are placeholders.</p></div>
+
+<h2 id="stack">In your stack</h2>
+<p>An API is orchestration: it sits above <a href="./role-ladder.html">the role ladder</a> and runs recipes without changing them. Checked at geotoolz <code>640670c</code> and pipekit <code>9e86a56</code>.</p>
+<div class="tbl"><table><thead><tr><th>Piece</th><th>Role in a backend</th><th>Status</th></tr></thead><tbody><tr><td>geocatalog <code>from_stac_search</code>, <code>STACSource</code></td><td>the upstream client: turns a provider's STAC answer into a catalog</td><td>ships</td></tr><tr><td><code>GeoSlice</code></td><td>the request, once validated: bounds × time × resolution × CRS</td><td>ships</td></tr><tr><td>pipekit <code>dumps</code>, <code>loads</code>, <code>loads_sandboxed</code></td><td>a recipe as JSON in a request body, loaded safely</td><td>ships</td></tr><tr><td><code>pipekit_ops.pipeline_hash</code></td><td>half of the idempotency key, and the recipe's id on the record</td><td>ships</td></tr><tr><td>geocloud's loop-aware coroutine runner</td><td>lets blocking handlers call async readers</td><td>ships</td></tr><tr><td><code>ProductCatalog</code>, <code>PostGISCatalog</code></td><td>the product database behind publish</td><td>proposed · <a href="https://github.com/jejjohnson/geotoolz/issues/671">geotoolz#671</a>, <a href="https://github.com/jejjohnson/geotoolz/issues/672">#672</a></td></tr><tr><td><code>PgstacCatalog</code>, <code>StacApiCatalog</code>, <code>sync_to_pgstac</code></td><td>the product catalog and the mirror into it</td><td>proposed · <a href="https://github.com/jejjohnson/geotoolz/issues/673">#673</a>, <a href="https://github.com/jejjohnson/geotoolz/issues/674">#674</a></td></tr><tr><td>stac-fastapi, TiTiler, LitServe</td><td>ready-made search, read and predict services</td><td>outside the stack; none is a dependency today</td></tr></tbody></table></div>
+
+<h2 id="later">Left for later</h2>
+<p>Each of these matters in production and gets a line here: <b>authentication</b> (who is asking: API keys or tokens, checked before the function runs), <b>rate limits</b> (how much one client may ask), <b>versioning</b> (a <code>/v1</code> prefix, so the shape of a response can change without breaking clients), a real <b>queue</b> for jobs, and <b>deployment</b> (containers, several copies, a load balancer).</p>
+
+<h2>Where this goes next</h2>
+<div class="tbl"><table><thead><tr><th>Idea here</th><th>Shows up as</th></tr></thead><tbody><tr><td>Product database and product catalog</td><td>the <a href="./product-catalog.html">product catalog</a> design: one record with three encodings (K), the adapters (F), the sync into pgstac (L)</td></tr><tr><td>A job ends in commit and publish</td><td>stages 9 and 10 of <a href="./geo-pipeline.html">the geo pipeline</a></td></tr><tr><td>The idempotency key</td><td>recipe stamps and hashes (<a href="./recipe-registries.html">recipe registries</a>, G); upserts (<a href="./databases-catalogs.html">databases and catalogs</a>)</td></tr><tr><td>Plain def against async def</td><td><a href="./parallelism.html">parallelism</a>: the event loop and the thread pool</td></tr></tbody></table></div>
+
+<footer>Sources: the <a href="https://fastapi.tiangolo.com/">FastAPI</a> documentation; <a href="https://github.com/lightning-ai/litserve">LitServe</a>'s repository page (read 13 November 2026) for its quick-start, feature list and throughput claim; the <a href="https://stacspec.org/">STAC</a> specification, and the stac-fastapi, pgstac and TiTiler projects as I know them, not re-checked online for this page. The service is one file of 261 lines, run as shown with FastAPI 0.162, uvicorn 0.54 and pydantic 2.13 over geotoolz at <code>640670c</code>, on one 2-core machine; SQLite stands in for the product database, the job worker is a thread in the web process, and the 200 ms read is an injected delay. The Earth Search address in the client sketch is illustrative and was not called.</footer>
+
+</main>
+</body>
+</html>
