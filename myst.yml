@@ -61,6 +61,7 @@ project:
         - file: docs/design/skill_tree_gaussx.md
         - file: docs/design/skill_tree_kernellib.md
         - file: docs/design/skill_tree_geotoolz.md
+        - file: docs/design/skill_tree_pipekit.md
         - title: Storage and catalogs
           children:
             - file: docs/design/storage_formats.md
