@@ -30,6 +30,7 @@ Background for the Level 2 collections and recipe registries pages. The running 
 - **A branch** is a name that moves; a **tag** is a name that does not; an id is forever.
 - **A commit** is one conditional pointer move: all or nothing, and the second of two writers gets a conflict.
 - **Provenance** is the ids of data, code, environment and settings recorded on the product.
+- **DVC and Icechunk fit together:** DVC keeps the pipeline and ordinary files, Icechunk the arrays, and a pointer file holding the snapshot id joins them under one git commit.
 
 ## On the page
 
@@ -40,4 +41,5 @@ Background for the Level 2 collections and recipe registries pages. The running 
 5. Commits: all or nothing
 6. Provenance: ids on the product
 7. One idea in git, DVC, Icechunk, pipekit, lock files and images
-8. In the stack, and where each idea goes in the design pages
+8. DVC and Icechunk together: a pointer file joins them, run end to end
+9. In the stack, and where each idea goes in the design pages
