@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Cloud-Native Raster Formats</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none',
+    macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one 46rem reading column, GeoStack hydrographic palette (from the esmax ocean pages).
+   New in this kit: --unit (units chip + units-check box) and --ex (running-example card). */
+:root {
+  --paper: #F1F5F6; --panel: #E4ECEF; --ink: #0E1E28; --muted: #4E616C; --rule: #C6D3D9;
+  --sea: #0A6B68; --sea-soft: #D3E7E5; --oracle: #985710; --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1; --unit: #5B4A9A; --unit-soft: #E6E2F3; --ex: #2F5E8C; --ex-soft: #DCE7F2;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+/* kit annotation: names each component so it can be referred to in review */
+.kit { margin-top: 3.4rem; padding-top: 0.6rem; border-top: 2px solid var(--ink); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.kit .id { font-family: var(--mono); font-size: 0.82rem; font-weight: 500; color: var(--unit); }
+.kit .what { font-family: var(--display); font-size: 0.86rem; color: var(--muted); }
+.kit + h2, .kit + .tldr, .kit + h3 { margin-top: 0.9rem; }
+.kitnote { font-family: var(--display); font-size: 0.82rem; color: var(--muted); border: 1px dashed var(--rule); border-radius: 6px; padding: 0.5rem 0.75rem; margin: 0.6rem 0 1rem; }
+.kitnote b { color: var(--unit); font-weight: 600; }
+
+/* C1 TL;DR */
+.tldr { border-top: 2px solid var(--ink); padding-top: 1rem; margin-top: 2rem; }
+.tldr ul { margin: 0.6rem 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+
+/* C2 pipeline chart */
+.chart { display: grid; }
+.box { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 0 0.9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--sea); line-height: 1.25; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .sub { color: var(--muted); font-size: 0.95rem; }
+.box.focus { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.focus .num { color: var(--oracle); }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.box .sig .n { white-space: nowrap; }
+.box .sig .s { display: flex; flex-wrap: wrap; gap: 0.2rem 0.4rem; align-items: center; min-width: 0; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.link { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; }
+svg.g { width: 1.15rem; height: 1.15rem; color: var(--sea); flex: none; }
+
+/* units chip (new) */
+.u { display: inline-block; font-family: var(--mono); font-size: 0.74rem; line-height: 1.5; padding: 0 0.4rem; border-radius: 4px; background: var(--unit-soft); color: var(--unit); white-space: nowrap; }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+td.gl { width: 1.6rem; }
+td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+td code { font-size: 0.8rem; white-space: nowrap; }
+
+/* C4 running-example card (new) */
+.ex { border: 1px solid var(--ex); border-radius: 6px; overflow: hidden; margin: 1rem 0 1.4rem; }
+.ex-h { background: var(--ex-soft); padding: 0.6rem 1rem; display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; border-bottom: 1px solid var(--ex); }
+.ex-h .tag { color: var(--ex); }
+.ex-h strong { font-family: var(--display); font-weight: 600; }
+.ex-b { padding: 0.7rem 1rem 0.3rem; font-size: 0.95rem; }
+.ex-b .tbl { margin: 0.4rem 0 0.6rem; border-top: 0; }
+.ex.mini { border-left: 3px solid var(--ex); border-top: 0; border-right: 0; border-bottom: 0; border-radius: 0 6px 6px 0; background: var(--ex-soft); padding: 0.7rem 1rem; font-size: 0.96rem; }
+.ex.mini .tag { color: var(--ex); display: block; margin-bottom: 0.25rem; }
+.ex.mini p:last-child { margin-bottom: 0; }
+
+/* C6 concept box */
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.def h3 { margin: 0 0 0.6rem; }
+.def p:last-child { margin-bottom: 0; }
+.where { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 0.3rem 0.8rem; align-items: baseline; margin: 0.4rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px dashed var(--rule); font-size: 0.92rem; }
+.where .wl { grid-column: 1 / -1; font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+/* C7 operator card */
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.phase { font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.phase.train { background: var(--oracle-soft); color: var(--oracle); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io .sh { display: grid; justify-items: end; gap: 0.15rem; padding-top: 0.15rem; }
+.io .sh code { font-size: 0.8rem; text-align: right; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io .sh { grid-column: 2; justify-items: start; padding-top: 0; }
+  .where { grid-template-columns: max-content minmax(0, 1fr); }
+  .where .u { grid-column: 2; justify-self: start; }
+}
+
+/* C8 units check (new) */
+.uc { border: 1px solid var(--unit); border-radius: 6px; margin: 1rem 0 1.4rem; overflow: hidden; }
+.uc-h { background: var(--unit-soft); padding: 0.55rem 1rem; border-bottom: 1px solid var(--unit); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.uc-h .tag { color: var(--unit); }
+.uc-h strong { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.uc-rows { padding: 0.4rem 1rem 0.6rem; display: grid; }
+.uc-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.2rem 1rem; align-items: center; padding: 0.35rem 0; border-bottom: 1px dashed var(--rule); font-size: 0.93rem; }
+.uc-row:last-child { border-bottom: 0; }
+.uc-row > div { min-width: 0; overflow-x: auto; }
+.uc-row .r { color: var(--muted); }
+.uc-row.ok .r { color: var(--sea); font-weight: 600; font-family: var(--display); font-size: 0.86rem; }
+@media (max-width: 560px) { .uc-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* C9 code sketch */
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+pre .mk { color: var(--oracle); }
+pre .un { color: var(--unit); }
+pre.diagram { background: var(--paper); }
+
+/* C10 two cases */
+.case { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.8rem; margin: 1rem 0 1.4rem; }
+.case > div { border: 1px solid var(--rule); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.94rem; min-width: 0; overflow-x: auto; }
+.case .lin { border-top: 3px solid var(--sea); }
+.case .non { border-top: 3px solid var(--oracle); }
+.case .tag { display: block; margin-bottom: 0.2rem; }
+
+/* C11 watch-out */
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.note p:last-child { margin-bottom: 0; }
+
+/* C12 series nav */
+.series { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--display); font-size: 0.82rem; color: var(--muted); margin-bottom: 1.4rem; }
+.series a { text-decoration: none; }
+footer { margin-top: 3rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 1rem; }
+
+/* v2: role rows in signatures — in / u / θ / est / out */
+.box .sig .d.par, .io-l.par { color: var(--oracle); }
+.box .sig .d.exo, .io-l.exo { color: var(--ex); }
+.box .sig .d.est, .io-l.est { color: var(--muted); font-style: italic; }
+.box .sig .none, .io .none { color: var(--muted); font-style: italic; font-size: 0.86rem; }
+.box .sig .rule { grid-column: 1 / -1; border-top: 1px dotted var(--rule); margin: 0.15rem 0; }
+.io-group.par { background: var(--oracle-soft); }
+.io-group.exo { background: var(--ex-soft); }
+.io-group.est { border-top: 1px dotted var(--rule); }
+.io-group + .io-group { border-top: 1px solid var(--rule); }
+.where { grid-template-columns: max-content minmax(0, 1fr) max-content max-content; }
+.where .sh { font-size: 0.86rem; }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .sh, .where .u { grid-column: 2; justify-self: start; } }
+
+/* v3: numbered equation stack inside boxes and operator arrows */
+.eqs { display: grid; gap: 0.2rem; margin-top: 0.35rem; font-size: 0.95rem; min-width: 0; }
+.eqs > div { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr); align-items: baseline; min-width: 0; overflow-x: auto; overflow-y: hidden; }
+.eqs .ln { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.op-arrow .eqs { margin-top: 0; }
+.box .sig .d.cst, .io-l.cst { color: var(--muted); }
+.box .sig .s .none { font-size: 0.78rem; }
+
+/* v4: model box steps, assumptions, compact Where grid */
+.mstep { display: flex; align-items: baseline; gap: 0.5rem; margin: 1.3rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px solid var(--rule); }
+.mstep:first-of-type { border-top: 0; padding-top: 0; margin-top: 0.6rem; }
+.mstep .mn { font-family: var(--display); font-weight: 700; color: var(--sea); font-size: 0.95rem; }
+.mstep .ml { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.mstep .mu { font-family: var(--mono); font-size: 0.72rem; color: var(--oracle); }
+.asm { display: grid; gap: 0.55rem; margin: 0.4rem 0 0.6rem; }
+.asm .a { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 0.5rem; align-items: start; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 0.55rem 0.75rem; }
+.asm .a > div { min-width: 0; }
+.asm .aid { font-family: var(--mono); font-weight: 500; font-size: 0.82rem; color: var(--oracle); padding-top: 0.15rem; }
+.asm small { display: block; color: var(--muted); font-size: 0.84rem; line-height: 1.45; margin-top: 0.2rem; }
+.asm mjx-container[display="true"] { margin: 0.35rem 0 !important; }
+.where { grid-template-columns: max-content minmax(0, 1fr); column-gap: 0.8rem; row-gap: 0.45rem; align-items: baseline; }
+.where .me { min-width: 0; }
+.where .meta { display: inline-flex; flex-wrap: wrap; gap: 0.25rem 0.45rem; align-items: baseline; margin-left: 0.5rem; }
+.where .meta .sh { font-size: 0.86rem; color: var(--muted); }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .meta { display: flex; margin-left: 0; margin-top: 0.1rem; } }
+
+/* visual figures */
+figure.viz { margin: 1.4rem 0 1.6rem; }
+.vwrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; }
+.vwrap svg.v { display: block; width: 100%; min-width: 560px; height: auto; }
+figure.viz figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.5rem; }
+svg.v text { font-family: var(--display); font-size: 13px; fill: var(--ink); }
+svg.v .h { font-weight: 600; font-size: 13.5px; }
+svg.v .mono { font-family: var(--mono); font-size: 11.5px; }
+svg.v .muted { fill: var(--muted); }
+svg.v .o { fill: var(--oracle); }
+svg.v .s { fill: var(--sea); }
+svg.v .e { fill: var(--ex); }
+svg.v .tile { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+svg.v .hit { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.4; }
+svg.v .skip { fill: var(--paper); stroke: var(--rule); stroke-dasharray: 3 3; }
+svg.v .win { fill: var(--oracle); }
+svg.v .hdr { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .ovr { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ref { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.3; }
+svg.v .keybox { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .panelbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .repobox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.4; }
+svg.v .file { fill: var(--panel); stroke: var(--rule); }
+svg.v .snap { fill: var(--paper); stroke: var(--sea); stroke-width: 2; }
+svg.v .snap.now { fill: var(--sea); }
+svg.v .step { fill: var(--sea); }
+svg.v .stepn { fill: var(--paper); font-weight: 700; font-size: 14px; }
+svg.v .stepbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .who { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ln { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+svg.v .ln-o { stroke: var(--oracle); stroke-width: 1.6; fill: none; }
+svg.v .ln-s { stroke: var(--sea); stroke-width: 1.6; fill: none; }
+svg.v .ln-e { stroke: var(--ex); stroke-width: 1.6; fill: none; }
+svg.v .dash { stroke-dasharray: 4 3; }
+ol.steps { margin: 0 0 1.2rem; padding-left: 1.3rem; display: grid; gap: 0.3rem; }
+details.maths { border: 1px solid var(--rule); border-radius: 6px; margin: 1rem 0 1.6rem; background: var(--paper); }
+details.maths > summary { cursor: pointer; padding: 0.6rem 1rem; font-family: var(--display); font-weight: 600; font-size: 0.92rem; color: var(--unit); }
+details.maths > summary:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+details.maths .dbody { padding: 0 1rem 0.6rem; }
+
+.uses { border-left: 3px solid var(--sea); background: var(--sea-soft); border-radius: 0 6px 6px 0; padding: 0.85rem 1rem; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.uses .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.uses ul { margin: 0.2rem 0 0.6rem; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.uses p { margin-bottom: 0.5rem; }
+.uses p.less { color: var(--muted); margin-bottom: 0; }
+ul.verdicts { padding-left: 1.2rem; display: grid; gap: 0.45rem; margin: 0.4rem 0 1.2rem; }
+svg.v .cogbox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .zarrbox { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.2; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-scalar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+    <symbol id="g-vector" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="15" y="9" width="6" height="6"/></g></symbol>
+    <symbol id="g-spectrum" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 20h18"/><path d="M3 14l3-4 3 2 2-6 2 9 2-3 3 1 3-4" stroke-linejoin="round"/></g></symbol>
+    <symbol id="g-field" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16"/><path d="M4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16" stroke-width="0.8"/></g></symbol>
+    <symbol id="g-mask" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 4h8v8H4zM12 12h8v8h-8z" fill="currentColor" opacity="0.55"/></symbol>
+    <symbol id="g-cube" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="2" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" fill="var(--paper)"/><rect x="3" y="9" width="13" height="13" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-matrix" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16"/><path d="M4 4l16 16" stroke-width="1"/></g></symbol>
+    <symbol id="g-dataset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" stroke-width="1"/></g></symbol>
+    <symbol id="g-weights" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1"><path d="M5 6l7 6M5 18l7-6M12 5l7 7M12 12l7 0M12 19l7-7" fill="none"/></g><g fill="currentColor"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="12" r="2"/></g></symbol>
+    <symbol id="g-decision" viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  </defs>
+</svg>
+</head>
+<body>
+<main>
+
+<nav class="series" aria-label="Series"><span>GeoStack · storage</span><span>›</span><span>background</span><a href="./l2-collections.html">Level 2 collections →</a><a href="./product-catalog.html">Product catalog →</a><a href="./recipe-registries.html">Recipe registries →</a></nav>
+<div class="eyebrow">GeoStack · storage background · bytes → array</div>
+<h1>How does a 100 × 100 window come out of a 60 MB band?</h1>
+<p class="lede">Pictures first, maths folded away. Every cloud-native format answers the same question: given the pixels you want, which bytes do you fetch? COG, GeoParquet and Zarr each answer it with an index. kerchunk, VirtualiZarr and Icechunk separate that index from the files, so one set of bytes can be read as Zarr, combined with others and versioned.</p>
+
+<section class="tldr" aria-label="TL;DR">
+  <span class="tag">TL;DR</span>
+  <h2>Four indexes over the same bytes</h2>
+  <ul>
+    <li><strong>A COG</strong> is a GeoTIFF whose header lists where every tile starts and how long it is, so a window read is a few HTTP range requests, not a download.</li>
+    <li><strong>GeoParquet</strong> is a table stored by column and by row group, with per-group bounding boxes and times, so a query skips most of the file.</li>
+    <li><strong>Zarr</strong> splits an N-dimensional array into chunks, one object per chunk key, described by small JSON metadata files.</li>
+    <li><strong>A chunk reference</strong> (URL, offset, length) is all a Zarr reader needs. kerchunk writes references to a file, VirtualiZarr builds them from archives as xarray objects, and Icechunk stores them, with real chunks, in versioned commits.</li>
+    <li><strong>Reading a raster through Icechunk</strong> is a Zarr key lookup, then a manifest lookup, then the same range request a COG read makes. The test: the bytes fetched for our window are identical in both paths.</li>
+  </ul>
+</section>
+
+<h2>The running example</h2>
+<div class="ex">
+  <div class="ex-h"><span class="tag">Running example</span><strong>One Sentinel-2 SWIR band, read for a 2 km site</strong></div>
+  <div class="ex-b">
+    <p>Band B12 (2 190 nm, the band methane matched filters lean on) of one Sentinel-2 L2A tile, stored as a COG, read for a 2 km × 2 km window over a site. The 512-pixel tile size is illustrative: a real file states its own in its header. The same numbers run to the end.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Quantity</th><th>Symbol</th><th>Role</th><th style="text-align:right">Value</th><th>Unit</th></tr></thead>
+      <tbody>
+        <tr><td>MGRS tile side</td><td>—</td><td>size</td><td class="num">109.8</td><td>km</td></tr>
+        <tr><td>Ground sampling of B12</td><td>\(\Delta s\)</td><td>size</td><td class="num">20</td><td>m</td></tr>
+        <tr><td>Band size</td><td>\(N_r = N_c\)</td><td>size</td><td class="num">5 490</td><td>px</td></tr>
+        <tr><td>Bytes per pixel (uint16)</td><td>\(\beta\)</td><td>size</td><td class="num">2</td><td>B</td></tr>
+        <tr><td>Band, uncompressed</td><td>\(N_r N_c \beta\)</td><td>size</td><td class="num">60 280 200</td><td>B</td></tr>
+        <tr><td>Tile (chunk) side</td><td>\(P\)</td><td>const</td><td class="num">512</td><td>px</td></tr>
+        <tr><td>Tiles per side, total</td><td>\(n_t\), \(n_t^2\)</td><td>const</td><td class="num">11, 121</td><td>—</td></tr>
+        <tr><td>Site window</td><td>\(W = (r_0, r_1, c_0, c_1)\)</td><td>in</td><td class="num">2 000–2 099, 3 050–3 149</td><td>px</td></tr>
+        <tr><td>Scenes over the site in June 2026</td><td>\(S\)</td><td>size</td><td class="num">6</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+<details class="maths"><summary>The four read paths as operators, the kinds of object and the symbols</summary>
+<div class="dbody">
+
+<p>Each box is one read path, written as an operator: what you pass in, what the format already stores (const), what the reader works out on the way (est), and what comes back. None of them has parameters to fit.</p>
+<div class="chart">
+  <a class="box" href="#cog"><span class="num">1</span><div><div class="name">COG window read</div>
+    <div class="eqs">
+      <div><span class="ln">1</span>\(\mathcal{I} = \{ \lfloor r_0 / P \rfloor, \ldots, \lfloor r_1 / P \rfloor \}\)</div>
+      <div><span class="ln">2</span>\(\mathcal{J} = \{ \lfloor c_0 / P \rfloor, \ldots, \lfloor c_1 / P \rfloor \}\)</div>
+      <div><span class="ln">3</span>\(k = i n_t + j, \ (i, j) \in \mathcal{I} \times \mathcal{J}\)</div>
+      <div><span class="ln">4</span>\(\vect{x}_W = \mathrm{crop}_W(\mathrm{decode}(\mathrm{GET}(\mathrm{url}, [o_k, o_k + \ell_k))))\)</div>
+    </div></div>
+    <div class="sig">
+      <span class="d">in</span><svg class="g"><use href="#g-scalar"/></svg><span class="n">url, \(W\)</span><span class="s"><code>(), (4,)</code><span class="u">—</span><span class="u">px</span></span>
+      <span class="d par">θ</span><svg class="g"><use href="#g-weights"/></svg><span class="n">none</span><span class="s absent"><span class="none">nothing to fit</span></span>
+      <span class="d cst">const</span><svg class="g"><use href="#g-scalar"/></svg><span class="n">\(P, n_t\)</span><span class="s"><code>(), ()</code><span class="u">px</span><span class="u">—</span><span class="none">TIFF header</span></span>
+      <span class="d cst"></span><svg class="g"><use href="#g-vector"/></svg><span class="n">\(o_k, \ell_k\)</span><span class="s"><code>(tile,)</code><span class="u">B</span><span class="none">TileOffsets, TileByteCounts</span></span>
+      <span class="d est">est</span><svg class="g"><use href="#g-mask"/></svg><span class="n">\(\mathcal{I}, \mathcal{J}, k\)</span><span class="s"><code>(tile,)</code><span class="u">—</span><span class="none">eq. 1–3</span></span>
+      <span class="d">out</span><svg class="g"><use href="#g-field"/></svg><span class="n">\(\vect{x}_W\)</span><span class="s"><code>(row, col)</code><span class="u">DN</span><span class="none">eq. 4</span></span>
+    </div></a>
+  <div class="link"><span></span><span>the same scenes, found by a table query instead of a file name</span></div>
+  <a class="box" href="#geoparquet"><span class="num">2</span><div><div class="name">GeoParquet query</div>
+    <div class="eqs">
+      <div><span class="ln">1</span>\(\mathrm{keep}_g \iff \vect{b}_g \cap B \neq \varnothing \wedge \tau_g \cap \mathcal{T} \neq \varnothing\)</div>
+      <div><span class="ln">2</span>\(\mathrm{keep}_n \iff \mathrm{keep}_{g(n)} \wedge \vect{b}_n \cap B \neq \varnothing \wedge \tau_n \cap \mathcal{T} \neq \varnothing\)</div>
+    </div></div>
+    <div class="sig">
+      <span class="d">in</span><svg class="g"><use href="#g-vector"/></svg><span class="n">\(B, \mathcal{T}\)</span><span class="s"><code>(4,), (2,)</code><span class="u">m</span><span class="u">time</span></span>
+      <span class="d par">θ</span><svg class="g"><use href="#g-weights"/></svg><span class="n">none</span><span class="s absent"><span class="none">nothing to fit</span></span>
+      <span class="d cst">const</span><svg class="g"><use href="#g-vector"/></svg><span class="n">\(\vect{b}_g, \tau_g\)</span><span class="s"><code>(group, 4), (group, 2)</code><span class="u">m</span><span class="u">time</span><span class="none">row-group statistics</span></span>
+      <span class="d cst"></span><svg class="g"><use href="#g-dataset"/></svg><span class="n">\(\vect{b}_n, \tau_n\)</span><span class="s"><code>(row, 4), (row, 2)</code><span class="u">m</span><span class="u">time</span><span class="none">bbox and time columns</span></span>
+      <span class="d est">est</span><svg class="g"><use href="#g-mask"/></svg><span class="n">\(\mathrm{keep}_g\)</span><span class="s"><code>(group,)</code><span class="u">bool</span><span class="none">eq. 1</span></span>
+      <span class="d">out</span><svg class="g"><use href="#g-mask"/></svg><span class="n">\(\mathrm{keep}_n\)</span><span class="s"><code>(row,)</code><span class="u">bool</span><span class="none">eq. 2</span></span>
+    </div></a>
+  <div class="link"><span></span><span>the same tiles, addressed by a key instead of an offset</span></div>
+  <a class="box" href="#zarr"><span class="num">3</span><div><div class="name">Zarr chunk read</div>
+    <div class="eqs">
+      <div><span class="ln">1</span>\(\mathcal{I} \times \mathcal{J}\) as in box 1, with chunk shape \((P, P)\)</div>
+      <div><span class="ln">2</span>\(\kappa_{ij} = \texttt{B12/c/}i\texttt{/}j\)</div>
+      <div><span class="ln">3</span>\(\vect{x}_W = \mathrm{crop}_W(\mathrm{decode}(\mathrm{GET}(\kappa_{ij})))\)</div>
+    </div></div>
+    <div class="sig">
+      <span class="d">in</span><svg class="g"><use href="#g-scalar"/></svg><span class="n">store, \(W\)</span><span class="s"><code>(), (4,)</code><span class="u">—</span><span class="u">px</span></span>
+      <span class="d par">θ</span><svg class="g"><use href="#g-weights"/></svg><span class="n">none</span><span class="s absent"><span class="none">nothing to fit</span></span>
+      <span class="d cst">const</span><svg class="g"><use href="#g-scalar"/></svg><span class="n">\(P\), codecs</span><span class="s"><code>(), —</code><span class="u">px</span><span class="none">zarr.json</span></span>
+      <span class="d est">est</span><svg class="g"><use href="#g-vector"/></svg><span class="n">\(\kappa_{ij}\)</span><span class="s"><code>(chunk,)</code><span class="u">key</span><span class="none">eq. 2</span></span>
+      <span class="d">out</span><svg class="g"><use href="#g-field"/></svg><span class="n">\(\vect{x}_W\)</span><span class="s"><code>(row, col)</code><span class="u">DN</span><span class="none">eq. 3</span></span>
+    </div></a>
+  <div class="link"><span></span><span>the same keys, resolved to the original COG's bytes</span></div>
+  <a class="box focus" href="#icechunk-read"><span class="num">4</span><div><div class="name">Icechunk virtual read</div>
+    <div class="eqs">
+      <div><span class="ln">1</span>\(\kappa_{ij}\) as in box 3</div>
+      <div><span class="ln">2</span>\((\mathrm{url}_k, o_k, \ell_k) = M_\sigma(\kappa_{ij})\)</div>
+      <div><span class="ln">3</span>\(\vect{x}_W = \mathrm{crop}_W(\mathrm{decode}(\mathrm{GET}(\mathrm{url}_k, [o_k, o_k + \ell_k))))\)</div>
+    </div></div>
+    <div class="sig">
+      <span class="d">in</span><svg class="g"><use href="#g-scalar"/></svg><span class="n">repo@\(\sigma\), \(W\)</span><span class="s"><code>(), (4,)</code><span class="u">—</span><span class="u">px</span></span>
+      <span class="d par">θ</span><svg class="g"><use href="#g-weights"/></svg><span class="n">none</span><span class="s absent"><span class="none">nothing to fit</span></span>
+      <span class="d cst">const</span><svg class="g"><use href="#g-dataset"/></svg><span class="n">\(M_\sigma\)</span><span class="s"><code>(chunk,)</code><span class="u">refs</span><span class="none">the snapshot's manifest</span></span>
+      <span class="d est">est</span><svg class="g"><use href="#g-vector"/></svg><span class="n">\(\kappa_{ij}\), \((\mathrm{url}_k, o_k, \ell_k)\)</span><span class="s"><code>(chunk,)</code><span class="u">key</span><span class="u">B</span><span class="none">eq. 1–2</span></span>
+      <span class="d">out</span><svg class="g"><use href="#g-field"/></svg><span class="n">\(\vect{x}_W\)</span><span class="s"><code>(row, col)</code><span class="u">DN</span><span class="none">eq. 3</span></span>
+    </div></a>
+</div>
+
+<h3>The kinds of object on this page</h3>
+<div class="tbl"><table>
+  <thead><tr><th></th><th>Kind</th><th>Dimensions</th><th>Example here</th></tr></thead>
+  <tbody>
+    <tr><td class="gl"><svg class="g"><use href="#g-field"/></svg></td><td class="k">field</td><td><code>(row, col)</code></td><td>the band B12, the window \(\vect{x}_W\)</td></tr>
+    <tr><td class="gl"><svg class="g"><use href="#g-vector"/></svg></td><td class="k">vector</td><td><code>(tile,)</code></td><td>tile offsets \(o_k\), lengths \(\ell_k\)</td></tr>
+    <tr><td class="gl"><svg class="g"><use href="#g-mask"/></svg></td><td class="k">mask</td><td><code>(tile,)</code>, <code>(row,)</code></td><td>which tiles, row groups, rows to read</td></tr>
+    <tr><td class="gl"><svg class="g"><use href="#g-dataset"/></svg></td><td class="k">dataset</td><td><code>(row, column)</code>, <code>(chunk,)</code></td><td>a catalog table, a chunk manifest</td></tr>
+  </tbody>
+</table></div><p>\(r\) indexes pixel rows and \(c\) pixel columns, from 0; \(i\) and \(j\) index tile rows and tile columns; \(k\) numbers tiles in file order; \(g\) indexes Parquet row groups and \(n\) table rows.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Symbol</th><th>Role</th><th>Shape</th><th>Unit</th></tr></thead>
+  <tbody>
+    <tr><td>\(W = (r_0, r_1, c_0, c_1)\)</td><td>in · the window, inclusive bounds</td><td>\(\mathbb{Z}^4\) <code>(4,)</code></td><td><span class="u">px</span></td></tr>
+    <tr><td>\(P\)</td><td>const · tile or chunk side</td><td>\(\mathbb{Z}_{>0}\)</td><td><span class="u">px</span></td></tr>
+    <tr><td>\(n_t = \lceil N_c / P \rceil\)</td><td>const · tiles per row of tiles</td><td>\(\mathbb{Z}_{>0}\)</td><td><span class="u">—</span></td></tr>
+    <tr><td>\(o_k, \ell_k\)</td><td>const · byte offset and byte length of tile \(k\)</td><td>\(\mathbb{Z}^{n_t^2}\) <code>(tile,)</code></td><td><span class="u">B</span></td></tr>
+    <tr><td>\(\mathcal{I}, \mathcal{J}\)</td><td>est · tile rows and columns the window touches</td><td>index sets</td><td><span class="u">—</span></td></tr>
+    <tr><td>\(\kappa_{ij}\)</td><td>est · the Zarr key of chunk \((i, j)\)</td><td>string</td><td><span class="u">key</span></td></tr>
+    <tr><td>\(M_\sigma\)</td><td>const · manifest of snapshot \(\sigma\): key to reference</td><td>map <code>(chunk,)</code></td><td><span class="u">refs</span></td></tr>
+    <tr><td>\(B\), \(\mathcal{T}\)</td><td>in · query box and time interval</td><td>\(\mathbb{R}^4\), interval</td><td><span class="u">m</span> <span class="u">time</span></td></tr>
+    <tr><td>\(\vect{b}_g, \tau_g\)</td><td>const · bounding box and time range of row group \(g\)</td><td><code>(group, 4)</code>, <code>(group, 2)</code></td><td><span class="u">m</span> <span class="u">time</span></td></tr>
+    <tr><td>\(\vect{x}_W\)</td><td>out · the pixels of the window</td><td>\(\mathbb{Z}^{100 \times 100}\) <code>(row, col)</code></td><td><span class="u">DN</span></td></tr>
+  </tbody>
+</table></div>
+</div></details>
+
+<h2 id="part1">Part 1 · Three formats, three indexes</h2>
+
+<h2 id="cog">COG: a GeoTIFF you can read in pieces</h2>
+<p>Our band is one file of 60.3 MB. A plain GeoTIFF stored in strips, or with its header at the end, forces a reader to fetch most of it to find anything. A Cloud-Optimized GeoTIFF puts the header first, stores the image in square tiles, and adds downsampled overviews, so the header alone says exactly which bytes hold which pixels.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 420" role="img" aria-label="A COG: the band is cut into 11 by 11 tiles; the site window touches four of them; the file is a header followed by the tiles in order, and the reader fetches the header and four byte ranges.">
+<defs><marker id="a1m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker><marker id="a1o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--oracle)"/></marker><marker id="a1s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--sea)"/></marker><marker id="a1e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ex)"/></marker></defs>
+<text class="h" x="30" y="40">The band B12: 11 × 11 tiles of 512 px</text>
+<rect class="tile" x="30" y="60" width="20" height="20"/><rect class="tile" x="50" y="60" width="20" height="20"/><rect class="tile" x="70" y="60" width="20" height="20"/><rect class="tile" x="90" y="60" width="20" height="20"/><rect class="tile" x="110" y="60" width="20" height="20"/><rect class="tile" x="130" y="60" width="20" height="20"/><rect class="tile" x="150" y="60" width="20" height="20"/><rect class="tile" x="170" y="60" width="20" height="20"/><rect class="tile" x="190" y="60" width="20" height="20"/><rect class="tile" x="210" y="60" width="20" height="20"/><rect class="tile" x="230" y="60" width="20" height="20"/><rect class="tile" x="30" y="80" width="20" height="20"/><rect class="tile" x="50" y="80" width="20" height="20"/><rect class="tile" x="70" y="80" width="20" height="20"/><rect class="tile" x="90" y="80" width="20" height="20"/><rect class="tile" x="110" y="80" width="20" height="20"/><rect class="tile" x="130" y="80" width="20" height="20"/><rect class="tile" x="150" y="80" width="20" height="20"/><rect class="tile" x="170" y="80" width="20" height="20"/><rect class="tile" x="190" y="80" width="20" height="20"/><rect class="tile" x="210" y="80" width="20" height="20"/><rect class="tile" x="230" y="80" width="20" height="20"/><rect class="tile" x="30" y="100" width="20" height="20"/><rect class="tile" x="50" y="100" width="20" height="20"/><rect class="tile" x="70" y="100" width="20" height="20"/><rect class="tile" x="90" y="100" width="20" height="20"/><rect class="tile" x="110" y="100" width="20" height="20"/><rect class="tile" x="130" y="100" width="20" height="20"/><rect class="tile" x="150" y="100" width="20" height="20"/><rect class="tile" x="170" y="100" width="20" height="20"/><rect class="tile" x="190" y="100" width="20" height="20"/><rect class="tile" x="210" y="100" width="20" height="20"/><rect class="tile" x="230" y="100" width="20" height="20"/><rect class="tile" x="30" y="120" width="20" height="20"/><rect class="tile" x="50" y="120" width="20" height="20"/><rect class="tile" x="70" y="120" width="20" height="20"/><rect class="tile" x="90" y="120" width="20" height="20"/><rect class="tile" x="110" y="120" width="20" height="20"/><rect class="hit" x="130" y="120" width="20" height="20"/><rect class="hit" x="150" y="120" width="20" height="20"/><rect class="tile" x="170" y="120" width="20" height="20"/><rect class="tile" x="190" y="120" width="20" height="20"/><rect class="tile" x="210" y="120" width="20" height="20"/><rect class="tile" x="230" y="120" width="20" height="20"/><rect class="tile" x="30" y="140" width="20" height="20"/><rect class="tile" x="50" y="140" width="20" height="20"/><rect class="tile" x="70" y="140" width="20" height="20"/><rect class="tile" x="90" y="140" width="20" height="20"/><rect class="tile" x="110" y="140" width="20" height="20"/><rect class="hit" x="130" y="140" width="20" height="20"/><rect class="hit" x="150" y="140" width="20" height="20"/><rect class="tile" x="170" y="140" width="20" height="20"/><rect class="tile" x="190" y="140" width="20" height="20"/><rect class="tile" x="210" y="140" width="20" height="20"/><rect class="tile" x="230" y="140" width="20" height="20"/><rect class="tile" x="30" y="160" width="20" height="20"/><rect class="tile" x="50" y="160" width="20" height="20"/><rect class="tile" x="70" y="160" width="20" height="20"/><rect class="tile" x="90" y="160" width="20" height="20"/><rect class="tile" x="110" y="160" width="20" height="20"/><rect class="tile" x="130" y="160" width="20" height="20"/><rect class="tile" x="150" y="160" width="20" height="20"/><rect class="tile" x="170" y="160" width="20" height="20"/><rect class="tile" x="190" y="160" width="20" height="20"/><rect class="tile" x="210" y="160" width="20" height="20"/><rect class="tile" x="230" y="160" width="20" height="20"/><rect class="tile" x="30" y="180" width="20" height="20"/><rect class="tile" x="50" y="180" width="20" height="20"/><rect class="tile" x="70" y="180" width="20" height="20"/><rect class="tile" x="90" y="180" width="20" height="20"/><rect class="tile" x="110" y="180" width="20" height="20"/><rect class="tile" x="130" y="180" width="20" height="20"/><rect class="tile" x="150" y="180" width="20" height="20"/><rect class="tile" x="170" y="180" width="20" height="20"/><rect class="tile" x="190" y="180" width="20" height="20"/><rect class="tile" x="210" y="180" width="20" height="20"/><rect class="tile" x="230" y="180" width="20" height="20"/><rect class="tile" x="30" y="200" width="20" height="20"/><rect class="tile" x="50" y="200" width="20" height="20"/><rect class="tile" x="70" y="200" width="20" height="20"/><rect class="tile" x="90" y="200" width="20" height="20"/><rect class="tile" x="110" y="200" width="20" height="20"/><rect class="tile" x="130" y="200" width="20" height="20"/><rect class="tile" x="150" y="200" width="20" height="20"/><rect class="tile" x="170" y="200" width="20" height="20"/><rect class="tile" x="190" y="200" width="20" height="20"/><rect class="tile" x="210" y="200" width="20" height="20"/><rect class="tile" x="230" y="200" width="20" height="20"/><rect class="tile" x="30" y="220" width="20" height="20"/><rect class="tile" x="50" y="220" width="20" height="20"/><rect class="tile" x="70" y="220" width="20" height="20"/><rect class="tile" x="90" y="220" width="20" height="20"/><rect class="tile" x="110" y="220" width="20" height="20"/><rect class="tile" x="130" y="220" width="20" height="20"/><rect class="tile" x="150" y="220" width="20" height="20"/><rect class="tile" x="170" y="220" width="20" height="20"/><rect class="tile" x="190" y="220" width="20" height="20"/><rect class="tile" x="210" y="220" width="20" height="20"/><rect class="tile" x="230" y="220" width="20" height="20"/><rect class="tile" x="30" y="240" width="20" height="20"/><rect class="tile" x="50" y="240" width="20" height="20"/><rect class="tile" x="70" y="240" width="20" height="20"/><rect class="tile" x="90" y="240" width="20" height="20"/><rect class="tile" x="110" y="240" width="20" height="20"/><rect class="tile" x="130" y="240" width="20" height="20"/><rect class="tile" x="150" y="240" width="20" height="20"/><rect class="tile" x="170" y="240" width="20" height="20"/><rect class="tile" x="190" y="240" width="20" height="20"/><rect class="tile" x="210" y="240" width="20" height="20"/><rect class="tile" x="230" y="240" width="20" height="20"/><rect class="tile" x="30" y="260" width="20" height="20"/><rect class="tile" x="50" y="260" width="20" height="20"/><rect class="tile" x="70" y="260" width="20" height="20"/><rect class="tile" x="90" y="260" width="20" height="20"/><rect class="tile" x="110" y="260" width="20" height="20"/><rect class="tile" x="130" y="260" width="20" height="20"/><rect class="tile" x="150" y="260" width="20" height="20"/><rect class="tile" x="170" y="260" width="20" height="20"/><rect class="tile" x="190" y="260" width="20" height="20"/><rect class="tile" x="210" y="260" width="20" height="20"/><rect class="tile" x="230" y="260" width="20" height="20"/>
+<rect class="win" x="149.1" y="138.1" width="4" height="4"/>
+<path class="ln" d="M130 120 L350 60"/><path class="ln" d="M130 160 L350 220"/>
+<text class="h" x="350" y="40">Zoom: the 4 tiles the site touches</text>
+<rect class="hit" x="350" y="60" width="80" height="80"/><text class="mono muted" x="356" y="76">tile 38</text><rect class="hit" x="430" y="60" width="80" height="80"/><text class="mono muted" x="436" y="76">tile 39</text><rect class="hit" x="350" y="140" width="80" height="80"/><text class="mono muted" x="356" y="156">tile 49</text><rect class="hit" x="430" y="140" width="80" height="80"/><text class="mono muted" x="436" y="156">tile 50</text>
+<rect class="win" x="426.6" y="132.5" width="15.6" height="15.6"/>
+<path class="ln-o" d="M482.2 106.5 L444.2 134.5" marker-end="url(#a1o)"/>
+<text class="o" x="486.2" y="104.5">the site: 100 × 100 px</text>
+<path class="ln-o" d="M390.0 140.0 C 390.0 200.0, 323.6 270.0, 323.6 328.0" marker-end="url(#a1o)"/><path class="ln-o" d="M470.0 140.0 C 470.0 200.0, 327.1 270.0, 327.1 328.0" marker-end="url(#a1o)"/><path class="ln-o" d="M390.0 220.0 C 390.0 280.0, 361.8 270.0, 361.8 328.0" marker-end="url(#a1o)"/><path class="ln-o" d="M470.0 220.0 C 470.0 280.0, 365.3 270.0, 365.3 328.0" marker-end="url(#a1o)"/>
+<rect class="hdr" x="30" y="330" width="90" height="30"/>
+<rect class="ovr" x="120" y="330" width="70" height="30"/>
+<rect class="tile" x="190" y="330" width="420" height="30"/>
+<rect class="win" x="321.9" y="330" width="3.5" height="30"/><rect class="win" x="325.4" y="330" width="3.5" height="30"/><rect class="win" x="360.1" y="330" width="3.5" height="30"/><rect class="win" x="363.6" y="330" width="3.5" height="30"/>
+<text class="s" x="36" y="350">header</text>
+<text class="muted" x="126" y="350">overviews</text>
+<text class="muted" x="604" y="350" text-anchor="end">full-res tiles 0 … 120</text>
+<text class="muted" x="30" y="380">The file, in byte order (60 MB). The header lists where each tile starts and how long it is.</text>
+<text class="o" x="30" y="402">The reader fetches: the header, then 4 byte ranges ≈ 2 MB.</text>
+</svg></div><figcaption>A COG answers "which bytes hold these pixels?" from its header alone. Our 100 × 100 site straddles a corner shared by four tiles, so four ranges are fetched.</figcaption></figure>
+<ol class="steps"><li><b>Read the header</b>, a few kilobytes at the start of the file.</li><li><b>Work out which tiles</b> the window touches, by dividing pixel positions by the tile size.</li><li><b>Fetch only those tiles</b>, one byte range each, and decode them.</li></ol>
+<pre><span class="c"># Shapes: C bands; window of H × W pixels; T tiles touched</span>
+<span class="un"># Units:  [DN] = Sentinel-2 L2A digital number; [B] = bytes</span>
+import geoarray
+import geocloud.cog
+
+<span class="mk"># today (geocloud)</span>
+source = geocloud.cog.CogSource.open(b12_url)                   <span class="c"># header only</span>  <span class="un">≈ kB</span>
+<span class="mk"># today (geoarray)</span>
+window = geoarray.PixelWindow(                                  <span class="c"># → (4,)</span>  <span class="un">px</span>
+    col_off=3050, row_off=2000, width=100, height=100
+)
+<span class="c"># k = i n_t + j for (i, j) ∈ 𝓘 × 𝓙; x_W = crop(decode(GET(url, [o_k, o_k + ℓ_k))))</span>
+<span class="mk"># today (geocloud)</span>
+site = source.read_window(window)                       <span class="c"># → (1, 100, 100)</span>  <span class="un">[DN]</span></pre>
+<div class="note"><span class="tag">Watch out</span><p>The tile size, not the window, sets the cost: our 100 × 100 window straddles four tiles and fetches about a hundred times the bytes it uses. A COG made for small windows uses smaller tiles, and the original Sentinel-2 archive (JPEG 2000 in SAFE folders) is not a COG at all, which is why catalogs such as Earth Search republish it as COGs.</p></div>
+<div class="ex mini"><span class="tag">Running example</span><p>Our site window touches tiles 38, 39, 49 and 50 of B12: one header read and four range requests, at most 2.1 MB before compression, instead of 60.3 MB.</p></div>
+<div class="uses"><span class="tag">When to use a COG</span>
+<p>Use a COG when the unit of work is one image on one grid, and other people or tools need to open it. Every GIS, GDAL, rasterio and the web tilers read COGs directly, with no extra library.</p>
+<ul>
+  <li><b>Per-scene L1 and L2 products</b>: Sentinel-2 L2A and Landsat Collection 2 are published as COGs on AWS and Planetary Computer.</li>
+  <li><b>Your own per-scene outputs</b>: a matched-filter enhancement map written with <code>geocloud.cog.write_cog</code>, handed to a colleague or a dashboard.</li>
+  <li><b>Map tiles on the fly</b>: overviews let a tiler serve a zoomed-out view without reading full-resolution tiles.</li>
+</ul>
+<p class="less">Less suited to a time series on one grid (one file per date means one open per date), to more than three dimensions, or to data that grows by appending.</p></div>
+<details class="maths"><summary>The tile index in symbols, as an operator, with the byte count</summary>
+<div class="dbody">
+<div class="def">
+  <span class="tag">Concept</span>
+  <h3>A COG is a tile index in front of compressed tiles</h3>
+  <p>The header (the TIFF IFD) records the tile side and, for every tile in file order, where it starts and how many bytes it takes. A window maps to tile indices by integer division, and each tile to one byte range:</p>
+  \[ k(i, j) = i n_t + j \]
+  \[ \mathrm{bytes}(k) = [o_k, o_k + \ell_k) \]
+  <p>Overviews repeat the same layout at half, quarter, … resolution, so a zoomed-out view reads small tiles from a small image.</p>
+  <div class="where">
+    <span class="wl">Where</span>
+    <span class="sy">\(i, j\)</span><span class="me">tile row and tile column<span class="meta"><span class="sh">\(\mathbb{Z}_{\ge 0}\)</span><span class="u">—</span></span></span>
+    <span class="sy">\(n_t\)</span><span class="me">tiles per row of tiles, \(\lceil N_c / P \rceil\)<span class="meta"><span class="sh">\(\mathbb{Z}_{>0}\)</span><span class="u">—</span></span></span>
+    <span class="sy">\(o_k, \ell_k\)</span><span class="me">TileOffsets and TileByteCounts of tile \(k\)<span class="meta"><span class="sh">\(\mathbb{Z}_{\ge 0}\)</span><span class="u">B</span></span></span>
+  </div>
+</div>
+<div class="op">
+  <div class="op-h"><span class="phase">Use</span><span class="opname">CogSource.read_window</span><span class="when">any level · one call per window</span></div>
+  <div class="io-group"><div class="io-l">In</div>
+    <div class="io"><svg class="g"><use href="#g-scalar"/></svg><div class="nm">url<small>the COG, on object storage or over HTTP</small></div><div class="sh"><code>()</code><span class="u">—</span></div></div>
+    <div class="io"><svg class="g"><use href="#g-vector"/></svg><div class="nm">\(W\) window<small>a <code>PixelWindow</code>: row and column offset, height, width</small></div><div class="sh"><code>(4,)</code><span class="u">px</span></div></div>
+  </div>
+  <div class="io-group par"><div class="io-l par">Parameters \(\gvect{\theta}\)</div>
+    <div class="io absent"><svg class="g"><use href="#g-weights"/></svg><div class="nm"><span class="none">none</span><small>a read has nothing to fit</small></div><div class="sh"><code>—</code></div></div>
+  </div>
+  <div class="io-group"><div class="io-l cst">Constants · in the file header</div>
+    <div class="io"><svg class="g"><use href="#g-scalar"/></svg><div class="nm">\(P\), \(n_t\)<small>TileWidth, and the tile grid it implies</small></div><div class="sh"><code>(), ()</code><span class="u">px</span></div></div>
+    <div class="io"><svg class="g"><use href="#g-vector"/></svg><div class="nm">\(o_k, \ell_k\)<small>TileOffsets, TileByteCounts</small></div><div class="sh"><code>(tile,)</code><span class="u">B</span></div></div>
+  </div>
+  <div class="io-group est"><div class="io-l est">Estimated in each call</div>
+    <div class="io"><svg class="g"><use href="#g-mask"/></svg><div class="nm">\(\mathcal{I}, \mathcal{J}, k\) tiles touched<small>eq. 1–3</small></div><div class="sh"><code>(tile,)</code><span class="u">—</span></div></div>
+  </div>
+  <div class="op-arrow"><span class="ar">↓</span><div class="eqs">
+    <div><span class="ln">1</span>\(\mathcal{I} = \{ \lfloor r_0 / P \rfloor, \ldots, \lfloor r_1 / P \rfloor \}\)</div>
+    <div><span class="ln">2</span>\(\mathcal{J} = \{ \lfloor c_0 / P \rfloor, \ldots, \lfloor c_1 / P \rfloor \}\)</div>
+    <div><span class="ln">3</span>\(k = i n_t + j\)</div>
+    <div><span class="ln">4</span>\(\vect{x}_W = \mathrm{crop}_W(\mathrm{decode}(\mathrm{GET}(\mathrm{url}, [o_k, o_k + \ell_k))))\)</div>
+  </div></div>
+  <div class="io-group"><div class="io-l">Out</div>
+    <div class="io"><svg class="g"><use href="#g-field"/></svg><div class="nm">\(\vect{x}_W\) window<small>eq. 4; a <code>GeoArray</code> with the window's transform</small></div><div class="sh"><code>(band, row, col)</code><span class="u">DN</span></div></div>
+  </div>
+  <div class="op-foot">Nothing is trained. The tile size is the file's choice, and it sets how many bytes a small window costs.</div>
+</div>
+<div class="uc">
+  <div class="uc-h"><span class="tag">Units check</span><strong>How many bytes does the window cost?</strong></div>
+  <div class="uc-rows">
+    <div class="uc-row"><div>\(n_t = \lceil 5490 / 512 \rceil\)</div><div class="r">px / px → 11 tiles per side, 121 in all</div></div>
+    <div class="uc-row"><div>\(\mathcal{I} = \{ \lfloor 2000 / 512 \rfloor, \lfloor 2099 / 512 \rfloor \}\)</div><div class="r">px / px → {3, 4}</div></div>
+    <div class="uc-row"><div>\(\mathcal{J} = \{ \lfloor 3050 / 512 \rfloor, \lfloor 3149 / 512 \rfloor \}\)</div><div class="r">px / px → {5, 6}</div></div>
+    <div class="uc-row"><div>\(k = i n_t + j\)</div><div class="r">→ tiles 38, 39, 49, 50</div></div>
+    <div class="uc-row"><div>\(4 P^2 \beta\)</div><div class="r">\(\mathrm{px^2} \cdot \mathrm{B\ px^{-2}} = \mathrm{B}\) → 2 097 152 B before compression</div></div>
+    <div class="uc-row ok"><div>\(4 P^2 \beta / (N_r N_c \beta)\)</div><div class="r">✓ 3.5 % of the band, for 20 000 B of wanted pixels</div></div>
+  </div>
+</div>
+
+</div></details>
+
+<h2 id="geoparquet">GeoParquet: a table you can read by column and by place</h2>
+<p>Before reading any pixel you need the six June scenes that cover the site. That is a table question: which rows have a footprint over \(B\) and a time inside \(\mathcal{T}\)? GeoParquet is Parquet with a standard geometry column, and it answers that question without reading the whole table.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 330" role="img" aria-label="A GeoParquet table split into four row groups by time and stored by column. The footer's per-group statistics let the June query read only row group 2, and only three of its columns.">
+<defs><marker id="a2m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker><marker id="a2o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--oracle)"/></marker><marker id="a2s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--sea)"/></marker><marker id="a2e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ex)"/></marker></defs>
+<text class="h" x="40" y="30">A catalog table, stored by column and by row group</text>
+<text class="mono muted" x="46" y="52">id</text><text class="mono muted" x="124" y="52">filepath</text><text class="mono muted" x="202" y="52">start_time</text><text class="mono muted" x="280" y="52">geometry</text><text class="mono muted" x="358" y="52">bbox</text><text class="mono muted" x="436" y="52">cloud</text><rect class="skip" x="40" y="60" width="78" height="46"/><rect class="skip" x="118" y="60" width="78" height="46"/><rect class="skip" x="196" y="60" width="78" height="46"/><rect class="skip" x="274" y="60" width="78" height="46"/><rect class="skip" x="352" y="60" width="78" height="46"/><rect class="skip" x="430" y="60" width="78" height="46"/><text class="muted" x="520" y="80">row group 0</text><text class="mono muted" x="520" y="96">2025 · skipped</text><rect class="skip" x="40" y="106" width="78" height="46"/><rect class="skip" x="118" y="106" width="78" height="46"/><rect class="skip" x="196" y="106" width="78" height="46"/><rect class="skip" x="274" y="106" width="78" height="46"/><rect class="skip" x="352" y="106" width="78" height="46"/><rect class="skip" x="430" y="106" width="78" height="46"/><text class="muted" x="520" y="126">row group 1</text><text class="mono muted" x="520" y="142">Jan–May 2026 · skipped</text><rect class="tile" x="40" y="152" width="78" height="46"/><rect class="hit" x="118" y="152" width="78" height="46"/><rect class="hit" x="196" y="152" width="78" height="46"/><rect class="tile" x="274" y="152" width="78" height="46"/><rect class="hit" x="352" y="152" width="78" height="46"/><rect class="tile" x="430" y="152" width="78" height="46"/><text class="o" x="520" y="172">row group 2</text><text class="mono o" x="520" y="188">Jun 2026 · read</text><rect class="skip" x="40" y="198" width="78" height="46"/><rect class="skip" x="118" y="198" width="78" height="46"/><rect class="skip" x="196" y="198" width="78" height="46"/><rect class="skip" x="274" y="198" width="78" height="46"/><rect class="skip" x="352" y="198" width="78" height="46"/><rect class="skip" x="430" y="198" width="78" height="46"/><text class="muted" x="520" y="218">row group 3</text><text class="mono muted" x="520" y="234">Jul–Dec 2026 · skipped</text><rect class="hdr" x="40" y="262" width="468" height="34"/><text class="s" x="48" y="283">footer: min / max of every column, per row group</text><path class="ln-s" d="M488 262 L488 198" marker-end="url(#a2s)"/>
+<text class="o" x="40" y="326">A June query over the site reads 1 row group and 3 columns, and returns 6 rows.</text>
+</svg></div><figcaption>The reader starts at the footer, keeps only row groups whose time range and bounding box can match, and fetches only the columns it asks for. Row-group sizes and dates are illustrative.</figcaption></figure>
+<p>Sorting decides how much a query skips. geocatalog's <code>build_raster_catalog</code> sorts rows by <code>start_time</code>, then by a Hilbert key of the geometry, by default, so rows close in time and space land in the same row groups.</p>
+<pre><span class="c"># Shapes: R rows in the catalog; G row groups; S rows kept</span>
+<span class="un"># Units:  bounds in the catalog CRS [m]; times naive UTC</span>
+import geocatalog
+
+<span class="mk"># today (geocatalog)</span>
+catalog = geocatalog.open_catalog("s3://bkt/s2_l2a.parquet")    <span class="c"># footer only → R rows</span>
+<span class="c"># keep_g ⇔ b_g ∩ B ≠ ∅ ∧ τ_g ∩ 𝒯 ≠ ∅, then the same test per row</span>
+<span class="mk"># today (geocatalog)</span>
+june = catalog.query(site_june)                                 <span class="c"># R → S = 6 rows</span></pre>
+<div class="note"><span class="tag">Watch out</span><p>Without the bounding-box column (GeoParquet 1.0 files, or files written without it), the footer has no spatial statistics, so a spatial filter must decode every geometry. Write files with the covering column, and sort them, or the format's main advantage is lost.</p></div>
+<div class="ex mini"><span class="tag">Running example</span><p>The query reads the footer, the row groups whose time range overlaps June 2026, and only the geometry, time and <code>filepath</code> columns, and returns six rows: six COG paths for B12.</p></div>
+<div class="uses"><span class="tag">When to use GeoParquet</span>
+<p>Use GeoParquet for anything that is a table with a geometry: one row per thing, a few columns per row. It is compact, typed, and queried in place by DuckDB, pandas, geopandas and browsers.</p>
+<ul>
+  <li><b>Catalogs of files or scenes</b>: geocatalog saves every catalog as GeoParquet and queries it with DuckDB.</li>
+  <li><b>Vector products</b>: plume outlines, areas of interest, field boundaries.</li>
+  <li><b>Point observations and matchups</b>: Argo profiles, along-track sea-surface height, station series, scene-to-in-situ matchup tables.</li>
+</ul>
+<p class="less">Not for dense rasters: a grid stored as one row per pixel is large and slow; keep pixels in COG or Zarr and their footprints in GeoParquet.</p></div>
+<details class="maths"><summary>Row-group skipping in symbols</summary>
+<div class="dbody">
+<div class="def">
+  <span class="tag">Concept</span>
+  <h3>Parquet stores a table by column and by row group</h3>
+  <p>Rows are cut into row groups; inside a group each column is stored on its own, and the file footer keeps each column's minimum and maximum per group. A reader fetches only the columns it needs, and skips any group whose statistics cannot match. GeoParquet adds the geometry column (WKB) and, in version 1.1, a bounding-box column whose statistics make spatial skipping work:</p>
+  \[ \mathrm{keep}_g \iff \vect{b}_g \cap B \neq \varnothing \wedge \tau_g \cap \mathcal{T} \neq \varnothing \]
+  <div class="where">
+    <span class="wl">Where</span>
+    <span class="sy">\(g\)</span><span class="me">a row group, a few thousand to a million rows<span class="meta"><span class="sh">\(\mathbb{Z}_{\ge 0}\)</span><span class="u">—</span></span></span>
+    <span class="sy">\(\vect{b}_g\)</span><span class="me">smallest box holding every footprint in group \(g\)<span class="meta"><span class="sh">\(\mathbb{R}^4\)</span><span class="u">m</span></span></span>
+    <span class="sy">\(\tau_g\)</span><span class="me">earliest start and latest end time in group \(g\)<span class="meta"><span class="sh">interval</span><span class="u">time</span></span></span>
+  </div>
+</div>
+
+</div></details>
+
+<h2 id="zarr">Zarr: an array split into keyed chunks</h2>
+<p>A COG is one file with an internal index. Zarr turns the index inside out: each chunk is its own object, its name is computed from its position, and a small JSON file describes the array. Nothing has to be read to find a chunk; the key says where it is.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 330" role="img" aria-label="A Zarr array cut into 11 by 11 chunks, each stored as its own object whose key is its position; the four chunks under the site map straight to four keys.">
+<defs><marker id="a3m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker><marker id="a3o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--oracle)"/></marker><marker id="a3s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--sea)"/></marker><marker id="a3e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ex)"/></marker></defs>
+<text class="h" x="40" y="34">The same band as Zarr: one object per chunk</text>
+<rect class="tile" x="40" y="60" width="18" height="18"/><rect class="tile" x="58" y="60" width="18" height="18"/><rect class="tile" x="76" y="60" width="18" height="18"/><rect class="tile" x="94" y="60" width="18" height="18"/><rect class="tile" x="112" y="60" width="18" height="18"/><rect class="tile" x="130" y="60" width="18" height="18"/><rect class="tile" x="148" y="60" width="18" height="18"/><rect class="tile" x="166" y="60" width="18" height="18"/><rect class="tile" x="184" y="60" width="18" height="18"/><rect class="tile" x="202" y="60" width="18" height="18"/><rect class="tile" x="220" y="60" width="18" height="18"/><rect class="tile" x="40" y="78" width="18" height="18"/><rect class="tile" x="58" y="78" width="18" height="18"/><rect class="tile" x="76" y="78" width="18" height="18"/><rect class="tile" x="94" y="78" width="18" height="18"/><rect class="tile" x="112" y="78" width="18" height="18"/><rect class="tile" x="130" y="78" width="18" height="18"/><rect class="tile" x="148" y="78" width="18" height="18"/><rect class="tile" x="166" y="78" width="18" height="18"/><rect class="tile" x="184" y="78" width="18" height="18"/><rect class="tile" x="202" y="78" width="18" height="18"/><rect class="tile" x="220" y="78" width="18" height="18"/><rect class="tile" x="40" y="96" width="18" height="18"/><rect class="tile" x="58" y="96" width="18" height="18"/><rect class="tile" x="76" y="96" width="18" height="18"/><rect class="tile" x="94" y="96" width="18" height="18"/><rect class="tile" x="112" y="96" width="18" height="18"/><rect class="tile" x="130" y="96" width="18" height="18"/><rect class="tile" x="148" y="96" width="18" height="18"/><rect class="tile" x="166" y="96" width="18" height="18"/><rect class="tile" x="184" y="96" width="18" height="18"/><rect class="tile" x="202" y="96" width="18" height="18"/><rect class="tile" x="220" y="96" width="18" height="18"/><rect class="tile" x="40" y="114" width="18" height="18"/><rect class="tile" x="58" y="114" width="18" height="18"/><rect class="tile" x="76" y="114" width="18" height="18"/><rect class="tile" x="94" y="114" width="18" height="18"/><rect class="tile" x="112" y="114" width="18" height="18"/><rect class="hit" x="130" y="114" width="18" height="18"/><rect class="hit" x="148" y="114" width="18" height="18"/><rect class="tile" x="166" y="114" width="18" height="18"/><rect class="tile" x="184" y="114" width="18" height="18"/><rect class="tile" x="202" y="114" width="18" height="18"/><rect class="tile" x="220" y="114" width="18" height="18"/><rect class="tile" x="40" y="132" width="18" height="18"/><rect class="tile" x="58" y="132" width="18" height="18"/><rect class="tile" x="76" y="132" width="18" height="18"/><rect class="tile" x="94" y="132" width="18" height="18"/><rect class="tile" x="112" y="132" width="18" height="18"/><rect class="hit" x="130" y="132" width="18" height="18"/><rect class="hit" x="148" y="132" width="18" height="18"/><rect class="tile" x="166" y="132" width="18" height="18"/><rect class="tile" x="184" y="132" width="18" height="18"/><rect class="tile" x="202" y="132" width="18" height="18"/><rect class="tile" x="220" y="132" width="18" height="18"/><rect class="tile" x="40" y="150" width="18" height="18"/><rect class="tile" x="58" y="150" width="18" height="18"/><rect class="tile" x="76" y="150" width="18" height="18"/><rect class="tile" x="94" y="150" width="18" height="18"/><rect class="tile" x="112" y="150" width="18" height="18"/><rect class="tile" x="130" y="150" width="18" height="18"/><rect class="tile" x="148" y="150" width="18" height="18"/><rect class="tile" x="166" y="150" width="18" height="18"/><rect class="tile" x="184" y="150" width="18" height="18"/><rect class="tile" x="202" y="150" width="18" height="18"/><rect class="tile" x="220" y="150" width="18" height="18"/><rect class="tile" x="40" y="168" width="18" height="18"/><rect class="tile" x="58" y="168" width="18" height="18"/><rect class="tile" x="76" y="168" width="18" height="18"/><rect class="tile" x="94" y="168" width="18" height="18"/><rect class="tile" x="112" y="168" width="18" height="18"/><rect class="tile" x="130" y="168" width="18" height="18"/><rect class="tile" x="148" y="168" width="18" height="18"/><rect class="tile" x="166" y="168" width="18" height="18"/><rect class="tile" x="184" y="168" width="18" height="18"/><rect class="tile" x="202" y="168" width="18" height="18"/><rect class="tile" x="220" y="168" width="18" height="18"/><rect class="tile" x="40" y="186" width="18" height="18"/><rect class="tile" x="58" y="186" width="18" height="18"/><rect class="tile" x="76" y="186" width="18" height="18"/><rect class="tile" x="94" y="186" width="18" height="18"/><rect class="tile" x="112" y="186" width="18" height="18"/><rect class="tile" x="130" y="186" width="18" height="18"/><rect class="tile" x="148" y="186" width="18" height="18"/><rect class="tile" x="166" y="186" width="18" height="18"/><rect class="tile" x="184" y="186" width="18" height="18"/><rect class="tile" x="202" y="186" width="18" height="18"/><rect class="tile" x="220" y="186" width="18" height="18"/><rect class="tile" x="40" y="204" width="18" height="18"/><rect class="tile" x="58" y="204" width="18" height="18"/><rect class="tile" x="76" y="204" width="18" height="18"/><rect class="tile" x="94" y="204" width="18" height="18"/><rect class="tile" x="112" y="204" width="18" height="18"/><rect class="tile" x="130" y="204" width="18" height="18"/><rect class="tile" x="148" y="204" width="18" height="18"/><rect class="tile" x="166" y="204" width="18" height="18"/><rect class="tile" x="184" y="204" width="18" height="18"/><rect class="tile" x="202" y="204" width="18" height="18"/><rect class="tile" x="220" y="204" width="18" height="18"/><rect class="tile" x="40" y="222" width="18" height="18"/><rect class="tile" x="58" y="222" width="18" height="18"/><rect class="tile" x="76" y="222" width="18" height="18"/><rect class="tile" x="94" y="222" width="18" height="18"/><rect class="tile" x="112" y="222" width="18" height="18"/><rect class="tile" x="130" y="222" width="18" height="18"/><rect class="tile" x="148" y="222" width="18" height="18"/><rect class="tile" x="166" y="222" width="18" height="18"/><rect class="tile" x="184" y="222" width="18" height="18"/><rect class="tile" x="202" y="222" width="18" height="18"/><rect class="tile" x="220" y="222" width="18" height="18"/><rect class="tile" x="40" y="240" width="18" height="18"/><rect class="tile" x="58" y="240" width="18" height="18"/><rect class="tile" x="76" y="240" width="18" height="18"/><rect class="tile" x="94" y="240" width="18" height="18"/><rect class="tile" x="112" y="240" width="18" height="18"/><rect class="tile" x="130" y="240" width="18" height="18"/><rect class="tile" x="148" y="240" width="18" height="18"/><rect class="tile" x="166" y="240" width="18" height="18"/><rect class="tile" x="184" y="240" width="18" height="18"/><rect class="tile" x="202" y="240" width="18" height="18"/><rect class="tile" x="220" y="240" width="18" height="18"/>
+<rect class="panelbox" x="348" y="34" width="250" height="270" rx="6"/><text class="mono muted" x="360" y="52">s3://bkt/b12.zarr/</text><text class="mono s" x="360" y="72">zarr.json</text><text class="mono s" x="360" y="92">B12/zarr.json</text><text class="mono muted" x="360" y="112">B12/c/0/0</text><text class="mono muted" x="360" y="132">B12/c/0/1</text><text class="mono muted" x="360" y="152">…</text><text class="mono o" x="360" y="172">B12/c/3/5</text><text class="mono o" x="360" y="192">B12/c/3/6</text><text class="mono muted" x="360" y="212">…</text><text class="mono o" x="360" y="232">B12/c/4/5</text><text class="mono o" x="360" y="252">B12/c/4/6</text><text class="mono muted" x="360" y="272">…</text><text class="mono muted" x="360" y="292">B12/c/10/10</text>
+<path class="ln-o" d="M139.0 123.0 C 219.0 123.0, 270 168, 354 168" marker-end="url(#a3o)"/><path class="ln-o" d="M157.0 123.0 C 237.0 123.0, 270 188, 354 188" marker-end="url(#a3o)"/><path class="ln-o" d="M139.0 141.0 C 219.0 141.0, 270 228, 354 228" marker-end="url(#a3o)"/><path class="ln-o" d="M157.0 141.0 C 237.0 141.0, 270 248, 354 248" marker-end="url(#a3o)"/>
+<text class="s" x="40" y="288">zarr.json: shape, chunk shape, data type, codecs</text>
+<text class="o" x="40" y="310">The key is computed from the position: nothing to look up.</text>
+</svg></div><figcaption>Where a COG keeps an index of offsets, Zarr names each chunk by its position. The site window still needs the same four chunks.</figcaption></figure>
+<p>Version 3 adds sharding: many chunks packed into one object with a small index at its end, so a store need not hold millions of tiny objects.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Format</th><th>Unit of access</th><th>Where the index lives</th><th>Best for</th></tr></thead>
+  <tbody>
+    <tr><td>COG</td><td>a tile, by byte range</td><td>the TIFF header, at the start of the file</td><td>one scene, one grid; any GIS reads it</td></tr>
+    <tr><td>GeoParquet</td><td>a column of a row group</td><td>the footer's per-group statistics</td><td>tables: catalogs, points, polygons</td></tr>
+    <tr><td>Zarr</td><td>a chunk, by key</td><td>the key itself; shapes in <code>zarr.json</code></td><td>N-dimensional cubes, many variables, appends</td></tr>
+  </tbody>
+</table></div>
+<pre><span class="c"># Shapes: H × W window; chunks of P × P</span>
+<span class="un"># Units:  [DN]</span>
+import xarray as xr
+
+<span class="mk"># not pinned (xarray)</span>
+band = xr.open_zarr("s3://bkt/b12.zarr")["B12"]                <span class="c"># zarr.json only</span>
+<span class="c"># κ_ij = B12/c/i/j for (i, j) ∈ 𝓘 × 𝓙</span>
+<span class="mk"># not pinned (xarray)</span>
+site = band.isel(y=slice(2000, 2100), x=slice(3050, 3150))  <span class="c"># → (100, 100)</span>  <span class="un">[DN]</span>
+<span class="mk"># not pinned (xarray)</span>
+pixels = site.values                                            <span class="c"># reads 4 chunks</span>  <span class="un">[DN]</span></pre>
+<div class="note"><span class="tag">Watch out</span><p>Chunk shape is fixed when the array is written and sets every read's cost, as tile size does for a COG. Chunks that are too small make millions of objects and requests; too large, and every small window fetches megabytes. Sharding exists to separate the two choices.</p></div>
+<div class="ex mini"><span class="tag">Running example</span><p>Stored as Zarr with \(512 \times 512\) chunks, B12 is 121 objects, <code>B12/c/0/0</code> to <code>B12/c/10/10</code>, and the site window reads <code>B12/c/3/5</code>, <code>c/3/6</code>, <code>c/4/5</code> and <code>c/4/6</code>: the same four tiles as the COG.</p></div>
+<div class="uses"><span class="tag">When to use Zarr</span>
+<p>Use Zarr when the data is a cube: many dates, levels, bands or ensemble members on one grid, or anything that grows by appending. Chunks can be shaped for the reads you do most, along time for a pixel's series or along space for a map.</p>
+<ul>
+  <li><b>L3 and L4 grids</b>: ERA5, GLORYS, gap-filled sea-surface height, your analysis cubes.</li>
+  <li><b>Model output and training data</b>: a run appended step by step; pipekit's <code>CachedDataset</code> writes Zarr.</li>
+  <li><b>Many variables together</b>: a <code>Dataset</code> or <code>DataTree</code> with shared coordinates, opened lazily by xarray.</li>
+</ul>
+<p class="less">Less suited to handing one scene to a GIS user, and to very small chunks: a million 1 kB objects cost a million requests unless you shard.</p></div>
+<details class="maths"><summary>Chunk keys in symbols</summary>
+<div class="dbody">
+<div class="def">
+  <span class="tag">Concept</span>
+  <h3>A Zarr array is metadata plus one object per chunk</h3>
+  <p><code>zarr.json</code> stores the array's shape, chunk shape, data type and codec chain. Chunk \((i, j)\) of array <code>B12</code> lives under a key built from its indices (Zarr v3's default encoding), and groups nest arrays like folders:</p>
+  \[ \kappa_{ij} = \texttt{B12/c/}i\texttt{/}j \]
+  <p>Version 3 adds sharding: many chunks packed into one object, with an index at its end, so a store need not hold millions of tiny objects.</p>
+  <div class="where">
+    <span class="wl">Where</span>
+    <span class="sy">\(\kappa_{ij}\)</span><span class="me">the object key of chunk \((i, j)\)<span class="meta"><span class="sh">string</span><span class="u">key</span></span></span>
+    <span class="sy">\(P\)</span><span class="me">chunk side, as for COG tiles<span class="meta"><span class="sh">\(\mathbb{Z}_{>0}\)</span><span class="u">px</span></span></span>
+  </div>
+</div>
+
+</div></details>
+
+<h2 id="equivalence">COG and Zarr: what maps to what</h2>
+<p>A COG and a Zarr array store the same thing in the same way: a grid cut into compressed blocks, plus a small description. They differ in where the index lives (inside one file, or in the keys), in how many dimensions they allow, and in how georeferencing is written down.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 420" role="img" aria-label="COG parts matched to Zarr parts: header to zarr.json, tiles to chunks with the same bytes, tile offsets to keys, compression to codecs, nodata to fill_value directly; georeferencing, overviews and extra dimensions need a convention.">
+<text class="h" x="20" y="34">COG</text><text class="h" x="390" y="34">Zarr</text>
+<rect class="cogbox" x="20" y="58" width="230" height="32" rx="5"/><text x="32" y="79">header (IFD)</text><rect class="zarrbox" x="390" y="58" width="230" height="32" rx="5"/><text x="402" y="79">zarr.json</text><line class="ln-s" x1="252" y1="74" x2="388" y2="74"/><text class="mono s" x="320" y="69" text-anchor="middle" style="font-size:10px">metadata</text><rect class="cogbox" x="20" y="102" width="230" height="32" rx="5"/><text x="32" y="123">tiles, in byte order</text><rect class="zarrbox" x="390" y="102" width="230" height="32" rx="5"/><text x="402" y="123">chunks, one object per key</text><line class="ln-s" x1="252" y1="118" x2="388" y2="118"/><text class="mono s" x="320" y="113" text-anchor="middle" style="font-size:10px">same bytes</text><rect class="cogbox" x="20" y="146" width="230" height="32" rx="5"/><text x="32" y="167">TileOffsets, TileByteCounts</text><rect class="zarrbox" x="390" y="146" width="230" height="32" rx="5"/><text x="402" y="167">the key (or a shard index)</text><line class="ln-s" x1="252" y1="162" x2="388" y2="162"/><text class="mono s" x="320" y="157" text-anchor="middle" style="font-size:10px">the index</text><rect class="cogbox" x="20" y="190" width="230" height="32" rx="5"/><text x="32" y="211">DEFLATE / ZSTD (+ predictor)</text><rect class="zarrbox" x="390" y="190" width="230" height="32" rx="5"/><text x="402" y="211">codec chain</text><line class="ln-s" x1="252" y1="206" x2="388" y2="206"/><text class="mono s" x="320" y="201" text-anchor="middle" style="font-size:10px">same, if the codec exists</text><rect class="cogbox" x="20" y="234" width="230" height="32" rx="5"/><text x="32" y="255">nodata tag</text><rect class="zarrbox" x="390" y="234" width="230" height="32" rx="5"/><text x="402" y="255">fill_value</text><line class="ln-s" x1="252" y1="250" x2="388" y2="250"/><text class="mono s" x="320" y="245" text-anchor="middle" style="font-size:10px">direct</text><rect class="cogbox" x="20" y="278" width="230" height="32" rx="5"/><text x="32" y="299">GeoKeys, geotransform</text><rect class="zarrbox" x="390" y="278" width="230" height="32" rx="5"/><text x="402" y="299">attributes: CF spatial_ref, GeoZarr</text><line class="ln-o dash" x1="252" y1="294" x2="388" y2="294"/><text class="mono o" x="320" y="289" text-anchor="middle" style="font-size:10px">needs a convention</text><rect class="cogbox" x="20" y="322" width="230" height="32" rx="5"/><text x="32" y="343">overviews</text><rect class="zarrbox" x="390" y="322" width="230" height="32" rx="5"/><text x="402" y="343">multiscales: one array per level</text><line class="ln-o dash" x1="252" y1="338" x2="388" y2="338"/><text class="mono o" x="320" y="333" text-anchor="middle" style="font-size:10px">needs a convention</text><rect class="cogbox" x="20" y="366" width="230" height="32" rx="5"/><text x="32" y="387">2-D image (+ bands)</text><rect class="zarrbox" x="390" y="366" width="230" height="32" rx="5"/><text x="402" y="387">any dims: time, band, y, x</text><line class="ln-o dash" x1="252" y1="382" x2="388" y2="382"/><text class="mono o" x="320" y="377" text-anchor="middle" style="font-size:10px">Zarr is more general</text>
+<line class="ln-s" x1="20" y1="424" x2="60" y2="424"/><text class="muted" x="68" y="428">maps directly</text>
+<line class="ln-o dash" x1="190" y1="424" x2="230" y2="424"/><text class="muted" x="238" y="428">maps only through an agreed convention</text>
+</svg></div><figcaption>The pixels and their compressed tiles map one-to-one. What a GIS needs to place them on the Earth does not, unless both sides agree on a convention.</figcaption></figure>
+<h3>Is it a one-to-one translation?</h3>
+<ul class="verdicts">
+  <li><b>Pixels: yes, both ways.</b> The values, data type, tile or chunk grid and nodata value carry over without loss.</li>
+  <li><b>Bytes: often, even without copying.</b> A COG tile can be served as a Zarr chunk as-is, which is exactly what a virtual reference does, as long as a Zarr codec exists for the COG's compression. virtual-tiff lists Deflate, Zlib, LZW, LZMA, LERC, PNG, WebP, JPEG XL and PackBits; old-style JPEG TIFFs are not supported yet, so check a file's compression before relying on it.</li>
+  <li><b>Georeferencing: only through a convention.</b> A COG stores its CRS and transform in GeoTIFF tags that every GIS reads. Zarr has no built-in georeferencing, so it lives in attributes: CF <code>grid_mapping</code> with a <code>spatial_ref</code> variable (what <code>geoarray.to_xarray</code> writes), the GeoZarr conventions, or your own. A reader that does not know the convention sees an array with no place on Earth.</li>
+  <li><b>Overviews and extra dimensions: not one-to-one.</b> COG overviews become a multiscales group, one array per level, by convention. A Zarr cube with time or ensemble dimensions has no single-COG equivalent: it becomes one COG per time step and member.</li>
+</ul>
+<h3>Can Zarr read a COG directly?</h3>
+<p>Not by itself. zarr-python reads stores laid out as Zarr keys, and a COG is one file with its own index. Three bridges give a COG a Zarr face without converting it:</p>
+<ul class="verdicts">
+  <li><b>tifffile</b> opens a TIFF or COG as a Zarr store (<code>imread(path, return_as="zarr")</code>, zarr-python 3), mapping its tiles to chunks on the fly. It can also write that mapping out as fsspec reference JSON.</li>
+  <li><b>virtual-tiff</b>, a VirtualiZarr parser, turns the COG's tiles into virtual Zarr v3 references you can commit to Icechunk: the route Part 2 follows.</li>
+  <li><b>kerchunk</b> scans a TIFF into a reference file that fsspec serves as Zarr.</li>
+</ul>
+<p>In the other direction, GDAL's Zarr driver reads Zarr, so <code>gdal_translate</code> can write a Zarr array out as a COG.</p>
+<h3>Converting, with the stack</h3>
+<pre><span class="c"># Shapes: C bands; (y, x) = (5490, 5490); chunks and tiles of 512 × 512</span>
+<span class="un"># Units:  [DN]</span>
+import geoarray
+import geocloud.cog
+import geoops.io
+import xarray as xr
+
+<span class="c"># --- COG → Zarr, as a copy ---</span>
+<span class="mk"># today (geocloud)</span>
+scene = geocloud.cog.CogSource.open(b12_url).load()            <span class="c"># → (1, 5490, 5490)</span>  <span class="un">[DN]</span>
+<span class="mk"># today* (geoops)</span>
+write = geoops.io.WriteZarr(store="s3://bkt/b12.zarr", chunks={"y": 512, "x": 512})
+write(scene)
+
+<span class="c"># --- Zarr → COG ---</span>
+<span class="mk"># not pinned (xarray)</span>
+band = xr.open_zarr("s3://bkt/b12.zarr")["B12"]
+<span class="mk"># today (geoarray)</span>
+grid = geoarray.from_xarray(band)                              <span class="c"># → (1, 5490, 5490)</span>  <span class="un">[DN]</span>
+<span class="mk"># today (geocloud)</span>
+geocloud.cog.write_cog(grid, "s3://bkt/b12_copy.tif")</pre>
+<div class="note"><span class="tag">Watch out</span><p>The two writers in the stack disagree on georeferencing today: <code>geoops.io.WriteZarr</code> stores <code>crs</code> and <code>transform</code> as plain attributes, while <code>geoarray.from_xarray</code> reads a CF <code>spatial_ref</code>. Until they share one convention (workstream D of the Level 2 collections doc), the Zarr → COG round trip above needs the CRS restored by hand.</p></div>
+<p>The third route needs no copy at all: open the COG with VirtualiZarr's TIFF parser, and its tiles become Zarr chunks by reference. That is Part 2.</p>
+
+<h2 id="part2">Part 2 · Pointers instead of copies</h2>
+<p>Look at boxes 1 and 3 again. A COG tile and a Zarr chunk are the same thing: a compressed block of pixels at a known place. A Zarr reader does not care whether the bytes of <code>B12/c/3/5</code> sit in their own object or inside a COG, as long as it can find them. That observation is all three tools below are built on.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 230" role="img" aria-label="A Zarr key B12/c/3/5 points to a reference holding a URL, an offset and a length, which picks out tile 38's bytes inside the original COG.">
+<defs><marker id="a4m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker><marker id="a4o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--oracle)"/></marker><marker id="a4s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--sea)"/></marker><marker id="a4e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ex)"/></marker></defs>
+<rect class="keybox" x="20" y="60" width="150" height="56" rx="6"/>
+<text class="muted" x="34" y="82">Zarr asks for key</text>
+<text class="mono o" x="34" y="104">B12/c/3/5</text>
+<path class="ln-e" d="M172 88 L222 88" marker-end="url(#a4e)"/>
+<rect class="ref" x="226" y="40" width="190" height="96" rx="6"/>
+<text class="e" x="240" y="62">reference</text>
+<text class="mono" x="240" y="84">url: …/B12.tif</text>
+<text class="mono" x="240" y="104">offset: o₃₈</text>
+<text class="mono" x="240" y="124">length: ℓ₃₈</text>
+<path class="ln-e" d="M418 88 C 470 88, 470 170, 428.9 172" marker-end="url(#a4e)"/>
+<rect class="hdr" x="300" y="176" width="40" height="26"/>
+<rect class="tile" x="340" y="176" width="280" height="26"/>
+<rect class="win" x="427.9" y="176" width="2.3" height="26"/>
+<text class="muted" x="300" y="222">the original COG, untouched: bytes [o₃₈, o₃₈ + ℓ₃₈)</text>
+<text class="muted" x="20" y="160">A Zarr reader only needs the bytes.</text>
+<text class="muted" x="20" y="178">Where they live is the reference's job.</text>
+</svg></div><figcaption>One reference per chunk turns existing files into a Zarr store without copying a byte.</figcaption></figure>
+<details class="maths"><summary>The reference in symbols</summary>
+<div class="dbody">
+<div class="def">
+  <span class="tag">Concept</span>
+  <h3>A chunk reference is where the bytes are, not the bytes</h3>
+  <p>For every Zarr key, store a reference to bytes that already exist, and give the reader the codec chain to decode them:</p>
+  \[ \mathrm{ref}(\kappa_{ij}) = (\mathrm{url}_k, o_k, \ell_k) \]
+  <p>A set of references plus the array metadata is a virtual Zarr store: Zarr's interface over the original files, with nothing copied.</p>
+  <div class="where">
+    <span class="wl">Where</span>
+    <span class="sy">\(\mathrm{url}_k\)</span><span class="me">the original file holding tile \(k\)<span class="meta"><span class="sh">string</span><span class="u">—</span></span></span>
+    <span class="sy">\(o_k, \ell_k\)</span><span class="me">the tile's offset and length in that file, from its header<span class="meta"><span class="sh">\(\mathbb{Z}_{\ge 0}\)</span><span class="u">B</span></span></span>
+  </div>
+</div>
+
+</div></details>
+
+<h2 id="kerchunk">kerchunk: references written to a file</h2>
+<p>kerchunk scans an archival file (HDF5, NetCDF, GRIB, TIFF) and writes its references to a JSON or Parquet file. fsspec's reference filesystem then serves the keys, so xarray opens the archive as if it were Zarr. kerchunk predates Zarr v3, so its keys use v2's dotted form.</p>
+<pre><span class="c"># a kerchunk reference file, abbreviated: Zarr v2 keys → [url, offset, length]</span>
+{
+  "version": 1,
+  "refs": {
+    "B12/.zarray": "{\"shape\": [5490, 5490], \"chunks\": [512, 512], ...}",
+    "B12/3.5": ["s3://bkt/T30SYJ_20260601_B12.tif", o_38, ℓ_38],
+    "B12/3.6": ["s3://bkt/T30SYJ_20260601_B12.tif", o_39, ℓ_39]
+  }
+}</pre>
+<div class="note"><span class="tag">Watch out</span><p>A reference file is just a file: nothing versions it, nothing updates it atomically, and one JSON file for millions of chunks grows large (hence the Parquet form). Two writers, or a crash mid-write, leave it inconsistent.</p></div>
+
+<h2 id="virtualizarr">VirtualiZarr: references as xarray objects</h2>
+<p>VirtualiZarr opens an archival file with a parser for its format and returns an <code>xarray.Dataset</code> whose variables are <code>ManifestArray</code>s: arrays of chunk references, not of values. You can concatenate, merge and rename them with ordinary xarray calls, then write the result to kerchunk JSON or Parquet, or into an Icechunk repo. It has parsers for HDF5/NetCDF4, NetCDF3, TIFF, GRIB, FITS, DMR++ and existing kerchunk and Zarr stores.</p>
+<pre><span class="c"># Shapes: S scenes; per scene one (y, x) band in n_t² chunks</span>
+<span class="un"># Units:  references only; no pixel values are read</span>
+import virtualizarr
+import xarray as xr
+
+<span class="mk"># not pinned (virtualizarr)</span>
+scene = virtualizarr.open_virtual_dataset(                      <span class="c"># → 121 refs</span>
+    url=b12_url, parser=tiff_parser, registry=registry
+)
+<span class="c"># the six June scenes along a new time axis: only manifests are joined</span>
+<span class="mk"># not pinned (virtualizarr)</span>
+june = xr.concat(scenes, dim="time")                            <span class="c"># → 726 refs</span></pre>
+<div class="note"><span class="tag">Watch out</span><p>Concatenation needs every input to share chunk shape, codecs and grid. Six revisits of one MGRS tile do; scenes from neighbouring tiles in different UTM zones do not, which is why Level 2 collections keep one group per scene instead of one cube.</p></div>
+
+<h2 id="icechunk">Icechunk: a versioned store for real and virtual chunks</h2>
+<p>Icechunk is a storage engine for Zarr v3. A repository holds array metadata, chunks written into it, and references to chunks elsewhere, and every change goes through a transaction that ends in a commit. Each commit is a snapshot with an id; branches and tags name snapshots. Readers open a snapshot and see a consistent store, whatever writers are doing.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 360" role="img" aria-label="Six June COG files at the bottom. kerchunk writes their references to a JSON file; VirtualiZarr holds them in memory as an xarray dataset and writes them out; Icechunk stores them in a repository whose commits form a timeline of snapshots with a branch and a tag.">
+<defs><marker id="a5m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker><marker id="a5o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--oracle)"/></marker><marker id="a5s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--sea)"/></marker><marker id="a5e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ex)"/></marker></defs>
+<text class="h" x="20" y="28">Three ways to hold references to the same six files</text>
+<rect class="panelbox" x="20" y="44" width="180" height="200" rx="8"/>
+<text class="h" x="34" y="68">kerchunk</text>
+<rect class="keybox" x="38" y="84" width="144" height="90" rx="4"/>
+<text class="mono muted" x="46" y="102">refs.json</text>
+<text class="mono" x="46" y="122">B12/3.5 → […]</text>
+<text class="mono" x="46" y="140">B12/3.6 → […]</text>
+<text class="mono muted" x="46" y="158">…</text>
+<text class="muted" x="34" y="200">a file of references</text>
+<text class="muted" x="34" y="220">no versions, no commits</text>
+
+<rect class="panelbox" x="230" y="44" width="180" height="200" rx="8"/>
+<text class="h" x="244" y="68">VirtualiZarr</text>
+<rect class="ref" x="248" y="84" width="144" height="90" rx="4"/>
+<text class="mono" x="256" y="104">Dataset</text>
+<text class="mono" x="256" y="124">time: 6</text>
+<text class="mono" x="256" y="142">y, x: 5490</text>
+<text class="mono muted" x="256" y="160">ManifestArray</text>
+<text class="muted" x="244" y="200">references in memory,</text>
+<text class="muted" x="244" y="220">combined with xarray</text>
+<path class="ln-e" d="M246 130 L186 130" marker-end="url(#a5e)"/>
+<path class="ln-e" d="M394 130 L452 130" marker-end="url(#a5e)"/>
+<text class="e" x="212" y="122" text-anchor="middle">write</text>
+<text class="e" x="424" y="122" text-anchor="middle">write</text>
+
+<rect class="repobox" x="440" y="44" width="180" height="200" rx="8"/>
+<text class="h s" x="454" y="68">Icechunk repo</text>
+<line class="ln" x1="470" y1="110" x2="590" y2="110"/>
+<circle class="snap" cx="470" cy="110" r="9"/><circle class="snap" cx="530" cy="110" r="9"/><circle class="snap now" cx="590" cy="110" r="9"/>
+<text class="mono muted" x="462" y="138">σ₁</text><text class="mono muted" x="522" y="138">σ₂</text><text class="mono s" x="582" y="138">σ₃</text>
+<text class="mono o" x="508" y="92">tag: jun-2026</text>
+<text class="mono s" x="568" y="160">main</text>
+<rect class="hit" x="458" y="172" width="12" height="12"/><rect class="hit" x="474" y="172" width="12" height="12"/>
+<text class="muted" x="492" y="183">real chunks</text>
+<text class="muted" x="454" y="208">+ references to files</text>
+<text class="muted" x="454" y="228">each commit a snapshot</text>
+<rect class="file" x="40" y="300" width="80" height="40" rx="4"/><text class="mono muted" x="48" y="324">Jun 1 .tif</text><rect class="file" x="138" y="300" width="80" height="40" rx="4"/><text class="mono muted" x="146" y="324">Jun 6 .tif</text><rect class="file" x="236" y="300" width="80" height="40" rx="4"/><text class="mono muted" x="244" y="324">Jun 11 .tif</text><rect class="file" x="334" y="300" width="80" height="40" rx="4"/><text class="mono muted" x="342" y="324">Jun 16 .tif</text><rect class="file" x="432" y="300" width="80" height="40" rx="4"/><text class="mono muted" x="440" y="324">Jun 21 .tif</text><rect class="file" x="530" y="300" width="80" height="40" rx="4"/><text class="mono muted" x="538" y="324">Jun 26 .tif</text>
+<path class="ln dash" d="M110 244 L110 298"/><path class="ln dash" d="M320 244 L320 298"/><path class="ln dash" d="M530 244 L530 298"/>
+<text class="muted" x="40" y="356">the original COGs stay where they are; all three point into them</text>
+</svg></div><figcaption>kerchunk is a format for references, VirtualiZarr builds references as xarray objects, and Icechunk stores them (and real chunks) in versioned commits.</figcaption></figure>
+<div class="tbl"><table>
+  <thead><tr><th></th><th>kerchunk</th><th>VirtualiZarr</th><th>Icechunk</th></tr></thead>
+  <tbody>
+    <tr><td class="k">What it is</td><td>a reference file format and scanners</td><td>a library that builds references with xarray</td><td>a transactional Zarr v3 store</td></tr>
+    <tr><td class="k">Holds real chunks</td><td>no</td><td>no (in-memory references)</td><td>yes, beside virtual ones</td></tr>
+    <tr><td class="k">Versions</td><td>no</td><td>no</td><td>snapshots, branches, tags</td></tr>
+    <tr><td class="k">Atomic updates</td><td>no</td><td>—</td><td>yes, one commit</td></tr>
+    <tr><td class="k">Writes to</td><td>JSON, Parquet</td><td>kerchunk or Icechunk</td><td>object storage</td></tr>
+    <tr><td class="k">Read with</td><td>fsspec reference filesystem</td><td>(writes for others to read)</td><td>any Zarr v3 reader on the session's store</td></tr>
+  </tbody>
+</table></div>
+<details class="maths"><summary>A snapshot's manifest in symbols</summary>
+<div class="dbody">
+<div class="def">
+  <span class="tag">Concept</span>
+  <h3>A snapshot is a manifest from keys to chunks</h3>
+  <p>For snapshot \(\sigma\), the manifest maps every chunk key either to a chunk the repo stores itself or to a reference into another file. A commit writes new manifests and metadata and then moves the branch to the new snapshot in one step, so readers see all of a change or none of it.</p>
+  \[ M_\sigma(\kappa) \in \{ \text{chunk in the repo}, (\mathrm{url}, o, \ell) \} \]
+  <div class="where">
+    <span class="wl">Where</span>
+    <span class="sy">\(\sigma\)</span><span class="me">a snapshot id, immutable; branches and tags point at one<span class="meta"><span class="sh">string</span><span class="u">—</span></span></span>
+    <span class="sy">\(M_\sigma\)</span><span class="me">the snapshot's chunk manifest<span class="meta"><span class="sh">map <code>(chunk,)</code></span><span class="u">refs</span></span></span>
+  </div>
+</div>
+
+</div></details>
+
+<h2 id="icechunk-read">How a raster is read in chunks through Icechunk</h2>
+<p>This is the step the Level 2 collections design takes for granted. Write the six June B12 COGs into a repo as virtual references, then read the site window through Zarr. Five steps, and only one of them is new.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 470" role="img" aria-label="Five steps: slice the cube, Zarr computes four chunk keys, Icechunk resolves them in the snapshot manifest to byte ranges, the object store fetches four ranges from the original COG, the codec decodes and crops to a 100 by 100 array.">
+<defs><marker id="a6m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker><marker id="a6o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--oracle)"/></marker><marker id="a6s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--sea)"/></marker><marker id="a6e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ex)"/></marker></defs>
+<circle class="step" cx="44" cy="56" r="16"/><text class="stepn" x="44" y="61" text-anchor="middle">1</text><rect class="stepbox" x="72" y="30" width="410" height="54" rx="6"/><text class="h" x="86" y="52">You slice the cube</text><text class="mono o" x="86" y="72">isel(time=0, y=2000:2100, x=3050:3150)</text><rect class="who" x="500" y="44" width="110" height="26" rx="13"/><text class="mono" x="555" y="61" text-anchor="middle">you</text><path class="ln" d="M44 74 L44 122" marker-end="url(#a6m)"/><circle class="step" cx="44" cy="142" r="16"/><text class="stepn" x="44" y="147" text-anchor="middle">2</text><rect class="stepbox" x="72" y="116" width="410" height="54" rx="6"/><text class="h" x="86" y="138">Zarr turns the window into keys</text><text class="mono o" x="86" y="158">B12/c/3/5 · c/3/6 · c/4/5 · c/4/6</text><rect class="who" x="500" y="130" width="110" height="26" rx="13"/><text class="mono" x="555" y="147" text-anchor="middle">zarr</text><path class="ln" d="M44 160 L44 208" marker-end="url(#a6m)"/><circle class="step" cx="44" cy="228" r="16"/><text class="stepn" x="44" y="233" text-anchor="middle">3</text><rect class="stepbox" x="72" y="202" width="410" height="54" rx="6"/><text class="h" x="86" y="224">Icechunk looks each key up in snapshot σ's manifest</text><text class="mono o" x="86" y="244">key → (url, offset, length)</text><rect class="who" x="500" y="216" width="110" height="26" rx="13"/><text class="mono" x="555" y="233" text-anchor="middle">icechunk</text><path class="ln" d="M44 246 L44 294" marker-end="url(#a6m)"/><circle class="step" cx="44" cy="314" r="16"/><text class="stepn" x="44" y="319" text-anchor="middle">4</text><rect class="stepbox" x="72" y="288" width="410" height="54" rx="6"/><text class="h" x="86" y="310">The object store makes 4 ranged GETs on the original COG</text><text class="mono o" x="86" y="330">≈ 2 MB of compressed tiles</text><rect class="who" x="500" y="302" width="110" height="26" rx="13"/><text class="mono" x="555" y="319" text-anchor="middle">obstore</text><path class="ln" d="M44 332 L44 380" marker-end="url(#a6m)"/><circle class="step" cx="44" cy="400" r="16"/><text class="stepn" x="44" y="405" text-anchor="middle">5</text><rect class="stepbox" x="72" y="374" width="410" height="54" rx="6"/><text class="h" x="86" y="396">The codec decodes, the window is cropped</text><text class="mono o" x="86" y="416">array (100, 100) of DN</text><rect class="who" x="500" y="388" width="110" height="26" rx="13"/><text class="mono" x="555" y="405" text-anchor="middle">codec</text>
+</svg></div><figcaption>Every step except the third is what any Zarr read does. Icechunk's only job on a read is to say, for snapshot σ, where each key's bytes are.</figcaption></figure>
+<pre><span class="c"># Shapes: S = 6 scenes; per scene (y, x) = (5490, 5490) in 121 chunks; window 100 × 100</span>
+<span class="un"># Units:  [DN]; references in bytes</span>
+import icechunk
+import xarray as xr
+
+<span class="c"># --- write once: references, not pixels ---</span>
+<span class="c"># config names s3://bkt/ as a virtual chunk container</span>
+<span class="mk"># not pinned (icechunk)</span>
+repo = icechunk.Repository.create(storage, config)
+<span class="mk"># not pinned (icechunk)</span>
+session = repo.writable_session("main")
+<span class="mk"># not pinned (virtualizarr)</span>
+june.vz.to_icechunk(session.store)                              <span class="c"># → 726 refs</span>  <span class="un">refs</span>
+<span class="mk"># not pinned (icechunk)</span>
+snapshot_id = session.commit("B12, June 2026, six scenes")     <span class="c"># → σ</span>
+
+<span class="c"># --- read any time later: Zarr keys → manifest → ranged GETs ---</span>
+<span class="mk"># not pinned (icechunk)</span>
+reader = repo.readonly_session(snapshot_id=snapshot_id)
+<span class="mk"># not pinned (xarray)</span>
+cube = xr.open_zarr(reader.store, consolidated=False)["B12"]   <span class="c"># (time, y, x) lazy</span>
+<span class="c"># κ_ij → M_σ(κ_ij) = (url_k, o_k, ℓ_k) → GET → decode</span>
+<span class="mk"># not pinned (xarray)</span>
+site = cube.isel(time=0, y=slice(2000, 2100), x=slice(3050, 3150))  <span class="c"># lazy</span>
+<span class="mk"># not pinned (xarray)</span>
+pixels = site.values                                            <span class="c"># → (100, 100)</span>  <span class="un">[DN]</span></pre>
+<div class="note"><span class="tag">Watch out</span><p>Virtual references only work while the original files stay where they are and stay byte-identical. Readers must also be allowed to fetch from the referenced URL prefix (Icechunk calls it a virtual chunk container), and how that is authorised depends on the Icechunk version; check the release you pin.</p></div>
+<div class="ex mini"><span class="tag">Running example</span><p>The repo holds 726 references and a few kilobytes of metadata, not 362 MB of pixels (six bands of 60.3 MB). Reading the site in one June scene fetches the same four tiles as the COG read; reading it in all six scenes fetches 24.</p></div>
+<details class="maths"><summary>The read path as an operator, with the byte count</summary>
+<div class="dbody">
+<div class="op">
+  <div class="op-h"><span class="phase">Use</span><span class="opname">xr.open_zarr(session.store)</span><span class="when">any level · one call per window</span></div>
+  <div class="io-group"><div class="io-l">In</div>
+    <div class="io"><svg class="g"><use href="#g-scalar"/></svg><div class="nm">repo@\(\sigma\)<small>a read-only session on a branch, tag or snapshot id</small></div><div class="sh"><code>()</code><span class="u">—</span></div></div>
+    <div class="io"><svg class="g"><use href="#g-vector"/></svg><div class="nm">\(W\) window<small>an <code>isel</code> on the opened array</small></div><div class="sh"><code>(4,)</code><span class="u">px</span></div></div>
+  </div>
+  <div class="io-group par"><div class="io-l par">Parameters \(\gvect{\theta}\)</div>
+    <div class="io absent"><svg class="g"><use href="#g-weights"/></svg><div class="nm"><span class="none">none</span><small>a read has nothing to fit</small></div><div class="sh"><code>—</code></div></div>
+  </div>
+  <div class="io-group"><div class="io-l cst">Constants · in the snapshot</div>
+    <div class="io"><svg class="g"><use href="#g-dataset"/></svg><div class="nm">\(M_\sigma\) manifest<small>key → reference for every chunk; read once per session</small></div><div class="sh"><code>(chunk,)</code><span class="u">refs</span></div></div>
+    <div class="io"><svg class="g"><use href="#g-scalar"/></svg><div class="nm">array metadata<small>shape, chunk shape \(P\), the COG's codecs, written by VirtualiZarr</small></div><div class="sh"><code>—</code><span class="u">—</span></div></div>
+  </div>
+  <div class="io-group est"><div class="io-l est">Estimated in each call</div>
+    <div class="io"><svg class="g"><use href="#g-vector"/></svg><div class="nm">\(\kappa_{ij}\) keys<small>eq. 1, by Zarr</small></div><div class="sh"><code>(chunk,)</code><span class="u">key</span></div></div>
+    <div class="io"><svg class="g"><use href="#g-vector"/></svg><div class="nm">\((\mathrm{url}_k, o_k, \ell_k)\) references<small>eq. 2, by Icechunk</small></div><div class="sh"><code>(chunk,)</code><span class="u">B</span></div></div>
+  </div>
+  <div class="op-arrow"><span class="ar">↓</span><div class="eqs">
+    <div><span class="ln">1</span>\(\kappa_{ij} = \texttt{B12/c/}i\texttt{/}j, \ (i, j) \in \mathcal{I} \times \mathcal{J}\)</div>
+    <div><span class="ln">2</span>\((\mathrm{url}_k, o_k, \ell_k) = M_\sigma(\kappa_{ij})\)</div>
+    <div><span class="ln">3</span>\(\vect{x}_W = \mathrm{crop}_W(\mathrm{decode}(\mathrm{GET}(\mathrm{url}_k, [o_k, o_k + \ell_k))))\)</div>
+  </div></div>
+  <div class="io-group"><div class="io-l">Out</div>
+    <div class="io"><svg class="g"><use href="#g-field"/></svg><div class="nm">\(\vect{x}_W\) window<small>eq. 3; the same pixels as the COG read</small></div><div class="sh"><code>(row, col)</code><span class="u">DN</span></div></div>
+  </div>
+  <div class="op-foot">Zarr does eq. 1, Icechunk eq. 2, the object store and the codec eq. 3. Swappable: the snapshot \(\sigma\), which pins exactly which files and bytes a read means.</div>
+</div>
+<div class="uc">
+  <div class="uc-h"><span class="tag">Units check</span><strong>Does the Icechunk read cost what the COG read costs?</strong></div>
+  <div class="uc-rows">
+    <div class="uc-row"><div>chunks touched, \(\vert \mathcal{I} \times \mathcal{J} \vert\)</div><div class="r">→ 4, the same tiles 38, 39, 49, 50</div></div>
+    <div class="uc-row"><div>bytes per chunk, \(\ell_k\)</div><div class="r">the COG's own tile lengths, unchanged</div></div>
+    <div class="uc-row"><div>references in the repo, \(S n_t^2\)</div><div class="r">6 · 121 → 726</div></div>
+    <div class="uc-row ok"><div>\(\sum_k \ell_k\)</div><div class="r">✓ identical to box 1, plus one manifest read per session</div></div>
+  </div>
+</div>
+
+</div></details>
+
+<h2 id="compatibility">Compatibility: who can read what</h2>
+<p>The formats in Part 1 are open standards with many readers. The tools in Part 2 are newer, and each needs its own client, so the choice is also a choice of who can open your data.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 420" role="img" aria-label="Decision guide: a table goes to GeoParquet; one image on one grid for other tools goes to COG; many images on one grid, N-D or appended goes to Zarr; files you do not own and cannot copy go to virtual references, kept and versioned in Icechunk.">
+<defs><marker id="a8m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker><marker id="a8o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--oracle)"/></marker><marker id="a8s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--sea)"/></marker><marker id="a8e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ex)"/></marker></defs>
+<rect class="stepbox" x="20" y="40" width="360" height="52" rx="6"/><text x="34" y="71">Is it a table: a catalog, points, polygons?</text><path class="ln-s" d="M382 66 L428 66" marker-end="url(#a8s)"/><text class="mono s" x="398" y="58" text-anchor="middle" style="font-size:10px">yes</text><rect class="zarrbox" x="432" y="40" width="190" height="52" rx="6"/><text class="h" x="446" y="62">GeoParquet</text><text class="muted" x="446" y="81" style="font-size:11px">one row per thing</text><path class="ln" d="M200 92 L200 130" marker-end="url(#a8m)"/><text class="mono muted" x="210" y="116" style="font-size:10px">no</text><rect class="stepbox" x="20" y="132" width="360" height="52" rx="6"/><text x="34" y="163">One image on one grid, for GIS and web tools?</text><path class="ln-s" d="M382 158 L428 158" marker-end="url(#a8s)"/><text class="mono s" x="398" y="150" text-anchor="middle" style="font-size:10px">yes</text><rect class="zarrbox" x="432" y="132" width="190" height="52" rx="6"/><text class="h" x="446" y="154">COG</text><text class="muted" x="446" y="173" style="font-size:11px">per-scene products</text><path class="ln" d="M200 184 L200 222" marker-end="url(#a8m)"/><text class="mono muted" x="210" y="208" style="font-size:10px">no</text><rect class="stepbox" x="20" y="224" width="360" height="52" rx="6"/><text x="34" y="255">Many images on one grid, N-D, or appended over time?</text><path class="ln-s" d="M382 250 L428 250" marker-end="url(#a8s)"/><text class="mono s" x="398" y="242" text-anchor="middle" style="font-size:10px">yes</text><rect class="zarrbox" x="432" y="224" width="190" height="52" rx="6"/><text class="h" x="446" y="246">Zarr</text><text class="muted" x="446" y="265" style="font-size:11px">real chunks, can append</text><path class="ln" d="M200 276 L200 314" marker-end="url(#a8m)"/><text class="mono muted" x="210" y="300" style="font-size:10px">no</text><rect class="stepbox" x="20" y="316" width="360" height="52" rx="6"/><text x="34" y="347">Files you don't own, too big to copy?</text><path class="ln-s" d="M382 342 L428 342" marker-end="url(#a8s)"/><text class="mono s" x="398" y="334" text-anchor="middle" style="font-size:10px">yes</text><rect class="zarrbox" x="432" y="316" width="190" height="52" rx="6"/><text class="h" x="446" y="338">virtual references</text><text class="muted" x="446" y="357" style="font-size:11px">versioned in Icechunk</text>
+</svg></div><figcaption>Ask the questions top to bottom and stop at the first yes. The answers are not exclusive: the Level 2 collections design keeps COGs where they are, catalogs them in GeoParquet, and reads them as Zarr through Icechunk.</figcaption></figure>
+<p>Readers grouped by what they open. Two of them are already in your stack: <code>geocloud.cog</code> reads COGs with Development Seed's async-geotiff (the <code>[cog]</code> extra), and geocatalog reads GeoParquet with DuckDB.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Reader</th><th>From</th><th>Opens</th><th>Gives you</th><th>GDAL</th></tr></thead>
+  <tbody>
+    <tr><td class="k">GDAL, QGIS</td><td>OSGeo</td><td>COG, GeoParquet, Zarr (v3 in recent releases)</td><td>rasters and layers in any GIS</td><td>is GDAL</td></tr>
+    <tr><td class="k">rasterio, rioxarray</td><td>community</td><td>COG, and anything GDAL reads</td><td>NumPy; xarray through <code>engine="rasterio"</code></td><td>yes</td></tr>
+    <tr><td class="k">odc-stac, stackstac</td><td>community</td><td>COGs listed in STAC items</td><td>a lazy xarray cube <code>(time, band, y, x)</code></td><td>yes, through rasterio</td></tr>
+    <tr><td class="k">async-geotiff</td><td>Development Seed</td><td>COG and GeoTIFF windows and overviews, async, over obstore</td><td>NumPy arrays with transform and CRS; no reprojection</td><td>no (Rust async-tiff)</td></tr>
+    <tr><td class="k">lazycogs</td><td>Development Seed</td><td>many COGs found through STAC, cached as stac-geoparquet</td><td>a lazy <code>(band, time, y, x)</code> xarray DataArray on a target grid</td><td>no (async-geotiff, obstore)</td></tr>
+    <tr><td class="k">tifffile</td><td>Christoph Gohlke</td><td>TIFF and COG as a Zarr store (<code>return_as="zarr"</code>); writes fsspec reference JSON</td><td>a Zarr array over the TIFF's tiles</td><td>no</td></tr>
+    <tr><td class="k">virtual-tiff</td><td>VirtualiZarr ecosystem</td><td>TIFF and COG, as a VirtualiZarr parser (<code>VirtualTIFF</code>)</td><td>virtual Zarr v3 references, committed to Icechunk</td><td>no</td></tr>
+    <tr><td class="k">xarray + zarr-python</td><td>community</td><td>Zarr v2 and v3 stores</td><td>lazy <code>Dataset</code> / <code>DataTree</code></td><td>no</td></tr>
+    <tr><td class="k">kerchunk + fsspec</td><td>community</td><td>reference JSON or Parquet</td><td>a Zarr store over the original files</td><td>no</td></tr>
+    <tr><td class="k">icechunk</td><td>Earthmover</td><td>Icechunk repositories (Python and Rust clients)</td><td>a Zarr v3 store for xarray at a snapshot</td><td>no</td></tr>
+    <tr><td class="k">DuckDB, geopandas</td><td>community</td><td>GeoParquet</td><td>tables, SQL, GeoDataFrames</td><td>no</td></tr>
+    <tr><td class="k">Browsers</td><td>various</td><td>COG (geotiff.js, tilers), Zarr (zarrita), GeoParquet (DuckDB-Wasm)</td><td>maps and tables in a web page</td><td>no</td></tr>
+  </tbody>
+</table></div>
+<p class="byline">Reader support moves fast; this table reflects the projects' docs as of November 2026. Check the versions you pin.</p>
+<div class="uses"><span class="tag">lazycogs and geocatalog</span>
+<p>lazycogs does in one call what <code>geocatalog</code> does in two: search STAC, cache the hits as GeoParquet, then load a lazy cube on a target grid without GDAL. That overlaps <code>load_raster_timeseries</code> (which reads through rasterio) closely enough to be worth a look as an engine behind it, the way async-geotiff already sits behind <code>geocloud.cog</code>.</p></div>
+<h3>So should you write Zarr, or keep TIFFs and COGs?</h3>
+<ul class="verdicts">
+  <li><b>Keep COGs</b> for anything delivered per scene or opened in a GIS, and for archives others publish. Do not convert a mission's archive to Zarr just to read it: reference it.</li>
+  <li><b>Write Zarr</b> when you produce a cube (many dates on one grid, model output, training data) or append over time. That is where Zarr's N-D chunks pay off.</li>
+  <li><b>Reference, don't copy,</b> when you need Zarr's interface over files you do not own. VirtualiZarr builds the references; Icechunk keeps them, versioned, next to any real chunks you add.</li>
+  <li><b>Plain TIFFs that are not COGs</b> (striped, header at the end) should be converted to COGs before cloud use; a virtual reference to a striped TIFF reads whole strips.</li>
+  <li><b>Remember the audience of Part 2.</b> An Icechunk repo is not a plain Zarr folder: a reader needs the Icechunk client. For data you hand to people outside your stack, publish COGs or plain Zarr as well.</li>
+</ul>
+
+<h2>The numbers, path by path</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 640 210" role="img" aria-label="Bytes fetched before compression: 60.28 MB to download the band, 2.10 MB for a window read by COG, Zarr or Icechunk, 0.02 MB of pixels actually wanted.">
+<text class="h" x="20" y="58">Download the band</text><rect x="250" y="42" width="360.0" height="24" rx="3" style="fill:var(--sea)"/><text class="mono" x="618.0" y="59">60.28 MB</text><text class="h" x="20" y="116">COG / Zarr / Icechunk window</text><rect x="250" y="100" width="12.5" height="24" rx="3" style="fill:var(--oracle)"/><text class="mono" x="270.5" y="117">2.10 MB</text><text class="h" x="20" y="174">Pixels you wanted</text><rect x="250" y="158" width="2.0" height="24" rx="3" style="fill:var(--ex)"/><text class="mono" x="260.0" y="175">0.02 MB</text>
+<line class="ln" x1="250" y1="34" x2="250" y2="200"/>
+<text class="muted" x="20" y="200">bytes fetched before compression, linear scale</text>
+</svg></div><figcaption>All three chunked paths fetch the same four tiles. The gap between the middle and bottom bars is the price of a tile size much larger than the window.</figcaption></figure>
+<div class="tbl"><table>
+  <thead><tr><th>Path</th><th>What is read</th><th style="text-align:right">Requests</th><th style="text-align:right">Bytes, before compression</th></tr></thead>
+  <tbody>
+    <tr><td>Download the band</td><td>the whole file</td><td class="num">1</td><td class="num">60 280 200</td></tr>
+    <tr><td>COG window (box 1)</td><td>header, tiles 38, 39, 49, 50</td><td class="num">1 + 4</td><td class="num">2 097 152</td></tr>
+    <tr><td>GeoParquet query (box 2)</td><td>footer, June row groups, three columns</td><td class="num">a few</td><td class="num">small, table-dependent</td></tr>
+    <tr><td>Zarr window (box 3)</td><td><code>zarr.json</code>, four chunks</td><td class="num">1 + 4</td><td class="num">2 097 152</td></tr>
+    <tr><td>Icechunk virtual window (box 4)</td><td>manifest, four ranges of the COG</td><td class="num">1 + 4</td><td class="num">2 097 152</td></tr>
+    <tr><td>Pixels actually wanted</td><td>\(100 \times 100\) of uint16</td><td class="num">—</td><td class="num">20 000</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Where this goes next</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Idea here</th><th>Becomes, in the design docs</th></tr></thead>
+  <tbody>
+    <tr><td>GeoParquet row-group skipping</td><td>geocatalog's working catalog today; the GeoParquet product-catalog adapter (<a href="./product-catalog.html">product catalog</a>, F)</td></tr>
+    <tr><td>A Zarr group per scene</td><td><code>scenes/&lt;id&gt;/</code> in the repo, read by <code>load_scenes</code> (<a href="./l2-collections.html">Level 2 collections</a>, C)</td></tr>
+    <tr><td>VirtualiZarr references</td><td>virtual ingest of archives, no copy (Level 2 collections, E)</td></tr>
+    <tr><td>Snapshots and commits</td><td><code>meta/</code> rows committed with their data, <code>IcechunkGeoCatalog</code> (Level 2 collections, A, B)</td></tr>
+    <tr><td>A table stored as columns</td><td>the <code>meta/</code> group: catalog columns as aligned 1-D Zarr arrays (Level 2 collections, A)</td></tr>
+  </tbody>
+</table></div>
+
+<footer>Sources: <a href="https://cogeo.org/">cogeo.org</a> (COG); the <a href="https://geoparquet.org/">GeoParquet</a> 1.1 specification; the <a href="https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html">Zarr v3 specification</a>; the <a href="https://fsspec.github.io/kerchunk/">kerchunk</a>, <a href="https://developmentseed.org/async-geotiff/latest/">async-geotiff</a>, <a href="https://developmentseed.org/lazycogs">lazycogs</a>, <a href="https://virtual-tiff.readthedocs.io/en/latest/">virtual-tiff</a>, <a href="https://pypi.org/project/tifffile">tifffile</a>, <a href="https://virtualizarr.readthedocs.io/en/stable/how_to/usage.html">VirtualiZarr</a> and <a href="https://icechunk.io/">Icechunk</a> docs; geotoolz at <code>640670c</code> for <code>CogSource</code>, <code>PixelWindow</code>, <code>open_catalog</code> and <code>build_raster_catalog</code>'s default sort. Markers: <code>today (pkg)</code> ships at that commit; <code>not pinned (pkg)</code> is a third-party API not checked against an installed version. The 512-pixel tile size and the six-scene month are illustrative.</footer>
+</main>
+</body>
+</html>

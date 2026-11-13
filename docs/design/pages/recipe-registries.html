@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>pipekit Recipe Registries</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: one reading column (~900px); wide figures and code scroll sideways in their own frames.
+   Ice-blue accent = the new surface (Icechunk); amber = a verified gap; repo hues tag packages. */
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --sunk: #eef2f6;
+  --fg: #16202b;
+  --fg2: #4a5866;
+  --fg3: #7a8794;
+  --line: #c9d3dd;
+  --accent: #1a6fc2;
+  --accent-soft: #e3effa;
+  --warn: #b86a0a;
+  --warn-soft: #fbefdc;
+  --c-geotoolz: #2f7d6a;
+  --c-xrtoolz: #a2541e;
+  --c-pipekit: #6b4fb0;
+  --c-ext: #8a96a3;
+  --code-bg: #f0f4f8;
+  --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141b; --surface: #151d26; --sunk: #1b2530; --fg: #e3e9ef; --fg2: #a8b4c0; --fg3: #7d8a97;
+    --line: #2f3c49; --accent: #6cb0f0; --accent-soft: #15293d; --warn: #e7a24a; --warn-soft: #33260f;
+    --c-geotoolz: #5cc0a6; --c-xrtoolz: #e0904f; --c-pipekit: #a68ee8; --c-ext: #8f9caa; --code-bg: #111a22;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141b; --surface: #151d26; --sunk: #1b2530; --fg: #e3e9ef; --fg2: #a8b4c0; --fg3: #7d8a97;
+  --line: #2f3c49; --accent: #6cb0f0; --accent-soft: #15293d; --warn: #e7a24a; --warn-soft: #33260f;
+  --c-geotoolz: #5cc0a6; --c-xrtoolz: #e0904f; --c-pipekit: #a68ee8; --c-ext: #8f9caa; --code-bg: #111a22;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15.5px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 72px;
+}
+main { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+section { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; margin-top: 8px; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); }
+code { font-family: var(--font-mono); font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); }
+.byline { color: var(--fg2); font-size: 14px; }
+.lede { font-size: 17px; }
+header { display: flex; flex-direction: column; gap: 14px; }
+
+.pins { display: flex; flex-wrap: wrap; gap: 8px; }
+.pin { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--surface); color: var(--fg2); }
+.pin b { font-weight: 500; }
+.pin.geotoolz b { color: var(--c-geotoolz); } .pin.xrtoolz b { color: var(--c-xrtoolz); }
+.pin.pipekit b { color: var(--c-pipekit); } .pin.geostack b { color: var(--fg); }
+
+.summary { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; }
+.summary li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: baseline; }
+.summary .tag { font-family: var(--font-mono); font-weight: 500; color: var(--accent); }
+
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.figwrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 12px; -webkit-overflow-scrolling: touch; }
+.figwrap svg { display: block; width: 100%; min-width: 640px; max-width: 820px; margin: 0 auto; height: auto; }
+figcaption { font-size: 14px; color: var(--fg2); max-width: 70ch; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--fg2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+.dot { width: 14px; height: 14px; border-radius: 50%; display: inline-grid; place-items: center; font: 600 9px var(--font-mono); color: var(--bg); }
+
+/* SVG (page CSS, theme tokens) */
+svg text { font-family: var(--font-body); fill: var(--fg); }
+svg .t-h { font-size: 13.5px; font-weight: 600; }
+svg .t-m { font-family: var(--font-mono); font-size: 11.5px; fill: var(--fg2); }
+svg .t-b { font-size: 12px; fill: var(--fg2); }
+svg .t-tier { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; fill: var(--fg3); }
+svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+svg .band { fill: var(--sunk); stroke: var(--line); stroke-width: 1; }
+svg .item { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+svg .new { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 5 3; }
+svg .repo { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+svg .warnbox { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.4; stroke-dasharray: 5 3; }
+svg .new-t { fill: var(--accent); }
+svg .muted { opacity: 0.45; }
+svg .s-geotoolz { fill: var(--c-geotoolz); } svg .s-xrtoolz { fill: var(--c-xrtoolz); }
+svg .s-pipekit { fill: var(--c-pipekit); } svg .s-ext { fill: var(--c-ext); }
+svg .edge { stroke: var(--fg3); stroke-width: 1.4; fill: none; }
+svg .edge-a { stroke: var(--accent); stroke-width: 1.8; fill: none; }
+svg .dash { stroke-dasharray: 4 3; }
+svg .head { fill: var(--fg3); }
+svg .head-a { fill: var(--accent); }
+svg .lbl { font-family: var(--font-mono); font-size: 10.5px; fill: var(--fg2); }
+svg .lbl-a { font-family: var(--font-mono); font-size: 10.5px; fill: var(--accent); }
+svg .gap-c { fill: var(--warn); }
+svg .ws-c { fill: var(--accent); }
+svg .mark-t { fill: var(--bg); font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg3); background: var(--sunk); }
+tr:last-child td { border-bottom: none; }
+td code { white-space: nowrap; }
+.repo-t { font-family: var(--font-mono); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.repo-t.geotoolz { color: var(--c-geotoolz); } .repo-t.xrtoolz { color: var(--c-xrtoolz); } .repo-t.pipekit { color: var(--c-pipekit); }
+.path { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg3); word-break: break-all; }
+
+.gaps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.gaps li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; }
+.gaps.risk li { background: var(--accent-soft); }
+.num { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--bg); background: var(--warn); }
+.num.ws { background: var(--accent); }
+.gaps li p { max-width: none; }
+
+pre { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; color: var(--fg); tab-size: 4; }
+pre .c { color: var(--fg3); }
+pre .st-t { color: var(--c-geotoolz); font-weight: 500; }
+pre .st-p { color: var(--accent); font-weight: 500; }
+pre .st-u { color: var(--c-xrtoolz); font-weight: 500; }
+pre .kw { color: var(--c-pipekit); }
+pre .eq { color: var(--fg2); font-style: italic; }
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { font-family: var(--font-mono); font-size: 13px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg2); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.markers { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14px; color: var(--fg2); }
+.markers code { justify-self: start; }
+.note { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--fg2); font-size: 14.5px; }
+.decide { display: grid; gap: 8px; }
+.decide div { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
+.decide b { font-family: var(--font-mono); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg3); padding-top: 2px; }
+@media (max-width: 560px) { .decide div { grid-template-columns: 1fr; gap: 2px; } }
+.sources { font-size: 14px; color: var(--fg2); display: grid; gap: 4px; padding-left: 18px; margin: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="eyebrow">Design note · recipes and registries</div>
+  <h1>pipekit recipe registries</h1>
+  <div class="byline">12 Nov 2026 · J. Emmanuel Johnson</div>
+  <p class="lede">pipekit already treats a pipeline as data: it serialises to JSON, hashes to an id, and lives in a registry with tags. This page checks how far that goes today, then puts pipekit's four storage seams (model registry, cache store, training data, product stamp) on Icechunk, so code and data are versioned the same way.</p>
+  <div class="pins">
+    <span class="pin pipekit"><b>pipekit</b> 9e86a56</span>
+    <span class="pin geotoolz"><b>geotoolz</b> 640670c</span>
+    <span class="pin geostack"><b>geostack</b> 343d60e</span>
+  </div>
+  <p class="byline">Read from <code>main</code> on 12 Nov 2026. One of three pages: <a href="./l2-collections.html">Level 2 collections in GeoStack</a> (the repo, its index and transactions, A–E), <a href="./product-catalog.html">GeoStack product catalog</a> (F, K, L) and this one (G–J). Letters never repeat across them.</p>
+</header>
+
+<section>
+  <h2>Summary</h2>
+  <p>None of pipekit's operators change, and <code>pipeline_hash</code> keeps its meaning. What changes is where pipekit persists things, and what a product records about the code that made it.</p>
+  <ul class="summary">
+    <li><span class="tag">G.</span><span><b>Products that name their recipe.</b> pipekit stores operators by <code>pipeline_hash</code>, but no product records which recipe made it, and the hash covers configuration, not code. A small stamp (hash, registry, package versions, lockfile hash) goes into every product row.</span></li>
+    <li><span class="tag">H.</span><span><b>A model registry on Icechunk.</b> <code>registry.store</code> writes up to four objects one after another, so a crash can leave half an entry. An <code>IcechunkModelRegistry</code> makes each store one commit.</span></li>
+    <li><span class="tag">I.</span><span><b>A cache store on Icechunk.</b> <code>Cache</code> already writes to any named <code>Store</code>, and pipekit leaves carrier-specific stores to its sister packages. An <code>IcechunkStore</code> keeps array results as Zarr instead of pickles, and shares them across machines.</span></li>
+    <li><span class="tag">J.</span><span><b>Training data pinned to a snapshot.</b> <code>TrainingDataset.content_hash</code> hashes the dataset's configuration, so it cannot tell two versions of the same files apart. A dataset read from a repo folds the snapshot id into its hash.</span></li>
+  </ul>
+  <p><b>End state.</b> pipekit-ops stays dependency-free; pipekit-experiment gains an Icechunk registry and the recipe stamp behind an <code>[icechunk]</code> extra; geocloud gains a carrier-aware Icechunk store; pipekit-train datasets can name a snapshot. A model, a cache entry, a training set and a product are each one commit with an immutable id.</p>
+</section>
+
+<section id="current">
+  <div class="eyebrow">Current state · verified in code</div>
+  <h2>Where pipekit persists things today</h2>
+  <p>Three layers. At the top, what makes a pipeline a recipe. In the middle, the three places pipelines run. At the bottom, the four places their results and records land. Every store at the bottom is a separate system with its own write semantics.</p>
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 800 450" role="img" aria-label="Current pipekit persistence. A recipe is an operator state record with a content hash. Cache, training and inference pipelines write to four separate stores: cache stores that pickle by key, datasets cached as Zarr or versioned with DVC, a model registry of JSON and weight files, and JSON run records.">
+      <defs>
+        <marker id="r1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="t-tier" transform="translate(20 86) rotate(-90)" text-anchor="middle">DEFINE</text>
+      <text class="t-tier" transform="translate(20 206) rotate(-90)" text-anchor="middle">RUN</text>
+      <text class="t-tier" transform="translate(20 376) rotate(-90)" text-anchor="middle">PERSIST</text>
+
+      <rect class="box" x="40" y="40" width="750" height="92" rx="7"/>
+      <rect class="s-pipekit" x="40" y="40" width="4" height="92" rx="2"/>
+      <text class="t-h" x="56" y="62">A recipe is data</text>
+      <text class="t-m" x="56" y="84">op.state = {module, class, config} · dumps · loads · loads_sandboxed</text>
+      <text class="t-m" x="56" y="104">pipeline_hash(op, weights) = sha256(stable_json(state) ‖ 0x00 ‖ weights)</text>
+      <circle class="gap-c" cx="776" cy="56" r="9"/><text class="mark-t" x="776" y="60" text-anchor="middle">5</text>
+      <line class="edge" x1="415" y1="132" x2="415" y2="157" marker-end="url(#r1)"/>
+
+      <rect class="box" x="40" y="160" width="250" height="92" rx="7"/>
+      <rect class="s-pipekit" x="40" y="160" width="4" height="92" rx="2"/>
+      <text class="t-h" x="56" y="182">Cache(inner, store)</text>
+      <text class="t-b" x="56" y="202">key = sha256(input ‖ pipeline_hash)</text>
+      <text class="t-b" x="56" y="220">hits · misses</text>
+      <rect class="box" x="310" y="160" width="230" height="92" rx="7"/>
+      <rect class="s-pipekit" x="310" y="160" width="4" height="92" rx="2"/>
+      <text class="t-h" x="326" y="182">TrainingLoop</text>
+      <text class="t-m" x="326" y="202">dataset.content_hash()</text>
+      <text class="t-b" x="326" y="220">hash of type and config</text>
+      <rect class="box" x="560" y="160" width="230" height="92" rx="7"/>
+      <rect class="s-geotoolz" x="560" y="160" width="4" height="92" rx="2"/>
+      <text class="t-h" x="576" y="182">Inference</text>
+      <text class="t-b" x="576" y="202">a geoops pipeline</text>
+      <text class="t-b" x="576" y="220">→ products (L2 page)</text>
+      <circle class="gap-c" cx="776" cy="176" r="9"/><text class="mark-t" x="776" y="180" text-anchor="middle">4</text>
+
+      <line class="edge" x1="125" y1="252" x2="125" y2="317" marker-start="url(#r1)" marker-end="url(#r1)"/>
+      <text class="lbl" x="131" y="290">save · load</text>
+      <line class="edge" x1="350" y1="317" x2="350" y2="255" marker-end="url(#r1)"/>
+      <text class="lbl" x="356" y="290">reads</text>
+      <line class="edge" x1="505" y1="252" x2="505" y2="317" marker-end="url(#r1)"/>
+      <text class="lbl" x="511" y="290">store</text>
+      <line class="edge" x1="580" y1="317" x2="580" y2="255" marker-end="url(#r1)"/>
+      <text class="lbl" x="586" y="290">load</text>
+      <line class="edge" x1="700" y1="252" x2="700" y2="317" marker-end="url(#r1)"/>
+      <text class="lbl" x="706" y="290">record</text>
+
+      <rect class="band" x="40" y="320" width="170" height="112" rx="7"/>
+      <rect class="s-pipekit" x="40" y="320" width="4" height="112" rx="2"/>
+      <text class="t-h" x="56" y="342">Cache stores</text>
+      <text class="t-m" x="56" y="362">MemoryStore</text>
+      <text class="t-m" x="56" y="380">DirectoryStore</text>
+      <text class="t-b" x="56" y="398">one pickle per key</text>
+      <circle class="gap-c" cx="196" cy="336" r="9"/><text class="mark-t" x="196" y="340" text-anchor="middle">2</text>
+      <rect class="band" x="225" y="320" width="170" height="112" rx="7"/>
+      <rect class="s-pipekit" x="225" y="320" width="4" height="112" rx="2"/>
+      <text class="t-h" x="241" y="342">Datasets</text>
+      <text class="t-b" x="241" y="362">CachedDataset → Zarr</text>
+      <text class="t-m" x="241" y="380" style="font-size:10.5px">DVCDatasetVersioning</text>
+      <text class="t-b" x="241" y="398">files, by path</text>
+      <circle class="gap-c" cx="381" cy="336" r="9"/><text class="mark-t" x="381" y="340" text-anchor="middle">3</text>
+      <rect class="band" x="410" y="320" width="190" height="112" rx="7"/>
+      <rect class="s-pipekit" x="410" y="320" width="4" height="112" rx="2"/>
+      <text class="t-h" x="426" y="342">Model registry</text>
+      <text class="t-b" x="426" y="362">Local · S3 (fsspec)</text>
+      <text class="t-m" x="426" y="380" style="font-size:10.5px">operator.json · weights.bin</text>
+      <text class="t-m" x="426" y="398" style="font-size:10.5px">metadata.json · _tags/</text>
+      <circle class="gap-c" cx="586" cy="336" r="9"/><text class="mark-t" x="586" y="340" text-anchor="middle">1</text>
+      <rect class="band" x="615" y="320" width="175" height="112" rx="7"/>
+      <rect class="s-pipekit" x="615" y="320" width="4" height="112" rx="2"/>
+      <text class="t-h" x="631" y="342">Run records</text>
+      <text class="t-m" x="631" y="362">TrainingArtifact</text>
+      <text class="t-m" x="631" y="380">InferenceArtifact</text>
+      <text class="t-b" x="631" y="398">JSON files</text>
+    </svg>
+    </div>
+    <figcaption>Each store is right on its own, but they share no identity and no transaction: a model, the data it was trained on, the cache it filled and the products it made are found by four different kinds of path. Amber numbers mark the gaps below.</figcaption>
+  </figure>
+
+  <h3>The pieces, and where each one lives</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Component</th><th>Package</th><th>What it does</th><th>Read in</th></tr></thead>
+    <tbody>
+      <tr><td><code>Operator.state</code></td><td class="repo-t pipekit">pipekit-ops</td><td><code>{module, class, config}</code>, nested for <code>Sequential</code> and <code>Graph</code>; <code>from_state</code> rebuilds it.</td><td class="path">_base/operator.py:248</td></tr>
+      <tr><td><code>dumps</code>, <code>loads</code>, <code>loads_sandboxed</code></td><td class="repo-t pipekit">pipekit-ops</td><td>The state as JSON and back; the sandboxed loader builds only allowlisted classes. Operators holding closures (<code>forbid_in_yaml</code>) refuse to load.</td><td class="path">serial.py</td></tr>
+      <tr><td><code>pipeline_hash</code></td><td class="repo-t pipekit">pipekit-ops</td><td><code>sha256(stable_json(op.state) ‖ 0x00 ‖ weights)</code>: the id the registries, <code>Cache</code> and run records share.</td><td class="path">hashing.py:95</td></tr>
+      <tr><td><code>Cache</code>, <code>Store</code>, <code>store_scope</code></td><td class="repo-t pipekit">pipekit-ops</td><td>Memoisation keyed by input and <code>pipeline_hash(inner)</code> into a named store. A store is three methods over 64-hex keys; carrier-specific stores are left to sister packages.</td><td class="path">cache.py, store.py</td></tr>
+      <tr><td><code>LocalModelRegistry</code>, <code>S3ModelRegistry</code></td><td class="repo-t pipekit">pipekit-experiment</td><td>Operators and weights under their hash, with tags; <code>load</code> checks the content against the hash. Both share <code>_ModelRegistryBase</code>, which needs six storage primitives.</td><td class="path">registry.py:87</td></tr>
+      <tr><td><code>JaxModelOp</code></td><td class="repo-t pipekit">pipekit-jax</td><td>Round-trips trained weights through a <code>ModelRegistry</code> as one blob, from JSON config alone.</td><td class="path">model_op.py</td></tr>
+      <tr><td><code>TrainingDataset.content_hash</code></td><td class="repo-t pipekit">pipekit-train</td><td>Defaults to a hash of the class name and config; datasets with external state are told to override it.</td><td class="path">dataset.py:145</td></tr>
+      <tr><td><code>CachedDataset</code></td><td class="repo-t pipekit">pipekit-train</td><td>Writes the first epoch into a fixed-shape Zarr store, keyed on the source's <code>content_hash</code>, locally or through fsspec.</td><td class="path">dataset.py:461</td></tr>
+      <tr><td><code>DVCDatasetVersioning</code></td><td class="repo-t pipekit">pipekit-experiment</td><td>Wraps the DVC CLI: <code>add</code>, <code>pull</code>, <code>push</code>, <code>hash</code> on files.</td><td class="path">adapters/dvc.py</td></tr>
+      <tr><td><code>TrainingArtifact</code>, <code>InferenceArtifact</code></td><td class="repo-t pipekit">pipekit-experiment</td><td>JSON records pinning a pipeline, its dataset and model hashes, backend info and the lockfile.</td><td class="path">artifacts.py</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Five verified gaps</h3>
+  <ul class="gaps">
+    <li><span class="num">1</span><p><b>A registry store is several writes.</b> <code>store</code> writes <code>operator.json</code>, then <code>weights.bin</code>, then <code>metadata.json</code>, then the tag file. <code>LocalModelRegistry</code> makes each file atomic, not the set, and <code>S3ModelRegistry</code> says it is only as atomic as its backing store.</p></li>
+    <li><span class="num">2</span><p><b>No array-aware cache store.</b> <code>DirectoryStore</code> pickles one file per key, and <code>store.py</code> leaves Zarr, COG and object-store stores to the sister packages; none exists in geotoolz yet.</p></li>
+    <li><span class="num">3</span><p><b>A dataset hash names its config, not its data.</b> The default <code>content_hash</code> cannot tell two versions of the same files apart, so <code>TrainingArtifact.dataset_hash</code> does not pin the data unless a subclass folds a version in. DVC can, but per file and through git.</p></li>
+    <li><span class="num">4</span><p><b>Products do not name their recipe.</b> Nothing writes a <code>pipeline_hash</code> next to a product, so "which code made this map" has no lookup.</p></li>
+    <li><span class="num">5</span><p><b>The hash covers config, not code.</b> <code>op.state</code> has no package version, so the same <code>MatchedFilter</code> config hashes alike under two geoops releases. Versions are kept only in an artifact's <code>backend_info</code> and <code>deps_lock</code>.</p></li>
+  </ul>
+</section>
+
+<section id="target">
+  <div class="eyebrow">Revised target</div>
+  <h2>The same seams, on Icechunk</h2>
+  <p>Every box and line from the current diagram is still here. Blue text marks what each box gains, with its workstream letter. The new band at the bottom is the repo that the four stores now write into, each write one commit.</p>
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 800 560" role="img" aria-label="Target pipekit persistence. The recipe gains a stamp of hash, versions and lockfile. Cache writes to an Icechunk store, training datasets fold in a snapshot id, inference stamps its recipe on products. Cache stores, datasets, the model registry and run records all commit into Icechunk repos.">
+      <defs>
+        <marker id="r2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="r2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head-a" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="t-tier" transform="translate(20 86) rotate(-90)" text-anchor="middle">DEFINE</text>
+      <text class="t-tier" transform="translate(20 206) rotate(-90)" text-anchor="middle">RUN</text>
+      <text class="t-tier" transform="translate(20 376) rotate(-90)" text-anchor="middle">PERSIST</text>
+      <text class="t-tier" transform="translate(20 518) rotate(-90)" text-anchor="middle">REPO</text>
+
+      <rect class="box" x="40" y="40" width="750" height="92" rx="7"/>
+      <rect class="s-pipekit" x="40" y="40" width="4" height="92" rx="2"/>
+      <text class="t-h" x="56" y="62">A recipe is data</text>
+      <text class="t-m" x="56" y="84">op.state = {module, class, config} · dumps · loads · loads_sandboxed</text>
+      <text class="t-m" x="56" y="104">pipeline_hash(op, weights) = sha256(stable_json(state) ‖ 0x00 ‖ weights)</text>
+      <text class="t-m new-t" x="56" y="124">+ RecipeStamp: hash · registry · versions · lockfile hash</text>
+      <circle class="ws-c" cx="776" cy="56" r="9"/><text class="mark-t" x="776" y="60" text-anchor="middle">G</text>
+      <line class="edge" x1="415" y1="132" x2="415" y2="157" marker-end="url(#r2)"/>
+
+      <rect class="box" x="40" y="160" width="250" height="92" rx="7"/>
+      <rect class="s-pipekit" x="40" y="160" width="4" height="92" rx="2"/>
+      <text class="t-h" x="56" y="182">Cache(inner, store)</text>
+      <text class="t-b" x="56" y="202">key = sha256(input ‖ pipeline_hash)</text>
+      <text class="t-b" x="56" y="220">hits · misses</text>
+      <text class="t-m new-t" x="56" y="242">+ store="scenes" → repo</text>
+      <circle class="ws-c" cx="276" cy="176" r="9"/><text class="mark-t" x="276" y="180" text-anchor="middle">I</text>
+      <rect class="box" x="310" y="160" width="230" height="92" rx="7"/>
+      <rect class="s-pipekit" x="310" y="160" width="4" height="92" rx="2"/>
+      <text class="t-h" x="326" y="182">TrainingLoop</text>
+      <text class="t-m" x="326" y="202">dataset.content_hash()</text>
+      <text class="t-b" x="326" y="220">hash of type and config</text>
+      <text class="t-b new-t" x="326" y="242">+ and the snapshot id</text>
+      <circle class="ws-c" cx="526" cy="176" r="9"/><text class="mark-t" x="526" y="180" text-anchor="middle">J</text>
+      <rect class="box" x="560" y="160" width="230" height="92" rx="7"/>
+      <rect class="s-geotoolz" x="560" y="160" width="4" height="92" rx="2"/>
+      <text class="t-h" x="576" y="182">Inference</text>
+      <text class="t-b" x="576" y="202">a geoops pipeline</text>
+      <text class="t-b" x="576" y="220">→ products (L2 page)</text>
+      <text class="t-b new-t" x="576" y="242">+ stamps its recipe on each</text>
+      <circle class="ws-c" cx="776" cy="176" r="9"/><text class="mark-t" x="776" y="180" text-anchor="middle">G</text>
+
+      <line class="edge" x1="125" y1="252" x2="125" y2="317" marker-start="url(#r2)" marker-end="url(#r2)"/>
+      <text class="lbl" x="131" y="290">save · load</text>
+      <line class="edge" x1="350" y1="317" x2="350" y2="255" marker-end="url(#r2)"/>
+      <text class="lbl" x="356" y="290">reads</text>
+      <line class="edge" x1="505" y1="252" x2="505" y2="317" marker-end="url(#r2)"/>
+      <text class="lbl" x="511" y="290">store</text>
+      <line class="edge" x1="580" y1="317" x2="580" y2="255" marker-end="url(#r2)"/>
+      <text class="lbl" x="586" y="290">load</text>
+      <line class="edge" x1="700" y1="252" x2="700" y2="317" marker-end="url(#r2)"/>
+      <text class="lbl" x="706" y="290">record</text>
+
+      <rect class="band" x="40" y="320" width="170" height="112" rx="7"/>
+      <rect class="s-pipekit" x="40" y="320" width="4" height="112" rx="2"/>
+      <text class="t-h" x="56" y="342">Cache stores</text>
+      <text class="t-m" x="56" y="362">MemoryStore</text>
+      <text class="t-m" x="56" y="380">DirectoryStore</text>
+      <text class="t-b" x="56" y="398">one pickle per key</text>
+      <text class="t-m new-t" x="56" y="420">+ IcechunkStore</text>
+      <circle class="ws-c" cx="196" cy="336" r="9"/><text class="mark-t" x="196" y="340" text-anchor="middle">I</text>
+      <rect class="band" x="225" y="320" width="170" height="112" rx="7"/>
+      <rect class="s-pipekit" x="225" y="320" width="4" height="112" rx="2"/>
+      <text class="t-h" x="241" y="342">Datasets</text>
+      <text class="t-b" x="241" y="362">CachedDataset → Zarr</text>
+      <text class="t-m" x="241" y="380" style="font-size:10.5px">DVCDatasetVersioning</text>
+      <text class="t-b" x="241" y="398">files, by path</text>
+      <text class="t-b new-t" x="241" y="420">+ read at a snapshot</text>
+      <circle class="ws-c" cx="381" cy="336" r="9"/><text class="mark-t" x="381" y="340" text-anchor="middle">J</text>
+      <rect class="band" x="410" y="320" width="190" height="112" rx="7"/>
+      <rect class="s-pipekit" x="410" y="320" width="4" height="112" rx="2"/>
+      <text class="t-h" x="426" y="342">Model registry</text>
+      <text class="t-b" x="426" y="362">Local · S3 (fsspec)</text>
+      <text class="t-m" x="426" y="380" style="font-size:10.5px">operator.json · weights.bin</text>
+      <text class="t-m" x="426" y="398" style="font-size:10.5px">metadata.json · _tags/</text>
+      <text class="t-m new-t" x="426" y="420" style="font-size:10.5px">+ IcechunkModelRegistry</text>
+      <circle class="ws-c" cx="586" cy="336" r="9"/><text class="mark-t" x="586" y="340" text-anchor="middle">H</text>
+      <rect class="band" x="615" y="320" width="175" height="112" rx="7"/>
+      <rect class="s-pipekit" x="615" y="320" width="4" height="112" rx="2"/>
+      <text class="t-h" x="631" y="342">Run records</text>
+      <text class="t-m" x="631" y="362">TrainingArtifact</text>
+      <text class="t-m" x="631" y="380">InferenceArtifact</text>
+      <text class="t-b" x="631" y="398">JSON files</text>
+      <text class="t-b new-t" x="631" y="420">+ next to their model</text>
+      <circle class="ws-c" cx="776" cy="336" r="9"/><text class="mark-t" x="776" y="340" text-anchor="middle">H</text>
+
+      <line class="edge-a" x1="125" y1="432" x2="125" y2="487" marker-end="url(#r2a)"/>
+      <line class="edge-a" x1="310" y1="487" x2="310" y2="435" marker-end="url(#r2a)"/>
+      <line class="edge-a" x1="505" y1="432" x2="505" y2="487" marker-end="url(#r2a)"/>
+      <line class="edge-a" x1="700" y1="432" x2="700" y2="487" marker-end="url(#r2a)"/>
+      <text class="lbl-a" x="408" y="464" text-anchor="middle">each write one commit</text>
+
+      <rect class="repo" x="40" y="490" width="750" height="56" rx="7"/>
+      <text class="t-h new-t" x="56" y="513">Icechunk repos</text>
+      <text class="t-b" x="56" y="533">cache entries · models · training sets · run records, each named by a snapshot id</text>
+    </svg>
+    </div>
+    <figcaption>Data and code now share one kind of identity. A product record (product catalog, F) names its inputs by snapshot and its recipe by <code>pipeline_hash</code>; the model behind that hash, the data it was trained on and the cache it filled are each a snapshot too.</figcaption>
+  </figure>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--c-pipekit)"></i>pipekit</span>
+    <span><i class="sw" style="background:var(--c-geotoolz)"></i>geotoolz</span>
+    <span><i class="dot" style="background:var(--warn)">1</i>verified gap</span>
+    <span><i class="dot" style="background:var(--accent)">H</i>workstream</span>
+  </div>
+
+  <h3>What each workstream adds</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Symbol</th><th>Destination</th><th>Reason</th><th>Closes</th></tr></thead>
+    <tbody>
+      <tr><td><code>RecipeStamp</code>, <code>stamp</code></td><td><span class="repo-t pipekit">pipekit-experiment</span></td><td>Hash, registry URI, package versions and lockfile hash, written into every product row; the full <code>InferenceArtifact</code> stays in the registry.</td><td>G · gaps 4, 5</td></tr>
+      <tr><td><code>IcechunkModelRegistry</code></td><td><span class="repo-t pipekit">pipekit-experiment</span>, extra <code>[icechunk]</code></td><td>The six primitives of <code>_ModelRegistryBase</code> over one writable session, so <code>store</code> is one commit. Same layout and hashes as the other two.</td><td>H · gap 1</td></tr>
+      <tr><td><code>IcechunkStore</code></td><td><span class="repo-t geotoolz">geocloud</span>, extra <code>[icechunk]</code></td><td>A <code>Store</code> that writes carriers as Zarr groups (CF <code>spatial_ref</code>, L2 page D) and anything else as bytes. geocloud already owns object storage, as <code>store.py</code> asks.</td><td>I · gap 2</td></tr>
+      <tr><td><code>SnapshotDataset</code></td><td><span class="repo-t pipekit">pipekit-train</span>, extra <code>[icechunk]</code></td><td>A <code>TrainingDataset</code> read at a snapshot, whose <code>content_hash</code> folds the snapshot id in; <code>CachedDataset</code> can target a repo.</td><td>J · gap 3</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="recipes">
+  <div class="eyebrow">G · recipes</div>
+  <h2>Recipes are versioned like data</h2>
+  <p>The repo and the recipe registry are the same pattern on two kinds of thing.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Concept</th><th>Data (Icechunk repo)</th><th>Recipes (pipekit registry)</th></tr></thead>
+    <tbody>
+      <tr><td>Content</td><td>arrays and <code>meta/</code> rows</td><td><code>op.state</code> JSON, plus optional weights</td></tr>
+      <tr><td>Identity</td><td>snapshot id</td><td><code>pipeline_hash</code></td></tr>
+      <tr><td>Human name</td><td>tag (<code>mf-v0.3-2026-06</code>)</td><td>tag (<code>mf-v0.3</code>)</td></tr>
+      <tr><td>Store</td><td>a repo on object storage</td><td><code>LocalModelRegistry</code>, <code>S3ModelRegistry</code>; Icechunk with H</td></tr>
+      <tr><td>Restore</td><td>open the repo at a snapshot</td><td><code>registry.load(hash)</code>, or <code>loads</code> on the JSON</td></tr>
+      <tr><td>Catalogued in</td><td><a href="./product-catalog.html">product catalog</a> (F)</td><td><code>registry.list(tags=…)</code>; the same catalog if you want one search</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>A product is a recipe applied to inputs</h3>
+  <p>Write α = R(x) for a product α made by recipe R from inputs x. Provenance is complete when the record names all three, each by an immutable id:</p>
+  <pre>  inputs x     derived_from links → source items         <span class="c">product catalog, F</span>
+               scenes at repo@snapshot                     <span class="c">L2 page, A</span>
+      │
+  recipe R     pipeline_hash → registry.load(hash)          <span class="c">today</span>
+               package versions + lockfile hash             <span class="c">G</span>
+      │
+  product α    products/mf/&lt;id&gt; at repo@snapshot          <span class="c">L2 page, B</span>
+               one product-catalog record naming x and R    <span class="c">F + G</span></pre>
+  <p>With all three, a product can be rebuilt and checked: load R by hash, open x at its snapshot, run, and compare with α. That is gate G1.</p>
+
+  <h3>The one subtlety: config is not code</h3>
+  <p><code>pipeline_hash</code> covers <code>op.state</code>, the configuration. Two geoops releases with different <code>MatchedFilter</code> code but the same config share a hash. Changing the hash to include versions would move every id already in a registry, so keep the hash and record the versions beside it.</p>
+  <div class="decide">
+    <div><b>Recommended</b><span>Keep <code>pipeline_hash</code> as the recipe id. Stamp each product with the hash, the versions of the packages it imported and a hash of the lockfile; keep the full <code>InferenceArtifact</code> in the registry next to the recipe.</span></div>
+    <div><b>Alternative</b><span>Fold versions into the id, a recipe-and-environment hash. One id says everything, but every patch release mints a new id for an unchanged recipe, and old registry entries stop matching.</span></div>
+  </div>
+<pre data-hl># pipekit_experiment/_src/stamp.py
+"""What a product records about the recipe that made it."""
+
+import dataclasses
+from importlib import metadata
+
+import pipekit_ops
+import pipekit_ops.hashing
+
+# Shapes: P packages pinned
+
+
+@dataclasses.dataclass(frozen=True)
+class RecipeStamp:
+    """The recipe behind a product: its id, where it lives, what ran it.
+
+    Args:
+        pipeline_hash: The recipe id, pipekit_ops.pipeline_hash(op).
+        registry_uri: The registry that holds the recipe.
+        versions: Package name to installed version, for the packages it uses.
+        lock_hash: sha256 of the lockfile the run used.
+    """
+
+    pipeline_hash: str
+    registry_uri: str
+    versions: dict[str, str]
+    lock_hash: str
+
+
+# proposed (G)
+def stamp(
+    op: pipekit_ops.Operator,
+    *,
+    registry_uri: str,
+    packages: tuple[str, ...],
+    lockfile: str,
+) -> RecipeStamp:
+    """Build the stamp a transaction writes into every product row."""
+    # h = sha256(stable_json(op.state) ‖ 0x00)
+    # today (pipekit-ops)
+    recipe_hash = pipekit_ops.pipeline_hash(op)                     # → 64 hex
+    # not pinned (importlib)
+    versions = {name: metadata.version(name) for name in packages}  # → P
+    # h_lock = sha256(lockfile)
+    # today (pipekit-ops)
+    lock_hash = pipekit_ops.hashing.sha256_hex(lockfile)            # → 64 hex
+    return RecipeStamp(recipe_hash, registry_uri, versions, lock_hash)</pre>
+  <p>In the product catalog the stamp becomes a few properties beside the lineage links: <code>pipekit:pipeline_hash</code>, <code>pipekit:registry</code>, <code>pipekit:lock_hash</code>, and <code>processing:software</code> for the versions. In a PostGIS table, <code>pipeline_hash</code> earns its own indexed column, so "everything this recipe made" is one query.</p>
+</section>
+
+<section id="registry">
+  <div class="eyebrow">H · model registry</div>
+  <h2>A model registry where a store is one commit</h2>
+  <p><code>_ModelRegistryBase</code> keeps all the user-facing logic (hashing, verify-on-load, tag merging) and asks a backend for six primitives: <code>_exists</code>, <code>_read_text</code>, <code>_write_text</code>, <code>_read_bytes</code>, <code>_write_bytes</code>, <code>_children</code>, plus <code>_where</code> for messages. An Icechunk backend implements those against one writable session and wraps <code>store</code> and <code>tag</code> in a commit, so a crash leaves no half entry and every model version is a snapshot.</p>
+  <pre>  models.icechunk/
+  ├── &lt;hash&gt;/operator.json     <span class="c">the state, as the other backends write it</span>
+  ├── &lt;hash&gt;/weights.bin       <span class="c">optional blob (JaxModelOp.serialize_weights)</span>
+  ├── &lt;hash&gt;/metadata.json     <span class="c">tags merged across stores</span>
+  └── _tags/&lt;name&gt;             <span class="c">the hash a name points at</span></pre>
+<pre data-hl># pipekit_experiment/_src/icechunk_registry.py
+"""A model registry whose every store and tag is one Icechunk commit."""
+
+import contextlib
+from collections.abc import Iterator
+
+import icechunk
+
+from pipekit_experiment.registry import _ModelRegistryBase
+
+# Shapes: B bytes of weights
+
+
+class IcechunkModelRegistry(_ModelRegistryBase):
+    """Operators and weights in an Icechunk repo, one commit per store.
+
+    Args:
+        repo: The repository that holds the models.
+        branch: The branch stores commit to.
+    """
+
+    def __init__(self, repo: icechunk.Repository, *, branch: str = "main") -> None:
+        self.repo = repo
+        self.branch = branch
+        self._session = None
+
+    @contextlib.contextmanager
+    def _transaction(self, message: str) -> Iterator[None]:
+        # not pinned (icechunk)
+        self._session = self.repo.writable_session(self.branch)
+        try:
+            yield
+            # not pinned (icechunk)
+            self._session.commit(message)
+        finally:
+            self._session = None
+
+    def store(self, model_op, *, name=None, tags=None, weights=None) -> str:
+        # proposed (H)
+        with self._transaction(f"store {name or 'model'}"):
+            # today (pipekit-experiment)
+            return super().store(model_op, name=name, tags=tags, weights=weights)
+
+    def _write_bytes(self, data: bytes, *parts: str) -> None:
+        # proposed (H): one uint8 array per object, in the open session
+        write_object(self._session.store, "/".join(parts), data)    # → (B,)</pre>
+  <p class="byline">Only two of the primitives are shown; the rest follow the same shape. <code>tag</code> gets the same transaction wrapper. Weights stay one blob here so the hash is unchanged; storing each array leaf as its own Zarr array would make them inspectable, but would need its own hash rule.</p>
+</section>
+
+<section id="cache">
+  <div class="eyebrow">I · cache store</div>
+  <h2>A cache that is shared, typed and versioned</h2>
+  <p><code>Cache(op, store="scenes")</code> names a store, and <code>store_scope</code> binds the name to a real store around the call, so where results go is a deployment choice outside the pipeline's config and its hash. An Icechunk store fits that seam without touching pipekit-ops, which stays free of third-party dependencies.</p>
+<pre data-hl># geocloud/_src/icechunk_store.py
+"""A pipekit Store in an Icechunk repo: carriers as Zarr, the rest as bytes."""
+
+from typing import Any
+
+import icechunk
+
+# Shapes: K keys written before a commit
+
+
+class IcechunkStore:
+    """Cache entries under cache/&lt;key&gt;/, committed in batches.
+
+    Args:
+        repo: The repository that holds the cache.
+        branch: The branch entries commit to.
+        every: Commit after this many saves; the rest commit on close.
+    """
+
+    def __init__(
+        self,
+        repo: icechunk.Repository,
+        *,
+        branch: str,
+        every: int = 64,
+    ) -> None:
+        ...
+
+    def __contains__(self, key: str) -> bool: ...
+
+    def load(self, key: str) -> Any: ...
+
+    def save(self, key: str, value: Any) -> None:
+        # proposed (I): a GeoArray becomes a Zarr group with CF spatial_ref
+        ...
+
+    def close(self) -> str: ...</pre>
+<pre data-hl># a pipeline, unchanged, with its cache bound to a repo
+import geocloud.icechunk
+import pipekit_ops
+
+# Shapes: S scenes; C bands; H × W pixels
+
+# proposed (I)
+scene_cache = geocloud.icechunk.IcechunkStore(repo, branch="cache")
+# today (pipekit-ops)
+cached_filter = pipekit_ops.Cache(matched_filter, store="scenes")
+# today (pipekit-ops)
+with pipekit_ops.store_scope(scenes=scene_cache):
+    for scene in scenes:                                            # (S,)
+        # α̂ = tᵀ Σ⁻¹ (y − μ) / (tᵀ Σ⁻¹ t)
+        enhancement = cached_filter(scene)                          # → (1, H, W)
+# proposed (I)
+cache_snapshot = scene_cache.close()                                # → id</pre>
+  <p>Two things to keep in mind. A commit per save would be slow, so the store batches commits and closes with one. And a byte entry is still a pickle: load cache entries only from repos you trust, as with <code>DirectoryStore</code> today.</p>
+</section>
+
+<section id="datasets">
+  <div class="eyebrow">J · training data</div>
+  <h2>Training data pinned to a snapshot</h2>
+  <p><code>TrainingDataset.content_hash</code> is what <code>CachedDataset</code> keys on and what <code>TrainingArtifact.dataset_hash</code> records. Its docstring already asks datasets with external state to fold that state in; a dataset read from a repo folds in the snapshot id, so the hash changes when the data does.</p>
+<pre data-hl># pipekit_train/_src/snapshot_dataset.py
+"""A TrainingDataset read from an Icechunk repo at one snapshot."""
+
+import pipekit_train
+import pipekit_train.dataset
+
+
+class SnapshotDataset(pipekit_train.TrainingDataset):
+    """Samples read from repo@snapshot; the snapshot is part of its identity.
+
+    Args:
+        uri: Where the repository lives.
+        snapshot: The snapshot every sample is read from.
+    """
+
+    def content_hash(self) -> str:
+        # h = sha256(type ‖ config ‖ snapshot)
+        config = {**self.get_config(), "snapshot": self.snapshot}
+        # today (pipekit-train)
+        return pipekit_train.dataset.hash_config(type(self).__qualname__, config)</pre>
+  <div class="decide">
+    <div><b>Recommended</b><span>Icechunk snapshots for array training data, read through <code>SnapshotDataset</code>; DVC stays for the files that are not arrays (label exports, configs, notebooks).</span></div>
+    <div><b>Alternative</b><span>DVC for everything. One tool, but it versions whole files through git, so a new month of scenes re-hashes files instead of adding chunks.</span></div>
+  </div>
+</section>
+
+<section id="gates">
+  <h2>Testing gates</h2>
+  <p>Each workstream merges only when its gate passes.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Gate</th><th>Workstream</th><th>Passes when</th></tr></thead>
+    <tbody>
+      <tr><td>G1 Reproduce</td><td>G</td><td>Loading the recipe by <code>pipeline_hash</code> and the inputs at their snapshot, under the stamped lockfile, and running again gives arrays bit-identical to the product.</td></tr>
+      <tr><td>G2 Stable id</td><td>G</td><td><code>pipeline_hash(loads(dumps(op))) == pipeline_hash(op)</code> for every operator in the recipe, and every product row carries a hash that <code>registry.load</code> resolves.</td></tr>
+      <tr><td>H1 Parity</td><td>H</td><td>The registry test suite passes unchanged on all three backends, and the same operator stores under the same hash on each.</td></tr>
+      <tr><td>H2 Atomic store</td><td>H</td><td>A store that raises after <code>operator.json</code> leaves the branch at its old snapshot, and <code>load</code> of the hash raises <code>KeyError</code>.</td></tr>
+      <tr><td>I1 Cache parity</td><td>I</td><td>Over one run, hits, misses and outputs are identical with <code>DirectoryStore</code> and <code>IcechunkStore</code>; a <code>GeoArray</code> read back has an equal <code>Grid</code>.</td></tr>
+      <tr><td>I2 Restart</td><td>I</td><td>A new process bound to the same repo and branch hits every entry the first process saved.</td></tr>
+      <tr><td>J1 Pinned data</td><td>J</td><td><code>content_hash</code> changes when the snapshot or the config changes, and only then.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="sequencing">
+  <h2>Sequencing and risks</h2>
+  <p>The stamp first, since it needs no new dependency and closes the provenance loop the product catalog opens. Then the registry, the smallest change with the clearest win.</p>
+  <pre>  G  recipe stamp
+      │
+      ◆ G1 · G2
+      │
+  H  Icechunk model registry
+      │
+      ◆ H1 · H2
+      │
+  J  snapshot datasets  ┃  I  Icechunk cache store     <span class="c">(parallel)</span>
+      │
+      ◆ J1 · I1 · I2</pre>
+  <ul class="gaps risk">
+    <li><span class="num ws">!</span><p><b>Overriding <code>store</code> leans on a private base.</b> <code>_ModelRegistryBase</code> is underscored. Fallback: give it a public hook, a <code>_transaction</code> context that defaults to doing nothing, so each backend opts in.</p></li>
+    <li><span class="num ws">!</span><p><b>Commit cost.</b> A commit per cache save or per small model is slow on object storage. Fallback: batch commits in the store, and keep <code>DirectoryStore</code> for hot local caches.</p></li>
+    <li><span class="num ws">!</span><p><b>Two kinds of tag.</b> Registry tags (<code>_tags/&lt;name&gt;</code>) move freely; Icechunk tags are meant to be stable. Fallback: registry tags stay data inside the repo, and Icechunk tags mark releases only.</p></li>
+    <li><span class="num ws">!</span><p><b>Pickles in a shared repo.</b> A shared cache spreads pickles further than a local directory. Fallback: carriers always go as Zarr, and byte entries load only from repos on an allowlist.</p></li>
+  </ul>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <ul class="sources">
+    <li>pipekit at <code>9e86a56</code>: <code>pipekit_ops/serial.py</code>, <code>hashing.py</code>, <code>cache.py</code>, <code>store.py</code>; <code>pipekit_experiment/registry.py</code>, <code>artifacts.py</code>, <code>adapters/dvc.py</code>; <code>pipekit_train/dataset.py</code>; <code>pipekit_jax/model_op.py</code></li>
+    <li>geotoolz at <code>640670c</code>: <code>geoops/matched_filter/_src/operators.py</code> (<code>MatchedFilter.get_config</code>)</li>
+    <li><a href="./l2-collections.html">Level 2 collections in GeoStack</a> and <a href="./product-catalog.html">GeoStack product catalog</a>, the companion pages</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(function () {
+  var tabs = [];
+  function select(t) {
+    tabs.forEach(function (b) {
+      var on = b === t;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+      document.getElementById(b.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(function (b, i) {
+    b.addEventListener('click', function () { select(b); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        var n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        select(n); n.focus();
+      }
+    });
+  });
+
+
+  // Light highlighting for the sketches: comments, status markers, equations, keywords.
+  var KW = /\b(import|from|class|def|return|for|in|with|as|yield|if|else|is|None|True|False)\b/g;
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function comment(text) {
+    var t = esc(text);
+    if (/^#\s*(today\*?|proposed|user)\b/.test(text)) {
+      t = t.replace(/(today\*?\s*\([^)]*\))/, '<span class="st-t">$1</span>')
+           .replace(/(proposed\s*\([^)]*\))/, '<span class="st-p">$1</span>')
+           .replace(/^(#\s*)(user)\b/, '$1<span class="st-u">$2</span>');
+      return '<span class="c">' + t + '</span>';
+    }
+    if (/[α-ωΑ-Ωᵀ⁻¹∩∧∅⇔←Σμ]/.test(text) && !/Shapes:/.test(text)) {
+      return '<span class="c eq">' + t + '</span>';
+    }
+    return '<span class="c">' + t + '</span>';
+  }
+  document.querySelectorAll('pre[data-hl]').forEach(function (pre) {
+    var lines = pre.textContent.split('\n');
+    var inDoc = false;
+    pre.innerHTML = lines.map(function (line) {
+      var tq = (line.match(/"""/g) || []).length;
+      if (inDoc || tq) {
+        var out = '<span class="c">' + esc(line) + '</span>';
+        if (tq === 1) inDoc = !inDoc;
+        return out;
+      }
+      var i = -1, q = null;
+      for (var k = 0; k < line.length; k++) {
+        var ch = line[k];
+        if (q) { if (ch === q) q = null; }
+        else if (ch === '"' || ch === "'") q = ch;
+        else if (ch === '#') { i = k; break; }
+      }
+      var code = i < 0 ? line : line.slice(0, i);
+      var rest = i < 0 ? '' : line.slice(i);
+      return esc(code).replace(KW, '<span class="kw">$1</span>') + (rest ? comment(rest) : '');
+    }).join('\n');
+  });
+})();
+</script>
+</body>
+</html>
