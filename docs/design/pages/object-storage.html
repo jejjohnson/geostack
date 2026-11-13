@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Object Storage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none',
+    macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one 46rem reading column, GeoStack hydrographic palette (from the esmax ocean pages).
+   New in this kit: --unit (units chip + units-check box) and --ex (running-example card). */
+:root {
+  --paper: #F1F5F6; --panel: #E4ECEF; --ink: #0E1E28; --muted: #4E616C; --rule: #C6D3D9;
+  --sea: #0A6B68; --sea-soft: #D3E7E5; --oracle: #985710; --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1; --unit: #5B4A9A; --unit-soft: #E6E2F3; --ex: #2F5E8C; --ex-soft: #DCE7F2;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+/* kit annotation: names each component so it can be referred to in review */
+.kit { margin-top: 3.4rem; padding-top: 0.6rem; border-top: 2px solid var(--ink); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.kit .id { font-family: var(--mono); font-size: 0.82rem; font-weight: 500; color: var(--unit); }
+.kit .what { font-family: var(--display); font-size: 0.86rem; color: var(--muted); }
+.kit + h2, .kit + .tldr, .kit + h3 { margin-top: 0.9rem; }
+.kitnote { font-family: var(--display); font-size: 0.82rem; color: var(--muted); border: 1px dashed var(--rule); border-radius: 6px; padding: 0.5rem 0.75rem; margin: 0.6rem 0 1rem; }
+.kitnote b { color: var(--unit); font-weight: 600; }
+
+/* C1 TL;DR */
+.tldr { border-top: 2px solid var(--ink); padding-top: 1rem; margin-top: 2rem; }
+.tldr ul { margin: 0.6rem 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+
+/* C2 pipeline chart */
+.chart { display: grid; }
+.box { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 0 0.9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--sea); line-height: 1.25; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .sub { color: var(--muted); font-size: 0.95rem; }
+.box.focus { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.focus .num { color: var(--oracle); }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.box .sig .n { white-space: nowrap; }
+.box .sig .s { display: flex; flex-wrap: wrap; gap: 0.2rem 0.4rem; align-items: center; min-width: 0; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.link { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; }
+svg.g { width: 1.15rem; height: 1.15rem; color: var(--sea); flex: none; }
+
+/* units chip (new) */
+.u { display: inline-block; font-family: var(--mono); font-size: 0.74rem; line-height: 1.5; padding: 0 0.4rem; border-radius: 4px; background: var(--unit-soft); color: var(--unit); white-space: nowrap; }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+td.gl { width: 1.6rem; }
+td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+td code { font-size: 0.8rem; white-space: nowrap; }
+
+/* C4 running-example card (new) */
+.ex { border: 1px solid var(--ex); border-radius: 6px; overflow: hidden; margin: 1rem 0 1.4rem; }
+.ex-h { background: var(--ex-soft); padding: 0.6rem 1rem; display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; border-bottom: 1px solid var(--ex); }
+.ex-h .tag { color: var(--ex); }
+.ex-h strong { font-family: var(--display); font-weight: 600; }
+.ex-b { padding: 0.7rem 1rem 0.3rem; font-size: 0.95rem; }
+.ex-b .tbl { margin: 0.4rem 0 0.6rem; border-top: 0; }
+.ex.mini { border-left: 3px solid var(--ex); border-top: 0; border-right: 0; border-bottom: 0; border-radius: 0 6px 6px 0; background: var(--ex-soft); padding: 0.7rem 1rem; font-size: 0.96rem; }
+.ex.mini .tag { color: var(--ex); display: block; margin-bottom: 0.25rem; }
+.ex.mini p:last-child { margin-bottom: 0; }
+
+/* C6 concept box */
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.def h3 { margin: 0 0 0.6rem; }
+.def p:last-child { margin-bottom: 0; }
+.where { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 0.3rem 0.8rem; align-items: baseline; margin: 0.4rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px dashed var(--rule); font-size: 0.92rem; }
+.where .wl { grid-column: 1 / -1; font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+/* C7 operator card */
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.phase { font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.phase.train { background: var(--oracle-soft); color: var(--oracle); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io .sh { display: grid; justify-items: end; gap: 0.15rem; padding-top: 0.15rem; }
+.io .sh code { font-size: 0.8rem; text-align: right; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io .sh { grid-column: 2; justify-items: start; padding-top: 0; }
+  .where { grid-template-columns: max-content minmax(0, 1fr); }
+  .where .u { grid-column: 2; justify-self: start; }
+}
+
+/* C8 units check (new) */
+.uc { border: 1px solid var(--unit); border-radius: 6px; margin: 1rem 0 1.4rem; overflow: hidden; }
+.uc-h { background: var(--unit-soft); padding: 0.55rem 1rem; border-bottom: 1px solid var(--unit); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.uc-h .tag { color: var(--unit); }
+.uc-h strong { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.uc-rows { padding: 0.4rem 1rem 0.6rem; display: grid; }
+.uc-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.2rem 1rem; align-items: center; padding: 0.35rem 0; border-bottom: 1px dashed var(--rule); font-size: 0.93rem; }
+.uc-row:last-child { border-bottom: 0; }
+.uc-row > div { min-width: 0; overflow-x: auto; }
+.uc-row .r { color: var(--muted); }
+.uc-row.ok .r { color: var(--sea); font-weight: 600; font-family: var(--display); font-size: 0.86rem; }
+@media (max-width: 560px) { .uc-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* C9 code sketch */
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+pre .mk { color: var(--oracle); }
+pre .un { color: var(--unit); }
+pre.diagram { background: var(--paper); }
+
+/* C10 two cases */
+.case { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.8rem; margin: 1rem 0 1.4rem; }
+.case > div { border: 1px solid var(--rule); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.94rem; min-width: 0; overflow-x: auto; }
+.case .lin { border-top: 3px solid var(--sea); }
+.case .non { border-top: 3px solid var(--oracle); }
+.case .tag { display: block; margin-bottom: 0.2rem; }
+
+/* C11 watch-out */
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.note p:last-child { margin-bottom: 0; }
+
+/* C12 series nav */
+.series { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--display); font-size: 0.82rem; color: var(--muted); margin-bottom: 1.4rem; }
+.series a { text-decoration: none; }
+footer { margin-top: 3rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 1rem; }
+
+/* v2: role rows in signatures — in / u / θ / est / out */
+.box .sig .d.par, .io-l.par { color: var(--oracle); }
+.box .sig .d.exo, .io-l.exo { color: var(--ex); }
+.box .sig .d.est, .io-l.est { color: var(--muted); font-style: italic; }
+.box .sig .none, .io .none { color: var(--muted); font-style: italic; font-size: 0.86rem; }
+.box .sig .rule { grid-column: 1 / -1; border-top: 1px dotted var(--rule); margin: 0.15rem 0; }
+.io-group.par { background: var(--oracle-soft); }
+.io-group.exo { background: var(--ex-soft); }
+.io-group.est { border-top: 1px dotted var(--rule); }
+.io-group + .io-group { border-top: 1px solid var(--rule); }
+.where { grid-template-columns: max-content minmax(0, 1fr) max-content max-content; }
+.where .sh { font-size: 0.86rem; }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .sh, .where .u { grid-column: 2; justify-self: start; } }
+
+/* v3: numbered equation stack inside boxes and operator arrows */
+.eqs { display: grid; gap: 0.2rem; margin-top: 0.35rem; font-size: 0.95rem; min-width: 0; }
+.eqs > div { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr); align-items: baseline; min-width: 0; overflow-x: auto; overflow-y: hidden; }
+.eqs .ln { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.op-arrow .eqs { margin-top: 0; }
+.box .sig .d.cst, .io-l.cst { color: var(--muted); }
+.box .sig .s .none { font-size: 0.78rem; }
+
+/* v4: model box steps, assumptions, compact Where grid */
+.mstep { display: flex; align-items: baseline; gap: 0.5rem; margin: 1.3rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px solid var(--rule); }
+.mstep:first-of-type { border-top: 0; padding-top: 0; margin-top: 0.6rem; }
+.mstep .mn { font-family: var(--display); font-weight: 700; color: var(--sea); font-size: 0.95rem; }
+.mstep .ml { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.mstep .mu { font-family: var(--mono); font-size: 0.72rem; color: var(--oracle); }
+.asm { display: grid; gap: 0.55rem; margin: 0.4rem 0 0.6rem; }
+.asm .a { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 0.5rem; align-items: start; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 0.55rem 0.75rem; }
+.asm .a > div { min-width: 0; }
+.asm .aid { font-family: var(--mono); font-weight: 500; font-size: 0.82rem; color: var(--oracle); padding-top: 0.15rem; }
+.asm small { display: block; color: var(--muted); font-size: 0.84rem; line-height: 1.45; margin-top: 0.2rem; }
+.asm mjx-container[display="true"] { margin: 0.35rem 0 !important; }
+.where { grid-template-columns: max-content minmax(0, 1fr); column-gap: 0.8rem; row-gap: 0.45rem; align-items: baseline; }
+.where .me { min-width: 0; }
+.where .meta { display: inline-flex; flex-wrap: wrap; gap: 0.25rem 0.45rem; align-items: baseline; margin-left: 0.5rem; }
+.where .meta .sh { font-size: 0.86rem; color: var(--muted); }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .meta { display: flex; margin-left: 0; margin-top: 0.1rem; } }
+
+/* visual figures */
+figure.viz { margin: 1.4rem 0 1.6rem; }
+.vwrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; }
+.vwrap svg.v { display: block; width: 100%; min-width: 560px; height: auto; }
+figure.viz figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.5rem; }
+svg.v text { font-family: var(--display); font-size: 13px; fill: var(--ink); }
+svg.v .h { font-weight: 600; font-size: 13.5px; }
+svg.v .mono { font-family: var(--mono); font-size: 11.5px; }
+svg.v .muted { fill: var(--muted); }
+svg.v .o { fill: var(--oracle); }
+svg.v .s { fill: var(--sea); }
+svg.v .e { fill: var(--ex); }
+svg.v .tile { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+svg.v .hit { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.4; }
+svg.v .skip { fill: var(--paper); stroke: var(--rule); stroke-dasharray: 3 3; }
+svg.v .win { fill: var(--oracle); }
+svg.v .hdr { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .ovr { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ref { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.3; }
+svg.v .keybox { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .panelbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .repobox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.4; }
+svg.v .file { fill: var(--panel); stroke: var(--rule); }
+svg.v .snap { fill: var(--paper); stroke: var(--sea); stroke-width: 2; }
+svg.v .snap.now { fill: var(--sea); }
+svg.v .step { fill: var(--sea); }
+svg.v .stepn { fill: var(--paper); font-weight: 700; font-size: 14px; }
+svg.v .stepbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .who { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ln { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+svg.v .ln-o { stroke: var(--oracle); stroke-width: 1.6; fill: none; }
+svg.v .ln-s { stroke: var(--sea); stroke-width: 1.6; fill: none; }
+svg.v .ln-e { stroke: var(--ex); stroke-width: 1.6; fill: none; }
+svg.v .dash { stroke-dasharray: 4 3; }
+ol.steps { margin: 0 0 1.2rem; padding-left: 1.3rem; display: grid; gap: 0.3rem; }
+details.maths { border: 1px solid var(--rule); border-radius: 6px; margin: 1rem 0 1.6rem; background: var(--paper); }
+details.maths > summary { cursor: pointer; padding: 0.6rem 1rem; font-family: var(--display); font-weight: 600; font-size: 0.92rem; color: var(--unit); }
+details.maths > summary:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+details.maths .dbody { padding: 0 1rem 0.6rem; }
+
+.uses { border-left: 3px solid var(--sea); background: var(--sea-soft); border-radius: 0 6px 6px 0; padding: 0.85rem 1rem; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.uses .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.uses ul { margin: 0.2rem 0 0.6rem; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.uses p { margin-bottom: 0.5rem; }
+.uses p.less { color: var(--muted); margin-bottom: 0; }
+ul.verdicts { padding-left: 1.2rem; display: grid; gap: 0.45rem; margin: 0.4rem 0 1.2rem; }
+svg.v .cogbox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .zarrbox { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.2; }
+svg.v .wait { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1; }
+svg.v .cpu { fill: var(--oracle); }
+svg.v .no { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg.v .lane { stroke: var(--rule); stroke-width: 1; }
+svg.v .tick { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg.v .bar { fill: var(--sea); }
+svg.v .bar.slow { fill: var(--oracle); }
+svg.v .yes { fill: var(--sea); font-weight: 600; }
+svg.v .cell { fill: var(--paper); stroke: var(--rule); }
+svg.v .cellh { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .pt { fill: var(--oracle); stroke: var(--paper); stroke-width: 1.5; }
+svg.v .w { fill: var(--paper); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="a-s" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--sea)"/></marker>
+<marker id="a-o" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--oracle)"/></marker>
+<marker id="a-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker>
+<marker id="a-e" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--ex)"/></marker>
+</defs></svg>
+<main>
+
+<nav class="series" aria-label="Series"><span>GeoStack · storage</span><span>›</span><span>background</span><a href="./parallelism.html">← Parallelism</a><a href="./storage-formats.html">Storage formats →</a></nav>
+<div class="eyebrow">GeoStack · background · key → bytes</div>
+<h1>What is a bucket, and why can't you append to a file in it?</h1>
+<p class="lede">Pictures first. S3, Azure Blob Storage and Google Cloud Storage are not disks. Each is a dictionary from a name to a blob of bytes, reached over HTTP with five operations. Cloud-native formats, catalogs and versioned stores are all designed around what those five can and cannot do.</p>
+
+<section class="tldr" aria-label="TL;DR">
+  <span class="tag">TL;DR</span>
+  <h2>A dictionary over HTTP</h2>
+  <ul>
+    <li><strong>A bucket maps keys to objects.</strong> There are no folders; a “/” in a key is just a character.</li>
+    <li><strong>Five verbs:</strong> PUT a whole object, GET it (or a byte range), HEAD its metadata, LIST keys by prefix, DELETE. No append, no edit in place, no rename.</li>
+    <li><strong>Range requests</strong> are what make COG, Parquet and Zarr sharding work: fetch the index, then only the bytes you need.</li>
+    <li><strong>Listing is slow</strong> (1 000 keys per page, one page after another), so serious layouts keep their own index.</li>
+    <li><strong>One PUT is atomic; several are not.</strong> Anything that must change together needs a design: write new objects, then swap one pointer with a conditional PUT.</li>
+    <li><strong>Every request costs time and money,</strong> so fewer, larger, concurrent requests from the same region win.</li>
+  </ul>
+</section>
+
+<h2>The running example</h2>
+<div class="ex">
+  <div class="ex-h"><span class="tag">Running example</span><strong>The B12 band as one object</strong></div>
+  <div class="ex-b">
+    <p>The same Sentinel-2 L2A band as the other background pages, now seen as what it is on the cloud: one object in a public bucket. The key follows the layout of the Sentinel-2 COG archive on AWS; the date and tile are illustrative.</p>
+    <div class="tbl"><table><thead><tr><th>Quantity</th><th>Value</th></tr></thead><tbody><tr><td>Bucket</td><td><code>sentinel-cogs</code></td></tr><tr><td>Key</td><td><code>sentinel-s2-l2a-cogs/31/T/CJ/2026/6/S2A_31TCJ_20260612_0_L2A/B12.tif</code></td></tr><tr><td>Object size, uncompressed band</td><td>60 280 200 B</td></tr><tr><td>Tiles</td><td>121 (11 × 11 of 512 px)</td></tr><tr><td>Site window</td><td>tiles 38, 39, 49, 50</td></tr><tr><td>Large case</td><td>500 scenes stored as Zarr chunks: 60 500 objects</td></tr></tbody></table></div>
+  </div>
+</div>
+
+<h2 id="keys">Keys, not folders</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 214" role="img" aria-label="An object store holds a flat sorted list of keys, each pointing to bytes; a file browser draws folders from the slashes in the keys."><text class="h" x="20" y="22">What the store holds: a flat, sorted list of keys</text><rect class="keybox" x="20" y="36" width="330" height="20" rx="3"/><text class="mono" x="28" y="50">…/S2A_31TCJ_20260612_0_L2A/B11.tif</text><path class="ln" d="M350 46 H384" marker-end="url(#a-m)"/><rect class="file" x="392" y="36" width="60" height="20" rx="3"/><text class="tick" x="422" y="50" text-anchor="middle">bytes</text><rect class="hit" x="20" y="62" width="330" height="20" rx="3"/><text class="mono" x="28" y="76">…/S2A_31TCJ_20260612_0_L2A/B12.tif</text><path class="ln" d="M350 72 H384" marker-end="url(#a-m)"/><rect class="file" x="392" y="62" width="60" height="20" rx="3"/><text class="tick" x="422" y="76" text-anchor="middle">bytes</text><rect class="keybox" x="20" y="88" width="330" height="20" rx="3"/><text class="mono" x="28" y="102">…/S2A_31TCJ_20260612_0_L2A/SCL.tif</text><path class="ln" d="M350 98 H384" marker-end="url(#a-m)"/><rect class="file" x="392" y="88" width="60" height="20" rx="3"/><text class="tick" x="422" y="102" text-anchor="middle">bytes</text><rect class="keybox" x="20" y="114" width="330" height="20" rx="3"/><text class="mono" x="28" y="128">…/S2A_31TCJ_20260617_0_L2A/B11.tif</text><path class="ln" d="M350 124 H384" marker-end="url(#a-m)"/><rect class="file" x="392" y="114" width="60" height="20" rx="3"/><text class="tick" x="422" y="128" text-anchor="middle">bytes</text><rect class="keybox" x="20" y="140" width="330" height="20" rx="3"/><text class="mono" x="28" y="154">…/S2A_31TCJ_20260617_0_L2A/B12.tif</text><path class="ln" d="M350 150 H384" marker-end="url(#a-m)"/><rect class="file" x="392" y="140" width="60" height="20" rx="3"/><text class="tick" x="422" y="154" text-anchor="middle">bytes</text><text class="h" x="480" y="22">What a browser shows</text><text class="mono muted" x="480" y="50">S2A_…_20260612_0_L2A/</text><text class="mono" x="498" y="68">B11.tif</text><text class="mono" x="498" y="86">B12.tif</text><text class="mono" x="498" y="104">SCL.tif</text><text class="mono muted" x="480" y="122">S2A_…_20260617_0_L2A/</text><text class="mono" x="498" y="140">B11.tif</text><text class="mono" x="498" y="158">B12.tif</text><text class="muted" x="480" y="186">Folders are drawn from the “/”</text><text class="muted" x="480" y="203">in the keys. None exist.</text></svg></div><figcaption>A bucket is a dictionary from key to bytes. The highlighted key is the running example's object. “Listing a folder” is really “list every key that starts with this prefix”.</figcaption></figure>
+<p>An <b>object</b> is a blob of bytes plus a little metadata (size, time, a fingerprint called the ETag). A <b>key</b> is its full name. A <b>bucket</b> (Azure: container) holds the keys. The store keeps keys sorted, which is why a prefix search is possible and nothing else is: you cannot ask for “every <code>B12.tif</code>” without walking every scene prefix.</p>
+
+<h2 id="verbs">Five verbs</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 214" role="img" aria-label="The five operations of an object store: PUT, GET with optional range, HEAD, LIST and DELETE. There is no append, in-place edit, rename or lock."><rect class="hdr" x="20" y="12" width="76" height="30" rx="6"/><text class="h" x="58" y="32" text-anchor="middle">PUT</text><text x="110" y="26">write a whole object</text><text class="tick" x="110" y="41">one request, all or nothing</text><rect class="hdr" x="20" y="52" width="76" height="30" rx="6"/><text class="h" x="58" y="72" text-anchor="middle">GET</text><text x="110" y="66">read an object, or a byte range of it</text><text class="tick" x="110" y="81">Range: bytes=a-b</text><rect class="hdr" x="20" y="92" width="76" height="30" rx="6"/><text class="h" x="58" y="112" text-anchor="middle">HEAD</text><text x="110" y="106">size, time and ETag, no bytes</text><text class="tick" x="110" y="121">the ETag changes when the object does</text><rect class="hdr" x="20" y="132" width="76" height="30" rx="6"/><text class="h" x="58" y="152" text-anchor="middle">LIST</text><text x="110" y="146">keys under a prefix</text><text class="tick" x="110" y="161">1 000 per page, in key order</text><rect class="hdr" x="20" y="172" width="76" height="30" rx="6"/><text class="h" x="58" y="192" text-anchor="middle">DELETE</text><text x="110" y="186">remove an object</text><text class="tick" x="110" y="201"></text><text class="h" x="430" y="26">Not on the list</text><rect class="no" x="430" y="38" width="230" height="26" rx="6"/><text x="442" y="55">append to an object</text><rect class="no" x="430" y="72" width="230" height="26" rx="6"/><text x="442" y="89">edit bytes in place</text><rect class="no" x="430" y="106" width="230" height="26" rx="6"/><text x="442" y="123">rename (it is copy + delete)</text><rect class="no" x="430" y="140" width="230" height="26" rx="6"/><text x="442" y="157">lock an object</text></svg></div><figcaption>Five verbs, each one HTTP request. Everything a format or a catalog does on the cloud is built from these, and shaped by the four that are missing.</figcaption></figure>
+<p>The missing operations matter more than the present ones. No append means a growing array cannot be one growing file, so Zarr stores one object per chunk. No rename means the usual “write to a temp file, then rename” trick for safe writes does not exist. No lock means two writers cannot take turns unless the format gives them a way.</p>
+
+<h2 id="range">Range requests: reading part of an object</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 304" role="img" aria-label="A window read is five requests: one range for the file header, then one range for each of tiles 38, 39, 49 and 50."><rect class="who" x="20" y="14" width="120" height="278" rx="6"/><text class="h" x="80" y="36" text-anchor="middle">your code</text><rect class="repobox" x="540" y="14" width="120" height="278" rx="6"/><text class="h" x="600" y="36" text-anchor="middle">object store</text><path class="ln-s" d="M140 60 H532" marker-end="url(#a-s)"/><text class="mono" x="150" y="55">GET  bytes=0–16383</text><path class="ln-o" d="M540 74 H148" marker-end="url(#a-o)"/><text class="tick" x="530" y="87" text-anchor="end">206 · header: where every tile is · 16 kB</text><path class="ln-s" d="M140 106 H532" marker-end="url(#a-s)"/><text class="mono" x="150" y="101">GET  bytes of tile 38</text><path class="ln-o" d="M540 120 H148" marker-end="url(#a-o)"/><text class="tick" x="530" y="133" text-anchor="end">206 · one compressed tile · ≤ 524 kB</text><path class="ln-s" d="M140 152 H532" marker-end="url(#a-s)"/><text class="mono" x="150" y="147">GET  bytes of tile 39</text><path class="ln-o" d="M540 166 H148" marker-end="url(#a-o)"/><text class="tick" x="530" y="179" text-anchor="end">206 · one compressed tile · ≤ 524 kB</text><path class="ln-s" d="M140 198 H532" marker-end="url(#a-s)"/><text class="mono" x="150" y="193">GET  bytes of tile 49</text><path class="ln-o" d="M540 212 H148" marker-end="url(#a-o)"/><text class="tick" x="530" y="225" text-anchor="end">206 · one compressed tile · ≤ 524 kB</text><path class="ln-s" d="M140 244 H532" marker-end="url(#a-s)"/><text class="mono" x="150" y="239">GET  bytes of tile 50</text><path class="ln-o" d="M540 258 H148" marker-end="url(#a-o)"/><text class="tick" x="530" y="271" text-anchor="end">206 · one compressed tile · ≤ 524 kB</text></svg></div><figcaption>The window read from the storage formats page, as HTTP. Status 206 means “partial content”. Five requests fetch about 2.1 MB uncompressed out of a 60.28 MB band; the four tile requests can run at the same time.</figcaption></figure>
+<p>A <b>range request</b> is a GET with a header naming the bytes wanted. It costs about the same as any other request, whatever the object's size. A format is <b>cloud-native</b> when its index sits where one small range request can fetch it and points to byte ranges for everything else. The <a href="./storage-formats.html">storage formats</a> page shows how COG, GeoParquet and Zarr each do that.</p>
+<pre>import obstore
+
+<span class="mk"># not pinned (obstore)</span>
+store = obstore.store.S3Store("sentinel-cogs", region="us-west-2", skip_signature=True)
+key = "sentinel-s2-l2a-cogs/31/T/CJ/2026/6/S2A_31TCJ_20260612_0_L2A/B12.tif"
+
+<span class="mk"># not pinned (obstore)</span>
+head = obstore.head(store, key)                       # size, last_modified, e_tag
+<span class="mk"># not pinned (obstore)</span>
+header = obstore.get_range(store, key, start=0, end=16_384)       # → 16 384 B
+<span class="mk"># not pinned (obstore)</span>
+tiles = obstore.get_ranges(store, key, starts=starts, ends=ends)  # → 4 buffers
+
+<span class="mk"># not pinned (obstore)</span>
+<span class="c"># fails if the key already exists: a conditional PUT</span>
+obstore.put(store, "models/_tags/v3", b"&lt;hash&gt;", mode="create")</pre>
+<p>Each request has a fixed cost of tens of milliseconds before the first byte arrives, so a read is priced in requests more than in bytes. Two consequences: merge nearby ranges into one request, and send independent requests at the same time (the <a href="./parallelism.html">parallelism</a> page measures that: 121 tile fetches drop from 6.4 s to 0.23 s).</p>
+
+<h2 id="list">Listing is the slow verb</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 176" role="img" aria-label="Listing 60,500 objects takes 61 sequential pages of 1,000 keys; reading one manifest object takes one request."><text class="h" x="20" y="22">Find 60 500 chunk objects by listing</text><rect class="wait" x="20" y="34" width="16" height="16" rx="2"/><rect class="wait" x="40" y="34" width="16" height="16" rx="2"/><rect class="wait" x="60" y="34" width="16" height="16" rx="2"/><rect class="wait" x="80" y="34" width="16" height="16" rx="2"/><rect class="wait" x="100" y="34" width="16" height="16" rx="2"/><rect class="wait" x="120" y="34" width="16" height="16" rx="2"/><rect class="wait" x="140" y="34" width="16" height="16" rx="2"/><rect class="wait" x="160" y="34" width="16" height="16" rx="2"/><rect class="wait" x="180" y="34" width="16" height="16" rx="2"/><rect class="wait" x="200" y="34" width="16" height="16" rx="2"/><rect class="wait" x="220" y="34" width="16" height="16" rx="2"/><rect class="wait" x="240" y="34" width="16" height="16" rx="2"/><rect class="wait" x="260" y="34" width="16" height="16" rx="2"/><rect class="wait" x="280" y="34" width="16" height="16" rx="2"/><rect class="wait" x="300" y="34" width="16" height="16" rx="2"/><rect class="wait" x="320" y="34" width="16" height="16" rx="2"/><rect class="wait" x="340" y="34" width="16" height="16" rx="2"/><rect class="wait" x="360" y="34" width="16" height="16" rx="2"/><rect class="wait" x="380" y="34" width="16" height="16" rx="2"/><rect class="wait" x="400" y="34" width="16" height="16" rx="2"/><rect class="wait" x="420" y="34" width="16" height="16" rx="2"/><rect class="wait" x="440" y="34" width="16" height="16" rx="2"/><rect class="wait" x="460" y="34" width="16" height="16" rx="2"/><rect class="wait" x="480" y="34" width="16" height="16" rx="2"/><rect class="wait" x="500" y="34" width="16" height="16" rx="2"/><rect class="wait" x="520" y="34" width="16" height="16" rx="2"/><rect class="wait" x="540" y="34" width="16" height="16" rx="2"/><rect class="wait" x="560" y="34" width="16" height="16" rx="2"/><rect class="wait" x="580" y="34" width="16" height="16" rx="2"/><rect class="wait" x="600" y="34" width="16" height="16" rx="2"/><rect class="wait" x="620" y="34" width="16" height="16" rx="2"/><rect class="wait" x="20" y="56" width="16" height="16" rx="2"/><rect class="wait" x="40" y="56" width="16" height="16" rx="2"/><rect class="wait" x="60" y="56" width="16" height="16" rx="2"/><rect class="wait" x="80" y="56" width="16" height="16" rx="2"/><rect class="wait" x="100" y="56" width="16" height="16" rx="2"/><rect class="wait" x="120" y="56" width="16" height="16" rx="2"/><rect class="wait" x="140" y="56" width="16" height="16" rx="2"/><rect class="wait" x="160" y="56" width="16" height="16" rx="2"/><rect class="wait" x="180" y="56" width="16" height="16" rx="2"/><rect class="wait" x="200" y="56" width="16" height="16" rx="2"/><rect class="wait" x="220" y="56" width="16" height="16" rx="2"/><rect class="wait" x="240" y="56" width="16" height="16" rx="2"/><rect class="wait" x="260" y="56" width="16" height="16" rx="2"/><rect class="wait" x="280" y="56" width="16" height="16" rx="2"/><rect class="wait" x="300" y="56" width="16" height="16" rx="2"/><rect class="wait" x="320" y="56" width="16" height="16" rx="2"/><rect class="wait" x="340" y="56" width="16" height="16" rx="2"/><rect class="wait" x="360" y="56" width="16" height="16" rx="2"/><rect class="wait" x="380" y="56" width="16" height="16" rx="2"/><rect class="wait" x="400" y="56" width="16" height="16" rx="2"/><rect class="wait" x="420" y="56" width="16" height="16" rx="2"/><rect class="wait" x="440" y="56" width="16" height="16" rx="2"/><rect class="wait" x="460" y="56" width="16" height="16" rx="2"/><rect class="wait" x="480" y="56" width="16" height="16" rx="2"/><rect class="wait" x="500" y="56" width="16" height="16" rx="2"/><rect class="wait" x="520" y="56" width="16" height="16" rx="2"/><rect class="wait" x="540" y="56" width="16" height="16" rx="2"/><rect class="wait" x="560" y="56" width="16" height="16" rx="2"/><rect class="wait" x="580" y="56" width="16" height="16" rx="2"/><rect class="wait" x="600" y="56" width="16" height="16" rx="2"/><text class="muted" x="20" y="96">61 pages of 1 000 keys, one after another: each page says where the next starts</text><text class="h" x="20" y="134">Find them from an index</text><rect class="hit" x="20" y="146" width="16" height="16" rx="2"/><text class="muted" x="46" y="159">1 GET of a manifest that lists every chunk</text></svg></div><figcaption>Listing is paged and sequential, so it scales with the number of objects, not with what you want. This is why Zarr has consolidated metadata, Icechunk has manifests, and geocatalog keeps a table of files.</figcaption></figure>
+<div class="uses"><span class="tag">When to list, and when not to</span><ul><li><b>List</b> to discover what exists once: building a catalog, an inventory, a clean-up job.</li><li><b>Do not list</b> on the read path. Read an index instead: a STAC item, a geocatalog table, Zarr consolidated metadata, an Icechunk manifest.</li><li><b>Design keys for the prefix you will list by</b>: <code>tile/year/month/scene/</code> lets you list one month of one tile cheaply.</li></ul><p class="less">Stores also limit request rates per prefix (S3 documents 3 500 writes and 5 500 reads per second) and answer “slow down” beyond that, so a retry with backoff belongs in any client.</p></div>
+
+<h2 id="atomic">Writing safely: one PUT, or a pointer swap</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 720 282" role="img" aria-label="A single PUT is atomic; four PUTs can be interrupted half way; a conditional PUT with If-Match lets one of two writers succeed and tells the other to retry."><text class="h" x="20" y="22">One PUT is all-or-nothing</text><rect class="hdr" x="20" y="34" width="150" height="30" rx="6"/><text class="mono" x="95" y="54" text-anchor="middle">PUT weights.bin</text><text class="muted" x="184" y="54">readers see the old object or the new one, never half</text><text class="h" x="20" y="96">Four PUTs are four separate events</text><rect class="hdr" x="20" y="108" width="150" height="30" rx="6"/><text class="mono" x="95" y="128" text-anchor="middle">operator.json</text><rect class="hdr" x="182" y="108" width="150" height="30" rx="6"/><text class="mono" x="257" y="128" text-anchor="middle">weights.bin</text><rect class="no" x="344" y="108" width="150" height="30" rx="6"/><text class="mono" x="419" y="128" text-anchor="middle">metadata.json</text><rect class="no" x="506" y="108" width="150" height="30" rx="6"/><text class="mono" x="581" y="128" text-anchor="middle">_tags/v3</text><path class="ln-o" d="M338 100 V146"/><text class="o" x="344" y="160">crash here: two of four objects exist</text><text class="h" x="20" y="198">A conditional PUT lets exactly one writer win</text><rect class="who" x="20" y="210" width="110" height="26" rx="6"/><text x="75" y="228" text-anchor="middle">writer A</text><rect class="who" x="20" y="244" width="110" height="26" rx="6"/><text x="75" y="262" text-anchor="middle">writer B</text><path class="ln-s" d="M130 223 H300" marker-end="url(#a-s)"/><text class="mono" x="310" y="228">PUT refs/main  If-Match: etag-7   →  200, now etag-8</text><path class="ln-o" d="M130 257 H300" marker-end="url(#a-o)"/><text class="mono" x="310" y="262">PUT refs/main  If-Match: etag-7   →  412, try again</text></svg></div><figcaption>The middle row is pipekit's model registry today (operator, weights, metadata, tag). The bottom row is how a versioned store commits safely: every new object is written under a fresh key, then one small pointer is swapped with a condition.</figcaption></figure>
+<p>S3, Azure and GCS are <b>strongly consistent</b>: once a PUT returns, every later GET and LIST sees it. That covers one object. For several objects that must change together, the pattern is always the same: write the new objects under keys nobody reads yet, then make them visible with one conditional write. Icechunk commits this way; the <a href="./versions-identity.html">versions and identity</a> page builds on it.</p>
+<div class="uses"><span class="tag">When a plain bucket is enough, and when it is not</span><ul><li><b>Enough</b>: write-once products, one object per output, readers that find objects through a catalog.</li><li><b>Not enough on its own</b>: several objects that form one logical thing (a Zarr store, a model with weights and metadata), or more than one writer. Use a transactional layer (Icechunk, a database) on top.</li></ul><p class="less">A crash between PUTs is not rare at scale: at 60 500 objects per ingest, plan for it.</p></div>
+
+<h2 id="providers">Three providers, one model</h2>
+<div class="tbl"><table><thead><tr><th></th><th>AWS S3</th><th>Azure Blob / ADLS Gen2</th><th>Google Cloud Storage</th></tr></thead><tbody><tr><td>Container of keys</td><td>bucket</td><td>container (in a storage account)</td><td>bucket</td></tr><tr><td>URI</td><td><code>s3://bucket/key</code></td><td><code>az://container/key</code>, <code>abfs://</code></td><td><code>gs://bucket/key</code></td></tr><tr><td>Range reads</td><td>yes</td><td>yes</td><td>yes</td></tr><tr><td>Conditional writes</td><td><code>If-None-Match</code>, <code>If-Match</code></td><td>ETag conditions, leases</td><td>generation preconditions</td></tr><tr><td>Real directories</td><td>no</td><td>yes, with the hierarchical namespace (ADLS Gen2): atomic directory rename</td><td>no (optional on newer bucket types)</td></tr><tr><td>Auth you will meet</td><td>keys, roles, unsigned public access</td><td>account keys, SAS tokens, managed identity</td><td>service accounts</td></tr></tbody></table></div>
+<p>The differences are in names and credentials. Libraries such as obstore and fsspec hide them behind one interface, which is why the stack addresses everything by URI.</p>
+
+<h2 id="stack">In your stack</h2>
+<p>Checked at geotoolz <code>640670c</code> and pipekit <code>9e86a56</code>.</p>
+<div class="tbl"><table><thead><tr><th>Where</th><th>What it does with the bucket</th></tr></thead><tbody><tr><td>geocloud <code>store.py</code></td><td>one process-wide pool of obstore clients, keyed by URI root (S3, Azure, GCS, Hugging Face, local); credentials live in the store, keys in <code>object_key(uri)</code></td></tr><tr><td>geocloud <code>CogSource</code></td><td>range requests for COG headers and tiles through async-geotiff on the pooled client</td></tr><tr><td>geocloud <code>files</code></td><td>copy between stores, 8 objects at a time</td></tr><tr><td>geocatalog</td><td>lists once to build a catalog, then answers queries from the table, never from LIST</td></tr><tr><td>pipekit <code>S3ModelRegistry</code></td><td>four PUTs per registered model, the tag last; the reason for the transactional registry in the recipe registries design</td></tr></tbody></table></div>
+<pre>import geocloud.store
+
+<span class="mk"># today (geocloud)</span>
+store = geocloud.store.get_obstore("s3://sentinel-cogs/sentinel-s2-l2a-cogs/31/T/CJ/")
+<span class="mk"># today (geocloud)</span>
+key = geocloud.store.object_key(uri)       # the part of the URI after the store's root</pre>
+
+<h2>Where this goes next</h2>
+<div class="tbl"><table><thead><tr><th>Idea here</th><th>Shows up as</th></tr></thead><tbody><tr><td>Range requests</td><td>how COG, Parquet and Zarr are read (<a href="./storage-formats.html">storage formats</a>)</td></tr><tr><td>An index instead of LIST</td><td>catalogs and STAC (<a href="./databases-catalogs.html">databases and catalogs</a>); Icechunk manifests</td></tr><tr><td>New keys, then a conditional pointer swap</td><td>snapshots and commits (<a href="./versions-identity.html">versions and identity</a>); <a href="./l2-collections.html">Level 2 collections</a>, B</td></tr><tr><td>Four PUTs are not atomic</td><td>the transactional model registry (<a href="./recipe-registries.html">recipe registries</a>, H)</td></tr></tbody></table></div>
+
+<footer>Sources: the Amazon S3 user guide (consistency model, conditional requests, request-rate guidance, ListObjectsV2), the Azure Blob Storage and Data Lake Storage Gen2 documentation, the Google Cloud Storage documentation, and the <a href="https://developmentseed.org/obstore/latest/">obstore</a> documentation. Provider facts are from those documents as I know them, not re-checked online for this page; the obstore calls are marked <code>not pinned</code> for the same reason. Stack rows read from geotoolz at <code>640670c</code> and pipekit at <code>9e86a56</code>. The byte counts are the running example's; the bucket key is illustrative.</footer>
+
+</main>
+</body>
+</html>

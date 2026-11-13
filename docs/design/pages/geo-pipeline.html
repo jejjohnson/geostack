@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>The Geo Pipeline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none',
+    macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one 46rem reading column, GeoStack hydrographic palette (from the esmax ocean pages).
+   New in this kit: --unit (units chip + units-check box) and --ex (running-example card). */
+:root {
+  --paper: #F1F5F6; --panel: #E4ECEF; --ink: #0E1E28; --muted: #4E616C; --rule: #C6D3D9;
+  --sea: #0A6B68; --sea-soft: #D3E7E5; --oracle: #985710; --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1; --unit: #5B4A9A; --unit-soft: #E6E2F3; --ex: #2F5E8C; --ex-soft: #DCE7F2;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+/* kit annotation: names each component so it can be referred to in review */
+.kit { margin-top: 3.4rem; padding-top: 0.6rem; border-top: 2px solid var(--ink); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.kit .id { font-family: var(--mono); font-size: 0.82rem; font-weight: 500; color: var(--unit); }
+.kit .what { font-family: var(--display); font-size: 0.86rem; color: var(--muted); }
+.kit + h2, .kit + .tldr, .kit + h3 { margin-top: 0.9rem; }
+.kitnote { font-family: var(--display); font-size: 0.82rem; color: var(--muted); border: 1px dashed var(--rule); border-radius: 6px; padding: 0.5rem 0.75rem; margin: 0.6rem 0 1rem; }
+.kitnote b { color: var(--unit); font-weight: 600; }
+
+/* C1 TL;DR */
+.tldr { border-top: 2px solid var(--ink); padding-top: 1rem; margin-top: 2rem; }
+.tldr ul { margin: 0.6rem 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+
+/* C2 pipeline chart */
+.chart { display: grid; }
+.box { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 0 0.9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--sea); line-height: 1.25; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .sub { color: var(--muted); font-size: 0.95rem; }
+.box.focus { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.focus .num { color: var(--oracle); }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.box .sig .n { white-space: nowrap; }
+.box .sig .s { display: flex; flex-wrap: wrap; gap: 0.2rem 0.4rem; align-items: center; min-width: 0; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.link { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; }
+svg.g { width: 1.15rem; height: 1.15rem; color: var(--sea); flex: none; }
+
+/* units chip (new) */
+.u { display: inline-block; font-family: var(--mono); font-size: 0.74rem; line-height: 1.5; padding: 0 0.4rem; border-radius: 4px; background: var(--unit-soft); color: var(--unit); white-space: nowrap; }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+td.gl { width: 1.6rem; }
+td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+td code { font-size: 0.8rem; white-space: nowrap; }
+
+/* C4 running-example card (new) */
+.ex { border: 1px solid var(--ex); border-radius: 6px; overflow: hidden; margin: 1rem 0 1.4rem; }
+.ex-h { background: var(--ex-soft); padding: 0.6rem 1rem; display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; border-bottom: 1px solid var(--ex); }
+.ex-h .tag { color: var(--ex); }
+.ex-h strong { font-family: var(--display); font-weight: 600; }
+.ex-b { padding: 0.7rem 1rem 0.3rem; font-size: 0.95rem; }
+.ex-b .tbl { margin: 0.4rem 0 0.6rem; border-top: 0; }
+.ex.mini { border-left: 3px solid var(--ex); border-top: 0; border-right: 0; border-bottom: 0; border-radius: 0 6px 6px 0; background: var(--ex-soft); padding: 0.7rem 1rem; font-size: 0.96rem; }
+.ex.mini .tag { color: var(--ex); display: block; margin-bottom: 0.25rem; }
+.ex.mini p:last-child { margin-bottom: 0; }
+
+/* C6 concept box */
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.def h3 { margin: 0 0 0.6rem; }
+.def p:last-child { margin-bottom: 0; }
+.where { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 0.3rem 0.8rem; align-items: baseline; margin: 0.4rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px dashed var(--rule); font-size: 0.92rem; }
+.where .wl { grid-column: 1 / -1; font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+/* C7 operator card */
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.phase { font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.phase.train { background: var(--oracle-soft); color: var(--oracle); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io .sh { display: grid; justify-items: end; gap: 0.15rem; padding-top: 0.15rem; }
+.io .sh code { font-size: 0.8rem; text-align: right; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io .sh { grid-column: 2; justify-items: start; padding-top: 0; }
+  .where { grid-template-columns: max-content minmax(0, 1fr); }
+  .where .u { grid-column: 2; justify-self: start; }
+}
+
+/* C8 units check (new) */
+.uc { border: 1px solid var(--unit); border-radius: 6px; margin: 1rem 0 1.4rem; overflow: hidden; }
+.uc-h { background: var(--unit-soft); padding: 0.55rem 1rem; border-bottom: 1px solid var(--unit); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.uc-h .tag { color: var(--unit); }
+.uc-h strong { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.uc-rows { padding: 0.4rem 1rem 0.6rem; display: grid; }
+.uc-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.2rem 1rem; align-items: center; padding: 0.35rem 0; border-bottom: 1px dashed var(--rule); font-size: 0.93rem; }
+.uc-row:last-child { border-bottom: 0; }
+.uc-row > div { min-width: 0; overflow-x: auto; }
+.uc-row .r { color: var(--muted); }
+.uc-row.ok .r { color: var(--sea); font-weight: 600; font-family: var(--display); font-size: 0.86rem; }
+@media (max-width: 560px) { .uc-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* C9 code sketch */
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+pre .mk { color: var(--oracle); }
+pre .un { color: var(--unit); }
+pre.diagram { background: var(--paper); }
+
+/* C10 two cases */
+.case { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.8rem; margin: 1rem 0 1.4rem; }
+.case > div { border: 1px solid var(--rule); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.94rem; min-width: 0; overflow-x: auto; }
+.case .lin { border-top: 3px solid var(--sea); }
+.case .non { border-top: 3px solid var(--oracle); }
+.case .tag { display: block; margin-bottom: 0.2rem; }
+
+/* C11 watch-out */
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.note p:last-child { margin-bottom: 0; }
+
+/* C12 series nav */
+.series { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--display); font-size: 0.82rem; color: var(--muted); margin-bottom: 1.4rem; }
+.series a { text-decoration: none; }
+footer { margin-top: 3rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 1rem; }
+
+/* v2: role rows in signatures — in / u / θ / est / out */
+.box .sig .d.par, .io-l.par { color: var(--oracle); }
+.box .sig .d.exo, .io-l.exo { color: var(--ex); }
+.box .sig .d.est, .io-l.est { color: var(--muted); font-style: italic; }
+.box .sig .none, .io .none { color: var(--muted); font-style: italic; font-size: 0.86rem; }
+.box .sig .rule { grid-column: 1 / -1; border-top: 1px dotted var(--rule); margin: 0.15rem 0; }
+.io-group.par { background: var(--oracle-soft); }
+.io-group.exo { background: var(--ex-soft); }
+.io-group.est { border-top: 1px dotted var(--rule); }
+.io-group + .io-group { border-top: 1px solid var(--rule); }
+.where { grid-template-columns: max-content minmax(0, 1fr) max-content max-content; }
+.where .sh { font-size: 0.86rem; }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .sh, .where .u { grid-column: 2; justify-self: start; } }
+
+/* v3: numbered equation stack inside boxes and operator arrows */
+.eqs { display: grid; gap: 0.2rem; margin-top: 0.35rem; font-size: 0.95rem; min-width: 0; }
+.eqs > div { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr); align-items: baseline; min-width: 0; overflow-x: auto; overflow-y: hidden; }
+.eqs .ln { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.op-arrow .eqs { margin-top: 0; }
+.box .sig .d.cst, .io-l.cst { color: var(--muted); }
+.box .sig .s .none { font-size: 0.78rem; }
+
+/* v4: model box steps, assumptions, compact Where grid */
+.mstep { display: flex; align-items: baseline; gap: 0.5rem; margin: 1.3rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px solid var(--rule); }
+.mstep:first-of-type { border-top: 0; padding-top: 0; margin-top: 0.6rem; }
+.mstep .mn { font-family: var(--display); font-weight: 700; color: var(--sea); font-size: 0.95rem; }
+.mstep .ml { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.mstep .mu { font-family: var(--mono); font-size: 0.72rem; color: var(--oracle); }
+.asm { display: grid; gap: 0.55rem; margin: 0.4rem 0 0.6rem; }
+.asm .a { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 0.5rem; align-items: start; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 0.55rem 0.75rem; }
+.asm .a > div { min-width: 0; }
+.asm .aid { font-family: var(--mono); font-weight: 500; font-size: 0.82rem; color: var(--oracle); padding-top: 0.15rem; }
+.asm small { display: block; color: var(--muted); font-size: 0.84rem; line-height: 1.45; margin-top: 0.2rem; }
+.asm mjx-container[display="true"] { margin: 0.35rem 0 !important; }
+.where { grid-template-columns: max-content minmax(0, 1fr); column-gap: 0.8rem; row-gap: 0.45rem; align-items: baseline; }
+.where .me { min-width: 0; }
+.where .meta { display: inline-flex; flex-wrap: wrap; gap: 0.25rem 0.45rem; align-items: baseline; margin-left: 0.5rem; }
+.where .meta .sh { font-size: 0.86rem; color: var(--muted); }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .meta { display: flex; margin-left: 0; margin-top: 0.1rem; } }
+
+/* visual figures */
+figure.viz { margin: 1.4rem 0 1.6rem; }
+.vwrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; }
+.vwrap svg.v { display: block; width: 100%; min-width: 560px; height: auto; }
+figure.viz figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.5rem; }
+svg.v text { font-family: var(--display); font-size: 13px; fill: var(--ink); }
+svg.v .h { font-weight: 600; font-size: 13.5px; }
+svg.v .mono { font-family: var(--mono); font-size: 11.5px; }
+svg.v .muted { fill: var(--muted); }
+svg.v .o { fill: var(--oracle); }
+svg.v .s { fill: var(--sea); }
+svg.v .e { fill: var(--ex); }
+svg.v .tile { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+svg.v .hit { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.4; }
+svg.v .skip { fill: var(--paper); stroke: var(--rule); stroke-dasharray: 3 3; }
+svg.v .win { fill: var(--oracle); }
+svg.v .hdr { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .ovr { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ref { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.3; }
+svg.v .keybox { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .panelbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .repobox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.4; }
+svg.v .file { fill: var(--panel); stroke: var(--rule); }
+svg.v .snap { fill: var(--paper); stroke: var(--sea); stroke-width: 2; }
+svg.v .snap.now { fill: var(--sea); }
+svg.v .step { fill: var(--sea); }
+svg.v .stepn { fill: var(--paper); font-weight: 700; font-size: 14px; }
+svg.v .stepbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .who { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ln { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+svg.v .ln-o { stroke: var(--oracle); stroke-width: 1.6; fill: none; }
+svg.v .ln-s { stroke: var(--sea); stroke-width: 1.6; fill: none; }
+svg.v .ln-e { stroke: var(--ex); stroke-width: 1.6; fill: none; }
+svg.v .dash { stroke-dasharray: 4 3; }
+ol.steps { margin: 0 0 1.2rem; padding-left: 1.3rem; display: grid; gap: 0.3rem; }
+details.maths { border: 1px solid var(--rule); border-radius: 6px; margin: 1rem 0 1.6rem; background: var(--paper); }
+details.maths > summary { cursor: pointer; padding: 0.6rem 1rem; font-family: var(--display); font-weight: 600; font-size: 0.92rem; color: var(--unit); }
+details.maths > summary:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+details.maths .dbody { padding: 0 1rem 0.6rem; }
+
+.uses { border-left: 3px solid var(--sea); background: var(--sea-soft); border-radius: 0 6px 6px 0; padding: 0.85rem 1rem; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.uses .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.uses ul { margin: 0.2rem 0 0.6rem; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.uses p { margin-bottom: 0.5rem; }
+.uses p.less { color: var(--muted); margin-bottom: 0; }
+ul.verdicts { padding-left: 1.2rem; display: grid; gap: 0.45rem; margin: 0.4rem 0 1.2rem; }
+svg.v .cogbox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .zarrbox { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.2; }
+svg.v .wait { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1; }
+svg.v .cpu { fill: var(--oracle); }
+svg.v .no { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg.v .lane { stroke: var(--rule); stroke-width: 1; }
+svg.v .tick { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg.v .bar { fill: var(--sea); }
+svg.v .bar.slow { fill: var(--oracle); }
+svg.v .yes { fill: var(--sea); font-weight: 600; }
+svg.v .cell { fill: var(--paper); stroke: var(--rule); }
+svg.v .cellh { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .pt { fill: var(--oracle); stroke: var(--paper); stroke-width: 1.5; }
+svg.v .w { fill: var(--paper); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="a-s" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--sea)"/></marker>
+<marker id="a-o" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--oracle)"/></marker>
+<marker id="a-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker>
+<marker id="a-e" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--ex)"/></marker>
+</defs></svg>
+<main>
+
+<nav class="series" aria-label="Series"><span>GeoStack · design</span><span>›</span><span>background</span><a href="./role-ladder.html">← The role ladder</a><a href="./backends-apis.html">Backends and APIs →</a></nav>
+<div class="eyebrow">GeoStack · background · question → product → question</div>
+<h1>What does every geoscience pipeline do, in order?</h1>
+<p class="lede">Pictures first. Whatever the science, the job has the same outline: find the scenes, read only what you need, cut it into pieces, compute, stitch, and keep the result so that someone can find it again. This page names ten stages for that outline, says what each hands to the next, and runs all ten on one small example. It starts from the eight-stage diagram in geotoolz and adds the two stages that versioned storage and a product catalog bring.</p>
+
+<section class="tldr" aria-label="TL;DR">
+  <span class="tag">TL;DR</span>
+  <h2>Find, compute, keep, and around again</h2>
+  <ul>
+    <li><strong>Find:</strong> search an archive, catalog what it holds, save only the hits. No pixel is decoded in these three.</li>
+    <li><strong>Compute:</strong> stream the hits as one lazy field, then split → apply → combine, which is xarray's pattern applied to space.</li>
+    <li><strong>Keep:</strong> write the result, <em>commit</em> it as a version, <em>publish</em> a record of it. The last two are new.</li>
+    <li><strong>Typed seams.</strong> Neighbouring stages hand over an object (a catalog, a field, a patch, a snapshot id), never a bare file path.</li>
+    <li><strong>It is a loop.</strong> A published product is an archive: the next pipeline searches it. Each lap raises the processing level.</li>
+    <li><strong>The test:</strong> all ten stages run on a 24-file archive; the patched NDVI matches the unpatched one to 2e-16, and the product reopened through its record's snapshot id is identical.</li>
+  </ul>
+</section>
+
+<h2>The running example</h2>
+<div class="ex">
+  <div class="ex-h"><span class="tag">Running example</span><strong>NDVI over one site for June, from a small archive</strong></div>
+  <div class="ex-b">
+    <p>An archive of synthetic two-band scenes (red and near-infrared) on a 10 m UTM grid: four tiles, six dates each. The request is a 5 × 4 km site for June 2026. The answer is one NDVI map, the vegetation index \((\rho_\text{nir} - \rho_\text{red}) / (\rho_\text{nir} + \rho_\text{red})\). Stages 1 to 8 are geotoolz as it ships; stages 9 and 10 use Icechunk and a Parquet table directly.</p>
+    <div class="tbl"><table><thead><tr><th>Quantity</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td>Archive</td><td>24 COGs, 25.8 MB</td><td>synthetic</td></tr><tr><td>Scene</td><td>2 × 600 × 600 uint16, 10 m</td><td>synthetic</td></tr><tr><td>Request</td><td>5 × 4 km, 1 to 30 June 2026</td><td>chosen</td></tr><tr><td>Hits</td><td>6 scenes (2 tiles × 3 dates), 6.4 MB</td><td>measured</td></tr><tr><td>Field</td><td>2 × 400 × 500</td><td>measured</td></tr><tr><td>Patches</td><td>20 of 128 × 128, stride 96</td><td>measured</td></tr><tr><td>Product</td><td>400 × 500 float, mean NDVI 0.41</td><td>measured</td></tr><tr><td>Snapshot id</td><td><code>TF4JRH7NH25RB8FX2W9G</code></td><td>measured</td></tr></tbody></table></div>
+  </div>
+</div>
+
+<h2 id="stages">Ten stages, three acts</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 548" role="img" aria-label="Ten stages in three acts: search, catalog and save find the data; stream, split, apply and combine compute on it; write, commit and publish keep the result."><text class="h" x="20" y="26">Find</text><text class="muted" x="88" y="26">no pixel is decoded</text><rect class="ref" x="20" y="36" width="640" height="36" rx="6"/><text class="tick" x="40" y="59" text-anchor="middle">1</text><text class="h" x="58" y="59">Search</text><text x="150" y="52">a question → file names</text><text class="tick" x="150" y="66">an archive's index</text><text x="650" y="52" text-anchor="end">STAC · CMR · a folder</text><text class="mono" x="650" y="66" text-anchor="end">24 files</text><rect class="ref" x="20" y="82" width="640" height="36" rx="6"/><text class="tick" x="40" y="105" text-anchor="middle">2</text><text class="h" x="58" y="105">Catalog</text><text x="150" y="98">file names → rows; a request → hits</text><text class="tick" x="150" y="112">headers only</text><text x="650" y="98" text-anchor="end">geocatalog</text><text class="mono" x="650" y="112" text-anchor="end">24 rows → 6</text><rect class="ref" x="20" y="128" width="640" height="36" rx="6"/><text class="tick" x="40" y="151" text-anchor="middle">3</text><text class="h" x="58" y="151">Save</text><text x="150" y="144">hits → hits near the compute</text><text class="tick" x="150" y="158">bytes, undecoded</text><text x="650" y="144" text-anchor="end">geocatalog · geocloud</text><text class="mono" x="650" y="158" text-anchor="end">6 files, 6.4 MB</text><text class="h" x="20" y="188">Compute</text><text class="muted" x="88" y="188">split → apply → combine, on a lazy field</text><rect class="hdr" x="20" y="198" width="640" height="36" rx="6"/><text class="tick" x="40" y="221" text-anchor="middle">4</text><text class="h" x="58" y="221">Stream</text><text x="150" y="214">hits → one lazy field</text><text class="tick" x="150" y="228">pixels, on demand</text><text x="650" y="214" text-anchor="end">geocatalog · geopatcher</text><text class="mono" x="650" y="228" text-anchor="end">(2, 400, 500)</text><rect class="hdr" x="20" y="244" width="640" height="36" rx="6"/><text class="tick" x="40" y="267" text-anchor="middle">5</text><text class="h" x="58" y="267">Split</text><text x="150" y="260">field → patches</text><text class="tick" x="150" y="274">pixels</text><text x="650" y="260" text-anchor="end">geopatcher</text><text class="mono" x="650" y="274" text-anchor="end">20 × (2, 128, 128)</text><rect class="hdr" x="20" y="290" width="640" height="36" rx="6"/><text class="tick" x="40" y="313" text-anchor="middle">6</text><text class="h" x="58" y="313">Apply</text><text x="150" y="306">patch → patch</text><text class="tick" x="150" y="320">pixels</text><text x="650" y="306" text-anchor="end">geoops</text><text class="mono" x="650" y="320" text-anchor="end">20 × (128, 128)</text><rect class="hdr" x="20" y="336" width="640" height="36" rx="6"/><text class="tick" x="40" y="359" text-anchor="middle">7</text><text class="h" x="58" y="359">Combine</text><text x="150" y="352">patches → one array</text><text class="tick" x="150" y="366">pixels</text><text x="650" y="352" text-anchor="end">geopatcher</text><text class="mono" x="650" y="366" text-anchor="end">(400, 500)</text><text class="h" x="20" y="396">Keep</text><text class="muted" x="88" y="396">a file, a version, a record</text><rect class="hit" x="20" y="406" width="640" height="36" rx="6"/><text class="tick" x="40" y="429" text-anchor="middle">8</text><text class="h" x="58" y="429">Write</text><text x="150" y="422">array → file or store</text><text class="tick" x="150" y="436">a product</text><text x="650" y="422" text-anchor="end">geoops.io · geocloud</text><text class="mono" x="650" y="436" text-anchor="end">1 COG, 1.3 MB</text><rect class="hit" x="20" y="452" width="640" height="36" rx="6"/><text class="tick" x="40" y="475" text-anchor="middle">9</text><text class="h" x="58" y="475">Commit</text><text x="150" y="468">store → snapshot id</text><text class="tick" x="150" y="482">a version</text><text x="650" y="468" text-anchor="end">Icechunk</text><text class="mono" x="650" y="482" text-anchor="end">1 snapshot</text><rect class="no" x="392" y="461" width="40" height="18" rx="9"/><text class="tick" x="412" y="474" text-anchor="middle">new</text><rect class="hit" x="20" y="498" width="640" height="36" rx="6"/><text class="tick" x="40" y="521" text-anchor="middle">10</text><text class="h" x="58" y="521">Publish</text><text x="150" y="514">snapshot + recipe → record</text><text class="tick" x="150" y="528">a row</text><text x="650" y="514" text-anchor="end">product catalog</text><text class="mono" x="650" y="528" text-anchor="end">1 row</text><rect class="no" x="392" y="507" width="40" height="18" rx="9"/><text class="tick" x="412" y="520" text-anchor="middle">new</text></svg></div><figcaption>The eight stages of the geotoolz diagram, with two added at the end. Each row says what goes in and what comes out, what the stage actually touches, which package owns it, and the running example's numbers.</figcaption></figure>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 274" role="img" aria-label="The number of things at each stage: 24 files, 6 matching rows, 6 files, 1 field, 20 patches, 20 patches, 1 array, 1 file, 1 snapshot, 1 row."><text x="92" y="24" text-anchor="end">Search</text><rect class="ref" x="104" y="10" width="13" height="16" rx="2"/><rect class="ref" x="121" y="10" width="13" height="16" rx="2"/><rect class="ref" x="138" y="10" width="13" height="16" rx="2"/><rect class="ref" x="155" y="10" width="13" height="16" rx="2"/><rect class="ref" x="172" y="10" width="13" height="16" rx="2"/><rect class="ref" x="189" y="10" width="13" height="16" rx="2"/><rect class="ref" x="206" y="10" width="13" height="16" rx="2"/><rect class="ref" x="223" y="10" width="13" height="16" rx="2"/><rect class="ref" x="240" y="10" width="13" height="16" rx="2"/><rect class="ref" x="257" y="10" width="13" height="16" rx="2"/><rect class="ref" x="274" y="10" width="13" height="16" rx="2"/><rect class="ref" x="291" y="10" width="13" height="16" rx="2"/><rect class="ref" x="308" y="10" width="13" height="16" rx="2"/><rect class="ref" x="325" y="10" width="13" height="16" rx="2"/><rect class="ref" x="342" y="10" width="13" height="16" rx="2"/><rect class="ref" x="359" y="10" width="13" height="16" rx="2"/><rect class="ref" x="376" y="10" width="13" height="16" rx="2"/><rect class="ref" x="393" y="10" width="13" height="16" rx="2"/><rect class="ref" x="410" y="10" width="13" height="16" rx="2"/><rect class="ref" x="427" y="10" width="13" height="16" rx="2"/><rect class="ref" x="444" y="10" width="13" height="16" rx="2"/><rect class="ref" x="461" y="10" width="13" height="16" rx="2"/><rect class="ref" x="478" y="10" width="13" height="16" rx="2"/><rect class="ref" x="495" y="10" width="13" height="16" rx="2"/><text class="muted" x="520" y="23">24 files</text><text x="92" y="50" text-anchor="end">Catalog</text><rect class="ref" x="104" y="36" width="13" height="16" rx="2"/><rect class="ref" x="121" y="36" width="13" height="16" rx="2"/><rect class="ref" x="138" y="36" width="13" height="16" rx="2"/><rect class="ref" x="155" y="36" width="13" height="16" rx="2"/><rect class="ref" x="172" y="36" width="13" height="16" rx="2"/><rect class="ref" x="189" y="36" width="13" height="16" rx="2"/><text class="muted" x="214" y="49">6 rows that match</text><text x="92" y="76" text-anchor="end">Save</text><rect class="ref" x="104" y="62" width="13" height="16" rx="2"/><rect class="ref" x="121" y="62" width="13" height="16" rx="2"/><rect class="ref" x="138" y="62" width="13" height="16" rx="2"/><rect class="ref" x="155" y="62" width="13" height="16" rx="2"/><rect class="ref" x="172" y="62" width="13" height="16" rx="2"/><rect class="ref" x="189" y="62" width="13" height="16" rx="2"/><text class="muted" x="214" y="75">6 files</text><text x="92" y="102" text-anchor="end">Stream</text><rect class="hdr" x="104" y="88" width="13" height="16" rx="2"/><text class="muted" x="129" y="101">1 field</text><text x="92" y="128" text-anchor="end">Split</text><rect class="hdr" x="104" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="121" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="138" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="155" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="172" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="189" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="206" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="223" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="240" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="257" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="274" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="291" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="308" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="325" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="342" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="359" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="376" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="393" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="410" y="114" width="13" height="16" rx="2"/><rect class="hdr" x="427" y="114" width="13" height="16" rx="2"/><text class="muted" x="452" y="127">20 patches</text><text x="92" y="154" text-anchor="end">Apply</text><rect class="hdr" x="104" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="121" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="138" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="155" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="172" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="189" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="206" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="223" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="240" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="257" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="274" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="291" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="308" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="325" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="342" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="359" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="376" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="393" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="410" y="140" width="13" height="16" rx="2"/><rect class="hdr" x="427" y="140" width="13" height="16" rx="2"/><text class="muted" x="452" y="153">20 patches</text><text x="92" y="180" text-anchor="end">Combine</text><rect class="hdr" x="104" y="166" width="13" height="16" rx="2"/><text class="muted" x="129" y="179">1 array</text><text x="92" y="206" text-anchor="end">Write</text><rect class="hit" x="104" y="192" width="13" height="16" rx="2"/><text class="muted" x="129" y="205">1 file</text><text x="92" y="232" text-anchor="end">Commit</text><rect class="hit" x="104" y="218" width="13" height="16" rx="2"/><text class="muted" x="129" y="231">1 snapshot</text><text x="92" y="258" text-anchor="end">Publish</text><rect class="hit" x="104" y="244" width="13" height="16" rx="2"/><text class="muted" x="129" y="257">1 row</text></svg></div><figcaption>The shape every pipeline has: many candidates narrow to a few, the few become one field, the field fans out into patches and folds back into one result, and the result is kept three ways.</figcaption></figure>
+
+<h2 id="find">Act 1 · Find: from a question to a few files</h2>
+<p><b>Search</b> asks an archive what it has. <b>Catalog</b> turns the answer into a table of footprints, times and paths, so the next question is a query on that table and not another crawl. <b>Save</b> brings only the matching files close to where the computing runs. The request itself is an object, a <code>GeoSlice</code>: bounds × time × resolution × CRS.</p>
+<pre><span class="c"># Shapes: T = 2 bands; H × W = 400 × 500 px (the site); h × w = 128 × 128 px</span>
+
+<span class="c"># --- search ---</span>
+<span class="c">    # the archive: here a folder; in production a STAC, CMR or GEE search</span>
+    files = sorted(glob.glob(str(ARCHIVE / "*.tif")))             # → 24 paths
+
+<span class="c">    # --- catalog ---</span>
+<span class="mk">    # today (geocatalog)</span>
+<span class="c">    # index once: footprint, CRS, resolution and time per file; no pixels read</span>
+    catalog = build_raster_catalog(                               # 24 paths → 24 rows
+        files, filename_regex=r"_(?P&lt;date&gt;\d{8})", date_format="%Y%m%d"
+    )
+<span class="mk">    # today (geocatalog)</span>
+<span class="c">    # the request: bounds × time × resolution × CRS</span>
+    site = gc.GeoSlice(
+        bounds=(723000.0, 4375000.0, 728000.0, 4379000.0),
+        interval=pd.Interval(
+            pd.Timestamp("2026-06-01"), pd.Timestamp("2026-06-30"), closed="both"
+        ),
+        resolution=(PIXEL_M, PIXEL_M),
+        crs=CRS,
+    )
+<span class="mk">    # today (geocatalog)</span>
+    hits = catalog.query(site)                                    # 24 rows → 6 rows
+
+<span class="c">    # --- save ---</span>
+<span class="mk">    # today (geocatalog)</span>
+<span class="c">    # fetch only the hits next to the compute; local files stay where they are</span>
+    staged = gc.staging.stage(hits, dest=str(WORK / "cache"))     # 6 rows → 6 rows</pre>
+<div class="uses"><span class="tag">When a Find stage changes shape</span><ul><li><b>Search</b> is a STAC or CMR call in production; here it is a folder listing. Either way it returns names, not data.</li><li><b>Catalog</b> can be skipped only for a one-off. A second question about the same archive is where it pays.</li><li><b>Save</b> has nothing to do when the files are already next to the compute, as here. From a bucket it downloads the hits; with virtual references it records where the bytes are and copies nothing.</li></ul><p class="less">Background: <a href="./databases-catalogs.html">databases and catalogs</a> for the table and its indexes; <a href="./object-storage.html">object storage</a> for why listing is slow and why only the hits are fetched.</p></div>
+
+<h2 id="compute">Act 2 · Compute: split, apply, combine</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 224" role="img" aria-label="A field is cut into overlapping patches, a function runs on each patch, and the results are merged with weights that fade towards each patch&#x27;s edge."><text class="h" x="20" y="20">The field</text><rect class="who" x="20" y="32" width="200" height="160" rx="4"/><rect class="cell" x="30" y="42" width="78" height="64" rx="2" style="fill-opacity:.55"/><rect class="hit" x="86" y="78" width="78" height="64" rx="2" style="fill-opacity:.55"/><rect class="hdr" x="112" y="108" width="78" height="64" rx="2" style="fill-opacity:.55"/><text class="muted" x="20" y="212">overlapping windows, read on demand</text><path class="ln" d="M228 60 H262" marker-end="url(#a-m)"/><rect class="cell" x="270" y="40" width="56" height="40" rx="3"/><text class="tick" x="298" y="65" text-anchor="middle">patch</text><path class="ln" d="M326 60 H360" marker-end="url(#a-m)"/><rect class="stepbox" x="368" y="40" width="64" height="40" rx="3"/><text class="mono" x="400" y="65" text-anchor="middle">f( · )</text><path class="ln" d="M432 60 H466 V114 H492" marker-end="url(#a-m)"/><path class="ln" d="M228 114 H262" marker-end="url(#a-m)"/><rect class="hit" x="270" y="94" width="56" height="40" rx="3"/><text class="tick" x="298" y="119" text-anchor="middle">patch</text><path class="ln" d="M326 114 H360" marker-end="url(#a-m)"/><rect class="stepbox" x="368" y="94" width="64" height="40" rx="3"/><text class="mono" x="400" y="119" text-anchor="middle">f( · )</text><path class="ln" d="M432 114 H492" marker-end="url(#a-m)"/><path class="ln" d="M228 168 H262" marker-end="url(#a-m)"/><rect class="hdr" x="270" y="148" width="56" height="40" rx="3"/><text class="tick" x="298" y="173" text-anchor="middle">patch</text><path class="ln" d="M326 168 H360" marker-end="url(#a-m)"/><rect class="stepbox" x="368" y="148" width="64" height="40" rx="3"/><text class="mono" x="400" y="173" text-anchor="middle">f( · )</text><path class="ln" d="M432 168 H466 V114 H492" marker-end="url(#a-m)"/><text class="h" x="298" y="20" text-anchor="middle">Split</text><text class="h" x="400" y="20" text-anchor="middle">Apply</text><text class="h" x="580" y="20" text-anchor="middle">Combine</text><rect class="repobox" x="500" y="54" width="160" height="120" rx="4"/><rect class="cell" x="510" y="62" width="78" height="52" rx="2" style="fill-opacity:.55"/><rect class="hit" x="548" y="88" width="78" height="52" rx="2" style="fill-opacity:.55"/><rect class="hdr" x="566" y="112" width="78" height="52" rx="2" style="fill-opacity:.55"/><text class="muted" x="500" y="196">weights fade each patch out</text><text class="muted" x="500" y="212">towards its edges</text></svg></div><figcaption>xarray's split → apply → combine, on space. Measured on the running example: 20 patches of 128 px with 32 px of overlap give the same NDVI as computing the whole site at once, to 2e-16.</figcaption></figure>
+<p><b>Stream</b> presents the saved files as one <b>field</b>: an array on the request's grid that reads pixels only when a window is asked for. <b>Split</b> cuts the field into overlapping patches. <b>Apply</b> runs one operator on each patch. <b>Combine</b> merges the results, weighting each patch so that the seams disappear.</p>
+<pre><span class="c"># --- stream ---</span>
+<span class="mk">    # today (geocatalog)</span>
+<span class="c">    # a Field: the six files as one lazy mosaic on the site's grid</span>
+    field = gc.patch.field_for(staged, site)                      # 6 rows → (T, H, W)
+
+<span class="c">    # --- split ---</span>
+<span class="mk">    # today (geopatcher)</span>
+    patcher = gp.SpatialPatcher(
+        geometry=gp.spatial.geometry.Rectangular(size=(128, 128), boundary="pad"),
+        sampler=gp.spatial.sampler.RegularStride(step=(96, 96)),
+        window=gp.spatial.window.Hann(),
+        aggregation=gp.spatial.aggregation.OverlapAdd(),
+    )
+<span class="mk">    # today (geoops)</span>
+    patches = GridSampler(patcher=patcher)(field)                 # (T, H, W) → 20 × (T, h, w)
+
+<span class="c">    # --- apply ---</span>
+<span class="mk">    # today (geoops)</span>
+<span class="c">    # NDVI = (ρ_nir − ρ_red) / (ρ_nir + ρ_red)</span>
+    ndvi = gz.DNToReflectance(scale=1e-4) | gz.NDVI(red=0, nir=1)
+<span class="mk">    # today (geoops)</span>
+    results = ApplyToChips(operator=ndvi)(patches)                # 20 × (T, h, w) → 20 × (h, w)
+
+<span class="c">    # --- combine ---</span>
+<span class="mk">    # today (geoops)</span>
+<span class="c">    # window-weighted merge of the overlaps, back on the site's grid</span>
+    merge = MergePatches(
+        aggregation=gp.spatial.aggregation.OverlapAdd(), domain=field.domain
+    )
+    product = merge(results)                                      # 20 × (h, w) → (H, W)</pre>
+<details class="maths"><summary>Why the merge has no seams (overlap-add)</summary>
+<div class="dbody">
+<p>Let patch \(p\) give a result \(y_p(n)\) at pixel \(n\), with a window weight \(w_p(n) \ge 0\) that is largest at the patch's centre and falls towards its edge (zero where the patch does not cover \(n\)). The merged value is the weighted mean over the patches that cover the pixel:</p>
+\[ \hat{y}(n) = \frac{\sum_p w_p(n) y_p(n)}{\sum_p w_p(n)} \]
+<p>For an operator that acts pixel by pixel, such as NDVI, every patch gives the same value at a shared pixel, so \(\hat{y}(n) = y(n)\) exactly; the measured difference is 2.2e-16. For an operator that looks at a neighbourhood (a convolution, a neural network), values near a patch edge are less reliable, and the weights are what keep them from showing.</p>
+</div></details>
+<div class="uses"><span class="tag">When to split, and how much to overlap</span><ul><li><b>Split</b> when the field does not fit in memory, when patches should run at the same time, or when a model expects a fixed input size.</li><li><b>Overlap</b> at least as far as the operator looks sideways: none for a per-pixel index, the receptive field for a network.</li><li><b>Do not split</b> an operator that needs the whole scene at once (a scene-wide covariance): fit it first, then apply per patch.</li></ul><p class="less">Background: <a href="./storage-formats.html">storage formats</a> for how a window read fetches only its tiles; <a href="./parallelism.html">parallelism</a> for running the patches at the same time.</p></div>
+
+<h2 id="keep">Act 3 · Keep: a file, a version, a record</h2>
+<p><b>Write</b> puts the result somewhere with its georeference intact. That is where the original eight stages end, and where two problems begin: a half-written result looks like a result, and nobody else knows it exists. <b>Commit</b> makes the write a version that appears all at once and can be named for ever. <b>Publish</b> adds one row to a product catalog saying what the product is, where it is, which version, and what made it.</p>
+<pre><span class="c"># --- write ---</span>
+<span class="mk">    # today (geoops)</span>
+    gz.WriteCOG(path=str(WORK / "ndvi_june.tif"))(product)        # (H, W) → 1 file
+
+<span class="c">    # --- commit ---</span>
+<span class="mk">    # today (icechunk)</span>
+<span class="c">    # the same product into a versioned store: visible all at once, or not at all</span>
+    repo = icechunk.Repository.create(
+        icechunk.local_filesystem_storage(str(WORK / "products.icechunk"))
+    )
+    session = repo.writable_session("main")
+    values = np.asarray(product)                                  # (H, W)
+    array = zarr.create_array(
+        session.store, name="ndvi", shape=values.shape, chunks=(256, 256), dtype="f4"
+    )
+    array[:] = values
+    array.attrs["transform"] = [float(v) for v in product.transform]
+    array.attrs["crs"] = "EPSG:32630"
+    snapshot_id = session.commit("NDVI, site, June 2026")         # → snapshot id
+
+<span class="c">    # --- publish ---</span>
+<span class="mk">    # today (pipekit)</span>
+<span class="c">    # h = SHA-256(stable_json(state) ‖ 0x00 ‖ weights): the recipe's id</span>
+    recipe_hash = pipekit_ops.pipeline_hash(ndvi, b"")
+<span class="c">    # one row in the product table: what, where, when, from what, by what</span>
+    record = {
+        "id": "ndvi_site_2026-06",
+        "start_time": "2026-06-01",
+        "end_time": "2026-06-30",
+        "bbox": list(site.bounds),
+        "crs": "EPSG:32630",
+        "href": "products.icechunk",
+        "snapshot_id": snapshot_id,
+        "recipe_hash": recipe_hash,
+        "sources": [pathlib.Path(path).name for path in hits.gdf["filepath"]],
+    }
+    pq.write_table(pa.Table.from_pylist([record]), WORK / "products.parquet")
+
+<span class="c">    # --- loop ---</span>
+<span class="c">    # the next pipeline's search is a query on the product table</span>
+    found = pq.read_table(WORK / "products.parquet").to_pylist()[0]
+    reopened = repo.readonly_session(snapshot_id=found["snapshot_id"])
+    again = zarr.open_array(reopened.store, path="ndvi")[:]       # → (H, W)</pre>
+<p>The record is the whole of what the next user needs:</p>
+<pre>{
+  "id": "ndvi_site_2026-06",
+  "start_time": "2026-06-01",
+  "end_time": "2026-06-30",
+  "bbox": [
+    723000.0,
+    4375000.0,
+    728000.0,
+    4379000.0
+  ],
+  "crs": "EPSG:32630",
+  "href": "products.icechunk",
+  "snapshot_id": "TF4JRH7NH25RB8FX2W9G",
+  "recipe_hash": "4b8c154a8762594f\u2026",
+  "sources": [
+    "S2_A_20260605.tif",
+    "S2_A_20260612.tif",
+    "S2_A_20260621.tif",
+    "S2_B_20260605.tif",
+    "S2_B_20260612.tif",
+    "S2_B_20260621.tif"
+  ]
+}</pre>
+<div class="uses"><span class="tag">When to commit and publish</span><ul><li><b>Write only</b> for a scratch result you will look at once.</li><li><b>Commit</b> when a result may be rewritten or appended to, or when a reader could arrive mid-write.</li><li><b>Publish</b> when anyone else, or any later pipeline, should find the result by place and time.</li></ul><p class="less">Background: <a href="./versions-identity.html">versions and identity</a> for snapshots and commits; <a href="./databases-catalogs.html">databases and catalogs</a> for the product table.</p></div>
+
+<h2 id="loop">The loop</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 238" role="img" aria-label="Three laps of the same pipeline: each lap&#x27;s published product is the archive the next lap searches, from reflectance to NDVI to anomalies to alerts."><text class="h" x="20" y="20">Publish feeds the next search</text><rect class="ref" x="20" y="34" width="190" height="40" rx="6"/><text x="115" y="59" text-anchor="middle">L2 reflectance scenes</text><path class="ln" d="M210 54 H254" marker-end="url(#a-m)"/><rect class="hdr" x="262" y="34" width="150" height="40" rx="6"/><text class="tick" x="337" y="52" text-anchor="middle">search → … → publish</text><text class="tick" x="337" y="66" text-anchor="middle">the same ten stages</text><path class="ln" d="M412 54 H456" marker-end="url(#a-m)"/><rect class="hit" x="464" y="34" width="196" height="40" rx="6"/><text x="562" y="52" text-anchor="middle">NDVI, June, per site</text><text class="tick" x="562" y="66" text-anchor="middle">L3</text><path class="ln-o" d="M562 74 V85 H115 V94" marker-end="url(#a-o)"/><rect class="ref" x="20" y="96" width="190" height="40" rx="6"/><text x="115" y="121" text-anchor="middle">NDVI, per month</text><path class="ln" d="M210 116 H254" marker-end="url(#a-m)"/><rect class="hdr" x="262" y="96" width="150" height="40" rx="6"/><text class="tick" x="337" y="114" text-anchor="middle">search → … → publish</text><text class="tick" x="337" y="128" text-anchor="middle">the same ten stages</text><path class="ln" d="M412 116 H456" marker-end="url(#a-m)"/><rect class="hit" x="464" y="96" width="196" height="40" rx="6"/><text x="562" y="114" text-anchor="middle">anomaly vs 5-year mean</text><text class="tick" x="562" y="128" text-anchor="middle">L4</text><path class="ln-o" d="M562 136 V147 H115 V156" marker-end="url(#a-o)"/><rect class="ref" x="20" y="158" width="190" height="40" rx="6"/><text x="115" y="183" text-anchor="middle">anomalies, per site</text><path class="ln" d="M210 178 H254" marker-end="url(#a-m)"/><rect class="hdr" x="262" y="158" width="150" height="40" rx="6"/><text class="tick" x="337" y="176" text-anchor="middle">search → … → publish</text><text class="tick" x="337" y="190" text-anchor="middle">the same ten stages</text><path class="ln" d="M412 178 H456" marker-end="url(#a-m)"/><rect class="hit" x="464" y="158" width="196" height="40" rx="6"/><text x="562" y="176" text-anchor="middle">drought alerts</text><text class="tick" x="562" y="190" text-anchor="middle">indicator</text><text class="muted" x="20" y="226">Each lap searches what the lap before published, and raises the processing level.</text></svg></div><figcaption>Without publish, the chain ends in a file somebody has to know about. With it, the product catalog is an archive like any other, and a pipeline's output is the next pipeline's input.</figcaption></figure>
+
+<h2 id="seams">What crosses each seam</h2>
+<div class="tbl"><table><thead><tr><th>Between</th><th>What is handed over</th><th>In the running example</th></tr></thead><tbody><tr><td>search → catalog</td><td>file names or URIs</td><td>24 paths</td></tr><tr><td>catalog → save</td><td>a <code>GeoCatalog</code>: rows of footprint, time, path</td><td>6 rows</td></tr><tr><td>save → stream</td><td>the same catalog, pointing at nearby copies</td><td>6 rows</td></tr><tr><td>stream → split</td><td>a <code>RasterField</code>: a lazy array with a grid</td><td>(2, 400, 500) uint16</td></tr><tr><td>split → apply → combine</td><td>a list of <code>Patch</code>, each a small <code>GeoArray</code> with its place</td><td>20 patches</td></tr><tr><td>combine → write</td><td>one <code>GeoArray</code> on the request's grid</td><td>(400, 500) float64</td></tr><tr><td>write → commit</td><td>a store with uncommitted changes</td><td>1 array, 4 chunks</td></tr><tr><td>commit → publish</td><td>a snapshot id</td><td><code>TF4JRH7NH25RB8FX2W9G</code></td></tr><tr><td>publish → the next search</td><td>a record: id, footprint, time, where, snapshot, recipe</td><td>1 row</td></tr></tbody></table></div>
+<p>Because each seam is an object with a known shape, a stage can be replaced without touching its neighbours: a different archive behind search, a different operator in apply, a different store behind write.</p>
+
+<h2 id="ladder">The pipeline and the role ladder</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 680 332" role="img" aria-label="The ten stages drawn as ten steps inside one recipe; the Apply step opens onto the lower rungs of the role ladder, from algorithm down to structure."><text class="h" x="20" y="20">The pipeline is a recipe; each stage is a step</text><rect class="panelbox" x="20" y="32" width="640" height="118" rx="6"/><text class="muted" x="34" y="50">⑥ recipe</text><rect class="stepbox" x="34" y="60" width="112" height="34" rx="6"/><text class="h" x="90" y="75" text-anchor="middle">Search</text><text class="tick" x="90" y="88" text-anchor="middle">⑤ step</text><rect class="stepbox" x="158" y="60" width="112" height="34" rx="6"/><text class="h" x="214" y="75" text-anchor="middle">Catalog</text><text class="tick" x="214" y="88" text-anchor="middle">⑤ step</text><rect class="stepbox" x="282" y="60" width="112" height="34" rx="6"/><text class="h" x="338" y="75" text-anchor="middle">Save</text><text class="tick" x="338" y="88" text-anchor="middle">⑤ step</text><rect class="stepbox" x="406" y="60" width="112" height="34" rx="6"/><text class="h" x="462" y="75" text-anchor="middle">Stream</text><text class="tick" x="462" y="88" text-anchor="middle">⑤ step</text><rect class="stepbox" x="530" y="60" width="112" height="34" rx="6"/><text class="h" x="586" y="75" text-anchor="middle">Split</text><text class="tick" x="586" y="88" text-anchor="middle">⑤ step</text><rect class="hit" x="34" y="104" width="112" height="34" rx="6"/><text class="h" x="90" y="119" text-anchor="middle">Apply</text><text class="tick" x="90" y="132" text-anchor="middle">⑤ step</text><rect class="stepbox" x="158" y="104" width="112" height="34" rx="6"/><text class="h" x="214" y="119" text-anchor="middle">Combine</text><text class="tick" x="214" y="132" text-anchor="middle">⑤ step</text><rect class="stepbox" x="282" y="104" width="112" height="34" rx="6"/><text class="h" x="338" y="119" text-anchor="middle">Write</text><text class="tick" x="338" y="132" text-anchor="middle">⑤ step</text><rect class="stepbox" x="406" y="104" width="112" height="34" rx="6"/><text class="h" x="462" y="119" text-anchor="middle">Commit</text><text class="tick" x="462" y="132" text-anchor="middle">⑤ step</text><rect class="stepbox" x="530" y="104" width="112" height="34" rx="6"/><text class="h" x="586" y="119" text-anchor="middle">Publish</text><text class="tick" x="586" y="132" text-anchor="middle">⑤ step</text><path class="ln-o" d="M90 138 V176" marker-end="url(#a-o)"/><text class="o" x="100" y="168">inside Apply</text><rect class="hdr" x="34" y="184" width="200" height="22" rx="4"/><text x="46" y="199">④ algorithm</text><rect class="stepbox" x="34" y="212" width="200" height="22" rx="4"/><text x="46" y="227">③ model</text><rect class="stepbox" x="34" y="240" width="200" height="22" rx="4"/><text x="46" y="255">② strategy</text><rect class="hdr" x="34" y="268" width="200" height="22" rx="4"/><text x="46" y="283">① primitive</text><rect class="stepbox" x="34" y="296" width="200" height="22" rx="4"/><text x="46" y="311">⓪ structure</text><text class="muted" x="256" y="204">The lower rungs live inside one stage.</text><text class="muted" x="256" y="222">They take arrays and know nothing of</text><text class="muted" x="256" y="240">files, catalogs or snapshots.</text><text class="muted" x="256" y="276">Orchestration runs the recipe: per site,</text><text class="muted" x="256" y="294">per month, on a schedule.</text></svg></div><figcaption>How this page meets the role ladder. The ladder describes what is inside a library; the pipeline describes what a job does from start to finish. They meet at rung ⑤: every stage is a step, and the science sits under one of them.</figcaption></figure>
+
+<h2 id="update">What Icechunk and the product catalog change</h2>
+<p>The two new stages are the visible part. The same two ideas also change four of the original eight. Rows marked proposed are the workstreams of the storage design pages.</p>
+<div class="tbl"><table><thead><tr><th>Stage</th><th>Today</th><th>With Icechunk and a product catalog</th><th>Status</th></tr></thead><tbody><tr><td>Catalog</td><td>rows in a GeoParquet file beside the data</td><td>rows stored in the repository with the chunks; a snapshot id pins both</td><td>proposed · <a href="https://github.com/jejjohnson/geotoolz/issues/664">geotoolz#664</a></td></tr><tr><td>Save</td><td>download the hits</td><td>record references to the original COGs; copy nothing</td><td>proposed · <a href="https://github.com/jejjohnson/geotoolz/issues/668">geotoolz#668</a></td></tr><tr><td>Stream</td><td>one mosaic on the request's grid</td><td>also: one tree node per scene, each on its own grid</td><td>proposed · <a href="https://github.com/jejjohnson/geotoolz/issues/666">geotoolz#666</a></td></tr><tr><td>Write</td><td>a COG or a Zarr store</td><td>the same, with standard CRS metadata in Zarr</td><td>proposed · <a href="https://github.com/jejjohnson/geotoolz/issues/667">geotoolz#667</a></td></tr><tr><td>Commit</td><td>—</td><td>append in one transaction; the snapshot id is the version</td><td>runs here with Icechunk directly; API proposed · <a href="https://github.com/jejjohnson/geotoolz/issues/665">geotoolz#665</a></td></tr><tr><td>Publish</td><td>—</td><td>one record to a product catalog (GeoParquet, PostGIS, pgstac or a STAC API)</td><td>runs here as a Parquet row; API proposed · <a href="https://github.com/jejjohnson/geotoolz/issues/671">geotoolz#671</a></td></tr><tr><td>Stamp (rides along)</td><td>the recipe's hash can be computed</td><td>written onto every product with the snapshot it read</td><td>proposed · <a href="https://github.com/jejjohnson/pipekit/issues/235">pipekit#235</a></td></tr></tbody></table></div>
+
+<h2 id="times">Where the time went</h2>
+<div class="tbl"><table><thead><tr><th>Stage</th><th style="text-align:right">Time</th><th>What it did here</th></tr></thead><tbody><tr><td>search</td><td class="num">0.2 ms</td><td>listed a folder</td></tr><tr><td>catalog</td><td class="num">47.3 ms</td><td>read 24 headers, answered one request</td></tr><tr><td>save</td><td class="num">4.8 ms</td><td>nothing to copy: the files are local</td></tr><tr><td>stream</td><td class="num">75.4 ms</td><td>opened six files as one mosaic</td></tr><tr><td>split</td><td class="num">5.8 ms</td><td>cut 20 windows</td></tr><tr><td>apply</td><td class="num">11.7 ms</td><td>NDVI on 20 patches</td></tr><tr><td>combine</td><td class="num">3.1 ms</td><td>weighted merge</td></tr><tr><td>write</td><td class="num">35.2 ms</td><td>one COG with overviews</td></tr><tr><td>commit</td><td class="num">16.8 ms</td><td>one Icechunk commit</td></tr><tr><td>publish</td><td class="num">1.6 ms</td><td>one Parquet row</td></tr></tbody></table></div>
+<p>These are local-disk timings on a tiny archive and say little about a real run, where search, save and stream wait on the network and dominate. They are here to show that every stage ran, and that the two new ones are cheap.</p>
+
+<h2>Where this goes next</h2>
+<div class="tbl"><table><thead><tr><th>Stage</th><th>Background page</th><th>Design page</th></tr></thead><tbody><tr><td>Search, catalog</td><td><a href="./databases-catalogs.html">Databases and catalogs</a></td><td><a href="./l2-collections.html">Level 2 collections</a></td></tr><tr><td>Save, stream</td><td><a href="./object-storage.html">Object storage</a>, <a href="./storage-formats.html">storage formats</a></td><td>Level 2 collections</td></tr><tr><td>Split, apply, combine</td><td><a href="./parallelism.html">Parallelism</a>, <a href="./role-ladder.html">the role ladder</a></td><td><a href="./kinds-and-roles.html">Kinds and roles</a></td></tr><tr><td>Write, commit</td><td><a href="./versions-identity.html">Versions and identity</a></td><td>Level 2 collections</td></tr><tr><td>Publish, stamp</td><td>Databases and catalogs, versions and identity</td><td><a href="./product-catalog.html">Product catalog</a>, <a href="./recipe-registries.html">recipe registries</a></td></tr></tbody></table></div>
+
+<footer>Source: the “search · catalog · save · stream · split · apply · combine · write” diagram and README of geotoolz at <code>640670c</code>, extended here with commit and publish. The code is one file of 208 lines, run as shown with geotoolz at <code>640670c</code>, pipekit at <code>9e86a56</code>, icechunk 2.3.1 and zarr 3.4.2 on a synthetic archive. Search is a folder listing and save copies nothing because the archive is local; commit and publish use Icechunk and pyarrow directly and are stand-ins for APIs that are proposed, not shipped. The processing-level labels in the loop figure are illustrative.</footer>
+
+</main>
+</body>
+</html>
