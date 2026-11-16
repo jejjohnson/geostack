@@ -31,6 +31,8 @@ When a status changes, change it on the page first, then here.
 | OP | [Operators](./operators.md) |
 | OC | [Operator coupling](./operator_coupling.md) |
 | PL | [Package layout](./package_layout.md) |
+| PD | [Products](./products.md) |
+| XR | [xrops layer](./xrops_layer.md) |
 | SL | [Levels across the stack](./stack_levels.md) |
 | ES | [esmax](./esmax.md) |
 | NF | [Neural fields](./neural_fields.md) |
@@ -179,6 +181,36 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | PL-Q7 | geoproducts or xrproducts, by what one read returns | decided 29 Oct 2026 |
 | PL-Q8 | `load_states` stays in geocatalog | decided 29 Oct 2026 |
 | PL-Q9 | Points: a CF DSG `Dataset` on the labeled side, `GeoPoints` on the array side | `GeoPoints` decided; DSG open |
+| PL-Q10 | One workspace: xrtoolz's packages join geotoolz | decided 13 Nov 2026 |
+| PL-Q11 | One products package for both lanes (see PD) | open |
+| PL-Q12 | xrops as the xarray layer (see XR) | open |
+
+## Products (PD)
+
+| ID | Decision or question | Status |
+| --- | --- | --- |
+| PD-D1 | One package: xrproducts folds into geoproducts | open (PL-Q11) |
+| PD-D2 | The geometry of a read picks its carrier | open (PL-Q11) |
+| PD-D3 | A carrier-free base install | open (PL-Q11) |
+| PD-D4 | One request vocabulary in `geoproducts.types` | open (PL-Q11) |
+| PD-Q1 | The merged package's name | open |
+| PD-Q2 | What EMIT and GHGSat scenes return | open |
+| PD-Q3 | Where the CF `Variable` registry lives | open |
+| PD-Q4 | The cache variable and directory | open |
+| PD-Q5 | A carrier constructor in the adapter protocol | open |
+
+## xrops layer (XR)
+
+| ID | Decision or question | Status |
+| --- | --- | --- |
+| XR-D1 | Duplicates of geoops and functax go first | open (PL-Q12) |
+| XR-D2 | Kernels split into array modules inside xrops, run through `KernelOp` | open (PL-Q12) |
+| XR-D3 | Kernels move down when their library exists | open (PL-Q12) |
+| XR-D4 | xrops keeps the work that needs labels | open (PL-Q12) |
+| XR-Q1 | An xrops operator only when it adds label work | open |
+| XR-Q2 | The morphology backend | open |
+| XR-Q3 | Where the spherical metric lives | open |
+| XR-Q4 | Whether `xrops.lift` stays | open |
 
 ## Levels across the stack (SL)
 
