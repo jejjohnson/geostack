@@ -17,7 +17,7 @@ This page is the GeoML layer. It may import GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at geonnax 0.0.9, kernellib 0.0.21, optax-bayes 0.0.3, filterax 0.0.5, vardax 0.1.9, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.1.1, pyrox-gp 0.1.9, pyrox-lgm 0.1.2, pyrox-nn 0.1.0, manipy-jax 0.1.0.
+Listed at geonnax 0.0.9, kernellib 0.0.21, optax-bayes 0.0.3, filterax 0.0.5, vardax 0.1.9, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.3.0, pyrox-gp 0.3.0, pyrox-lgm 0.1.3, pyrox-nn 0.2.0, pyrox-ssm 0.2.0, manipy-jax 0.1.0.
 
 ## Upstream: `geonnax`
 
@@ -690,43 +690,35 @@ Gaussian processes for pyrox.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `BernoulliLikelihood` | class | Binary classification likelihood with logit link. |
+| `BernoulliLikelihood` | class | Binary classification likelihood with logit link, over `gaussx.BernoulliLikelihood`. |
 | `ConditionedGP` | class | GP conditioned on Gaussian-likelihood training observations. |
 | `ConditionedLatentFactorGP` | class | Latent-factor posterior — MAP latents plus the decoder posterior. |
-| `ConditionedMarkovGP` | class | Markov GP conditioned on Gaussian-likelihood observations. |
 | `ConditionedOILMMGP` | class | OILMM posterior — ``Q`` conditioned scalar GPs plus the mixing. |
 | `ConjugateVI` | class | Natural-gradient / CVI update for sparse variational GPs. |
 | `Constant` | class | Constant kernel ``k(x, x') = sigma^2``. |
-| `ConstantSDE` | class | Re-exported from `gaussx`. |
 | `Cosine` | class | Cosine kernel ``sigma^2 cos(2 pi \|\|x - x'\|\| / period)``. |
-| `CosineSDE` | class | Re-exported from `gaussx`. |
 | `DecoupledInducingFeatures` | class | Decoupled mean / covariance inducing-feature bases (Cheng & Boots 2017). |
 | `DecoupledPathwiseSampler` | class | Sparse/decoupled pathwise sampler with RFF prior + inducing update. |
 | `DeltaGuide` | class | Point-mass (MAP-style) variational posterior over inducing values. |
-| `DistLikelihood` | class | Generic likelihood wrapping any ``numpyro.distributions.Distribution``. |
+| `DistLikelihood` | class | Re-exported from `pyrox`. |
 | `ExpectationPropagation` | class | Parallel expectation propagation (Minka 2001) with damping. |
-| `ExpectationPropagationMarkov` | class | Parallel Expectation Propagation for `MarkovGPPrior`. |
 | `FourierInducingFeatures` | class | VFF — Variational Fourier inducing features on $[-L, L]^D$. |
 | `FullRankGuide` | class | Full-rank Gaussian variational posterior over inducing values ``u``. |
 | `GPPrior` | class | Finite-dimensional GP prior over a fixed training input set. |
 | `GaussNewtonInference` | class | Gauss-Newton inference: Newton loop with PSD-projected curvature. |
-| `GaussNewtonMarkovInference` | class | Gauss-Newton (Markov) inference: Newton with a strict PSD floor. |
-| `GaussianLikelihood` | class | Gaussian observation model $p(y \mid f) = N(y \mid f, \sigma^2)$. |
-| `Guide` | class | Abstract base for variational posterior families. |
-| `HeteroscedasticGaussianLikelihood` | class | Gaussian regression with input-dependent noise. |
+| `GaussianLikelihood` | class | Gaussian observation model $p(y \mid f) = N(y \mid f, \sigma^2)$, over `gaussx.GaussianLikelihood`. |
+| `GradientPosterior` | class | Gaussian posterior over $\nabla f$ at $M$ test points (point-major). |
+| `Guide` | class | Re-exported from `pyrox`. |
+| `HeteroscedasticGaussianLikelihood` | class | Gaussian regression with input-dependent noise, over `gaussx.HeteroscedasticGaussianLikelihood`. |
 | `ICMKernel` | class | Intrinsic coregionalization model with one shared latent kernel. |
 | `InducingFeatures` | class | Protocol for inter-domain inducing features. |
-| `IntegratedWienerSDE` | class | Re-exported from `gaussx`. |
 | `LMCKernel` | class | Linear model of coregionalization for vector-valued GPs. |
 | `LaplaceInference` | class | Laplace approximation via Newton iteration on the log posterior. |
-| `LaplaceMarkovInference` | class | Laplace approximation for `MarkovGPPrior`. |
 | `LaplacianInducingFeatures` | class | Inducing features from low-frequency graph Laplacian eigenvectors. |
 | `LatentFactorGPPrior` | class | GP latent factors with an analytically marginalized linear decoder. |
-| `Likelihood` | class | Abstract base for observation models. |
+| `Likelihood` | class | Re-exported from `pyrox`. |
 | `Linear` | class | Linear kernel ``sigma^2 x^T x' + bias``. |
-| `MarkovGPPrior` | class | Linear-time temporal GP prior over a sorted 1-D grid. |
 | `Matern` | class | Matern kernel with ``nu in {0.5, 1.5, 2.5}``. |
-| `MaternSDE` | class | Re-exported from `gaussx`. |
 | `MeanFieldGuide` | class | Diagonal Gaussian variational posterior over inducing values ``u``. |
 | `MultiOutputConditionedGP` | class | Multi-output GP conditioned on Gaussian-likelihood observations. |
 | `MultiOutputGPPrior` | class | Finite-dimensional multi-output GP prior over fixed training inputs. |
@@ -734,40 +726,29 @@ Gaussian processes for pyrox.
 | `MultiOutputSparseGPPrior` | class | Sparse multi-output GP prior over shared inducing inputs. |
 | `NaturalGuide` | class | Natural-parameter Gaussian variational posterior over inducing values. |
 | `NonGaussConditionedGP` | class | GP conditioned on a non-Gaussian likelihood via an advanced strategy. |
-| `NonGaussConditionedMarkovGP` | class | Markov GP conditioned on a non-Gaussian likelihood via a site-based strategy. |
-| `NormalizingKalmanPrior` | class | Normalizing Kalman Filter prior over a multivariate time grid. |
 | `OILMMGPPrior` | class | Orthogonal-mixing multi-output GP prior with a projected exact posterior. |
 | `OILMMKernel` | class | Orthogonal instantaneous linear mixing model. |
 | `PathwiseFunction` | class | Callable posterior function draw(s) produced by a pathwise sampler. |
 | `PathwiseSampler` | class | Exact-GP pathwise posterior sampler using Matheron's rule. |
 | `Periodic` | class | Periodic (MacKay) kernel. |
-| `PeriodicSDE` | class | Re-exported from `gaussx`. |
-| `PoissonLikelihood` | class | Count likelihood with log-link. |
+| `PoissonLikelihood` | class | Count likelihood with log link, over `gaussx.PoissonLikelihood`. |
 | `Polynomial` | class | Polynomial kernel ``sigma^2 (x^T x' + bias)^degree``. |
 | `PosteriorLinearization` | class | Iterated statistical-linearization site updates. |
-| `PosteriorLinearizationMarkov` | class | Posterior linearization for `MarkovGPPrior` (Markov IPLF). |
-| `ProductSDE` | class | Re-exported from `gaussx`. |
 | `QuasiNewtonInference` | class | MAP optimization via L-BFGS, Laplace covariance at convergence. |
-| `QuasiPeriodicSDE` | class | Re-exported from `gaussx`. |
 | `RBF` | class | Radial basis function (squared exponential) kernel. |
 | `RationalQuadratic` | class | Rational quadratic kernel. |
-| `SDEKernel` | class | Re-exported from `gaussx`. |
-| `SDEParams` | class | Re-exported from `gaussx`. |
 | `SharedInducingPoints` | class | Shared inducing inputs for multi-output latent GP collections. |
 | `SlepianInducingFeatures` | class | Region-localized Slepian inducing features on $S^2$. |
-| `SoftmaxLikelihood` | class | Multi-class classification likelihood with softmax link. |
-| `SparseConditionedMarkovGP` | class | Sparse Markov GP fitted to a guide. |
+| `SoftmaxLikelihood` | class | Multi-class classification likelihood with softmax link, over `gaussx.SoftmaxLikelihood`. |
 | `SparseGPPrior` | class | GP prior parameterized over inducing inputs ``Z``. |
-| `SparseMarkovGPPrior` | class | Sparse variational GP prior over an SDE kernel and inducing time grid. |
 | `SphericalHarmonicInducingFeatures` | class | VISH — inducing harmonics on $S^2$ (Dutordoir et al. 2020). |
-| `StudentTLikelihood` | class | Heavy-tailed regression: ``p(y \| f) = StudentT(nu, f, sigma)``. |
-| `SumSDE` | class | Re-exported from `gaussx`. |
+| `StudentTLikelihood` | class | Heavy-tailed regression $p(y \mid f) = \mathrm{StudentT}(\nu, f, \sigma)$, over `gaussx.StudentTLikelihood`. |
 | `WarpedGaussianLikelihood` | class | $p(y \mid f) = N(y \mid G(f), \sigma^2)$ -- the transformed-GP model. |
 | `White` | class | White-noise kernel ``sigma^2 delta(x, x')``. |
 | `WhitenedGuide` | class | Whitened-coordinate Gaussian variational posterior over inducing values. |
 | `collapsed_lfr_log_prob` | function | Log-likelihood with the linear decoder marginalized analytically. |
 | `decoder_posterior` | function | Closed-form matrix-normal posterior over the decoder. |
-| `funk_hecke_coefficients` | function | Funk-Hecke coefficients of a zonal kernel on $S^2$. |
+| `funk_hecke_coefficients` | function | Deprecated: use `kernellib.funk_hecke_coefficients` on a frozen kernel. |
 | `gp_factor` | function | Register the collapsed GP log marginal likelihood with NumPyro. |
 | `gp_sample` | function | Sample a latent function ``f`` at the prior's training inputs. |
 | `init_inducing` | function | Inducing inputs ``(M, D)``: rows of ``X`` picked by `kernellib.select_landmarks`. |
@@ -776,15 +757,10 @@ Gaussian processes for pyrox.
 | `lfr_factor` | function | Register the collapsed latent-factor log-likelihood with NumPyro. |
 | `lfr_model` | function | MAP-over-latents collapsed latent-factor regression model. |
 | `lfr_predictive_moments` | function | Exact moments of the product of two independent Gaussians. |
-| `markov_gp_factor` | function | Register the collapsed Markov-GP marginal log-likelihood with NumPyro. |
-| `markov_gp_sample` | function | Sample a latent function ``f`` at the prior's training times. |
 | `mo_gp_factor` | function | Register the collapsed multi-output GP marginal likelihood with NumPyro. |
 | `mo_svgp_elbo` | function | Structured multi-output SVGP ELBO as a differentiable scalar. |
 | `mo_svgp_factor` | function | Register the multi-output SVGP ELBO as a NumPyro factor site. |
-| `normalizing_kalman_factor` | function | Register the NKF marginal log-likelihood with NumPyro. |
 | `preconditioned_cg_solver` | function | A gaussx solver strategy for exact GPs: preconditioned CG plus SLQ. |
-| `sparse_markov_elbo` | function | Sparse variational ELBO for `SparseMarkovGPPrior`. |
-| `sparse_markov_factor` | function | Register `sparse_markov_elbo` as a NumPyro factor site. |
 | `svgp_elbo` | function | Structured SVGP ELBO as a differentiable scalar. |
 | `svgp_factor` | function | Register the structured SVGP ELBO as a NumPyro factor site. |
 | `warp_to_base` | function | Map observations into the space where the factor model is linear. |
@@ -802,7 +778,7 @@ Latent Gaussian models for pyrox.
 |---|---|---|
 | `AR1` | class | Stationary AR(1), $x_t = \rho x_{t-1} + \varepsilon_t$. |
 | `AbstractComponent` | class | A latent field with hyperpriors and a projector to observations. |
-| `AbstractObservation` | class | ``y \| eta`` for an LGM, with its own hyperparameters. |
+| `AbstractObservation` | class | Re-exported from `pyrox`. |
 | `BYM2` | class | BYM2 (Riebler et al., 2016), a mixture of unstructured and ICAR effects. |
 | `Bernoulli` | class | ``y ~ Bernoulli(sigmoid(eta))``, ``y`` in ``{0, 1}``. |
 | `Besag` | class | Intrinsic CAR (ICAR / Besag): precision $\tau R$, $R = D - W$. |
@@ -817,6 +793,7 @@ Latent Gaussian models for pyrox.
 | `Kronecker` | class | Separable product $Q = Q_\text{main} \otimes Q_\text{group}$ (R-INLA ``group``). |
 | `LGM` | class | A latent Gaussian model: components, fixed effects and an observation model. |
 | `Leroux` | class | Leroux CAR: precision $\tau(\rho R + (1 - \rho) I)$, $\rho \in [0, 1]$. |
+| `MarkovGP` | class | A temporal Gaussian process with a gaussx SDE kernel, in precision form. |
 | `NegativeBinomial` | class | ``y ~ NegBin(mean exp(eta), size)``; ``size`` under ``Gamma(1, 0.1)``. |
 | `PCAR1Rho` | class | PC prior on the lag-one correlation $\rho$ of an AR(1) process. |
 | `PCBYM2Phi` | class | PC prior on the BYM2 mixing parameter $\phi \in (0, 1)$. |
@@ -838,60 +815,9 @@ Latent Gaussian models for pyrox.
 
 Bayesian neural networks for pyrox.
 
-### `pyrox_nn`
+## Upstream: `pyrox-ssm`
 
-| Name | Kind | What it does |
-|---|---|---|
-| `ArcCosineFourierFeatures` | class | Random features for the arc-cosine kernel (Cho & Saul, 2009). |
-| `BayesianAffineModulation` | class | `geonnax.AffineModulation` with Normal priors on the FiLM generator. |
-| `BayesianConcatConditioner` | class | `geonnax.ConcatConditioner` with Normal priors on the projection. |
-| `BayesianFourierNet` | class | FourierNet with Bayesian priors on all filter and linear weights. |
-| `BayesianGaborNet` | class | GaborNet with Bayesian priors on all filter and linear weights. |
-| `BayesianHyperLinear` | class | `geonnax.HyperLinear` with Normal priors on the generator only. |
-| `BayesianNeuralField` | class | The full Bayesian Neural Field architecture. |
-| `BayesianSIREN` | class | SIREN with regime-scaled Normal priors on all layer weights. |
-| `BayesianSlepianEncoder` | class | Slepian encoder with NumPyro sites for cap radius and centre. |
-| `ConditionedRFFNet` | class | Conditional analogue of `pyrox_nn.RandomKitchenSinks`. |
-| `DeepVSSGP` | class | Deep Random Feature Expansion for Variational SSGP (Cutajar et al. 2017). |
-| `DenseDVI` | class | Deterministic Variational Inference dense layer (Wu et al., 2018). |
-| `DenseFlipout` | class | Bayesian dense layer with Flipout sign-flip structure. |
-| `DenseHierarchical` | class | Hierarchical Bayesian dense layer with multiplicative shrinkage. |
-| `DenseNCP` | class | Noise Contrastive Prior dense layer (Hafner et al., 2019). |
-| `DenseRank1` | class | Rank-1 ensemble dense layer. |
-| `DenseReparameterization` | class | Bayesian dense layer via the reparameterization trick. |
-| `DenseVariational` | class | Dense layer with a user-supplied prior factory. |
-| `DenseVariationalDropout` | class | Sparse variational dropout dense layer. |
-| `FourierFeatures` | class | Per-input dyadic-frequency Fourier basis. |
-| `HSGPFeatures` | class | Hilbert-Space Gaussian Process feature layer (Riutort-Mayol et al., 2023). |
-| `HyperFourierFeatures` | class | Random Fourier features with ``(W, b, log_lengthscale)`` from a parameter net. |
-| `InteractionFeatures` | class | Element-wise products on selected pairs of input columns. |
-| `LaplaceCosineFeatures` | class | Cosine-bias variant of random Fourier features for the Laplace kernel. |
-| `LaplaceFourierFeatures` | class | SSGP-style RFF layer with Laplace (Matern-1/2) spectral density. |
-| `LayerNormEnsemble` | class | Per-ensemble-member LayerNorm. |
-| `MCSigmoidDenseFA` | class | Heteroscedastic multi-label output layer (FA noise + sigmoid). |
-| `MCSoftmaxDenseFA` | class | Heteroscedastic multi-class output layer (FA noise + softmax). |
-| `MaternCosineFeatures` | class | Cosine-bias variant of random Fourier features for the Matern kernel. |
-| `MaternFourierFeatures` | class | SSGP-style RFF layer with Matern spectral density. |
-| `MultiHeadAttentionBE` | class | Multi-head attention with BatchEnsemble rank-1 projections. |
-| `NCPNormalOutput` | class | Output-side Noise Contrastive Prior layer (Hafner et al., 2018). |
-| `RBFCosineFeatures` | class | Cosine-bias variant of random Fourier features for the RBF kernel. |
-| `RBFFourierFeatures` | class | SSGP-style RFF layer with RBF spectral density. |
-| `RandomFeatureGaussianProcess` | class | SNGP output layer (Liu et al., 2020). |
-| `RandomKitchenSinks` | class | Random Kitchen Sinks: RFF + a learned linear head. |
-| `SeasonalFeatures` | class | Period-and-harmonic cos/sin basis on a scalar time axis. |
-| `Standardization` | class | Apply a fixed-coefficient affine standardization. |
-| `VariationalFourierFeatures` | class | VSSGP — RFF with a learnable variational posterior over frequencies. |
-| `cyclic_encode` | function | Re-exported from `geonnax`. |
-| `deg2rad` | function | Re-exported from `geonnax`. |
-| `fourier_features` | function | Re-exported from `geonnax`. |
-| `interaction_features` | function | Re-exported from `geonnax`. |
-| `lonlat_scale` | function | Re-exported from `geonnax`. |
-| `lonlat_to_cartesian3d` | function | Re-exported from `geonnax`. |
-| `seasonal_features` | function | Re-exported from `geonnax`. |
-| `seasonal_frequencies` | function | Re-exported from `geonnax`. |
-| `spherical_harmonic_encode` | function | Re-exported from `geonnax`. |
-| `standardize` | function | Re-exported from `geonnax`. |
-| `unstandardize` | function | Re-exported from `geonnax`. |
+State-space models for pyrox.
 
 ## Upstream: `manipy-jax`
 
