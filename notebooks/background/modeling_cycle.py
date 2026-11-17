@@ -140,7 +140,7 @@ class Emulator:
 
     def __init__(self, components=40, seed=0):
         self.scale_in = sklearn.preprocessing.StandardScaler()
-        self.basis = sklearn.decomposition.PCA(components)
+        self.basis = sklearn.decomposition.PCA(components, random_state=seed)
         self.scale_out = sklearn.preprocessing.StandardScaler()
         self.network = sklearn.neural_network.MLPRegressor(
             hidden_layer_sizes=(128, 128), max_iter=3000, tol=1e-6, random_state=seed
@@ -164,7 +164,7 @@ class Amortized:
     """q(θ | y; ν): scene → a Gaussian over θ, in one forward pass."""
 
     def __init__(self, hidden=(128, 128), seed=0):
-        self.basis = sklearn.decomposition.PCA(60)
+        self.basis = sklearn.decomposition.PCA(60, random_state=seed)
         self.scale = sklearn.preprocessing.StandardScaler()
         self.scale_theta = sklearn.preprocessing.StandardScaler()
         options = dict(max_iter=600, tol=1e-6, early_stopping=True, random_state=seed)
