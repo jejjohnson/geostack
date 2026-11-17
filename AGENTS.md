@@ -42,7 +42,7 @@ not into a local package.
 
 | Layer | `references/…` | Libraries | pixi environment | Capability index |
 |---|---|---|---|---|
-| GeoStack | `geostack/` | pipekit, geotoolz, xrtoolz (uv workspaces; members under `packages/`), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
+| GeoStack | `geostack/` | pipekit, geotoolz (uv workspaces; members under `packages/`; geotoolz holds xrtoolz too), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
 | GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, finitevolX, spectraldiffx | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
 | GeoML | `geoml/` | geonnax, kernellib, optax_bayes, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
 | GeoModels | `geomodels/` | plumax, somax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |

@@ -24,7 +24,7 @@ lazy, `try`-guarded and type-checking-only imports). It then states eight
 rules that keep the graph free of cycles.
 
 <!-- violation-summary:begin -->
-Today it has **two imports their package does not declare**. [](#tbl-dg-violations) lists each one with its fix.
+Today it has **five edges up a layer** and **two imports their package does not declare**. [](#tbl-dg-violations) lists each one with its fix.
 <!-- violation-summary:end -->
 
 +++
@@ -90,15 +90,17 @@ flowchart TB
   end
   subgraph geostack["GeoStack"]
     direction LR
-    xrtoolz["xrtoolz"]
     geotoolz["geotoolz"]
     georeader["georeader (third party)"]
     pipekit["pipekit"]
   end
   argminax --> gaussx
   filterax --> gaussx
+  finitevolX --> integrix
+  finitevolX -.-> pipekit
   finitevolX --> spectraldiffx
   gauss_flows --> gaussx
+  geotoolz --> functax
   geotoolz --> georeader
   geotoolz --> pipekit
   integrix --> functax
@@ -109,14 +111,17 @@ flowchart TB
   optax_bayes -.-> gaussx
   plumax --> finitevolX
   plumax --> pipekit
+  plumax --> radtrax
+  plumax -.-> vardax
+  plumax -.-> xtremax
   pyrox -.-> gauss_flows
   pyrox --> kernellib
-  radtrax --> gaussx
-  radtrax -.-> georeader
+  radtrax --> argminax
+  radtrax --> geonnax
+  radtrax -.-> geotoolz
   sesmax -.-> filterax
   sesmax --> finitevolX
   sesmax --> geonnax
-  sesmax --> integrix
   sesmax --> pipekit
   sesmax -.-> vardax
   somax --> filterax
@@ -124,14 +129,14 @@ flowchart TB
   somax --> geonnax
   somax --> pipekit
   spectraldiffx --> gaussx
-  vardax --> gaussx
+  vardax --> argminax
   vardax --> geonnax
+  vardax --> integrix
   vardax --> pipekit
-  xrtoolz --> geotoolz
 ```
 :::
 
-23 repositories, 41 packages and 41 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+22 repositories, 42 packages and 55 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -213,8 +218,7 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoNumerics | 2 | finitevolX | finite volume |
 | GeoNumerics | 1 | argminax, integrix, spectraldiffx | optimisation, integration and spectral methods |
 | GeoNumerics | 0 | functax, gaussx | linear algebra, Gaussians and function approximation |
-| GeoStack | 2 | xrtoolz | operators on xarray, lifting geoops over cubes |
-| GeoStack | 1 | geotoolz | operators on arrays and geoarray carriers |
+| GeoStack | 1 | geotoolz | operators on geoarray carriers, and on xarray lifting geoops over cubes |
 | GeoStack | 0 | georeader, pipekit | pipelines and readers |
 <!-- tier-table:end -->
 :::
@@ -242,6 +246,11 @@ the shared vocabulary belongs in filterax, and vardax reuses it
 |---|---|---|---|---|
 | undeclared | somax:somax/_src/da/filterax_bridge.py | filterax | `module` | module-level imports in somax/_src/da, declared only in the da dependency group; make it an extra |
 | undeclared | somax:somax/_src/da/obs.py | filterax | `module` | the same extra |
+| upward | finitevolx | pipekit-jax | `extra` | pipekit is Core in the stack layer map, below GeoNumerics; this graph has no Core layer yet, so it ranks pipekit with GeoStack |
+| upward | finitevolx | pipekit-ops | `extra` | pipekit is Core in the stack layer map, below GeoNumerics; this graph has no Core layer yet, so it ranks pipekit with GeoStack |
+| upward | geotoolz-array | functax | `base` | functax is Core in the stack layer map, below GeoStack; this graph has no Core layer yet, so it ranks functax with GeoNumerics |
+| upward | geotoolz-ops | functax | `extra` | functax is Core in the stack layer map, below GeoStack; this graph has no Core layer yet, so it ranks functax with GeoNumerics |
+| upward | xrtoolz-ops | functax | `extra` | functax is Core in the stack layer map, below GeoStack; this graph has no Core layer yet, so it ranks functax with GeoNumerics |
 <!-- violation-table:end -->
 :::
 
@@ -298,16 +307,27 @@ cannot import, so most of its tests could no longer be collected.
 <!-- edge-table:begin -->
 | From | To | Strongest evidence | Example |
 |---|---|---|---|
+| plumax | argminax | extra | `plumax → argminax` |
 | plumax | finitevolX | base | `plumax → finitevolx` |
 | plumax | gaussx | base | `plumax → gaussx` |
-| plumax | pipekit | base | `plumax → pipekit` |
+| plumax | georeader | extra | `plumax → georeader-spaceml` |
+| plumax | geotoolz | extra | `plumax → geotoolz-ops` |
+| plumax | integrix | base | `plumax → integrix` |
+| plumax | pipekit | base | `plumax → pipekit-ops` |
+| plumax | radtrax | base | `plumax → radtrax` |
+| plumax | vardax | extra | `plumax → vardax` |
+| plumax | xtremax | extra | `plumax → xtremax` |
+| radtrax | argminax | base | `radtrax → argminax` |
 | radtrax | gaussx | base | `radtrax → gaussx` |
+| radtrax | geonnax | base | `radtrax → geonnax` |
 | radtrax | georeader | extra | `radtrax → georeader-spaceml` |
+| radtrax | geotoolz | extra | `radtrax → geotoolz-ops` |
+| radtrax | pipekit | extra | `radtrax → pipekit-ops` |
 | sesmax | filterax | extra | `sesmax-core → filterax` |
 | sesmax | finitevolX | base | `sesmax-core → finitevolx` |
 | sesmax | geonnax | base | `sesmax-core → geonnax` |
 | sesmax | integrix | base | `sesmax-core → integrix` |
-| sesmax | pipekit | base | `sesmax-core → pipekit` |
+| sesmax | pipekit | base | `sesmax-core → pipekit-cycle` |
 | sesmax | spectraldiffx | base | `sesmax-core → spectraldiffx` |
 | sesmax | vardax | extra | `sesmax-core → vardax` |
 | somax | filterax | import | `somax → filterax` |
@@ -326,18 +346,21 @@ cannot import, so most of its tests could no longer be collected.
 | pyrox | gaussx | base | `pyrox-gp → gaussx` |
 | pyrox | geonnax | base | `pyrox-gp → geonnax` |
 | pyrox | kernellib | base | `pyrox-gp → kernellib` |
+| vardax | argminax | base | `vardax → argminax` |
 | vardax | gaussx | base | `vardax → gaussx` |
 | vardax | geonnax | base | `vardax → geonnax` |
-| vardax | pipekit | base | `vardax → pipekit` |
+| vardax | integrix | base | `vardax → integrix` |
+| vardax | pipekit | base | `vardax → pipekit-cycle` |
 | argminax | gaussx | base | `argminax → gaussx` |
 | finitevolX | gaussx | base | `finitevolx → gaussx` |
+| finitevolX | integrix | base | `finitevolx → integrix` |
+| finitevolX | pipekit | extra | `finitevolx → pipekit-jax` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
 | integrix | functax | base | `integrix → functax` |
 | integrix | gaussx | base | `integrix → gaussx` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
+| geotoolz | functax | base | `geotoolz-array → functax` |
 | geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
-| geotoolz | pipekit | base | `geotoolz-array → pipekit` |
-| xrtoolz | geotoolz | base | `xrtoolz-ops → geotoolz-ops` |
-| xrtoolz | pipekit | base | `xrtoolz-ops → pipekit` |
+| geotoolz | pipekit | base | `geotoolz-array → pipekit-array` |
 <!-- edge-table:end -->
 :::

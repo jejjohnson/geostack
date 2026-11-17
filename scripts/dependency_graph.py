@@ -52,7 +52,7 @@ TITLES = {
 }
 #: within a layer, a repository may import only repositories of a lower tier
 TIERS: dict[str, dict[str, int]] = {
-    "geostack": {"pipekit": 0, "georeader": 0, "geotoolz": 1, "xrtoolz": 2},
+    "geostack": {"pipekit": 0, "georeader": 0, "geotoolz": 1},
     "numerics": {
         "gaussx": 0,
         "functax": 0,
@@ -78,8 +78,7 @@ TIERS: dict[str, dict[str, int]] = {
 TIER_ROLES = {
     "geostack": (
         "pipelines and readers",
-        "operators on arrays and geoarray carriers",
-        "operators on xarray, lifting geoops over cubes",
+        "operators on geoarray carriers, and on xarray lifting geoops over cubes",
     ),
     "numerics": (
         "linear algebra, Gaussians and function approximation",
@@ -101,7 +100,20 @@ TIER_ROLES = {
 #: on one that is gone, so the list only shrinks
 #: Rules between packages name the two packages, and ``undeclared`` names the
 #: importing file, so a new edge or a new import is a new entry
+_CORE_FUNCTAX = (
+    "functax is Core in the stack layer map, below GeoStack; this graph has no"
+    " Core layer yet, so it ranks functax with GeoNumerics"
+)
+_CORE_PIPEKIT = (
+    "pipekit is Core in the stack layer map, below GeoNumerics; this graph has"
+    " no Core layer yet, so it ranks pipekit with GeoStack"
+)
 KNOWN: dict[tuple[str, str, str], str] = {
+    ("upward", "finitevolx", "pipekit-jax"): _CORE_PIPEKIT,
+    ("upward", "finitevolx", "pipekit-ops"): _CORE_PIPEKIT,
+    ("upward", "geotoolz-array", "functax"): _CORE_FUNCTAX,
+    ("upward", "geotoolz-ops", "functax"): _CORE_FUNCTAX,
+    ("upward", "xrtoolz-ops", "functax"): _CORE_FUNCTAX,
     ("undeclared", "somax:somax/_src/da/filterax_bridge.py", "filterax"): (
         "module-level imports in somax/_src/da, declared only in the da"
         " dependency group; make it an extra"
@@ -743,9 +755,8 @@ def render(page: Path, g: Graph) -> str:
 
 #: where each repository's guard test goes, relative to its root
 GUARD_PATHS = {
-    "pipekit": "packages/pipekit/tests/test_dependency_rules.py",
+    "pipekit": "packages/pipekit-ops/tests/test_dependency_rules.py",
     "geotoolz": "packages/geotoolz-ops/tests/test_dependency_rules.py",
-    "xrtoolz": "packages/xrtoolz-ops/tests/test_dependency_rules.py",
     "pyrox": "packages/pyrox/tests/test_dependency_rules.py",
 }
 PAGE_URL = (

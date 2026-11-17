@@ -82,7 +82,7 @@ walks a running example through each row, from detector counts to heatwave retur
 |---|---|---|
 | **GeoStack** · data in, data out | [pipekit](https://github.com/jejjohnson/pipekit) | Carrier-agnostic operator-graph framework, plus `-array`, `-cycle`, `-evaluate`, `-experiment`, `-jax`, `-train` |
 | | [geotoolz](https://github.com/jejjohnson/geotoolz) | Remote-sensing operators on GeoTensor, plus `-catalog`, `-cloud`, `-patcher`, `-products` |
-| | [xrtoolz](https://github.com/jejjohnson/xrtoolz) | Operators for xarray data cubes, plus `-core`, `-einx`, `-grad`, `-reader`, `-sklearn` |
+| | [xrtoolz](https://github.com/jejjohnson/geotoolz/tree/main/packages/xrtoolz-ops) | Operators for xarray data cubes, plus `-ops` and `-products`, in the geotoolz workspace |
 | | [georeader](https://github.com/spaceml-org/georeader) | Raster reading and the GeoTensor carrier (third-party, read-only here) |
 | **GeoNumerics** · structured numerics | [gaussx](https://github.com/jejjohnson/gaussx) | Structured linear algebra and Gaussian primitives on lineax |
 | | [finitevolX](https://github.com/jejjohnson/finitevolX) | Arakawa C-grid finite-volume operators |
@@ -126,7 +126,7 @@ run on both:
   <img alt="The repositories in four layer bands, with edges pointing down from each repository to those it depends on or imports" src="docs/images/overview/dependency_graph.svg" width="100%">
 </p>
 
-23 repositories, 41 packages and 41 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+22 repositories, 42 packages and 55 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 

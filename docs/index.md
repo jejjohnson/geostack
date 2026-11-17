@@ -6,7 +6,7 @@ Welcome to the documentation for GeoStack.
 
 GeoStack is a vertically integrated, JAX-native research software stack for geophysical modeling, inference and data assimilation. We suggest you start with the [GeoStack overview](overview.md), which covers the problem, the three organising axes, the package map and an end-to-end walkthrough. Its [reading list](overview.md#sec-reading) links every report, the GeoModels pages and the benchmarks gallery.
 
-geostack has no package of its own. The scripts and notebooks here compose the libraries it builds on ([pipekit](https://github.com/jejjohnson/pipekit), [geotoolz](https://github.com/jejjohnson/geotoolz), [xrtoolz](https://github.com/jejjohnson/xrtoolz) and [georeader](https://github.com/spaceml-org/georeader)), which are pinned as git submodules under `references/`. So any reusable code goes into those libraries.
+geostack has no package of its own. The scripts and notebooks here compose the libraries it builds on ([pipekit](https://github.com/jejjohnson/pipekit), [geotoolz](https://github.com/jejjohnson/geotoolz), which holds xrtoolz too, and [georeader](https://github.com/spaceml-org/georeader)), which are pinned as git submodules under `references/`. So any reusable code goes into those libraries.
 
 ::::{grid} 1 1 3 3
 
