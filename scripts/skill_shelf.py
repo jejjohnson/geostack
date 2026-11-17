@@ -9,7 +9,8 @@ regenerated and checked:
   ``__all__`` of its ``__init__.py``, with the subpackage each is imported
   from;
 - the names each other package in the stack uses, from its imports and its
-  attribute accesses on the library's modules.
+  attribute accesses on the library's modules;
+- the names each other package subclasses, from the bases of its classes.
 
 It reads files only (it imports and installs nothing), like
 ``dependency_graph.py``, whose package discovery it reuses.
@@ -24,7 +25,7 @@ import argparse
 import ast
 import sys
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -33,7 +34,8 @@ import dependency_graph as dg
 
 
 ROOT = Path(__file__).resolve().parents[1]
-#: a dependent receives a unit's card when it uses at least this many names
+#: a dependent receives a unit's card when it uses at least this many names,
+#: or when it subclasses one of the unit's names
 CARD_THRESHOLD = 3
 
 
@@ -374,6 +376,51 @@ def uses(source: str, modules: set[str], names: set[str]) -> set[str]:
     return found & names
 
 
+def subclasses(source: str, modules: set[str], names: set[str]) -> set[str]:
+    """The names of ``names`` that a class in ``source`` has as a base.
+
+    A base counts when it is a name imported from one of ``modules`` (under
+    its own name or an ``as`` name), or ``alias.name`` / ``alias.sub.name``
+    for an alias of a module; a subscript (``Base[T]``) counts as its value.
+    A class that only matches a protocol's shape, without naming it as a
+    base, is not found.
+    """
+    tree = _parse(source)
+    if tree is None:
+        return set()
+    aliases: set[str] = set()
+    local: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.split(".")[0] in modules:
+                    aliases.add(alias.asname or alias.name.split(".")[0])
+        elif (
+            isinstance(node, ast.ImportFrom)
+            and node.level == 0
+            and node.module
+            and node.module.split(".")[0] in modules
+        ):
+            for alias in node.names:
+                local[alias.asname or alias.name] = alias.name
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        for base in node.bases:
+            if isinstance(base, ast.Subscript):
+                base = base.value
+            if isinstance(base, ast.Name) and base.id in local:
+                found.add(local[base.id])
+            elif isinstance(base, ast.Attribute):
+                head: ast.expr = base.value
+                while isinstance(head, ast.Attribute):
+                    head = head.value
+                if isinstance(head, ast.Name) and head.id in aliases:
+                    found.add(base.attr)
+    return found & names
+
+
 def unit_of(shelf: Shelf, origin: str) -> str | None:
     """The unit a ``module.subpackage`` belongs to; the longest pattern wins."""
     module = origin.split(".")[0]
@@ -391,6 +438,8 @@ class Measured:
 
     names: dict[str, str]  # public name -> module.subpackage
     used: dict[str, set[str]]  # dependent distribution -> names it uses
+    #: dependent distribution -> names one of its classes has as a base
+    subclassed: dict[str, set[str]] = field(default_factory=dict)
 
 
 def measure(shelf: Shelf, pkgs: dict[str, dg.Package]) -> Measured:
@@ -401,16 +450,22 @@ def measure(shelf: Shelf, pkgs: dict[str, dg.Package]) -> Measured:
         names |= exports(pkgs[dist])
         modules |= {dg._module_name(root) for root in pkgs[dist].modules}
     used: dict[str, set[str]] = {}
+    subclassed: dict[str, set[str]] = {}
     for dist, pkg in sorted(pkgs.items()):
         if dist in shelf.packages or pkg.repo in dg.THIRD_PARTY:
             continue
         found: set[str] = set()
+        bases: set[str] = set()
         for root in pkg.modules:
             for f in dg._files(root):
-                found |= uses(f.read_text(encoding="utf-8"), modules, set(names))
+                source = f.read_text(encoding="utf-8")
+                found |= uses(source, modules, set(names))
+                bases |= subclasses(source, modules, set(names))
         if found:
             used[dist] = found
-    return Measured(names, used)
+        if bases:
+            subclassed[dist] = bases
+    return Measured(names, used, subclassed)
 
 
 def unassigned(shelf: Shelf, m: Measured) -> list[str]:
@@ -469,15 +524,29 @@ def uses_table(shelf: Shelf, m: Measured) -> str:
 
 
 def cards_table(shelf: Shelf, m: Measured) -> str:
-    """The cards each dependent receives: units it uses ``CARD_THRESHOLD`` names of."""
+    """The cards each dependent receives.
+
+    A unit's card goes to a dependent that uses ``CARD_THRESHOLD`` of its
+    names, or that subclasses one of them; the row names the bases.
+    """
     rows = ["| Dependent package | Cards | Also uses |", "|---|---|---|"]
     for dist in _dependents(m):
         counts = _count(shelf, m, m.used[dist])
-        cards = [u.name for u in shelf.units if counts[u.name] >= CARD_THRESHOLD]
+        bases: dict[str, list[str]] = {}
+        for name in sorted(m.subclassed.get(dist, ())):
+            unit = unit_of(shelf, m.names[name])
+            if unit is not None:
+                bases.setdefault(unit, []).append(f"`{name}`")
+        cards = []
+        for u in shelf.units:
+            if u.name in bases:
+                cards.append(f"{u.name} (subclasses {', '.join(bases[u.name])})")
+            elif counts[u.name] >= CARD_THRESHOLD:
+                cards.append(u.name)
         below = [
             f"{u.name} ({counts[u.name]})"
             for u in shelf.units
-            if 0 < counts[u.name] < CARD_THRESHOLD
+            if 0 < counts[u.name] < CARD_THRESHOLD and u.name not in bases
         ]
         rows.append(f"| {dist} | {'; '.join(cards) or 'none'} | {'; '.join(below)} |")
     return "\n".join(rows)

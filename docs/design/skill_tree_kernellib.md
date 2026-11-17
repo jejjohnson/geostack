@@ -103,7 +103,7 @@ One entry is a judgement call: feature maps are tagged setup, because a map is f
 (sk-units)=
 ## Units and cards
 
-A dependent package receives the card of each unit it uses at least three names of.
+A dependent package receives the card of each unit it uses at least three names of, or subclasses a name of.
 
 :::{table} The cards each dependent package would receive from kernellib.
 :label: tbl-sk-cards
