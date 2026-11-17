@@ -1,6 +1,6 @@
 ---
 title: "Parallelism: threads, processes and async"
-subtitle: "Background · explainer · why reading 121 tiles takes 6.4 s one at a time, and which mechanism gets it to 0.23 s"
+subtitle: "Background · explainer · why reading 121 tiles takes 6.4 s one at a time, and which mechanism gets it to 0.21 s"
 short_title: Parallelism
 description: "A visual explainer of concurrency and parallelism in Python: waiting versus computing, async, threads and the GIL, processes, vectorising and distributing, with measured timings for one Sentinel-2 band; background for the storage formats page and the storage design pages."
 date: 2026-11-13
@@ -25,11 +25,11 @@ Background for the storage pages that follow it. One running example, reading al
 
 ## TL;DR: waiting and computing need different tools
 
-- **Two kinds of work.** Waiting on a network or disk leaves the CPU free; computing keeps it busy. A cloud read is mostly waiting: 50 ms of fetch to 2.3 ms of decode per tile.
-- **Async** overlaps waits on one thread and never computes two things at once: 0.39 s with 64 requests in flight, and 6.47 s if one blocking call hides inside it.
-- **Threads** overlap waits, and computing too when it runs in NumPy, zlib or Rust, which release the GIL: 0.23 s with 64 threads, against 6.44 s serial.
-- **Processes** overlap any computing, including pure Python, and pay in start-up time and copying; for this read they are expensive threads (3.26 s with 2).
-- **Below and above.** Vectorising speeds up one worker (45× for scaling a tile); distributing adds machines.
+- **Two kinds of work.** Waiting on a network or disk leaves the CPU free; computing keeps it busy. A cloud read is mostly waiting: 50 ms of fetch to 2.2 ms of decode per tile.
+- **Async** overlaps waits on one thread and never computes two things at once: 0.38 s with 64 requests in flight, and 6.40 s if one blocking call hides inside it.
+- **Threads** overlap waits, and computing too when it runs in NumPy, zlib or Rust, which release the GIL: 0.21 s with 64 threads, against 6.38 s serial.
+- **Processes** overlap any computing, including pure Python, and pay in start-up time and copying; for this read they are expensive threads (3.24 s with 2).
+- **Below and above.** Vectorising speeds up one worker (46× for scaling a tile); distributing adds machines.
 
 ## On the page
 
@@ -43,6 +43,6 @@ Background for the storage pages that follow it. One running example, reading al
 
 ## Sources and reproduction
 
-Every measured number on the page comes from `notebooks/background/parallelism.py` (run by hand: `python notebooks/background/parallelism.py`; its first cell lists what it needs). The recorded output is `docs/images/background_parallelism/results.json`, and the page was built from it. It is not a DVC stage: the timings depend on the machine, so a scheduled `dvc repro` would rewrite them on every run.
+Every measured number on the page comes from `notebooks/background/parallelism.py` (run by hand: `pixi run python notebooks/background/parallelism.py`), with every setting read from `configs/background/parallelism.yaml`. The recorded output is `docs/images/background_parallelism/results.json`, and the page was built from it. It is not a DVC stage: the timings depend on the machine, so a scheduled `dvc repro` would rewrite them on every run.
 
 Sources: the Python documentation for asyncio [@python_asyncio], `concurrent.futures` [@python_concurrent_futures] and free threading [@python_free_threading]; PEP 703 [@pep703]; the dask scheduling guide [@dask_scheduling]; and the zarr-python source [@zarr_python].
