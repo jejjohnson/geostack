@@ -125,9 +125,25 @@ RECIPE_HASH = pipekit_ops.pipeline_hash(NDVI, b"")
 
 
 def run_recipe(job_id: str, request: RunRequest, catalog: gc.GeoCatalog) -> None:
-    """The ten stages of the pipeline page, ending in one row of the product table."""
+    """Run the job and record how it ended: a job never stays 'running'."""
     with database() as db:
         db.execute("UPDATE jobs SET status = 'running' WHERE id = ?", (job_id,))
+    try:
+        product_id = run_stages(job_id, request, catalog)
+    except Exception:
+        # nobody holds the future, so the job row is the only record of a failure
+        with database() as db:
+            db.execute("UPDATE jobs SET status = 'failed' WHERE id = ?", (job_id,))
+        raise
+    with database() as db:
+        db.execute(
+            "UPDATE jobs SET status = 'done', product_id = ? WHERE id = ?",
+            (product_id, job_id),
+        )
+
+
+def run_stages(job_id: str, request: RunRequest, catalog: gc.GeoCatalog) -> str:
+    """The ten stages of the pipeline page, ending in one row of the product table."""
     interval = pd.Interval(
         pd.Timestamp(request.start), pd.Timestamp(request.end), closed="both"
     )
@@ -166,10 +182,7 @@ def run_recipe(job_id: str, request: RunRequest, catalog: gc.GeoCatalog) -> None
             (product_id, str(request.start), str(request.end), *request.bounds,
              f"products.icechunk#{product_id}", snapshot_id, RECIPE_HASH),
         )
-        db.execute(
-            "UPDATE jobs SET status = 'done', product_id = ? WHERE id = ?",
-            (product_id, job_id),
-        )
+    return product_id
 
 
 # === app ===
@@ -237,17 +250,19 @@ def start_job(
     payload = request.model_dump_json() + RECIPE_HASH
     job_id = hashlib.sha256(payload.encode()).hexdigest()[:12]
     with database() as db:
-        # one statement decides who creates the job: concurrent retries cannot both win
-        inserted = db.execute(
-            "INSERT INTO jobs VALUES (?, 'queued', NULL) ON CONFLICT (id) DO NOTHING",
+        # one statement decides who starts the job: a new id is inserted, a failed job
+        # is queued again, anything else is left alone; concurrent retries cannot both win
+        claimed = db.execute(
+            "INSERT INTO jobs VALUES (?, 'queued', NULL) ON CONFLICT (id) DO UPDATE"
+            " SET status = 'queued' WHERE jobs.status = 'failed'",
             (job_id,),
         )
-        created = inserted.rowcount == 1
+        started = claimed.rowcount == 1
         row = db.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
-    if not created:
+    if not started:
         response.status_code = 200
         return job_from_row(row)
-    # only the request that inserted the row queues the work
+    # only the request that claimed the row queues the work
     http.app.state.workers.submit(run_recipe, job_id, request, http.app.state.catalog)
     return job_from_row(row)
 

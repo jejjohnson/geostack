@@ -23,9 +23,9 @@
 # the three read variants.
 #
 # Needs: everything `geo_pipeline.py` needs, plus FastAPI, uvicorn and httpx.
-# It illustrates a docs page and is not a stage of the DVC pipeline; run it by hand:
+# The third-party packages are in the `background` pixi environment. It was run against geotoolz at 640670c and pipekit at 9e86a56 (which has pipekit-ops), newer than the submodule pins. Not a stage of the DVC pipeline; run it by hand:
 #
-#     python notebooks/background/backends.py
+#     pixi run -e background python notebooks/background/backends.py
 #
 # It writes `docs/images/background_backends/results.json`, the file the page's
 # numbers were taken from. Timings depend on the machine and change from run to run; counts, sizes and errors do not. About half a minute. Uses local port 8765.
@@ -79,6 +79,14 @@ try:
                       "errors": sum(x.status_code >= 400 for x in burst), "job_ids": len({x.json()["id"] for x in burst})}
         while c.get(f"/jobs/{burst[0].json()['id']}").json()["status"] not in ("done", "failed"): time.sleep(0.05)
         R["burst"]["products_for_it"] = sum(p["id"] == f"ndvi_{burst[0].json()['id']}" for p in c.get("/products").json())
+        # a run that cannot succeed (no scenes that year) must end as 'failed'; a retry queues it again
+        doomed = dict(body, start="2031-06-01", end="2031-06-30")
+        def wait(job_id):
+            while (job := c.get(f"/jobs/{job_id}").json())["status"] not in ("done", "failed"): time.sleep(0.05)
+            return job
+        rf = c.post("/jobs", json=doomed); failed = wait(rf.json()["id"])
+        rf2 = c.post("/jobs", json=doomed)
+        R["failure"] = {"status": failed["status"], "retry_status": rf2.status_code, "after_retry": wait(rf2.json()["id"])["status"]}
         r3 = c.post("/jobs", json=body); R["repost_after_status"], R["repost_after"] = r3.status_code, r3.json()
         R["search"] = c.get("/products", params={"bbox": "724000,4376000,725000,4377000", "start": "2026-06-01", "end": "2026-06-02"}).json()
         R["search_miss"] = c.get("/products", params={"bbox": "100000,4376000,101000,4377000"}).json()

@@ -1,6 +1,6 @@
 {
  "empty": [],
- "post_ms": 6.3,
+ "post_ms": 6.6,
  "post_status": 202,
  "job": {
   "id": "35d3ee9cf866",
@@ -9,8 +9,8 @@
  },
  "repost_status": 200,
  "repost_same": true,
- "job_ms": 191.7,
- "polls": 4,
+ "job_ms": 246.9,
+ "polls": 5,
  "job_done": {
   "id": "35d3ee9cf866",
   "status": "done",
@@ -23,6 +23,11 @@
   "errors": 0,
   "job_ids": 1,
   "products_for_it": 1
+ },
+ "failure": {
+  "status": "failed",
+  "retry_status": 202,
+  "after_retry": "failed"
  },
  "repost_after_status": 200,
  "repost_after": {
@@ -42,7 +47,7 @@
     4379000.0
    ],
    "href": "products.icechunk#ndvi_35d3ee9cf866",
-   "snapshot_id": "Y8XXQNC0BN0T6VHXKA5G",
+   "snapshot_id": "ZEEMGHXMGC446YN0A2G0",
    "recipe_hash": "4b8c154a8762594f3212fa70805170ff6f9755f061166f02c72452ca50319ed0"
   }
  ],
@@ -58,7 +63,7 @@
    4379000.0
   ],
   "href": "products.icechunk#ndvi_35d3ee9cf866",
-  "snapshot_id": "Y8XXQNC0BN0T6VHXKA5G",
+  "snapshot_id": "ZEEMGHXMGC446YN0A2G0",
   "recipe_hash": "4b8c154a8762594f3212fa70805170ff6f9755f061166f02c72452ca50319ed0"
  },
  "404": [
@@ -93,18 +98,18 @@
   "RunRequest",
   "ValidationError"
  ],
- "search_ms": 4.18,
+ "search_ms": 2.26,
  "trap_blocking": {
   "wall_s": 4.03,
-  "health_ms": 3981.3
+  "health_ms": 3980.9
  },
  "trap_plain": {
   "wall_s": 0.23,
-  "health_ms": 2.9
- },
- "trap_offloaded": {
-  "wall_s": 0.81,
   "health_ms": 2.8
  },
- "lines": 289
+ "trap_offloaded": {
+  "wall_s": 0.82,
+  "health_ms": 3.0
+ },
+ "lines": 304
 }

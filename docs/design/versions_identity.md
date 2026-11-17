@@ -46,6 +46,6 @@ Background for the Level 2 collections and recipe registries pages. The running 
 
 ## Sources and reproduction
 
-Every measured number on the page comes from `notebooks/background/versions.py` (run by hand: `python notebooks/background/versions.py`; its first cell lists what it needs). The recorded output is `docs/images/background_versions/results.json` and `dvc_icechunk.json`, and the page was built from it. It is not a DVC stage: snapshot ids are generated, so they differ on every run.
+Every measured number on the page comes from `notebooks/background/versions.py` (run by hand: `pixi run -e background python notebooks/background/versions.py`; its first cell lists what it needs). The recorded output is `docs/images/background_versions/results.json` and `dvc_icechunk.json`, and the page was built from it. It is not a DVC stage: snapshot ids are generated, so they differ on every run.
 
 Sources: the Icechunk documentation [@icechunk_docs], with behaviour observed in icechunk 2.3.1; the git [@git_docs] and DVC [@dvc_docs] documentation, as known and not re-checked online for the page.

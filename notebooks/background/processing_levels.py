@@ -23,9 +23,9 @@
 # of day 32.
 #
 # Needs: NumPy, SciPy, einx, matplotlib.
-# It illustrates a docs page and is not a stage of the DVC pipeline; run it by hand:
+# The third-party packages are in the `background` pixi environment. Not a stage of the DVC pipeline; run it by hand:
 #
-#     python notebooks/background/processing_levels.py
+#     pixi run -e background python notebooks/background/processing_levels.py
 #
 # It writes `docs/images/background_processing_levels/results.json`, the file the page's
 # numbers were taken from. Seeded, so the numbers repeat. About two minutes.

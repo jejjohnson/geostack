@@ -22,9 +22,9 @@
 # inference and an amortized map, each scored against the step before.
 #
 # Needs: NumPy, SciPy, scikit-learn, matplotlib.
-# It illustrates a docs page and is not a stage of the DVC pipeline; run it by hand:
+# The third-party packages are in the `background` pixi environment. Not a stage of the DVC pipeline; run it by hand:
 #
-#     python notebooks/background/modeling_cycle.py
+#     pixi run -e background python notebooks/background/modeling_cycle.py
 #
 # It writes `docs/images/background_modeling_cycle/results.json`, the file the page's
 # numbers were taken from. Seeded; timings depend on the machine and change from run to run; counts, sizes and errors do not. About five minutes.

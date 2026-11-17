@@ -45,4 +45,4 @@ A broader view than [the role ladder](./role_ladder.md): the ladder says what is
 
 ## Sources and reproduction
 
-Every measured number on the page comes from `notebooks/background/geo_pipeline.py` (run by hand: `python notebooks/background/geo_pipeline.py`; its first cell lists what it needs). The recorded output is `docs/images/background_geo_pipeline/results.json`, and the page was built from it. It is not a DVC stage: snapshot ids are generated, so they differ on every run.
+Every measured number on the page comes from `notebooks/background/geo_pipeline.py` (run by hand: `pixi run -e background python notebooks/background/geo_pipeline.py`; its first cell lists what it needs). The recorded output is `docs/images/background_geo_pipeline/results.json`, and the page was built from it. It is not a DVC stage: snapshot ids are generated, so they differ on every run. It was run against geotoolz at `640670c` and pipekit at `9e86a56`, newer than the submodule pins.

@@ -28,7 +28,7 @@ Background for the [product catalog](./product_catalog.md) design and for servic
 - **REST** is a convention: resources with addresses, a few verbs, JSON answers with a status code, no memory between requests.
 - **Two STACs.** Upstream, we are a client of a provider's STAC API. Downstream, the pipeline writes our product database, which is mirrored into a product catalog that we serve as STAC.
 - **FastAPI** turns a typed function into an endpoint: it parses, validates, serialises and documents from the type hints.
-- **Long work is a job:** accept, return an id at once (6 ms here), let the client check back; the id is a hash of the request, so a retry cannot run it twice.
+- **Long work is a job:** accept, return an id at once (7 ms here), let the client check back; the id is a hash of the request, so a retry cannot run it twice, and a run that raises ends as `failed`.
 - **The blocking trap:** one blocking call in an async endpoint turned 20 concurrent requests from 0.23 s into 4.03 s and held an unrelated health check for 4.0 s.
 - **LitServe** is FastAPI plus what model serving needs (load once, batch, spread over GPUs); it belongs at the predict endpoint.
 
@@ -47,6 +47,6 @@ Background for the [product catalog](./product_catalog.md) design and for servic
 
 ## Sources and reproduction
 
-The service is `notebooks/background/backends_service.py` and the client that measures it is `notebooks/background/backends.py` (run by hand: `python notebooks/background/backends.py`). The recorded output is `docs/images/background_backends/results.json`, and the page was built from it. It is not a DVC stage: its timings depend on the machine, and FastAPI and uvicorn are not listed in `pixi.toml`.
+The service is `notebooks/background/backends_service.py` and the client that measures it is `notebooks/background/backends.py` (run by hand: `pixi run -e background python notebooks/background/backends.py`). The recorded output is `docs/images/background_backends/results.json`, and the page was built from it. It is not a DVC stage: its timings depend on the machine. It was run against geotoolz at `640670c`, newer than the submodule pin.
 
 Sources: the FastAPI documentation [@fastapi_docs]; LitServe's repository page [@litserve_repo], read 13 November 2026; the STAC specification [@stac_spec], stac-fastapi [@stac_fastapi_docs], pgstac [@pgstac_docs] and TiTiler [@titiler_docs], as known and not re-checked online for the page.

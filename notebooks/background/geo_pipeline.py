@@ -22,9 +22,9 @@
 # Parquet row.
 #
 # Needs: geotoolz (geoarray, geocatalog, geocloud, geoops, geopatcher), pipekit-ops, icechunk, zarr, pyarrow, pandas, pyproj.
-# It illustrates a docs page and is not a stage of the DVC pipeline; run it by hand:
+# The third-party packages are in the `background` pixi environment. It was run against geotoolz at 640670c and pipekit at 9e86a56 (which has pipekit-ops), newer than the submodule pins. Not a stage of the DVC pipeline; run it by hand:
 #
-#     python notebooks/background/geo_pipeline.py
+#     pixi run -e background python notebooks/background/geo_pipeline.py
 #
 # It writes `docs/images/background_geo_pipeline/results.json`, the file the page's
 # numbers were taken from. Timings depend on the machine and change from run to run; counts, sizes and errors do not. Snapshot ids differ on every run. Under a minute.

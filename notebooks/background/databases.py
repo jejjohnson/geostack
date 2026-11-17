@@ -22,9 +22,9 @@
 # then an aggregate in a row store and a column store, an upsert and a rollback.
 #
 # Needs: NumPy, DuckDB, pyarrow (SQLite ships with Python, with its R-tree module).
-# It illustrates a docs page and is not a stage of the DVC pipeline; run it by hand:
+# The third-party packages are in the `background` pixi environment. Not a stage of the DVC pipeline; run it by hand:
 #
-#     python notebooks/background/databases.py
+#     pixi run -e background python notebooks/background/databases.py
 #
 # It writes `docs/images/background_databases/results.json`, the file the page's
 # numbers were taken from. Timings depend on the machine and change from run to run; counts, sizes and errors do not. Under a minute.

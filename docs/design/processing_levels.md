@@ -44,6 +44,6 @@ Background for axis 2 of the [overview](../overview.md), the L0 to L5 lifecycle 
 
 ## Sources and reproduction
 
-Every measured number on the page comes from `notebooks/background/processing_levels.py` (run by hand: `python notebooks/background/processing_levels.py`; its first cell lists what it needs). The recorded output is `docs/images/background_processing_levels/` (`results.json` and the six panels), and the page was built from it. It is seeded and reads no data, so a rerun gives the same numbers; it is not a DVC stage yet.
+Every measured number on the page comes from `notebooks/background/processing_levels.py` (run by hand: `pixi run -e background python notebooks/background/processing_levels.py`; its first cell lists what it needs). The recorded output is `docs/images/background_processing_levels/` (`results.json` and the six panels), and the page was built from it. It is seeded and reads no data, so a rerun gives the same numbers; it is not a DVC stage yet.
 
 Sources: the level names follow the [overview](../overview.md); the marine heatwave definition is that of Hobday et al. [@hobday2016].

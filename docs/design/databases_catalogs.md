@@ -46,6 +46,6 @@ Background for the product catalog page. One question, which of 100 000 scenes c
 
 ## Sources and reproduction
 
-Every measured number on the page comes from `notebooks/background/databases.py` (run by hand: `python notebooks/background/databases.py`; its first cell lists what it needs). The recorded output is `docs/images/background_databases/results.json`, and the page was built from it. It is not a DVC stage: its timings depend on the machine.
+Every measured number on the page comes from `notebooks/background/databases.py` (run by hand: `pixi run -e background python notebooks/background/databases.py`; its first cell lists what it needs). The recorded output is `docs/images/background_databases/results.json`, and the page was built from it. It is not a DVC stage: its timings depend on the machine.
 
 Sources, as known and not re-checked online for the page: the PostgreSQL [@postgresql_docs] and PostGIS [@postgis_docs] documentation, the SQLite R*Tree module [@sqlite_rtree], DuckDB [@duckdb_docs], Apache Parquet [@parquet_docs], the STAC specification [@stac_spec], pgstac [@pgstac_docs] and stac-fastapi [@stac_fastapi_docs].

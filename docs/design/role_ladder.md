@@ -43,4 +43,4 @@ Background for [kinds and roles](./kinds_and_roles.md), which defines the ladder
 
 ## Sources and reproduction
 
-Every measured number on the page comes from `notebooks/background/role_ladder.py` (run by hand: `python notebooks/background/role_ladder.py`; its first cell lists what it needs). The recorded output is `docs/images/background_role_ladder/results.json`, and the page was built from it. It illustrates the page and is not a DVC stage; it needs einx and scikit-learn, which `pixi.toml` does not list.
+Every measured number on the page comes from `notebooks/background/role_ladder.py` (run by hand: `pixi run -e background python notebooks/background/role_ladder.py`; its first cell lists what it needs). The recorded output is `docs/images/background_role_ladder/results.json`, and the page was built from it. It illustrates the page and is not a DVC stage; it was run against pipekit at `9e86a56` for pipekit-ops, which the pinned submodule does not install.

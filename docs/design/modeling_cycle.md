@@ -43,4 +43,4 @@ Background for axes 1 and 3 of the [overview](../overview.md). A methane plume i
 
 ## Sources and reproduction
 
-Every measured number on the page comes from `notebooks/background/modeling_cycle.py` (run by hand: `python notebooks/background/modeling_cycle.py`; its first cell lists what it needs). The recorded output is `docs/images/background_modeling_cycle/` (`results.json` and five panels), and the page was built from it. It is not a DVC stage: steps 3 to 5 train small networks, so their numbers move a little between runs and machines.
+Every measured number on the page comes from `notebooks/background/modeling_cycle.py` (run by hand: `pixi run -e background python notebooks/background/modeling_cycle.py`; its first cell lists what it needs). The recorded output is `docs/images/background_modeling_cycle/` (`results.json` and five panels), and the page was built from it. It is not a DVC stage: steps 3 to 5 train small networks, so their numbers move a little between runs and machines.
