@@ -68,14 +68,16 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 <!-- shelf:uses:begin -->
 | Dependent package | Names used | Structures and primitives | Strategies | Gaussians | Gaussian processes | State space | Quadrature | Inference and ensembles |
 |---|---|---|---|---|---|---|---|---|
-| pyrox-gp | 51 | 9 | 6 | 3 | 9 | 14 | 6 | 4 |
+| pyrox-gp | 45 | 10 | 6 | 3 | 9 | 0 | 13 | 4 |
+| pyrox-ssm | 33 | 3 | 2 | 1 | 1 | 16 | 7 | 3 |
+| pyrox-lgm | 29 | 16 | 0 | 0 | 0 | 4 | 9 | 0 |
 | kernellib | 25 | 16 | 9 | 0 | 0 | 0 | 0 | 0 |
-| pyrox-lgm | 23 | 16 | 0 | 0 | 0 | 0 | 7 | 0 |
 | argminax | 17 | 9 | 6 | 0 | 0 | 0 | 0 | 2 |
 | filterax | 17 | 3 | 1 | 1 | 0 | 1 | 0 | 11 |
 | plumax | 12 | 8 | 1 | 2 | 0 | 1 | 0 | 0 |
 | gauss-flows | 7 | 0 | 0 | 0 | 0 | 4 | 2 | 1 |
 | radtrax | 7 | 5 | 1 | 1 | 0 | 0 | 0 | 0 |
+| pyrox-nn | 6 | 5 | 0 | 0 | 0 | 0 | 0 | 1 |
 | spectraldiffx | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 |
 | optax-bayes | 4 | 3 | 1 | 0 | 0 | 0 | 0 | 0 |
 | manipy-jax | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -290,14 +292,16 @@ Below the threshold, with no subclass, the unit is named on an "also uses" line.
 <!-- shelf:cards:begin -->
 | Dependent package | Cards | Also uses |
 |---|---|---|
-| pyrox-gp | Structures and primitives; Strategies (subclasses `AbstractPreconditioner`); Gaussians; Gaussian processes; State space; Quadrature; Inference and ensembles |  |
+| pyrox-gp | Structures and primitives; Strategies (subclasses `AbstractPreconditioner`); Gaussians; Gaussian processes; Quadrature; Inference and ensembles |  |
+| pyrox-ssm | Structures and primitives; State space; Quadrature; Inference and ensembles | Strategies (2); Gaussians (1); Gaussian processes (1) |
+| pyrox-lgm | Structures and primitives; State space; Quadrature |  |
 | kernellib | Structures and primitives; Strategies |  |
-| pyrox-lgm | Structures and primitives; Quadrature |  |
 | argminax | Structures and primitives; Strategies | Inference and ensembles (2) |
 | filterax | Structures and primitives; Inference and ensembles | Strategies (1); Gaussians (1); State space (1) |
 | plumax | Structures and primitives | Strategies (1); Gaussians (2); State space (1) |
 | gauss-flows | State space | Quadrature (2); Inference and ensembles (1) |
 | radtrax | Structures and primitives | Strategies (1); Gaussians (1) |
+| pyrox-nn | Structures and primitives | Inference and ensembles (1) |
 | spectraldiffx | Structures and primitives |  |
 | optax-bayes | Structures and primitives | Strategies (1) |
 | manipy-jax | Structures and primitives |  |
@@ -307,8 +311,8 @@ Below the threshold, with no subclass, the unit is named on an "also uses" line.
 :::
 
 The node is the package, not the repository.
-pyrox is a workspace of four packages at this pin, and they differ: pyrox-lgm needs two cards, pyrox-nn and the core take no gaussx name, and pyrox-gp needs all seven.
-pyrox-gp is the GP modelling shell and, at this pin, also holds the state-space models, which pyrox's default branch has since moved to a package of their own.
+pyrox is a workspace of five packages at this pin, and they differ: pyrox-gp needs six cards, pyrox-ssm four, pyrox-lgm three, pyrox-nn one, and the core takes no gaussx name.
+The state-space models have moved out of pyrox-gp into pyrox-ssm, which takes the state-space card with them.
 A workspace is then a small tree of its own: pyrox-gp builds on pyrox core, as gaussx's units build on each other.
 
 ### The extend skills

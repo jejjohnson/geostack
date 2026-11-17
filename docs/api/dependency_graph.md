@@ -45,7 +45,7 @@ Today it has **two imports their package does not declare**. [](#tbl-dg-violatio
 ## The graph
 
 The diagram folds packages into repositories: pipekit's seven packages are
-one box, so are geotoolz's five, xrtoolz's six and pyrox's four. Each arrow
+one box, so are geotoolz's five, xrtoolz's six and pyrox's five. Each arrow
 reads "imports or depends on".
 
 <!-- dependency-graph:begin -->
@@ -109,6 +109,9 @@ flowchart TB
   optax_bayes -.-> gaussx
   plumax --> finitevolX
   plumax --> pipekit
+  pyrox --> argminax
+  pyrox -.-> filterax
+  pyrox --> functax
   pyrox -.-> gauss_flows
   pyrox --> kernellib
   radtrax --> gaussx
@@ -131,7 +134,7 @@ flowchart TB
 ```
 :::
 
-23 repositories, 41 packages and 41 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+23 repositories, 42 packages and 44 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -322,9 +325,12 @@ cannot import, so most of its tests could no longer be collected.
 | manipy | gaussx | base | `manipy-jax → gaussx` |
 | manipy | kernellib | base | `manipy-jax → kernellib` |
 | optax_bayes | gaussx | extra | `optax-bayes → gaussx` |
+| pyrox | argminax | base | `pyrox-lgm → argminax` |
+| pyrox | filterax | extra | `pyrox-ssm → filterax` |
+| pyrox | functax | base | `pyrox-gp → functax` |
 | pyrox | gauss_flows | extra | `pyrox-gp → gauss-flows` |
 | pyrox | gaussx | base | `pyrox-gp → gaussx` |
-| pyrox | geonnax | base | `pyrox-gp → geonnax` |
+| pyrox | geonnax | base | `pyrox-nn → geonnax` |
 | pyrox | kernellib | base | `pyrox-gp → kernellib` |
 | vardax | gaussx | base | `vardax → gaussx` |
 | vardax | geonnax | base | `vardax → geonnax` |
