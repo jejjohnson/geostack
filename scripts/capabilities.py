@@ -304,7 +304,28 @@ LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
 }
 
 # Names two homes may share on purpose, and why: {name: reason}.
+_GP_LIKELIHOOD = (
+    "pyrox-gp's observation model builds the gaussx likelihood of the same name"
+    " (pyrox#375); the numerics are gaussx's"
+)
+_GP_KERNEL = (
+    "pyrox-gp's kernel is kernellib's with priors and guides on its"
+    " hyperparameters, and freezes into the kernellib kernel of the same name"
+)
 ALLOWED_SHARED_NAMES: dict[str, str] = {
+    "BernoulliLikelihood": _GP_LIKELIHOOD,
+    "GaussianLikelihood": _GP_LIKELIHOOD,
+    "HeteroscedasticGaussianLikelihood": _GP_LIKELIHOOD,
+    "PoissonLikelihood": _GP_LIKELIHOOD,
+    "SoftmaxLikelihood": _GP_LIKELIHOOD,
+    "StudentTLikelihood": _GP_LIKELIHOOD,
+    "Constant": _GP_KERNEL,
+    "Cosine": _GP_KERNEL,
+    "Matern": _GP_KERNEL,
+    "Periodic": _GP_KERNEL,
+    "Polynomial": _GP_KERNEL,
+    "RationalQuadratic": _GP_KERNEL,
+    "White": _GP_KERNEL,
     "Operator": (
         "pipekit_ops.Operator is the base (geotoolz re-exports it); xrops.Operator"
         " subclasses it with xarray DataTree dispatch for the xrops operators."
@@ -368,8 +389,6 @@ _SESMAX_IMEX = (
 _SESMAX = "sesmax-core is somax's successor; somax keeps its copy until it is archived"
 _STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
 _TRANSFORMS = "moved from spectraldiffx to functax.transform (spectraldiffx#166)"
-_KERNELS = "kernels in both kernellib and pyrox-gp"
-_LIKELIHOODS = "likelihoods in both gaussx and pyrox-gp"
 _SOMAX = "somax's own name for a different object"
 _NUMERICS = "the same solver or grid in several GeoNumerics libraries"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
@@ -411,37 +430,27 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
     "geoml": {
         "Augment": "different objects in gauss_flows and xrtoolz",
         "Axis": "functax.geometry.Axis beside pipekit-evaluate's evaluation Axis",
-        "BernoulliLikelihood": _LIKELIHOODS,
-        "Constant": _KERNELS,
-        "Cosine": _KERNELS,
         "Cubic": _FX_KERNELS,
-        "GaussianLikelihood": _LIKELIHOODS,
         "Graph": "kernellib's Graph beside pipekit's operator Graph",
-        "HeteroscedasticGaussianLikelihood": _LIKELIHOODS,
         "Identity": "functax.interp.Identity beside geoops' Identity operator",
         "ImplicitAdjoint": _VARDAX,
         "Kernel": "functax.interp's RBF kernel protocol beside pyrox-gp's Kernel",
         "Kronecker": "Kronecker structures in both gaussx and pyrox-lgm",
-        "Linear": _KERNELS,
+        "Linear": _FX_KERNELS,
         "LinearBasis": "functax.interp.LinearBasis beside vardax's LinearBasis",
         "LinearObs": _VARDAX,
-        "Matern": _KERNELS,
         "OrthogonalRandomFeatures": "random features in geonnax, kernellib, pyrox-nn",
-        "Periodic": _KERNELS,
-        "PoissonLikelihood": _LIKELIHOODS,
-        "Polynomial": _KERNELS,
         "Prior": "different objects in pipekit-evaluate and vardax",
-        "RBF": _KERNELS,
-        "RationalQuadratic": _KERNELS,
+        "RBF": _FX_KERNELS,
         "RecursiveCheckpointAdjoint": _VARDAX,
         "ReducedBasis": _VARDAX,
-        "SoftmaxLikelihood": _LIKELIHOODS,
         "SphericalHarmonicTransform": "spherical harmonics, geonnax and spectraldiffx",
-        "StudentTLikelihood": _LIKELIHOODS,
         "Wendland": _FX_KERNELS,
-        "White": _KERNELS,
         "divergence": _FX_DIFFOPS,
-        "funk_hecke_coefficients": _KERNELS,
+        "funk_hecke_coefficients": (
+            "pyrox-gp's deprecated copy forwards to kernellib's; it goes when pyrox"
+            " removes it"
+        ),
         "gaussian_entropy": _DIVERGENCES,
         "gradient": _FX_DIFFOPS,
         "kl_divergence": _DIVERGENCES,
