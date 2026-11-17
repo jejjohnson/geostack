@@ -72,6 +72,57 @@ def test_uses_ignores_a_file_that_does_not_parse() -> None:
     assert ss.uses("def broken(:\n", {"lib"}, {"solve"}) == set()
 
 
+def test_subclasses_finds_bases_by_import_alias_and_subscript() -> None:
+    source = (
+        "import lib as lb\n"
+        "import other\n"
+        "from lib import Operator as Op, Model, solve\n"
+        "class A(Op): ...\n"
+        "class B(lb.sub.Stateful[int], other.Model): ...\n"
+        "class C(Unknown, metaclass=Model): ...\n"
+        "y = solve(Model)\n"
+    )
+    names = {"Operator", "Stateful", "Model", "solve"}
+    assert ss.subclasses(source, {"lib"}, names) == {"Operator", "Stateful"}
+    assert ss.subclasses("class Broken(:\n", {"lib"}, names) == set()
+
+
+def _two_unit_shelf():
+    return ss.Shelf(
+        page="",
+        packages=("lib",),
+        units=(
+            ss.Unit("core", "⑤", "data", ("lib",)),
+            ss.Unit("extra", "⑥", "data", ("lib.sub",)),
+        ),
+    )
+
+
+def test_a_subclass_earns_the_card_below_the_threshold() -> None:
+    names = {"Operator": "lib..", "run": "lib..", "cache": "lib.sub"}
+    measured = ss.Measured(
+        names=names,
+        used={"child": {"Operator", "cache"}, "caller": {"Operator", "run"}},
+        subclassed={"child": {"Operator"}},
+    )
+    rows = ss.cards_table(_two_unit_shelf(), measured).splitlines()[2:]
+    assert rows == [
+        "| caller | none | core (2) |",
+        "| child | core (subclasses `Operator`) | extra (1) |",
+    ]
+
+
+def test_pipekit_operator_subclasses_receive_the_operator_card(pkgs) -> None:
+    shelf = ss.SHELVES["pipekit"]
+    measured = ss.measure(shelf, pkgs)
+    table = ss.cards_table(shelf, measured)
+    subclassers = [d for d, b in measured.subclassed.items() if "Operator" in b]
+    assert subclassers, "no package subclasses pipekit's Operator"
+    for dist in subclassers:
+        row = next(r for r in table.splitlines() if r.startswith(f"| {dist} |"))
+        assert "Operators and composition (subclasses" in row.split("|")[2]
+
+
 def test_unit_of_prefers_the_longest_pattern() -> None:
     shelf = ss.Shelf(
         page="",

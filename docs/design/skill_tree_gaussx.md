@@ -281,7 +281,8 @@ The card for structures and primitives:
 
 A dependent package receives the card of each unit it uses.
 The script reads that from the package's imports, with a threshold of three names (proposed, `CARD_THRESHOLD`).
-Below the threshold the unit is named on an "also uses" line.
+A package that subclasses one of a unit's names receives the card whatever its count, and the table names the base.
+Below the threshold, with no subclass, the unit is named on an "also uses" line.
 
 :::{table} The cards each dependent package would receive, and the units it uses fewer than three names of.
 :label: tbl-sg-cards
@@ -289,7 +290,7 @@ Below the threshold the unit is named on an "also uses" line.
 <!-- shelf:cards:begin -->
 | Dependent package | Cards | Also uses |
 |---|---|---|
-| pyrox-gp | Structures and primitives; Strategies; Gaussians; Gaussian processes; State space; Quadrature; Inference and ensembles |  |
+| pyrox-gp | Structures and primitives; Strategies (subclasses `AbstractPreconditioner`); Gaussians; Gaussian processes; State space; Quadrature; Inference and ensembles |  |
 | kernellib | Structures and primitives; Strategies |  |
 | pyrox-lgm | Structures and primitives; Quadrature |  |
 | argminax | Structures and primitives; Strategies | Inference and ensembles (2) |
@@ -420,7 +421,7 @@ plugins/gaussx/skills/                                                proposed (
 
 - **The front door stops triggering for recipes.** Today one description covers Kalman filters and GPs. Fallback: `gaussians-and-recipes` takes those phrases into its own description, and GX-5 checks it.
 - **The unit boundaries move.** jejjohnson/geostack#122 asks whether the Kalman scans move to filterax and whether `UnscentedIntegrator` is a strategy. Fallback: units follow subpackages, so a move changes one row of [](#tbl-sg-units) and regenerates the cards.
-- **The import threshold hides a dependency that matters.** One name can be the whole reason for a dependency. Fallback: the "also uses" line names it, and a repository can pin a card in its shelf.
+- **The import threshold hides a dependency that matters.** One name can be the whole reason for a dependency. A subclass already earns the card. Fallback for the rest: the "also uses" line names it, and a repository can pin a card in its shelf.
 - **The counts undercount.** Only names in the static `__all__` of the package root are counted, so the seven names behind the numpyro extra and anything reached through a submodule are missed. Fallback: the gap is one direction only, so a card is never given for a unit a package does not use.
 - **`role-ladder` drifts from its page.** Fallback: its vocabulary table is generated from the page's.
 

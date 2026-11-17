@@ -117,29 +117,31 @@ That is two structures, one primitive, two strategies, one model, four steps, te
 (st-pk-units)=
 ## Units and cards
 
-:::{table} The cards each dependent package would receive from pipekit at a threshold of three names.
+:::{table} The cards each dependent package would receive from pipekit: a unit it uses three names of, or subclasses a name of.
 :label: tbl-pk-cards
 
 <!-- shelf:cards:begin -->
 | Dependent package | Cards | Also uses |
 |---|---|---|
-| geotoolz-ops | Operators and composition; Control and execution; Named arrays | Recipes as data (2) |
+| geotoolz-ops | Operators and composition (subclasses `Operator`, `Sequential`); Control and execution; Named arrays | Recipes as data (2) |
 | geotoolz-array | Operators and composition; Named arrays |  |
-| xrtoolz-ops | Operators and composition; Named arrays | Evaluation (1) |
-| vardax | Cycles | Operators and composition (1) |
-| sesmax-core | JAX bridge | Operators and composition (2) |
-| geotoolz-patcher | none | Operators and composition (2); Named arrays (1); Training (1) |
-| somax | none | Operators and composition (2); Cycles (1) |
+| xrtoolz-ops | Operators and composition (subclasses `Operator`); Named arrays | Evaluation (1) |
+| vardax | Operators and composition (subclasses `Operator`); Cycles |  |
+| sesmax-core | Operators and composition (subclasses `Operator`); JAX bridge (subclasses `JaxOperator`) |  |
+| geotoolz-patcher | Operators and composition (subclasses `Operator`); Training (subclasses `TrainingDataset`) | Named arrays (1) |
+| somax | Operators and composition (subclasses `Operator`, `StatefulOperator`) | Cycles (1) |
 | geotoolz-products | none | Operators and composition (1) |
-| plumax | none | Operators and composition (1) |
+| plumax | Operators and composition (subclasses `Operator`) |  |
 <!-- shelf:cards:end -->
 :::
 
-Four packages receive no card, and that is wrong for all four.
-geotoolz-patcher, somax, geotoolz-products and plumax each take one or two names from the operator unit, and the name is `Operator`: geotoolz-patcher, somax and plumax subclass it, and geotoolz-products imports it.
-A package that subclasses a base class or implements a protocol needs the whole contract, however few names it imports.
+By name count alone, four packages would receive no card: geotoolz-patcher, somax, geotoolz-products and plumax each take one or two names from the operator unit, and the name is `Operator`.
+geotoolz-patcher, somax and plumax subclass it, and a package that subclasses a base class needs the whole contract, however few names it imports.
 So the threshold counts calls, and a subclass always earns the card.
-The script does not detect subclassing yet; it is a follow-up below.
+The script reads the bases of every class in a dependent package, and the table names the base that earned each card.
+Six packages receive the operator card that way, and vardax and sesmax-core gain it beside the card they already had.
+geotoolz-products is the one package left without a card: it imports `Operator` and subclasses nothing.
+A class that matches a protocol's shape without naming the protocol as a base is not found.
 
 (st-pk-listed)=
 ## Listed skills
@@ -168,7 +170,7 @@ Its floor is third party, and only for the packages built on the core.
 (st-pk-differs)=
 ## Where pipekit bends the pattern
 
-1. **A contract is not a name count.** Subclassing `Operator` is one import and the whole contract. The card rule needs "subclasses or implements" beside "uses at least three names".
+1. **A contract is not a name count.** Subclassing `Operator` is one import and the whole contract. The card rule is "subclasses a name" beside "uses at least three names", and it does not yet cover a protocol implemented by shape.
 2. **The shelf is mostly ⑥.** Ten of 21 entries are recipes. `role-ladder`'s recipe and orchestration files carry the general rules, and pipekit's entries say only what each combinator or template does.
 3. **Nothing exists yet.** With no skill and no contributor skill to start from, the skeleton came from the packages and their subpackages alone, and the four extend skills are proposals.
 4. **Units are packages.** Each package above the core is one unit, because each has one job and its own dependents.
@@ -180,7 +182,7 @@ Gates GX-0 to GX-6 of [gaussx's shelf](./skill_tree_gaussx.md#sg-gates) apply wi
 
 | Gate | Passes when |
 | --- | --- |
-| PK-1 Contracts | every package that subclasses `pipekit.Operator` or implements a `pipekit_cycle` protocol receives that unit's card |
+| PK-1 Contracts | every package that subclasses `pipekit.Operator` or implements a `pipekit_cycle` protocol receives that unit's card; the subclass half is generated into [](#tbl-pk-cards), the protocol half is not checked |
 
 (st-pk-risks)=
 ## Risks
@@ -191,7 +193,8 @@ Gates GX-0 to GX-6 of [gaussx's shelf](./skill_tree_gaussx.md#sg-gates) apply wi
 (st-pk-followups)=
 ## Follow-up reports
 
-- [ ] `feat(scripts): give a dependent that subclasses a unit's base class that unit's card` — gate PK-1
+- [x] `feat(scripts): give a dependent that subclasses a unit's base class that unit's card` — gate PK-1, subclass half
+- [ ] `feat(scripts): give a dependent that implements a unit's protocol by shape that unit's card` — gate PK-1, protocol half
 
 ## Relationships
 

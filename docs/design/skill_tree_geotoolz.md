@@ -131,7 +131,7 @@ A step entry states its family's coupling class in its first line.
 <!-- shelf:cards:end -->
 :::
 
-No package reaches the threshold, so no library's block carries a geotoolz card.
+No package reaches the threshold or subclasses a geotoolz name, so no library's block carries a geotoolz card.
 The thirteen cards are written all the same, for two other readers.
 The band front doors for geoscientists and for data engineers are built from them, and so are the capstones: a capstone for a methane plume lists the detection and plumes card, the masks card and the patching card as its floor.
 
