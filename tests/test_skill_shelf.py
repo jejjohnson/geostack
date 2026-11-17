@@ -60,10 +60,12 @@ def test_uses_counts_from_imports_and_aliased_attributes() -> None:
         "from lib import solve, missing\n"
         "from lib.sub import logdet\n"
         "y = lb.Kronecker(a, b)\n"
+        "w = lb.sub.trace(a)\n"
         "z = other.cholesky(a)\n"
     )
-    names = {"solve", "logdet", "Kronecker", "cholesky"}
-    assert ss.uses(source, {"lib"}, names) == {"solve", "logdet", "Kronecker"}
+    names = {"solve", "logdet", "Kronecker", "cholesky", "trace"}
+    found = ss.uses(source, {"lib"}, names)
+    assert found == {"solve", "logdet", "Kronecker", "trace"}
 
 
 def test_uses_ignores_a_file_that_does_not_parse() -> None:
@@ -92,3 +94,15 @@ def test_render_replaces_only_the_marked_block() -> None:
     assert out.startswith("before\n<!-- shelf:units:begin -->\n| Unit |")
     assert out.endswith("<!-- shelf:units:end -->\nafter\n")
     assert "old" not in out
+
+
+def test_exports_reads_the_root_and_its_public_submodules(tmp_path: Path) -> None:
+    root = tmp_path / "lib"
+    (root / "_src").mkdir(parents=True)
+    (root / "__init__.py").write_text(
+        "from lib._src.solvers import solve\n__all__ = ['solve']\n"
+    )
+    (root / "curvature.py").write_text("__all__ = ['laplace', 'solve']\n")
+    (root / "_private.py").write_text("__all__ = ['hidden']\n")
+    pkg = ss.dg.Package("lib", "lib", "numerics", tmp_path, modules=[root])
+    assert ss.exports(pkg) == {"solve": "lib.solvers", "laplace": "lib.curvature"}
