@@ -20,13 +20,30 @@
 # Reads 121 tiles with a 50 ms injected wait and a real deflate decode, under every
 # mechanism the page compares, and times each (best of three).
 #
-# Needs: NumPy only.
+# Needs: NumPy and OmegaConf, both in the default pixi environment. Every setting
+# (seed, tile count and size, latency, worker counts) is read from
+# `configs/background/parallelism.yaml` and recorded in the output.
 # It illustrates a docs page and is not a stage of the DVC pipeline; run it by hand:
 #
-#     python notebooks/background/parallelism.py
+#     pixi run python notebooks/background/parallelism.py
 #
 # It writes `docs/images/background_parallelism/results.json`, the file the page's
 # numbers were taken from. Timings depend on the machine and change from run to run; counts, sizes and errors do not. About one minute.
+
+# %%
+# Settings come from configs/background/parallelism.yaml; the recorded output goes to
+# docs/images/background_parallelism (set BACKGROUND_OUT to write somewhere else).
+import os as _os
+import pathlib as _pathlib
+
+from omegaconf import OmegaConf
+
+_root = _pathlib.Path.cwd()
+while not (_root / "myst.yml").exists() and _root != _root.parent:
+    _root = _root.parent
+OUT = _pathlib.Path(_os.environ.get("BACKGROUND_OUT", _root / "docs/images/background_parallelism"))
+OUT.mkdir(parents=True, exist_ok=True)
+CFG = OmegaConf.load(_root / "configs/background/parallelism.yaml")
 
 # %%
 """Running example: 121 tiles; fetch = 50 ms wait, decode = deflate + predictor."""
@@ -34,16 +51,16 @@ import asyncio, json, os, time, zlib
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import numpy as np
 
-N, LAT = 121, 0.050
-rng = np.random.default_rng(0)
-base = np.cumsum(rng.integers(-40, 40, (512, 512)), axis=1).astype(np.int16)
+N, LAT, PX = CFG.tiles, CFG.latency_s, CFG.tile_px
+rng = np.random.default_rng(CFG.seed)
+base = np.cumsum(rng.integers(-40, 40, (PX, PX)), axis=1).astype(np.int16)
 diff = np.diff(base, axis=1, prepend=0).astype(np.int16)
-BLOB = zlib.compress(diff.tobytes(), 6)
+BLOB = zlib.compress(diff.tobytes(), CFG.deflate_level)
 
 def fetch(i):
     time.sleep(LAT); return BLOB
 def decode(blob):                      # native: zlib + numpy release the GIL
-    a = np.frombuffer(zlib.decompress(blob), np.int16).reshape(512, 512)
+    a = np.frombuffer(zlib.decompress(blob), np.int16).reshape(PX, PX)
     return int(np.cumsum(a, axis=1, dtype=np.int16).sum())
 def decode_py(blob):                   # pure Python: holds the GIL
     s = 0
@@ -53,7 +70,7 @@ def tile(i): return decode(fetch(i))
 def cpu_native(i): return decode(BLOB)
 def cpu_py(i): return decode_py(BLOB)
 
-def timeit(f, reps=3):
+def timeit(f, reps=CFG.repeats):
     best = 1e9
     for _ in range(reps):
         t = time.perf_counter(); f(); best = min(best, time.perf_counter() - t)
@@ -78,37 +95,29 @@ async def run_async_blocking(conc):   # the trap: time.sleep inside a coroutine
 def pool(P, n, f):
     with P(n) as ex: list(ex.map(f, range(N)))
 
-# %%
-# Where the recorded output goes. Set BACKGROUND_OUT to write somewhere else.
-import os as _os
-import pathlib as _pathlib
-
-_root = _pathlib.Path.cwd()
-while not (_root / "myst.yml").exists() and _root != _root.parent:
-    _root = _root.parent
-OUT = _pathlib.Path(_os.environ.get("BACKGROUND_OUT", _root / "docs/images/background_parallelism"))
-OUT.mkdir(parents=True, exist_ok=True)
-
 if __name__ == "__main__":
-    R = {"cores": os.cpu_count(), "blob_kb": round(len(BLOB)/1024, 1)}
+    R = {"config": OmegaConf.to_container(CFG), "cores": os.cpu_count(), "blob_kb": round(len(BLOB)/1024, 1)}
     R["decode_ms"] = round(timeit(lambda: [decode(BLOB) for _ in range(N)]) / N * 1e3, 2)
     R["decode_py_ms"] = round(timeit(lambda: [decode_py(BLOB) for _ in range(N)]) / N * 1e3, 2)
     R["serial"] = timeit(lambda: [tile(i) for i in range(N)], 1)
-    for n in (4, 16, 64):
+    for n in CFG.thread_workers:
         R[f"threads{n}"] = timeit(lambda: pool(ThreadPoolExecutor, n, tile))
-    for c in (16, 64):
+    for c in CFG.async_in_flight:
         R[f"async{c}"] = timeit(lambda: asyncio.run(run_async(c, False)))
-    R["async16_offload"] = timeit(lambda: asyncio.run(run_async(16, True)))
-    R["async16_blocking"] = timeit(lambda: asyncio.run(run_async_blocking(16)), 1)
-    R["procs2"] = timeit(lambda: pool(ProcessPoolExecutor, 2, tile), 2)
-    R["procs16"] = timeit(lambda: pool(ProcessPoolExecutor, 16, tile), 2)
+    c = CFG.async_offload_in_flight
+    R[f"async{c}_offload"] = timeit(lambda: asyncio.run(run_async(c, True)))
+    c = CFG.async_blocking_in_flight
+    R[f"async{c}_blocking"] = timeit(lambda: asyncio.run(run_async_blocking(c)), 1)
+    for n in CFG.process_workers:
+        R[f"procs{n}"] = timeit(lambda: pool(ProcessPoolExecutor, n, tile), 2)
     # CPU only
+    w = CFG.cpu_workers
     R["cpu_py_serial"] = timeit(lambda: [cpu_py(i) for i in range(N)])
-    R["cpu_py_threads2"] = timeit(lambda: pool(ThreadPoolExecutor, 2, cpu_py))
-    R["cpu_py_procs2"] = timeit(lambda: pool(ProcessPoolExecutor, 2, cpu_py))
+    R[f"cpu_py_threads{w}"] = timeit(lambda: pool(ThreadPoolExecutor, w, cpu_py))
+    R[f"cpu_py_procs{w}"] = timeit(lambda: pool(ProcessPoolExecutor, w, cpu_py))
     R["cpu_nat_serial"] = timeit(lambda: [cpu_native(i) for i in range(N)])
-    R["cpu_nat_threads2"] = timeit(lambda: pool(ThreadPoolExecutor, 2, cpu_native))
-    R["cpu_nat_procs2"] = timeit(lambda: pool(ProcessPoolExecutor, 2, cpu_native))
+    R[f"cpu_nat_threads{w}"] = timeit(lambda: pool(ThreadPoolExecutor, w, cpu_native))
+    R[f"cpu_nat_procs{w}"] = timeit(lambda: pool(ProcessPoolExecutor, w, cpu_native))
     # vectorise: reflectance = (DN - 1000) / 10000 on one tile
     row = base.tolist()
     def loop(): return [[(v - 1000) / 10000 for v in r] for r in row]

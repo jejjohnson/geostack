@@ -1,0 +1,14 @@
+# Settings of notebooks/background/parallelism.py, the benchmark behind
+# docs/design/pages/parallelism.html. The run records them in results.json.
+seed: 0
+tiles: 121               # tiles in one band
+tile_px: 512             # tile edge, pixels
+latency_s: 0.050         # injected wait per fetch
+deflate_level: 6
+repeats: 3               # best of this many runs
+thread_workers: [4, 16, 64]
+async_in_flight: [16, 64]
+async_offload_in_flight: 16
+async_blocking_in_flight: 16
+process_workers: [2, 16]
+cpu_workers: 2           # workers for the compute-only comparison
