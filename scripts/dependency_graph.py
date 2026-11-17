@@ -72,7 +72,7 @@ TIERS: dict[str, dict[str, int]] = {
         "pyrox": 3,
         "vardax": 3,
     },
-    "geomodels": {"radtrax": 0, "somax": 0, "sesmax": 0, "plumax": 1},
+    "geomodels": {"radtrax": 0, "sesmax": 0, "plumax": 1},
 }
 #: what each tier holds, for the page
 TIER_ROLES = {
@@ -114,11 +114,6 @@ KNOWN: dict[tuple[str, str, str], str] = {
     ("upward", "geotoolz-array", "functax"): _CORE_FUNCTAX,
     ("upward", "geotoolz-ops", "functax"): _CORE_FUNCTAX,
     ("upward", "xrtoolz-ops", "functax"): _CORE_FUNCTAX,
-    ("undeclared", "somax:somax/_src/da/filterax_bridge.py", "filterax"): (
-        "module-level imports in somax/_src/da, declared only in the da"
-        " dependency group; make it an extra"
-    ),
-    ("undeclared", "somax:somax/_src/da/obs.py", "filterax"): "the same extra",
 }
 #: imports that stay undeclared on purpose, and why: a guarded integration
 #: with a library that cannot be installed beside the package. Each repository's

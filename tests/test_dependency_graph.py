@@ -96,8 +96,8 @@ def test_a_second_package_edge_between_known_repositories_is_new() -> None:
 
 
 def test_a_second_undeclared_import_is_new() -> None:
-    new, _ = dg.check(_with_import("somax", "filterax", "somax/_src/new.py"))
-    assert set(new) == {("undeclared", "somax:somax/_src/new.py", "filterax")}
+    new, _ = dg.check(_with_import("radtrax", "filterax", "src/radtrax/new.py"))
+    assert set(new) == {("undeclared", "radtrax:src/radtrax/new.py", "filterax")}
 
 
 def test_an_extra_does_not_declare_what_import_runs() -> None:

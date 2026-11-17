@@ -15,7 +15,7 @@ specific to Claude Code.
   GeoStack (pipekit, geotoolz with xrtoolz, georeader), GeoNumerics (gaussx,
   functax, argminax, integrix, finitevolX, spectraldiffx), GeoML (geonnax,
   kernellib, optax_bayes, filterax, vardax, gauss_flows, xtremax, pyrox,
-  manipy) and GeoModels (plumax, somax, radtrax, sesmax), under
+  manipy) and GeoModels (plumax, radtrax, sesmax), under
   `references/<layer>/`; edges between layers point down ("The layers" in
   `AGENTS.md`).
 - **georeader is not ours.** It is spaceml-org's: read it, never write it,

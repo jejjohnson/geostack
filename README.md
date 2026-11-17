@@ -96,7 +96,6 @@ walks a running example through each row, from detector counts to heatwave retur
 | | [xtremax](https://github.com/jejjohnson/xtremax) | Extreme-value and point-process models |
 | | [pyrox](https://github.com/jejjohnson/pyrox) | Equinox + NumPyro: GPs, Bayesian NNs, latent Gaussian models (`pyrox`, `-gp`, `-lgm`, `-nn`) |
 | **GeoModels** · physics | [plumax](https://github.com/jejjohnson/plumax) | Plume transport: Gaussian plume and puff, Lagrangian, LES |
-| | [somax](https://github.com/jejjohnson/somax) | Simple ocean and atmosphere models |
 | | [radtrax](https://github.com/jejjohnson/radtrax) | Differentiable radiative transfer for methane remote sensing |
 
 Each library is a git submodule under `references/<layer>/<name>`, installed
@@ -126,7 +125,7 @@ run on both:
   <img alt="The repositories in four layer bands, with edges pointing down from each repository to those it depends on or imports" src="docs/images/overview/dependency_graph.svg" width="100%">
 </p>
 
-22 repositories, 42 packages and 55 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+21 repositories, 41 packages and 50 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 

@@ -94,7 +94,6 @@ pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = tru
 pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
 manipy-jax = { path = "references/geoml/manipy", editable = true }
 plumax = { path = "references/geomodels/plumax", editable = true }
-somax = { path = "references/geomodels/somax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
@@ -181,7 +180,6 @@ manipy-jax = { path = "references/geoml/manipy", editable = true }
 
 [feature.geomodels.pypi-dependencies]
 plumax = { path = "references/geomodels/plumax", editable = true }
-somax = { path = "references/geomodels/somax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }

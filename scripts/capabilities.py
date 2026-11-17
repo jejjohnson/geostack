@@ -120,7 +120,6 @@ UPSTREAM_BLURB: dict[str, str] = {
     "manipy-jax": "Manifold learning and alignment, and hyperspectral workflows.",
     # GeoModels
     "plumax": "Plume transport: Gaussian plume and puff, Lagrangian and LES.",
-    "somax": "Simple ocean and atmosphere models in JAX.",
     "radtrax": "Differentiable radiative transfer for methane remote sensing.",
     "sesmax": "The sesmax workspace in one install; an umbrella that holds no code.",
     "sesmax-core": "Simple Earth-system models: state, terms, steppers, forcing.",
@@ -212,24 +211,6 @@ GEOMODELS: dict[str, list[str]] = {
                 "hapi_lut",
                 "assimilation",
                 "matched_filter",
-            )
-        ),
-    ],
-    "somax": [
-        "somax",
-        *(
-            f"somax.{sub}"
-            for sub in (
-                "core",
-                "domain",
-                "models",
-                "operators",
-                "solvers",
-                "da",
-                "flows",
-                "eval",
-                "io",
-                "monitor",
             )
         ),
     ],
