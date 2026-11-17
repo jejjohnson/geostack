@@ -25,7 +25,7 @@ numbering:
 Recommended: each repository ships **use skills by band of the role ladder** in its own plugin, a generated "Builds on" block links each to the units it depends on, one shared `role-ladder` skill sits at the root, and one geostack marketplace installs a skill together with its parents.
 Alternative: one geostack plugin that holds a copy of every skill, which installs in one step but drifts from the repositories.
 Status: open, 12 Nov 2026.
-Revised the same day: the first draft had one skill per repository, which [](#st-tree) replaces with units by band; gaussx's shelf, on its own page, is the worked example.
+Revised the same day: the first draft had one skill per repository, which [](#st-tree) replaces with units by band; [gaussx's shelf](./skill_tree_gaussx.md) is the worked example.
 
 What does not change: the dependency graph and its eight rules, the task skills in each repository's `.claude/skills/`, and the eight plugin skills that already exist.
 
@@ -172,7 +172,7 @@ A node is a unit: the rungs of one repository that one band of users works at. A
 The [kinds-and-roles](./kinds_and_roles.md) page gives the principle: each kind of user "works in a band of the ladder and treats the rung below it as atomic: their floor".
 A skill is written for a band, and a contract card is that band's floor.
 
-1. **Shelf and units.** Each package has a shelf: one short skill per job a caller comes with, tagged with its role. gaussx's has 24. A unit is a group of shelf entries that the same dependents use together; it is what a card describes and what an edge points at, and gaussx has seven. The node is the package, not the repository: pyrox is five packages, and each uses a different part of gaussx.
+1. **Shelf and units.** Each package has a shelf: one short skill per job a caller comes with, tagged with its role. [gaussx's shelf](./skill_tree_gaussx.md) has 24. A unit is a group of shelf entries that the same dependents use together; it is what a card describes and what an edge points at, and gaussx has seven. The node is the package, not the repository: pyrox is a workspace, and its packages use different parts of gaussx.
 2. **Listing.** A unit is listed, and so always in the agent's context, when someone would ask for it without mentioning the rest. Every other shelf entry is loaded when a listed skill or a card points at it. Each listed skill costs about 170 tokens in every session. That figure is what `claude plugin details` projects for the four use skills of the prototype (jejagents#5), whose listings come to about 150, 170, 170 and 230 tokens; it is a projection by that tool, not a pipeline output of this repository.
 3. **Edges.** Across repositories an edge is one of the 41 direct dependencies, and it points at the units the dependent uses, read from its imports. Inside a repository an edge follows the ladder: nouns, verbs, adverbs, then the rungs above.
 4. **Contract cards.** One card per unit, at most 15 lines, laid out as nouns, verbs and adverbs. It says how to go exactly one rung down, and never further. The generator copies into a child's block only the cards of the units it uses.
