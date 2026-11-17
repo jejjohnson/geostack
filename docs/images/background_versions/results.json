@@ -1,0 +1,94 @@
+{
+ "sha256_band_ms": 54.5,
+ "band_mb": 60.28,
+ "h1": "ce51a570eb6e4d0b0b50a4c45e370ab95c4d68f5b8dd87da82a02adf648fb406",
+ "h2": "5d32c793384f3f313e96d34c69e57e4c450a188c36b609647d659307573e5668",
+ "hex_diff": 63,
+ "chunks": 121,
+ "chunks_changed": 4,
+ "changed_idx": [
+  38,
+  39,
+  49,
+  50
+ ],
+ "snap1": "4ee8729f2e94",
+ "snap2": "a45086386e32",
+ "ice_after1": {
+  "repo": [
+   1,
+   434
+  ],
+  "transactions": [
+   2,
+   996
+  ],
+  "snapshots": [
+   2,
+   848
+  ],
+  "chunks": [
+   121,
+   51553058
+  ],
+  "overwritten": [
+   1,
+   279
+  ],
+  "manifests": [
+   1,
+   2825
+  ]
+ },
+ "ice_after2": {
+  "repo": [
+   1,
+   545
+  ],
+  "transactions": [
+   3,
+   1183
+  ],
+  "snapshots": [
+   3,
+   1505
+  ],
+  "chunks": [
+   125,
+   53345914
+  ],
+  "overwritten": [
+   2,
+   713
+  ],
+  "manifests": [
+   2,
+   5647
+  ]
+ },
+ "id1": "E76W51X7SY6XW8MFJVG0",
+ "id2": "HDTKHFT9FYTZRB13JBCG",
+ "old_px": 3449,
+ "new_px": 3450,
+ "main_after_discard": true,
+ "conflict": "ConflictError",
+ "same_content_same_id": false,
+ "history": [
+  [
+   "6XCPCASNMGKQ41RG0AK0",
+   "writer A"
+  ],
+  [
+   "HDTKHFT9FYTZRB13JBCG",
+   "reprocess site window"
+  ],
+  [
+   "E76W51X7SY6XW8MFJVG0",
+   "ingest 2026-06-12"
+  ],
+  [
+   "1CECHNKREP0F1RSTCMT0",
+   "Repository initialized"
+  ]
+ ]
+}

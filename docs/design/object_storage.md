@@ -20,7 +20,7 @@ Background for the storage pages. The running example's B12 band is one object i
 
 {button}`Open the full page <./pages/object-storage.html>`
 
-**Status.** Background. Provider facts are from the S3, Azure and GCS documentation as known in November 2026, not re-checked online for this page; the obstore calls are marked `not pinned`.
+**Status.** Background. The provider facts cited under Sources were checked against the S3, Azure and GCS documentation on 17 November 2026. The obstore `put`, `get_range` and `get_ranges` signatures were checked the same day; the other obstore calls are marked `not pinned`. Nothing on the page is measured.
 
 ## TL;DR: a dictionary over HTTP
 
@@ -40,3 +40,15 @@ Background for the storage pages. The running example's B12 band is one object i
 6. Writing safely: one PUT, or a pointer swap
 7. S3, Azure and GCS side by side
 8. In the stack: geocloud's client pool, geocatalog, pipekit's S3 registry
+
+## Sources and reproduction
+
+Each claim links to the page that supports it:
+
+- S3 is strongly consistent for reads after writes, overwrites, deletes and listings [@aws_s3_consistency].
+- Conditional writes (`If-None-Match: *`, `If-Match` with an ETag) fail with 412 Precondition Failed [@aws_s3_conditional_writes; @aws_s3_conditional_requests].
+- S3 scales to at least 3 500 writes and 5 500 reads per second per prefix, and can answer 503 Slow Down while it scales [@aws_s3_performance].
+- A listing returns up to 1 000 keys per request and continues with a token [@aws_s3_listobjectsv2].
+- With a hierarchical namespace, Azure renames or deletes a directory as one atomic operation [@azure_adls_namespace].
+- Google Cloud Storage is strongly consistent for reads after writes and for listings [@gcs_consistency], and its `ifGenerationMatch` precondition fails with 412 [@gcs_preconditions].
+- The obstore calls in the sketches [@obstore_docs].

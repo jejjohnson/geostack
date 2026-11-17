@@ -27,8 +27,8 @@ Background for the product catalog page. One question, which of 100 000 scenes c
 ## TL;DR: a table, an index, and a promise about writes
 
 - **A catalog is a table:** one row per scene, a unique id, a column pointing at the data.
-- **An index** lets a query skip rows: the June query drops from 9.1 ms to 0.28 ms with a B-tree on time.
-- **Row stores** suit single-row reads and writes; **column stores** suit scans (29 ms against 4.5 ms for a monthly mean, 24 MB against 5.2 MB on disk).
+- **An index** lets a query skip rows: the June query drops from 6.7 ms to 0.16 ms with a B-tree on time.
+- **Row stores** suit single-row reads and writes; **column stores** suit scans (30 ms against 4.1 ms for a monthly mean, 24 MB against 5.2 MB on disk).
 - **A transaction** makes several changes succeed or fail together; an **upsert** makes a write safe to repeat.
 - **STAC** is a vocabulary for catalog rows; **pgstac** stores it in PostgreSQL and is written through its functions.
 
@@ -43,3 +43,9 @@ Background for the product catalog page. One question, which of 100 000 scenes c
 7. SQL, drivers and ORMs
 8. STAC and pgstac
 9. In the stack: geocatalog and the product catalog design
+
+## Sources and reproduction
+
+Every measured number on the page comes from `notebooks/background/databases.py` (run by hand: `python notebooks/background/databases.py`; its first cell lists what it needs). The recorded output is `docs/images/background_databases/results.json`, and the page was built from it. It is not a DVC stage: its timings depend on the machine.
+
+Sources, as known and not re-checked online for the page: the PostgreSQL [@postgresql_docs] and PostGIS [@postgis_docs] documentation, the SQLite R*Tree module [@sqlite_rtree], DuckDB [@duckdb_docs], Apache Parquet [@parquet_docs], the STAC specification [@stac_spec], pgstac [@pgstac_docs] and stac-fastapi [@stac_fastapi_docs].

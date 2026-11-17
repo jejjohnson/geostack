@@ -42,3 +42,7 @@ A broader view than [the role ladder](./role_ladder.md): the ladder says what is
 7. What crosses each seam
 8. The pipeline and the role ladder
 9. What Icechunk and the product catalog change, stage by stage
+
+## Sources and reproduction
+
+Every measured number on the page comes from `notebooks/background/geo_pipeline.py` (run by hand: `python notebooks/background/geo_pipeline.py`; its first cell lists what it needs). The recorded output is `docs/images/background_geo_pipeline/results.json`, and the page was built from it. It is not a DVC stage: snapshot ids are generated, so they differ on every run.

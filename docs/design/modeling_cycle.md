@@ -28,7 +28,7 @@ Background for axes 1 and 3 of the [overview](../overview.md). A methane plume i
 - **Compare decides.** A misfit the noise explains runs the fast inner loop (estimate state and parameters); a misfit with a pattern runs the slow outer loop (change the model or the data).
 - **The inner loop cannot repair a wrong model:** it fits model 1 with a spread coefficient of 0.58 ± 0.01 where the truth is 0.30, and the misfit still has a pattern (χ² 2.41).
 - **One structural change fixes it:** estimating the wind direction gives χ² 0.95 and recovers all three parameters.
-- **Then make it fast, in steps:** 65 s per scene with the simulator, 3.0 s with an emulator, 0.42 ms with an amortized map.
+- **Then make it fast, in steps:** 81 s per scene with the simulator, 3.2 s with an emulator, 0.51 ms with an amortized map.
 - **Every fast step has a slower one as its referee,** and the improve step is shown working on the emulator and on the amortized map.
 - **Fast is not free:** the amortized map is less sharp than the sampler, and says so with wider error bars that were checked.
 
@@ -40,3 +40,7 @@ Background for axes 1 and 3 of the [overview](../overview.md). A methane plume i
 4. Step 6 as a table of who is scored against whom
 5. How the two cycles nest, and what a change of model resets
 6. Where each step lives in the stack and outside it
+
+## Sources and reproduction
+
+Every measured number on the page comes from `notebooks/background/modeling_cycle.py` (run by hand: `python notebooks/background/modeling_cycle.py`; its first cell lists what it needs). The recorded output is `docs/images/background_modeling_cycle/` (`results.json` and five panels), and the page was built from it. It is not a DVC stage: steps 3 to 5 train small networks, so their numbers move a little between runs and machines.

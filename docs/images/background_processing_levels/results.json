@@ -1,0 +1,176 @@
+{
+ "theta": [
+  3.9024,
+  0.9868,
+  1.6286
+ ],
+ "theta_physics": [
+  0.0,
+  1.0,
+  1.6667
+ ],
+ "retrieval_std": 0.248,
+ "cloud_fraction": 0.421,
+ "cloud_flag_agreement": 1.0,
+ "coverage_l2": 0.579,
+ "coverage_l3_binned": 0.313,
+ "rmse_l1_t11_vs_sst": 1.457,
+ "rmse_l2": 0.192,
+ "rmse_l3_binned": 0.171,
+ "rmse_l3": 0.471,
+ "rmse_l3_observed": 0.069,
+ "rmse_l3_unobserved": 0.566,
+ "rmse_l4": 0.266,
+ "rmse_l4_observed": 0.067,
+ "rmse_l4_unobserved": 0.318,
+ "rmse_climatology": 0.847,
+ "rmse_forecast_by_day": [
+  0.392,
+  0.455,
+  0.485,
+  0.529,
+  0.521
+ ],
+ "rmse_persist_clim_by_day": [
+  0.904,
+  0.888,
+  0.873,
+  0.854,
+  0.778
+ ],
+ "l3_std_mean": 0.297,
+ "l4_std_mean": 0.158,
+ "mhw_cell_days_true": 22626,
+ "mhw_cell_days_l4": 15845,
+ "mhw_cell_days_l3": 7989,
+ "mhw_hits_l4": 15313,
+ "mhw_hits_l3": 7762,
+ "events_l4": [
+  {
+   "start_day": 4,
+   "end_day": 59,
+   "duration_days": 56,
+   "peak_intensity_K": 3.31,
+   "max_area_km2": 251875
+  },
+  {
+   "start_day": 35,
+   "end_day": 59,
+   "duration_days": 25,
+   "peak_intensity_K": 2.42,
+   "max_area_km2": 177500
+  },
+  {
+   "start_day": 1,
+   "end_day": 9,
+   "duration_days": 9,
+   "peak_intensity_K": 2.46,
+   "max_area_km2": 80625
+  }
+ ],
+ "events_true": [
+  {
+   "start_day": 0,
+   "end_day": 59,
+   "duration_days": 60,
+   "peak_intensity_K": 3.52,
+   "max_area_km2": 273750
+  },
+  {
+   "start_day": 30,
+   "end_day": 59,
+   "duration_days": 30,
+   "peak_intensity_K": 2.5,
+   "max_area_km2": 245000
+  },
+  {
+   "start_day": 0,
+   "end_day": 17,
+   "duration_days": 18,
+   "peak_intensity_K": 2.76,
+   "max_area_km2": 101250
+  }
+ ],
+ "n_events_l4": 20,
+ "n_events_true": 18,
+ "sizes": {
+  "L0": [
+   [
+    60,
+    2,
+    70,
+    50
+   ],
+   "uint16",
+   840000
+  ],
+  "L1": [
+   [
+    60,
+    2,
+    70,
+    50
+   ],
+   "float32 + 2 \u00d7 float32 geolocation",
+   3360000
+  ],
+  "L2": [
+   [
+    60,
+    70,
+    50
+   ],
+   "float32 + uint8 flag + geolocation",
+   2730000
+  ],
+  "L3": [
+   [
+    60,
+    64,
+    64
+   ],
+   "2 \u00d7 float32 (mean, variance)",
+   1966080
+  ],
+  "L4": [
+   [
+    60,
+    64,
+    64
+   ],
+   "2 \u00d7 float32 (mean, variance)",
+   1966080
+  ],
+  "L5": [
+   [
+    20,
+    5
+   ],
+   "table rows",
+   2044
+  ]
+ },
+ "example": {
+  "day": 30,
+  "dn": [
+   1178,
+   1265
+  ],
+  "gain": [
+   0.0029563,
+   0.0026745
+  ],
+  "offset": [
+   0.51694,
+   0.61339
+  ],
+  "tb": [
+   250.32,
+   250.11
+  ],
+  "sst_l2": null,
+  "truth": 293.11,
+  "clear": false
+ },
+ "lines": 445
+}
