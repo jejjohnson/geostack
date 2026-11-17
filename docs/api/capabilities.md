@@ -17,13 +17,13 @@ This page is the GeoStack layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at pipekit 0.1.4, pipekit-array 0.0.9, pipekit-cycle 0.0.3, pipekit-evaluate 0.1.1, pipekit-experiment 0.0.5, pipekit-jax 0.0.6, pipekit-train 0.1.3, georeader-spaceml 2.4.1, geotoolz-ops 0.17.0, geotoolz-array 0.3.2, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.14.2, geotoolz-products 0.7.1, xrtoolz-ops 0.4.0, xrtoolz-products 0.4.0.
+Listed at pipekit-ops 0.2.1, pipekit 0.2.0, pipekit-array 0.1.1, pipekit-cycle 0.1.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.1.0, pipekit-train 0.2.0, georeader-spaceml 2.4.1, geotoolz-ops 0.18.1, geotoolz-array 0.4.1, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.14.3, geotoolz-products 0.7.1, xrtoolz-ops 0.5.1, xrtoolz-products 0.5.0.
 
-## Upstream: `pipekit`
+## Upstream: `pipekit-ops`
 
-Carrier-agnostic operator-graph framework for pipelines.
+The core: Operator, Graph and the ready-made operators.
 
-### `pipekit`
+### `pipekit_ops`
 
 | Name | Kind | What it does |
 |---|---|---|
@@ -31,43 +31,80 @@ Carrier-agnostic operator-graph framework for pipelines.
 | `AssertDType` | class | Pass-through; raise `QCError` if ``getattr(x, 'dtype')`` mismatches. |
 | `AssertHasAttribute` | class | Pass-through; raise `QCError` if attribute missing (or value mismatches). |
 | `AssertShape` | class | Pass-through; raise `QCError` if ``getattr(x, 'shape')`` mismatches. |
+| `AssertSignature` | class | Pass-through; raise `QCError` unless the carrier's dims fit ``pattern``. |
+| `AssertThat` | class | Pass-through; raise `QCError` if ``pred(x)`` is falsy. |
+| `Assoc` | class | Add a key whose value is computed from the whole dict (toolz ``assoc``). |
 | `AsyncMap` | class | Apply ``op`` to each item of an iterable inside an async event loop. |
 | `BackendError` | class | Inputs on more than one backend, or a backend the code does not run on. |
 | `BatchedMap` | class | Split an iterable into batches and call ``op`` on each batch as a list. |
 | `Branch` | class | Binary conditional: run ``if_true`` or ``if_false`` based on a predicate. |
-| `Cache` | class | Memoise an inner operator by hashing its input and config. |
+| `Cache` | class | Memoise an inner operator by hashing its input and the inner pipeline. |
 | `Carrier` | class | Re-exported from `typing`. |
 | `CarryState` | class | Base class for state threaded through a stateful pipeline. |
 | `Coalesce` | class | Try each source in order; return the first output that satisfies ``is_ok``. |
+| `Concat` | class | Flatten exactly one level (toolz ``concat``). |
 | `ConfigMixin` | class | Auto-derive `get_config()` from `__init__` parameter names. |
 | `Const` | class | Return a fixed value, ignoring any input. |
+| `Count` | class | The number of items (toolz ``count``). |
+| `CountBy` | class | Count items per key, in first-seen order (toolz ``countby``). |
+| `DirectoryStore` | class | One file per key under ``root``, written atomically. |
+| `Dissoc` | class | Drop some keys; missing keys are ignored (toolz ``dissoc``). |
+| `Failed` | class | The slot of an item that failed under ``on_error="collect"``. |
 | `Fanout` | class | Apply each named operator to the same input; return a dict of outputs. |
+| `Filter` | class | Keep the items a predicate accepts (builtin ``filter``). |
 | `FittableTransformer` | class | Anything with sklearn-style ``fit`` + ``transform`` methods. |
+| `Fold` | class | Associative fold over chunks, reduced in parallel through `Map`. |
+| `Get` | class | Index into a mapping or sequence (toolz ``get``). |
+| `GetIn` | class | Walk a key path through nested containers (toolz ``get_in``). |
 | `Graph` | class | A symbolic operator graph with multiple inputs and outputs. |
+| `GroupBy` | class | Group items by a key, in first-seen order (toolz ``groupby``). |
 | `Histogram` | class | Controller that captures simple histograms by key. |
 | `Identity` | class | Explicit no-op. |
 | `Input` | class | A named entry point into a `Graph`. |
+| `LabelledAdapter` | class | An adapter that can set the labels of named dims (optional). |
 | `Lambda` | class | Wrap an arbitrary callable as an `Operator`. |
+| `Log` | class | Pass the carrier through and write one ``logging`` record per call. |
+| `Map` | class | Apply ``op`` to every item, on any executor, with a bounded window. |
+| `MapError` | class | Every failure of a ``Map(on_error="collect")`` run, with the partial results. |
+| `MemoryStore` | class | A dict guarded by a lock: shared by the threads of one process. |
+| `Merge` | class | Union of several mappings; later inputs win (toolz ``merge``). |
 | `MissingAdapterError` | class | A carrier from a known family arrived with no adapter registered. |
 | `NamedArrayAdapter` | class | What carrier-agnostic code needs from one carrier family. |
 | `Node` | class | A vertex in a `Graph`. |
+| `Not` | class | Negate a predicate; the operator form of `complement`. |
 | `Operator` | class | Base class for pipekit operators. |
+| `PartitionAll` | class | Split into tuples of ``n`` consecutive items (toolz ``partition_all``). |
+| `Pick` | class | Keep only some keys, in the order given. |
 | `Predictor` | class | Anything with a sklearn-style ``predict`` method. |
+| `Prefetch` | class | Run ``op`` up to ``depth`` items ahead of the consumer, in input order. |
 | `ProcessMap` | class | Apply ``op`` to each item of an iterable using a process pool. |
 | `Profile` | class | Controller that records per-step wall-clock timings. |
 | `QCError` | class | Raised when a QC assertion fails. |
 | `Quarantine` | class | Non-raising QC: on failure log and return ``sentinel``; on success pass through. |
+| `RateLimit` | class | At most ``calls`` starts of ``op`` in any window of ``period`` seconds. |
+| `Reduce` | class | Left fold (``functools.reduce``), with the operator called on one pair. |
+| `Remove` | class | Drop the items a predicate accepts (toolz ``remove``). |
+| `Rename` | class | Rename keys; unlisted keys pass through and the order is kept. |
 | `Retry` | class | Retry an operator on transient failures with exponential backoff. |
 | `Sequential` | class | Apply a list of operators in order, threading the output of each into the next. |
 | `ShapeTrace` | class | Log ``shape`` / ``dtype`` of each carrier passing through. |
 | `Signature` | class | Immutable shape + dtype record. |
 | `Sink` | class | Apply a side-effecting write and pass the input through unchanged. |
 | `Snapshot` | class | Controller that captures intermediate carriers by name. |
+| `SortBy` | class | A stable sort by key (builtin ``sorted``). |
 | `StatefulOperator` | class | Marker base for operators whose ``_apply`` threads carry-state. |
+| `Store` | class | What `Cache` needs from a store: membership, load and save by key. |
 | `Switch` | class | Multi-way dispatch on ``key(carrier)``. |
+| `Take` | class | The first ``n`` items (toolz ``take``), for dry runs. |
 | `Tap` | class | Fire a callback on the carrier; return the carrier unchanged. |
 | `ThreadMap` | class | Apply ``op`` to each item of an iterable using a thread pool. |
+| `Timeout` | class | Raise `TimeoutError` if ``op`` has not returned after ``seconds``. |
 | `Try` | class | Run ``primary``; on caught exceptions run ``fallback``. |
+| `Unique` | class | The first occurrence of each item, or of each key (toolz ``unique``). |
+| `Until` | class | Apply ``op`` until ``pred`` holds, at most ``max_iter`` times. |
+| `UpdateIn` | class | Replace the value at a key path by ``op(value)`` (toolz ``update_in``). |
+| `ValMap` | class | Apply an operator to every value, keeping the keys (toolz ``valmap``). |
+| `Zip` | class | Align several iterables into tuples (builtin ``zip``), strict by default. |
 | `allowed` | function | Return the registered class names (``"module.Class"`` keys). |
 | `backend_name` | function | ``"jax"``, ``"dask"`` or ``"numpy"`` for raw data (tracers count as JAX). |
 | `backend_of` | function | The backend of a carrier or a raw array; ``None`` for any other value. |
@@ -77,6 +114,7 @@ Carrier-agnostic operator-graph framework for pipelines.
 | `compose_left` | function | Left-to-right composition (pipeline order). |
 | `compute_output_signature` | function | Free-function dispatch to ``op.compute_output_signature``. |
 | `dumps` | function | JSON-encode an operator's state record. |
+| `executor_scope` | function | Bind the executor that ``Map(executor="scope")`` borrows inside the block. |
 | `from_state_sandboxed` | function | Build an operator tree from a state record, allowlisted classes only. |
 | `get_adapter` | function | The adapter for ``x``'s type, or ``None`` for an unnamed value. |
 | `juxt` | function | Return a callable that applies each operator to its input and tuples the results. |
@@ -89,8 +127,14 @@ Carrier-agnostic operator-graph framework for pipelines.
 | `register_adapter` | function | Register ``adapter`` for ``carrier_type`` and its subclasses. |
 | `register_lazy_adapter` | function | Register ``loader`` for carrier types defined under ``module_prefix``. |
 | `signature_of` | function | ``x``'s `Signature` if it is a registered carrier; ``x`` itself otherwise. |
+| `store_scope` | function | Bind store names to stores inside the block. |
 | `unregister` | function | Remove ``cls`` from the sandboxed loader's allowlist. |
 | `unregister_adapter` | function | Remove the adapter registered for exactly ``carrier_type``, if any. |
+| `upgrade_state` | function | ``state`` with module names saved before pipekit 0.2.0 renamed. |
+
+## Upstream: `pipekit`
+
+The pipekit workspace in one install; an umbrella that holds no code.
 
 ## Upstream: `pipekit-array`
 
@@ -100,39 +144,73 @@ Array API operators (NumPy, JAX, CuPy, PyTorch).
 
 | Name | Kind | What it does |
 |---|---|---|
+| `ApplyAlong` | class | ``inner`` on each item along ``dim``; the results stacked along ``dim``, first. |
 | `ArgReduce` | class | The index of a reduction along one dim (``"argmax"``, ``"argmin"``). |
+| `BatchAlong` | class | ``inner`` on chunks of ``size`` along ``dim`` of one carrier, joined back. |
+| `BroadcastLike` | class | Add ``other``'s missing dims to ``x``, in front: ``op(x, other)``. |
+| `Coarsen` | class | Reduce non-overlapping blocks along named dims by a named reduction. |
 | `Combine` | class | An element-wise function of carriers with the same dims: ``op(a, b, …)``. |
 | `ConcatenateAlong` | class | Concatenate a list-of-arrays along an existing axis via `xp.concat`. |
+| `CumReduce` | class | A cumulative function along ``dim``, by its array-namespace name. |
+| `Diff` | class | The n-th forward difference along ``dim``: N entries become N - n. |
 | `DimArray` | class | A raw array with one name per axis and static labels on some dims. |
-| `DimArrayAdapter` | class | The reference `pipekit.NamedArrayAdapter`, for `DimArray`. |
+| `DimArrayAdapter` | class | The reference `pipekit_ops.NamedArrayAdapter`, for `DimArray`. |
+| `Dot` | class | The sum of the product of carriers over named dims: ``op(*xs)``. |
 | `Estimator` | class | A scikit-learn-style estimator fitted and applied on a named carrier. |
+| `ExpandDims` | class | Insert length-1 dims at position ``axis`` of the result. |
 | `ISel` | class | Select by position along one dim; an integer drops the dim. |
 | `KernelOp` | class | An L1 kernel wrapped once, run on raw arrays and on every named carrier. |
 | `KernelSpec` | class | A generalized-ufunc signature over abstract core-dim letters. |
 | `MapOver` | class | ``fn`` on each item along ``dim``; the results stacked along ``dim``, first. |
 | `MeanScalar` | class | Reduce an array to a scalar (or per-axis means) via `xp.mean`. |
+| `MergeDims` | class | Merge the listed dims into one, placed last, in C order. |
+| `Pad` | class | Widen named dims at either end; a padded dim loses its labels. |
 | `Padded` | class | A batch: the items as one carrier and a mask of the real ones. |
+| `Quantile` | class | Quantiles over named dims; a sequence ``q`` adds a leading ``quantile`` dim. |
 | `Reduce` | class | Reduce over named dims with an array-namespace reduction. |
+| `Rename` | class | New dim names; data, order and labels unchanged. |
+| `Roll` | class | Shift data cyclically along named dims; labels stay. |
 | `RowLayout` | class | How `to_rows` flattened a carrier, so `from_rows` can rebuild one. |
 | `Sel` | class | Select by exact label along one dim; one label drops the dim. |
+| `Shift` | class | Shift data along named dims, filling the vacated entries; labels stay. |
+| `SplitDims` | class | Split one dim into several, in place, in C order. |
+| `Squeeze` | class | Drop named length-1 dims. |
 | `StackAlong` | class | Stack a list-of-arrays along a new axis via `xp.stack`. |
 | `TakeAlong` | class | Gather one entry of ``dim`` per position: ``op(x, index)``. |
 | `Transpose` | class | Reorder dims by name. |
+| `Where` | class | Keep ``x`` where ``cond`` is True, ``other`` elsewhere: ``op(x, cond)``. |
+| `Window` | class | Sliding windows along one dim, as a new last dim; full windows only. |
 | `argreduce` | function | The index of a reduction along one dim (``"argmax"``, ``"argmin"``). |
 | `array_namespace` | function | Return the Array API namespace shared by all input arrays. |
 | `batch` | function | Group named carriers into `Padded` batches of ``size`` along ``dim``. |
+| `broadcast_like` | function | Add ``other``'s missing dims to ``x``, in front, in ``other``'s order. |
+| `coarsen` | function | Reduce non-overlapping blocks of k entries along each named dim. |
 | `combine` | function | ``fn`` of the data of carriers with the same dims; never aligns. |
 | `concat` | function | Join carriers along an existing dim; the other dims must agree. |
+| `cumreduce` | function | A cumulative function along ``dim``; labels and length unchanged. |
+| `diff` | function | The n-th forward difference along ``dim`` (xarray's ``diff``). |
+| `dot` | function | The sum of the product of carriers over named dims (``xr.dot``). |
+| `expand_dims` | function | Insert length-1 dims, consecutively, at position ``axis`` of the result. |
 | `from_rows` | function | A carrier like ``layout.template`` from a table of rows. |
 | `isel` | function | Select by position on named dims; an integer drops its dim. |
 | `map_over` | function | ``fn`` on each item along ``dim``; the results stacked along ``dim``, first. |
+| `merge_dims` | function | Merge the listed dims into one, placed last, in C order (xarray's ``stack``). |
+| `pad` | function | Widen named dims at either end (xarray's ``pad``, four modes). |
+| `quantile` | function | Quantiles over named dims (xarray's ``quantile``). |
 | `reduce` | function | Reduce over one or more named dims. |
+| `rename` | function | New dim names; data, order and labels unchanged. |
+| `roll` | function | Shift data cyclically along named dims; labels stay (xarray's ``roll``). |
 | `sel` | function | Select by exact label on named dims: no ranges, no nearest. |
+| `shift` | function | Shift data along named dims, filling the vacated entries (xarray's ``shift``). |
+| `split_dims` | function | Split one dim into several, in place, in C order (xarray's ``unstack``). |
+| `squeeze` | function | Drop named length-1 dims. |
 | `stack` | function | A new leading dim ``dim`` from carriers with the same dims; never aligns. |
 | `stack_items` | function | Items along a new leading dim ``dim``, each keeping its own geometry. |
 | `take_along` | function | Gather one entry of ``dim`` per position, with an index carrier. |
 | `to_rows` | function | ``x`` as a ``(n_samples, n_features)`` table, and how to undo it. |
 | `transpose` | function | Reorder dims by name; ``order`` names every dim once. |
+| `where` | function | Keep ``x`` where ``cond`` is True, ``other`` elsewhere (xarray's ``where``). |
+| `window` | function | Sliding windows along one dim; the window becomes a new last dim. |
 
 ## Upstream: `pipekit-cycle`
 
@@ -244,7 +322,7 @@ JAX / Equinox carrier integration for pipekit.
 | `DiffraxForwardModel` | lazy | Needs `diffrax`. |
 | `EnsembleScanCycle` | class | Run a `ScanCycle` on every ensemble member at once, with ``jax.vmap``. |
 | `JaxKernelOp` | class | A `KernelOp` whose array parameters are pytree leaves. |
-| `JaxModelOp` | class | Wrap an `eqx.Module` as a `pipekit.Operator` with weight round-trip. |
+| `JaxModelOp` | class | Wrap an `eqx.Module` as a `pipekit_ops.Operator` with weight round-trip. |
 | `JaxOperator` | class | Base class for pipekit operators whose fields are Equinox fields. |
 | `Rollout` | class | Carrier-only rollout: ``c₀ -> [c₀, c_k, c_2k, …, c_n]``. |
 | `ScanCycle` | class | Apply ``step_op`` for ``n_steps`` inside one ``jax.lax.scan``. |
@@ -436,7 +514,7 @@ Composable remote-sensing operators on GeoTensor.
 | `Gamma` | class | Power-law gamma correction. |
 | `GammaCorrect` | class | Apply display gamma correction. |
 | `GapFillIDW` | class | Fill NaNs with inverse-distance weighted finite neighbours. |
-| `GapFillInpaintBiharmonic` | class | Smoothly inpaint NaN gaps with a biharmonic-style fill. |
+| `GapFillInpaintBiharmonic` | class | Smoothly inpaint NaN gaps with a biharmonic fill (Δ²u = 0). |
 | `GapFillLaplacian` | class | Fill NaNs by solving a discrete Laplace equation. |
 | `GapFillNearest` | class | Fill NaNs from the nearest finite neighbour. |
 | `GaussianDenoise` | class | Gaussian smoother over the trailing two spatial axes. |
@@ -456,6 +534,7 @@ Composable remote-sensing operators on GeoTensor.
 | `HoughLines` | class | Detect prominent straight lines with the Hough transform. |
 | `IMEEstimate` | class | Integrated Mass Enhancement (IME) flux estimator. |
 | `IntegratedIrradiance` | class | Compute band-integrated TOA solar irradiance from an SRF table. |
+| `InterpAt` | class | H(x): a grid read at the positions of points, as an operator. |
 | `InvertMask` | class | Invert a boolean mask element-wise. |
 | `IronOxide` | class | Iron Oxide ratio — Segal 1982 / Sabins 1999. |
 | `LabelConnectedComponents` | class | Convert a binary mask into an int32 connected-component label map. |
@@ -571,7 +650,7 @@ Composable remote-sensing operators on GeoTensor.
 | `RemoveSmallObjects` | class | Remove connected True components smaller than ``min_area_px`` pixels. |
 | `ReorderBands` | class | Reorder bands by integer index or band name. |
 | `ReplaceOutliers` | class | Replace outliers with median, NaN, or nearest-neighbour interpolation. |
-| `Reproject` | class | Reproject a `GeoArray` to a destination CRS (and optional resolution). |
+| `Reproject` | class | Reproject a `GeoArray` to a destination CRS or onto a target grid. |
 | `ReprojectLike` | class | Reproject a `GeoArray` onto another `GeoArray`'s CRS + grid. |
 | `Resample` | class | Resample a `GeoArray` to a target spatial resolution. |
 | `ResampleLike` | class | Resample a `GeoArray` onto another `GeoArray`'s spatial grid. |
@@ -614,6 +693,7 @@ Composable remote-sensing operators on GeoTensor.
 | `StretchToUint8` | class | Percentile-stretch display data to ``uint8``. |
 | `StructureTensor` | class | Local structure-tensor eigenvalue stack. |
 | `SunAngleJitter` | class | Rescale TOA reflectance for a simulated solar-zenith change. |
+| `SwathToGrid` | class | Grid a swath onto a target grid by inverse-distance weighting. |
 | `Threshold` | class | Binary mask of the pixels strictly above a global threshold. |
 | `Tile` | class | Split a `GeoArray` into spatial tiles. |
 | `ToFloat32` | class | Cast the carrier's values to ``float32``. |
@@ -642,13 +722,13 @@ The GeoArray carrier: an array with its grid (transform, CRS).
 | `DIMS` | constant | `('time', 'band', 'y', 'x')` |
 | `FrozenAttrs` | class | An immutable, hashable mapping of string keys to frozen values. |
 | `GeoArray` | class | A georeferenced array whose data is a NumPy or a JAX array. |
-| `GeoArrayAdapter` | class | The `pipekit.NamedArrayAdapter` for `GeoArray`. |
+| `GeoArrayAdapter` | class | The `pipekit_ops.NamedArrayAdapter` for `GeoArray`. |
 | `GeoArrayError` | class | Base class of every error geoarray raises on its own account. |
 | `GeoArrayTraceError` | class | An operation needs concrete values but got JAX tracers. |
 | `GeoPoints` | class | Scattered samples on the ``obs`` dim: positions, optional z, time, valid. |
-| `GeoPointsAdapter` | class | The `pipekit.NamedArrayAdapter` for `GeoPoints`: xy, z, time, valid match. |
+| `GeoPointsAdapter` | class | The `pipekit_ops.NamedArrayAdapter` for `GeoPoints`: xy, z, time, valid match. |
 | `GeoSwath` | class | Data in sensor geometry: per-pixel lat/lon on the ``row col`` dims. |
-| `GeoSwathAdapter` | class | The `pipekit.NamedArrayAdapter` for `GeoSwath`: lat/lon must match exactly. |
+| `GeoSwathAdapter` | class | The `pipekit_ops.NamedArrayAdapter` for `GeoSwath`: lat/lon must match exactly. |
 | `Grid` | class | A pixel grid with no data: transform, CRS and spatial shape. |
 | `GridMismatchError` | class | Carriers that must share one pixel grid do not. |
 | `HostTransferWarning` | class | A JAX carrier's data was copied to the host for NumPy code. |
@@ -664,7 +744,6 @@ The GeoArray carrier: an array with its grid (transform, CRS).
 | `crop` | function | The ``size`` pixels starting at ``offset``, with the matching transform. |
 | `footprint` | function | The outline of the carrier's grid as a shapely ``Polygon``. |
 | `get_options` | function | The current options, as a new dict. |
-| `interp_at` | function | H(x): ``grid`` read at the positions of ``points``. |
 | `pad` | function | Add fill pixels around the spatial axes; the transform moves with them. |
 | `pad_points` | function | ``points`` padded to ``n`` samples, with ``valid=False`` on the pad. |
 | `pixel_coords` | function | Map coordinates of every pixel, ``(2, H, W)``: x then y. |
@@ -672,7 +751,7 @@ The GeoArray carrier: an array with its grid (transform, CRS).
 | `set_options` | class | Set process-wide options, for good or within a ``with`` block. |
 | `stack` | function | Stack carriers on one grid along a new dim. |
 | `to_dimarray` | function | A carrier's data, dims and labels as a ``pipekit_array.DimArray``; no grid. |
-| `to_pixel` | function | Map coordinates ``(x, y)`` to fractional pixel ``(row, col)`` centres. |
+| `to_pixel` | function | Re-exported from `functax`. |
 | `write_window` | function | A copy of ``g`` with ``values`` written into ``window``. |
 
 ## Upstream: `geotoolz-catalog`
@@ -737,7 +816,9 @@ Composable operators for Earth System Data Cubes (xrops).
 | `Augment` | class | Run an inner ``Operator`` and merge its output back into the input. |
 | `Difference` | class | The ``derivative``-th partial derivative along one dim. |
 | `Gradient` | class | The first partial derivatives along ``dims``, stacked on a ``component`` dim. |
-| `Operator` | class | ``pipekit.Operator`` plus xarray ``DataTree`` dispatch. |
+| `Lift` | class | ``op`` applied to each item of a cube along ``dim``; built by `lift`. |
+| `Operator` | class | ``pipekit_ops.Operator`` plus xarray ``DataTree`` dispatch. |
+| `lift` | function | Apply a geoops geometry operator per item over an xarray cube. |
 
 ## Upstream: `xrtoolz-products`
 

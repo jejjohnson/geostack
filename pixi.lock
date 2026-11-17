@@ -433,16 +433,18 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/functax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -837,16 +839,18 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/functax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -1282,16 +1286,18 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/functax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -1664,16 +1670,18 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/functax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -2142,16 +2150,17 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
       - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
@@ -2580,16 +2589,17 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
       - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
@@ -3077,7 +3087,6 @@ environments:
       - pypi: ./references/geomodels/radtrax
       - pypi: ./references/geomodels/sesmax/packages/sesmax
       - pypi: ./references/geomodels/sesmax/packages/sesmax-core
-      - pypi: ./references/geomodels/somax
       - pypi: ./references/geostack/georeader
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-array
@@ -3086,16 +3095,17 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
       - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
@@ -3522,7 +3532,6 @@ environments:
       - pypi: ./references/geomodels/radtrax
       - pypi: ./references/geomodels/sesmax/packages/sesmax
       - pypi: ./references/geomodels/sesmax/packages/sesmax-core
-      - pypi: ./references/geomodels/somax
       - pypi: ./references/geostack/georeader
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-array
@@ -3531,16 +3540,17 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
       - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
@@ -4123,16 +4133,18 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/functax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -4632,16 +4644,18 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/functax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -5141,16 +5155,18 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/functax
       - pypi: https://files.pythonhosted.org/packages/04/d5/81d1403788f072e7d0e2b2fe539a0ae4410f27886ff52df094e5348c99ea/vegafusion-2.0.3-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
@@ -5588,16 +5604,18 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+      - pypi: ./references/numerics/functax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -6057,16 +6075,17 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
       - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
@@ -6478,16 +6497,17 @@ environments:
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-ops
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-products
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
+      - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
       - pypi: ./references/geostack/pipekit/packages/pipekit
       - pypi: ./references/geostack/pipekit/packages/pipekit-array
       - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
       - pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
       - pypi: ./references/geostack/pipekit/packages/pipekit-experiment
       - pypi: ./references/geostack/pipekit/packages/pipekit-jax
+      - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
-      - pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
       - pypi: ./references/numerics/argminax
       - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
@@ -6578,7 +6598,7 @@ packages:
   - python_abi 3.13.* *_cp313
   license: MIT AND Apache-2.0
   purls:
-  - pkg:pypi/aiohttp?source=compressed-mapping
+  - pkg:pypi/aiohttp?source=hash-mapping
   run_exports: {}
   size: 1246053
   timestamp: 1791734313039
@@ -7003,7 +7023,7 @@ packages:
   - python_abi 3.13.* *_cp313
   license: BSD-3-Clause AND MIT AND EPL-2.0
   purls:
-  - pkg:pypi/backports-zstd?source=compressed-mapping
+  - pkg:pypi/backports-zstd?source=hash-mapping
   run_exports: {}
   size: 244807
   timestamp: 1791654836417
@@ -7413,7 +7433,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/fonttools?source=compressed-mapping
+  - pkg:pypi/fonttools?source=hash-mapping
   run_exports: {}
   size: 3191755
   timestamp: 1791995388802
@@ -9762,7 +9782,7 @@ packages:
   license: BSD-3-Clause
   license_family: BSD
   purls:
-  - pkg:pypi/markupsafe?source=compressed-mapping
+  - pkg:pypi/markupsafe?source=hash-mapping
   run_exports: {}
   size: 27785
   timestamp: 1791548971554
@@ -10475,7 +10495,8 @@ packages:
   license: LGPL-3.0-only
   license_family: LGPL
   purls:
-  - pkg:pypi/pyside6?source=compressed-mapping
+  - pkg:pypi/pyside6?source=hash-mapping
+  - pkg:pypi/shiboken6?source=hash-mapping
   run_exports: {}
   size: 13947145
   timestamp: 1788745031498
@@ -10796,7 +10817,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/ruamel-yaml-clib?source=compressed-mapping
+  - pkg:pypi/ruamel-yaml-clib?source=hash-mapping
   run_exports: {}
   size: 160419
   timestamp: 1788881219721
@@ -10810,8 +10831,7 @@ packages:
   - __glibc >=2.17
   license: MIT
   license_family: MIT
-  purls:
-  - pkg:pypi/ruff?source=compressed-mapping
+  purls: []
   run_exports: {}
   size: 8926625
   timestamp: 1791586553873
@@ -10972,7 +10992,7 @@ packages:
   license: BSD-3-Clause
   license_family: BSD
   purls:
-  - pkg:pypi/ujson?source=compressed-mapping
+  - pkg:pypi/ujson?source=hash-mapping
   size: 58738
   timestamp: 1788568482030
 - conda: https://conda.anaconda.org/conda-forge/linux-64/ukkonen-1.1.0-py313h7037e92_0.conda
@@ -11038,7 +11058,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/wcwidth?source=compressed-mapping
+  - pkg:pypi/wcwidth?source=hash-mapping
   run_exports: {}
   size: 368447
   timestamp: 1791194573338
@@ -11820,7 +11840,7 @@ packages:
   license: Apache-2.0
   license_family: APACHE
   purls:
-  - pkg:pypi/atpublic?source=compressed-mapping
+  - pkg:pypi/atpublic?source=hash-mapping
   run_exports: {}
   size: 16682
   timestamp: 1791876508312
@@ -11930,7 +11950,7 @@ packages:
   license: Apache-2.0
   license_family: Apache
   purls:
-  - pkg:pypi/boto3?source=compressed-mapping
+  - pkg:pypi/boto3?source=hash-mapping
   size: 88762
   timestamp: 1791474090624
 - conda: https://conda.anaconda.org/conda-forge/noarch/boto3-1.43.111-pyhd8ed1ab_0.conda
@@ -11944,7 +11964,7 @@ packages:
   license: Apache-2.0
   license_family: Apache
   purls:
-  - pkg:pypi/boto3?source=compressed-mapping
+  - pkg:pypi/boto3?source=hash-mapping
   run_exports: {}
   size: 88855
   timestamp: 1791833650663
@@ -11959,7 +11979,7 @@ packages:
   license: Apache-2.0
   license_family: Apache
   purls:
-  - pkg:pypi/botocore?source=compressed-mapping
+  - pkg:pypi/botocore?source=hash-mapping
   size: 9190727
   timestamp: 1791462408447
 - conda: https://conda.anaconda.org/conda-forge/noarch/botocore-1.43.111-pyhd8ed1ab_0.conda
@@ -11973,7 +11993,7 @@ packages:
   license: Apache-2.0
   license_family: Apache
   purls:
-  - pkg:pypi/botocore?source=compressed-mapping
+  - pkg:pypi/botocore?source=hash-mapping
   run_exports: {}
   size: 9281652
   timestamp: 1791823984682
@@ -12540,7 +12560,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/filelock?source=compressed-mapping
+  - pkg:pypi/filelock?source=hash-mapping
   size: 102017
   timestamp: 1791739638282
 - conda: https://conda.anaconda.org/conda-forge/noarch/filelock-4.2.0-pyhd8ed1ab_0.conda
@@ -12550,7 +12570,7 @@ packages:
   - python >=3.11
   license: MIT
   purls:
-  - pkg:pypi/filelock?source=compressed-mapping
+  - pkg:pypi/filelock?source=hash-mapping
   run_exports: {}
   size: 103837
   timestamp: 1792017306237
@@ -12796,7 +12816,7 @@ packages:
   - python
   license: BSD-3-Clause
   purls:
-  - pkg:pypi/gitpython?source=compressed-mapping
+  - pkg:pypi/gitpython?source=hash-mapping
   run_exports: {}
   size: 186188
   timestamp: 1792007726948
@@ -13214,7 +13234,7 @@ packages:
   license: BSD-3-Clause
   license_family: BSD
   purls:
-  - pkg:pypi/jsonpointer?source=compressed-mapping
+  - pkg:pypi/jsonpointer?source=hash-mapping
   size: 14728
   timestamp: 1791676993658
 - conda: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.26.0-pyhcf101f3_1.conda
@@ -13719,7 +13739,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/narwhals?source=compressed-mapping
+  - pkg:pypi/narwhals?source=hash-mapping
   run_exports: {}
   size: 303300
   timestamp: 1791622361931
@@ -13958,7 +13978,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/platformdirs?source=compressed-mapping
+  - pkg:pypi/platformdirs?source=hash-mapping
   run_exports: {}
   size: 34027
   timestamp: 1791727231159
@@ -13999,7 +14019,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/polars?source=compressed-mapping
+  - pkg:pypi/polars?source=hash-mapping
   size: 570232
   timestamp: 1791561649215
 - conda: https://conda.anaconda.org/conda-forge/noarch/pre-commit-4.6.2-pyha770c72_0.conda
@@ -14015,7 +14035,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/pre-commit?source=hash-mapping
+  - pkg:pypi/pre-commit?source=compressed-mapping
   size: 201879
   timestamp: 1786408353117
 - conda: https://conda.anaconda.org/conda-forge/noarch/pre-commit-4.7.0-pyha770c72_0.conda
@@ -14143,7 +14163,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/pydantic?source=compressed-mapping
+  - pkg:pypi/pydantic?source=hash-mapping
   run_exports: {}
   size: 358514
   timestamp: 1791761552444
@@ -14159,7 +14179,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/pydantic-settings?source=compressed-mapping
+  - pkg:pypi/pydantic-settings?source=hash-mapping
   size: 60984
   timestamp: 1786146776076
 - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-settings-2.16.0-pyh5ded981_0.conda
@@ -14174,7 +14194,7 @@ packages:
   - python
   license: MIT
   purls:
-  - pkg:pypi/pydantic-settings?source=compressed-mapping
+  - pkg:pypi/pydantic-settings?source=hash-mapping
   run_exports: {}
   size: 69536
   timestamp: 1792000612449
@@ -14453,7 +14473,7 @@ packages:
   license: BSD-2-Clause
   license_family: BSD
   purls:
-  - pkg:pypi/python-json-logger?source=hash-mapping
+  - pkg:pypi/python-json-logger?source=compressed-mapping
   size: 19367
   timestamp: 1786872772907
 - conda: https://conda.anaconda.org/conda-forge/noarch/python-lsp-jsonrpc-1.1.2-pyhff2d567_1.conda
@@ -15158,7 +15178,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/virtualenv?source=compressed-mapping
+  - pkg:pypi/virtualenv?source=hash-mapping
   run_exports: {}
   size: 3995083
   timestamp: 1791784412547
@@ -15708,7 +15728,7 @@ packages:
   - python_abi 3.13.* *_cp313
   license: BSD-3-Clause AND MIT AND EPL-2.0
   purls:
-  - pkg:pypi/backports-zstd?source=compressed-mapping
+  - pkg:pypi/backports-zstd?source=hash-mapping
   run_exports: {}
   size: 242793
   timestamp: 1791654845115
@@ -16013,7 +16033,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/fonttools?source=compressed-mapping
+  - pkg:pypi/fonttools?source=hash-mapping
   run_exports: {}
   size: 3091255
   timestamp: 1791995318452
@@ -18799,8 +18819,7 @@ packages:
   - __osx >=11.0
   license: MIT
   license_family: MIT
-  purls:
-  - pkg:pypi/ruff?source=compressed-mapping
+  purls: []
   run_exports: {}
   size: 8198789
   timestamp: 1791586611651
@@ -18883,7 +18902,7 @@ packages:
   license: BSD-3-Clause
   license_family: BSD
   purls:
-  - pkg:pypi/scipy?source=compressed-mapping
+  - pkg:pypi/scipy?source=hash-mapping
   run_exports: {}
   size: 14162801
   timestamp: 1791887922440
@@ -19021,7 +19040,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/wcwidth?source=compressed-mapping
+  - pkg:pypi/wcwidth?source=hash-mapping
   run_exports: {}
   size: 370064
   timestamp: 1791194620909
@@ -19118,7 +19137,7 @@ packages:
   license: Apache-2.0
   license_family: Apache
   purls:
-  - pkg:pypi/yarl?source=compressed-mapping
+  - pkg:pypi/yarl?source=hash-mapping
   run_exports: {}
   size: 177884
   timestamp: 1791286119377
@@ -19320,13 +19339,16 @@ packages:
   - optax>=0.2
   - jaxtyping>=0.2.28
   - diffrax>=0.5
+  - einx>=0.4
   - equinox>=0.11
   - optimistix>=0.1
   - lineax>=0.1
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@cd6264c
-  - geonnax @ git+https://github.com/jejjohnson/geonnax@5318173
-  - pipekit @ git+https://github.com/jejjohnson/pipekit#subdirectory=packages/pipekit
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit#subdirectory=packages/pipekit-cycle
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
+  - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4
+  - geonnax @ git+https://github.com/jejjohnson/geonnax@v0.0.10
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-cycle
   - xarray>=2024.0 ; extra == 'data'
   - numpy>=1.26 ; extra == 'data'
   - matplotlib>=3.9.0 ; extra == 'viz'
@@ -19341,12 +19363,15 @@ packages:
   - jupyter>=1.0.0 ; extra == 'jlab'
   - autoroot>=1.0.0 ; extra == 'jlab'
   - jupytext>=1.16.0 ; extra == 'jlab'
+  - nbconvert>=7.16.0 ; extra == 'jlab'
+  - cyclopts>=3.0 ; extra == 'jlab'
+  - loguru>=0.7.2 ; extra == 'jlab'
   - matplotlib>=3.9.0 ; extra == 'examples'
   - loguru>=0.7.2 ; extra == 'examples'
   - tqdm>=4.66.0 ; extra == 'examples'
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit#subdirectory=packages/pipekit-jax ; extra == 'persist'
-  - pipekit-experiment @ git+https://github.com/jejjohnson/pipekit#subdirectory=packages/pipekit-experiment ; extra == 'persist'
-  - pipekit-train @ git+https://github.com/jejjohnson/pipekit#subdirectory=packages/pipekit-train ; extra == 'train'
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-jax ; extra == 'persist'
+  - pipekit-experiment @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-experiment ; extra == 'persist'
+  - pipekit-train @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-train ; extra == 'train'
   - vardax[data,viz,exp,jlab,examples,persist,train] ; extra == 'all'
   requires_python: '>=3.12,<3.14'
 - pypi: ./references/geoml/xtremax
@@ -19369,21 +19394,36 @@ packages:
   requires_dist:
   - jax>=0.10
   - jaxlib>=0.10
-  - numpy
+  - numpy>=2.0
   - xarray
   - netcdf4
   - scipy>=1.11
   - diffrax>=0.6
   - equinox>=0.11
   - finitevolx @ git+https://github.com/jejjohnson/finitevolX@v0.0.45
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.5
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   - optimistix>=0.0.10
-  - scikit-learn>=1.3
-  - pipekit @ git+https://github.com/jejjohnson/pipekit@ef3c17f85678dbcdd739f27ef75a0eaab6d5163f#subdirectory=packages/pipekit
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
+  - radtrax @ git+https://github.com/jejjohnson/radtrax@v0.1.0
+  - einx>=0.4
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.5
   - numpyro>=0.21 ; extra == 'inference'
-  - hitran-api ; extra == 'hapi'
+  - xrtoolz-ops @ git+https://github.com/jejjohnson/geotoolz@df8c228090b675365abd3fe272890f6a055434c6#subdirectory=packages/xrtoolz-ops ; extra == 'io'
+  - xrtoolz-products @ git+https://github.com/jejjohnson/geotoolz@df8c228090b675365abd3fe272890f6a055434c6#subdirectory=packages/xrtoolz-products ; extra == 'io'
+  - pyproj ; extra == 'io'
   - matplotlib ; extra == 'notebooks'
   - ipython ; extra == 'notebooks'
+  - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4 ; extra == 'assim'
+  - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.5 ; extra == 'assim'
+  - pipekit-train[equinox,cache] @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-train ; extra == 'emulate'
+  - numpyro>=0.21 ; extra == 'population'
+  - pyyaml>=6 ; extra == 'population'
+  - xtremax @ git+https://github.com/jejjohnson/xtremax@eeec71e732c5aaee63f57934ce9f7e1226b9dc6a ; extra == 'population'
+  - georeader-spaceml>=2.4.1 ; extra == 'geo'
+  - geotoolz-ops[morph] @ git+https://github.com/jejjohnson/geotoolz@df8c228090b675365abd3fe272890f6a055434c6#subdirectory=packages/geotoolz-ops ; extra == 'geo'
+  - scikit-learn>=1.4 ; extra == 'geo'
+  - tqdm>=4 ; extra == 'geo'
+  - typing-extensions>=4 ; extra == 'geo'
   requires_python: '>=3.12'
 - pypi: ./references/geomodels/radtrax
   name: radtrax
@@ -19394,14 +19434,20 @@ packages:
   - jaxtyping>=0.3
   - lineax>=0.1
   - optimistix>=0.1
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.5
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
+  - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4
+  - geonnax @ git+https://github.com/jejjohnson/geonnax@v0.0.9
   - numpy>=2.0
   - xarray
   - netcdf4
   - scikit-learn>=1.3
+  - scipy>=1.11
+  - einx>=0.4
   - hitran-api ; extra == 'hitran'
   - georeader-spaceml>=2.4.1 ; extra == 'geo'
+  - geotoolz-ops @ git+https://github.com/jejjohnson/geotoolz@df8c228090b675365abd3fe272890f6a055434c6#subdirectory=packages/geotoolz-ops ; extra == 'geo'
   - openpyxl>=3.1 ; extra == 'geo'
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops ; extra == 'geo'
   - tqdm>=4 ; extra == 'geo'
   - typing-extensions>=4 ; extra == 'geo'
   requires_python: '>=3.12'
@@ -19422,38 +19468,19 @@ packages:
   - optimistix>=0.1
   - einops>=0.8.2
   - paramax>=0.0.5
-  - finitevolx[pipekit] @ git+https://github.com/jejjohnson/finitevolX.git@v0.1.0
+  - finitevolx[pipekit] @ git+https://github.com/jejjohnson/finitevolX.git@a28525dfc0f36d26ded9ffea285e9832aed5aaae
   - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.1
-  - pipekit @ git+https://github.com/jejjohnson/pipekit.git@pipekit-v0.1.4#subdirectory=packages/pipekit
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-cycle-v0.0.3#subdirectory=packages/pipekit-cycle
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit.git@pipekit-jax-v0.0.6#subdirectory=packages/pipekit-jax
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit.git@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-cycle
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit.git@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-jax
   - geonnax @ git+https://github.com/jejjohnson/geonnax.git@v0.0.11
-  - integrix @ git+https://github.com/jejjohnson/integrix.git@v0.0.3
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
   - filterax @ git+https://github.com/jejjohnson/filterax@v0.0.6 ; extra == 'da'
-  - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.0 ; extra == 'da'
+  - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.5 ; extra == 'da'
   - flowjax ; extra == 'flows'
   - xarray>=2026.4.0 ; extra == 'xarray'
   - zarr>=3.1.6 ; extra == 'xarray'
   - orbax-checkpoint>=0.11.37 ; extra == 'checkpoint'
-  requires_python: '>=3.12'
-- pypi: ./references/geomodels/somax
-  name: somax
-  requires_dist:
-  - jax>=0.10.2
-  - jaxlib>=0.11.1
-  - jaxtyping>=0.3.9
-  - equinox>=0.13.8
-  - diffrax>=0.7.2
-  - lineax>=0.1.1
-  - optimistix>=0.1
-  - einops>=0.8.2
-  - paramax>=0.0.5
-  - finitevolx @ git+https://github.com/jejjohnson/finitevolX.git@v0.0.41
-  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@v0.0.10
-  - pipekit @ git+https://github.com/jejjohnson/pipekit.git#subdirectory=packages/pipekit
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git#subdirectory=packages/pipekit-cycle
-  - geonnax @ git+https://github.com/jejjohnson/geonnax.git@9f160d3
-  - flowjax ; extra == 'flows'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/georeader
   name: georeader-spaceml
@@ -19492,8 +19519,9 @@ packages:
   - numpy>=1.26
   - pyproj>=3.6
   - affine>=2.4
-  - pipekit @ git+https://github.com/jejjohnson/pipekit@132d76d18e70c582578fad449236337b8f970cb4#subdirectory=packages/pipekit
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@132d76d18e70c582578fad449236337b8f970cb4#subdirectory=packages/pipekit-array
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array
+  - functax @ git+https://github.com/jejjohnson/functax@v0.0.6
   - jax>=0.4.30 ; extra == 'jax'
   - xarray>=2024.10 ; extra == 'xarray'
   - shapely>=2.0 ; extra == 'vector'
@@ -19557,8 +19585,8 @@ packages:
   - affine>=2.4
   - pyproj>=3.6
   - pandas>=2.1
-  - pipekit @ git+https://github.com/jejjohnson/pipekit@132d76d18e70c582578fad449236337b8f970cb4#subdirectory=packages/pipekit
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@132d76d18e70c582578fad449236337b8f970cb4#subdirectory=packages/pipekit-array
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array
   - einx>=0.4
   - rasterio>=1.3 ; extra == 'raster'
   - geopandas>=0.14 ; extra == 'vector'
@@ -19578,7 +19606,8 @@ packages:
   - geotoolz-cloud[hdf4] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'hdf4'
   - geotoolz-cloud[netcdf] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'netcdf'
   - zarr>=3 ; extra == 'zarr'
-  - geotoolz-ops[raster,vector,morph,sensors,viz,learn,hydra,patch,vector-cube,cloud,hdf5,hdf4,netcdf,zarr] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'all'
+  - functax[jax,scipy] @ git+https://github.com/jejjohnson/functax@v0.0.6 ; extra == 'interp'
+  - geotoolz-ops[raster,vector,morph,sensors,viz,learn,hydra,patch,vector-cube,cloud,hdf5,hdf4,netcdf,zarr,interp] @ ./references/geostack/geotoolz/packages/geotoolz-ops ; extra == 'all'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/geotoolz/packages/geotoolz-patcher
   name: geotoolz-patcher
@@ -19590,7 +19619,7 @@ packages:
   - typing-extensions>=4.0
   - rasterio>=1.3
   - pyproj>=3.6
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@132d76d18e70c582578fad449236337b8f970cb4#subdirectory=packages/pipekit-array
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array
   - xarray>=2024.1 ; extra == 'grid'
   - geopandas>=0.14 ; extra == 'vector'
   - shapely>=2.0 ; extra == 'vector'
@@ -19611,8 +19640,8 @@ packages:
   - dask[bag]>=2024.8.3 ; extra == 'patch-full'
   - geotoolz-array[jax] @ ./references/geostack/geotoolz/packages/geotoolz-array ; extra == 'patch-full'
   - geotoolz-cloud[cog] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'patch-full'
-  - pipekit @ git+https://github.com/jejjohnson/pipekit@132d76d18e70c582578fad449236337b8f970cb4#subdirectory=packages/pipekit ; extra == 'pipekit'
-  - pipekit-train[equinox] @ git+https://github.com/jejjohnson/pipekit@132d76d18e70c582578fad449236337b8f970cb4#subdirectory=packages/pipekit-train ; extra == 'train'
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops ; extra == 'pipekit'
+  - pipekit-train[equinox] @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-train ; extra == 'train'
   - xarray>=2024.1 ; extra == 'train'
   - zarr>=3.0 ; extra == 'train'
   requires_python: '>=3.12'
@@ -19634,103 +19663,19 @@ packages:
   - geopandas>=0.14 ; extra == 'carbonmapper'
   - pandas>=2.1 ; extra == 'carbonmapper'
   requires_python: '>=3.12'
-- pypi: ./references/geostack/pipekit/packages/pipekit
-  name: pipekit
-  requires_python: '>=3.12'
-- pypi: ./references/geostack/pipekit/packages/pipekit-array
-  name: pipekit-array
-  requires_dist:
-  - pipekit @ ./references/geostack/pipekit/packages/pipekit
-  - numpy>=2.0 ; extra == 'numpy'
-  - jax>=0.4.20 ; extra == 'jax'
-  - torch>=2.0 ; extra == 'torch'
-  - cupy>=13 ; extra == 'cupy'
-  - dask[array]>=2024 ; extra == 'dask'
-  - xarray>=2024.6 ; extra == 'xarray'
-  - scikit-learn>=1.4 ; extra == 'sklearn'
-  - einx>=0.4 ; extra == 'einx'
-  - array-api-compat>=1.4 ; extra == 'compat'
-  requires_python: '>=3.12'
-- pypi: ./references/geostack/pipekit/packages/pipekit-cycle
-  name: pipekit-cycle
-  requires_dist:
-  - pipekit @ ./references/geostack/pipekit/packages/pipekit
-  - pipekit-array @ ./references/geostack/pipekit/packages/pipekit-array ; extra == 'array'
-  requires_python: '>=3.12'
-- pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
-  name: pipekit-evaluate
-  requires_dist:
-  - pipekit @ ./references/geostack/pipekit/packages/pipekit
-  - numpy>=2.0
-  - scipy>=1.10
-  - pipekit-cycle @ ./references/geostack/pipekit/packages/pipekit-cycle ; extra == 'cycle'
-  - xskillscore>=0.0.26 ; extra == 'xskill'
-  - properscoring>=0.1 ; extra == 'proper'
-  requires_python: '>=3.12'
-- pypi: ./references/geostack/pipekit/packages/pipekit-experiment
-  name: pipekit-experiment
-  requires_dist:
-  - pipekit @ ./references/geostack/pipekit/packages/pipekit
-  - mlflow>=2.10 ; extra == 'mlflow'
-  - wandb>=0.16 ; extra == 'wandb'
-  - dvc>=3.30 ; extra == 'dvc'
-  - hydra-core>=1.3 ; extra == 'hydra'
-  - hydra-zen>=0.13 ; extra == 'hydra'
-  - metaflow>=2.10 ; extra == 'metaflow'
-  - fsspec>=2024.0 ; extra == 's3'
-  - s3fs>=2024.0 ; extra == 's3'
-  requires_python: '>=3.12'
-- pypi: ./references/geostack/pipekit/packages/pipekit-jax
-  name: pipekit-jax
-  requires_dist:
-  - pipekit @ ./references/geostack/pipekit/packages/pipekit
-  - pipekit-cycle @ ./references/geostack/pipekit/packages/pipekit-cycle
-  - equinox>=0.11
-  - jax>=0.4.30
-  - jaxtyping>=0.2
-  - diffrax>=0.7 ; extra == 'diffrax'
-  - pipekit-array @ ./references/geostack/pipekit/packages/pipekit-array ; extra == 'array'
-  requires_python: '>=3.12'
-- pypi: ./references/geostack/pipekit/packages/pipekit-train
-  name: pipekit-train
-  requires_dist:
-  - pipekit @ ./references/geostack/pipekit/packages/pipekit
-  - equinox>=0.11 ; extra == 'equinox'
-  - optax>=0.2 ; extra == 'equinox'
-  - jax>=0.4.30 ; extra == 'equinox'
-  - grain>=0.2 ; extra == 'equinox'
-  - orbax-checkpoint>=0.6 ; extra == 'equinox'
-  - jaxtyping>=0.2 ; extra == 'equinox'
-  - lightning>=2.4 ; extra == 'lightning'
-  - torch>=2.0 ; extra == 'lightning'
-  - keras>=3.0 ; extra == 'keras'
-  - numpyro>=0.15 ; extra == 'numpyro'
-  - optax>=0.2 ; extra == 'numpyro'
-  - blackjax>=1.2 ; extra == 'blackjax'
-  - numpyro>=0.15 ; extra == 'blackjax'
-  - optax>=0.2 ; extra == 'blackjax'
-  - pipekit-cycle @ ./references/geostack/pipekit/packages/pipekit-cycle ; extra == 'cycle'
-  - pipekit-experiment @ ./references/geostack/pipekit/packages/pipekit-experiment ; extra == 'experiment'
-  - zarr>=2.18 ; extra == 'cache'
-  - zarr>=2.18 ; extra == 's3'
-  - fsspec>=2024.0 ; extra == 's3'
-  - s3fs>=2024.0 ; extra == 's3'
-  - zarr>=2.18 ; extra == 'gcs'
-  - fsspec>=2024.0 ; extra == 'gcs'
-  - gcsfs>=2024.0 ; extra == 'gcs'
-  requires_python: '>=3.12'
-- pypi: ./references/geostack/xrtoolz/packages/xrtoolz
+- pypi: ./references/geostack/geotoolz/packages/xrtoolz
   name: xrtoolz
   requires_dist:
-  - xrtoolz-ops @ ./references/geostack/xrtoolz/packages/xrtoolz-ops
-  - xrtoolz-products @ ./references/geostack/xrtoolz/packages/xrtoolz-products
-  - xrtoolz-ops[wavelets] @ ./references/geostack/xrtoolz/packages/xrtoolz-ops ; extra == 'wavelets'
-  - xrtoolz-ops[image] @ ./references/geostack/xrtoolz/packages/xrtoolz-ops ; extra == 'image'
-  - xrtoolz-ops[maps] @ ./references/geostack/xrtoolz/packages/xrtoolz-ops ; extra == 'maps'
-  - xrtoolz-ops[sklearn] @ ./references/geostack/xrtoolz/packages/xrtoolz-ops ; extra == 'sklearn'
-  - xrtoolz-ops[vector] @ ./references/geostack/xrtoolz/packages/xrtoolz-ops ; extra == 'vector'
+  - xrtoolz-ops @ ./references/geostack/geotoolz/packages/xrtoolz-ops
+  - xrtoolz-products @ ./references/geostack/geotoolz/packages/xrtoolz-products
+  - xrtoolz-ops[wavelets] @ ./references/geostack/geotoolz/packages/xrtoolz-ops ; extra == 'wavelets'
+  - xrtoolz-ops[image] @ ./references/geostack/geotoolz/packages/xrtoolz-ops ; extra == 'image'
+  - xrtoolz-ops[functax] @ ./references/geostack/geotoolz/packages/xrtoolz-ops ; extra == 'functax'
+  - xrtoolz-ops[maps] @ ./references/geostack/geotoolz/packages/xrtoolz-ops ; extra == 'maps'
+  - xrtoolz-ops[sklearn] @ ./references/geostack/geotoolz/packages/xrtoolz-ops ; extra == 'sklearn'
+  - xrtoolz-ops[vector] @ ./references/geostack/geotoolz/packages/xrtoolz-ops ; extra == 'vector'
   requires_python: '>=3.12'
-- pypi: ./references/geostack/xrtoolz/packages/xrtoolz-ops
+- pypi: ./references/geostack/geotoolz/packages/xrtoolz-ops
   name: xrtoolz-ops
   requires_dist:
   - numpy>=1.26
@@ -19745,22 +19690,24 @@ packages:
   - xrft>=1.0
   - xskillscore>=0.0.26
   - numpy-groupies>=0.11
-  - pipekit-array[xarray] @ git+https://github.com/jejjohnson/pipekit#subdirectory=packages/pipekit-array
-  - geotoolz-ops @ git+https://github.com/jejjohnson/geotoolz#subdirectory=packages/geotoolz-ops
+  - pipekit-array[xarray] @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array
+  - geotoolz-ops @ ./references/geostack/geotoolz/packages/geotoolz-ops
+  - geotoolz-array @ ./references/geostack/geotoolz/packages/geotoolz-array
   - matplotlib>=3.8
-  - pipekit @ git+https://github.com/jejjohnson/pipekit#subdirectory=packages/pipekit
-  - xrtoolz-products @ ./references/geostack/xrtoolz/packages/xrtoolz-products
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
+  - xrtoolz-products @ ./references/geostack/geotoolz/packages/xrtoolz-products
   - netcdf4>=1.6
   - pywavelets>=1.4 ; extra == 'wavelets'
   - scikit-image>=0.21 ; extra == 'image'
+  - functax[jax,scipy] @ git+https://github.com/jejjohnson/functax@v0.0.6 ; extra == 'functax'
   - cartopy>=0.22 ; extra == 'maps'
   - geopandas>=1.1.3 ; extra == 'vector'
   - shapely>=2.0 ; extra == 'vector'
   - rasterio>=1.3 ; extra == 'vector'
-  - pipekit-array[sklearn] @ git+https://github.com/jejjohnson/pipekit#subdirectory=packages/pipekit-array ; extra == 'sklearn'
+  - pipekit-array[sklearn] @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array ; extra == 'sklearn'
   - scikit-learn>=1.4 ; extra == 'sklearn'
   requires_python: '>=3.12'
-- pypi: ./references/geostack/xrtoolz/packages/xrtoolz-products
+- pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
   name: xrtoolz-products
   requires_dist:
   - numpy>=1.26
@@ -19781,6 +19728,100 @@ packages:
   - loguru>=0.7.3 ; extra == 'aemet'
   - netcdf4>=1.6 ; extra == 'aemet'
   - netcdf4>=1.6 ; extra == 'local'
+  requires_python: '>=3.12'
+- pypi: ./references/geostack/pipekit/packages/pipekit
+  name: pipekit
+  requires_dist:
+  - pipekit-ops @ ./references/geostack/pipekit/packages/pipekit-ops
+  - pipekit-array @ ./references/geostack/pipekit/packages/pipekit-array
+  - pipekit-cycle @ ./references/geostack/pipekit/packages/pipekit-cycle
+  - pipekit-experiment @ ./references/geostack/pipekit/packages/pipekit-experiment
+  - pipekit-evaluate @ ./references/geostack/pipekit/packages/pipekit-evaluate
+  - pipekit-train @ ./references/geostack/pipekit/packages/pipekit-train
+  - pipekit-jax @ ./references/geostack/pipekit/packages/pipekit-jax
+  requires_python: '>=3.12'
+- pypi: ./references/geostack/pipekit/packages/pipekit-array
+  name: pipekit-array
+  requires_dist:
+  - pipekit-ops @ ./references/geostack/pipekit/packages/pipekit-ops
+  - numpy>=2.0 ; extra == 'numpy'
+  - jax>=0.4.20 ; extra == 'jax'
+  - torch>=2.0 ; extra == 'torch'
+  - cupy>=13 ; extra == 'cupy'
+  - dask[array]>=2024 ; extra == 'dask'
+  - xarray>=2024.6 ; extra == 'xarray'
+  - scikit-learn>=1.4 ; extra == 'sklearn'
+  - einx>=0.4 ; extra == 'einx'
+  - array-api-compat>=1.4 ; extra == 'compat'
+  requires_python: '>=3.12'
+- pypi: ./references/geostack/pipekit/packages/pipekit-cycle
+  name: pipekit-cycle
+  requires_dist:
+  - pipekit-ops @ ./references/geostack/pipekit/packages/pipekit-ops
+  - pipekit-array @ ./references/geostack/pipekit/packages/pipekit-array ; extra == 'array'
+  requires_python: '>=3.12'
+- pypi: ./references/geostack/pipekit/packages/pipekit-evaluate
+  name: pipekit-evaluate
+  requires_dist:
+  - pipekit-ops @ ./references/geostack/pipekit/packages/pipekit-ops
+  - numpy>=2.0
+  - scipy>=1.10
+  - pipekit-cycle @ ./references/geostack/pipekit/packages/pipekit-cycle ; extra == 'cycle'
+  - xskillscore>=0.0.26 ; extra == 'xskill'
+  - properscoring>=0.1 ; extra == 'proper'
+  requires_python: '>=3.12'
+- pypi: ./references/geostack/pipekit/packages/pipekit-experiment
+  name: pipekit-experiment
+  requires_dist:
+  - pipekit-ops @ ./references/geostack/pipekit/packages/pipekit-ops
+  - mlflow>=2.10 ; extra == 'mlflow'
+  - wandb>=0.16 ; extra == 'wandb'
+  - dvc>=3.30 ; extra == 'dvc'
+  - hydra-core>=1.3 ; extra == 'hydra'
+  - hydra-zen>=0.13 ; extra == 'hydra'
+  - metaflow>=2.10 ; extra == 'metaflow'
+  - fsspec>=2024.0 ; extra == 's3'
+  - s3fs>=2024.0 ; extra == 's3'
+  requires_python: '>=3.12'
+- pypi: ./references/geostack/pipekit/packages/pipekit-jax
+  name: pipekit-jax
+  requires_dist:
+  - pipekit-ops @ ./references/geostack/pipekit/packages/pipekit-ops
+  - pipekit-cycle @ ./references/geostack/pipekit/packages/pipekit-cycle
+  - equinox>=0.11
+  - jax>=0.4.30
+  - jaxtyping>=0.2
+  - diffrax>=0.7 ; extra == 'diffrax'
+  - pipekit-array @ ./references/geostack/pipekit/packages/pipekit-array ; extra == 'array'
+  requires_python: '>=3.12'
+- pypi: ./references/geostack/pipekit/packages/pipekit-ops
+  name: pipekit-ops
+  requires_python: '>=3.12'
+- pypi: ./references/geostack/pipekit/packages/pipekit-train
+  name: pipekit-train
+  requires_dist:
+  - pipekit-ops @ ./references/geostack/pipekit/packages/pipekit-ops
+  - equinox>=0.11 ; extra == 'equinox'
+  - optax>=0.2 ; extra == 'equinox'
+  - jax>=0.4.30 ; extra == 'equinox'
+  - grain>=0.2 ; extra == 'equinox'
+  - orbax-checkpoint>=0.6 ; extra == 'equinox'
+  - jaxtyping>=0.2 ; extra == 'equinox'
+  - keras>=3.0 ; extra == 'keras'
+  - numpyro>=0.15 ; extra == 'numpyro'
+  - optax>=0.2 ; extra == 'numpyro'
+  - blackjax>=1.2 ; extra == 'blackjax'
+  - numpyro>=0.15 ; extra == 'blackjax'
+  - optax>=0.2 ; extra == 'blackjax'
+  - pipekit-cycle @ ./references/geostack/pipekit/packages/pipekit-cycle ; extra == 'cycle'
+  - pipekit-experiment @ ./references/geostack/pipekit/packages/pipekit-experiment ; extra == 'experiment'
+  - zarr>=2.18 ; extra == 'cache'
+  - zarr>=2.18 ; extra == 's3'
+  - fsspec>=2024.0 ; extra == 's3'
+  - s3fs>=2024.0 ; extra == 's3'
+  - zarr>=2.18 ; extra == 'gcs'
+  - fsspec>=2024.0 ; extra == 'gcs'
+  - gcsfs>=2024.0 ; extra == 'gcs'
   requires_python: '>=3.12'
 - pypi: ./references/numerics/argminax
   name: argminax
@@ -19806,8 +19847,9 @@ packages:
   - scipy>=1.14.0
   - lineax>=0.1.0
   - diffrax>=0.6.0
-  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.0.13
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.0.17
+  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.1
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.5
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
   - pytest>=8.3.0 ; extra == 'test'
   - pytest-cov>=5.0.0 ; extra == 'test'
   - pytest-pretty>=1.2.0 ; extra == 'test'
@@ -19830,6 +19872,8 @@ packages:
   - tqdm>=4.66.0 ; extra == 'examples'
   - xarray>=2025.1.0 ; extra == 'examples'
   - zarr>=3.1.5 ; extra == 'examples'
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops ; extra == 'pipekit'
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-jax ; extra == 'pipekit'
   - mkdocs>=1.6.0 ; extra == 'docs'
   - mkdocs-material>=9.5.0 ; extra == 'docs'
   - mkdocstrings[python]>=0.25.0 ; extra == 'docs'
