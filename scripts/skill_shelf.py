@@ -259,6 +259,7 @@ SHELVES: dict[str, Shelf] = {
             ),
             Unit("Curvature", "⓪ ③", "numerics, ML", ("argminax.curvature",)),
             Unit("Diagnostics", "④", "ML", ("argminax.diagnose",)),
+            Unit("Bayesian learning rule", "② ④", "ML", ("argminax.blr",)),
         ),
     ),
 }

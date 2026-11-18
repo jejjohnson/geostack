@@ -44,7 +44,7 @@ not into a local package.
 |---|---|---|---|---|
 | GeoStack | `geostack/` | pipekit, geotoolz (uv workspaces; members under `packages/`; geotoolz holds xrtoolz too), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
 | GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, finitevolX, spectraldiffx | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
-| GeoML | `geoml/` | geonnax, kernellib, optax_bayes, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn, -ssm), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
+| GeoML | `geoml/` | geonnax, kernellib, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn, -ssm), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
 | GeoModels | `geomodels/` | plumax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
 
 Edges between layers point down: GeoModels may import GeoML, GeoNumerics and
@@ -71,7 +71,7 @@ These hold for every project made from the template:
   `NUMERICS`, `GEOML`, `GEOMODELS`), so its API joins that layer's index.
 - **Edges between layers point down** (see "The layers"). Code that would
   make a lower layer import a higher one belongs in the higher layer.
-  Within a layer, each repository has a tier and imports only lower tiers;
+  Within a layer, each repository, or a group of packages inside one, has a tier and imports only lower tiers;
   every library edge counts (extras, lazy and guarded imports; not dev, docs
   or tutorial dependency groups),
   every import is declared, and a reverse edge is fixed by moving code, never

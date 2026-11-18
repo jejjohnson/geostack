@@ -58,10 +58,6 @@
 	path = references/geoml/kernellib
 	url = https://github.com/jejjohnson/kernellib.git
 	branch = main
-[submodule "references/geoml/optax_bayes"]
-	path = references/geoml/optax_bayes
-	url = https://github.com/jejjohnson/optax_bayes.git
-	branch = main
 [submodule "references/numerics/functax"]
 	path = references/numerics/functax
 	url = https://github.com/jejjohnson/functax.git

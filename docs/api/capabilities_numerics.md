@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.6.15, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.6, integrix 0.0.5.
+Listed at gaussx 0.6.12, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.7, integrix 0.0.5.
 
 ## Upstream: `gaussx`
 
@@ -46,7 +46,6 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `BlockTriDiag` | class | Block-tridiagonal operator A with a symmetric off-diagonal band. |
 | `CGSolver` | class | Conjugate-gradient solve with a stochastic log-determinant. |
 | `CUR` | class | CUR decomposition A ≈ C U R, with C = A_:,J and R = A_I,:. |
-| `CallableLikelihood` | class | A factorised likelihood from a per-site log density. |
 | `CapacitanceSolver` | class | Solve a base system subject to homogeneous point constraints. |
 | `Chandrupatla` | class | Chandrupatla's hybrid inverse-quadratic / bisection root finder. |
 | `ColumnID` | class | Column interpolative decomposition A ≈ A_:,J X. |
@@ -87,7 +86,6 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `LOOResult` | class | Result of `leave_one_out_cv`: the LOO log-likelihood and predictives. |
 | `LOVECache` | class | Cached rank-k Lanczos approximation Q diag(θ)⁻¹ Qᵀ of Σ_y⁻¹. |
 | `LSMRSolver` | class | LSMR iterative least-squares solver (Fong & Saunders 2011). |
-| `LaplaceModel` | class | The latent Gaussian model of `laplace_mode`, with the maps one Newton step needs. |
 | `LaplaceResult` | class | The Gaussian approximation 𝒩(x̂, Λ_x\|y⁻¹) at the mode. |
 | `LinearGaussianPosterior` | class | Posterior 𝒩(x_a, P_a) of `linear_gaussian_update`. |
 | `LinearizedSDE` | class | Linear surrogate dx(t) = (F_c,t x(t) + c_t) dt + L_c db(t) of an SDE. |
@@ -263,8 +261,6 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `kronecker_sum_tag` | constant | `kronecker_sum_tag` |
 | `kronecker_tag` | constant | `kronecker_tag` |
 | `laplace_mode` | function | Mode, Hessian and log-marginal of the Laplace approximation, in precision form. |
-| `laplace_model` | function | Collect and check the pieces of the latent Gaussian model of `laplace_mode`. |
-| `laplace_result` | function | The Gaussian approximation and the Laplace log-marginal at a mode. |
 | `leave_one_out_cv` | function | LOO-CV via the bordered-system identity, without refitting N times. |
 | `ledoit_wolf_shrinkage` | function | Ledoit-Wolf shrinkage of an ensemble covariance, without forming it. |
 | `linear_gaussian_update` | function | Matrix-free posterior of a linear-Gaussian observation. |
@@ -1009,11 +1005,11 @@ Optimisation with uncertainty at the minimum: solvers, curvature.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `Laplace` | class | The Gaussian N(x̂, Ŝ) at a minimum, with Ŝ = Ĥ⁻¹ never formed. |
+| `Laplace` | class | The Gaussian 𝒩(x̂, Σ_x∣y) at a minimum, with Σ_x∣y = Λ_x∣y⁻¹ never formed. |
 | `VarianceEstimate` | class | A probed estimate of the marginal variances, with its standard error. |
 | `gauss_newton` | function | Build the Laplace posterior at a minimum from whitened residuals. |
 | `low_rank` | function | Return a low-rank form of the covariance of a whitened posterior. |
-| `marginal_variance` | function | Return the marginal variances diag(Ŝ) of a Laplace posterior. |
+| `marginal_variance` | function | Return the marginal variances diag(Σ_x∣y) of a Laplace posterior. |
 | `push_forward` | function | Map a posterior in whitened coordinates back to physical ones. |
 | `sample_by_perturbation` | function | Draw from a Gauss–Newton posterior by perturbing its residuals. |
 
@@ -1022,26 +1018,26 @@ Optimisation with uncertainty at the minimum: solvers, curvature.
 | Name | Kind | What it does |
 |---|---|---|
 | `TraceEstimate` | class | A scalar diagnostic and its standard error. |
-| `averaging_kernel` | function | Return the averaging kernel A = ∂x̂/∂x of a Laplace posterior, lazily. |
+| `averaging_kernel` | function | Return the averaging kernel J_x̂ = ∂x̂/∂x of a Laplace posterior, lazily. |
 | `degrees_of_freedom` | function | Return the degrees of freedom for signal, the trace of the averaging kernel. |
 | `evidence` | function | Return the Laplace evidence log p(y) at a minimum. |
 | `information_content` | function | Return the information content of the measurement, in nats. |
-| `optimize_prior_precision` | function | Return the isotropic prior precision λ that maximises the Laplace evidence. |
+| `optimize_prior_precision` | function | Return the isotropic prior precision δ that maximises the Laplace evidence. |
 
 ### `argminax.solve`
 
 | Name | Kind | What it does |
 |---|---|---|
-| `CovarianceLaplaceResult` | class | The Gaussian at the mode of a GP with prior covariance K. |
+| `CovarianceLaplaceResult` | class | The Gaussian at the mode of a GP with prior covariance K_XX. |
 | `DualSolution` | class | The result of an observation-space solve. |
 | `GaussNewtonCG` | class | Gauss–Newton or Levenberg–Marquardt, each step by a matrix-free inner CG. |
-| `LaplaceModeResult` | class | The Gaussian N(x̂, Λ_x\|y⁻¹) at the mode, with gaussx's `LaplaceResult` fields. |
+| `LaplaceModeResult` | class | The Gaussian 𝒩(x̂, Λ_x∣y⁻¹) at the mode, with gaussx's `LaplaceResult` fields. |
 | `Reparametrised` | class | A bound on the state, imposed by solving in an unconstrained variable u. |
 | `SiteLaplaceResult` | class | The mode of a latent GP and the Newton site naturals there. |
 | `dual_solve` | function | Solve the 3D-Var increment in observation space. |
 | `incremental_dual_solve` | function | Incremental 3D-Var in observation space, for a nonlinear forward model. |
 | `laplace_mode` | function | Mode and Gaussian approximation of a latent Gaussian model, in precision form. |
-| `laplace_mode_covariance` | function | Laplace approximation of a GP with prior covariance K, by damped Newton. |
+| `laplace_mode_covariance` | function | Laplace approximation of a GP with prior covariance K_XX, by damped Newton. |
 | `laplace_mode_sites` | function | Laplace approximation by damping the site naturals, given a posterior-mean map. |
 
 ## Upstream: `integrix`
