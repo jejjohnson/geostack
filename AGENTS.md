@@ -269,6 +269,7 @@ agent can read and follow them), and two read-only review checklists in
 | Verify before a PR | `pre-pr-check` |
 | Review a change | `geostack-review` (+ the read-only `.claude/agents/reuse-reviewer.md` and `reproducibility-reviewer.md`) |
 | Write a squash commit message | `squash-commit` |
+| Write, rebuild or review the README of a stack library (vardax, argminax, …) | `library-readme` |
 | Open or link GitHub issues | `create-gh-issue`, `link-gh-issues` (templates in `.github/ISSUE_TEMPLATE/`; `make gh-labels`, `gh-sub`, `gh-block`, `gh-show`) |
 
 A research project is not a library other projects build on, so the
