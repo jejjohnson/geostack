@@ -13,7 +13,7 @@ It builds on four other skills, which still apply in full: `eman-prose-tech` (do
 
 This standard is for libraries. A research project made from the GeoStack template keeps the template's README layout.
 
-The canonical copy lives in [jejagents](https://github.com/jejjohnson/jejagents) (`skills/library-readme/`); this copy is here so an agent working on a stack library from GeoStack finds it. Change both together.
+This is the only copy. It lives in geostack's plugin (`plugins/geostack/`), which installs it in every repository that adds the geostack marketplace, so change it here and nowhere else.
 
 ## Exemplars
 
@@ -204,7 +204,7 @@ Run these before the README ships:
 5. Check every name in the tables and on the figures against `__all__`, every URL (the figure URLs included) with `curl -s -o /dev/null -w '%{http_code}'`, and every status claim ("ships", "Wave 4") against the live issue.
 6. Build the docs when the change touched a docs page.
 
-Both scripts come with the personal skills in [jejagents](https://github.com/jejjohnson/jejagents): clone it and run its `./install.sh`, which copies the skills into `~/.claude/skills/`. Without them, do steps 3 and 4 by hand against §11 (no macros, inline `` $`…`$ ``, display maths in `math` fences, `\mid` in table cells, no em dashes, no hard wraps), and say in the PR that the two scripts were not run.
+Both scripts come with the `eman-style-math` and `eman-prose-tech` skills. Without them, do steps 3 and 4 by hand against §11 (no macros, inline `` $`…`$ ``, display maths in `math` fences, `\mid` in table cells, no em dashes, no hard wraps), and say in the PR that the two scripts were not run.
 
 ## Checklist
 
