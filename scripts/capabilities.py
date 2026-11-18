@@ -304,6 +304,10 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         "pipekit_array.pad pads named dims of any named carrier;"
         " geoarray.pad pads a GeoArray's spatial axes and moves its transform."
     ),
+    "CallableObs": (
+        "vardax.CallableObs subclasses pipekit_cycle.CallableObs as an Equinox"
+        " module, so vardax's solvers and pipekit-cycle share one family."
+    ),
     "Shift": (
         "pipekit_array.Shift shifts data along named dims; kernellib.Shift is"
         " the input warp x - offset of a kernel."
@@ -400,10 +404,13 @@ _NUMERICS = "the same solver or grid in several GeoNumerics libraries"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
 _PLUME_PUFF = "the same name in plumax's plume and puff models"
 _RADTRAX_MF = (
-    "the matched-filter operators in both geoops and radtrax.geo, which radtrax"
-    " ported from geoops; geoops cannot delegate to radtrax, a higher layer"
+    "the matched-filter operators moved from geoops to radtrax.geo; geoops keeps"
+    " its copy until geotoolz#482 removes it"
 )
-_PLUMAX_LOGQUAD = "plumax.population's log-space quadrature, now in integrix.expect"
+_PLUMAX_LOGQUAD = (
+    "deprecated plumax.population aliases forwarding to integrix.expect"
+    " (plumax#253), until plumax#283 removes them"
+)
 _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
 
 KNOWN_CLASHES: dict[str, dict[str, str]] = {
@@ -423,7 +430,6 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         ),
     },
     "geoml": {
-        "CallableObs": _VARDAX,
         "Augment": "different objects in gauss_flows and xrtoolz",
         "Axis": "functax.geometry.Axis beside pipekit-evaluate's evaluation Axis",
         "BernoulliLikelihood": _LIKELIHOODS,
