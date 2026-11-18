@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>vardax — four ways to differentiate a rollout</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  #diagram { width: 1560px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 24px; align-items: stretch; }
+  .lane { display: flex; flex-direction: column; }
+  .chain {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 12px;
+    padding: 0 14px 12px; margin-top: 12px; position: relative;
+    height: 78px; box-sizing: border-box;
+  }
+  .dot { width: 16px; height: 16px; border-radius: 50%; position: relative; flex: none; }
+  .dot.live { background: var(--accent); }
+  .dot.dead { background: transparent; border: 2px solid #b6bfcc; width: 12px; height: 12px; }
+  .dot .lbl {
+    position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap;
+  }
+  .seg { flex: 1; height: 2.5px; margin: 0 4px; background: var(--accent); }
+  .seg.dead { background: #cbd5e1; height: 2px; }
+  .gap { font-family: var(--mono); color: var(--muted); font-size: 13px; padding: 0 2px; }
+  .tag {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--ink-accent);
+    border: 1.5px solid var(--accent); border-radius: 8px; padding: 3px 7px; margin-left: 8px;
+    white-space: nowrap;
+  }
+  .how { font-size: 12px; color: var(--muted); margin: 8px 0 0 2px; line-height: 1.4; min-height: 34px; }
+  .eq {
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink-accent);
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: 9px 12px; margin-top: 12px; line-height: 1.5;
+  }
+  .eq.words { font-family: var(--sans); font-size: 12.5px; }
+  .eq sup, .eq sub { font-size: 0.75em; }
+  .facts { margin-top: 12px; }
+  .fact { display: grid; grid-template-columns: 82px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.45; margin-top: 6px; }
+  .fact .k { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.06em; padding-top: 2px; }
+  .fact .v { color: var(--ink); }
+  .fact code { font-family: var(--mono); font-size: 12px; }
+  .fact sub { font-size: 0.75em; }
+  .base-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 30px; }
+  .slab {
+    display: flex; align-items: center; gap: 14px; border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+  .key { display: flex; gap: 26px; margin-top: 14px; font-size: 12.5px; color: var(--muted); align-items: center; }
+  .key span { display: inline-flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">vardax — four ways to differentiate a rollout</div>
+  <div class="subtitle">Each computes the gradient ∇<sub>x₀</sub>𝒥 of a 4D-Var cost through the rollout. What changes is which states of the rollout are kept for the backward pass, so what it costs and when it is right.</div>
+
+  <div class="grid">
+    <!-- direct -->
+    <div class="lane find">
+      <div class="lane-head"><span class="verb">direct</span><span class="pkg">keep every step</span></div>
+      <div class="chain">
+        <div class="dot live"><span class="lbl">x<sub>0</sub></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl">x<sub>1</sub></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl">x<sub>2</sub></span></div><div class="seg"></div>
+        <span class="gap">…</span><div class="seg"></div>
+        <div class="dot live"><span class="lbl">x<sub>N</sub></span></div>
+      </div>
+      <div class="how">reverse mode through the scan of steps, no checkpointing</div>
+      <div class="eq">x<sup>†</sup><sub>t−1</sub> = F<sub>t</sub><sup>⊤</sup> x<sup>†</sup><sub>t</sub> + ∇<sub>x<sub>t−1</sub></sub>𝒥<sub>o</sub></div>
+      <div class="facts">
+        <div class="fact"><div class="k">adjoint</div><div class="v"><code>dfx.DirectAdjoint()</code></div></div>
+        <div class="fact"><div class="k">memory</div><div class="v">O(N<sub>step</sub>)</div></div>
+        <div class="fact"><div class="k">time</div><div class="v">O(N<sub>step</sub>)</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">short windows, or debugging: the gradient is plain reverse mode with no tricks</div></div>
+      </div>
+    </div>
+
+    <!-- recursive checkpoint -->
+    <div class="lane compute">
+      <div class="lane-head"><span class="verb">checkpoint</span><span class="pkg">keep a few</span></div>
+      <div class="chain">
+        <div class="dot live"><span class="lbl">x<sub>0</sub></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl">x<sub>1</sub></span></div><div class="seg dead"></div>
+        <div class="dot live"><span class="lbl">x<sub>2</sub></span></div><div class="seg dead"></div>
+        <span class="gap">…</span><div class="seg dead"></div>
+        <div class="dot live"><span class="lbl">x<sub>N</sub></span></div>
+      </div>
+      <div class="how">the same recursion, each state recomputed from the nearest checkpoint</div>
+      <div class="eq">N<sub>ckpt</sub> = ⌈log<sub>2</sub> N<sub>step</sub>⌉ + 1 by default</div>
+      <div class="facts">
+        <div class="fact"><div class="k">adjoint</div><div class="v"><code>dfx.RecursiveCheckpointAdjoint()</code>, diffrax's default</div></div>
+        <div class="fact"><div class="k">memory</div><div class="v">O(log N<sub>step</sub>)</div></div>
+        <div class="fact"><div class="k">time</div><div class="v">O(N<sub>step</sub> log N<sub>step</sub>)</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">by default: it balances memory and time; override <code>checkpoints</code> only if profiling shows memory pressure</div></div>
+      </div>
+    </div>
+
+    <!-- backsolve -->
+    <div class="lane cut">
+      <div class="lane-head"><span class="verb">backsolve</span><span class="pkg">solve backwards</span></div>
+      <div class="chain">
+        <div class="dot dead"><span class="lbl">x<sub>0</sub></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl">x<sub>1</sub></span></div><div class="seg dead"></div>
+        <span class="gap">…</span><div class="seg dead"></div>
+        <div class="dot live"><span class="lbl">x<sub>N</sub></span></div>
+        <span class="tag">← x<sup>†</sup>(t)</span>
+      </div>
+      <div class="how">the forward state is recomputed during the backward solve, from t = T to 0</div>
+      <div class="eq">dx<sup>†</sup>/dt = −F(t)<sup>⊤</sup> x<sup>†</sup>(t) − ∇<sub>x(t)</sub>𝒥<sub>o</sub></div>
+      <div class="facts">
+        <div class="fact"><div class="k">adjoint</div><div class="v"><code>dfx.BacksolveAdjoint()</code></div></div>
+        <div class="fact"><div class="k">memory</div><div class="v">O(1) in the length of the trajectory</div></div>
+        <div class="fact"><div class="k">time</div><div class="v">about 2× the forward</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">long windows with little memory; the backward solve can be stiff, so use <code>dfx.Kvaerno5</code> or <code>dfx.ImplicitEuler</code> for it</div></div>
+      </div>
+    </div>
+
+    <!-- forward mode -->
+    <div class="lane out">
+      <div class="lane-head"><span class="verb">forward</span><span class="pkg">carry tangents</span></div>
+      <div class="chain">
+        <div class="dot dead"><span class="lbl">x<sub>0</sub></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl">x<sub>1</sub></span></div><div class="seg dead"></div>
+        <span class="gap">…</span><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl">x<sub>N</sub></span></div>
+        <span class="tag">+ D<sub>θ</sub> tangents →</span>
+      </div>
+      <div class="how">no backward pass: the sensitivity ODEs are solved forward with the state</div>
+      <div class="eq words">∂x(t)/∂θ solved alongside x(t)</div>
+      <div class="facts">
+        <div class="fact"><div class="k">adjoint</div><div class="v"><code>dfx.ForwardMode()</code></div></div>
+        <div class="fact"><div class="k">memory</div><div class="v">O(D<sub>θ</sub>)</div></div>
+        <div class="fact"><div class="k">time</div><div class="v">O(D<sub>θ</sub>) × the forward</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">few parameters, D<sub>θ</sub> ≪ D<sub>x</sub>, such as one emission rate q</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="key">
+    <span><span class="dot live" style="display:inline-block;background:#64748b"></span> kept for the backward pass</span>
+    <span><span class="dot dead" style="display:inline-block"></span> not kept: recomputed when needed, or never needed</span>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">forward_adjoint=</div>
+      <div class="what">vardax hands the choice to <code>forward.with_adjoint</code>, which a diffrax-backed forward passes to <code>diffeqsolve</code>. For any per-step forward, <code>checkpoint=True</code> (or a block length k) wraps each step in <code>jax.checkpoint</code> through integrix instead; the gradient is unchanged.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">minimiser_adjoint=</div>
+      <div class="what">A separate slot differentiates the inner minimisation, not the rollout: <code>optx.ImplicitAdjoint</code> by default, or argminax's <code>KStep</code> and <code>OneStep</code>, compared in argminax's adjoints figure.</div>
+    </div>
+  </div>
+</div>
+<script src="_connect.js"></script>
+<script>ready();</script>
+</body>
+</html>
