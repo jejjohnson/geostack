@@ -25,6 +25,8 @@ The library at the top with its icon and tagline, the stack layers as boxes belo
 
 The library's public modules as cards inside one package box: each card has the module's name, what it does in a few words, and the libraries it imports as chips (dashed when through an extra). Arrows run only between the library's own modules and read "imports"; a module that imports nothing else from the package says so under its card. A strip names what every module imports. Read the `import` lines of each `_src/<module>/`, including the lazy ones inside functions (an extra is usually imported there). Copy `argminax_imports/`.
 
+The exception hierarchy is a code map too: the standard-library parents dashed along the top, the package's base error in the middle, and each concrete error below with an arrow to each parent, what raises it in plain words, and where (the modules that raise it, or the extras it names). A strip says what is reported without an exception, such as a solve's `result`. Read the classes in the exceptions module and their `raise` sites; the figure follows the code where a docstring has fallen behind. Copy `argminax_exceptions/`.
+
 ## Hub
 
 The central object in the middle lane, as one large equation with a short note on its shape and how it is held. A lane on the left for what builds it or uses it to get there, a lane on the right for what is read off it, three or four cards each. Every connector is labelled with the operation that links the card to the object (a solve, a factor, a log-determinant, a fixed point). Each card has a title in plain words, its module and public names, and its formula. Two slabs say what does the operations and what the large-scale variant is. Copy `argminax_hessian/`.
