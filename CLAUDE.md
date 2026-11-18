@@ -40,7 +40,9 @@ specific to Claude Code.
     `add-notebook`, `reproduce-results`, `write-up-results`;
   - shipping: `pre-pr-check`, `geostack-review`, `squash-commit`;
   - GitHub housekeeping: `create-gh-issue`, `link-gh-issues`;
-  - the README of a stack library: `library-readme`.
+  - the README and docs figures of a stack library: `library-readme` and
+    `library-docs-figures`, kept in `plugins/geostack/skills/` so the
+    geostack plugin installs them in every repository.
 - **Subagents** (`.claude/agents/`), both read-only, both used by
   `geostack-review`; run them on any diff that adds code, configs
   or pipeline stages, before committing:

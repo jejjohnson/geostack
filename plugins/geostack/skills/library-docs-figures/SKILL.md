@@ -7,9 +7,9 @@ description: The GeoStack standard for a library's documentation figures, set by
 
 Draft 2 · 18 Nov 2026 · taken from argminax's docs figures ([geostack#198](https://github.com/jejjohnson/geostack/pull/198), [geostack#200](https://github.com/jejjohnson/geostack/pull/200)) and the argminax pages that place them, which Eman named as the standard, and from vardax's ([geostack#204](https://github.com/jejjohnson/geostack/pull/204) to [geostack#211](https://github.com/jejjohnson/geostack/pull/211)), which add the pipeline and the forms a large library needs.
 
-A library's README carries three figures: the overview, the role ladder and the dependencies (the `library-readme` skill in geostack's `.claude/skills/`, §10). Its docs carry those three and more: a figure wherever a page explains an idea that a picture says faster. This skill is for the docs. Every figure is drawn once in geostack, under `docs/images/libraries/<pkg>_<name>/`, and the library's pages embed it from geostack's `main`, so the stack's figures stay in one place and in one style.
+A library's README carries three figures: the overview, the role ladder and the dependencies (the `library-readme` skill in this plugin, §10). Its docs carry those three and more: a figure wherever a page explains an idea that a picture says faster. This skill is for the docs. Every figure is drawn once in geostack, under `docs/images/libraries/<pkg>_<name>/`, and the library's pages embed it from geostack's `main`, so the stack's figures stay in one place and in one style.
 
-It builds on three other skills: `role-ladder` (in this plugin) for the ladder figure, `eman-style-math` for the notation on every figure, and `library-readme` for the README's three.
+It builds on three other skills: `role-ladder` (in this plugin) for the ladder figure, `eman-style-math` for the notation on every figure, and `library-readme` (in this plugin) for the README's three.
 
 ## 1. The catalogue
 
