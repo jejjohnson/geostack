@@ -71,7 +71,7 @@ These hold for every project made from the template:
   `NUMERICS`, `GEOML`, `GEOMODELS`), so its API joins that layer's index.
 - **Edges between layers point down** (see "The layers"). Code that would
   make a lower layer import a higher one belongs in the higher layer.
-  Within a layer, each repository has a tier and imports only lower tiers;
+  Within a layer, each repository, or a group of packages inside one, has a tier and imports only lower tiers;
   every library edge counts (extras, lazy and guarded imports; not dev, docs
   or tutorial dependency groups),
   every import is declared, and a reverse edge is fixed by moving code, never
