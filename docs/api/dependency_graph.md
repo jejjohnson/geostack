@@ -24,7 +24,7 @@ lazy, `try`-guarded and type-checking-only imports). It then states eight
 rules that keep the graph free of cycles.
 
 <!-- violation-summary:begin -->
-Today it has **two imports their package does not declare**. [](#tbl-dg-violations) lists each one with its fix.
+Today the graph breaks none of them.
 <!-- violation-summary:end -->
 
 +++
@@ -65,7 +65,6 @@ flowchart TB
     plumax["plumax"]
     radtrax["radtrax"]
     sesmax["sesmax"]
-    somax["somax"]
   end
   subgraph geoml["GeoML"]
     direction LR
@@ -82,23 +81,28 @@ flowchart TB
   subgraph numerics["GeoNumerics"]
     direction LR
     finitevolX["finitevolX"]
-    argminax["argminax"]
-    integrix["integrix"]
     spectraldiffx["spectraldiffx"]
-    functax["functax"]
-    gaussx["gaussx"]
   end
   subgraph geostack["GeoStack"]
     direction LR
-    xrtoolz["xrtoolz"]
     geotoolz["geotoolz"]
     georeader["georeader (third party)"]
+  end
+  subgraph core["Core"]
+    direction LR
+    argminax["argminax"]
+    integrix["integrix"]
+    functax["functax"]
+    gaussx["gaussx"]
     pipekit["pipekit"]
   end
   argminax --> gaussx
   filterax --> gaussx
+  finitevolX --> integrix
+  finitevolX -.-> pipekit
   finitevolX --> spectraldiffx
   gauss_flows --> gaussx
+  geotoolz --> functax
   geotoolz --> georeader
   geotoolz --> pipekit
   integrix --> functax
@@ -109,44 +113,43 @@ flowchart TB
   optax_bayes -.-> gaussx
   plumax --> finitevolX
   plumax --> pipekit
+  plumax --> radtrax
+  plumax -.-> vardax
+  plumax -.-> xtremax
   pyrox --> argminax
   pyrox -.-> filterax
   pyrox --> functax
   pyrox -.-> gauss_flows
   pyrox --> kernellib
-  radtrax --> gaussx
-  radtrax -.-> georeader
+  radtrax --> argminax
+  radtrax --> geonnax
+  radtrax -.-> geotoolz
   sesmax -.-> filterax
   sesmax --> finitevolX
   sesmax --> geonnax
-  sesmax --> integrix
   sesmax --> pipekit
   sesmax -.-> vardax
-  somax --> filterax
-  somax --> finitevolX
-  somax --> geonnax
-  somax --> pipekit
   spectraldiffx --> gaussx
-  vardax --> gaussx
+  vardax --> argminax
   vardax --> geonnax
+  vardax --> integrix
   vardax --> pipekit
-  xrtoolz --> geotoolz
 ```
 :::
 
-23 repositories, 42 packages and 44 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+21 repositories, 42 packages and 53 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
 What it shows:
 
 - **Every edge between layers points down.** GeoModels uses GeoML, GeoNumerics
-  and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoNumerics uses nothing above
-  it.
+  and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoStack and GeoNumerics use
+  only Core, and Core uses nothing above it.
 - **gaussx is the foundation.** Every repository in GeoNumerics, GeoML and
   GeoModels except geonnax reaches it. A breaking change in gaussx is a
   change to almost the whole stack.
-- **plumax is the one GeoModels repository that imports another.** It builds on radtrax: plume physics uses radiative transfer, never the reverse ([package boundaries](../geomodels/package_boundaries.md#pb-rules), rule 2). somax imports no one in its layer.
+- **plumax is the one GeoModels repository that imports another.** It builds on radtrax: plume physics uses radiative transfer, never the reverse ([package boundaries](../geomodels/package_boundaries.md#pb-rules), rule 2).
 - **The one cycle is inside GeoStack** (in red): pipekit-train imports
   `geopatcher.time` from geotoolz-patcher, and geotoolz depends on pipekit.
   The import is lazy and behind a `try`, so nothing fails at install time,
@@ -160,11 +163,12 @@ Each rule is a check in `scripts/dependency_graph.py`. The name in brackets
 is the rule's name in [](#tbl-dg-violations).
 
 1. **Layers point down** (`upward`). A repository may depend on its own layer
-   or a lower one: GeoStack and GeoNumerics at the bottom, GeoML above them,
-   GeoModels on top. GeoStack and GeoNumerics never import each other.
+   or a lower one: Core at the bottom, GeoStack and GeoNumerics side by side
+   above it, GeoML above them, GeoModels on top. GeoStack and GeoNumerics never
+   import each other. Core is the stack layer map's layer of maths and plumbing that know no geography (pipekit, gaussx, functax, argminax and integrix); its repositories keep their submodule directories under `references/geostack/` and `references/numerics/`.
 2. **Within a layer, tiers point down** (`tier`). Each repository has a tier
    in its layer ([](#tbl-dg-tiers)) and imports only repositories of a lower
-   tier. Two repositories of the same tier never import each other. In GeoModels, radtrax and somax share tier 0 and plumax sits above them in tier 1, because its plume-to-radiance coupling composes a plume model with radtrax's forward model.
+   tier. Two repositories of the same tier never import each other. In GeoModels, radtrax and sesmax share tier 0 and plumax sits above them in tier 1, because its plume-to-radiance coupling composes a plume model with radtrax's forward model.
 3. **Every library edge counts.** Base dependencies, extras, and imports,
    whether at module level, inside a function, behind a `try` or under
    `TYPE_CHECKING`, all go into the graph. An optional edge is still an edge,
@@ -208,17 +212,17 @@ is the rule's name in [](#tbl-dg-violations).
 | Layer | Tier | Repositories | Holds |
 |---|---|---|---|
 | GeoModels | 1 | plumax | plume models, which may build on radtrax |
-| GeoModels | 0 | radtrax, sesmax, somax | radiative transfer and Earth-system dynamics |
+| GeoModels | 0 | radtrax, sesmax | radiative transfer and Earth-system dynamics |
 | GeoML | 3 | pyrox, vardax | probabilistic models and variational assimilation (may build on filterax) |
 | GeoML | 2 | filterax, manipy | ensemble filters and manifold learning |
 | GeoML | 1 | kernellib, optax_bayes, xtremax | kernels, optimisers and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
-| GeoNumerics | 2 | finitevolX | finite volume |
-| GeoNumerics | 1 | argminax, integrix, spectraldiffx | optimisation, integration and spectral methods |
-| GeoNumerics | 0 | functax, gaussx | linear algebra, Gaussians and function approximation |
-| GeoStack | 2 | xrtoolz | operators on xarray, lifting geoops over cubes |
-| GeoStack | 1 | geotoolz | operators on arrays and geoarray carriers |
-| GeoStack | 0 | georeader, pipekit | pipelines and readers |
+| GeoNumerics | 1 | finitevolX | finite volume |
+| GeoNumerics | 0 | spectraldiffx | spectral methods |
+| GeoStack | 1 | geotoolz | operators on geoarray carriers, and on xarray lifting geoops over cubes |
+| GeoStack | 0 | georeader | readers |
+| Core | 1 | argminax, integrix | optimisation and integration |
+| Core | 0 | functax, gaussx, pipekit | pipelines, linear algebra, Gaussians and function approximation |
 <!-- tier-table:end -->
 :::
 
@@ -243,8 +247,7 @@ the shared vocabulary belongs in filterax, and vardax reuses it
 <!-- violation-table:begin -->
 | Rule | From | To | Where | Why, and the fix |
 |---|---|---|---|---|
-| undeclared | somax:somax/_src/da/filterax_bridge.py | filterax | `module` | module-level imports in somax/_src/da, declared only in the da dependency group; make it an extra |
-| undeclared | somax:somax/_src/da/obs.py | filterax | `module` | the same extra |
+| none | | | | |
 <!-- violation-table:end -->
 :::
 
@@ -257,10 +260,6 @@ The fixes:
    the two undeclared imports, which are four rows for one dataset. The imports are
    broken anyway: geotoolz-patcher has `geopatcher.temporal`, not
    `geopatcher.time`.
-2. **Make somax's filterax import an extra.** `somax/_src/da` imports
-   filterax at module level, but somax declares filterax only in its `da`
-   dependency group, so `pip install somax` gives a package whose `da`
-   module cannot import. A `[da]` extra with filterax and vardax fixes it.
 
 gauss_flows's guarded gaussx import stays undeclared, as an exception in
 `UNDECLARED_OK`. gaussx is not on PyPI, and gauss_flows's `[interp]` extra
@@ -287,7 +286,6 @@ cannot import, so most of its tests could no longer be collected.
 | Follow-up | Where | Why |
 |---|---|---|
 | Move `XarrayWindowDataset` and `_xreader` to `geopatcher.integrations.train` | pipekit, geotoolz | fix 1; Report 16 D2 |
-| A `[da]` extra with filterax and vardax | somax | fix 2 |
 | The same check inside each repository: `python scripts/dependency_graph.py --guard <repo>` writes its `test_dependency_rules.py` | each upstream repository but georeader | catches a reverse edge before it reaches geostack's pin |
 | Move vardax's observation operators and dynamics onto filterax's | vardax, filterax | open question 1 |
 :::
@@ -301,23 +299,29 @@ cannot import, so most of its tests could no longer be collected.
 <!-- edge-table:begin -->
 | From | To | Strongest evidence | Example |
 |---|---|---|---|
+| plumax | argminax | extra | `plumax → argminax` |
 | plumax | finitevolX | base | `plumax → finitevolx` |
 | plumax | gaussx | base | `plumax → gaussx` |
-| plumax | pipekit | base | `plumax → pipekit` |
+| plumax | georeader | extra | `plumax → georeader-spaceml` |
+| plumax | geotoolz | extra | `plumax → geotoolz-ops` |
+| plumax | integrix | base | `plumax → integrix` |
+| plumax | pipekit | base | `plumax → pipekit-ops` |
+| plumax | radtrax | base | `plumax → radtrax` |
+| plumax | vardax | extra | `plumax → vardax` |
+| plumax | xtremax | extra | `plumax → xtremax` |
+| radtrax | argminax | base | `radtrax → argminax` |
 | radtrax | gaussx | base | `radtrax → gaussx` |
+| radtrax | geonnax | base | `radtrax → geonnax` |
 | radtrax | georeader | extra | `radtrax → georeader-spaceml` |
+| radtrax | geotoolz | extra | `radtrax → geotoolz-ops` |
+| radtrax | pipekit | extra | `radtrax → pipekit-ops` |
 | sesmax | filterax | extra | `sesmax-core → filterax` |
 | sesmax | finitevolX | base | `sesmax-core → finitevolx` |
 | sesmax | geonnax | base | `sesmax-core → geonnax` |
 | sesmax | integrix | base | `sesmax-core → integrix` |
-| sesmax | pipekit | base | `sesmax-core → pipekit` |
+| sesmax | pipekit | base | `sesmax-core → pipekit-cycle` |
 | sesmax | spectraldiffx | base | `sesmax-core → spectraldiffx` |
 | sesmax | vardax | extra | `sesmax-core → vardax` |
-| somax | filterax | import | `somax → filterax` |
-| somax | finitevolX | base | `somax → finitevolx` |
-| somax | geonnax | base | `somax → geonnax` |
-| somax | pipekit | base | `somax → pipekit` |
-| somax | spectraldiffx | base | `somax → spectraldiffx` |
 | filterax | gaussx | base | `filterax → gaussx` |
 | gauss_flows | gaussx | import | `gauss-flows → gaussx` |
 | kernellib | gaussx | base | `kernellib → gaussx` |
@@ -332,18 +336,21 @@ cannot import, so most of its tests could no longer be collected.
 | pyrox | gaussx | base | `pyrox-gp → gaussx` |
 | pyrox | geonnax | base | `pyrox-nn → geonnax` |
 | pyrox | kernellib | base | `pyrox-gp → kernellib` |
+| vardax | argminax | base | `vardax → argminax` |
 | vardax | gaussx | base | `vardax → gaussx` |
 | vardax | geonnax | base | `vardax → geonnax` |
-| vardax | pipekit | base | `vardax → pipekit` |
-| argminax | gaussx | base | `argminax → gaussx` |
+| vardax | integrix | base | `vardax → integrix` |
+| vardax | pipekit | base | `vardax → pipekit-cycle` |
 | finitevolX | gaussx | base | `finitevolx → gaussx` |
+| finitevolX | integrix | base | `finitevolx → integrix` |
+| finitevolX | pipekit | extra | `finitevolx → pipekit-jax` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
+| spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
+| geotoolz | functax | base | `geotoolz-array → functax` |
+| geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
+| geotoolz | pipekit | base | `geotoolz-array → pipekit-array` |
+| argminax | gaussx | base | `argminax → gaussx` |
 | integrix | functax | base | `integrix → functax` |
 | integrix | gaussx | base | `integrix → gaussx` |
-| spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
-| geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
-| geotoolz | pipekit | base | `geotoolz-array → pipekit` |
-| xrtoolz | geotoolz | base | `xrtoolz-ops → geotoolz-ops` |
-| xrtoolz | pipekit | base | `xrtoolz-ops → pipekit` |
 <!-- edge-table:end -->
 :::

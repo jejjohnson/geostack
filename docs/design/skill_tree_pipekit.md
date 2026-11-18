@@ -42,16 +42,16 @@ pipekit is seven packages with seven different jobs, and nine packages in the st
 <!-- shelf:units:begin -->
 | Unit | Rungs | Home band | Subpackages | Names |
 |---|---|---|---|---|
-| Operators and composition | ⑤ ⑥ | geoscience, data | `pipekit.adapters` 9, `pipekit._base` 7, `pipekit.compose` 5, `pipekit.blocks` 4, `pipekit.protocols` 2, `pipekit.signature` 2, `pipekit.state` 2, `pipekit.testing` 2, `pipekit.combine` 1, `pipekit.imports` 1 | 35 |
-| Control and execution | ⑥ | data | `pipekit.qc` 6, `pipekit.control` 5, `pipekit.observe` 5, `pipekit.parallel` 5, `pipekit.cache` 2 | 23 |
-| Recipes as data | ⑥ | data | `pipekit.serial` 6, `pipekit.hashing` 4 | 10 |
-| Named arrays | ⓪ ① ⑤ | geoscience, ML | `pipekit_array.dims` 12, `pipekit_array.dim_operators` 8, `pipekit_array.kernel` 6, `pipekit_array.einx` 5, `pipekit_array.testing` 5, `pipekit_array.batching` 4, `pipekit_array.rows` 3, `pipekit_array.xarray` 3, `pipekit_array.combinators` 2, `pipekit_array.dimarray` 2, `pipekit_array._namespace` 1, `pipekit_array.estimator` 1, `pipekit_array.reductions` 1 | 53 |
+| Operators and composition | ⑤ ⑥ | geoscience, data | `pipekit_ops.seq` 12, `pipekit_ops.adapters` 10, `pipekit_ops.dicts` 8, `pipekit_ops._base` 7, `pipekit_ops.execution` 6, `pipekit_ops.compose` 5, `pipekit_ops.blocks` 4, `pipekit_ops.store` 4, `pipekit_ops.flow` 3, `pipekit_ops.protocols` 2, `pipekit_ops.signature` 2, `pipekit_ops.state` 2, `pipekit_ops.testing` 2, `pipekit_ops.combine` 1, `pipekit_ops.imports` 1 | 69 |
+| Control and execution | ⑥ | data | `pipekit_ops.qc` 8, `pipekit_ops.observe` 6, `pipekit_ops.control` 5, `pipekit_ops.parallel` 5, `pipekit_ops.cache` 2 | 26 |
+| Recipes as data | ⑥ | data | `pipekit_ops.serial` 7, `pipekit_ops.hashing` 4 | 11 |
+| Named arrays | ⓪ ① ⑤ | geoscience, ML | `pipekit_array.dim_operators` 25, `pipekit_array.dims` 12, `pipekit_array.dim_shapes` 6, `pipekit_array.dim_shifts` 6, `pipekit_array.kernel` 6, `pipekit_array.batching` 5, `pipekit_array.einx` 5, `pipekit_array.testing` 5, `pipekit_array.dim_algebra` 3, `pipekit_array.dim_windows` 3, `pipekit_array.rows` 3, `pipekit_array.xarray` 3, `pipekit_array.combinators` 2, `pipekit_array.dimarray` 2, `pipekit_array._namespace` 1, `pipekit_array.estimator` 1, `pipekit_array.reductions` 1 | 89 |
 | Cycles | ⑥ | ML, geoscience | `pipekit_cycle.protocols` 14, `pipekit_cycle.adjoints` 6, `pipekit_cycle.cycle` 4, `pipekit_cycle.obs` 4, `pipekit_cycle.da` 3, `pipekit_cycle.forward` 3, `pipekit_cycle.state` 3, `pipekit_cycle.bfn` 1 | 38 |
 | JAX bridge | ⑤ ⑥ | ML | `pipekit_jax.cycle` 3, `pipekit_jax` 2, `pipekit_jax.adjoints` 2, `pipekit_jax.diffrax_model` 1, `pipekit_jax.model_op` 1, `pipekit_jax.operator` 1 | 10 |
 | Training | ⑥ | ML | `pipekit_train.loss` 5, `pipekit_train.callbacks` 4, `pipekit_train.dataset` 4, `pipekit_train.sweep` 4, `pipekit_train.loop` 3, `pipekit_train.writer` 2 | 22 |
 | Evaluation | ⑥ | ML | `pipekit_evaluate.benchmark` 21, `pipekit_evaluate.taxonomy` 6, `pipekit_evaluate.report` 3, `pipekit_evaluate` 1, `pipekit_evaluate.scorers` 1 | 32 |
 | Experiments and registries | orchestration | data | `pipekit_experiment.registry` 3, `pipekit_experiment.run` 3, `pipekit_experiment.artifacts` 2, `pipekit_experiment.protocols` 2 | 10 |
-| **All** | | | | **233** |
+| **All** | | | | **307** |
 <!-- shelf:units:end -->
 :::
 
@@ -61,15 +61,16 @@ pipekit is seven packages with seven different jobs, and nine packages in the st
 <!-- shelf:uses:begin -->
 | Dependent package | Names used | Operators and composition | Control and execution | Recipes as data | Named arrays | Cycles | JAX bridge | Training | Evaluation | Experiments and registries |
 |---|---|---|---|---|---|---|---|---|---|---|
-| geotoolz-ops | 26 | 14 | 5 | 2 | 5 | 0 | 0 | 0 | 0 | 0 |
-| geotoolz-array | 18 | 4 | 0 | 0 | 14 | 0 | 0 | 0 | 0 | 0 |
-| xrtoolz-ops | 7 | 3 | 0 | 0 | 3 | 0 | 0 | 0 | 1 | 0 |
-| vardax | 6 | 1 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 0 |
+| geotoolz-ops | 28 | 14 | 5 | 2 | 7 | 0 | 0 | 0 | 0 | 0 |
+| geotoolz-array | 16 | 4 | 0 | 0 | 12 | 0 | 0 | 0 | 0 | 0 |
+| xrtoolz-ops | 9 | 4 | 0 | 0 | 4 | 0 | 0 | 0 | 1 | 0 |
+| vardax | 8 | 1 | 0 | 0 | 0 | 7 | 0 | 0 | 0 | 0 |
 | sesmax-core | 5 | 2 | 0 | 0 | 0 | 0 | 3 | 0 | 0 | 0 |
 | geotoolz-patcher | 4 | 2 | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 0 |
-| somax | 3 | 2 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 |
+| finitevolx | 2 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
 | geotoolz-products | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | plumax | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| radtrax | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
 
@@ -126,12 +127,13 @@ That is two structures, one primitive, two strategies, one model, four steps, te
 | geotoolz-ops | Operators and composition (subclasses `Operator`, `Sequential`); Control and execution; Named arrays | Recipes as data (2) |
 | geotoolz-array | Operators and composition; Named arrays |  |
 | xrtoolz-ops | Operators and composition (subclasses `Operator`); Named arrays | Evaluation (1) |
-| vardax | Operators and composition (subclasses `Operator`); Cycles |  |
+| vardax | Operators and composition (subclasses `Operator`); Cycles (subclasses `CallableObs`, `LinearObs`) |  |
 | sesmax-core | Operators and composition (subclasses `Operator`); JAX bridge (subclasses `JaxOperator`) |  |
 | geotoolz-patcher | Operators and composition (subclasses `Operator`); Training (subclasses `TrainingDataset`) | Named arrays (1) |
-| somax | Operators and composition (subclasses `Operator`, `StatefulOperator`) | Cycles (1) |
+| finitevolx | JAX bridge (subclasses `JaxOperator`) | Operators and composition (1) |
 | geotoolz-products | none | Operators and composition (1) |
 | plumax | Operators and composition (subclasses `Operator`) |  |
+| radtrax | Operators and composition (subclasses `Operator`) |  |
 <!-- shelf:cards:end -->
 :::
 

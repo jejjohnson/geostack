@@ -6,10 +6,6 @@
 	path = references/geostack/geotoolz
 	url = https://github.com/jejjohnson/geotoolz.git
 	branch = main
-[submodule "references/xrtoolz"]
-	path = references/geostack/xrtoolz
-	url = https://github.com/jejjohnson/xrtoolz.git
-	branch = main
 [submodule "references/georeader"]
 	path = references/geostack/georeader
 	url = https://github.com/spaceml-org/georeader.git
@@ -33,10 +29,6 @@
 [submodule "references/geomodels/radtrax"]
 	path = references/geomodels/radtrax
 	url = https://github.com/jejjohnson/radtrax.git
-	branch = main
-[submodule "references/geomodels/somax"]
-	path = references/geomodels/somax
-	url = https://github.com/jejjohnson/somax.git
 	branch = main
 [submodule "references/geoml/filterax"]
 	path = references/geoml/filterax
