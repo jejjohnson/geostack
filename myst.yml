@@ -111,6 +111,9 @@ project:
               children:
                 - file: docs/design/libraries/xrcf.md
                 - file: docs/design/libraries/xrcf_details.md
+            - title: pyrox-ssm
+              children:
+                - file: docs/design/libraries/pyrox_ssm.md
         - file: docs/design/esmax.md
         - file: docs/design/neural_fields.md
         - file: docs/design/decisions.md
