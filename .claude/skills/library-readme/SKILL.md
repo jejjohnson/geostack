@@ -144,7 +144,7 @@ Every library README carries three figures, drawn once in geostack and embedded 
 | Role ladder | the public names on the rungs of the GeoStack role ladder | `docs/images/libraries/<pkg>_roles/` | `make_svgs.py`, light and dark SVGs | What else is in the box |
 | Dependencies | who imports the library, which of its modules each uses, and what it builds on | `docs/images/libraries/<pkg>_ecosystem/` | `make_svgs.py`, light and dark SVGs | Ecosystem |
 
-A detail figure for one module (argminax's `argminax_blr/`) follows the overview's form and sits in the docs guide for that module, not in the README.
+A detail figure for one module (argminax's `argminax_blr/`) follows the overview's form and sits in the docs guide for that module, not in the README. The docs carry these three and more; the `library-docs-figures` skill (`plugins/geostack/skills/library-docs-figures/`) is the standard for them.
 
 **The overview** has four columns joined by labelled arrows, and a row of slabs underneath:
 
