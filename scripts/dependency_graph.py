@@ -74,6 +74,12 @@ TIERS: dict[str, dict[str, int]] = {
     },
     "geomodels": {"radtrax": 0, "sesmax": 0, "plumax": 1},
 }
+#: packages that sit in a higher tier than the rest of their repository; inside
+#: the repository an edge may point down a package tier or stay level, and edges
+#: to other repositories use the package's tier
+PACKAGE_TIERS: dict[str, dict[str, int]] = {
+    "geotoolz": {"xrtoolz": 2, "xrtoolz-ops": 2, "xrtoolz-products": 2},
+}
 #: what each tier holds, for the page
 TIER_ROLES = {
     "core": (
@@ -82,7 +88,8 @@ TIER_ROLES = {
     ),
     "geostack": (
         "readers",
-        "operators on geoarray carriers, and on xarray lifting geoops over cubes",
+        "operators on arrays and geoarray carriers",
+        "operators on xarray, lifting geoops over cubes",
     ),
     "numerics": (
         "spectral methods",
@@ -468,6 +475,12 @@ def build() -> Graph:
     return graph(pkgs, imports(pkgs))
 
 
+def tier_of(pkg: Package) -> int:
+    """A package's tier: its own in ``PACKAGE_TIERS``, else its repository's."""
+    own = PACKAGE_TIERS.get(pkg.repo, {})
+    return own.get(pkg.name, TIERS[pkg.layer].get(pkg.repo, 0))
+
+
 def violations(g: Graph) -> dict[tuple[str, str, str], str]:
     """Every rule the graph breaks: {(rule, a, b): evidence}.
 
@@ -495,15 +508,22 @@ def violations(g: Graph) -> dict[tuple[str, str, str], str]:
                 out[("stale-tier", repo, lay)] = (
                     "no such submodule in this layer; remove it from TIERS"
                 )
+    for repo, tiers in PACKAGE_TIERS.items():
+        for name in tiers:
+            if name not in g.pkgs or g.pkgs[name].repo != repo:
+                out[("stale-package-tier", name, repo)] = (
+                    "no such package in this repository; remove it from PACKAGE_TIERS"
+                )
     for e in g.pkg_edges:
         a, b = g.pkgs[e.source], g.pkgs[e.target]
-        if a.repo == b.repo:
-            continue
         evidence = e.kind + (f", {e.via}" if e.via else "")
-        tiers = TIERS[a.layer]
+        if a.repo == b.repo:
+            if tier_of(b) > tier_of(a):
+                out[("package-tier", e.source, e.target)] = evidence
+            continue
         if a.layer != b.layer and LAYER_RANK[b.layer] >= LAYER_RANK[a.layer]:
             out[("upward", e.source, e.target)] = evidence
-        elif a.layer == b.layer and tiers.get(b.repo, 0) >= tiers.get(a.repo, 0):
+        elif a.layer == b.layer and tier_of(b) >= tier_of(a):
             out[("tier", e.source, e.target)] = evidence
         if a.repo in THIRD_PARTY:
             out[("third-party", e.source, e.target)] = evidence
@@ -655,6 +675,11 @@ def tier_table(g: Graph) -> str:
     for lay in reversed(LAYERS):
         for tier, role in reversed(list(enumerate(TIER_ROLES[lay]))):
             repos = sorted(r for r, t in TIERS[lay].items() if t == tier)
+            repos += [
+                f"{r} ({', '.join(sorted(n for n, t in own.items() if t == tier))})"
+                for r, own in sorted(PACKAGE_TIERS.items())
+                if TIERS[lay].get(r) is not None and tier in own.values()
+            ]
             rows.append(f"| {TITLES[lay]} | {tier} | {', '.join(repos)} | {role} |")
     return "\n".join(rows)
 
@@ -691,6 +716,14 @@ RULE_NOUNS = {
     ),
     "untiered": ("repository without a tier", "repositories without a tier"),
     "stale-tier": ("tier for a missing repository", "tiers for missing repositories"),
+    "package-tier": (
+        "edge between packages of one repository that points up a tier",
+        "edges between packages of one repository that point up a tier",
+    ),
+    "stale-package-tier": (
+        "package tier for a missing package",
+        "package tiers for missing packages",
+    ),
 }
 
 
@@ -765,17 +798,24 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
     base = repo_path(repo)
     path = GUARD_PATHS.get(repo, "tests/test_dependency_rules.py")
 
-    def allowed(other: str) -> bool:
-        lay = g.repos[other]
-        if other == repo:
+    def allowed(other: Package) -> bool:
+        if other.repo == repo:
             return True
-        if lay == layer:
-            return TIERS[lay].get(other, 0) < tier
-        return LAYER_RANK[lay] < LAYER_RANK[layer]
+        if other.layer == layer:
+            return tier_of(other) < tier
+        return LAYER_RANK[other.layer] < LAYER_RANK[layer]
 
     mods = {_module_name(m): p for p in g.pkgs.values() for m in p.modules}
-    forbidden = {m: p.name for m, p in mods.items() if not allowed(p.repo)}
-    ok = {m: p.name for m, p in mods.items() if allowed(p.repo)}
+    forbidden = {m: p.name for m, p in mods.items() if not allowed(p)}
+    ok = {m: p.name for m, p in mods.items() if allowed(p)}
+    own = [p for p in g.pkgs.values() if p.repo == repo]
+    inside = {
+        p.name: {
+            m: q.name for m, q in mods.items() if q in own and tier_of(q) > tier_of(p)
+        }
+        for p in own
+    }
+    inside = {k: v for k, v in inside.items() if v}
     packages = {
         p.name: (
             str((p.path / "pyproject.toml").relative_to(base)),
@@ -796,6 +836,16 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         if not d:
             return "{}"
         rows = "".join(f"\n    {q(k)}: {q(v)}," for k, v in sorted(d.items()))
+        return "{" + rows + "\n}"
+
+    def nested(d: dict) -> str:
+        # one expanded dict per package, as ruff format keeps it
+        if not d:
+            return "{}"
+        rows = ""
+        for k, v in sorted(d.items()):
+            inner = "".join(f"\n        {q(a)}: {q(b)}," for a, b in sorted(v.items()))
+            rows += f"\n    {q(k)}: {{{inner}\n    }},"
         return "{" + rows + "\n}"
 
     def reasons(d: dict) -> str:
@@ -820,6 +870,14 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         )
         return "{" + rows + "\n}"
 
+    by_tier: dict[int, list[str]] = defaultdict(list)
+    for name, t in PACKAGE_TIERS.get(repo, {}).items():
+        by_tier[t].append(name)
+    inside_rule = "".join(
+        f" Inside {repo}, {', '.join(sorted(names))} sit in tier {t}, so no"
+        f" {repo} package of a lower tier may import or depend on them."
+        for t, names in sorted(by_tier.items())
+    )
     intro = textwrap.fill(
         f"{repo} sits in {TITLES[layer]}, tier {tier} ({TIER_ROLES[layer][tier]})."
         f" Its packages must not import or depend on"
@@ -827,7 +885,7 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         f" it, or beside it in the same tier. Every import of a stack library is"
         f" declared, as a dependency or an extra, and what importing a package"
         f" runs needs a dependency. Its packages form no cycle. Dev, docs and"
-        f" tutorial dependency groups are not checked.",
+        f" tutorial dependency groups are not checked." + inside_rule,
         width=79,
     )
     template = ROOT / "scripts" / "templates" / "test_dependency_rules.py.tmpl"
@@ -839,6 +897,7 @@ def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
         packages=table(packages),
         forbidden=literal(forbidden),
         allowed=literal(ok),
+        inside=nested(inside),
         skip_dirs="{" + "".join(f"\n    {q(d)}," for d in sorted(SKIP_DIRS)) + "\n}",
         exceptions=reasons(
             {v[1]: why for v, why in UNDECLARED_OK.items() if v[0] in packages}

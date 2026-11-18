@@ -166,6 +166,7 @@ is the rule's name in [](#tbl-dg-violations).
 2. **Within a layer, tiers point down** (`tier`). Each repository has a tier
    in its layer ([](#tbl-dg-tiers)) and imports only repositories of a lower
    tier. Two repositories of the same tier never import each other. In GeoModels, radtrax and sesmax share tier 0 and plumax sits above them in tier 1, because its plume-to-radiance coupling composes a plume model with radtrax's forward model.
+   A group of packages inside one repository can sit in a higher tier of its own (`PACKAGE_TIERS`, `package-tier`): the xrtoolz packages sit in GeoStack tier 2 inside geotoolz, so xrops may import geoops, but no other geotoolz package may import or depend on xrtoolz, xrtoolz-ops or xrtoolz-products. A cycle check alone would miss geocatalog or geoproducts importing xrops, because xrops depends on neither. Between repositories, each package's own tier applies.
 3. **Every library edge counts.** Base dependencies, extras, and imports,
    whether at module level, inside a function, behind a `try` or under
    `TYPE_CHECKING`, all go into the graph. An optional edge is still an edge,
@@ -194,7 +195,7 @@ is the rule's name in [](#tbl-dg-violations).
 7. **A third-party repository is a leaf** (`third-party`). georeader belongs
    to spaceml-org: we depend on it and never change it, and nothing of ours
    moves into it.
-8. **A new repository arrives with its place** (`untiered`, `stale-tier`). Adding a
+8. **A new repository arrives with its place** (`untiered`, `stale-tier`, `stale-package-tier`). Adding a
    submodule means adding it to `TIERS` in `scripts/dependency_graph.py` with
    its layer and tier, in the same pull request, and removing or renaming one
    means changing its entry there too.
@@ -216,7 +217,8 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
 | GeoNumerics | 1 | finitevolX | finite volume |
 | GeoNumerics | 0 | spectraldiffx | spectral methods |
-| GeoStack | 1 | geotoolz | operators on geoarray carriers, and on xarray lifting geoops over cubes |
+| GeoStack | 2 | geotoolz (xrtoolz, xrtoolz-ops, xrtoolz-products) | operators on xarray, lifting geoops over cubes |
+| GeoStack | 1 | geotoolz | operators on arrays and geoarray carriers |
 | GeoStack | 0 | georeader | readers |
 | Core | 1 | argminax, integrix | optimisation and integration |
 | Core | 0 | functax, gaussx, pipekit | pipelines, linear algebra, Gaussians and function approximation |
