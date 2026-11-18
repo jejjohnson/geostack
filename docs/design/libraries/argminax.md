@@ -19,7 +19,7 @@ argminax is the stack's optimisation library with uncertainty at the optimum: it
 | Imports | gaussx; extends optimistix; JAX, Equinox, lineax |
 | Imported by | radtrax, plumax, vardax, pyrox-gp, pyrox-lgm, pyrox-nn |
 | Takes over | vardax's adjoint strategies and posterior adapters; radtrax's retrieval diagnostics; the Newton loops of gaussx, pyrox-gp and pyrox-lgm; plumax's 4D-Var posterior |
-| Does not own | training over batches (optax, optax\_bayes); sampling (NumPyro, pyrox); adjoints through time (integrix) |
+| Does not own | plain training over batches (optax); sampling (NumPyro, pyrox); adjoints through time (integrix) |
 | Status | proposed; no repository yet |
 | Tracked in | the [layer map](../stack_layer_map.md); the companion [functax](functax.md) and [integrix](integrix.md) designs |
 
@@ -63,7 +63,7 @@ Three jobs share the word optimisation, and only one belongs here:
 | --- | --- | --- |
 | Solve | where is the minimum x̂? | optimistix, extended by argminax's solvers |
 | Curvature | how sharp is the minimum, and what does that say about x̂? | **argminax** |
-| Train | how do I fit a network's weights over many batches? | optax and optax\_bayes |
+| Train | how do I fit a network's weights over many batches? | optax, and `argminax.blr` for a Gaussian over them |
 
 At the minimum x̂, with K = ∂F/∂x the Jacobian there, the Gauss–Newton curvature gives the posterior covariance Ŝ and the averaging kernel A:
 
@@ -81,7 +81,7 @@ The last piece is the derivative of x̂ with respect to what went in (the prior,
 
 ## Modules and boundaries
 
-Four modules: the solvers optimistix lacks, the curvature at the minimum, the retrieval diagnostics built on it, and the adjoints of a minimiser. argminax extends optimistix as gaussx extends lineax: its solvers are optimistix solvers and its adjoints are optimistix adjoints, so `optx.minimise` and `optx.least_squares` keep working.
+Five modules: the solvers optimistix lacks, the curvature at the minimum, the retrieval diagnostics built on it, the adjoints of a minimiser, and the Bayesian learning rule. argminax extends optimistix as gaussx extends lineax: its solvers are optimistix solvers and its adjoints are optimistix adjoints, so `optx.minimise` and `optx.least_squares` keep working. It extends optax the same way: the transforms of `argminax.blr` are optax transforms, behind the `argminax[optax]` extra.
 
 | Module | Owns | Comes from |
 | --- | --- | --- |
@@ -89,6 +89,7 @@ Four modules: the solvers optimistix lacks, the curvature at the minimum, the re
 | `argminax.curvature` | Gauss–Newton, Fisher and quasi-Newton curvature, Laplace covariance Ŝ, its low-rank and diagonal forms, all as gaussx operators | vardax `GaussNewtonHessian`, `LaplaceCovariance`; plumax `PosteriorCovariance`; pyrox `last_layer_laplace`'s GGN |
 | `argminax.diagnose` | averaging kernel A, degrees of freedom for signal, information content, evidence at the minimum | radtrax `var3d/diagnostics.py`; pyrox's evidence and prior-precision search |
 | `argminax.adjoint` | adjoints of a minimiser stopped early: k-step and one-step. At a converged minimum optimistix's own `ImplicitAdjoint` already does the job, so argminax adds none. | vardax `KStepAdjoint`, `OneStepAdjoint`, `to_optimistix_adjoint` |
+| `argminax.blr` | the Bayesian learning rule as optax transforms (diagonal, full-rank and low-rank Gaussians, IVON, Newton) and the Laplace posterior of their state | optax\_bayes, retired after argminax 0.0.7 ([argminax#58](https://github.com/jejjohnson/argminax/issues/58)) |
 
 ### What argminax owns, and what it hands off
 
@@ -99,7 +100,7 @@ The test for every name: does it find a minimum, or say something about the curv
 | optimistix | the stack's solvers and adjoints, as optimistix subclasses | `minimise`, `least_squares`, `root_find`, BFGS, its solver and adjoint protocols | argminax extends optimistix |
 | gaussx | the iteration to a tolerance | one step's algebra (`newton_update`, `gauss_newton_precision`), structured solves, its Chandrupatla root finder | a single step is gaussx's; the loop around it is argminax's |
 | integrix | adjoints of a minimiser | adjoints of a march: checkpointed backward sweeps through a forward run | through the iterations of an optimiser is argminax's; through time is integrix's |
-| optax, optax\_bayes | deterministic solves to a tolerance | stochastic training over batches; the Bayesian learning rule | many batches and a learning rate are optax's |
+| optax | deterministic solves to a tolerance, and the Bayesian learning rule as optax transforms | stochastic training over batches | many batches and a learning rate are optax's; a Gaussian carried in the optimiser state is argminax's |
 | pyrox, NumPyro | the Laplace approximation as curvature | sampling, variational inference, priors | a Gaussian at the mode is argminax's; anything that samples is pyrox's |
 | radtrax, plumax, vardax | the solver, curvature and diagnostics | the cost: forward model, observation operator, B and R | the library passes J (or its residuals) in |
 
@@ -201,7 +202,7 @@ Five decided, three open. Each entry gives the position first, then the trade-of
 
 ### 2. Scope: solve and curvature, not training
 
-**Decided (5 Nov 2026).** argminax owns deterministic solves to a tolerance and what the curvature at the minimum says. Stochastic training over batches stays with optax and optax\_bayes; sampling and variational inference stay with NumPyro and pyrox.
+**Decided (5 Nov 2026).** argminax owns deterministic solves to a tolerance and what the curvature at the minimum says. Stochastic training over batches stays with optax and optax\_bayes; sampling and variational inference stay with NumPyro and pyrox. **Revised (18 Nov 2026):** the Bayesian learning rule moved in from optax\_bayes as `argminax.blr` ([argminax#59](https://github.com/jejjohnson/argminax/issues/59)), and optax\_bayes is retired; plain training over batches stays with optax.
 
 ### 3. Layer: Core tier 1
 
