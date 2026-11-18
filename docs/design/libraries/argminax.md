@@ -23,11 +23,12 @@ argminax is the stack's optimisation library with uncertainty at the optimum: it
 | Status | proposed; no repository yet |
 | Tracked in | the [layer map](../stack_layer_map.md); the companion [functax](functax.md) and [integrix](integrix.md) designs |
 
-```{figure} ../../images/libraries/argminax.svg
-:alt: where argminax sits · Core tier 1
+```{figure} ../../images/libraries/argminax_ecosystem/argminax_ecosystem-light.svg
+:alt: argminax at the top; below it vardax, pyrox-lgm and pyrox-nn in GeoML and radtrax in GeoModels import it, plumax through its assim extra, each card naming the argminax modules it uses; argminax itself builds on gaussx, optimistix, lineax, JAX and Equinox, and on optax through an extra
 :width: 100%
+:label: fig-argminax-ecosystem
 
-Where argminax sits · core tier 1.
+Who imports argminax today, and what it builds on. The edges are the [dependency graph](../../api/dependency_graph.md) and each card's modules are that package's imports on `main`, so the figure shows today's users, where the table above lists the planned ones. `make_svgs.py` in the same folder writes the light and dark versions; the argminax README embeds both.
 ```
 
 argminax sits one tier above gaussx, whose single steps it iterates, so every library that minimises can import it. This page is the design; core types, algorithms and the code survey are in [argminax: design details](argminax_details.md).
@@ -79,6 +80,14 @@ A says how much a change in the true state moves the retrieved one: A = I means 
 
 The last piece is the derivative of x̂ with respect to what went in (the prior, the parameters of F). At an exact minimum it comes from the implicit function theorem; for a solver stopped early, as in learned 4D-Var, it comes from differentiating the last k iterations. Both are adjoint strategies of the minimiser.
 
+```{figure} ../../images/libraries/argminax_overview/argminax_overview.png
+:alt: argminax in one picture: you supply a cost, the fixed inputs y and θ, and a solver or a training loop; they define one minimum and the Hessian there; five questions, one module each, read that Hessian; out come the retrieval, the Laplace posterior, the diagnostics, the derivatives and the trained posterior; optimistix, gaussx with lineax, and optax underneath
+:width: 100%
+:label: fig-argminax-overview
+
+argminax in one picture: five questions, one minimum. The source is `argminax_overview.html` in the same folder; the argminax README and docs embed this PNG.
+```
+
 ## Modules and boundaries
 
 Five modules: the solvers optimistix lacks, the curvature at the minimum, the retrieval diagnostics built on it, the adjoints of a minimiser, and the Bayesian learning rule. argminax extends optimistix as gaussx extends lineax: its solvers are optimistix solvers and its adjoints are optimistix adjoints, so `optx.minimise` and `optx.least_squares` keep working. It extends optax the same way: the transforms of `argminax.blr` are optax transforms, behind the `argminax[optax]` extra.
@@ -90,6 +99,14 @@ Five modules: the solvers optimistix lacks, the curvature at the minimum, the re
 | `argminax.diagnose` | averaging kernel A, degrees of freedom for signal, information content, evidence at the minimum | radtrax `var3d/diagnostics.py`; pyrox's evidence and prior-precision search |
 | `argminax.adjoint` | adjoints of a minimiser stopped early: k-step and one-step. At a converged minimum optimistix's own `ImplicitAdjoint` already does the job, so argminax adds none. | vardax `KStepAdjoint`, `OneStepAdjoint`, `to_optimistix_adjoint` |
 | `argminax.blr` | the Bayesian learning rule as optax transforms (diagonal, full-rank and low-rank Gaussians, IVON, Newton) and the Laplace posterior of their state | optax\_bayes, retired after argminax 0.0.7 ([argminax#58](https://github.com/jejjohnson/argminax/issues/58)) |
+
+```{figure} ../../images/libraries/argminax_roles/argminax_roles-light.svg
+:alt: argminax on the role ladder: algorithms (laplace_mode, the dual solves, the diagnostics, blr_posterior), the Laplace model, strategies for solving, stepping and differentiating (GaussNewtonCG, Reparametrised, KStep, OneStep, the blr transforms), no primitives of its own (gaussx's newton_update, solve and logdet), and the Hessian as a gaussx structure; optimistix is the floor its solvers and adjoints extend
+:width: 100%
+:label: fig-argminax-roles
+
+argminax's public names on the role ladder, placed as on [argminax's skill shelf](../skill_tree_argminax.md). `make_svgs.py` in the same folder writes the light and dark versions; the argminax README embeds both.
+```
 
 ```{figure} ../../images/libraries/argminax_blr/argminax_blr.png
 :alt: argminax.blr: a plain optax loop passes the gradient of the cost to a Bayesian-learning-rule transform for the diagonal, low-rank or full-rank family; the optimiser state holds the precision and the natural mean, anchored by the prior; blr_posterior reads the Gaussian out as a Laplace for sampling
