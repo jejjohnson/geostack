@@ -79,12 +79,29 @@ def test_a_reverse_layer_edge_is_caught() -> None:
     assert ("upward", "gaussx", "plumax") in dg.violations(broken)
 
 
-def test_the_foundation_layers_do_not_import_each_other() -> None:
-    assert ("upward", "gaussx", "pipekit") in dg.violations(
-        _with_dependency("gaussx", "pipekit")
+def test_geostack_and_geonumerics_do_not_import_each_other() -> None:
+    assert ("upward", "geotoolz-ops", "finitevolx") in dg.violations(
+        _with_dependency("geotoolz-ops", "finitevolx")
     )
-    assert ("upward", "pipekit", "gaussx") in dg.violations(
-        _with_dependency("pipekit", "gaussx")
+    assert ("upward", "finitevolx", "geotoolz-ops") in dg.violations(
+        _with_dependency("finitevolx", "geotoolz-ops")
+    )
+    _, source = dg.guard("finitevolX", GRAPH)
+    assert '"geoops": "geotoolz-ops"' in source.split("ALLOWED")[0]  # forbidden
+
+
+def test_core_sits_below_geostack_and_geonumerics() -> None:
+    # Core repositories keep their submodule directory but rank below both
+    assert GRAPH.repos["pipekit"] == GRAPH.repos["functax"] == "core"
+    for user in ("geotoolz-ops", "finitevolx"):
+        found = dg.violations(_with_dependency(user, "functax"))
+        assert ("upward", user, "functax") not in found
+    assert ("upward", "functax", "geotoolz-ops") in dg.violations(
+        _with_dependency("functax", "geotoolz-ops")
+    )
+    # two Core repositories of one tier still may not import each other
+    assert ("tier", "gaussx", "pipekit") in dg.violations(
+        _with_dependency("gaussx", "pipekit")
     )
     _, source = dg.guard("gaussx", GRAPH)
     assert '"pipekit": "pipekit"' in source.split("ALLOWED")[0]  # forbidden
@@ -102,7 +119,7 @@ def test_xrtoolz_may_import_geotoolz_but_not_the_reverse() -> None:
 
 def test_a_second_package_edge_between_known_repositories_is_new() -> None:
     new, _ = dg.check(_with_dependency("pipekit-cycle", "geotoolz-cloud"))
-    assert ("tier", "pipekit-cycle", "geotoolz-cloud") in new
+    assert ("upward", "pipekit-cycle", "geotoolz-cloud") in new
 
 
 def test_a_second_undeclared_import_is_new() -> None:
@@ -145,7 +162,7 @@ def test_a_stub_import_is_a_typing_only_edge(tmp_path: Path) -> None:
     imp = dg.imports(pkgs)
     assert imp["gaussx"]["pipekit"][0].how == "typing"
     found = dg.violations(dg.graph(pkgs, imp))
-    assert ("upward", "gaussx", "pipekit") in found
+    assert ("tier", "gaussx", "pipekit") in found
     assert not any(k[0] == "undeclared" and k[2] == "pipekit" for k in found)
 
 
@@ -238,7 +255,7 @@ def test_every_guard_renders(repo: str) -> None:
     assert path.endswith("test_dependency_rules.py")
     # run its freshness check as if it sat at its path in the submodule: it
     # rediscovers the packages and their roots the way this script does
-    where = dg.REFS / GRAPH.repos[repo] / repo / path
+    where = dg.repo_path(repo) / path
     namespace = {"__file__": str(where), "__name__": "guard"}
     exec(compile(source, str(where), "exec"), namespace)
     namespace["test_packages_are_current"]()

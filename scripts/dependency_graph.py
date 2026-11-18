@@ -39,12 +39,18 @@ REFS = ROOT / "references"
 PAGES = (ROOT / "docs" / "api" / "dependency_graph.md", ROOT / "README.md")
 BEGIN, END = "<!-- dependency-graph:begin -->", "<!-- dependency-graph:end -->"
 
+#: the directories under ``references/`` that hold the submodules
+DIRS = ("geostack", "numerics", "geoml", "geomodels")
 #: layers from the bottom up
-LAYERS = ("geostack", "numerics", "geoml", "geomodels")
+LAYERS = ("core", *DIRS)
 #: an edge between layers points to a lower rank; GeoStack and GeoNumerics share
-#: the bottom rank, so neither may import the other
-LAYER_RANK = {"geostack": 0, "numerics": 0, "geoml": 1, "geomodels": 2}
+#: the rank above Core, so neither may import the other
+LAYER_RANK = {"core": 0, "geostack": 1, "numerics": 1, "geoml": 2, "geomodels": 3}
+#: repositories in Core, the maths and plumbing that know no geography (the
+#: stack layer map); their submodules stay in the directory they sit in today
+CORE = {"pipekit", "gaussx", "functax", "argminax", "integrix"}
 TITLES = {
+    "core": "Core",
     "geostack": "GeoStack",
     "numerics": "GeoNumerics",
     "geoml": "GeoML",
@@ -52,15 +58,9 @@ TITLES = {
 }
 #: within a layer, a repository may import only repositories of a lower tier
 TIERS: dict[str, dict[str, int]] = {
-    "geostack": {"pipekit": 0, "georeader": 0, "geotoolz": 1, "xrtoolz": 2},
-    "numerics": {
-        "gaussx": 0,
-        "functax": 0,
-        "argminax": 1,
-        "integrix": 1,
-        "spectraldiffx": 1,
-        "finitevolX": 2,
-    },
+    "core": {"pipekit": 0, "gaussx": 0, "functax": 0, "argminax": 1, "integrix": 1},
+    "geostack": {"georeader": 0, "geotoolz": 1, "xrtoolz": 2},
+    "numerics": {"spectraldiffx": 0, "finitevolX": 1},
     "geoml": {
         "geonnax": 0,
         "gauss_flows": 0,
@@ -76,14 +76,17 @@ TIERS: dict[str, dict[str, int]] = {
 }
 #: what each tier holds, for the page
 TIER_ROLES = {
+    "core": (
+        "pipelines, linear algebra, Gaussians and function approximation",
+        "optimisation and integration",
+    ),
     "geostack": (
-        "pipelines and readers",
+        "readers",
         "operators on arrays and geoarray carriers",
         "operators on xarray, lifting geoops over cubes",
     ),
     "numerics": (
-        "linear algebra, Gaussians and function approximation",
-        "optimisation, integration and spectral methods",
+        "spectral methods",
         "finite volume",
     ),
     "geoml": (
@@ -209,8 +212,9 @@ def declared(project: dict) -> tuple[set[str], set[str]]:
 def packages() -> dict[str, Package]:
     """Every distribution in the submodules, by normalised name."""
     out: dict[str, Package] = {}
-    for layer in LAYERS:
-        for repo in sorted(p for p in (REFS / layer).iterdir() if p.is_dir()):
+    for directory in DIRS:
+        for repo in sorted(p for p in (REFS / directory).iterdir() if p.is_dir()):
+            layer = "core" if repo.name in CORE else directory
             members = sorted((repo / "packages").glob("*/pyproject.toml"))
             for pyproject in members or [repo / "pyproject.toml"]:
                 meta = tomllib.loads(pyproject.read_text(encoding="utf-8"))
@@ -753,12 +757,20 @@ PAGE_URL = (
 )
 
 
+def repo_path(repo: str) -> Path:
+    """The submodule checkout of a repository, in whichever directory holds it."""
+    found = [REFS / d / repo for d in DIRS if (REFS / d / repo).is_dir()]
+    if len(found) != 1:
+        raise LookupError(f"{repo}: expected one submodule, found {found}")
+    return found[0]
+
+
 def guard(repo: str, g: Graph | None = None) -> tuple[str, str]:
     """(path in the repository, source) of the repository's guard test."""
     g = g or build()
     layer = g.repos[repo]
     tier = TIERS[layer][repo]
-    base = REFS / layer / repo
+    base = repo_path(repo)
     path = GUARD_PATHS.get(repo, "tests/test_dependency_rules.py")
 
     def allowed(other: str) -> bool:
@@ -858,7 +870,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{args.guard} is third party: geostack never writes to it")
             return 1
         path, text = guard(args.guard, g)
-        dest = REFS / g.repos[args.guard] / args.guard / path
+        dest = repo_path(args.guard) / path
         dest.write_text(text, encoding="utf-8")
         print(f"wrote {dest.relative_to(ROOT)}")
         return 0
