@@ -146,10 +146,12 @@ Run these before the README ships:
 
 1. Extract every Python block and run the runnable ones against the repo's `main`, in float64 if the package's tests use it. Paste the printed output into the "This prints" sentence.
 2. Lint and format each block with the repo's own ruff config, by passing it on stdin with a path inside the repo: `ruff check --stdin-filename docs/readme_block.py < block.py` (ruff's ambiguous-Unicode rule, RUF003, may be ignored for maths comments).
-3. `check_math.py README.md --target github` from `eman-style-math`, and `--target myst` on any docs page the change touched.
-4. `style_check.py` from `eman-prose-tech` on the prose with code blocks and HTML removed. Tables and the reference list skew its sentence metrics, so read the flags instead of chasing the bands.
+3. Check the maths with `check_math.py` from the `eman-style-math` skill, on the README with `--target github` and on any docs page the change touched with `--target myst`. The script declares its dependencies inline, so `uv run` installs them: `uv run ~/.claude/skills/eman-style-math/scripts/check_math.py README.md --target github`.
+4. Check the prose with `style_check.py` from the `eman-prose-tech` skill, which needs only the standard library: `python ~/.claude/skills/eman-prose-tech/scripts/style_check.py prose.md --register docs`, on the prose with code blocks and HTML removed. Tables and the reference list skew its sentence metrics, so read the flags instead of chasing the bands.
 5. Check every name in the tables against `__all__`, every URL with `curl -s -o /dev/null -w '%{http_code}'`, and every status claim ("ships", "Wave 4") against the live issue.
 6. Build the docs when the change touched a docs page.
+
+Both scripts come with the personal skills in [jejagents](https://github.com/jejjohnson/jejagents): clone it and run its `./install.sh`, which copies the skills into `~/.claude/skills/`. Without them, do steps 3 and 4 by hand against §10 (no macros, inline `` $`…`$ ``, display maths in `math` fences, `\mid` in table cells, no em dashes, no hard wraps), and say in the PR that the two scripts were not run.
 
 ## Checklist
 
