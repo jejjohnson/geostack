@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>functax — one expansion, five operations</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+
+  /* the one object */
+  .fx-obj { width: 860px; margin: 0 auto; }
+  .fx-expansion { text-align: center; margin: 2px 0 12px; color: var(--ink-accent); }
+  #diagram .fx-expansion .katex { font-size: 1.65em; }
+  .fx-terms { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fx-term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .fx-term .eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 12px; min-height: 42px; text-align: center;
+  }
+  #diagram .fx-term .eq .katex { font-size: 1.3em; }
+
+  /* one card per operation */
+  .fx-ops {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    column-gap: 20px; margin-top: 104px;
+  }
+  .fx-op .lane-head { margin-bottom: 8px; }
+  .fx-op .lane-head .verb { font-size: 13px; }
+  .fx-mod { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink-accent); }
+  .fx-eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 10px; min-height: 70px; line-height: 1.9;
+  }
+  #diagram .fx-eq .katex { font-size: 1.22em; white-space: nowrap; }
+  .fx-eq .k { font-size: 12px; color: var(--muted); margin-right: 4px; }
+  #diagram .fx-eq.tight .katex { font-size: 1.12em; }
+  .nowrap { white-space: nowrap; }
+  .fx-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 10px 2px 0; min-height: 72px; }
+  .fx-names { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .fx-names code {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink);
+    background: var(--card); border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 6px;
+  }
+
+  /* the floor: the library's own lower modules, then what it builds on */
+  .fx-floor { margin-top: 30px; display: grid; gap: 12px; }
+  .fx-slab {
+    display: grid; grid-template-columns: 170px 230px 1fr; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .fx-slab .lib { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--cut-ink); }
+  .fx-slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .fx-slab .list { font-size: 12.5px; color: var(--ink); line-height: 1.6; }
+  .fx-slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .fx-deps { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 12px; }
+  .fx-dep {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px; background: #fff; border: 1.5px dashed #cbd5e1;
+  }
+  .fx-dep .lib { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .fx-dep .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .fx-dep code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+  /* connector labels hold maths, so they use the sans face, not the chip's mono */
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">functax — one expansion, five operations</div>
+  <div class="subtitle">A field is a function, written as one basis expansion. Each module does one thing to it, and applying any plan, rule or transform is pure JAX, so jit, vmap and grad go through.</div>
+
+  <div class="lane compute fx-obj" id="obj">
+    <div class="lane-head"><span class="verb">one expansion</span><span class="pkg">a field <span class="m">x</span> over the coordinates <span class="m">\mathbf{s} \in \Omega</span></span></div>
+    <div class="fx-expansion"><span class="m">\displaystyle x(\mathbf{s}) \approx \sum_{d=1}^{D_z} z_d \, \phi_d(\mathbf{s}; \boldsymbol{\theta})</span></div>
+    <div class="fx-terms">
+      <div class="fx-term">
+        <div class="lbl">the coefficients, and the basis functions with their parameters</div>
+        <div class="eq"><span class="m">\mathbf{z} \in \mathbb{R}^{D_z}, \quad \phi_d(\,\cdot\,; \boldsymbol{\theta})</span></div>
+      </div>
+      <div class="fx-term">
+        <div class="lbl">on <span class="m">N</span> points <span class="m">\mathbf{s}_n</span>, the basis matrix</div>
+        <div class="eq"><span class="m">\mathbf{x} = \boldsymbol{\Phi} \mathbf{z}, \quad \boldsymbol{\Phi} \in \mathbb{R}^{N \times D_z}, \quad [\boldsymbol{\Phi}]_{nd} = \phi_d(\mathbf{s}_n)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fx-ops">
+    <div class="lane cut fx-op" id="op-interp">
+      <div class="lane-head"><span class="verb">interpolate</span><span class="fx-mod">functax.interp</span></div>
+      <div class="fx-eq"><span class="k">read-out</span> <span class="m">\mathbf{y} = \mathbf{H} \mathbf{x}</span><br><span class="k">adjoint</span> <span class="m">\mathbf{H}^\top \mathbf{r}</span></div>
+      <div class="fx-desc">A plan reads <span class="m">x</span> at the targets and sends the residuals <span class="m">\mathbf{r}</span> back to the grid. Global schemes fit first: <span class="nowrap"><span class="m">\mathbf{H}\, \mathcal{S}(\mathbf{x})</span>.</span></div>
+      <div class="fx-names"><code>Plan</code><code>Linear</code><code>Cubic</code><code>BSpline</code><code>Conservative</code><code>RBF</code><code>Kriging</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-diff">
+      <div class="lane-head"><span class="verb">differentiate</span><span class="fx-mod">functax.diffops</span></div>
+      <div class="fx-eq"><span class="m">\nabla x, \quad \nabla \cdot \mathbf{u}, \quad \nabla^2 x</span><br><span class="k">on the sphere</span> <span class="m">\nabla_S x, \quad \Delta_S x</span></div>
+      <div class="fx-desc">By autodiff of <span class="m">x</span> at one point; batch with vmap. Derivatives on grids belong to gridax, finitevolX and spectraldiffx.</div>
+      <div class="fx-names"><code>gradient</code><code>divergence</code><code>laplacian</code><code>surface_grad</code><code>laplace_beltrami</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-quad">
+      <div class="lane-head"><span class="verb">integrate</span><span class="fx-mod">functax.quad</span></div>
+      <div class="fx-eq"><span class="m">\int_\Omega x(\mathbf{s}) \, d\mathbf{s} \approx \sum_n w_n \, x(\mathbf{s}_n)</span></div>
+      <div class="fx-desc">A rule is data: the nodes <span class="m">\mathbf{s}_n</span> and the weights <span class="m">w_n</span>. integrix does the summing, scanning and adapting.</div>
+      <div class="fx-names"><code>Rule</code><code>gauss_legendre</code><code>clenshaw_curtis</code><code>SphereRule</code><code>cell_area</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-project">
+      <div class="lane-head"><span class="verb">project</span><span class="fx-mod">functax.project</span></div>
+      <div class="fx-eq tight"><span class="m">\hat{\mathbf{z}} = (\boldsymbol{\Phi}^\top \boldsymbol{\Phi} + \alpha \mathbf{I})^{-1} \boldsymbol{\Phi}^\top \mathbf{y}</span><br><span class="k">minimises</span> <span class="m">\lVert \boldsymbol{\Phi} \mathbf{z} - \mathbf{y} \rVert^2 + \alpha \lVert \mathbf{z} \rVert^2</span></div>
+      <div class="fx-desc">From data to coefficients: ridge least squares, Galerkin with a rule's weights, or a variational fit with a roughness <span class="nowrap"><span class="m">\lVert \mathbf{L} \mathbf{x} \rVert^2</span>.</span></div>
+      <div class="fx-names"><code>least_squares</code><code>galerkin</code><code>Variational</code><code>fill_gaps</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-transform">
+      <div class="lane-head"><span class="verb">transform</span><span class="fx-mod">functax.transform</span></div>
+      <div class="fx-eq"><span class="k">synthesis</span> <span class="m">\mathbf{x} = \boldsymbol{\Phi} \mathbf{z}</span><br><span class="k">analysis</span> <span class="m">\mathbf{z} = \boldsymbol{\Phi}^\top \mathbf{W} \mathbf{x}</span></div>
+      <div class="fx-desc">Between values on a grid and coefficients; the analysis shown is the spherical-harmonic one, by quadrature.</div>
+      <div class="fx-names"><code>SphericalHarmonicTransform</code><code>SphericalWaveletTransform</code><code>nonuniform_rfft</code><code>ChebyshevTransform1D</code></div>
+    </div>
+  </div>
+
+  <div class="fx-floor">
+    <div class="fx-slab">
+      <div class="lib">functax.basis</div>
+      <div class="what">the basis functions <span class="m">\phi_d(\mathbf{s}; \boldsymbol{\theta})</span></div>
+      <div class="list"><code>sphere</code> harmonics, needlets · <code>slepian</code> caps and regions · <code>fourier</code> · <code>local</code> RBF, Wendland, Gabor, wavelets · <code>eigen</code> EOFs, Laplacian eigenpairs · <code>polynomial</code> · <code>vector</code> · <code>features</code></div>
+    </div>
+    <div class="fx-slab">
+      <div class="lib">functax.geometry</div>
+      <div class="what">where <span class="m">\mathbf{s}</span> lives, CRS-free</div>
+      <div class="list"><code>Axis</code> · <code>AffineGrid</code> · <code>RectilinearGrid</code> · <code>CurvilinearGrid</code> · <code>Points</code> · sphere grids (<code>fibonacci_sphere</code>, <code>healpix_grid</code>, <code>icosphere</code>) · frames (<code>lonlat_to_unit</code>, <code>enu_basis</code>)</div>
+    </div>
+    <div class="fx-deps">
+      <div class="fx-dep">
+        <div class="lib">numpy</div>
+        <div class="what">The base install: <code>geometry.affine</code>'s raster kernels, so NumPy-only libraries can use them.</div>
+      </div>
+      <div class="fx-dep">
+        <div class="lib">functax[jax]</div>
+        <div class="what">JAX, Equinox, lineax, einx and jaxtyping, for every other module. A solver comes in as a lineax operator.</div>
+      </div>
+      <div class="fx-dep">
+        <div class="lib">functax[scipy]</div>
+        <div class="what">k-d trees and Delaunay triangulations for the host-side fits of the scattered-data schemes.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  const AMBER = "#cf9418", BLUE = "#3f6fb5";
+  const down = (id, shift, label) =>
+    wire("obj", id, { from: "bottom", to: "top", fromShift: shift, label, color: AMBER, at: 0.55, bend: 60 });
+
+  typeset(document);
+  document.fonts.ready.then(() => {
+    down("op-interp", -330, "<span class='m'>x</span> on a geometry");
+    down("op-diff", -165, "<span class='m'>\\mathbf{s} \\mapsto x(\\mathbf{s})</span>");
+    down("op-quad", 0, "<span class='m'>x(\\mathbf{s}_n)</span>");
+    wire("op-project", "obj", { from: "top", to: "bottom", toShift: 165, label: "fits <span class='m'>\\hat{\\mathbf{z}}</span> from <span class='m'>\\mathbf{y}</span>", color: BLUE, at: 0.45, bend: 60 });
+    down("op-transform", 330, "<span class='m'>x(\\mathbf{s}_n) \\leftrightarrow \\mathbf{z}</span>");
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>

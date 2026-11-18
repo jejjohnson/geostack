@@ -30,7 +30,7 @@ Use these sections, in this order. Sections marked optional appear only when the
 |---|---|---|
 | 1 | Header (no heading) | logo, tagline, badges, link row, then a `---` rule |
 | 2 | Opening (no heading) | the problem, the central equation, a short sketch, the "composed, not coded" paragraph |
-| 3 | Overview figure | the overview schematic of §10, embedded from geostack, with alt text that says what it shows |
+| 3 | Overview figure | the overview schematic of §10 (a flow, or the operations figure for a toolbox library), embedded from geostack, with alt text that says what it shows |
 | 4 | `## 🌟 Highlights` | five to seven bullets |
 | 5 | `## 📐 <the core idea>` | one table and at most three display equations |
 | 6 | `## 📥 Install` | the install command, the extras, the Python version |
@@ -38,6 +38,7 @@ Use these sections, in this order. Sections marked optional appear only when the
 | 8 | A second sketch (optional) | only when it shows a seam the quickstart does not (vardax's "Swap the method, keep the pipeline") |
 | 9 | `## 🔬 What else is in the box` | the role-ladder figure of §10, then the module table |
 | 10 | `## 📓 Tutorials` (optional) | one row per notebook or group of notebooks |
+| 10a | `## 🖼️ Gallery` (optional) | two to four specimen plots of what the library computes, each under one sentence naming the call that drew it |
 | 11 | `## 📖 Documentation` | one bullet per docs entry point |
 | 12 | `## 🧩 Ecosystem` | the dependency figure of §10, then the owner table and the dependency direction |
 | 13 | `## 🌳 Repository layout` | a short plain-text tree |
@@ -140,7 +141,7 @@ Every library README carries three figures, drawn once in geostack and embedded 
 
 | Figure | Shows | geostack folder | Made by | README section |
 |---|---|---|---|---|
-| Overview | what you supply, the one idea, what the library does with it, what comes out, and the libraries underneath | `docs/images/libraries/<pkg>_overview/` | `<pkg>_overview.html` (with `_base.css` and `_connect.js`), rendered to a PNG by `render.py` | under the opening (§1, row 3) |
+| Overview | what you supply, the one idea, what the library does with it, what comes out, and the libraries underneath; or, for a toolbox library, the one object and the operations on it | `docs/images/libraries/<pkg>_overview/` | `<pkg>_overview.html` (with `_base.css` and `_connect.js`), rendered to a PNG by `render.py` | under the opening (§1, row 3) |
 | Role ladder | the public names on the rungs of the GeoStack role ladder | `docs/images/libraries/<pkg>_roles/` | `make_svgs.py`, light and dark SVGs | What else is in the box |
 | Dependencies | who imports the library, which of its modules each uses, and what it builds on | `docs/images/libraries/<pkg>_ecosystem/` | `make_svgs.py`, light and dark SVGs | Ecosystem |
 
@@ -154,6 +155,10 @@ A detail figure for one module (argminax's `argminax_blr/`) follows the overview
 4. what comes out, with the result the reader will use most drawn solid;
 
 and one slab per upstream library the package extends, saying what it takes from it. The title says the idea in a few words ("argminax: five questions, one minimum").
+
+**A toolbox library gets the operations figure instead.** When the library is one object with several operations, each taking different inputs and giving different outputs, supply and out lanes would invent a pipeline it does not have. Draw the object at the top with its equation, one card per operation below it (the verb, its equation, its module, its public names), and the library's lower modules as slabs underneath; it still lives in `<pkg>_overview/`. functax is the example (one expansion; interpolate, differentiate, integrate, project, transform). The `library-docs-figures` skill has its layout under "Operations".
+
+**The gallery** holds specimens, not schematics: plots of what the library computes on toy data, drawn by the library's own `docs/assets/readme/figures.py` and embedded by relative path. Use it when a picture of the output proves something the text only claims (functax: Slepian functions leaking out of their cap past the Shannon number). The `library-docs-figures` skill has the rules under "Specimen".
 
 **The role ladder** takes its rungs from the `role-ladder` skill (`plugins/geostack/skills/role-ladder/` here):
 
@@ -169,6 +174,8 @@ and one slab per upstream library the package extends, saying what it takes from
 - A package that imports it only through an extra is drawn dashed, with the extra named under it; an edge between two dependents is a grey arrow.
 - A strip underneath lists what the library itself builds on.
 - The edges come from geostack's `docs/api/dependency_graph.md`. When a package's `main` and the graph disagree, draw `main` and say so in the PR.
+
+**Maths on them.** The overview's equations are typeset with KaTeX, as on every HTML figure, so they read as the README's maths and not as code; the SVGs write maths in Unicode. The `library-docs-figures` skill (§3) has the rule and `functax_overview/` is the example.
 
 **Making them.** The scripts use cyclopts and loguru and run with `uv run --no-project --with …` as their docstrings say. Render every figure in Chromium before committing, both themes for the SVGs: cairosvg mis-spaces bold `tspan` runs, so its previews are not a check. The overview's PNG needs Chromium anyway; where it cannot find `libgbm.so.1`, take it from conda-forge with `pixi exec -s libgbm`.
 
