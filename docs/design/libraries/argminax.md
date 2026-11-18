@@ -91,6 +91,14 @@ Five modules: the solvers optimistix lacks, the curvature at the minimum, the re
 | `argminax.adjoint` | adjoints of a minimiser stopped early: k-step and one-step. At a converged minimum optimistix's own `ImplicitAdjoint` already does the job, so argminax adds none. | vardax `KStepAdjoint`, `OneStepAdjoint`, `to_optimistix_adjoint` |
 | `argminax.blr` | the Bayesian learning rule as optax transforms (diagonal, full-rank and low-rank Gaussians, IVON, Newton) and the Laplace posterior of their state | optax\_bayes, retired after argminax 0.0.7 ([argminax#58](https://github.com/jejjohnson/argminax/issues/58)) |
 
+```{figure} ../../images/libraries/argminax_blr/argminax_blr.png
+:alt: argminax.blr: a plain optax loop passes the gradient of the cost to a Bayesian-learning-rule transform for the diagonal, low-rank or full-rank family; the optimiser state holds the precision and the natural mean, anchored by the prior; blr_posterior reads the Gaussian out as a Laplace for sampling
+:width: 100%
+:label: fig-argminax-blr
+
+`argminax.blr`: train with optax, read off a posterior. The source is `argminax_blr.html` in the same folder; the argminax docs embed this PNG.
+```
+
 ### What argminax owns, and what it hands off
 
 The test for every name: does it find a minimum, or say something about the curvature at one? Then argminax owns it.
