@@ -1,0 +1,237 @@
+{
+ "config": {
+  "seed": 0,
+  "scene": {
+   "pixels": 96,
+   "pixel_size_m": 60.0
+  },
+  "surface": {
+   "dark_albedo": 0.12,
+   "bright_albedo": 0.4,
+   "boundary_x_m": 1800.0,
+   "texture": 0.1,
+   "texture_scale_px": 3.0
+  },
+  "plume": {
+   "emission_rate_kg_s": 2.0,
+   "wind_speed_m_s": 4.0,
+   "direction_deg": 18.0,
+   "source_m": [
+    900.0,
+    2400.0
+   ],
+   "reference_width_m": 150.0,
+   "reference_distance_m": 1000.0,
+   "width_exponent": 0.9
+  },
+  "sensor": {
+   "band_start_nm": 2295.0,
+   "band_stop_nm": 2360.0,
+   "band_step_nm": 7.4,
+   "band_fwhm_nm": 8.5,
+   "snr": 400.0,
+   "noise_floor": 1e-06,
+   "solar_zenith_deg": 35.0,
+   "view_zenith_deg": 10.0
+  },
+  "atmosphere": {
+   "top_km": 20.0
+  },
+  "spectroscopy": {
+   "table_seed": 0,
+   "line_strength_scale": 5.0
+  },
+  "retrieval": {
+   "mask_sigma": 3.0,
+   "mask_smoothing_px": 2.0,
+   "mask_dilation_px": 3,
+   "mask_iterations": 3,
+   "saturation_iterations": 4,
+   "compare_above_mol_m2": 0.02,
+   "strong_above_mol_m2": 0.1,
+   "reference_albedo": 0.25,
+   "first_guess_albedo": 0.25,
+   "max_steps": 20,
+   "batch_size": 64
+  }
+ },
+ "bands_nm": [
+  2295.0,
+  2302.0,
+  2310.0,
+  2317.0,
+  2325.0,
+  2332.0,
+  2339.0,
+  2347.0,
+  2354.0
+ ],
+ "unit_absorption_m2_mol": [
+  -0.0237,
+  -0.2105,
+  -0.2212,
+  -0.2308,
+  -0.2672,
+  -0.2025,
+  -0.1377,
+  -0.1585,
+  -0.0438
+ ],
+ "emulator_error": [
+  {
+   "enhancement_mol_m2": 0.02,
+   "error_over_noise": 0.02
+  },
+  {
+   "enhancement_mol_m2": 0.05,
+   "error_over_noise": 0.14
+  },
+  {
+   "enhancement_mol_m2": 0.1,
+   "error_over_noise": 0.56
+  },
+  {
+   "enhancement_mol_m2": 0.2,
+   "error_over_noise": 2.12
+  },
+  {
+   "enhancement_mol_m2": 0.4,
+   "error_over_noise": 7.77
+  }
+ ],
+ "referee": {
+  "seconds": 75.2,
+  "reduced_chi_squared": 1.001,
+  "std_mol_m2": 0.0105,
+  "std_ppm_m": 248,
+  "truth_within_two_std": 0.954
+ },
+ "plume_pixels": {
+  "dark": 85,
+  "bright": 686,
+  "weak": 746,
+  "strong": 25
+ },
+ "against_referee": {
+  "matched_filter": {
+   "dark": 0.366,
+   "bright": 1.077,
+   "weak": 0.921,
+   "strong": 0.361,
+   "rms_mol_m2": 0.0251
+  },
+  "masked_background": {
+   "dark": 0.395,
+   "bright": 1.349,
+   "weak": 1.141,
+   "strong": 0.388,
+   "rms_mol_m2": 0.0263
+  },
+  "with_sensitivity": {
+   "dark": 0.963,
+   "bright": 0.976,
+   "weak": 0.979,
+   "strong": 0.957,
+   "rms_mol_m2": 0.0019
+  },
+  "with_saturation": {
+   "dark": 0.992,
+   "bright": 0.983,
+   "weak": 0.986,
+   "strong": 0.99,
+   "rms_mol_m2": 0.0009
+  }
+ },
+ "against_truth": {
+  "matched_filter": {
+   "dark": 0.372,
+   "bright": 1.078,
+   "weak": 0.905,
+   "strong": 0.369,
+   "rms_mol_m2": 0.0275
+  },
+  "masked_background": {
+   "dark": 0.401,
+   "bright": 1.376,
+   "weak": 1.138,
+   "strong": 0.396,
+   "rms_mol_m2": 0.0291
+  },
+  "with_sensitivity": {
+   "dark": 0.978,
+   "bright": 0.995,
+   "weak": 0.992,
+   "strong": 0.976,
+   "rms_mol_m2": 0.0103
+  },
+  "with_saturation": {
+   "dark": 1.006,
+   "bright": 1.001,
+   "weak": 0.999,
+   "strong": 1.01,
+   "rms_mol_m2": 0.0104
+  },
+  "referee": {
+   "dark": 1.015,
+   "bright": 1.02,
+   "weak": 1.013,
+   "strong": 1.021,
+   "rms_mol_m2": 0.0105
+  }
+ },
+ "mass_ratio": {
+  "matched_filter": 0.862,
+  "masked_background": 1.11,
+  "with_sensitivity": 0.989,
+  "with_saturation": 0.999,
+  "referee": 1.015
+ },
+ "sensitivity": {
+  "dark_median": 0.389,
+  "bright_median": 1.372,
+  "strongest_pixel_saturation": 0.947
+ },
+ "noise_mol_m2": {
+  "matched_filter": 0.011,
+  "with_saturation_dark": 0.0106,
+  "with_saturation_bright": 0.0105,
+  "referee_dark": 0.0106,
+  "referee_bright": 0.0105
+ },
+ "offset_mol_m2": {
+  "matched_filter": {
+   "dark": -0.0004,
+   "bright": -0.0077
+  },
+  "masked_background": {
+   "dark": 0.0002,
+   "bright": -0.0004
+  },
+  "with_sensitivity": {
+   "dark": 0.0005,
+   "bright": -0.0003
+  },
+  "with_saturation": {
+   "dark": 0.0005,
+   "bright": -0.0003
+  },
+  "referee": {
+   "dark": -0.0001,
+   "bright": 0.0002
+  }
+ },
+ "background_mask_pixels": 2262,
+ "seconds": {
+  "matched_filter": 0.0019,
+  "masked_background": 0.34,
+  "with_saturation": 0.65,
+  "referee": 75.2
+ },
+ "scene": {
+  "truth_max_mol_m2": 0.398,
+  "truth_max_ppm_m": 9414,
+  "plume_mass_kg": 2557,
+  "mol_m2_per_ppm_m": 4.2314570746280636e-05
+ },
+ "lines": 591
+}

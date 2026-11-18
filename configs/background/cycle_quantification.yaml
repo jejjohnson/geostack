@@ -1,0 +1,37 @@
+# Settings of notebooks/background/cycle_quantification.py, example 2 of the modeling
+# cycle pages (docs/design/pages/cycle-quantification.html). Recorded in results.json.
+seed: 0
+# example 1's output: the column map this example starts from
+input: docs/images/background_cycle_retrieval/enhancement.npz
+scene:
+  pixel_size_m: 60.0
+  origin_utm_m: [500000.0, 4000000.0]  # south-west corner
+  crs: EPSG:32629
+met:                       # what a reanalysis reports for the overpass
+  wind_speed_m_s: 3.5
+  wind_speed_std_m_s: 1.0
+  direction_deg: 0.0       # the truth is 18°
+catalogue:
+  source_m: [900.0, 2400.0]
+mass_enhancement:
+  mask_sigma: [2.0, 3.0, 4.0]
+  min_area_px: 20
+  length_method: max_axis
+plume:
+  reference_distance_m: 1000.0
+prior:
+  mean:
+    log_line_density: -1.2       # log of 0.3 kg m⁻¹
+    log_reference_width: 5.0     # log of 150 m
+    width_exponent: 0.9
+    background: 0.0
+  std:
+    log_line_density: 2.0
+    log_reference_width: 1.0
+    width_exponent: 0.3
+    background: 1.0e-3
+    direction_deg: 30.0
+    location_m: 60.0
+referee:                   # NUTS on the same posterior
+  warmup: 400
+  samples: 800

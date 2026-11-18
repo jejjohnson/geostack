@@ -1,0 +1,44 @@
+# Settings of notebooks/background/cycle_persistency.py, example 3 of the modeling
+# cycle pages (docs/design/pages/cycle-persistency.html). Recorded in results.json.
+seed: 0
+# example 2's output: the uncertainty of one event's emission rate
+input: docs/images/background_cycle_quantification/results.json
+window_days: 365.0
+truth:                     # the facility; the fits have to recover it
+  intensity:               # λ(t) = λ₀ + A sin(2πt − φ), events per day
+    lambda_0: 6.0
+    amplitude: 4.5
+    phase_hours: 14.0      # φ; with this formula the peak is 6 h later, at 20:00
+  mark:                    # Q ~ LogNormal(μ, σ²), kg h⁻¹
+    median_kg_h: 1500.0
+    sigma: 1.1
+  event_duration_h: 3.0    # how long an event stays visible
+instruments:               # detection curves P_d(Q) = 1 / (1 + (Q₅₀ / Q)^k)
+  hyperspectral:
+    q50_kg_h: 500.0
+    q50_log_std: 0.2
+    slope: 3.0
+    revisit_days: 3.0
+    clear_fraction: 0.7
+    local_hours: [7.0, 17.0]   # overpass time drawn in this range
+  multispectral:
+    q50_kg_h: 4000.0
+    q50_log_std: 0.2
+    slope: 3.0
+    revisit_days: 4.0
+    clear_fraction: 0.6
+    local_hours: [10.2, 10.8]
+evidence_draws: 32         # draws of Q carried by each detection
+support_kg_h: [10.0, 1.0e6]
+quadrature_nodes: 201
+sampler:
+  warmup: 400
+  samples: 400
+predictive_draws: 100
+metrics:
+  maintenance_window_h: 4.0
+  morning_start_h: 8.0
+  night_start_h: 20.0
+  wait_from_h: 18.0
+  nodes_per_day: 96        # quadrature of λ over the year
+  noon_h: 12.0             # splits the overpasses into morning and afternoon

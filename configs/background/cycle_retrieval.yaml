@@ -1,0 +1,46 @@
+# Settings of notebooks/background/cycle_retrieval.py, example 1 of the modeling
+# cycle pages (docs/design/pages/cycle-retrieval.html). Recorded in results.json.
+seed: 0
+scene:
+  pixels: 96               # rows and columns
+  pixel_size_m: 60.0
+surface:
+  dark_albedo: 0.12        # the facility's side of the scene
+  bright_albedo: 0.40      # the desert downwind
+  boundary_x_m: 1800.0
+  texture: 0.10            # relative standard deviation of the albedo texture
+  texture_scale_px: 3.0
+plume:                     # the truth; example 2 has to recover it
+  emission_rate_kg_s: 2.0
+  wind_speed_m_s: 4.0
+  direction_deg: 18.0
+  source_m: [900.0, 2400.0]
+  reference_width_m: 150.0
+  reference_distance_m: 1000.0
+  width_exponent: 0.9
+sensor:
+  band_start_nm: 2295.0
+  band_stop_nm: 2360.0
+  band_step_nm: 7.4
+  band_fwhm_nm: 8.5
+  snr: 400.0
+  noise_floor: 1.0e-6
+  solar_zenith_deg: 35.0
+  view_zenith_deg: 10.0
+atmosphere:
+  top_km: 20.0
+spectroscopy:
+  table_seed: 0
+  line_strength_scale: 5.0 # the synthetic lines are weak; see the notebook's first cell
+retrieval:
+  mask_sigma: 3.0          # plume mask for the background, in robust standard deviations
+  mask_smoothing_px: 2.0
+  mask_dilation_px: 3
+  mask_iterations: 3
+  saturation_iterations: 4
+  compare_above_mol_m2: 0.02   # pixels the models are compared on
+  strong_above_mol_m2: 0.1
+  reference_albedo: 0.25   # surface the unit absorption spectrum is taken at
+  first_guess_albedo: 0.25
+  max_steps: 20
+  batch_size: 64
