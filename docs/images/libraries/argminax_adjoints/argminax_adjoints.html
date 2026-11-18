@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>argminax — three ways to differentiate a solve</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  #diagram { width: 1560px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 28px; align-items: stretch; }
+  .lane { display: flex; flex-direction: column; }
+  .lane .node + .node { margin-top: 12px; }
+  .chain {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 12px;
+    padding: 18px 16px 30px; margin-top: 12px; position: relative;
+  }
+  .dot { width: 16px; height: 16px; border-radius: 50%; position: relative; flex: none; }
+  .dot.live { background: var(--accent); }
+  .dot.dead { background: transparent; border: 2px solid #b6bfcc; width: 12px; height: 12px; }
+  .dot.end { box-shadow: 0 0 0 4px var(--card), 0 0 0 6px var(--accent); }
+  .dot .lbl {
+    position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap;
+  }
+  .dot .lbl sup, .eq sup { font-size: 0.75em; }
+  .seg { flex: 1; height: 2.5px; margin: 0 4px; background: var(--accent); }
+  .seg.dead { background: #cbd5e1; height: 2px; }
+  .gap { font-family: var(--mono); color: var(--muted); font-size: 13px; padding: 0 2px; }
+  .sg {
+    font-family: var(--mono); font-size: 11px; font-weight: 700; color: #b45309;
+    border: 1.5px solid #f59e0b; border-radius: 6px; padding: 1px 5px; background: #fffbeb;
+    margin: 0 4px;
+  }
+  .solvebox {
+    font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--ink-accent);
+    border: 1.5px solid var(--accent); border-radius: 8px; padding: 4px 8px; margin-left: 8px;
+    white-space: nowrap;
+  }
+  .eq {
+    font-family: var(--mono); font-size: 13px; color: var(--ink-accent);
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: 9px 12px; margin-top: 12px;
+  }
+  .facts { margin-top: 12px; }
+  .fact { display: grid; grid-template-columns: 92px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.45; margin-top: 6px; }
+  .fact .k { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.06em; padding-top: 2px; }
+  .fact .v { color: var(--ink); }
+  .fact code { font-family: var(--mono); font-size: 12px; }
+  .base-row { display: grid; grid-template-columns: 1fr; margin-top: 30px; }
+  .slab {
+    display: flex; align-items: center; gap: 14px; border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+  .key { display: flex; gap: 26px; margin-top: 14px; font-size: 12.5px; color: var(--muted); align-items: center; }
+  .key span { display: inline-flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">argminax — three ways to differentiate a solve</div>
+  <div class="subtitle">The same solve returns the same x̂ each way. What changes is which iterations the gradient flows through, so what it costs and when it is right.</div>
+
+  <div class="grid">
+    <!-- unroll -->
+    <div class="lane find">
+      <div class="lane-head"><span class="verb">unroll</span><span class="pkg">through every iteration</span></div>
+      <div class="chain">
+        <div class="dot live"><span class="lbl">x<sup>(0)</sup></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl">x<sup>(1)</sup></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl">x<sup>(2)</sup></span></div><div class="seg"></div>
+        <span class="gap">…</span><div class="seg"></div>
+        <div class="dot live"><span class="lbl">x<sup>(T−1)</sup></span></div><div class="seg"></div>
+        <div class="dot live end"><span class="lbl">x̂</span></div>
+      </div>
+      <div class="eq">the chain rule through every x<sup>(t+1)</sup> = Φ(x<sup>(t)</sup>; θ)</div>
+      <div class="facts">
+        <div class="fact"><div class="k">adjoint</div><div class="v"><code>optx.RecursiveCheckpointAdjoint</code></div></div>
+        <div class="fact"><div class="k">costs</div><div class="v">memory or recomputation that grows with the number of iterations T</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">you want the derivative of the iterations as run; it is tied to the solver</div></div>
+      </div>
+    </div>
+
+    <!-- implicit -->
+    <div class="lane compute">
+      <div class="lane-head"><span class="verb">implicit</span><span class="pkg">at the minimum only</span></div>
+      <div class="chain">
+        <div class="dot dead"><span class="lbl">x<sup>(0)</sup></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl">x<sup>(1)</sup></span></div><div class="seg dead"></div>
+        <span class="gap">…</span><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl">x<sup>(T−1)</sup></span></div><div class="seg dead"></div>
+        <div class="dot live end"><span class="lbl">x̂</span></div>
+        <span class="solvebox">one solve</span>
+      </div>
+      <div class="eq">Σ<sub>x∣y</sub>⁻¹ ∂<sub>θ</sub>x̂ = −∇²<sub>xθ</sub>𝒥, at x̂</div>
+      <div class="facts">
+        <div class="fact"><div class="k">adjoint</div><div class="v"><code>optx.ImplicitAdjoint</code>, optimistix's default</div></div>
+        <div class="fact"><div class="k">costs</div><div class="v">one linear solve with the Hessian per direction, whatever T is</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">the solve converged to a strict minimum: check <code>solution.result</code></div></div>
+      </div>
+    </div>
+
+    <!-- truncated -->
+    <div class="lane cut">
+      <div class="lane-head"><span class="verb">truncated</span><span class="pkg">through the last k updates</span></div>
+      <div class="chain">
+        <div class="dot dead"><span class="lbl">x<sup>(0)</sup></span></div><div class="seg dead"></div>
+        <span class="gap">…</span><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl">x<sup>(T−k)</sup></span></div>
+        <span class="sg">sg</span>
+        <div class="seg"></div>
+        <span class="gap">…</span><div class="seg"></div>
+        <div class="dot live"><span class="lbl">x<sup>(T−1)</sup></span></div><div class="seg"></div>
+        <div class="dot live end"><span class="lbl">x̂</span></div>
+      </div>
+      <div class="eq">x̂ = Φ<sup>k</sup>(x̄; θ),  x̄ = sg(x<sup>(T−k)</sup>)</div>
+      <div class="facts">
+        <div class="fact"><div class="k">adjoint</div><div class="v"><code>KStep(k)</code>, and <code>OneStep()</code> for k = 1 (Bolte et al., 2023)</div></div>
+        <div class="fact"><div class="k">costs</div><div class="v">O(k) memory whatever T is; <code>OneStep</code> is O(1)</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">the solver is stopped early (learned 4D-Var); exact at the fixed point of a Newton-like update, and a larger k means less bias</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="key">
+    <span><span class="dot live" style="display:inline-block;background:#64748b"></span> the gradient flows through it</span>
+    <span><span class="dot dead" style="display:inline-block"></span> computed, not differentiated</span>
+    <span><span class="sg">sg</span> stop-gradient</span>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">optimistix</div>
+      <div class="what">All three are optimistix adjoints, passed as <code>adjoint=</code> to <code>optx.least_squares</code> or <code>optx.minimise</code>, so <code>jax.grad</code> and <code>jax.jacobian</code> work through the solve unchanged. <code>to_optimistix_adjoint</code> maps pipekit-cycle's adjoint specs onto them.</div>
+    </div>
+  </div>
+</div>
+<script src="_connect.js"></script>
+<script>ready();</script>
+</body>
+</html>

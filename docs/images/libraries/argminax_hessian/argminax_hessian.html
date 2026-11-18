@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>argminax — one Hessian, every answer</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  #diagram { width: 1560px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 430px 360px 430px;
+    column-gap: 120px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 16px; }
+  .node .f {
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink-accent);
+    margin-top: 6px; line-height: 1.55;
+  }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .hub-eq {
+    font-family: var(--mono); font-size: 19px; font-weight: 700; color: var(--ink-accent);
+    background: var(--card); border: 2px solid var(--accent); border-radius: 12px;
+    padding: 16px 14px; text-align: center; margin-top: 12px;
+  }
+  .hub-note { font-size: 12.5px; color: var(--muted); margin: 12px 2px 0; line-height: 1.5; }
+  .base-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px; border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">argminax — one Hessian, every answer</div>
+  <div class="subtitle">At the minimum every module reads the same operator: it solves with it, takes its log-determinant, or samples from it.</div>
+
+  <div class="grid">
+    <!-- left: getting there, and the Gaussian itself -->
+    <div class="lane find" id="lane-left">
+      <div class="lane-head"><span class="verb">build</span><span class="pkg">the Gaussian</span></div>
+      <div class="node" id="n-solve">
+        <div class="name">each Gauss–Newton step</div>
+        <div class="desc"><span class="mod">solve</span> — <code>GaussNewtonCG</code> solves with the same Gauss–Newton form at each iterate, by CG</div>
+        <div class="f">(J<sub>r</sub>ᵀ J<sub>r</sub> + β I) δ = −J<sub>r</sub>ᵀ r</div>
+      </div>
+      <div class="node" id="n-curv">
+        <div class="name">the posterior 𝒩(x̂, Σ<sub>x∣y</sub>)</div>
+        <div class="desc"><span class="mod">curvature</span> — a <code>Laplace</code>: <code>marginal_variance</code>, <code>.sample</code>, <code>push_forward</code></div>
+        <div class="f">x⁽ᵉ⁾ = x̂ + L⁻ᵀ v⁽ᵉ⁾,  Σ<sub>x∣y</sub>⁻¹ = L Lᵀ</div>
+      </div>
+      <div class="node" id="n-blr">
+        <div class="name">where training ends</div>
+        <div class="desc"><span class="mod">blr</span> — at the fixed point, with the exact curvature evaluated at the mean</div>
+        <div class="f">μ = x̂,  Λ = Σ<sub>x∣y</sub>⁻¹</div>
+      </div>
+    </div>
+
+    <!-- centre: the Hessian -->
+    <div class="lane compute" id="lane-hub">
+      <div class="lane-head"><span class="verb">one operator</span><span class="pkg">the Hessian at x̂</span></div>
+      <div class="hub-eq" id="hub">Σ<sub>x∣y</sub>⁻¹ = ∇²<sub>x</sub> 𝒥(x̂; y, θ)</div>
+      <div class="hub-note">D<sub>x</sub> × D<sub>x</sub> and positive definite, held as a gaussx operator. For the retrieval cost its Gauss–Newton form is Hᵀ Σ<sub>ε</sub>⁻¹ H + Σ<sub>x</sub>⁻¹, with H the Jacobian of h at x̂.</div>
+    </div>
+
+    <!-- right: what is read off it -->
+    <div class="lane cut" id="lane-right">
+      <div class="lane-head"><span class="verb">read</span><span class="pkg">what it says</span></div>
+      <div class="node" id="n-ak">
+        <div class="name">what the measurement decided</div>
+        <div class="desc"><span class="mod">diagnose</span> — <code>averaging_kernel</code>, <code>degrees_of_freedom</code></div>
+        <div class="f">A = I − Σ<sub>x∣y</sub> Σ<sub>x</sub>⁻¹,  d<sub>s</sub> = tr A</div>
+      </div>
+      <div class="node" id="n-ld">
+        <div class="name">information and evidence</div>
+        <div class="desc"><span class="mod">diagnose</span> — <code>information_content</code>, <code>evidence</code></div>
+        <div class="f">𝕀[x; y] = ½ log det(Σ<sub>x</sub> Σ<sub>x∣y</sub>⁻¹)<br>log p(y) ≈ −𝒥(x̂) − ½ log det Σ<sub>x∣y</sub>⁻¹ − …</div>
+      </div>
+      <div class="node" id="n-adj">
+        <div class="name">how x̂ moves</div>
+        <div class="desc"><span class="mod">implicit adjoint</span> — <code>jax.jacobian</code> through an optimistix solve</div>
+        <div class="f">G = ∂x̂/∂y = −Σ<sub>x∣y</sub> ∇²<sub>xy</sub>𝒥<br>∂x̂/∂θ = −Σ<sub>x∣y</sub> ∇²<sub>xθ</sub>𝒥</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">gaussx · lineax</div>
+      <div class="what">Every reading is a <code>solve</code>, a <code>logdet</code> or a Cholesky factor on the structured operator. Exact sampling factors it densely; <code>sample_by_perturbation</code> does not.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">argminax[matfree]</div>
+      <div class="what">For a state too large for an exact log-determinant, stochastic Lanczos quadrature, with a standard error.</div>
+    </div>
+  </div>
+</div>
+<script src="_connect.js"></script>
+<script>
+  const L = "#7b6bb5", R = "#3f6fb5";
+  wire("hub", "n-solve", { from: "left", to: "right", color: L, fromShift: -14, label: "<span class='t'>CG solve</span>" });
+  wire("hub", "n-curv", { from: "left", to: "right", color: L, label: "<span class='t'>Cholesky</span>" });
+  wire("hub", "n-blr", { from: "left", to: "right", color: L, fromShift: 14, label: "<span class='t'>fixed point</span>" });
+  wire("hub", "n-ak", { from: "right", to: "left", color: R, fromShift: -14, label: "<span class='t'>solve</span>" });
+  wire("hub", "n-ld", { from: "right", to: "left", color: R, label: "<span class='t'>log det</span>" });
+  wire("hub", "n-adj", { from: "right", to: "left", color: R, fromShift: 14, label: "<span class='t'>solve per direction</span>" });
+  ready();
+</script>
+</body>
+</html>
