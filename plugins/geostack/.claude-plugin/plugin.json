@@ -1,10 +1,10 @@
 {
   "name": "geostack",
-  "description": "The root of the GeoStack skill tree: the role ladder (structure, primitive, strategy, model, algorithm, step, recipe) that every library's skills are written in.",
+  "description": "The root of the GeoStack skill tree: the role ladder (structure, primitive, strategy, model, algorithm, step, recipe) that every library's skills are written in, and the standard for a library's documentation figures, drawn in geostack.",
   "author": {
     "name": "jejjohnson"
   },
   "repository": "https://github.com/jejjohnson/geostack",
   "license": "MIT",
-  "keywords": ["jax", "geostack", "role-ladder"]
+  "keywords": ["jax", "geostack", "role-ladder", "docs-figures"]
 }
