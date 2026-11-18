@@ -4,8 +4,12 @@
 <meta charset="utf-8">
 <title>argminax — three ways to differentiate a solve</title>
 <link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <style>
   #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .eq .katex { font-size: 1.15em; }
+  #diagram .dot .lbl .katex { font-size: 1em; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 28px; align-items: stretch; }
   .lane { display: flex; flex-direction: column; }
   .lane .node + .node { margin-top: 12px; }
@@ -20,7 +24,7 @@
   .dot.end { box-shadow: 0 0 0 4px var(--card), 0 0 0 6px var(--accent); }
   .dot .lbl {
     position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
-    font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap;
+    font-size: 11.5px; color: var(--muted); white-space: nowrap;
   }
   .dot .lbl sup, .eq sup { font-size: 0.75em; }
   .seg { flex: 1; height: 2.5px; margin: 0 4px; background: var(--accent); }
@@ -37,7 +41,7 @@
     white-space: nowrap;
   }
   .eq {
-    font-family: var(--mono); font-size: 13px; color: var(--ink-accent);
+    font-size: 13px; color: var(--ink-accent);
     background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
     padding: 9px 12px; margin-top: 12px;
   }
@@ -61,24 +65,24 @@
 <body>
 <div id="diagram">
   <div class="title">argminax — three ways to differentiate a solve</div>
-  <div class="subtitle">The same solve returns the same x̂ each way. What changes is which iterations the gradient flows through, so what it costs and when it is right.</div>
+  <div class="subtitle">The same solve returns the same <span class="m">\hat{\mathbf{x}}</span> each way. What changes is which iterations the gradient flows through, so what it costs and when it is right.</div>
 
   <div class="grid">
     <!-- unroll -->
     <div class="lane find">
       <div class="lane-head"><span class="verb">unroll</span><span class="pkg">through every iteration</span></div>
       <div class="chain">
-        <div class="dot live"><span class="lbl">x<sup>(0)</sup></span></div><div class="seg"></div>
-        <div class="dot live"><span class="lbl">x<sup>(1)</sup></span></div><div class="seg"></div>
-        <div class="dot live"><span class="lbl">x<sup>(2)</sup></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}^{(0)}</span></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}^{(1)}</span></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}^{(2)}</span></span></div><div class="seg"></div>
         <span class="gap">…</span><div class="seg"></div>
-        <div class="dot live"><span class="lbl">x<sup>(T−1)</sup></span></div><div class="seg"></div>
-        <div class="dot live end"><span class="lbl">x̂</span></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}^{(T-1)}</span></span></div><div class="seg"></div>
+        <div class="dot live end"><span class="lbl"><span class="m">\hat{\mathbf{x}}</span></span></div>
       </div>
-      <div class="eq">the chain rule through every x<sup>(t+1)</sup> = Φ(x<sup>(t)</sup>; θ)</div>
+      <div class="eq">the chain rule through every <span class="m">\mathbf{x}^{(t+1)} = \Phi(\mathbf{x}^{(t)}; \boldsymbol{\theta})</span></div>
       <div class="facts">
         <div class="fact"><div class="k">adjoint</div><div class="v"><code>optx.RecursiveCheckpointAdjoint</code></div></div>
-        <div class="fact"><div class="k">costs</div><div class="v">memory or recomputation that grows with the number of iterations T</div></div>
+        <div class="fact"><div class="k">costs</div><div class="v">memory or recomputation that grows with the number of iterations <span class="m">T</span></div></div>
         <div class="fact"><div class="k">right when</div><div class="v">you want the derivative of the iterations as run; it is tied to the solver</div></div>
       </div>
     </div>
@@ -87,39 +91,39 @@
     <div class="lane compute">
       <div class="lane-head"><span class="verb">implicit</span><span class="pkg">at the minimum only</span></div>
       <div class="chain">
-        <div class="dot dead"><span class="lbl">x<sup>(0)</sup></span></div><div class="seg dead"></div>
-        <div class="dot dead"><span class="lbl">x<sup>(1)</sup></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}^{(0)}</span></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}^{(1)}</span></span></div><div class="seg dead"></div>
         <span class="gap">…</span><div class="seg dead"></div>
-        <div class="dot dead"><span class="lbl">x<sup>(T−1)</sup></span></div><div class="seg dead"></div>
-        <div class="dot live end"><span class="lbl">x̂</span></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}^{(T-1)}</span></span></div><div class="seg dead"></div>
+        <div class="dot live end"><span class="lbl"><span class="m">\hat{\mathbf{x}}</span></span></div>
         <span class="solvebox">one solve</span>
       </div>
-      <div class="eq">Σ<sub>x∣y</sub>⁻¹ ∂<sub>θ</sub>x̂ = −∇²<sub>xθ</sub>𝒥, at x̂</div>
+      <div class="eq"><span class="m">\boldsymbol{\Sigma}_{x \mid y}^{-1} \, \partial_{\boldsymbol{\theta}} \hat{\mathbf{x}} = -\nabla^2_{\mathbf{x}\boldsymbol{\theta}} \mathcal{J}</span>, at <span class="m">\hat{\mathbf{x}}</span></div>
       <div class="facts">
         <div class="fact"><div class="k">adjoint</div><div class="v"><code>optx.ImplicitAdjoint</code>, optimistix's default</div></div>
-        <div class="fact"><div class="k">costs</div><div class="v">one linear solve with the Hessian per direction, whatever T is</div></div>
+        <div class="fact"><div class="k">costs</div><div class="v">one linear solve with the Hessian per direction, whatever <span class="m">T</span> is</div></div>
         <div class="fact"><div class="k">right when</div><div class="v">the solve converged to a strict minimum: check <code>solution.result</code></div></div>
       </div>
     </div>
 
     <!-- truncated -->
     <div class="lane cut">
-      <div class="lane-head"><span class="verb">truncated</span><span class="pkg">through the last k updates</span></div>
+      <div class="lane-head"><span class="verb">truncated</span><span class="pkg">through the last <span class="m">k</span> updates</span></div>
       <div class="chain">
-        <div class="dot dead"><span class="lbl">x<sup>(0)</sup></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}^{(0)}</span></span></div><div class="seg dead"></div>
         <span class="gap">…</span><div class="seg dead"></div>
-        <div class="dot dead"><span class="lbl">x<sup>(T−k)</sup></span></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}^{(T-k)}</span></span></div>
         <span class="sg">sg</span>
         <div class="seg"></div>
         <span class="gap">…</span><div class="seg"></div>
-        <div class="dot live"><span class="lbl">x<sup>(T−1)</sup></span></div><div class="seg"></div>
-        <div class="dot live end"><span class="lbl">x̂</span></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}^{(T-1)}</span></span></div><div class="seg"></div>
+        <div class="dot live end"><span class="lbl"><span class="m">\hat{\mathbf{x}}</span></span></div>
       </div>
-      <div class="eq">x̂ = Φ<sup>k</sup>(x̄; θ),  x̄ = sg(x<sup>(T−k)</sup>)</div>
+      <div class="eq"><span class="m">\hat{\mathbf{x}} = \Phi^k(\bar{\mathbf{x}}; \boldsymbol{\theta}), \quad \bar{\mathbf{x}} = \operatorname{sg}(\mathbf{x}^{(T-k)})</span></div>
       <div class="facts">
-        <div class="fact"><div class="k">adjoint</div><div class="v"><code>KStep(k)</code>, and <code>OneStep()</code> for k = 1 (Bolte et al., 2023)</div></div>
-        <div class="fact"><div class="k">costs</div><div class="v">O(k) memory whatever T is; <code>OneStep</code> is O(1)</div></div>
-        <div class="fact"><div class="k">right when</div><div class="v">the solver is stopped early (learned 4D-Var); exact at the fixed point of a Newton-like update, and a larger k means less bias</div></div>
+        <div class="fact"><div class="k">adjoint</div><div class="v"><code>KStep(k)</code>, and <code>OneStep()</code> for <span class="m">k = 1</span> (Bolte et al., 2023)</div></div>
+        <div class="fact"><div class="k">costs</div><div class="v"><span class="m">O(k)</span> memory whatever <span class="m">T</span> is; <code>OneStep</code> is <span class="m">O(1)</span></div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">the solver is stopped early (learned 4D-Var); exact at the fixed point of a Newton-like update, and a larger <span class="m">k</span> means less bias</div></div>
       </div>
     </div>
   </div>
@@ -137,7 +141,20 @@
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="_connect.js"></script>
-<script>ready();</script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
 </body>
 </html>
