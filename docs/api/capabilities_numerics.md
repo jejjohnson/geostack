@@ -419,7 +419,8 @@ Arakawa C-grid finite-volume operators.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `AB2Solver` | class | Adams-Bashforth 2nd-order solver (equinox Module). |
+| `AB2Solver` | class | Deprecated: use ``integrix.march.AB2Solver`` with ``integrix.march.run``. |
+| `AB3Solver` | class | Re-exported from `integrix`. |
 | `AbstractForcing` | class | Base class for forcing operators. |
 | `Advection1D` | class | 1-D advection operator. |
 | `Advection2D` | class | 2-D advection operator. |
@@ -455,13 +456,13 @@ Arakawa C-grid finite-volume operators.
 | `FieldBCSet` | class | Dispatch per-face boundary conditions across multiple fields. |
 | `ForcingProduct` | class | Modulated forcing: ``F = alpha * F_inner``. |
 | `ForcingSum` | class | Additive composition of forcings: ``F = F_1 + F_2 + ... + F_n``. |
-| `ForwardEulerDfx` | class | Forward Euler via the diffrax ``AbstractSolver`` interface. |
-| `IMEX_SSP2` | class | IMEX-SSP2(2,2,2) solver using diffrax MultiTerm. |
+| `ForwardEulerDfx` | class | Re-exported from `integrix`. |
+| `IMEX_SSP2` | class | Re-exported from `integrix`. |
 | `Interpolation1D` | class | 1-D averaging operators on an Arakawa C-grid. |
 | `Interpolation2D` | class | 2-D averaging operators on an Arakawa C-grid. |
 | `Interpolation3D` | class | 3-D averaging operators on an Arakawa C-grid. |
 | `KnownValueLifting` | class | Pre/post-processing wrapper for the lifting trick. |
-| `LeapfrogRAFSolver` | class | Leapfrog with Robert-Asselin filter (equinox Module). |
+| `LeapfrogRAFSolver` | class | Deprecated: use ``integrix.march.LeapfrogRAFSolver`` with ``integrix.march.run``. |
 | `LinearDrag2D` | class | Linear drag on a 2-D Arakawa C-grid. |
 | `LinearDrag3D` | class | Linear bottom drag on a 3-D Arakawa C-grid. |
 | `Mask1D` | class | Unified Arakawa C-grid mask for a 1-D Cartesian domain. |
@@ -479,9 +480,9 @@ Arakawa C-grid finite-volume operators.
 | `QGPotentialVorticity2D` | class | Quasi-geostrophic potential vorticity at T-points. |
 | `QuadraticDrag2D` | class | Quadratic bottom drag on a 2-D Arakawa C-grid. |
 | `QuadraticDrag3D` | class | Quadratic bottom drag on a 3-D Arakawa C-grid. |
-| `RK2Heun` | class | Heun's method (RK2) via Butcher tableau. |
-| `RK3SSP` | class | 3rd-order Strong-Stability-Preserving Runge-Kutta. |
-| `RK4Classic` | class | Classic 4th-order Runge-Kutta. |
+| `RK2Heun` | class | Re-exported from `integrix`. |
+| `RK3SSP` | class | Re-exported from `integrix`. |
+| `RK4Classic` | class | Re-exported from `integrix`. |
 | `RayleighDamping2D` | class | Rayleigh damping of a T-point field on a 2-D Arakawa C-grid. |
 | `RayleighDamping3D` | class | Rayleigh damping of a T-point field on a 3-D Arakawa C-grid. |
 | `Reconstruction1D` | class | 1-D face-value reconstruction. |
@@ -490,9 +491,10 @@ Arakawa C-grid finite-volume operators.
 | `Reflective1D` | class | Apply an even-symmetry reflective boundary on one face. |
 | `RegularNeumannHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
 | `Robin1D` | class | Robin (mixed) boundary condition: α·u + β·∂u/∂n = γ. |
-| `SSP_RK104` | class | 4th-order SSP Runge-Kutta with 10 stages (Ketcheson 2008). |
-| `SSP_RK2` | class | 2nd-order SSP Runge-Kutta (same as Heun). |
+| `SSP_RK104` | class | Re-exported from `integrix`. |
+| `SSP_RK2` | class | Re-exported from `integrix`. |
 | `SemiLagrangianSolver` | class | Semi-Lagrangian advection solver for diffrax. |
+| `SemiLagrangianTerm` | class | Velocity term for :class:`SemiLagrangianSolver` in ``diffeqsolve``. |
 | `Slip1D` | class | Slip boundary condition for tangential velocity at a solid wall. |
 | `SolveDomain` | class | Derived masks for the lifting trick. |
 | `SpectralHelmholtzSolver1D` | class | Re-exported from `spectraldiffx`. |
@@ -516,7 +518,7 @@ Arakawa C-grid finite-volume operators.
 | `SphericalMomentumAdvection3D` | class | Energy-conserving momentum advection on a 3-D spherical C-grid. |
 | `SphericalVorticity2D` | class | Vorticity and PV-flux operators on a 2-D spherical Arakawa C-grid. |
 | `SphericalVorticity3D` | class | 3-D spherical vorticity (vmap over z-levels). |
-| `SplitExplicitRKSolver` | class | Split-explicit barotropic/baroclinic solver. |
+| `SplitExplicitRKSolver` | class | Deprecated: use ``integrix.march.SplitExplicitRKSolver`` with ``integrix.march.run``. |
 | `Sponge1D` | class | Relax one ghost face toward a background value. |
 | `StaggeredDirichletHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
 | `StencilCapability1D` | class | Directional count of contiguous wet neighbours for each 1-D grid cell. |
@@ -526,10 +528,11 @@ Arakawa C-grid finite-volume operators.
 | `TimeVaryingForcing` | class | Bundle a time-agnostic forcing with time-dependent input fields. |
 | `Vorticity2D` | class | 2-D vorticity and PV-flux operators. |
 | `Vorticity3D` | class | 3-D vorticity operators (horizontal plane per z-level). |
+| `WindCurl2D` | class | Wind-stress curl forcing of the vorticity / QG potential vorticity. |
 | `WindStress2D` | class | Surface wind-stress forcing on a 2-D Arakawa C-grid. |
 | `WindStress3D` | class | Surface wind-stress forcing on a 3-D Arakawa C-grid. |
-| `ab2_step` | function | 2nd-order Adams-Bashforth. |
-| `ab3_step` | function | 3rd-order Adams-Bashforth. |
+| `ab2_step` | function | Re-exported from `integrix`. |
+| `ab3_step` | function | Re-exported from `integrix`. |
 | `arakawa_jacobian` | function | Arakawa (1966) discretization of J(f, g). |
 | `area_mean` | function | Area-weighted mean over physical interior T-cells. |
 | `area_sum` | function | Area-weighted sum over physical interior T-cells. |
@@ -563,6 +566,7 @@ Arakawa C-grid finite-volume operators.
 | `cartesian_volume_mean` | function | Cartesian volume-weighted mean. |
 | `cartesian_volume_sum` | function | Cartesian volume-weighted sum. |
 | `cartesian_volume_weights` | function | T-cell volumes on a Cartesian 3-D grid: ``dx · dy · dz``. |
+| `coast_ring` | function | Dry cells adjacent to at least one wet cell (the coast ring). |
 | `coriolis_fn` | function | Beta-plane Coriolis field. |
 | `coriolis_param` | function | Reference Coriolis parameter from latitude. |
 | `dct` | function | Re-exported from `spectraldiffx`. |
@@ -600,21 +604,22 @@ Arakawa C-grid finite-volume operators.
 | `dstn` | function | Re-exported from `spectraldiffx`. |
 | `enforce_periodic` | function | Fill the ghost-cell ring with periodic boundary conditions. |
 | `enstrophy` | function | Enstrophy (pointwise). |
-| `euler_step` | function | Forward Euler: y_{n+1} = y_n + dt * f(y_n). |
+| `euler_step` | function | Re-exported from `integrix`. |
 | `fft_eigenvalues` | function | Re-exported from `spectraldiffx`. |
 | `fft_eigenvalues_ps` | function | Re-exported from `spectraldiffx`. |
 | `fix_boundary_corners` | function | Average corner ghost cells from their two face-adjacent ghost neighbours. |
 | `free_slip_boundaries` | function | Fill ghost ring with symmetric reflection (free-slip wall). |
-| `heun_step` | function | Heun (RK2) predictor-corrector. |
+| `helmholtz_operator` | function | The rectangular Helmholtz operator ``(∇² − λ)`` as a gaussx operator. |
+| `heun_step` | function | Re-exported from `integrix`. |
 | `idct` | function | Re-exported from `spectraldiffx`. |
 | `idctn` | function | Re-exported from `spectraldiffx`. |
 | `idst` | function | Re-exported from `spectraldiffx`. |
 | `idstn` | function | Re-exported from `spectraldiffx`. |
-| `imex_ssp2_step` | function | IMEX-SSP2(2,2,2) time step. |
+| `imex_ssp2_step` | function | Re-exported from `integrix`. |
 | `interior` | function | Create an array shaped like ``like``, zero everywhere except the interior. |
 | `kinetic_energy` | function | Kinetic energy at T-points (cell centers) on an Arakawa C-grid. |
 | `layer_to_mode` | function | Transform a field from layer space to mode space. |
-| `leapfrog_raf_step` | function | Leapfrog with Robert-Asselin filter. |
+| `leapfrog_raf_step` | function | Re-exported from `integrix`. |
 | `linear_2pts` | function | 2-point centred reconstruction at face i+1/2. |
 | `linear_3pts_left` | function | 3-point left-biased reconstruction at face i+1/2. |
 | `linear_3pts_right` | function | 3-point right-biased reconstruction at face i+1/2. |
@@ -628,10 +633,12 @@ Arakawa C-grid finite-volume operators.
 | `linear_drag_tendency` | function | Linear (Rayleigh-type) drag tendency on one velocity component. |
 | `linear_drho_dS` | function | Partial derivative ∂ρ/∂S for the linear EOS (constant). |
 | `linear_drho_dT` | function | Partial derivative ∂ρ/∂T for the linear EOS (constant). |
+| `make_gaussx_multigrid_preconditioner` | function | The multigrid V-cycle as a symmetric gaussx preconditioner. |
 | `make_multigrid_preconditioner` | function | Return a preconditioner closure that applies a single multigrid V-cycle. |
 | `make_nystrom_preconditioner` | function | Build a randomized Nyström preconditioner for a symmetric operator. |
 | `make_preconditioner` | function | Convenience factory that builds a preconditioner by name. |
 | `make_spectral_preconditioner` | function | Return a spectral-solve preconditioner for PCG. |
+| `masked_helmholtz_operator` | function | The masked Helmholtz operator of :func:`masked_laplacian` as a gaussx operator. |
 | `masked_laplacian` | function | Apply the masked discrete Helmholtz operator (∇² − λ)·ψ. |
 | `masked_mean` | function | Mean over ``axis``, excluding dry cells. |
 | `masked_moments` | function | ``(mean, std)`` in one call — see :func:`masked_mean`, :func:`masked_std`. |
@@ -652,7 +659,8 @@ Arakawa C-grid finite-volume operators.
 | `potential_vorticity` | function | Potential vorticity (pointwise). |
 | `potential_vorticity_multilayer` | function | Multi-layer QG potential vorticity. |
 | `pressure_from_divergence` | function | Solve ∇²p = ∇·u for the pressure correction. |
-| `pv_flux_arakawa_lamb` | function | Arakawa--Lamb (1981) PV flux as a grid-free free function. |
+| `pv_flux_arakawa_lamb` | function | Deprecated alias of :func:`pv_flux_blend` (not Arakawa-Lamb 1981). |
+| `pv_flux_blend` | function | Blend of the energy- and enstrophy-conserving PV fluxes (grid-free). |
 | `pv_inversion` | function | QG potential-vorticity inversion: solve (∇² − λ)ψ = q. |
 | `qg_potential_vorticity` | function | QG potential vorticity at T-points (single layer). |
 | `quadratic_drag_tendency` | function | Quadratic bottom-drag tendency on one velocity component. |
@@ -661,8 +669,8 @@ Arakawa C-grid finite-volume operators.
 | `reconstruct` | function | Compute upwind face flux along *dim* using the given reconstruction method. |
 | `reduced_gravity` | function | Compute reduced gravity between two layers. |
 | `relative_vorticity_cgrid` | function | Relative vorticity at X-points (corners) on an Arakawa C-grid. |
-| `rk3_ssp_step` | function | 3rd-order Strong-Stability-Preserving Runge-Kutta (Shu-Osher form). |
-| `rk4_step` | function | Classic 4th-order Runge-Kutta. |
+| `rk3_ssp_step` | function | Re-exported from `integrix`. |
+| `rk4_step` | function | Re-exported from `integrix`. |
 | `rusanov_flux` | function | Local Lax--Friedrichs (Rusanov) numerical flux at faces along ``axis``. |
 | `semi_lagrangian_step` | function | Advect a 2D scalar field using semi-Lagrangian backtracking. |
 | `shear_strain` | function | Shear strain at X-points (corners) on an Arakawa C-grid. |
@@ -711,7 +719,7 @@ Arakawa C-grid finite-volume operators.
 | `spherical_volume_mean` | function | Spherical volume-weighted mean. |
 | `spherical_volume_sum` | function | Spherical volume-weighted sum. |
 | `spherical_volume_weights` | function | T-cell volumes on a spherical 3-D grid. |
-| `split_explicit_step` | function | Split-explicit barotropic/baroclinic time step. |
+| `split_explicit_step` | function | Re-exported from `integrix`. |
 | `ssh_to_streamfn` | function | Convert sea surface height to streamfunction. |
 | `strain_magnitude_squared` | function | Squared strain magnitude (pointwise). |
 | `streamfn_to_ssh` | function | Convert streamfunction to sea surface height. |
@@ -1084,30 +1092,13 @@ Integration: rules, cumulative scans, time marching, expectations.
 | Name | Kind | What it does |
 |---|---|---|
 | `AB2Solver` | class | Second-order Adams–Bashforth, run by `integrix.march.run`. |
-| `AB3Solver` | class | Third-order Adams–Bashforth as a diffrax solver, with an SSP-RK3 start. |
 | `AbstractStepper` | class | A fixed-step scheme whose history lives in the loop carry. |
-| `ForwardEulerDfx` | class | Forward Euler as a diffrax solver: yₙ₊₁ = yₙ + h F(tₙ, yₙ). |
-| `IMEX_SSP2` | class | IMEX-SSP2(2,2,2) for a `diffrax.MultiTerm` of an explicit and an implicit term. |
 | `LeapfrogRAFSolver` | class | Leapfrog with a Robert–Asselin filter, run by `integrix.march.run`. |
-| `RK2Heun` | class | Heun's method (RK2), with an embedded forward-Euler error estimate. |
-| `RK3SSP` | class | Third-order strong-stability-preserving Runge–Kutta (Shu–Osher). |
-| `RK4Classic` | class | The classical fourth-order Runge–Kutta method, fixed steps only. |
-| `SSP_RK104` | class | Ketcheson's ten-stage, fourth-order SSP Runge–Kutta, fixed steps only. |
-| `SSP_RK2` | class | Second-order SSP Runge–Kutta, the same scheme as `RK2Heun`. |
 | `SplitExplicitRKSolver` | class | Split-explicit stepping as an `AbstractStepper`, for `integrix.march.run`. |
 | `SplitExplicitTerms` | class | The vector fields of a split-explicit model, passed to `run` as ``rhs``. |
-| `ab2_step` | function | One second-order Adams–Bashforth step. |
-| `ab3_step` | function | One third-order Adams–Bashforth step. |
-| `euler_step` | function | One forward-Euler step: yₙ₊₁ = yₙ + h f(yₙ). |
-| `heun_step` | function | One Heun (RK2) step, order 2, SSP with C = 1. |
 | `imex_solver` | function | A ``KenCarp3`` IMEX solver whose implicit stage is matrix-free. |
-| `imex_ssp2_step` | function | One IMEX-SSP2(2,2,2) step, with the caller's implicit solve. |
 | `imex_stepsize_controller` | function | An adaptive PID step-size controller for an IMEX solve. |
-| `leapfrog_raf_step` | function | One leapfrog step with a Robert–Asselin filter on the middle level. |
-| `rk3_ssp_step` | function | One third-order SSP Runge–Kutta step in Shu–Osher form, C = 1. |
-| `rk4_step` | function | One classical fourth-order Runge–Kutta step. |
 | `run` | function | March y₀ through ``n_steps`` constant steps of h from t₀. |
-| `split_explicit_step` | function | One split-explicit barotropic/baroclinic step. |
 | `stable_step` | function | The largest stable forward-Euler step for advection and diffusion together. |
 
 ### `integrix.rule`

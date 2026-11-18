@@ -82,7 +82,7 @@ walks a running example through each row, from detector counts to heatwave retur
 |---|---|---|
 | **GeoStack** · data in, data out | [pipekit](https://github.com/jejjohnson/pipekit) | Carrier-agnostic operator-graph framework, plus `-array`, `-cycle`, `-evaluate`, `-experiment`, `-jax`, `-train` |
 | | [geotoolz](https://github.com/jejjohnson/geotoolz) | Remote-sensing operators on GeoTensor, plus `-catalog`, `-cloud`, `-patcher`, `-products` |
-| | [xrtoolz](https://github.com/jejjohnson/xrtoolz) | Operators for xarray data cubes, plus `-core`, `-einx`, `-grad`, `-reader`, `-sklearn` |
+| | [xrtoolz](https://github.com/jejjohnson/geotoolz/tree/main/packages/xrtoolz-ops) | Operators for xarray data cubes, plus `-ops` and `-products`, in the geotoolz workspace |
 | | [georeader](https://github.com/spaceml-org/georeader) | Raster reading and the GeoTensor carrier (third-party, read-only here) |
 | **GeoNumerics** · structured numerics | [gaussx](https://github.com/jejjohnson/gaussx) | Structured linear algebra and Gaussian primitives on lineax |
 | | [finitevolX](https://github.com/jejjohnson/finitevolX) | Arakawa C-grid finite-volume operators |
@@ -96,7 +96,6 @@ walks a running example through each row, from detector counts to heatwave retur
 | | [xtremax](https://github.com/jejjohnson/xtremax) | Extreme-value and point-process models |
 | | [pyrox](https://github.com/jejjohnson/pyrox) | Equinox + NumPyro: GPs, Bayesian NNs, latent Gaussian models, state-space models (`pyrox`, `-gp`, `-lgm`, `-nn`, `-ssm`) |
 | **GeoModels** · physics | [plumax](https://github.com/jejjohnson/plumax) | Plume transport: Gaussian plume and puff, Lagrangian, LES |
-| | [somax](https://github.com/jejjohnson/somax) | Simple ocean and atmosphere models |
 | | [radtrax](https://github.com/jejjohnson/radtrax) | Differentiable radiative transfer for methane remote sensing |
 
 Each library is a git submodule under `references/<layer>/<name>`, installed
@@ -126,7 +125,7 @@ run on both:
   <img alt="The repositories in four layer bands, with edges pointing down from each repository to those it depends on or imports" src="docs/images/overview/dependency_graph.svg" width="100%">
 </p>
 
-23 repositories, 42 packages and 44 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+21 repositories, 42 packages and 53 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -134,8 +133,8 @@ The rules that keep this graph free of cycles (each one is checked by
 `tests/test_dependency_graph.py`; the reasons, and where the graph breaks
 them today, are on the [dependency graph page](docs/api/dependency_graph.md)):
 
-1. **Layers point down.** GeoModels → GeoML → GeoNumerics / GeoStack; GeoStack
-   and GeoNumerics never import each other.
+1. **Layers point down.** GeoModels → GeoML → GeoNumerics / GeoStack → Core;
+   GeoStack and GeoNumerics never import each other.
 2. **Within a layer, tiers point down.** A repository imports only lower
    tiers of its own layer; in GeoModels only plumax imports another (radtrax).
 3. **Every library edge counts:** base dependencies, extras and imports,

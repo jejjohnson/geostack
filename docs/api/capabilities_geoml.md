@@ -347,114 +347,142 @@ Variational data assimilation: BLUE/OI, 3D-Var, 4D-Var and kin.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `AmortizedConfig` | class | Configuration for an ``AmortizedPosterior``. |
-| `AmortizedPosterior` | class | Amortized variational posterior $q_\phi(x \mid y)$. |
+| `AmortizedConfig` | class | Configuration of an ``AmortizedPosterior`` q(x \| y; ν). |
+| `AmortizedPosterior` | class | Amortized variational posterior q(x \| y; ν). |
 | `AnalysisStep` | class | Re-exported from `pipekit_cycle`. |
-| `AveragingKernel` | class | RTM L2-style averaging-kernel obs operator. |
+| `AveragingKernel` | class | Averaging-kernel observation operator of an L2 retrieval. |
 | `Batch1D` | class | Batch of 1-D spatiotemporal data. |
 | `Batch2D` | class | Batch of 2-D spatiotemporal data. |
 | `Batch2DMultivar` | class | Batch of 2-D multivariate spatiotemporal data. |
 | `BilinAEPrior1D` | class | Bilinear autoencoder prior for 1-D data. |
 | `BilinAEPrior2D` | class | Bilinear autoencoder prior for 2-D data. |
 | `BilinAEPrior2DMultivar` | class | Bilinear autoencoder prior for 2-D multivariate data. |
+| `CallableObs` | class | Observation operator h from any differentiable JAX function. |
 | `CompositeBasis` | class | Concatenate several reduced bases into one control vector. |
 | `ConditionalFlowHead` | class | Conditional normalising flow head (stub). |
+| `ConfigurationError` | class | A hyperparameter or constructor argument has an invalid value. |
 | `ConvAEPrior1D` | class | Convolutional autoencoder prior for 1-D spatially-structured data. |
-| `ConvLSTMGradMod1D` | class | 1-D ConvLSTM-based gradient modulator. |
-| `ConvLSTMGradMod2D` | class | 2-D ConvLSTM-based gradient modulator. |
-| `CostFunction` | class | Variational cost function ``J(x, batch, **kwargs) -> scalar``. |
+| `ConvLSTMGradMod1D` | class | 1-D ConvLSTM gradient modulator. |
+| `ConvLSTMGradMod2D` | class | 2-D ConvLSTM gradient modulator. |
+| `CostFunction` | class | Variational cost function over the state. |
+| `DataError` | class | A dataset cannot be processed (no observed values, too few samples). |
+| `DualThreeDVar` | class | 3D variational analysis of a single time, solved in observation space (PSAS). |
 | `DynIncrements` | class | One-step-increment dynamical prior. |
 | `DynTrajectory` | class | Full-rollout dynamical prior. |
 | `DynamicalPrior` | class | Base class for ODE-based dynamical priors. |
-| `EnsembleCovariance` | class | Sample-covariance posterior from an ensemble of analyses. |
+| `EnsembleCovariance` | class | Sample-covariance posterior from an ensemble ℰ of analyses. |
+| `FieldPointObs` | class | Callable field evaluated at scattered points. |
 | `ForwardModel` | class | Re-exported from `pipekit_cycle`. |
 | `FourDVarNet1D` | class | End-to-end 4DVarNet model for 1-D spatiotemporal reconstruction. |
 | `FourDVarNet2D` | class | End-to-end 4DVarNet model for 2-D spatiotemporal reconstruction. |
-| `GaussNewtonHessian` | class | Gauss-Newton Hessian inversion at MAP. |
+| `GaussNewtonHessian` | class | Gauss–Newton posterior at the analysis, with a Krylov budget. |
 | `GaussianMarkLikelihood` | class | Serialise a Gaussian posterior into a mark-likelihood dict. |
 | `GradModulator` | class | Learned gradient modulator for the FourDVarNet inner solver. |
+| `GridError` | class | Grid axes or coordinates are malformed (too few points, not increasing). |
+| `GridPointObs` | class | Gridded state or trajectory at scattered, time-stamped points. |
 | `IdentityObsEncoder` | class | Concatenate ``input`` and ``mask`` into a flat context vector. |
-| `IdentityPrior` | class | Trivial identity prior: $\varphi(x) = x$. |
+| `IdentityPrior` | class | Trivial identity prior: x̂ = g_ae(x; θ) = x. |
 | `ImplicitAdjoint` | class | Re-exported from `optimistix`. |
-| `Incremental4DVar` | class | Reduced-basis 4DVar. |
-| `IncrementalConfig` | class | Configuration for ``IncrementalFourDVar``. |
-| `IncrementalFourDVar` | class | Operational incremental 4DVar (Decision D11). |
+| `IncrementalConfig` | class | Solver switches of ``IncrementalFourDVar``, and its deprecated budget. |
+| `IncrementalFourDVar` | class | Operational incremental 4D-Var of an assimilation window. |
+| `InputTypeError` | class | An argument has the wrong type. |
 | `InstrumentRegistry` | class | Keyed lookup of ``InstrumentSpec`` by ``instrument_id``. |
-| `InstrumentSpec` | class | Per-instrument ``(obs_op, mask, R_op, id)`` bundle. |
-| `InterpObs` | class | Grid → scattered-obs sparse bilinear interpolation. |
-| `KStepAdjoint` | class | K-step differentiation: warmup under ``stop_gradient``, then ``k`` live steps. |
+| `InstrumentSpec` | class | One instrument's operator hᵢ, quality mask mᵢ, covariance Σ_ε,i and name. |
+| `InterpObs` | class | Sparse bilinear interpolation from a 2-D grid to scattered observations. |
+| `KStepAdjoint` | class | Deprecated alias of ``argminax.adjoint.KStep``; use that name instead. |
 | `L63Prior` | class | Learned prior for the Lorenz-63 system. |
 | `L96Prior` | class | Learned prior for the Lorenz-96 system. |
 | `LSTMState1D` | class | Hidden state for a 1-D ConvLSTM gradient modulator. |
 | `LSTMState2D` | class | Hidden state for a 2-D ConvLSTM gradient modulator. |
-| `LaplaceCovariance` | class | Laplace approximation at MAP. |
-| `LinearBasis` | class | Generic linear reduced basis with a diagonal-$Q$ prior. |
-| `LinearObs` | class | ``H(x) = H_mat @ x``. |
+| `LaplaceCovariance` | class | Laplace approximation of the posterior at the analysis. |
+| `LinearBasis` | class | Generic linear reduced basis with a diagonal prior over the coefficients. |
+| `LinearObs` | class | Linear observation operator H held as a lineax operator. |
+| `LinearParameterization` | class | Adapter from a `ReducedBasis` to a parameterization. |
 | `Lorenz63` | class | Lorenz-63 vector field as an Equinox module. |
 | `Lorenz96` | class | Lorenz-96 vector field as an Equinox module. |
 | `MLPAEPrior1D` | class | MLP autoencoder prior for 1-D data. |
-| `MLPObsEncoder` | class | Two-layer MLP encoder from flat ``(input, mask)`` to context. |
-| `MaskedIdentity` | class | $H(x) = m \odot x$ with optional element-wise mask. |
-| `Minimiser` | class | Wrapper protocol around ``optimistix.AbstractMinimiser``. |
+| `MLPObsEncoder` | class | MLP encoder from the flat ``(input, mask)`` to the context c. |
+| `MaskedIdentity` | class | Identity observation operator with an optional element-wise mask m. |
+| `MinimiseResult` | class | Outcome of a minimisation: the optimum θ⋆ and its diagnostics. |
+| `Minimiser` | class | Minimises a cost ``cost_fn(x, batch)`` from an initial guess. |
+| `MissingInputError` | class | A required input (a key, a target, a covariance) was not given. |
+| `ModelErrorBasis` | class | Separable space-time basis of the model error, with a Kronecker prior. |
 | `MultiInstrumentFusion` | class | Compose per-instrument operators at the likelihood level. |
+| `NeuralFieldParameterization` | class | A coordinate network evaluated on the grid as the state. |
+| `OEResult` | class | The output of `optimal_estimation`. |
+| `ObservationError` | class | Observations are inconsistent with the model or the assimilation window. |
 | `ObservationOperator` | class | Re-exported from `pipekit_cycle`. |
-| `OneStepAdjoint` | class | One-step differentiation (Bolte et al., 2023). |
-| `OptimalInterpolation` | class | BLUE / OI — closed-form linear-Gaussian analysis. |
-| `Posterior` | class | Posterior container — Decision D10. |
+| `OneStepAdjoint` | class | Deprecated alias of ``argminax.adjoint.OneStep``; use that name instead. |
+| `OptaxMinimiser` | class | First-order minimisation with an ``optax`` optimiser. |
+| `OptimalInterpolation` | class | Best linear unbiased estimate: the linear-Gaussian analysis in closed form. |
+| `OptimistixMinimiser` | class | An ``optimistix`` minimiser behind the `Minimiser` protocol. |
+| `PointObsBatch` | class | Scattered point observations, padded to a fixed count. |
+| `Posterior` | class | Posterior of an analysis, with optional samples and provenance. |
 | `PosteriorAdapter` | class | Turns an analysis output into a `Posterior` container. |
-| `Prior` | class | Prior model: maps state to its regularised reconstruction. |
+| `Prior` | class | Prior model: maps a state to its regularised reconstruction. |
 | `RecursiveCheckpointAdjoint` | class | Re-exported from `optimistix`. |
 | `ReducedBasis` | class | Reduced-basis control-vector operator. |
-| `RegressionHead` | class | Gaussian regression head: ``q_φ(x\|y) = N(μ_φ(y), diag(σ²_φ(y)))``. |
+| `ReducedBasisFourDVar` | class | Strong-constraint 4D-Var with the control in a reduced basis. |
+| `RegressionHead` | class | Gaussian regression head with diagonal covariance. |
+| `ResidualPenalty` | class | PDE residual of a continuous field at collocation points, as a cost. |
 | `ScoreDiffusionHead` | class | Score-based diffusion head (stub). |
+| `ShapeError` | class | An array or batch has a shape the operation cannot use. |
 | `SoftBoundedForward` | class | ``ForwardModel`` adapter that softly confines states to a box. |
-| `SolverState1D` | class | Mutable solver state for 1-D problems. |
-| `SolverState2D` | class | Mutable solver state for 2-D problems. |
-| `StrongFourDVar` | class | Strong-constraint 4DVar. |
+| `SolverState1D` | class | Carry of the 1-D solver loop: iterate, ConvLSTM carry and iteration index. |
+| `SolverState2D` | class | Carry of the 2-D solver loop: iterate, ConvLSTM carry and iteration index. |
+| `SpaceTimeFieldResult` | class | A fitted space-time field and its minimisation diagnostics. |
+| `SpaceTimeFieldVar` | class | Neural-field 4D-Var: fit one continuous field x(t, s; θ) to a whole window. |
+| `StateParameterization` | class | Control-to-state map with its own penalty. |
+| `StrongFourDVar` | class | Strong-constraint 4D-Var analysis of an assimilation window. |
+| `SupportsForwardAdjoint` | class | A ``ForwardModel`` whose integrator can take a ``diffrax`` adjoint. |
 | `TemporalPrior` | class | Time-dependent prior: dynamics-aware regularisation over a window. |
-| `ThreeDVar` | class | 3D variational analysis. |
+| `ThreeDVar` | class | 3D variational analysis of a single time. |
+| `UnsupportedInputError` | class | The input is valid in general but this operation does not support it. |
 | `VarDACycle` | function | Build a ``pipekit_cycle.DACycle`` from a vardax model. |
 | `VarSmootherCycle` | function | Build a ``pipekit_cycle.SmootherCycle`` from a vardax model. |
-| `WeakFourDVar` | class | Weak-constraint 4DVar with augmented control vector. |
-| `amortized_nll_loss_fn` | function | Negative log-likelihood for amortized inference (Epic 8). |
+| `VardaxError` | class | Base class for every error vardax raises on purpose. |
+| `WeakFourDVar` | class | Weak-constraint 4D-Var analysis of an assimilation window. |
+| `amortized_nll_loss_fn` | function | Negative log-likelihood for amortized inference. |
 | `amortized_train_step` | function | Single training step for ``AmortizedPosterior``. |
 | `assert_adjoint_calibrated` | function | Random-vector probe of the Jacobian agreement at ``y``. |
-| `assert_posterior_agreement` | function | Check that ``p_fast.mean`` lies within ``tolerance_sigma`` standard deviations of ``p_oracle.mean``. |
-| `background_cost` | function | Background cost $\\|x_0 - x_b\\|^2$. |
+| `assert_posterior_agreement` | function | Check that the fast posterior mean lies near the oracle's, per component. |
+| `background_cost` | function | Background cost: the mean square of the departure from the first guess. |
 | `composite_basis` | function | Build a `CompositeBasis` from a sequence of `ReducedBasis` components. |
-| `decomposed_loss` | function | Compute the decomposed variational loss. |
+| `decomposed_loss` | function | Decomposed variational loss: the weighted terms alongside their sum. |
 | `eof_basis` | function | Data-driven EOF (PCA) reduced basis from a sample matrix. |
 | `eval_step` | function | Compute the evaluation loss for a single batch (no gradient). |
-| `fourier_basis` | function | Laplacian-eigenfunction (Dirichlet/HSGP) reduced basis on a box. |
+| `fourier_basis` | function | Laplacian-eigenfunction reduced basis on a box, Dirichlet or HSGP. |
 | `fp_solver_step_1d` | function | Perform a single 1-D fixed-point projection step. |
 | `init_solver_state_1d` | function | Initialise a 1-D solver state from a batch. |
 | `init_solver_state_2d` | function | Initialise a 2-D solver state from a batch. |
-| `interp_obs_from_coords` | function | Build an `InterpObs` from grid axis arrays + obs locations. |
+| `interp_obs_from_coords` | function | Build an `InterpObs` from grid axis arrays and observation locations. |
 | `linear_basis` | function | Build a `LinearBasis` from an arbitrary precomputed design matrix. |
-| `obs_cost_1d` | function | Observation cost for 1-D data. |
-| `obs_cost_2d` | function | Observation cost for 2-D data. |
+| `obs_cost_1d` | function | Observation cost for 1-D data: the masked mean-squared error. |
+| `obs_cost_2d` | function | Observation cost for 2-D data: the masked mean-squared error. |
 | `one_step_solve_4dvarnet_1d` | function | Solve 4DVarNet-1D using k-step differentiation (Bolte et al., 2023). |
 | `one_step_solve_4dvarnet_2d` | function | Solve 4DVarNet-2D using k-step differentiation (Bolte et al., 2023). |
+| `optimal_estimation` | function | Rodgers optimal estimation of x from y = h(x) + ε. |
 | `plot_l96_grid` | function | Hovmöller-style image of Lorenz-96 states over time. |
 | `plot_l96_trajectories` | function | Line plot of selected Lorenz-96 variables over time. |
 | `plot_reconstruction_comparison` | function | Side-by-side comparison of target, masked input, and reconstruction. |
-| `prior_cost` | function | Prior cost based on learned autoencoder reconstruction. |
-| `rbf_basis` | function | Placeable radial-basis reduced basis (Gaussian or Wendland kernels). |
+| `point_obs_cost` | function | Masked, σ-weighted observation cost of a point batch. |
+| `prior_cost` | function | Prior cost of a learned autoencoder: the reconstruction mean square. |
+| `rbf_basis` | function | Radial-basis reduced basis of Gaussian or Wendland atoms. |
 | `reconstruction_loss` | function | Mean-squared reconstruction loss. |
-| `simulate_lorenz63` | function | Simulate the Lorenz-63 system and return state trajectory. |
-| `simulate_lorenz96` | function | Simulate the Lorenz-96 system and return state trajectory. |
-| `simulation_based_calibration` | function | Per Talts et al. 2018: rank histogram of true draws within posterior samples. |
+| `simulate_lorenz63` | function | Simulate the Lorenz-63 system and return the state trajectory. |
+| `simulate_lorenz96` | function | Simulate the Lorenz-96 system and return the state trajectory. |
+| `simulation_based_calibration` | function | Rank histogram of true draws within posterior samples (Talts et al. 2018). |
 | `solve_4dvarnet_1d` | function | Run the full 1-D 4DVarNet solver for ``n_steps`` iterations. |
 | `solve_4dvarnet_1d_fixedpoint` | function | Run ``n_fp_steps`` fixed-point projection steps using ``jax.lax.scan``. |
 | `solve_4dvarnet_2d` | function | Run the full 2-D 4DVarNet solver for ``n_steps`` iterations. |
 | `solver_step_1d` | function | Perform a single 1-D solver iteration. |
 | `solver_step_2d` | function | Perform a single 2-D solver iteration. |
-| `strong_variational_cost` | function | Strong-constraint variational cost $U(x_0)$. |
+| `strong_variational_cost` | function | Strong-constraint variational cost of the initial state. |
 | `time_patches` | function | Overlapping consecutive time pairs for one-step increment losses. |
 | `to_optimistix_adjoint` | function | Map an adjoint spec onto an ``optimistix.AbstractAdjoint``. |
 | `train_loss_fn` | function | Compute the training loss for a single batch. |
-| `train_step` | function | Perform a single training step (forward + backward + update). |
-| `variational_cost` | function | Compute the variational cost $U(x)$. |
+| `train_step` | function | Perform a single training step (forward, backward and update). |
+| `variational_cost` | function | Variational cost, the weighted sum of observation and prior mean squares. |
 | `variational_cost_grad` | function | Gradient of `variational_cost` w.r.t. ``x``. |
 | `wavelet_basis` | function | Orthonormal wavelet (DWT) reduced basis on a periodic grid. |
 

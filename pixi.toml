@@ -31,6 +31,7 @@ omegaconf = ">=2.3"
 # git submodules in references/geostack/ (git submodule update --init).
 georeader-spaceml = { path = "references/geostack/georeader", editable = true }
 pipekit = { path = "references/geostack/pipekit/packages/pipekit", editable = true }
+pipekit-ops = { path = "references/geostack/pipekit/packages/pipekit-ops", editable = true }
 pipekit-array = { path = "references/geostack/pipekit/packages/pipekit-array", editable = true }
 pipekit-cycle = { path = "references/geostack/pipekit/packages/pipekit-cycle", editable = true }
 pipekit-evaluate = { path = "references/geostack/pipekit/packages/pipekit-evaluate", editable = true }
@@ -44,9 +45,9 @@ geotoolz-catalog = { path = "references/geostack/geotoolz/packages/geotoolz-cata
 geotoolz-cloud = { path = "references/geostack/geotoolz/packages/geotoolz-cloud", editable = true }
 geotoolz-patcher = { path = "references/geostack/geotoolz/packages/geotoolz-patcher", editable = true }
 geotoolz-products = { path = "references/geostack/geotoolz/packages/geotoolz-products", editable = true }
-xrtoolz = { path = "references/geostack/xrtoolz/packages/xrtoolz", editable = true }
-xrtoolz-ops = { path = "references/geostack/xrtoolz/packages/xrtoolz-ops", editable = true }
-xrtoolz-products = { path = "references/geostack/xrtoolz/packages/xrtoolz-products", editable = true }
+xrtoolz = { path = "references/geostack/geotoolz/packages/xrtoolz", editable = true }
+xrtoolz-ops = { path = "references/geostack/geotoolz/packages/xrtoolz-ops", editable = true }
+xrtoolz-products = { path = "references/geostack/geotoolz/packages/xrtoolz-products", editable = true }
 
 [pypi-options.dependency-overrides]
 # The reference repos are uv workspaces whose own [tool.uv.sources] point
@@ -54,6 +55,7 @@ xrtoolz-products = { path = "references/geostack/xrtoolz/packages/xrtoolz-produc
 # the submodule checkout so the solve has a single source per package.
 georeader-spaceml = { path = "references/geostack/georeader", editable = true }
 pipekit = { path = "references/geostack/pipekit/packages/pipekit", editable = true }
+pipekit-ops = { path = "references/geostack/pipekit/packages/pipekit-ops", editable = true }
 pipekit-array = { path = "references/geostack/pipekit/packages/pipekit-array", editable = true }
 pipekit-cycle = { path = "references/geostack/pipekit/packages/pipekit-cycle", editable = true }
 pipekit-evaluate = { path = "references/geostack/pipekit/packages/pipekit-evaluate", editable = true }
@@ -67,9 +69,9 @@ geotoolz-catalog = { path = "references/geostack/geotoolz/packages/geotoolz-cata
 geotoolz-cloud = { path = "references/geostack/geotoolz/packages/geotoolz-cloud", editable = true }
 geotoolz-patcher = { path = "references/geostack/geotoolz/packages/geotoolz-patcher", editable = true }
 geotoolz-products = { path = "references/geostack/geotoolz/packages/geotoolz-products", editable = true }
-xrtoolz = { path = "references/geostack/xrtoolz/packages/xrtoolz", editable = true }
-xrtoolz-ops = { path = "references/geostack/xrtoolz/packages/xrtoolz-ops", editable = true }
-xrtoolz-products = { path = "references/geostack/xrtoolz/packages/xrtoolz-products", editable = true }
+xrtoolz = { path = "references/geostack/geotoolz/packages/xrtoolz", editable = true }
+xrtoolz-ops = { path = "references/geostack/geotoolz/packages/xrtoolz-ops", editable = true }
+xrtoolz-products = { path = "references/geostack/geotoolz/packages/xrtoolz-products", editable = true }
 # GeoNumerics, GeoML and GeoModels: installed only in the environments below,
 # each sibling pinned to its submodule (their own [tool.uv.sources] pin older
 # commits of one another; see .plans/submodules_by_stack.md).
@@ -93,7 +95,6 @@ pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true 
 pyrox-ssm = { path = "references/geoml/pyrox/packages/pyrox-ssm", editable = true }
 manipy-jax = { path = "references/geoml/manipy", editable = true }
 plumax = { path = "references/geomodels/plumax", editable = true }
-somax = { path = "references/geomodels/somax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
@@ -181,7 +182,6 @@ manipy-jax = { path = "references/geoml/manipy", editable = true }
 
 [feature.geomodels.pypi-dependencies]
 plumax = { path = "references/geomodels/plumax", editable = true }
-somax = { path = "references/geomodels/somax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }

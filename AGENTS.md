@@ -42,14 +42,14 @@ not into a local package.
 
 | Layer | `references/…` | Libraries | pixi environment | Capability index |
 |---|---|---|---|---|
-| GeoStack | `geostack/` | pipekit, geotoolz, xrtoolz (uv workspaces; members under `packages/`), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
+| GeoStack | `geostack/` | pipekit, geotoolz (uv workspaces; members under `packages/`; geotoolz holds xrtoolz too), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
 | GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, finitevolX, spectraldiffx | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
 | GeoML | `geoml/` | geonnax, kernellib, optax_bayes, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn, -ssm), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
-| GeoModels | `geomodels/` | plumax, somax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
+| GeoModels | `geomodels/` | plumax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
 
 Edges between layers point down: GeoModels may import GeoML, GeoNumerics and
 GeoStack; GeoML may import GeoNumerics and GeoStack; GeoNumerics and GeoStack import
-neither of the others. Each environment installs its layer and the layers it
+neither of the others. The dependency graph also ranks pipekit, gaussx, functax, argminax and integrix as Core, below GeoStack and GeoNumerics, so both may import them; their submodules stay in the directories above. Each environment installs its layer and the layers it
 may import, every library from its submodule (`[pypi-options.dependency-overrides]`
 in `pixi.toml`), so the libraries' own git pins of one another are ignored.
 
