@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>vardax — seven analysis methods, one cost</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  #diagram { width: 1560px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 290px 340px 300px 260px;
+    column-gap: 82px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .lane .group + .group { margin-top: 14px; }
+  .group-head {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 8px 2px;
+  }
+  .term { margin-top: 12px; }
+  .term .eq {
+    font-family: var(--mono); font-size: 13px; color: var(--ink-accent);
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .eq.optional { border-style: dashed; }
+  /* a weighted norm's square over its weight, stacked, so neither shrinks twice */
+  .w {
+    display: inline-flex; flex-direction: column; vertical-align: middle;
+    font-size: 0.9em; line-height: 1.05; margin-left: 1px;
+  }
+  .w sub, .w sup { font-size: 0.85em; }
+  .half { font-family: var(--sans, system-ui), sans-serif; font-size: 1.25em; }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .argmin {
+    font-family: var(--mono); font-size: 15px; font-weight: 700;
+    color: var(--ink-accent); margin: 2px 0 0 2px;
+  }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .variants { font-size: 12px; color: var(--muted); margin: 8px 0 0 2px; line-height: 1.5; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">vardax — seven analysis methods, one cost</div>
+  <div class="subtitle">Supply the seams, pick a method, cycle it. Switching method is a constructor change, not a rewrite.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">seams</span><span class="pkg">what you supply</span></div>
+      <div class="node">
+        <div class="name">observation operator <span class="imp">h</span></div>
+        <div class="desc"><code>MaskedIdentity</code> · <code>LinearObs</code> · <code>InterpObs</code> · <code>AveragingKernel</code> · <code>MultiInstrumentFusion</code> · <code>CallableObs</code></div>
+      </div>
+      <div class="node">
+        <div class="name">covariances <span class="imp">Σ<sub>x</sub> · Σ<sub>ε</sub> · Σ<sub>η</sub></span></div>
+        <div class="desc">lineax operators: diagonal, or Matérn, Kronecker and low rank from gaussx</div>
+      </div>
+      <div class="node">
+        <div class="name">forward model <span class="imp">f</span></div>
+        <div class="desc">a <code>DynTrajectory</code> through <code>.as_forward_model(dt)</code>, or any callable, such as a somax model</div>
+      </div>
+      <div class="node">
+        <div class="name">minimiser · adjoint</div>
+        <div class="desc">optimistix BFGS by default, argminax <code>GaussNewtonCG</code> or <code>OptaxMinimiser</code>; adjoints <code>optx.ImplicitAdjoint</code> or argminax <code>KStep</code> · <code>OneStep</code></div>
+      </div>
+    </div>
+
+    <!-- column 2: the one cost -->
+    <div class="lane compute" id="lane-cost">
+      <div class="lane-head"><span class="verb">one cost</span><span class="pkg">𝒥(x<sub>0</sub>, η)</span></div>
+      <div class="argmin">x⋆ = argmin 𝒥(x<sub>0</sub>, η)</div>
+      <div class="term">
+        <div class="lbl">background</div>
+        <div class="eq"><span class="half">½</span> ‖x<sub>0</sub> − μ<sub>x</sub>‖<span class="w"><span>2</span><span>Σ<sub>x</sub><sup>−1</sup></span></span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">observations, masked by m<sub>t</sub></div>
+        <div class="eq"><span class="half">½</span> ∑<sub>t</sub> ‖m<sub>t</sub> ⊙ (y<sub>t</sub> − h(x<sub>t</sub>))‖<span class="w"><span>2</span><span>Σ<sub>ε</sub><sup>−1</sup></span></span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">model error (weak constraint only)</div>
+        <div class="eq optional"><span class="half">½</span> ∑<sub>t</sub> ‖η<sub>t</sub>‖<span class="w"><span>2</span><span>Σ<sub>η</sub><sup>−1</sup></span></span></div>
+      </div>
+      <div class="note">along the rollout x<sub>t</sub> = f(x<sub>t−1</sub>) + η<sub>t</sub>, with η = 0 under the strong constraint</div>
+    </div>
+
+    <!-- column 3: the seven methods -->
+    <div class="lane cut" id="lane-methods">
+      <div class="lane-head"><span class="verb">methods</span><span class="pkg">how 𝒥 is minimised</span></div>
+      <div class="group">
+        <div class="group-head">closed form</div>
+        <div class="node"><div class="name"><code>OptimalInterpolation</code></div></div>
+      </div>
+      <div class="group">
+        <div class="group-head">iterative</div>
+        <div class="node">
+          <div class="name"><code>ThreeDVar</code> · <code>StrongFourDVar</code></div>
+          <div class="desc"><code>WeakFourDVar</code> · <code>IncrementalFourDVar</code></div>
+        </div>
+        <div class="variants">variants: <code>DualThreeDVar</code> · <code>ReducedBasisFourDVar</code> · <code>SpaceTimeFieldVar</code> · <code>optimal_estimation</code></div>
+      </div>
+      <div class="group">
+        <div class="group-head">learned</div>
+        <div class="node"><div class="name"><code>FourDVarNet1D</code> · <code>FourDVarNet2D</code></div></div>
+      </div>
+      <div class="group">
+        <div class="group-head">amortized</div>
+        <div class="node"><div class="name"><code>AmortizedPosterior</code></div></div>
+      </div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">what comes back</span></div>
+      <div class="node" id="analysis">
+        <div class="name">analysis <span class="imp">x⋆</span></div>
+        <div class="desc"><code>model(batch)</code>, the same call for every method</div>
+      </div>
+      <div class="node" id="posterior">
+        <div class="name">uncertainty</div>
+        <div class="desc"><code>model.posterior(batch)</code> on the variational classes: <code>LaplaceCovariance</code> · <code>GaussNewtonHessian</code> · <code>EnsembleCovariance</code>. <code>AmortizedPosterior</code> samples its q(x ∣ y).</div>
+      </div>
+      <div class="node solid" id="cycle">
+        <div class="name">cycled assimilation</div>
+        <div class="desc"><code>.as_analysis_step()</code> on every class, for <code>VarDACycle</code> · <code>VarSmootherCycle</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">lineax · gaussx</div>
+      <div class="what">Covariances stay operators, solved with CG or Cholesky; gaussx adds the structured ones and their square roots.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">optimistix · optax</div>
+      <div class="what">The minimisers: optimistix BFGS by default, optax (Adam) for neural fields and training.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">argminax</div>
+      <div class="what">Gauss–Newton CG and the dual solve, the one-step and k-step adjoints, and the Laplace curvature.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">diffrax · integrix</div>
+      <div class="what">diffrax integrates the dynamical priors and Lorenz systems; integrix checkpoints the rollout.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">geonnax</div>
+      <div class="what">The reduced bases and the derivatives in physics residuals; its SIREN is the usual field for <code>SpaceTimeFieldVar</code>.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">pipekit</div>
+      <div class="what"><code>AnalysisStep</code> and <code>DACycle</code>: whatever orchestrates pipekit operators orchestrates vardax.</div>
+    </div>
+  </div>
+</div>
+<script src="_connect.js"></script>
+<script>
+  wire("lane-supply", "lane-cost", { label: "<span class='t'>h · Σ · f</span>", color: "#7b6bb5" });
+  wire("lane-cost", "lane-methods", { label: "<span class='t'>𝒥</span>", color: "#cf9418" });
+  wire("lane-methods", "lane-out", { label: "<span class='t'>x⋆</span>", color: "#3f6fb5" });
+  ready();
+</script>
+</body>
+</html>
