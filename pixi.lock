@@ -2135,7 +2135,6 @@ environments:
       - pypi: ./references/geoml/geonnax
       - pypi: ./references/geoml/kernellib
       - pypi: ./references/geoml/manipy
-      - pypi: ./references/geoml/optax_bayes
       - pypi: ./references/geoml/pyrox/packages/pyrox
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
@@ -2574,7 +2573,6 @@ environments:
       - pypi: ./references/geoml/geonnax
       - pypi: ./references/geoml/kernellib
       - pypi: ./references/geoml/manipy
-      - pypi: ./references/geoml/optax_bayes
       - pypi: ./references/geoml/pyrox/packages/pyrox
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
@@ -3076,7 +3074,6 @@ environments:
       - pypi: ./references/geoml/geonnax
       - pypi: ./references/geoml/kernellib
       - pypi: ./references/geoml/manipy
-      - pypi: ./references/geoml/optax_bayes
       - pypi: ./references/geoml/pyrox/packages/pyrox
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
@@ -3521,7 +3518,6 @@ environments:
       - pypi: ./references/geoml/geonnax
       - pypi: ./references/geoml/kernellib
       - pypi: ./references/geoml/manipy
-      - pypi: ./references/geoml/optax_bayes
       - pypi: ./references/geoml/pyrox/packages/pyrox
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
@@ -6116,6 +6112,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/7d/8a/3b7f62b9df56460959f1b9bef094248d2a4d7f393c5b0d2da8efcdf0e40e/imageio-2.38.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/85/3f/07a582935b06ee0dddaaf2656fbeb5f7c4e1476f0649d1e5ac3c0dac540f/rioxarray-0.23.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/89/a5/da8ae6c6f1babe4b68e3e55d43d39b529e29774f10e0910671a6b8c86eb8/ml_dtypes-0.6.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8a/69/6a93d8600c339d7687a05857c7907bd4dd8cf88691a5ea106d7a50af90a1/optax-0.2.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/38/c66bbdc5047f4776c2bd3e47e5295a350e3fa44d5b8942105e71c2a876a0/jaxtyping-0.3.11-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/96/04e7b441807b26b794da5b11e59ed7f83b2cf8af202bd7eba8ad2fa6046e/wadler_lindig-0.1.7-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/f8/0d32243c6b8e5dbee9097cf0c95bbdf8681ba4463c927c2e3445f3775814/lineax-0.1.1-py3-none-any.whl
@@ -6126,6 +6123,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ae/d6/69a76c8ccdef14af687c497040292a46e59fc7a0ab24724b60e50ca61030/equinox-0.13.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b2/d6/de0cc74f8d36976aeca0dd2e9cbf711882ff8e177495115fd82459afdc4d/mercantile-1.2.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/b3/7d/01e62f59e4166af1be6238d9f2b7f3453630c51b8044b412d05b5606532a/absl_py-2.5.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b4/36/b962ad52031b5bfdd249923db6151ff2b665b08c017611db96838455f337/obstore-0.11.1-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cc/88/5c8819f232448d52514b76a64cf285bc608cff9179f3eeacf58750612323/statsmodels-0.15.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
@@ -6538,6 +6536,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/71/e7/40fb618334dcdf7c5a316c0e7343c5cd82d3d866edc100d98e29bc945ecd/partd-1.4.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/7d/8a/3b7f62b9df56460959f1b9bef094248d2a4d7f393c5b0d2da8efcdf0e40e/imageio-2.38.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/85/3f/07a582935b06ee0dddaaf2656fbeb5f7c4e1476f0649d1e5ac3c0dac540f/rioxarray-0.23.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8a/69/6a93d8600c339d7687a05857c7907bd4dd8cf88691a5ea106d7a50af90a1/optax-0.2.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/38/c66bbdc5047f4776c2bd3e47e5295a350e3fa44d5b8942105e71c2a876a0/jaxtyping-0.3.11-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/96/04e7b441807b26b794da5b11e59ed7f83b2cf8af202bd7eba8ad2fa6046e/wadler_lindig-0.1.7-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/f8/0d32243c6b8e5dbee9097cf0c95bbdf8681ba4463c927c2e3445f3775814/lineax-0.1.1-py3-none-any.whl
@@ -6548,6 +6547,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ae/d6/69a76c8ccdef14af687c497040292a46e59fc7a0ab24724b60e50ca61030/equinox-0.13.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b2/d6/de0cc74f8d36976aeca0dd2e9cbf711882ff8e177495115fd82459afdc4d/mercantile-1.2.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/b3/7d/01e62f59e4166af1be6238d9f2b7f3453630c51b8044b412d05b5606532a/absl_py-2.5.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
@@ -19265,19 +19265,6 @@ packages:
   - pooch>=1.8 ; extra == 'data'
   - scipy>=1.11 ; extra == 'data'
   requires_python: '>=3.12'
-- pypi: ./references/geoml/optax_bayes
-  name: optax-bayes
-  requires_dist:
-  - jax>=0.4.35
-  - jaxlib>=0.4.35
-  - optax>=0.2.4
-  - jaxtyping>=0.2.34
-  - lineax>=0.1.1
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@74599b66a0cd0ea18fe1f718584d80571a57d4c6 ; extra == 'gaussx'
-  - equinox>=0.11 ; extra == 'equinox'
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@74599b66a0cd0ea18fe1f718584d80571a57d4c6 ; extra == 'all'
-  - equinox>=0.11 ; extra == 'all'
-  requires_python: '>=3.12'
 - pypi: ./references/geoml/pyrox/packages/pyrox
   name: pyrox
   requires_dist:
@@ -19826,6 +19813,7 @@ packages:
 - pypi: ./references/numerics/argminax
   name: argminax
   requires_dist:
+  - einx>=0.4.3
   - equinox>=0.13.8
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.13
   - jax>=0.10
@@ -19835,6 +19823,7 @@ packages:
   - optimistix>=0.1.0,<0.2
   - matfree>=0.6.2 ; extra == 'matfree'
   - numpyro>=0.21 ; extra == 'numpyro'
+  - optax>=0.2.4 ; extra == 'optax'
   requires_python: '>=3.12'
 - pypi: ./references/numerics/finitevolX
   name: finitevolx

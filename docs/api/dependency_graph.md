@@ -73,7 +73,6 @@ flowchart TB
     filterax["filterax"]
     manipy["manipy"]
     kernellib["kernellib"]
-    optax_bayes["optax_bayes"]
     xtremax["xtremax"]
     gauss_flows["gauss_flows"]
     geonnax["geonnax"]
@@ -110,7 +109,6 @@ flowchart TB
   kernellib --> gaussx
   kernellib --> geonnax
   manipy --> kernellib
-  optax_bayes -.-> gaussx
   plumax --> finitevolX
   plumax --> pipekit
   plumax --> radtrax
@@ -134,7 +132,7 @@ flowchart TB
 ```
 :::
 
-21 repositories, 41 packages and 50 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+20 repositories, 40 packages and 49 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -212,7 +210,7 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoModels | 0 | radtrax, sesmax | radiative transfer and Earth-system dynamics |
 | GeoML | 3 | pyrox, vardax | probabilistic models and variational assimilation (may build on filterax) |
 | GeoML | 2 | filterax, manipy | ensemble filters and manifold learning |
-| GeoML | 1 | kernellib, optax_bayes, xtremax | kernels, optimisers and extremes |
+| GeoML | 1 | kernellib, xtremax | kernels and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
 | GeoNumerics | 1 | finitevolX | finite volume |
 | GeoNumerics | 0 | spectraldiffx | spectral methods |
@@ -325,7 +323,6 @@ cannot import, so most of its tests could no longer be collected.
 | kernellib | geonnax | base | `kernellib → geonnax` |
 | manipy | gaussx | base | `manipy-jax → gaussx` |
 | manipy | kernellib | base | `manipy-jax → kernellib` |
-| optax_bayes | gaussx | extra | `optax-bayes → gaussx` |
 | pyrox | gauss_flows | extra | `pyrox-gp → gauss-flows` |
 | pyrox | gaussx | base | `pyrox-gp → gaussx` |
 | pyrox | geonnax | base | `pyrox-gp → geonnax` |

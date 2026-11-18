@@ -1152,7 +1152,6 @@ LAYERS = {
             "filterax",
             "gauss_flows",
             "xtremax",
-            "optax_bayes",
         ],
     ),
     "GeoNumerics": (
@@ -1420,7 +1419,7 @@ DG_LAYERS = [
         [
             [("vardax", 0.84)],
             [("pyrox", 0.2), ("filterax", 0.42), ("manipy", 0.64)],
-            [("optax_bayes", 0.06), ("kernellib", 0.28), ("xtremax", 0.95)],
+            [("kernellib", 0.28), ("xtremax", 0.95)],
             [("gauss_flows", 0.12), ("geonnax", 0.47)],
         ],
     ),

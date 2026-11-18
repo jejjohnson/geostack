@@ -33,7 +33,7 @@ This page follows the pattern of [gaussx's shelf](./skill_tree_gaussx.md) and sa
 
 argminax is small, new, and extends another library's protocols, so most of what a caller must know is not in argminax.
 
-:::{table} argminax's public names by unit, at the submodule pin. The public API lives in four public modules, `solve`, `adjoint`, `curvature` and `diagnose`; the package root exports only the exceptions.
+:::{table} argminax's public names by unit, at the submodule pin. The public API lives in five public modules, `solve`, `adjoint`, `curvature`, `diagnose` and `blr`; the package root exports only the exceptions.
 :label: tbl-am-units
 
 <!-- shelf:units:begin -->
@@ -42,7 +42,8 @@ argminax is small, new, and extends another library's protocols, so most of what
 | Solvers and adjoints | ② ④ | ML | `argminax.solve` 11, `argminax.adjoint` 3, `argminax.exceptions` 3, `argminax` 1 | 18 |
 | Curvature | ⓪ ③ | numerics, ML | `argminax.curvature` 7 | 7 |
 | Diagnostics | ④ | ML | `argminax.diagnose` 6 | 6 |
-| **All** | | | | **31** |
+| Bayesian learning rule | ② ④ | ML | `argminax.blr` 12 | 12 |
+| **All** | | | | **43** |
 <!-- shelf:units:end -->
 :::
 
@@ -50,10 +51,10 @@ argminax is small, new, and extends another library's protocols, so most of what
 :label: tbl-am-consumers
 
 <!-- shelf:uses:begin -->
-| Dependent package | Names used | Solvers and adjoints | Curvature | Diagnostics |
-|---|---|---|---|---|
-| vardax | 6 | 5 | 1 | 0 |
-| plumax | 1 | 0 | 1 | 0 |
+| Dependent package | Names used | Solvers and adjoints | Curvature | Diagnostics | Bayesian learning rule |
+|---|---|---|---|---|---|
+| vardax | 6 | 5 | 1 | 0 | 0 |
+| plumax | 1 | 0 | 1 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
 
