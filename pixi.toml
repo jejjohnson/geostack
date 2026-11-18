@@ -83,7 +83,6 @@ argminax = { path = "references/numerics/argminax", editable = true }
 integrix = { path = "references/numerics/integrix", editable = true }
 geonnax = { path = "references/geoml/geonnax", editable = true }
 kernellib = { path = "references/geoml/kernellib", editable = true }
-optax-bayes = { path = "references/geoml/optax_bayes", editable = true }
 filterax = { path = "references/geoml/filterax", editable = true }
 vardax = { path = "references/geoml/vardax", editable = true }
 gauss-flows = { path = "references/geoml/gauss_flows", editable = true }
@@ -159,6 +158,9 @@ spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
 # integrix's and gaussx's own dependencies and SciPy is a conda dependency
 functax = { path = "references/numerics/functax", editable = true }
 argminax = { path = "references/numerics/argminax", editable = true }
+# argminax.blr needs argminax's optax extra; the override drops extras, so
+# optax is listed itself
+optax = "*"
 integrix = { path = "references/numerics/integrix", editable = true }
 # scikit-image (for the GeoModels notebooks) is listed here, not in geomodels:
 # the geo solve group puts it in every geo environment's lock, and
@@ -168,7 +170,6 @@ scikit-image = "*"
 [feature.geoml.pypi-dependencies]
 geonnax = { path = "references/geoml/geonnax", editable = true }
 kernellib = { path = "references/geoml/kernellib", editable = true }
-optax-bayes = { path = "references/geoml/optax_bayes", editable = true }
 filterax = { path = "references/geoml/filterax", editable = true }
 vardax = { path = "references/geoml/vardax", editable = true }
 gauss-flows = { path = "references/geoml/gauss_flows", editable = true }

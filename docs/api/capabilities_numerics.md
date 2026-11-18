@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.6.15, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.6, integrix 0.0.5.
+Listed at gaussx 0.6.15, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.7, integrix 0.0.5.
 
 ## Upstream: `gaussx`
 
@@ -1009,11 +1009,11 @@ Optimisation with uncertainty at the minimum: solvers, curvature.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `Laplace` | class | The Gaussian N(x̂, Ŝ) at a minimum, with Ŝ = Ĥ⁻¹ never formed. |
+| `Laplace` | class | The Gaussian 𝒩(x̂, Σ_x∣y) at a minimum, with Σ_x∣y = Λ_x∣y⁻¹ never formed. |
 | `VarianceEstimate` | class | A probed estimate of the marginal variances, with its standard error. |
 | `gauss_newton` | function | Build the Laplace posterior at a minimum from whitened residuals. |
 | `low_rank` | function | Return a low-rank form of the covariance of a whitened posterior. |
-| `marginal_variance` | function | Return the marginal variances diag(Ŝ) of a Laplace posterior. |
+| `marginal_variance` | function | Return the marginal variances diag(Σ_x∣y) of a Laplace posterior. |
 | `push_forward` | function | Map a posterior in whitened coordinates back to physical ones. |
 | `sample_by_perturbation` | function | Draw from a Gauss–Newton posterior by perturbing its residuals. |
 
@@ -1022,26 +1022,26 @@ Optimisation with uncertainty at the minimum: solvers, curvature.
 | Name | Kind | What it does |
 |---|---|---|
 | `TraceEstimate` | class | A scalar diagnostic and its standard error. |
-| `averaging_kernel` | function | Return the averaging kernel A = ∂x̂/∂x of a Laplace posterior, lazily. |
+| `averaging_kernel` | function | Return the averaging kernel J_x̂ = ∂x̂/∂x of a Laplace posterior, lazily. |
 | `degrees_of_freedom` | function | Return the degrees of freedom for signal, the trace of the averaging kernel. |
 | `evidence` | function | Return the Laplace evidence log p(y) at a minimum. |
 | `information_content` | function | Return the information content of the measurement, in nats. |
-| `optimize_prior_precision` | function | Return the isotropic prior precision λ that maximises the Laplace evidence. |
+| `optimize_prior_precision` | function | Return the isotropic prior precision δ that maximises the Laplace evidence. |
 
 ### `argminax.solve`
 
 | Name | Kind | What it does |
 |---|---|---|
-| `CovarianceLaplaceResult` | class | The Gaussian at the mode of a GP with prior covariance K. |
+| `CovarianceLaplaceResult` | class | The Gaussian at the mode of a GP with prior covariance K_XX. |
 | `DualSolution` | class | The result of an observation-space solve. |
 | `GaussNewtonCG` | class | Gauss–Newton or Levenberg–Marquardt, each step by a matrix-free inner CG. |
-| `LaplaceModeResult` | class | The Gaussian N(x̂, Λ_x\|y⁻¹) at the mode, with gaussx's `LaplaceResult` fields. |
+| `LaplaceModeResult` | class | The Gaussian 𝒩(x̂, Λ_x∣y⁻¹) at the mode, with gaussx's `LaplaceResult` fields. |
 | `Reparametrised` | class | A bound on the state, imposed by solving in an unconstrained variable u. |
 | `SiteLaplaceResult` | class | The mode of a latent GP and the Newton site naturals there. |
 | `dual_solve` | function | Solve the 3D-Var increment in observation space. |
 | `incremental_dual_solve` | function | Incremental 3D-Var in observation space, for a nonlinear forward model. |
 | `laplace_mode` | function | Mode and Gaussian approximation of a latent Gaussian model, in precision form. |
-| `laplace_mode_covariance` | function | Laplace approximation of a GP with prior covariance K, by damped Newton. |
+| `laplace_mode_covariance` | function | Laplace approximation of a GP with prior covariance K_XX, by damped Newton. |
 | `laplace_mode_sites` | function | Laplace approximation by damping the site naturals, given a posterior-mean map. |
 
 ## Upstream: `integrix`

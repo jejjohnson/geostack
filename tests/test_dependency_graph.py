@@ -118,11 +118,11 @@ def test_a_second_undeclared_import_is_new() -> None:
 
 
 def test_an_extra_does_not_declare_what_import_runs() -> None:
-    # gaussx is an extra of optax-bayes: enough for an optional module only
-    where = "src/optax_bayes/new.py"
-    key = ("undeclared", f"optax-bayes:{where}", "gaussx")
-    assert key not in dg.violations(_with_import("optax-bayes", "gaussx", where))
-    eager = _with_import("optax-bayes", "gaussx", where, eager=True)
+    # xtremax is an extra of plumax: enough for an optional module only
+    where = "src/plumax/new.py"
+    key = ("undeclared", f"plumax:{where}", "xtremax")
+    assert key not in dg.violations(_with_import("plumax", "xtremax", where))
+    eager = _with_import("plumax", "xtremax", where, eager=True)
     assert key in dg.violations(eager)
 
 
@@ -249,6 +249,50 @@ def test_every_guard_renders(repo: str) -> None:
     namespace = {"__file__": str(where), "__name__": "guard"}
     exec(compile(source, str(where), "exec"), namespace)
     namespace["test_packages_are_current"]()
+
+
+def test_xrtoolz_may_import_geotoolz_but_not_the_reverse() -> None:
+    # inside geotoolz, the xrtoolz packages sit in package tier 2 above the rest
+    assert dg.tier_of(GRAPH.pkgs["xrtoolz-ops"]) == 2
+    assert dg.tier_of(GRAPH.pkgs["geotoolz-ops"]) == 1
+    assert not any(k[0] == "package-tier" for k in dg.violations(GRAPH))
+    assert ("package-tier", "geotoolz-ops", "xrtoolz-ops") in dg.violations(
+        _with_dependency("geotoolz-ops", "xrtoolz-ops")
+    )
+    seeded = _with_import("geotoolz-ops", "xrtoolz-ops", "src/geoops/seeded.py")
+    assert ("package-tier", "geotoolz-ops", "xrtoolz-ops") in dg.violations(seeded)
+    # the case a cycle check misses: xrproducts depends on no geotoolz-catalog
+    assert ("package-tier", "geotoolz-catalog", "xrtoolz-products") in dg.violations(
+        _with_dependency("geotoolz-catalog", "xrtoolz-products")
+    )
+
+
+def test_the_package_cycle_check_is_live() -> None:
+    # a re-export of xrops from pipekit-ops (a counterfactual) closes a cycle
+    # through xrtoolz-ops → geotoolz-ops → pipekit-ops
+    pairs = [(e.source, e.target) for e in GRAPH.pkg_edges]
+    comps = dg.sccs(list(GRAPH.pkgs), [*pairs, ("pipekit-ops", "xrtoolz-ops")])
+    loop = {"geotoolz-ops", "pipekit-ops", "xrtoolz-ops"}
+    assert any(loop <= set(comp) for comp in comps)
+
+
+def test_a_stale_package_tier_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(dg.PACKAGE_TIERS, "geotoolz", {"gone": 2})
+    assert ("stale-package-tier", "gone", "geotoolz") in dg.violations(GRAPH)
+
+
+def test_the_geotoolz_guard_rejects_xrops_in_geoops() -> None:
+    path, source = dg.guard("geotoolz", GRAPH)
+    where = dg.repo_path("geotoolz") / path
+    namespace = {"__file__": str(where), "__name__": "guard"}
+    exec(compile(source, str(where), "exec"), namespace)
+    seeded = namespace["ROOT"] / "packages/geotoolz-ops/src/geoops/seeded.py"
+    namespace["_modules"] = lambda roots: {
+        "geoops.seeded": (seeded, [("xrops", "module", 1)])
+    }
+    with pytest.raises(AssertionError, match="imports xrops"):
+        namespace["test_no_import_points_up"]("geotoolz-ops")
+    namespace["test_no_import_points_up"]("xrtoolz-products")  # the reverse is fine
 
 
 def test_a_guard_catches_a_stale_import_root() -> None:

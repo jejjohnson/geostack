@@ -17,7 +17,7 @@ This page is the GeoML layer. It may import GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at geonnax 0.0.11, kernellib 0.0.21, optax-bayes 0.0.3, filterax 0.0.6, vardax 0.3.5, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.3.0, pyrox-gp 0.3.0, pyrox-lgm 0.1.3, pyrox-nn 0.2.0, pyrox-ssm 0.2.0, manipy-jax 0.1.0.
+Listed at geonnax 0.0.11, kernellib 0.0.21, filterax 0.0.6, vardax 0.3.5, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.3.0, pyrox-gp 0.3.0, pyrox-lgm 0.1.3, pyrox-nn 0.2.0, pyrox-ssm 0.2.0, manipy-jax 0.1.0.
 
 ## Upstream: `geonnax`
 
@@ -330,10 +330,6 @@ Covariance kernels and scalable kernel methods on gaussx.
 | `to_cross_operator` | function | ``K(X1, X2)`` as a rectangular linear operator. |
 | `to_operator` | function | ``K(X, X) (+ noise * I)`` as a symmetric, PSD-tagged linear operator. |
 | `vector_inputs` | function | Point-major rows ``[x_n, i]`` for the vector-field kernels. |
-
-## Upstream: `optax-bayes`
-
-The Bayesian learning rule as optax gradient transformations.
 
 ## Upstream: `filterax`
 

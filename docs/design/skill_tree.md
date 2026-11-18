@@ -61,7 +61,7 @@ The tree already exists as data; only the links between skills are missing.
 | GeoStack | geotoolz | `build-geo-pipeline` | `9e92120` |
 :::
 
-No skill yet: functax, argminax, integrix, gauss_flows, optax_bayes, filterax, manipy, vardax, radtrax, somax, sesmax, plumax, pipekit, xrtoolz and georeader.
+No skill yet: functax, argminax, integrix, gauss_flows, filterax, manipy, vardax, radtrax, somax, sesmax, plumax, pipekit, xrtoolz and georeader.
 
 (st-example)=
 ## Running example: fitting a sparse GP with pyrox
@@ -102,7 +102,6 @@ flowchart TB
     filterax:::none
     manipy:::none
     kernellib:::has
-    optax_bayes:::none
     xtremax:::has
     gauss_flows:::none
     geonnax:::has
@@ -134,7 +133,6 @@ flowchart TB
   kernellib --> gaussx
   kernellib --> geonnax
   manipy --> kernellib
-  optax_bayes -.-> gaussx
   plumax --> finitevolX
   plumax --> pipekit
   pyrox -.-> gauss_flows
