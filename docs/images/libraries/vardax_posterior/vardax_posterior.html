@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>vardax — four ways to build the posterior covariance</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  #diagram { width: 1560px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 24px; align-items: stretch; }
+  .lane { display: flex; flex-direction: column; }
+  .pict {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 12px;
+    padding: 10px 12px; margin-top: 12px; height: 200px; box-sizing: border-box;
+  }
+  .sketch { width: 320px; height: 150px; display: block; }
+  .sketch text { font-family: var(--mono); font-size: 11.5px; fill: var(--muted); }
+  .cap {
+    font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.35;
+    min-height: 32px;
+  }
+  .eq {
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink-accent);
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: 9px 12px; margin-top: 12px; line-height: 1.55; min-height: 60px; box-sizing: border-box;
+  }
+  .eq sup, .eq sub { font-size: 0.75em; }
+  .facts { margin-top: 12px; }
+  .fact { display: grid; grid-template-columns: 82px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.45; margin-top: 6px; }
+  .fact .k { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.06em; padding-top: 2px; }
+  .fact .v { color: var(--ink); }
+  .fact code, .node code { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+  .fact sub, .node sub, .fact sup, .node sup { font-size: 0.75em; }
+  .special { margin-top: 26px; }
+  .special .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px; }
+  .base-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
+  .slab {
+    display: flex; align-items: center; gap: 14px; border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">vardax — four ways to build the posterior covariance</div>
+  <div class="subtitle">Every analysis can hand back a <code>Posterior</code> whose covariance Σ<sub>x∣y</sub> is a lazy operator. The families differ in how a mat-vec with it is computed, what it costs and when it is right. Each sketch is a two-dimensional state: grey is the prior or the cost, colour the posterior Σ<sub>x∣y</sub> as a two-standard-deviation ellipse.</div>
+
+  <div class="grid">
+    <div class="lane find">
+      <div class="lane-head"><span class="verb">closed form</span><span class="pkg">exact BLUE</span></div>
+      <div class="pict">
+        <svg class="sketch" data-kind="closed" viewBox="0 0 320 150"></svg>
+        <div class="cap">a linear h: the prior and one observation of x<sub>1</sub> give the posterior exactly</div>
+      </div>
+      <div class="eq">Σ<sub>x∣y</sub> = Σ<sub>x</sub> − Σ<sub>x</sub>H<sup>⊤</sup>(HΣ<sub>x</sub>H<sup>⊤</sup> + Σ<sub>ε</sub>)<sup>−1</sup>HΣ<sub>x</sub></div>
+      <div class="facts">
+        <div class="fact"><div class="k">call</div><div class="v"><code>OptimalInterpolation.posterior(batch)</code></div></div>
+        <div class="fact"><div class="k">mat-vec</div><div class="v">one innovation solve, with the analysis's own solver; Σ<sub>x</sub><sup>−1</sup> is never applied</div></div>
+        <div class="fact"><div class="k">used by</div><div class="v"><code>OptimalInterpolation</code></div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">h is linear and the errors Gaussian: exact, and the cheapest and most accurate</div></div>
+      </div>
+    </div>
+
+    <div class="lane compute">
+      <div class="lane-head"><span class="verb">Laplace</span><span class="pkg">the inverse Hessian</span></div>
+      <div class="pict">
+        <svg class="sketch" data-kind="laplace" viewBox="0 0 320 150"></svg>
+        <div class="cap">a curved cost: the Gaussian matches its curvature at the MAP x<sup>⋆</sup></div>
+      </div>
+      <div class="eq">Σ<sub>x∣y</sub> = Λ<sub>x∣y</sub><sup>−1</sup>, Λ<sub>x∣y</sub> = Σ<sub>x</sub><sup>−1</sup> + ∑<sub>t</sub> (H<sub>t</sub>F<sub>t←0</sub>)<sup>⊤</sup>Σ<sub>ε</sub><sup>−1</sup>(H<sub>t</sub>F<sub>t←0</sub>)</div>
+      <div class="facts">
+        <div class="fact"><div class="k">call</div><div class="v"><code>LaplaceCovariance()</code>, or <code>.posterior(batch)</code></div></div>
+        <div class="fact"><div class="k">mat-vec</div><div class="v">a Krylov solve (<code>lineax.CG</code> by default); each iteration is one tangent-linear and one adjoint pass</div></div>
+        <div class="fact"><div class="k">used by</div><div class="v"><code>ThreeDVar</code>, <code>StrongFourDVar</code>, <code>WeakFourDVar</code>, <code>ReducedBasisFourDVar</code></div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">the likelihood is Gaussian and the posterior unimodal around the MAP</div></div>
+      </div>
+    </div>
+
+    <div class="lane cut">
+      <div class="lane-head"><span class="verb">Gauss–Newton</span><span class="pkg">with a budget</span></div>
+      <div class="pict">
+        <svg class="sketch" data-kind="gn" viewBox="0 0 320 150"></svg>
+        <div class="cap">a CG solve per mat-vec: ≤ n<sub>krylov</sub> steps, each a tangent-linear and an adjoint pass</div>
+      </div>
+      <div class="eq">the same Λ<sub>x∣y</sub><sup>−1</sup>, with CG capped at n<sub>krylov</sub> per mat-vec</div>
+      <div class="facts">
+        <div class="fact"><div class="k">call</div><div class="v"><code>GaussNewtonHessian(n_krylov, tol)</code></div></div>
+        <div class="fact"><div class="k">mat-vec</div><div class="v">up to n<sub>krylov</sub> tangent-linear plus adjoint passes</div></div>
+        <div class="fact"><div class="k">used by</div><div class="v"><code>StrongFourDVar</code>; <code>IncrementalFourDVar</code> builds it at its last outer iterate</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">as Laplace, when the Krylov cost must be capped</div></div>
+      </div>
+    </div>
+
+    <div class="lane out">
+      <div class="lane-head"><span class="verb">ensemble</span><span class="pkg">from N<sub>ℰ</sub> analyses</span></div>
+      <div class="pict">
+        <svg class="sketch" data-kind="ensemble" viewBox="0 0 320 150"></svg>
+        <div class="cap">N<sub>ℰ</sub> analyses on perturbed y; their spread, inflated by ζ, is the covariance</div>
+      </div>
+      <div class="eq">Σ<sub>x∣y</sub> ≈ ζ/(N<sub>ℰ</sub> − 1) ∑<sub>e</sub> x̃<sup>(e)</sup>x̃<sup>(e)⊤</sup></div>
+      <div class="facts">
+        <div class="fact"><div class="k">call</div><div class="v"><code>EnsembleCovariance(n_members, inflation)</code></div></div>
+        <div class="fact"><div class="k">mat-vec</div><div class="v">a low-rank operator; the cost is the N<sub>ℰ</sub> analyses behind it</div></div>
+        <div class="fact"><div class="k">used by</div><div class="v"><code>FourDVarNet1D</code> and <code>FourDVarNet2D</code>, which have no <code>obs_op</code> for Laplace</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">multimodal or non-Gaussian; inflation ζ is built in, localisation is not, so taper before spatial use</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lane out special">
+    <div class="lane-head"><span class="verb">special cases</span><span class="pkg">the same families with the control changed</span></div>
+    <div class="row">
+      <div class="node">
+        <div class="name">a linear control</div>
+        <div class="desc"><code>LinearParameterization</code> or <code>ReducedBasisFourDVar(basis=...)</code>: the precision is built for the coefficients, Σ<sub>x∣y</sub> = ΦΣ<sub>z∣y</sub>Φ<sup>⊤</sup>, and samples factor only the small Σ<sub>z∣y</sub>; any other parameterization raises <code>ValueError</code></div>
+      </div>
+      <div class="node">
+        <div class="name">the weak constraint</div>
+        <div class="desc"><code>WeakFourDVar</code> returns the x<sub>0</sub> block of Λ<sub>w∣y</sub><sup>−1</sup> over w = (x<sub>0</sub>, η<sub>1</sub>, …, η<sub>T</sub>): the Kalman-smoother covariance of x<sub>0</sub> in the linear-Gaussian case</div>
+      </div>
+      <div class="node">
+        <div class="name">amortized</div>
+        <div class="desc"><code>AmortizedPosterior</code> needs no adapter: it draws from its q(x ∣ y) with <code>.sample(batch, key, n)</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">Posterior</div>
+      <div class="what">Every family returns the same container: <code>mean</code>, a lazy <code>cov</code>, <code>samples</code> and <code>provenance</code>. <code>sample</code> draws through <code>gaussx.sample_mvn</code>, and <code>GaussianMarkLikelihood</code> serialises it for population models.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">gaussx · lineax</div>
+      <div class="what"><code>gaussx.diag</code> reads the variances off the lazy operator without forming it; <code>lineax.CG</code> solves each mat-vec of the Laplace and Gauss–Newton families.</div>
+    </div>
+  </div>
+</div>
+<script src="_connect.js"></script>
+<script>
+  // Sketches in a two-dimensional state (x1 across, x2 up). The ellipses are
+  // computed from 2x2 covariances: two standard deviations, k px per unit.
+  const NS = "http://www.w3.org/2000/svg";
+  const CX = 160;
+  let CY = 60, K = 34;  // set per sketch below
+  const px = (u, v) => [CX + K * u, CY - K * v];
+  function el(svg, tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v);
+    svg.appendChild(e);
+    return e;
+  }
+  function ellipse(svg, mean, S, attrs) {
+    // eigen-decomposition of the 2x2 covariance S = [[a, b], [b, c]]
+    const [a, b, c] = [S[0][0], S[0][1], S[1][1]];
+    const tr = (a + c) / 2, d = Math.sqrt(((a - c) / 2) ** 2 + b * b);
+    const l1 = tr + d, l2 = tr - d;
+    const ang = Math.atan2(l1 - a, b || 1e-12) * 180 / Math.PI;
+    const [x, y] = px(mean[0], mean[1]);
+    el(svg, "ellipse", {
+      cx: x, cy: y, rx: 2 * K * Math.sqrt(l1), ry: 2 * K * Math.sqrt(Math.max(l2, 0)),
+      transform: `rotate(${-ang} ${x} ${y})`, ...attrs,
+    });
+  }
+  function dot(svg, u, v, r, attrs) {
+    const [x, y] = px(u, v);
+    el(svg, "circle", { cx: x, cy: y, r, ...attrs });
+  }
+  function label(svg, u, v, text, anchor = "start") {
+    const [x, y] = px(u, v);
+    el(svg, "text", { x, y, "text-anchor": anchor }).textContent = text;
+  }
+  // a curved (non-Gaussian) cost: level sets of a banana around the MAP
+  function banana(svg, attrs) {
+    for (const s of [1.0, 0.68, 0.38]) {
+      const pts = [];
+      for (let i = 0; i <= 64; i++) {
+        const t = (2 * Math.PI * i) / 64, u = 2.0 * s * Math.cos(t);
+        pts.push(px(u, 0.75 * s * Math.sin(t) + 0.28 * u * u).join(","));
+      }
+      el(svg, "polyline", { points: pts.join(" "), fill: "none", ...attrs });
+    }
+  }
+  const css = getComputedStyle(document.documentElement);
+  for (const svg of document.querySelectorAll(".sketch")) {
+    const lane = svg.closest(".lane");
+    const acc = getComputedStyle(lane).getPropertyValue("--accent").trim();
+    const grey = "#94a3b8";
+    const kind = svg.dataset.kind;
+    [CY, K] = kind === "closed" ? [75, 44] : [108, 52];
+    if (kind === "closed") {
+      // prior N(0, Sx), y = x1 + e with variance r: the BLUE update; the grey band
+      // is the likelihood, x1 within y ± 2 sqrt(r), saying nothing about x2
+      const Sx = [[1.0, 0.45], [0.45, 0.45]], r = 0.06, y = 0.8;
+      const g = [Sx[0][0] / (Sx[0][0] + r), Sx[1][0] / (Sx[0][0] + r)];
+      const mean = [g[0] * y, g[1] * y];
+      const Sp = [
+        [Sx[0][0] - g[0] * Sx[0][0], Sx[0][1] - g[0] * Sx[0][1]],
+        [Sx[1][0] - g[1] * Sx[0][0], Sx[1][1] - g[1] * Sx[0][1]],
+      ];
+      const [bx0] = px(y - 2 * Math.sqrt(r), 0), [bx1] = px(y + 2 * Math.sqrt(r), 0);
+      el(svg, "rect", { x: bx0, y: 2, width: bx1 - bx0, height: 146, fill: grey, opacity: 0.18 });
+      ellipse(svg, [0, 0], Sx, { fill: "none", stroke: grey, "stroke-width": 1.5, "stroke-dasharray": "5 4" });
+      ellipse(svg, mean, Sp, { fill: acc, "fill-opacity": 0.25, stroke: acc, "stroke-width": 2 });
+      dot(svg, mean[0], mean[1], 3, { fill: acc });
+      label(svg, -2.75, 0.85, "prior Σx");
+      label(svg, 1.4, 1.35, "y ± 2σ, x1 only");
+      label(svg, 1.4, -0.75, "Σx|y");
+    } else {
+      banana(svg, { stroke: grey, "stroke-width": 1.2, opacity: kind === "ensemble" ? 0.9 : 0.7 });
+      dot(svg, 0, 0, 3, { fill: kind === "ensemble" ? grey : acc });
+      const Sl = [[0.36, 0], [0, 0.05]];  // the curvature at the MAP, inverted
+      if (kind === "laplace" || kind === "gn") {
+        ellipse(svg, [0, 0], Sl, { fill: acc, "fill-opacity": 0.22, stroke: acc, "stroke-width": 2 });
+        label(svg, 0.12, 0.22, "x⋆");
+      }
+      if (kind === "laplace") label(svg, 1.3, -0.45, "Σx|y = Λ⁻¹");
+      if (kind === "gn") {
+        // CG on the quadratic with Hessian L = Sl^-1, from u0 to the solution 0
+        const L = [[1 / 0.36, 0], [0, 1 / 0.05]];
+        let x = [-1.6, 0.5], rr = [-(L[0][0] * x[0]), -(L[1][1] * x[1])], d = [...rr];
+        const path = [x];
+        for (let k = 0; k < 2; k++) {
+          const Ld = [L[0][0] * d[0], L[1][1] * d[1]];
+          const a = (rr[0] ** 2 + rr[1] ** 2) / (d[0] * Ld[0] + d[1] * Ld[1]);
+          x = [x[0] + a * d[0], x[1] + a * d[1]];
+          const rn = [rr[0] - a * Ld[0], rr[1] - a * Ld[1]];
+          const bt = (rn[0] ** 2 + rn[1] ** 2) / (rr[0] ** 2 + rr[1] ** 2);
+          d = [rn[0] + bt * d[0], rn[1] + bt * d[1]];
+          rr = rn;
+          path.push(x);
+        }
+        el(svg, "polyline", {
+          points: path.map((q) => px(q[0], q[1]).join(",")).join(" "),
+          fill: "none", stroke: acc, "stroke-width": 2, "stroke-dasharray": "5 3",
+        });
+        path.forEach((q, i) => { dot(svg, q[0], q[1], 3.2, { fill: i ? acc : "#fff", stroke: acc, "stroke-width": 1.5 }); });
+      }
+      if (kind === "ensemble") {
+        // members along the curved cost, and their inflated sample covariance
+        const us = [-1.7, -1.15, -0.55, -0.1, 0.35, 0.8, 1.3, 1.75];
+        const vs = [-0.12, 0.2, -0.15, 0.1, -0.18, 0.14, -0.08, 0.16];
+        const pts = us.map((u, i) => [u, vs[i] + 0.28 * u * u]);
+        const n = pts.length, m = [0, 1].map((j) => pts.reduce((s, q) => s + q[j], 0) / n);
+        const C = [[0, 0], [0, 0]];
+        for (const q of pts) for (const i of [0, 1]) for (const j of [0, 1])
+          C[i][j] += (1.1 * (q[i] - m[i]) * (q[j] - m[j])) / (n - 1);
+        ellipse(svg, m, C, { fill: acc, "fill-opacity": 0.14, stroke: acc, "stroke-width": 2, "stroke-dasharray": "6 4" });
+        for (const q of pts) dot(svg, q[0], q[1], 3.6, { fill: acc });
+        label(svg, 2.15, 1.25, "x(e)");
+      }
+    }
+  }
+  ready();
+</script>
+</body>
+</html>
