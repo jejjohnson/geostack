@@ -1,0 +1,5 @@
+- **Provides.** Differentiable radiative transfer for methane and multi-gas remote sensing: a layered forward model from an atmospheric state to band values, with Jacobians from automatic differentiation.
+- **Start from.** `radtrax.ForwardModel`, `radtrax.atmosphere.AtmosphericState`, `radtrax.atmosphere.layers_from_levels`, `radtrax.atmosphere.ViewingGeometry`, `radtrax.spectroscopy.TableOpacity`, `radtrax.solvers.BeerLambert`, `radtrax.surface.Lambertian`, `radtrax.instrument.BandInstrument`.
+- **Keep.** `ForwardModel(opacity, solver, instrument)(atm, surface, geometry)` gives the band values of one pixel, the surface and geometry being arguments because they change per pixel; spectroscopy needs float64, so enable `jax_enable_x64`.
+- **Never.** Write a Jacobian by hand or differentiate a whole swath at once; take `jax.jacrev` of the per-pixel model and map pixels with `eqx.filter_vmap` outside it.
+- **Open the repository when.** You need more than these names: it has no skill yet, so read its `AGENTS.md` and its section of GeoStack's capability index.

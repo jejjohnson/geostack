@@ -35,6 +35,7 @@ blocks into a checkout of it, for a pull request there, like
 from __future__ import annotations
 
 import argparse
+import ast
 import configparser
 import graphlib
 import json
@@ -366,6 +367,102 @@ def adopted(tree: Tree, repo: str) -> bool:
     )
 
 
+def _public(module: Path) -> set[str] | None:
+    """The names a module file exports: its ``__all__``, else what it binds.
+
+    ``__all__`` is read wherever it is assigned or extended, so names appended
+    inside a ``try`` (an optional extra) count. Without one, every name bound
+    at the top level counts. ``None`` when the file cannot be parsed.
+    """
+    try:
+        tree = ast.parse(module.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError):
+        return None
+    listed: set[str] = set()
+    found = False
+    for node in ast.walk(tree):
+        targets = (
+            node.targets
+            if isinstance(node, ast.Assign)
+            else [node.target]
+            if isinstance(node, ast.AugAssign)
+            else []
+        )
+        if any(isinstance(t, ast.Name) and t.id == "__all__" for t in targets):
+            found = True
+            listed |= {
+                c.value
+                for c in ast.walk(node.value)
+                if isinstance(c, ast.Constant) and isinstance(c.value, str)
+            }
+    if found:
+        return listed
+    bound: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            bound.add(node.name)
+        elif isinstance(node, ast.Import | ast.ImportFrom):
+            bound |= {(a.asname or a.name).split(".")[0] for a in node.names}
+        elif isinstance(node, ast.Assign | ast.AnnAssign):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            bound |= {t.id for t in targets if isinstance(t, ast.Name)}
+    return bound
+
+
+def resolves(root: Path, parts: list[str]) -> bool:
+    """Whether ``parts`` names a submodule or a public name under ``root``.
+
+    ``root`` is an import package's directory; ``parts`` is what follows the
+    package in a dotted name. Leading parts that are submodules are walked
+    into; the part after them must be a public name of that module.
+    """
+    here = root
+    for i, part in enumerate(parts):
+        # a private submodule counts only when its parent exports it by name
+        listed = _public(here / "__init__.py") or set()
+        open_ = not part.startswith("_") or part in listed
+        if open_ and (here / part).is_dir():
+            here = here / part
+            continue
+        last = i == len(parts) - 1
+        if open_ and (here / f"{part}.py").is_file():
+            if last:
+                return True
+            names = _public(here / f"{part}.py")
+            return i == len(parts) - 2 and names is not None and parts[-1] in names
+        names = _public(here / "__init__.py") if here.is_dir() else None
+        return last and names is not None and part in names
+    return True
+
+
+def card_names(tree: Tree, pkgs: dict[str, dg.Package]) -> list[str]:
+    """Gate ST-7: every ``package.name`` a card writes in backticks is public.
+
+    A card may name its own library only by a path that exists and is not
+    private: each part before the last is a submodule (one with a leading
+    underscore only when its parent exports it), and the last is in that
+    module's ``__all__``.
+    """
+    roots: dict[str, dict[str, Path]] = {}
+    for pkg in pkgs.values():
+        for root in pkg.modules:
+            roots.setdefault(pkg.repo, {})[dg._module_name(root)] = root
+    out: list[str] = []
+    for repo, node in tree.nodes.items():
+        files = [card_file(tree, repo)]
+        files += [card_file(tree, repo, unit) for unit in node.units]
+        modules = roots.get(repo, {})
+        for path in files:
+            if path is None:
+                continue
+            text = path.read_text(encoding="utf-8")
+            for dotted in sorted(set(re.findall(r"`([A-Za-z_][\w.]*\w)", text))):
+                head, *parts = dotted.split(".")
+                if head in modules and parts and not resolves(modules[head], parts):
+                    out.append(f"ST-7 {repo}: card {path.name} names {dotted}")
+    return out
+
+
 def sources() -> dict[str, str]:
     """Each repository's ``owner/name`` on GitHub, from ``.gitmodules``."""
     parser = configparser.ConfigParser()
@@ -500,9 +597,12 @@ def content_violations(tree: Tree) -> list[str]:
     return out
 
 
-def violations(tree: Tree) -> list[str]:
-    """Every gate this script checks: ST-1, then ST-2 to ST-4."""
-    return graph_violations(tree) or content_violations(tree)
+def violations(tree: Tree, pkgs: dict[str, dg.Package] | None = None) -> list[str]:
+    """Every gate checked here: ST-1, then ST-2 to ST-4, and ST-7 given ``pkgs``."""
+    found = graph_violations(tree) or content_violations(tree)
+    if pkgs is not None and not found:
+        found = card_names(tree, pkgs)
+    return found
 
 
 def marketplace_stale(tree: Tree) -> bool:
@@ -555,7 +655,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{args.write} is third party: geostack never writes to it")
         return 1
     paths = {args.write: args.into.resolve()} if args.into else {}
-    tree = build(paths=paths)
+    graph = dg.build()
+    tree = build(graph, paths=paths)
     if args.write:
         if args.write not in tree.nodes or not tree.nodes[args.write].skills:
             print(f"{args.write} has no plugin with a skill")
@@ -570,7 +671,7 @@ def main(argv: list[str] | None = None) -> int:
                 path.write_text(text, encoding="utf-8")
                 print(f"wrote {path}")
         return 0
-    found = violations(tree)
+    found = violations(tree, graph.pkgs)
     if args.check and not found and marketplace_stale(tree):
         found = [
             f"stale: {MARKETPLACE.relative_to(ROOT)} (python scripts/skill_tree.py)"

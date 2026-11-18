@@ -1,0 +1,5 @@
+- **Provides.** Variational data assimilation in JAX: optimal interpolation, 3D-Var, strong and weak 4D-Var, learned 4DVarNet models, and posterior covariance estimates at the analysis.
+- **Start from.** `vardax.ThreeDVar`, `vardax.StrongFourDVar`, `vardax.OptimalInterpolation`, `vardax.Batch1D`, `vardax.PointObsBatch`, `vardax.MaskedIdentity`, `vardax.CallableObs`, `vardax.LaplaceCovariance`.
+- **Keep.** Give the prior and observation covariances as lineax operators (`prior_cov_op`, `obs_cov_op`); a model is called on a batch whose leading axis is the sample (`Batch1D(input=..., mask=...)`, mask 1 where observed) and returns the analysis for each sample.
+- **Never.** Write your own descent loop or invert a covariance by hand; pass a `minimiser` and the covariance operators to the model, and use `filterax` for Kalman filtering, which vardax does not provide.
+- **Open the repository when.** You need more than these names: it has no skill yet, so read its `AGENTS.md` and its section of GeoStack's capability index.

@@ -1,0 +1,5 @@
+- **Provides.** Bayesian models as Equinox modules that own NumPyro sample and param sites, Gaussian processes and Bayesian neural-network layers, ensemble MAP and variational fits, and latent Gaussian models fitted with INLA.
+- **Start from.** `pyrox._core.PyroxModule`, `pyrox._core.pyrox_method`, `pyrox_gp.RBF`, `pyrox_gp.GPPrior`, `pyrox_gp.gp_factor`, `pyrox_nn.DenseReparameterization`, `pyrox_ssm.MarkovGPPrior`, `pyrox_lgm.LGM`.
+- **Keep.** Inside a `PyroxModule` create sites with `self.pyrox_sample` in a `@pyrox_method`, give two instances of one class distinct `pyrox_name` values, and close over a `Parameterized` module instead of rebuilding it with `eqx.tree_at` or passing it through `jit`.
+- **Never.** Call `numpyro.sample` directly inside an Equinox module, or `cho_solve` a covariance; use `pyrox_sample` and `pyrox_gp.gp_factor`.
+- **Open the skill when.** You write a new probabilistic module, set kernel priors and guides, use sparse, Markov, multi-output or non-Gaussian GPs, Bayesian neural fields, deep ensembles, or INLA components.

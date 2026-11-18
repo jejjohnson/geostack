@@ -176,6 +176,28 @@ def test_st1_fails_on_a_cycle_and_on_a_unit_the_shelf_lacks(tree) -> None:
     assert any(m.startswith("ST-1 cycle") for m in st.graph_violations(tree))
 
 
+def test_st7_a_card_names_only_public_names_by_a_path_that_exists(tmp_path) -> None:
+    pkg = tmp_path / "lib"
+    (pkg / "sub").mkdir(parents=True)
+    (pkg / "_core").mkdir()
+    (pkg / "_hidden").mkdir()
+    (pkg / "__init__.py").write_text(
+        "__all__ = ['solve', '_core']\ntry:\n    __all__ += ['Extra']\n"
+        "except ImportError:\n    pass\n"
+    )
+    (pkg / "sub" / "__init__.py").write_text("__all__ = ['Grid']\n")
+    (pkg / "_core" / "__init__.py").write_text("__all__ = ['Base']\n")
+    (pkg / "_hidden" / "__init__.py").write_text("__all__ = ['Secret']\n")
+    (pkg / "plain.py").write_text("import os\n\ndef read():\n    pass\n")
+    for ok in (["solve"], ["Extra"], ["sub"], ["sub", "Grid"], ["_core", "Base"]):
+        assert st.resolves(pkg, ok), ok
+    for ok in (["plain"], ["plain", "read"]):
+        assert st.resolves(pkg, ok), ok
+    for bad in (["nope"], ["sub", "nope"], ["_hidden", "Secret"], ["plain", "nope"]):
+        assert not st.resolves(pkg, bad), bad
+    assert not st.resolves(pkg, ["solve", "attr"])
+
+
 def test_description_length_reads_plain_and_folded_scalars() -> None:
     assert st.description_length("---\nname: a\ndescription: four\n---\nbody") == 4
     folded = "---\ndescription: >-\n  two\n  words\nname: a\n---\n"
@@ -207,7 +229,14 @@ def test_marketplace_lists_each_plugin_with_the_plugins_it_builds_on(tree) -> No
 def test_the_tree_at_the_pins_passes_its_gates() -> None:
     graph = st.dg.build()
     tree = st.build(graph)
-    assert st.violations(tree) == [], "python scripts/skill_tree.py"
+    assert st.violations(tree, graph.pkgs) == [], "python scripts/skill_tree.py"
+    # a block quotes a parent's card, so every repository with a dependent has one
+    missing = [
+        repo
+        for repo, node in tree.nodes.items()
+        if tree.children(repo) and not node.units and not st.card_file(tree, repo)
+    ]
+    assert missing == [], "a repository that others build on has no card"
     assert not st.marketplace_stale(tree), "python scripts/skill_tree.py"
     assert {(r, e.parent) for r, es in tree.edges.items() for e in es} == {
         (e.source, e.target) for e in graph.edges
