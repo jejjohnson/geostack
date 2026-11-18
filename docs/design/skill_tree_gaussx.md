@@ -2,7 +2,7 @@
 title: "gaussx's skill shelf: 24 use skills by role, seven cards, three listed"
 subtitle: "Design · the skill tree worked out for one library"
 short_title: Skill tree · gaussx
-description: "Proposes gaussx's shelf of agent skills as the worked example of the skill tree: a shared role-ladder skill at the root, a shelf of 24 use skills tagged by role, grouped into seven units that each carry a contract card, three of them listed, the four existing contributor skills linked to the rungs they extend, and the third-party contracts each unit relies on. Measured on gaussx at 7fa1a38 and on the libraries that depend on it."
+description: "Proposes gaussx's shelf of agent skills as the worked example of the skill tree: a shared role-ladder skill at the root, a shelf of 24 use skills tagged by role, grouped into seven units that each carry a contract card, three of them listed, the four existing contributor skills linked to the rungs they extend, and the third-party contracts each unit relies on. Measured on gaussx at 6f98b68 and on the libraries that depend on it."
 date: 2026-11-12
 keywords:
   - agents
@@ -38,25 +38,25 @@ How should it split so that each library above gaussx gets only the part it uses
 
 One skill covers a ladder of five rungs, and no dependent uses all of it.
 
-gaussx @ `7fa1a38` exports 352 names in `gaussx.__all__` without the numpyro extra, and seven more with it.
+gaussx @ `6f98b68` exports 367 names in `gaussx.__all__` without the numpyro extra, and seven more with it.
 Its one skill, `structured-gaussian-linalg`, is 156 lines and costs about 2.1k tokens to load.
 Every count on this page comes from `scripts/skill_shelf.py`, which reads the submodules at the pins of this commit; `tests/test_skill_shelf.py` fails when a table here is stale.
 [](#tbl-sg-units) counts the public names by unit, from the subpackage each one is imported from in `src/gaussx/__init__.py`.
 
-:::{table} gaussx's public names by unit. A unit groups subpackages that the same dependents use; its rungs follow `AGENTS.md` @ `7fa1a38` and the ladder of the [kinds-and-roles](./kinds_and_roles.md) page, and its band is that page's.
+:::{table} gaussx's public names by unit. A unit groups subpackages that the same dependents use; its rungs follow `AGENTS.md` @ `6f98b68` and the ladder of the [kinds-and-roles](./kinds_and_roles.md) page, and its band is that page's.
 :label: tbl-sg-units
 
 <!-- shelf:units:begin -->
 | Unit | Rungs | Home band | Subpackages | Names |
 |---|---|---|---|---|
-| Structures and primitives | ⓪ ① | numerics | `gaussx._operators` 38, `gaussx._primitives` 29, `gaussx._tags` 24, `gaussx._linalg` 20, `gaussx._gmrf` 12, `gaussx._sparse` 4 | 127 |
+| Structures and primitives | ⓪ ① | numerics | `gaussx._operators` 41, `gaussx._primitives` 29, `gaussx._tags` 24, `gaussx._linalg` 20, `gaussx._gmrf` 12, `gaussx._sparse` 4 | 130 |
 | Strategies | ②, setup | numerics, ML | `gaussx._strategies` 20, `gaussx._randomized` 10, `gaussx._sketching` 7, `gaussx._preconditioners` 5, `gaussx._solve_frontend` 2 | 44 |
-| Gaussians | ③ | ML | `gaussx._expfam` 16, `gaussx._distributions` 11 | 27 |
+| Gaussians | ③ | ML | `gaussx._expfam` 16, `gaussx._distributions` 15 | 31 |
 | Gaussian processes | ④ | ML | `gaussx._gp` 29 | 29 |
-| State space | ④ | ML | `gaussx._ssm` 53 | 53 |
-| Quadrature | ② to ④ | ML | `gaussx._quadrature` 44 | 44 |
-| Inference and ensembles | ④ | ML | `gaussx._inference` 28 | 28 |
-| **All** | | | | **352** |
+| State space | ④ | ML | `gaussx._ssm` 54 | 54 |
+| Quadrature | ② to ④ | ML | `gaussx._quadrature` 45 | 45 |
+| Inference and ensembles | ④ | ML | `gaussx._inference` 34 | 34 |
+| **All** | | | | **367** |
 <!-- shelf:units:end -->
 :::
 
@@ -68,11 +68,11 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 <!-- shelf:uses:begin -->
 | Dependent package | Names used | Structures and primitives | Strategies | Gaussians | Gaussian processes | State space | Quadrature | Inference and ensembles |
 |---|---|---|---|---|---|---|---|---|
-| pyrox-gp | 45 | 10 | 6 | 3 | 9 | 0 | 13 | 4 |
-| pyrox-ssm | 33 | 3 | 2 | 1 | 1 | 16 | 7 | 3 |
+| pyrox-gp | 46 | 10 | 6 | 3 | 9 | 0 | 14 | 4 |
+| pyrox-ssm | 34 | 3 | 2 | 1 | 1 | 16 | 8 | 3 |
 | pyrox-lgm | 29 | 16 | 0 | 0 | 0 | 4 | 9 | 0 |
 | kernellib | 25 | 16 | 9 | 0 | 0 | 0 | 0 | 0 |
-| argminax | 17 | 9 | 6 | 0 | 0 | 0 | 0 | 2 |
+| argminax | 18 | 9 | 6 | 0 | 0 | 0 | 0 | 3 |
 | filterax | 17 | 3 | 1 | 1 | 0 | 1 | 0 | 11 |
 | plumax | 12 | 8 | 1 | 2 | 0 | 1 | 0 | 0 |
 | gauss-flows | 7 | 0 | 0 | 0 | 0 | 4 | 2 | 1 |
@@ -195,7 +195,7 @@ The extend skills stop restating what a Module is.
 The shelf is the library: one short skill file per job a caller comes with, tagged with its role, so each can be pointed at on its own.
 With `role-ladder` as the root, an entry never explains what a strategy or a model is, which keeps it short.
 
-:::{table} gaussx's shelf. Each use skill is one file; the extend skills exist today in `.claude/skills/`. Names are from `gaussx.__all__` @ `7fa1a38`.
+:::{table} gaussx's shelf. Each use skill is one file; the extend skills exist today in `.claude/skills/`. Names are from `gaussx.__all__` @ `6f98b68`.
 :label: tbl-sg-shelf
 
 | Role | Skill | Covers | Subpackage |
@@ -243,7 +243,7 @@ gaussx has seven, grouped by the band that works there.
 
 Inside gaussx the units are read in ladder order: nouns, verbs, adverbs, then models and algorithms.
 Two import tangles do not change that order.
-Layers 0, 1 and 1.5 "form one dispatch core with import cycles", and `_distributions` uses the Kalman routines of `_ssm` (`AGENTS.md` @ `7fa1a38`).
+Layers 0, 1 and 1.5 "form one dispatch core with import cycles", and `_distributions` uses the Kalman routines of `_ssm` (`AGENTS.md` @ `6f98b68`).
 
 ### Three listed skills
 
@@ -296,7 +296,7 @@ Below the threshold, with no subclass, the unit is named on an "also uses" line.
 | pyrox-ssm | Structures and primitives; State space; Quadrature; Inference and ensembles | Strategies (2); Gaussians (1); Gaussian processes (1) |
 | pyrox-lgm | Structures and primitives; State space; Quadrature |  |
 | kernellib | Structures and primitives; Strategies |  |
-| argminax | Structures and primitives; Strategies | Inference and ensembles (2) |
+| argminax | Structures and primitives; Strategies; Inference and ensembles |  |
 | filterax | Structures and primitives; Inference and ensembles | Strategies (1); Gaussians (1); State space (1) |
 | plumax | Structures and primitives | Strategies (1); Gaussians (2); State space (1) |
 | gauss-flows | State space | Quadrature (2); Inference and ensembles (1) |
@@ -337,7 +337,7 @@ They stay contributor skills, loaded inside the gaussx repository only.
 
 A third-party library gets a card in a use skill only when its types appear in that unit's public signatures.
 
-:::{table} gaussx's third-party dependencies and where they surface. "Imported in" is from `src/gaussx` @ `7fa1a38`.
+:::{table} gaussx's third-party dependencies and where they surface. "Imported in" is from `src/gaussx` @ `6f98b68`.
 :label: tbl-sg-substrate
 
 | Library | Imported in | Surfaces to a caller | Card in |
