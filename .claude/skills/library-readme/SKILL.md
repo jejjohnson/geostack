@@ -162,7 +162,7 @@ Both scripts come with the personal skills in [jejagents](https://github.com/jej
 - [ ] One runnable quickstart in `code-sketch` form, with its real printed output.
 - [ ] Derivations, later examples and training loops moved to the docs quickstart, which uses the same notation.
 - [ ] Every table name in `__all__`, every URL 200, every status claim checked live.
-- [ ] `check_math.py --target github` clean; prose in the docs register, no em dashes, no hard wraps.
+- [ ] `check_math.py --target github` clean (or the maths checked by hand against §10 when the script is not installed, and the PR says so); prose in the docs register, no em dashes, no hard wraps.
 
 ## Open questions
 
