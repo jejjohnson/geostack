@@ -4,8 +4,12 @@
 <meta charset="utf-8">
 <title>vardax — four ways to differentiate a rollout</title>
 <link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <style>
   #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.1em; }
+  #diagram .eq .katex { font-size: 1.12em; }
+  #diagram .dot .lbl .katex { font-size: 1em; }
   .grid { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 24px; align-items: stretch; }
   .lane { display: flex; flex-direction: column; }
   .chain {
@@ -19,7 +23,7 @@
   .dot.dead { background: transparent; border: 2px solid #b6bfcc; width: 12px; height: 12px; }
   .dot .lbl {
     position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
-    font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap;
+    font-size: 11.5px; color: var(--muted); white-space: nowrap;
   }
   .seg { flex: 1; height: 2.5px; margin: 0 4px; background: var(--accent); }
   .seg.dead { background: #cbd5e1; height: 2px; }
@@ -31,7 +35,7 @@
   }
   .how { font-size: 12px; color: var(--muted); margin: 8px 0 0 2px; line-height: 1.4; min-height: 34px; }
   .eq {
-    font-family: var(--mono); font-size: 12.5px; color: var(--ink-accent);
+    font-size: 12.5px; color: var(--ink-accent);
     background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
     padding: 9px 12px; margin-top: 12px; line-height: 1.5;
   }
@@ -58,25 +62,25 @@
 <body>
 <div id="diagram">
   <div class="title">vardax — four ways to differentiate a rollout</div>
-  <div class="subtitle">Each computes the gradient ∇<sub>x₀</sub>𝒥 of a 4D-Var cost through the rollout. What changes is which states of the rollout are kept for the backward pass, so what it costs and when it is right.</div>
+  <div class="subtitle">Each computes the gradient <span class="m">\nabla_{\mathbf{x}_0} \mathcal{J}</span> of a 4D-Var cost through the rollout. What changes is which states of the rollout are kept for the backward pass, so what it costs and when it is right.</div>
 
   <div class="grid">
     <!-- direct -->
     <div class="lane find">
       <div class="lane-head"><span class="verb">direct</span><span class="pkg">keep every step</span></div>
       <div class="chain">
-        <div class="dot live"><span class="lbl">x<sub>0</sub></span></div><div class="seg"></div>
-        <div class="dot live"><span class="lbl">x<sub>1</sub></span></div><div class="seg"></div>
-        <div class="dot live"><span class="lbl">x<sub>2</sub></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}_0</span></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}_1</span></span></div><div class="seg"></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}_2</span></span></div><div class="seg"></div>
         <span class="gap">…</span><div class="seg"></div>
-        <div class="dot live"><span class="lbl">x<sub>N</sub></span></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}_N</span></span></div>
       </div>
       <div class="how">reverse mode through the scan of steps, no checkpointing</div>
-      <div class="eq">x<sup>†</sup><sub>t−1</sub> = F<sub>t</sub><sup>⊤</sup> x<sup>†</sup><sub>t</sub> + ∇<sub>x<sub>t−1</sub></sub>𝒥<sub>o</sub></div>
+      <div class="eq"><span class="m">\mathbf{x}^\dagger_{t-1} = \mathbf{F}_t^\top \mathbf{x}^\dagger_t + \nabla_{\mathbf{x}_{t-1}} \mathcal{J}_o</span></div>
       <div class="facts">
         <div class="fact"><div class="k">adjoint</div><div class="v"><code>dfx.DirectAdjoint()</code></div></div>
-        <div class="fact"><div class="k">memory</div><div class="v">O(N<sub>step</sub>)</div></div>
-        <div class="fact"><div class="k">time</div><div class="v">O(N<sub>step</sub>)</div></div>
+        <div class="fact"><div class="k">memory</div><div class="v"><span class="m">O(N_\text{step})</span></div></div>
+        <div class="fact"><div class="k">time</div><div class="v"><span class="m">O(N_\text{step})</span></div></div>
         <div class="fact"><div class="k">right when</div><div class="v">short windows, or debugging: the gradient is plain reverse mode with no tricks</div></div>
       </div>
     </div>
@@ -85,18 +89,18 @@
     <div class="lane compute">
       <div class="lane-head"><span class="verb">checkpoint</span><span class="pkg">keep a few</span></div>
       <div class="chain">
-        <div class="dot live"><span class="lbl">x<sub>0</sub></span></div><div class="seg dead"></div>
-        <div class="dot dead"><span class="lbl">x<sub>1</sub></span></div><div class="seg dead"></div>
-        <div class="dot live"><span class="lbl">x<sub>2</sub></span></div><div class="seg dead"></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}_0</span></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}_1</span></span></div><div class="seg dead"></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}_2</span></span></div><div class="seg dead"></div>
         <span class="gap">…</span><div class="seg dead"></div>
-        <div class="dot live"><span class="lbl">x<sub>N</sub></span></div>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}_N</span></span></div>
       </div>
       <div class="how">the same recursion, each state recomputed from the nearest checkpoint</div>
-      <div class="eq">N<sub>ckpt</sub> = ⌈log<sub>2</sub> N<sub>step</sub>⌉ + 1 by default</div>
+      <div class="eq"><span class="m">N_\text{ckpt} = \lceil \log_2 N_\text{step} \rceil + 1</span> by default</div>
       <div class="facts">
         <div class="fact"><div class="k">adjoint</div><div class="v"><code>dfx.RecursiveCheckpointAdjoint()</code>, diffrax's default</div></div>
-        <div class="fact"><div class="k">memory</div><div class="v">O(log N<sub>step</sub>)</div></div>
-        <div class="fact"><div class="k">time</div><div class="v">O(N<sub>step</sub> log N<sub>step</sub>)</div></div>
+        <div class="fact"><div class="k">memory</div><div class="v"><span class="m">O(\log N_\text{step})</span></div></div>
+        <div class="fact"><div class="k">time</div><div class="v"><span class="m">O(N_\text{step} \log N_\text{step})</span></div></div>
         <div class="fact"><div class="k">right when</div><div class="v">by default: it balances memory and time; override <code>checkpoints</code> only if profiling shows memory pressure</div></div>
       </div>
     </div>
@@ -105,17 +109,17 @@
     <div class="lane cut">
       <div class="lane-head"><span class="verb">backsolve</span><span class="pkg">solve backwards</span></div>
       <div class="chain">
-        <div class="dot dead"><span class="lbl">x<sub>0</sub></span></div><div class="seg dead"></div>
-        <div class="dot dead"><span class="lbl">x<sub>1</sub></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}_0</span></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}_1</span></span></div><div class="seg dead"></div>
         <span class="gap">…</span><div class="seg dead"></div>
-        <div class="dot live"><span class="lbl">x<sub>N</sub></span></div>
-        <span class="tag">← x<sup>†</sup>(t)</span>
+        <div class="dot live"><span class="lbl"><span class="m">\mathbf{x}_N</span></span></div>
+        <span class="tag"><span class="m">\leftarrow \mathbf{x}^\dagger(t)</span></span>
       </div>
-      <div class="how">the forward state is recomputed during the backward solve, from t = T to 0</div>
-      <div class="eq">dx<sup>†</sup>/dt = −F(t)<sup>⊤</sup> x<sup>†</sup>(t) − ∇<sub>x(t)</sub>𝒥<sub>o</sub></div>
+      <div class="how">the forward state is recomputed during the backward solve, from <span class="m">t = T</span> to <span class="m">0</span></div>
+      <div class="eq"><span class="m">\mathrm{d}\mathbf{x}^\dagger / \mathrm{d}t = -\mathbf{F}(t)^\top \mathbf{x}^\dagger(t) - \nabla_{\mathbf{x}(t)} \mathcal{J}_o</span></div>
       <div class="facts">
         <div class="fact"><div class="k">adjoint</div><div class="v"><code>dfx.BacksolveAdjoint()</code></div></div>
-        <div class="fact"><div class="k">memory</div><div class="v">O(1) in the length of the trajectory</div></div>
+        <div class="fact"><div class="k">memory</div><div class="v"><span class="m">O(1)</span> in the length of the trajectory</div></div>
         <div class="fact"><div class="k">time</div><div class="v">about 2× the forward</div></div>
         <div class="fact"><div class="k">right when</div><div class="v">long windows with little memory; the backward solve can be stiff, so use <code>dfx.Kvaerno5</code> or <code>dfx.ImplicitEuler</code> for it</div></div>
       </div>
@@ -125,19 +129,19 @@
     <div class="lane out">
       <div class="lane-head"><span class="verb">forward</span><span class="pkg">carry tangents</span></div>
       <div class="chain">
-        <div class="dot dead"><span class="lbl">x<sub>0</sub></span></div><div class="seg dead"></div>
-        <div class="dot dead"><span class="lbl">x<sub>1</sub></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}_0</span></span></div><div class="seg dead"></div>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}_1</span></span></div><div class="seg dead"></div>
         <span class="gap">…</span><div class="seg dead"></div>
-        <div class="dot dead"><span class="lbl">x<sub>N</sub></span></div>
-        <span class="tag">+ D<sub>θ</sub> tangents →</span>
+        <div class="dot dead"><span class="lbl"><span class="m">\mathbf{x}_N</span></span></div>
+        <span class="tag">+ <span class="m">D_\theta</span> tangents →</span>
       </div>
       <div class="how">no backward pass: the sensitivity ODEs are solved forward with the state</div>
-      <div class="eq words">∂x(t)/∂θ solved alongside x(t)</div>
+      <div class="eq words"><span class="m">\partial \mathbf{x}(t) / \partial \boldsymbol{\theta}</span> solved alongside <span class="m">\mathbf{x}(t)</span></div>
       <div class="facts">
         <div class="fact"><div class="k">adjoint</div><div class="v"><code>dfx.ForwardMode()</code></div></div>
-        <div class="fact"><div class="k">memory</div><div class="v">O(D<sub>θ</sub>)</div></div>
-        <div class="fact"><div class="k">time</div><div class="v">O(D<sub>θ</sub>) × the forward</div></div>
-        <div class="fact"><div class="k">right when</div><div class="v">few parameters, D<sub>θ</sub> ≪ D<sub>x</sub>, such as one emission rate q</div></div>
+        <div class="fact"><div class="k">memory</div><div class="v"><span class="m">O(D_\theta)</span></div></div>
+        <div class="fact"><div class="k">time</div><div class="v"><span class="m">O(D_\theta)</span> × the forward</div></div>
+        <div class="fact"><div class="k">right when</div><div class="v">few parameters, <span class="m">D_\theta \ll D_x</span>, such as one emission rate <span class="m">q</span></div></div>
       </div>
     </div>
   </div>
@@ -150,7 +154,7 @@
   <div class="base-row">
     <div class="slab">
       <div class="lib">forward_adjoint=</div>
-      <div class="what">vardax hands the choice to <code>forward.with_adjoint</code>, which a diffrax-backed forward passes to <code>diffeqsolve</code>. For any per-step forward, <code>checkpoint=True</code> (or a block length k) wraps each step in <code>jax.checkpoint</code> through integrix instead; the gradient is unchanged.</div>
+      <div class="what">vardax hands the choice to <code>forward.with_adjoint</code>, which a diffrax-backed forward passes to <code>diffeqsolve</code>. For any per-step forward, <code>checkpoint=True</code> (or a block length <span class="m">k</span>) wraps each step in <code>jax.checkpoint</code> through integrix instead; the gradient is unchanged.</div>
     </div>
     <div class="slab">
       <div class="lib">minimiser_adjoint=</div>
@@ -158,7 +162,20 @@
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="_connect.js"></script>
-<script>ready();</script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
 </body>
 </html>

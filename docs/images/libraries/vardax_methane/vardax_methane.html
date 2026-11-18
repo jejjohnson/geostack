@@ -4,8 +4,12 @@
 <meta charset="utf-8">
 <title>vardax — a methane overpass, end to end</title>
 <link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <style>
   #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.1em; }
+  #diagram .eq .katex { font-size: 1.12em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
   .grid {
     display: grid;
     grid-template-columns: 290px 320px 320px 320px;
@@ -27,15 +31,10 @@
   .st.unpinned { color: #92400e; background: #fffbeb; border: 1.2px dashed #f59e0b; }
   .node.unpinned { border-style: dashed; }
   .eq {
-    font-family: var(--mono); font-size: 12.5px; color: var(--ink-accent);
+    font-size: 12.5px; color: var(--ink-accent);
     background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
     padding: 8px 11px; margin-top: 12px; line-height: 1.5;
   }
-  .w {
-    display: inline-flex; flex-direction: column; vertical-align: middle;
-    font-size: 0.9em; line-height: 1.05; margin-left: 1px;
-  }
-  .w sub, .w sup { font-size: 0.85em; }
   .eq .lbl { font-family: var(--sans); font-size: 11.5px; color: var(--muted); display: block; margin-bottom: 2px; }
   .band-head { display: flex; align-items: baseline; gap: 12px; margin: 34px 0 10px 2px; }
   .band-head .verb {
@@ -69,7 +68,7 @@
 <body>
 <div id="diagram">
   <div class="title">vardax — a methane overpass, end to end</div>
-  <div class="subtitle">Page 17's single-overpass inversion of one point source, x = (log Q, s<sub>1</sub>, s<sub>2</sub>, H<sub>eff</sub>), and the plumax tiers that fill its forward slot. Each box says whether its call ships today, is your code, or lives in a library the page has not pinned.</div>
+  <div class="subtitle">Page 17's single-overpass inversion of one point source, <span class="m">\mathbf{x} = (\log Q, s_1, s_2, H_\text{eff})</span>, and the plumax tiers that fill its forward slot. Each box says whether its call ships today, is your code, or lives in a library the page has not pinned.</div>
 
   <div class="grid">
     <!-- inputs -->
@@ -77,7 +76,7 @@
       <div class="lane-head"><span class="verb">inputs</span><span class="pkg">one event</span></div>
       <div class="node unpinned">
         <span class="st unpinned">not pinned</span>
-        <div class="name">overpasses y</div>
+        <div class="name">overpasses <span class="m">\mathbf{y}</span></div>
         <div class="desc">TROPOMI, EMIT and GHGSat L2 within 50 km and 2 h: XCH<sub>4</sub>, averaging kernel, quality mask, variance; a GeoCatalog query</div>
       </div>
       <div class="node">
@@ -87,28 +86,28 @@
       </div>
       <div class="node">
         <span class="st user">your code</span>
-        <div class="name">prior μ<sub>x</sub>, Σ<sub>x</sub></div>
-        <div class="desc">μ<sub>x</sub> = (log Q<sub>EDGAR</sub>, 0, 0, 50 m) from the inventory; Σ<sub>x</sub> = diag(1, 500², 500², 25²) as a <code>lx.DiagonalLinearOperator</code></div>
+        <div class="name">prior <span class="m">\boldsymbol{\mu}_x, \ \boldsymbol{\Sigma}_x</span></div>
+        <div class="desc"><span class="m">\boldsymbol{\mu}_x = (\log Q_\text{EDGAR}, 0, 0, 50 \ \text{m})</span> from the inventory; <span class="m">\boldsymbol{\Sigma}_x = \operatorname{diag}(1, 500^2, 500^2, 25^2)</span> as a <code>lx.DiagonalLinearOperator</code></div>
       </div>
     </div>
 
     <!-- operators -->
     <div class="lane compute" id="lane-ops">
-      <div class="lane-head"><span class="verb">operators</span><span class="pkg">h ∘ f and Σ<sub>ε</sub></span></div>
+      <div class="lane-head"><span class="verb">operators</span><span class="pkg"><span class="m">h \circ f</span> and <span class="m">\boldsymbol{\Sigma}_\varepsilon</span></span></div>
       <div class="node">
         <span class="st today">today</span>
-        <div class="name">observation h</div>
+        <div class="name">observation <span class="m">h</span></div>
         <div class="desc">one <code>AveragingKernel</code> per instrument, built from its L2 by your code, in an <code>InstrumentSpec</code> and an <code>InstrumentRegistry</code>; <code>MultiInstrumentFusion.to_observation_operator()</code> stacks them</div>
       </div>
       <div class="node">
         <span class="st today">today</span>
-        <div class="name">noise Σ<sub>ε</sub></div>
-        <div class="desc">diag(σ<sub>i</sub><sup>2</sup>) per instrument, one <code>lx.DiagonalLinearOperator</code> in sorted instrument order</div>
+        <div class="name">noise <span class="m">\boldsymbol{\Sigma}_\varepsilon</span></div>
+        <div class="desc"><span class="m">\operatorname{diag}(\sigma_i^2)</span> per instrument, one <code>lx.DiagonalLinearOperator</code> in sorted instrument order</div>
       </div>
       <div class="node unpinned" id="fwd">
         <span class="st unpinned">not pinned</span>
-        <div class="name">forward f</div>
-        <div class="desc">the plume given the met, x ↦ XCH<sub>4</sub>; page 17 sketches <code>plumax.tier1.GaussianPlume</code>, which plumax does not export; the tiers below fill this slot</div>
+        <div class="name">forward <span class="m">f</span></div>
+        <div class="desc">the plume given the met, <span class="m">\mathbf{x} \mapsto \text{XCH}_4</span>; page 17 sketches <code>plumax.tier1.GaussianPlume</code>, which plumax does not export; the tiers below fill this slot</div>
       </div>
     </div>
 
@@ -118,13 +117,13 @@
       <div class="node">
         <span class="st sketched">today*</span>
         <div class="name">IncrementalFourDVar</div>
-        <div class="desc"><code>forward=f</code>, <code>obs_op=h</code>, the prior and Σ<sub>ε</sub>, <code>config=IncrementalConfig(n_outer=5, n_inner=20, cvt=True)</code></div>
+        <div class="desc"><code>forward=f</code>, <code>obs_op=h</code>, the prior and <span class="m">\boldsymbol{\Sigma}_\varepsilon</span>, <code>config=IncrementalConfig(n_outer=5, n_inner=20, cvt=True)</code></div>
       </div>
-      <div class="eq"><span class="lbl">the cost, one observation time</span>𝒥(x) = ½‖x − μ<sub>x</sub>‖<span class="w"><span>2</span><span>Σ<sub>x</sub><sup>−1</sup></span></span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ ½‖m ⊙ (y − h(f(x)))‖<span class="w"><span>2</span><span>Σ<sub>ε</sub><sup>−1</sup></span></span></div>
+      <div class="eq"><span class="lbl">the cost, one observation time</span><span class="m">\mathcal{J}(\mathbf{x}) = \tfrac{1}{2} \Vert \mathbf{x} - \boldsymbol{\mu}_x \Vert^2_{\boldsymbol{\Sigma}_x^{-1}}</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="m">{}+ \tfrac{1}{2} \Vert \mathbf{m} \odot (\mathbf{y} - h(f(\mathbf{x}))) \Vert^2_{\boldsymbol{\Sigma}_\varepsilon^{-1}}</span></div>
       <div class="node">
         <span class="st today">today</span>
-        <div class="name">x<sup>⋆</sup> = inversion(batch)</div>
-        <div class="desc">the batch, a <code>Batch1D</code> of shape (1, 1, D<sub>y</sub>), is built from the overpasses by your code</div>
+        <div class="name"><span class="m">\mathbf{x}^\star</span> = inversion(batch)</div>
+        <div class="desc">the batch, a <code>Batch1D</code> of shape <span class="m">(1, 1, D_y)</span>, is built from the overpasses by your code</div>
       </div>
     </div>
 
@@ -134,7 +133,7 @@
       <div class="node">
         <span class="st today">today</span>
         <div class="name">posterior</div>
-        <div class="desc"><code>inversion.posterior(batch, adapter=GaussNewtonHessian())</code>: x<sup>⋆</sup> and a lazy Σ<sub>x∣y</sub> = (Σ<sub>x</sub><sup>−1</sup> + (HF)<sup>⊤</sup>Σ<sub>ε</sub><sup>−1</sup>HF)<sup>−1</sup></div>
+        <div class="desc"><code>inversion.posterior(batch, adapter=GaussNewtonHessian())</code>: <span class="m">\mathbf{x}^\star</span> and a lazy <span class="m">{\boldsymbol{\Sigma}_{x \mid y} = (\boldsymbol{\Sigma}_x^{-1} + (\mathbf{H}\mathbf{F})^\top \boldsymbol{\Sigma}_\varepsilon^{-1} \mathbf{H}\mathbf{F})^{-1}}</span></div>
       </div>
       <div class="node solid">
         <span class="st today">today</span>
@@ -156,7 +155,7 @@
       <div class="t">tier I</div>
       <div class="name">Gaussian plume</div>
       <div class="mod">plumax.gauss_plume</div>
-      <div class="desc">fits Q with NumPyro in its own <code>inference</code> module; its forward, <code>simulate_plume</code>, does not call vardax</div>
+      <div class="desc">fits <span class="m">Q</span> with NumPyro in its own <code>inference</code> module; its forward, <code>simulate_plume</code>, does not call vardax</div>
     </div>
     <div class="tier">
       <span class="st today" style="top:10px">today</span>
@@ -187,7 +186,7 @@
     <div class="cstep here"><b>2 classical</b>the inversion above, the oracle for later steps</div>
     <div class="cstep"><b>3 emulator</b>a neural plume, its adjoint gated by <code>assert_emulator_calibrated</code></div>
     <div class="cstep"><b>4 emulator inference</b>swap <code>forward=</code> for the emulator; the vardax code is unchanged</div>
-    <div class="cstep"><b>5 amortized</b>an <code>AmortizedPosterior</code> trained on simulated (Q, y) pairs</div>
+    <div class="cstep"><b>5 amortized</b>an <code>AmortizedPosterior</code> trained on simulated <span class="m">(Q, \mathbf{y})</span> pairs</div>
     <div class="cstep"><b>6 improve</b>swap any block; the previous step validates it</div>
   </div>
 
@@ -198,13 +197,24 @@
     <span class="k"><span class="st unpinned">not pinned</span> a library whose API the page has not checked</span>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="_connect.js"></script>
 <script>
-  wire("lane-in", "lane-ops", { label: "<span class='t'>y · met · prior</span>", color: "#7b6bb5" });
-  wire("lane-ops", "lane-inv", { label: "<span class='t'>h ∘ f · Σε</span>", color: "#cf9418" });
-  wire("lane-inv", "lane-out", { label: "<span class='t'>x⋆</span>", color: "#3f6fb5" });
-  wire("tiers", "fwd", { from: "top", to: "bottom", fromShift: -170, toShift: 30, color: "#94a3b8", dashed: true });
-  ready();
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-in", "lane-ops", { label: "<span class='m'>\\mathbf{y}</span> · met · prior", color: "#7b6bb5" });
+    wire("lane-ops", "lane-inv", { label: "<span class='m'>h \\circ f</span> · <span class='m'>\\boldsymbol{\\Sigma}_\\varepsilon</span>", color: "#cf9418" });
+    wire("lane-inv", "lane-out", { label: "<span class='m'>\\mathbf{x}^\\star</span>", color: "#3f6fb5" });
+    wire("tiers", "fwd", { from: "top", to: "bottom", fromShift: -170, toShift: 30, color: "#94a3b8", dashed: true });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
 </script>
 </body>
 </html>

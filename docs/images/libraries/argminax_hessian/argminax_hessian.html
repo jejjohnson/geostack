@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>argminax — one Hessian, every answer</title>
 <link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <style>
   #diagram { width: 1560px; }
   .grid {
@@ -13,13 +14,17 @@
     align-items: center;
   }
   .lane .node + .node { margin-top: 16px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .node .f .katex { font-size: 1.12em; }
+  #diagram .hub-eq .katex { font-size: 1.15em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
   .node .f {
-    font-family: var(--mono); font-size: 12.5px; color: var(--ink-accent);
+    font-size: 12.5px; color: var(--ink-accent);
     margin-top: 6px; line-height: 1.55;
   }
   .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
   .hub-eq {
-    font-family: var(--mono); font-size: 19px; font-weight: 700; color: var(--ink-accent);
+    font-size: 19px; font-weight: 700; color: var(--ink-accent);
     background: var(--card); border: 2px solid var(--accent); border-radius: 12px;
     padding: 16px 14px; text-align: center; margin-top: 12px;
   }
@@ -48,25 +53,25 @@
       <div class="node" id="n-solve">
         <div class="name">each Gauss–Newton step</div>
         <div class="desc"><span class="mod">solve</span> — <code>GaussNewtonCG</code> solves with the same Gauss–Newton form at each iterate, by CG</div>
-        <div class="f">(J<sub>r</sub>ᵀ J<sub>r</sub> + β I) δ = −J<sub>r</sub>ᵀ r</div>
+        <div class="f"><span class="m">{(\mathbf{J}_r^\top \mathbf{J}_r + \beta \mathbf{I}) \boldsymbol{\delta} = -\mathbf{J}_r^\top \mathbf{r}}</span></div>
       </div>
       <div class="node" id="n-curv">
-        <div class="name">the posterior 𝒩(x̂, Σ<sub>x∣y</sub>)</div>
+        <div class="name">the posterior <span class="m">\mathcal{N}(\hat{\mathbf{x}}, \boldsymbol{\Sigma}_{x \mid y})</span></div>
         <div class="desc"><span class="mod">curvature</span> — a <code>Laplace</code>: <code>marginal_variance</code>, <code>.sample</code>, <code>push_forward</code></div>
-        <div class="f">x⁽ᵉ⁾ = x̂ + L⁻ᵀ v⁽ᵉ⁾,  Σ<sub>x∣y</sub>⁻¹ = L Lᵀ</div>
+        <div class="f"><span class="m">{\mathbf{x}^{(e)} = \hat{\mathbf{x}} + \mathbf{L}^{-\top} \mathbf{v}^{(e)}, \quad \boldsymbol{\Sigma}_{x \mid y}^{-1} = \mathbf{L} \mathbf{L}^\top}</span></div>
       </div>
       <div class="node" id="n-blr">
         <div class="name">where training ends</div>
         <div class="desc"><span class="mod">blr</span> — at the fixed point, with the exact curvature evaluated at the mean</div>
-        <div class="f">μ = x̂,  Λ = Σ<sub>x∣y</sub>⁻¹</div>
+        <div class="f"><span class="m">\boldsymbol{\mu} = \hat{\mathbf{x}}, \quad \boldsymbol{\Lambda} = \boldsymbol{\Sigma}_{x \mid y}^{-1}</span></div>
       </div>
     </div>
 
     <!-- centre: the Hessian -->
     <div class="lane compute" id="lane-hub">
-      <div class="lane-head"><span class="verb">one operator</span><span class="pkg">the Hessian at x̂</span></div>
-      <div class="hub-eq" id="hub">Σ<sub>x∣y</sub>⁻¹ = ∇²<sub>x</sub> 𝒥(x̂; y, θ)</div>
-      <div class="hub-note">D<sub>x</sub> × D<sub>x</sub> and positive definite, held as a gaussx operator. For the retrieval cost its Gauss–Newton form is Hᵀ Σ<sub>ε</sub>⁻¹ H + Σ<sub>x</sub>⁻¹, with H the Jacobian of h at x̂.</div>
+      <div class="lane-head"><span class="verb">one operator</span><span class="pkg">the Hessian at <span class="m">\hat{\mathbf{x}}</span></span></div>
+      <div class="hub-eq" id="hub"><span class="m">\boldsymbol{\Sigma}_{x \mid y}^{-1} = \nabla^2_{\mathbf{x}} \mathcal{J}(\hat{\mathbf{x}}; \mathbf{y}, \boldsymbol{\theta})</span></div>
+      <div class="hub-note"><span class="m">D_x \times D_x</span> and positive definite, held as a gaussx operator. For the retrieval cost its Gauss–Newton form is <span class="m">\mathbf{H}^\top \boldsymbol{\Sigma}_\varepsilon^{-1} \mathbf{H} + \boldsymbol{\Sigma}_x^{-1}</span>, with <span class="m">\mathbf{H}</span> the Jacobian of <span class="m">h</span> at <span class="m">\hat{\mathbf{x}}</span>.</div>
     </div>
 
     <!-- right: what is read off it -->
@@ -75,17 +80,17 @@
       <div class="node" id="n-ak">
         <div class="name">what the measurement decided</div>
         <div class="desc"><span class="mod">diagnose</span> — <code>averaging_kernel</code>, <code>degrees_of_freedom</code></div>
-        <div class="f">A = I − Σ<sub>x∣y</sub> Σ<sub>x</sub>⁻¹,  d<sub>s</sub> = tr A</div>
+        <div class="f"><span class="m">\mathbf{A} = \mathbf{I} - \boldsymbol{\Sigma}_{x \mid y} \boldsymbol{\Sigma}_x^{-1}, \quad d_s = \operatorname{tr} \mathbf{A}</span></div>
       </div>
       <div class="node" id="n-ld">
         <div class="name">information and evidence</div>
         <div class="desc"><span class="mod">diagnose</span> — <code>information_content</code>, <code>evidence</code></div>
-        <div class="f">𝕀[x; y] = ½ log det(Σ<sub>x</sub> Σ<sub>x∣y</sub>⁻¹)<br>log p(y) ≈ −𝒥(x̂) − ½ log det Σ<sub>x∣y</sub>⁻¹ − …</div>
+        <div class="f"><span class="m">\mathbb{I}[\mathbf{x}; \mathbf{y}] = \tfrac{1}{2} \log \det(\boldsymbol{\Sigma}_x \boldsymbol{\Sigma}_{x \mid y}^{-1})</span><br><span class="m">\log p(\mathbf{y}) \approx -\mathcal{J}(\hat{\mathbf{x}}) - \tfrac{1}{2} \log \det \boldsymbol{\Sigma}_{x \mid y}^{-1} - \dots</span></div>
       </div>
       <div class="node" id="n-adj">
-        <div class="name">how x̂ moves</div>
+        <div class="name">how <span class="m">\hat{\mathbf{x}}</span> moves</div>
         <div class="desc"><span class="mod">implicit adjoint</span> — <code>jax.jacobian</code> through an optimistix solve</div>
-        <div class="f">G = ∂x̂/∂y = −Σ<sub>x∣y</sub> ∇²<sub>xy</sub>𝒥<br>∂x̂/∂θ = −Σ<sub>x∣y</sub> ∇²<sub>xθ</sub>𝒥</div>
+        <div class="f"><span class="m">\mathbf{G} = \partial\hat{\mathbf{x}} / \partial\mathbf{y} = -\boldsymbol{\Sigma}_{x \mid y} \nabla^2_{\mathbf{x}\mathbf{y}} \mathcal{J}</span><br><span class="m">\partial\hat{\mathbf{x}} / \partial\boldsymbol{\theta} = -\boldsymbol{\Sigma}_{x \mid y} \nabla^2_{\mathbf{x}\boldsymbol{\theta}} \mathcal{J}</span></div>
       </div>
     </div>
   </div>
@@ -101,16 +106,27 @@
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="_connect.js"></script>
 <script>
-  const L = "#7b6bb5", R = "#3f6fb5";
-  wire("hub", "n-solve", { from: "left", to: "right", color: L, fromShift: -14, label: "<span class='t'>CG solve</span>" });
-  wire("hub", "n-curv", { from: "left", to: "right", color: L, label: "<span class='t'>Cholesky</span>" });
-  wire("hub", "n-blr", { from: "left", to: "right", color: L, fromShift: 14, label: "<span class='t'>fixed point</span>" });
-  wire("hub", "n-ak", { from: "right", to: "left", color: R, fromShift: -14, label: "<span class='t'>solve</span>" });
-  wire("hub", "n-ld", { from: "right", to: "left", color: R, label: "<span class='t'>log det</span>" });
-  wire("hub", "n-adj", { from: "right", to: "left", color: R, fromShift: 14, label: "<span class='t'>solve per direction</span>" });
-  ready();
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    const L = "#7b6bb5", R = "#3f6fb5";
+    wire("hub", "n-solve", { from: "left", to: "right", color: L, fromShift: -14, label: "<span class='t'>CG solve</span>" });
+    wire("hub", "n-curv", { from: "left", to: "right", color: L, label: "<span class='t'>Cholesky</span>" });
+    wire("hub", "n-blr", { from: "left", to: "right", color: L, fromShift: 14, label: "<span class='t'>fixed point</span>" });
+    wire("hub", "n-ak", { from: "right", to: "left", color: R, fromShift: -14, label: "<span class='t'>solve</span>" });
+    wire("hub", "n-ld", { from: "right", to: "left", color: R, label: "<span class='t'>log det</span>" });
+    wire("hub", "n-adj", { from: "right", to: "left", color: R, fromShift: 14, label: "<span class='t'>solve per direction</span>" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
 </script>
 </body>
 </html>

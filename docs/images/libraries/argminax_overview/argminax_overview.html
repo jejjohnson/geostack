@@ -4,8 +4,13 @@
 <meta charset="utf-8">
 <title>argminax — five questions, one minimum</title>
 <link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <style>
   #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .argmin .katex { font-size: 1.3em; }
+  #diagram .term .eq .katex { font-size: 1.15em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
   .grid {
     display: grid;
     grid-template-columns: 270px 330px 320px 260px;
@@ -15,13 +20,12 @@
   .lane .node + .node { margin-top: 14px; }
   .term { margin-top: 12px; }
   .term .eq {
-    font-family: var(--mono); font-size: 13px; color: var(--ink-accent);
+    color: var(--ink-accent); text-align: center;
     background: var(--card); border: 1.5px solid var(--accent);
     border-radius: 10px; padding: 9px 12px;
   }
   .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
   .argmin {
-    font-family: var(--mono); font-size: 15px; font-weight: 700;
     color: var(--ink-accent); margin: 2px 0 0 2px;
   }
   .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
@@ -71,15 +75,15 @@
 
     <!-- column 2: the one minimum -->
     <div class="lane compute" id="lane-min">
-      <div class="lane-head"><span class="verb">one minimum</span><span class="pkg">x̂(y, θ)</span></div>
-      <div class="argmin">x̂ = argmin<sub>x</sub> 𝒥(x; y, θ)</div>
+      <div class="lane-head"><span class="verb">one minimum</span><span class="pkg"><span class="m">\hat{\mathbf{x}}(\mathbf{y}, \boldsymbol{\theta})</span></span></div>
+      <div class="argmin"><span class="m">\hat{\mathbf{x}} = \operatorname*{argmin}_{\mathbf{x}} \mathcal{J}(\mathbf{x}; \mathbf{y}, \boldsymbol{\theta})</span></div>
       <div class="term">
         <div class="lbl">the retrieval cost, the most common one</div>
-        <div class="eq">½ ‖y − h(x)‖²<sub>Σε⁻¹</sub> + ½ ‖x − μ<sub>x</sub>‖²<sub>Σx⁻¹</sub></div>
+        <div class="eq"><span class="m">\tfrac{1}{2} \Vert \mathbf{y} - h(\mathbf{x}) \Vert^2_{\boldsymbol{\Sigma}_\varepsilon^{-1}} + \tfrac{1}{2} \Vert \mathbf{x} - \boldsymbol{\mu}_x \Vert^2_{\boldsymbol{\Sigma}_x^{-1}}</span></div>
       </div>
       <div class="term">
         <div class="lbl">the Hessian at the minimum, read by every answer</div>
-        <div class="eq">Σ<sub>x∣y</sub>⁻¹ = ∇²<sub>x</sub> 𝒥(x̂; y, θ)</div>
+        <div class="eq"><span class="m">\boldsymbol{\Sigma}_{x \mid y}^{-1} = \nabla^2_{\mathbf{x}} \mathcal{J}(\hat{\mathbf{x}}; \mathbf{y}, \boldsymbol{\theta})</span></div>
       </div>
       <div class="note">held as a gaussx operator, so a large state is never densified</div>
     </div>
@@ -96,11 +100,11 @@
         <div class="desc"><span class="mod">curvature</span> — <code>gauss_newton</code> · <code>marginal_variance</code> · <code>low_rank</code></div>
       </div>
       <div class="node">
-        <div class="name">How much came from y?</div>
+        <div class="name">How much came from <span class="m">\mathbf{y}</span>?</div>
         <div class="desc"><span class="mod">diagnose</span> — <code>averaging_kernel</code> · <code>degrees_of_freedom</code> · <code>information_content</code> · <code>evidence</code></div>
       </div>
       <div class="node">
-        <div class="name">How does it move with y or θ?</div>
+        <div class="name">How does it move with <span class="m">\mathbf{y}</span> or <span class="m">\boldsymbol{\theta}</span>?</div>
         <div class="desc"><span class="mod">adjoint</span> — <code>optx.ImplicitAdjoint</code> at a minimum; <code>KStep</code> · <code>OneStep</code> for a solver stopped early</div>
       </div>
       <div class="node">
@@ -113,19 +117,19 @@
     <div class="lane out" id="lane-out">
       <div class="lane-head"><span class="verb">out</span><span class="pkg">answers, not a point</span></div>
       <div class="node">
-        <div class="name">retrieval x̂</div>
+        <div class="name">retrieval <span class="m">\hat{\mathbf{x}}</span></div>
         <div class="desc">with the solver's convergence <code>result</code></div>
       </div>
       <div class="node">
-        <div class="name">posterior 𝒩(x̂, Σ<sub>x∣y</sub>)</div>
+        <div class="name">posterior <span class="m">\mathcal{N}(\hat{\mathbf{x}}, \boldsymbol{\Sigma}_{x \mid y})</span></div>
         <div class="desc">a <code>Laplace</code>: marginal variances, samples, <code>push_forward</code></div>
       </div>
       <div class="node">
         <div class="name">diagnostics</div>
-        <div class="desc">A, d<sub>s</sub>, 𝕀[x; y], evidence — exact, or stochastic with a standard error</div>
+        <div class="desc"><span class="m">\mathbf{A}, \ d_s, \ \mathbb{I}[\mathbf{x}; \mathbf{y}]</span>, evidence — exact, or stochastic with a standard error</div>
       </div>
       <div class="node">
-        <div class="name">derivatives G · ∂x̂/∂θ</div>
+        <div class="name">derivatives <span class="m">\mathbf{G}, \ \partial_{\boldsymbol{\theta}} \hat{\mathbf{x}}</span></div>
         <div class="desc">the gain, and the gradient that makes a minimiser a layer</div>
       </div>
       <div class="node solid">
@@ -150,12 +154,23 @@
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="_connect.js"></script>
 <script>
-  wire("lane-supply", "lane-min", { label: "<span class='t'>𝒥 · args</span>", color: "#7b6bb5" });
-  wire("lane-min", "lane-questions", { label: "<span class='t'>x̂ · ∇²𝒥</span>", color: "#cf9418" });
-  wire("lane-questions", "lane-out", { label: "<span class='t'>answers</span>", color: "#3f6fb5" });
-  ready();
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-min", { label: "<span class='m'>\\mathcal{J}</span> · args", color: "#7b6bb5" });
+    wire("lane-min", "lane-questions", { label: "<span class='m'>\\hat{\\mathbf{x}}, \\ \\nabla^2 \\mathcal{J}</span>", color: "#cf9418" });
+    wire("lane-questions", "lane-out", { label: "answers", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
 </script>
 </body>
 </html>
