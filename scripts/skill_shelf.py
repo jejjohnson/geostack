@@ -531,30 +531,41 @@ def uses_table(shelf: Shelf, m: Measured) -> str:
     return "\n".join(rows)
 
 
-def cards_table(shelf: Shelf, m: Measured) -> str:
-    """The cards each dependent receives.
+def carded(shelf: Shelf, m: Measured, dist: str) -> dict[str, list[str]]:
+    """The units whose card ``dist`` receives, each with the names it subclasses.
 
     A unit's card goes to a dependent that uses ``CARD_THRESHOLD`` of its
-    names, or that subclasses one of them; the row names the bases.
+    names, or that subclasses one of them. The units come in shelf order.
     """
+    counts = _count(shelf, m, m.used.get(dist, set()))
+    bases: dict[str, list[str]] = {}
+    for name in sorted(m.subclassed.get(dist, ())):
+        unit = unit_of(shelf, m.names[name])
+        if unit is not None:
+            bases.setdefault(unit, []).append(name)
+    return {
+        u.name: bases.get(u.name, [])
+        for u in shelf.units
+        if u.name in bases or counts[u.name] >= CARD_THRESHOLD
+    }
+
+
+def cards_table(shelf: Shelf, m: Measured) -> str:
+    """The cards each dependent receives; a row names the bases it subclasses."""
     rows = ["| Dependent package | Cards | Also uses |", "|---|---|---|"]
     for dist in _dependents(m):
         counts = _count(shelf, m, m.used[dist])
-        bases: dict[str, list[str]] = {}
-        for name in sorted(m.subclassed.get(dist, ())):
-            unit = unit_of(shelf, m.names[name])
-            if unit is not None:
-                bases.setdefault(unit, []).append(f"`{name}`")
-        cards = []
-        for u in shelf.units:
-            if u.name in bases:
-                cards.append(f"{u.name} (subclasses {', '.join(bases[u.name])})")
-            elif counts[u.name] >= CARD_THRESHOLD:
-                cards.append(u.name)
+        got = carded(shelf, m, dist)
+        cards = [
+            f"{unit} (subclasses {', '.join(f'`{b}`' for b in bases)})"
+            if bases
+            else unit
+            for unit, bases in got.items()
+        ]
         below = [
             f"{u.name} ({counts[u.name]})"
             for u in shelf.units
-            if 0 < counts[u.name] < CARD_THRESHOLD and u.name not in bases
+            if counts[u.name] > 0 and u.name not in got
         ]
         rows.append(f"| {dist} | {'; '.join(cards) or 'none'} | {'; '.join(below)} |")
     return "\n".join(rows)

@@ -1,0 +1,4 @@
+- **Provides.** Gaussianization (RBIG) and normalizing flows: bijections, coupling layers, surjections and base distributions, with NumPyro wrappers.
+- **Start from.** `gauss_flows.AffineCoupling`, `gauss_flows.RQSplineCoupling`, `gauss_flows.FFJORD`, `gauss_flows.FlowDist`, `gauss_flows.FlowGuide`.
+- **Keep.** `FlowDist` and `FlowGuide` are the NumPyro entry points: pass them where a distribution or a guide is expected.
+- **Open the repository when.** You need more than these names: it has no skill yet, so read its section of GeoStack's GeoML capability index.

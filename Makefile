@@ -57,7 +57,7 @@ RESET  := \033[0m
 .PHONY: help install lint format typecheck test test-cov \
 	precommit clean version docs docs-serve docs-deploy \
 	init gh-labels gh-sub gh-block gh-show capabilities \
-	dependency-graph skill-shelves
+	dependency-graph skill-shelves skill-tree
 
 .DEFAULT_GOAL := help
 
@@ -175,6 +175,9 @@ dependency-graph: ## Regenerate the dependency graph in README.md, docs/api/depe
 
 skill-shelves: ## Regenerate the measured tables of the skill-shelf pages (docs/design/skill_tree_*.md)
 	uv run python scripts/skill_shelf.py
+
+skill-tree: ## Print the skill tree: each repository's skills and what they build on
+	uv run python scripts/skill_tree.py
 
 docs-deploy: ## Deploy documentation to GitHub Pages
 	BASE_URL=/geostack uv run --group docs myst build --html
