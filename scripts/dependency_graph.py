@@ -59,7 +59,7 @@ TITLES = {
 #: within a layer, a repository may import only repositories of a lower tier
 TIERS: dict[str, dict[str, int]] = {
     "core": {"pipekit": 0, "gaussx": 0, "functax": 0, "argminax": 1, "integrix": 1},
-    "geostack": {"georeader": 0, "geotoolz": 1, "xrtoolz": 2},
+    "geostack": {"georeader": 0, "geotoolz": 1},
     "numerics": {"spectraldiffx": 0, "finitevolX": 1},
     "geoml": {
         "geonnax": 0,
@@ -72,7 +72,7 @@ TIERS: dict[str, dict[str, int]] = {
         "pyrox": 3,
         "vardax": 3,
     },
-    "geomodels": {"radtrax": 0, "somax": 0, "sesmax": 0, "plumax": 1},
+    "geomodels": {"radtrax": 0, "sesmax": 0, "plumax": 1},
 }
 #: what each tier holds, for the page
 TIER_ROLES = {
@@ -82,8 +82,7 @@ TIER_ROLES = {
     ),
     "geostack": (
         "readers",
-        "operators on arrays and geoarray carriers",
-        "operators on xarray, lifting geoops over cubes",
+        "operators on geoarray carriers, and on xarray lifting geoops over cubes",
     ),
     "numerics": (
         "spectral methods",
@@ -104,13 +103,7 @@ TIER_ROLES = {
 #: on one that is gone, so the list only shrinks
 #: Rules between packages name the two packages, and ``undeclared`` names the
 #: importing file, so a new edge or a new import is a new entry
-KNOWN: dict[tuple[str, str, str], str] = {
-    ("undeclared", "somax:somax/_src/da/filterax_bridge.py", "filterax"): (
-        "module-level imports in somax/_src/da, declared only in the da"
-        " dependency group; make it an extra"
-    ),
-    ("undeclared", "somax:somax/_src/da/obs.py", "filterax"): "the same extra",
-}
+KNOWN: dict[tuple[str, str, str], str] = {}
 #: imports that stay undeclared on purpose, and why: a guarded integration
 #: with a library that cannot be installed beside the package. Each repository's
 #: guard test carries the same list. {(package, imported distribution): reason}
@@ -747,9 +740,8 @@ def render(page: Path, g: Graph) -> str:
 
 #: where each repository's guard test goes, relative to its root
 GUARD_PATHS = {
-    "pipekit": "packages/pipekit/tests/test_dependency_rules.py",
+    "pipekit": "packages/pipekit-ops/tests/test_dependency_rules.py",
     "geotoolz": "packages/geotoolz-ops/tests/test_dependency_rules.py",
-    "xrtoolz": "packages/xrtoolz-ops/tests/test_dependency_rules.py",
     "pyrox": "packages/pyrox/tests/test_dependency_rules.py",
 }
 PAGE_URL = (

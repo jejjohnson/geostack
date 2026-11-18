@@ -51,10 +51,10 @@ def test_page_is_current(page: Path) -> None:
 
 
 def test_the_cycle_check_is_live() -> None:
-    # a re-export of xrops from pipekit (a counterfactual) must close a cycle
-    # through xrtoolz → geotoolz → pipekit
-    edges = [(e.source, e.target) for e in GRAPH.edges] + [("pipekit", "xrtoolz")]
-    assert ["geotoolz", "pipekit", "xrtoolz"] in dg.sccs(list(GRAPH.repos), edges)
+    # a re-export of geoops from pipekit (a counterfactual) must close a cycle
+    # through geotoolz → pipekit
+    edges = [(e.source, e.target) for e in GRAPH.edges] + [("pipekit", "geotoolz")]
+    assert ["geotoolz", "pipekit"] in dg.sccs(list(GRAPH.repos), edges)
 
 
 def _with_dependency(source: str, target: str) -> dg.Graph:
@@ -107,24 +107,14 @@ def test_core_sits_below_geostack_and_geonumerics() -> None:
     assert '"pipekit": "pipekit"' in source.split("ALLOWED")[0]  # forbidden
 
 
-def test_xrtoolz_may_import_geotoolz_but_not_the_reverse() -> None:
-    # xrtoolz is tier 2 above geotoolz (#80): xrops imports geoops kernels
-    assert ("tier", "xrtoolz-ops", "geotoolz-ops") not in dg.violations(
-        _with_dependency("xrtoolz-ops", "geotoolz-ops")
-    )
-    assert ("tier", "geotoolz-ops", "xrtoolz-ops") in dg.violations(
-        _with_dependency("geotoolz-ops", "xrtoolz-ops")
-    )
-
-
 def test_a_second_package_edge_between_known_repositories_is_new() -> None:
     new, _ = dg.check(_with_dependency("pipekit-cycle", "geotoolz-cloud"))
     assert ("upward", "pipekit-cycle", "geotoolz-cloud") in new
 
 
 def test_a_second_undeclared_import_is_new() -> None:
-    new, _ = dg.check(_with_import("somax", "filterax", "somax/_src/new.py"))
-    assert set(new) == {("undeclared", "somax:somax/_src/new.py", "filterax")}
+    new, _ = dg.check(_with_import("radtrax", "filterax", "src/radtrax/new.py"))
+    assert set(new) == {("undeclared", "radtrax:src/radtrax/new.py", "filterax")}
 
 
 def test_an_extra_does_not_declare_what_import_runs() -> None:
@@ -184,11 +174,11 @@ def test_a_stale_tier_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_every_edge_of_a_longer_cycle_is_red() -> None:
-    # the counterfactual re-export closes pipekit → xrtoolz → geotoolz → pipekit
-    g = _with_dependency("pipekit", "xrtoolz-ops")
+    # a counterfactual geoops → plumax closes geotoolz → plumax → radtrax → geotoolz
+    g = _with_dependency("geotoolz-ops", "plumax")
     lines = dg.mermaid(g, "```mermaid").splitlines()
     drawn = [line.split() for line in lines if "-->" in line or "-.->" in line]
-    loop = {"geotoolz", "pipekit", "xrtoolz"}
+    loop = {"geotoolz", "plumax", "radtrax"}
     on_loop = {str(i) for i, (a, _, b) in enumerate(drawn) if {a, b} <= loop}
     style = next(line for line in lines if "linkStyle" in line)
     assert set(style.split()[1].split(",")) == on_loop
