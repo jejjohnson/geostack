@@ -108,7 +108,6 @@ UPSTREAM_BLURB: dict[str, str] = {
     # GeoML
     "geonnax": "Basis functions, neural layers and coordinate transforms in Equinox.",
     "kernellib": "Covariance kernels and scalable kernel methods on gaussx.",
-    "optax-bayes": "The Bayesian learning rule as optax gradient transformations.",
     "filterax": "Differentiable ensemble Kalman filters and smoothers.",
     "vardax": "Variational data assimilation: BLUE/OI, 3D-Var, 4D-Var and kin.",
     "gauss-flows": "Gaussianization (RBIG) and normalizing flows.",
@@ -161,7 +160,6 @@ NUMERICS: dict[str, list[str]] = {
 GEOML: dict[str, list[str]] = {
     "geonnax": ["geonnax"],
     "kernellib": ["kernellib"],
-    "optax-bayes": ["optax_bayes"],
     # filterax, xtremax and pyrox export little at the top level, so their
     # public subpackages are listed (as georeader's modules are above)
     "filterax": [

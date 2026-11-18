@@ -418,7 +418,7 @@ A package only imports from the layers below it, so there are no circular depend
 1. **gaussx** owns structured linear algebra and Gaussian primitives. It imports no GeoStack package.
 2. **geonnax** owns basis functions, neural layers and coordinate transforms. somax and the other models compose them and never reimplement them.
 3. **kernellib** owns covariance kernels and tapers. It imports no inference library.
-4. **optax_bayes** owns the Bayesian learning rule as optax transforms. It imports no model library.
+4. **argminax** owns optimisation with uncertainty at the minimum: solvers, curvature, retrieval diagnostics, and the Bayesian learning rule as optax transforms (`argminax.blr`). It imports no model library.
 5. **spectraldiffx** and **finitevolx** own discretisations (spectral and finite-volume operators, no physics).
 6. **pyrox** owns GP and Bayesian NN building blocks for NumPyro. Its pipekit surface (`KrigingOperator`) only lives in `pyrox.adapters.pipekit`.
 7. **filterax** owns ensemble Kalman methods and **vardax** owns 3D/4D-Var. Each one only exposes an `AnalysisStep` through `adapters/pipekit.py`.
@@ -592,7 +592,6 @@ This layer is pure math with no domain knowledge, and all of it is `eqx.Module`-
 | `filterax` | Differentiable ensemble Kalman methods |
 | `gauss_flows` | Rotation-based Gaussianization and normalizing flows |
 | `xtremax` | Extreme-value and point-process models; computes the L5 extremes |
-| `optax_bayes` | The Bayesian learning rule as optax gradient transformations |
 
 The adapter of each library (`*.adapters.pipekit`) makes it composable into pipekit pipelines, whereas the core never imports pipekit. See the [filterax example](#ex-filterax).
 :::
@@ -719,7 +718,7 @@ Each phase produces packages which are useful on their own ([](#tbl-phases)).
 | Phase | Scope | Status | Time |
 |---|---|---|---|
 | 1 | GeoNumerics: gaussx (v0.0.6), spectraldiffx, finitevolx | gaussx done; the rest drafts | ongoing |
-| 2 | GeoML: geonnax, kernellib, optax_bayes, pyrox, filterax, vardax, gauss_flows, xtremax | in progress | each at its own pace |
+| 2 | GeoML: geonnax, kernellib, pyrox, filterax, vardax, gauss_flows, xtremax | in progress | each at its own pace |
 | 3 | GeoModels: somax, plumax, radtrax | some done | project-driven |
 | 4 | Pipeline framework | **current focus** | ~3–4 months |
 | 5 | Evaluation, benchmarks and cycle discipline | next | ~2 months |

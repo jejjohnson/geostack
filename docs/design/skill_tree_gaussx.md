@@ -72,20 +72,19 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 | kernellib | 25 | 16 | 9 | 0 | 0 | 0 | 0 | 0 |
 | pyrox-lgm | 23 | 16 | 0 | 0 | 0 | 0 | 7 | 0 |
 | vardax | 21 | 15 | 1 | 3 | 0 | 0 | 0 | 2 |
-| argminax | 18 | 9 | 6 | 0 | 0 | 0 | 0 | 3 |
+| argminax | 20 | 10 | 6 | 0 | 0 | 0 | 0 | 4 |
 | filterax | 17 | 3 | 1 | 1 | 0 | 1 | 0 | 11 |
 | finitevolx | 10 | 6 | 4 | 0 | 0 | 0 | 0 | 0 |
 | radtrax | 10 | 5 | 2 | 3 | 0 | 0 | 0 | 0 |
 | gauss-flows | 7 | 0 | 0 | 0 | 0 | 4 | 2 | 1 |
 | plumax | 5 | 4 | 0 | 0 | 0 | 0 | 0 | 1 |
 | spectraldiffx | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 |
-| optax-bayes | 4 | 3 | 1 | 0 | 0 | 0 | 0 | 0 |
 | manipy-jax | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
 
 Three groups stand out.
-kernellib, spectraldiffx, optax-bayes and manipy stay at structures, primitives and strategies.
+kernellib, spectraldiffx and manipy stay at structures, primitives and strategies.
 filterax and gauss-flows mostly call algorithms: inference and ensembles for one, state space for the other.
 pyrox-gp uses every unit, and pyrox-lgm only structures, primitives and quadrature.
 
@@ -301,7 +300,6 @@ Below the threshold, with no subclass, the unit is named on an "also uses" line.
 | gauss-flows | State space | Quadrature (2); Inference and ensembles (1) |
 | plumax | Structures and primitives | Inference and ensembles (1) |
 | spectraldiffx | Structures and primitives |  |
-| optax-bayes | Structures and primitives | Strategies (1) |
 | manipy-jax | Structures and primitives |  |
 <!-- shelf:cards:end -->
 :::

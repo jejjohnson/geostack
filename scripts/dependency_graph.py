@@ -65,7 +65,6 @@ TIERS: dict[str, dict[str, int]] = {
         "geonnax": 0,
         "gauss_flows": 0,
         "kernellib": 1,
-        "optax_bayes": 1,
         "xtremax": 1,
         "filterax": 2,
         "manipy": 2,
@@ -90,7 +89,7 @@ TIER_ROLES = {
     ),
     "geoml": (
         "layers and flows",
-        "kernels, optimisers and extremes",
+        "kernels and extremes",
         "ensemble filters and manifold learning",
         "probabilistic models and variational assimilation (may build on filterax)",
     ),

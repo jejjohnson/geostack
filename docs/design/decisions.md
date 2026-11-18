@@ -220,7 +220,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | SL-O2 | Carrier code behind `[geo]` and `[xarray]` extras (`esmax-core[geo]`) | open |
 | SL-O3 | CH₄ column physics: L1 in radtrax, xarray operators behind `radtrax[xarray]` | open |
 | SL-O4 | A `plumax.runs` module per model for L3 runs | open |
-| SL-O5 | Fix filterax and optax_bayes missing from the capability index before classifying them | open |
+| SL-O5 | Fix filterax and optax_bayes missing from the capability index before classifying them; the optax_bayes half lapsed when it was retired into `argminax.blr` (18 Nov 2026) | open |
 | SL-O6 | What `xtremax.simulations` is for | open |
 | SL-O7 | somax's future is the esmax workspace | open (see ES-N1) |
 

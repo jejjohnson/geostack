@@ -11,8 +11,8 @@ How to use:
   1. Copy this file into your project's `.plans/` directory
      (gitignored). Rename to describe the wave, e.g.
      `.plans/wave-1-diagonal-backlog.md`.
-  2. Pick a short project prefix (e.g. PYX for pyrox, OBX for
-     optax_bayes) and number drafts sequentially: <PREFIX>-01,
+  2. Pick a short project prefix (e.g. PYX for pyrox, AMX for
+     argminax) and number drafts sequentially: <PREFIX>-01,
      <PREFIX>-02, … Draft IDs survive the draft→publish conversion
      so references between issues remain meaningful.
   3. Fill in the wave-level shared context once at the top, then
