@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>argminax.blr — the families</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  #diagram { width: 1560px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 28px; align-items: stretch; }
+  .lane { display: flex; flex-direction: column; }
+  .pict {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 12px;
+    padding: 16px 12px; margin-top: 12px; min-height: 150px;
+  }
+  .mat { display: grid; gap: 2px; }
+  .mat i { width: 11px; height: 11px; border-radius: 2px; background: #e5e7eb; display: block; }
+  .mat i.on { background: var(--accent); }
+  .mat i.lo { background: var(--accent); opacity: 0.35; }
+  .op { font-family: var(--mono); font-size: 18px; color: var(--muted); }
+  .eq {
+    font-family: var(--mono); font-size: 13px; color: var(--ink-accent);
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: 9px 12px; margin-top: 12px;
+  }
+  .facts { margin-top: 12px; }
+  .fact { display: grid; grid-template-columns: 96px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.45; margin-top: 6px; }
+  .fact .k { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.06em; padding-top: 2px; }
+  .fact .v { color: var(--ink); }
+  .fact code, .node code { font-family: var(--mono); font-size: 12px; }
+  .special { margin-top: 26px; }
+  .special .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px; }
+  .base-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
+  .slab {
+    display: flex; align-items: center; gap: 14px; border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">argminax.blr — one rule, three precisions</div>
+  <div class="subtitle">A family is a choice of structure for the precision Λ<sub>θ</sub>: each trades storage and the cost of a step against how much of the curvature it can hold.</div>
+
+  <div class="grid">
+    <div class="lane find">
+      <div class="lane-head"><span class="verb">diagonal</span><span class="pkg">blr_diagonal</span></div>
+      <div class="pict"><div class="mat" data-kind="diag"></div></div>
+      <div class="eq">Λ<sub>θ</sub> = diag(d), elementwise, no solve</div>
+      <div class="facts">
+        <div class="fact"><div class="k">storage</div><div class="v">O(D<sub>θ</sub>)</div></div>
+        <div class="fact"><div class="k">step</div><div class="v">O(D<sub>θ</sub>), from <code>gaussx.blr_diag_update</code></div></div>
+        <div class="fact"><div class="k">parameters</div><div class="v">any pytree, leaf by leaf</div></div>
+      </div>
+    </div>
+
+    <div class="lane compute">
+      <div class="lane-head"><span class="verb">low rank</span><span class="pkg">blr_low_rank</span></div>
+      <div class="pict">
+        <div class="mat" data-kind="diag"></div><span class="op">+</span>
+        <div class="mat" data-kind="U"></div><div class="mat" data-kind="Ut"></div>
+      </div>
+      <div class="eq">Λ<sub>θ</sub> = diag(d) + U Uᵀ, U of rank R (SLANG)</div>
+      <div class="facts">
+        <div class="fact"><div class="k">storage</div><div class="v">O(D<sub>θ</sub> R)</div></div>
+        <div class="fact"><div class="k">step</div><div class="v">O(D<sub>θ</sub> R²) with a built-in curvature: a thin SVD keeps the top R directions, and a Woodbury solve gives the mean</div></div>
+        <div class="fact"><div class="k">parameters</div><div class="v">a flat vector</div></div>
+      </div>
+    </div>
+
+    <div class="lane cut">
+      <div class="lane-head"><span class="verb">full rank</span><span class="pkg">blr_full_rank</span></div>
+      <div class="pict"><div class="mat" data-kind="dense"></div></div>
+      <div class="eq">Λ<sub>θ</sub> dense, the rule as it stands</div>
+      <div class="facts">
+        <div class="fact"><div class="k">storage</div><div class="v">O(D<sub>θ</sub>²)</div></div>
+        <div class="fact"><div class="k">step</div><div class="v">O(D<sub>θ</sub>³): two solves with the precision, by Cholesky unless a <code>solver</code> says otherwise</div></div>
+        <div class="fact"><div class="k">parameters</div><div class="v">a flat vector</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lane out special">
+    <div class="lane-head"><span class="verb">special cases</span><span class="pkg">the same rule with something fixed</span></div>
+    <div class="row">
+      <div class="node">
+        <div class="name">ivon</div>
+        <div class="desc">the diagonal family for deep networks (Shen et al., 2024): momentum on the gradient, a running curvature c̄, a clipped step; Λ<sub>θ</sub> = diag(c̄ + δ)</div>
+      </div>
+      <div class="node">
+        <div class="name">newton</div>
+        <div class="desc">the full-rank rule with α = 1 and the exact Hessian as the curvature: a damped Newton step inside an optax loop, solved by LU since the Hessian may be indefinite</div>
+      </div>
+      <div class="node">
+        <div class="name">preconditioned_sgd</div>
+        <div class="desc">the mean form with a precision P the caller fixes; it carries no Gaussian. <code>scale_by_preconditioner</code> is the same step without the step size</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">blr_posterior</div>
+      <div class="what">Every learned family reads out as a <code>Laplace</code> whose precision keeps its structure: diagonal, diagonal plus low rank, or dense. <code>ivon</code> needs its parameters and weight decay passed in.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">gaussx · lineax</div>
+      <div class="what">The diagonal step, the low-rank operator and its Woodbury solve, and the dense Cholesky solves.</div>
+    </div>
+  </div>
+</div>
+<script src="_connect.js"></script>
+<script>
+  const N = 10, R = 2;
+  for (const m of document.querySelectorAll(".mat")) {
+    const kind = m.dataset.kind;
+    const rows = kind === "Ut" ? R : N, cols = kind === "U" ? R : N;
+    m.style.gridTemplateColumns = `repeat(${cols}, 11px)`;
+    for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
+      const c = document.createElement("i");
+      if (kind === "dense" || kind === "U" || kind === "Ut") c.className = "on";
+      else if (kind === "diag" && i === j) c.className = "on";
+      if ((kind === "U" || kind === "Ut")) c.className = "lo";
+      m.appendChild(c);
+    }
+  }
+  ready();
+</script>
+</body>
+</html>
