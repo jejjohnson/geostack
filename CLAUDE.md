@@ -39,7 +39,8 @@ specific to Claude Code.
   - research workflow: `add-experiment`, `add-dataset`, `add-model`,
     `add-notebook`, `reproduce-results`, `write-up-results`;
   - shipping: `pre-pr-check`, `geostack-review`, `squash-commit`;
-  - GitHub housekeeping: `create-gh-issue`, `link-gh-issues`.
+  - GitHub housekeeping: `create-gh-issue`, `link-gh-issues`;
+  - the README of a stack library: `library-readme`.
 - **Subagents** (`.claude/agents/`), both read-only, both used by
   `geostack-review`; run them on any diff that adds code, configs
   or pipeline stages, before committing:
