@@ -101,6 +101,7 @@ flowchart TB
   finitevolX -.-> pipekit
   finitevolX --> spectraldiffx
   gauss_flows --> gaussx
+  geonnax --> functax
   geotoolz --> functax
   geotoolz --> georeader
   geotoolz --> pipekit
@@ -116,7 +117,6 @@ flowchart TB
   plumax -.-> xtremax
   pyrox --> argminax
   pyrox -.-> filterax
-  pyrox --> functax
   pyrox -.-> gauss_flows
   pyrox --> kernellib
   radtrax --> argminax
@@ -135,7 +135,7 @@ flowchart TB
 ```
 :::
 
-20 repositories, 41 packages and 52 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+20 repositories, 41 packages and 53 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -324,6 +324,7 @@ cannot import, so most of its tests could no longer be collected.
 | sesmax | vardax | extra | `sesmax-core → vardax` |
 | filterax | gaussx | base | `filterax → gaussx` |
 | gauss_flows | gaussx | import | `gauss-flows → gaussx` |
+| geonnax | functax | base | `geonnax → functax` |
 | kernellib | gaussx | base | `kernellib → gaussx` |
 | kernellib | geonnax | base | `kernellib → geonnax` |
 | manipy | gaussx | base | `manipy-jax → gaussx` |
