@@ -342,10 +342,46 @@ The 15-line card and the ST-6 threshold are proposals to tune on the running exa
 - **The listing budget.** Skill descriptions share a budget of 1% of the context window. The eight existing descriptions run 577 to 883 characters for the four measured. Fallback: shorten descriptions before adding rung-level skills.
 - **Fifteen nodes are missing.** A tree with gaps sends the agent to an `AGENTS.md` instead. Fallback: the block falls back to the card alone, as for gauss_flows in option A.
 
+(st-built)=
+## As built
+
+The generator is `scripts/skill_tree.py`, and `tests/test_skill_tree.py` runs its gates at the submodule pins.
+It was first tried on five repositories in jejagents#5 and jejagents#6, and gaussx is the first repository to ship a shelf.
+
+**What a repository ships.** Everything sits in its plugin, `plugins/<name>/`.
+
+```text
+plugins/<name>/.claude-plugin/plugin.json
+plugins/<name>/skills/<skill>/SKILL.md          one per listed skill
+plugins/<name>/skills/<skill>/shelf/<entry>.md  the entries of a shelf
+plugins/<name>/tree/shelf.toml                  listed skills, units and entries; only with a shelf
+plugins/<name>/tree/cards/<unit>.md             one contract card per unit of a shelf
+plugins/<name>/tree/card.md                     the one card of a repository without a shelf
+```
+
+A repository that ships no card yet, or that is third party, has its card in `skill_tree/cards/<repository>.md` here.
+A parent with neither a skill nor a card gets one line in the block that sends the agent to its `AGENTS.md`.
+
+**Who generates what.** A part that follows from the library alone is generated and checked in the library, so its own CI keeps it current.
+In gaussx that is `scripts/skill_shelf.py`: the table of entries in each listed skill, the cards of the units of gaussx below that skill, and the gates GX-1 to GX-3 against `gaussx.__all__`.
+A part that follows from the graph is generated here: the "Builds on" block, from `dependency_graph.py`'s edges.
+`python scripts/skill_tree.py --write <repository> --into <checkout>` writes a repository's blocks into a checkout of it, for a pull request there; geostack never commits into a submodule.
+
+**Which units an edge carries.** Nobody writes them.
+A repository receives a unit's card when one of its packages does by the rule of `skill_shelf.py` (three names used, or one subclassed), and the unit's key is its title in lower case with hyphens.
+ST-1 fails when a measured unit is missing from the parent's `shelf.toml`.
+
+**When ST-2 applies.** A repository is held to its block once every one of its skills carries one; `python scripts/skill_tree.py` lists the others.
+A block quotes the parents' cards at geostack's pins.
+So when a card changes, the pin of its repository and the pins of the repositories that quote it move in one pull request here, after each of those has regenerated its block.
+
+**Not built yet.** The node is still the repository, so pyrox would carry the union of what its five packages use.
+ST-6 has no evaluation beyond the two runs recorded in jejagents#6.
+
 (st-followups)=
 ## Follow-up reports
 
-- [ ] `feat(scripts): emit each skill's builds-on block and plugin dependencies from the dependency graph` — the generator and gates ST-1, ST-2 and ST-4
+- [x] `feat(scripts): emit each skill's builds-on block and plugin dependencies from the dependency graph` — the generator and gates ST-1, ST-2 and ST-4
 - [ ] `feat(plugins): a geostack marketplace that lists every repository's plugin` — option B and gate ST-5
 - [ ] `docs(skills): a contract card for each of the eight repositories with a skill` — bottom-up, gaussx first
 - [ ] `[EPIC] a use skill for each of the fifteen repositories without one` — bottom-up by tier: functax, pipekit and gauss_flows first
