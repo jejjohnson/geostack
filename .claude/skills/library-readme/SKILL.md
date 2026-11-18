@@ -1,11 +1,11 @@
 ---
 name: library-readme
-description: Eman's README standard for his JAX library repos (vardax, argminax and the rest of the GeoStack): centred header, one central equation, highlights, the core-idea table, install, one runnable code-sketch quickstart, module and ecosystem tables, with everything else moved to the docs quickstart. Use when writing, rebuilding or reviewing a library README.
+description: Eman's README standard for his JAX library repos (argminax, vardax and the rest of the GeoStack): centred header, one central equation, an overview schematic, highlights, the core-idea table, install, one runnable code-sketch quickstart, module and ecosystem tables with a role-ladder figure and a dependency figure drawn in geostack, with everything else moved to the docs quickstart. Use when writing, rebuilding or reviewing a library README, or drawing a library's schematics.
 ---
 
 # Library README standard
 
-Draft 1 · 18 Nov 2026 · taken from the vardax README and argminax PR #76, which Eman named as the standard.
+Draft 2 · 18 Nov 2026 · argminax's README is the standard: its text from argminax PRs #76 and #82, and its three schematics (overview, role ladder, dependencies), which live in geostack. Draft 1 took the text from vardax's README and argminax PR #76.
 
 A library README answers four questions in this order: what problem the library solves, what the one idea is, how to install it, and what a first run looks like. Everything else (derivations, second examples, variants, calling conventions, training loops) goes to the docs quickstart, and the README links there.
 
@@ -17,10 +17,10 @@ The canonical copy lives in [jejagents](https://github.com/jejjohnson/jejagents)
 
 ## Exemplars
 
-Read both before writing. They show the two shapes the core-idea section takes: a family of methods (vardax) and a set of questions about one object (argminax).
+argminax is the standard; read it first, then vardax. They show the two shapes the core-idea section takes: a set of questions about one object (argminax) and a family of methods (vardax).
 
-- vardax: <https://github.com/jejjohnson/vardax/blob/main/README.md>, seven methods as specialisations of one cost.
-- argminax: <https://github.com/jejjohnson/argminax/blob/main/README.md> (rebuilt in PR #76), three questions about one minimiser.
+- argminax: <https://github.com/jejjohnson/argminax/blob/main/README.md>, five questions about one minimiser, with all three schematics of §10.
+- vardax: <https://github.com/jejjohnson/vardax/blob/main/README.md>, seven methods as specialisations of one cost. Its overview figure predates §10 and lives in its own repo; a rebuild moves it to geostack.
 
 ## 1. Section order
 
@@ -30,16 +30,16 @@ Use these sections, in this order. Sections marked optional appear only when the
 |---|---|---|
 | 1 | Header (no heading) | logo, tagline, badges, link row, then a `---` rule |
 | 2 | Opening (no heading) | the problem, the central equation, a short sketch, the "composed, not coded" paragraph |
-| 3 | Overview figure (optional) | one diagram from `docs/assets/`, with alt text that says what it shows |
+| 3 | Overview figure | the overview schematic of §10, embedded from geostack, with alt text that says what it shows |
 | 4 | `## 🌟 Highlights` | five to seven bullets |
 | 5 | `## 📐 <the core idea>` | one table and at most three display equations |
 | 6 | `## 📥 Install` | the install command, the extras, the Python version |
 | 7 | `## <emoji> Quickstart: <the example>` | one runnable example and what it printed |
 | 8 | A second sketch (optional) | only when it shows a seam the quickstart does not (vardax's "Swap the method, keep the pipeline") |
-| 9 | `## 🔬 What else is in the box` | the module table |
+| 9 | `## 🔬 What else is in the box` | the role-ladder figure of §10, then the module table |
 | 10 | `## 📓 Tutorials` (optional) | one row per notebook or group of notebooks |
 | 11 | `## 📖 Documentation` | one bullet per docs entry point |
-| 12 | `## 🧩 Ecosystem` | the owner table and the dependency direction |
+| 12 | `## 🧩 Ecosystem` | the dependency figure of §10, then the owner table and the dependency direction |
 | 13 | `## 🌳 Repository layout` | a short plain-text tree |
 | 14 | `## ⚙️ Development` | the repo's own task commands |
 | 15 | `## 🎓 References` | the papers the docs and docstrings already cite |
@@ -134,13 +134,66 @@ The docs page keeps the same notation as the README. When the move touches a pag
 - **Development**: the repo's own task runner (`make`, `uv run poe`), copied from `AGENTS.md`, then a pointer to `AGENTS.md`.
 - **References**: author, year, linked title, venue in italics. Use only papers cited in the repo's docs or docstrings, and take venues and identifiers from there.
 
-## 10. Maths and prose
+## 10. The three schematics
+
+Every library README carries three figures, drawn once in geostack and embedded from there, so the stack's schematics stay in one place and in one style. argminax's are the reference: copy its folders and change the data, not the layout.
+
+| Figure | Shows | geostack folder | Made by | README section |
+|---|---|---|---|---|
+| Overview | what you supply, the one idea, what the library does with it, what comes out, and the libraries underneath | `docs/images/libraries/<pkg>_overview/` | `<pkg>_overview.html` (with `_base.css` and `_connect.js`), rendered to a PNG by `render.py` | under the opening (§1, row 3) |
+| Role ladder | the public names on the rungs of the GeoStack role ladder | `docs/images/libraries/<pkg>_roles/` | `make_svgs.py`, light and dark SVGs | What else is in the box |
+| Dependencies | who imports the library, which of its modules each uses, and what it builds on | `docs/images/libraries/<pkg>_ecosystem/` | `make_svgs.py`, light and dark SVGs | Ecosystem |
+
+A detail figure for one module (argminax's `argminax_blr/`) follows the overview's form and sits in the docs guide for that module, not in the README.
+
+**The overview** has four columns joined by labelled arrows, and a row of slabs underneath:
+
+1. what the caller supplies (the cost, the inputs, the solver or the model);
+2. the one idea the library is built around, with its equation (argminax: one minimum and the Hessian there; vardax: one cost);
+3. what the library does with it, one card per question or method, each naming its module and public names;
+4. what comes out, with the result the reader will use most drawn solid;
+
+and one slab per upstream library the package extends, saying what it takes from it. The title says the idea in a few words ("argminax: five questions, one minimum").
+
+**The role ladder** takes its rungs from the `role-ladder` skill (`plugins/geostack/skills/role-ladder/` here):
+
+- One row per rung the library has, highest first, each labelled with its number, its role and its grammar word ("4 algorithm · the sentence") and a caption saying what that rung is in this library. Never label rows L0, L1: the role is the point.
+- The chips are public names from `__all__` on `main`, placed as on the library's skill-shelf page (`docs/design/skill_tree_<pkg>.md`). A name the shelf page does not place yet is placed by the skill's §2 test, and the PR says which names were placed that way.
+- A rung the library leaves to another library is drawn dashed with that library's names ("none of argminax's own: one step is gaussx's"). Rungs above the library's top are left out.
+- A third-party floor the library extends goes in a dashed side box with an arrow to the rung it plugs into (argminax: optimistix, into the strategies).
+- A "built on" row closes the figure.
+
+**The dependency figure** has the library at the top with its icon, then the stack layers as boxes:
+
+- One card per package that imports the library, with what it is and the library's modules it uses, read from its `from <pkg>… import` lines on `main`.
+- A package that imports it only through an extra is drawn dashed, with the extra named under it; an edge between two dependents is a grey arrow.
+- A strip underneath lists what the library itself builds on.
+- The edges come from geostack's `docs/api/dependency_graph.md`. When a package's `main` and the graph disagree, draw `main` and say so in the PR.
+
+**Making them.** The scripts use cyclopts and loguru and run with `uv run --no-project --with …` as their docstrings say. Render every figure in Chromium before committing, both themes for the SVGs: cairosvg mis-spaces bold `tspan` runs, so its previews are not a check. The overview's PNG needs Chromium anyway; where it cannot find `libgbm.so.1`, take it from conda-forge with `pixi exec -s libgbm`.
+
+**Embedding them.** Merge the geostack PR first: the library's docs build downloads remote images, and a 404 fails a strict build. Then embed from geostack's `main`:
+
+```html
+<p align="center"><img src="https://raw.githubusercontent.com/jejjohnson/geostack/main/docs/images/libraries/<pkg>_overview/<pkg>_overview.png" alt="<what it shows>" width="100%"></p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejjohnson/geostack/main/docs/images/libraries/<pkg>_roles/<pkg>_roles-dark.svg">
+    <img alt="<what it shows>" src="https://raw.githubusercontent.com/jejjohnson/geostack/main/docs/images/libraries/<pkg>_roles/<pkg>_roles-light.svg" width="100%">
+  </picture>
+</p>
+```
+
+The dependency figure is embedded like the role ladder. The library's design page in geostack shows all three with relative paths.
+
+## 11. Maths and prose
 
 - Maths is the `eman-style-math` GitHub target: no macros, inline `` $`…`$ ``, display in a `math` fence, `\mid` inside table cells, one expression per line. The letters match the package's docstrings.
 - Prose is the `eman-prose-tech` docs register: "we" for the maintainers, plain words, parentheses for glosses, no em dashes. One paragraph per line, never hard-wrapped.
-- No ASCII box-and-arrow diagrams; a figure is an image from `docs/assets/` or a Mermaid block.
+- No ASCII box-and-arrow diagrams; a figure is one of the schematics of §10, an image from `docs/assets/` (the logo) or a Mermaid block.
 
-## 11. Verification
+## 12. Verification
 
 Run these before the README ships:
 
@@ -148,10 +201,10 @@ Run these before the README ships:
 2. Lint and format each block with the repo's own ruff config, by passing it on stdin with a path inside the repo: `ruff check --stdin-filename docs/readme_block.py < block.py` (ruff's ambiguous-Unicode rule, RUF003, may be ignored for maths comments).
 3. Check the maths with `check_math.py` from the `eman-style-math` skill, on the README with `--target github` and on any docs page the change touched with `--target myst`. The script declares its dependencies inline, so `uv run` installs them: `uv run ~/.claude/skills/eman-style-math/scripts/check_math.py README.md --target github`.
 4. Check the prose with `style_check.py` from the `eman-prose-tech` skill, which needs only the standard library: `python ~/.claude/skills/eman-prose-tech/scripts/style_check.py prose.md --register docs`, on the prose with code blocks and HTML removed. Tables and the reference list skew its sentence metrics, so read the flags instead of chasing the bands.
-5. Check every name in the tables against `__all__`, every URL with `curl -s -o /dev/null -w '%{http_code}'`, and every status claim ("ships", "Wave 4") against the live issue.
+5. Check every name in the tables and on the figures against `__all__`, every URL (the figure URLs included) with `curl -s -o /dev/null -w '%{http_code}'`, and every status claim ("ships", "Wave 4") against the live issue.
 6. Build the docs when the change touched a docs page.
 
-Both scripts come with the personal skills in [jejagents](https://github.com/jejjohnson/jejagents): clone it and run its `./install.sh`, which copies the skills into `~/.claude/skills/`. Without them, do steps 3 and 4 by hand against §10 (no macros, inline `` $`…`$ ``, display maths in `math` fences, `\mid` in table cells, no em dashes, no hard wraps), and say in the PR that the two scripts were not run.
+Both scripts come with the personal skills in [jejagents](https://github.com/jejjohnson/jejagents): clone it and run its `./install.sh`, which copies the skills into `~/.claude/skills/`. Without them, do steps 3 and 4 by hand against §11 (no macros, inline `` $`…`$ ``, display maths in `math` fences, `\mid` in table cells, no em dashes, no hard wraps), and say in the PR that the two scripts were not run.
 
 ## Checklist
 
@@ -162,9 +215,11 @@ Both scripts come with the personal skills in [jejagents](https://github.com/jej
 - [ ] One runnable quickstart in `code-sketch` form, with its real printed output.
 - [ ] Derivations, later examples and training loops moved to the docs quickstart, which uses the same notation.
 - [ ] Every table name in `__all__`, every URL 200, every status claim checked live.
-- [ ] `check_math.py --target github` clean (or the maths checked by hand against §10 when the script is not installed, and the PR says so); prose in the docs register, no em dashes, no hard wraps.
+- [ ] The three schematics of §10 drawn in geostack, rendered in Chromium in both themes, and embedded from geostack's `main` after the geostack PR merged; every chip in `__all__`, every edge in the dependency graph or on `main`.
+- [ ] `check_math.py --target github` clean (or the maths checked by hand against §11 when the script is not installed, and the PR says so); prose in the docs register, no em dashes, no hard wraps.
 
 ## Open questions
 
 - Should the README carry the quickstart at all once the docs site is live, or only the opening sketch? Both exemplars keep it.
 - Should optional sections (tutorials, a second sketch) have a size threshold, such as three or more notebooks?
+- Should the role-ladder and dependency scripts become one shared generator that reads each library's data, instead of a copy per library? Two libraries' worth of copies would show what varies.
