@@ -1,0 +1,5 @@
+- **Provides.** Integration for JAX: quadrature rules applied to samples or integrands, running integrals, adaptive quadrature with an error estimate, expectations with a standard error, and fixed-step marches of an ODE.
+- **Start from.** `integrix.rule.integrate`, `integrix.rule.Integral`, `integrix.scan.cumulative`, `integrix.adapt.GaussKronrod`, `integrix.expect.monte_carlo`, `integrix.expect.Expectation`, `integrix.march.run`, `integrix.march.RK4Classic`.
+- **Keep.** Give `integrate` a functax `Rule` (or a tuple of 1-D rules, or a weights array) and read the returned `Integral`, not a bare float; march with `run(stepper, rhs, t0, y0, dt, n_steps)` where `rhs(t, y, args)` is the vector field, and jit once at the top because the library never does.
+- **Never.** Call `scipy.integrate.quad` or `quadax.quadgk` inside a jitted model for a tolerance-controlled integral; use `integrix.adapt.GaussKronrod`.
+- **Open the repository when.** You write a new stepper or estimator, or need more than these names: it has no skill yet, so read its `AGENTS.md` and its section of GeoStack's capability index.

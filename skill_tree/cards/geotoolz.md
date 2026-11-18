@@ -1,0 +1,5 @@
+- **Provides.** Geospatial and Earth-observation pipelines as composable steps: cataloguing and querying rasters, reading them onto a target grid, tiling with overlap blending, per-pixel operators, cloud storage access, and writing COG, GeoTIFF or Zarr.
+- **Start from.** `geocatalog.build.build_raster_catalog`, `geocatalog.GeoSlice`, `geopatcher.SpatialPatcher`, `geoops.Sequential`, `geoops.NDVI`, `geoops.WriteCOG`, `geoarray.GeoArray`, `geocloud.files`.
+- **Keep.** A raster is a `geoarray.GeoArray` with bands on axis -3 (`(C, H, W)`), `fill_value` is the nodata, and a step you write subclasses `pipekit_ops.Operator`, implements `_apply`, and takes keyword-only configuration in its constructor.
+- **Never.** Write your own tiling loop, mosaic, STAC client or band arithmetic on raw arrays; compose the catalog, patcher and operator classes so nodata and georeferencing are carried through.
+- **Open the skill when.** You write a new operator or check it with `check_operator`, build the full tile, compute and stitch pipeline, read sensor products, or set up cloud credentials and object-store reads.

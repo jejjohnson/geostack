@@ -327,6 +327,7 @@ A skill tree can grow a cycle in three ways the import graph cannot, and each ha
 | ST-3 Budget | each `SKILL.md` is under 500 lines, each description under 1 536 characters, each contract card at most 15 lines |
 | ST-4 Downward | 0 load instructions name a skill of an equal or higher tier |
 | ST-5 Installs | on a clean machine, installing `pyrox@geostack` installs exactly pyrox, kernellib, geonnax and gaussx |
+| ST-7 Cards name real symbols | every `package.name` a card writes in backticks is a public name, by a path that exists |
 | ST-6 Cards suffice | on 10 pyrox tasks that call gaussx without changing it, the agent opens the gaussx skill in at most 2 (proposed threshold) |
 :::
 
@@ -388,6 +389,12 @@ That keeps the whole graph in one generated file here, and no repository has to 
 An entry depends on the plugins of the repositories it builds on directly, and on the root plugin when its skills are a shelf.
 ST-5 was run by hand with Claude Code 2.1.327: installing `pyrox@geostack` from this marketplace installed pyrox and three dependencies, kernellib, geonnax and gaussx.
 A repository's own marketplace stays as it is, and installs that plugin alone.
+
+**Cards.** Every repository that another builds on now has a card, 17 of the 20.
+gaussx ships its seven unit cards in its plugin; the other 16, georeader among them, have theirs in `skill_tree/cards/` here until each library takes its own.
+manipy, plumax and sesmax have no dependent, so no block quotes them and they have none.
+ST-7 is checked with the other gates: a card may name its library only by a path that exists and is public, read from the source at the pin.
+The lines of a card that say what to keep and what never to do are read from each library's `AGENTS.md` and code, and no test checks them.
 
 **Not built yet.** The node is still the repository, so pyrox would carry the union of what its five packages use.
 ST-6 has no evaluation beyond the two runs recorded in jejagents#6.

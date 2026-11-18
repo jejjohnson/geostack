@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.6.15, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.7, integrix 0.0.5.
+Listed at gaussx 0.6.16, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.7, integrix 0.0.5.
 
 ## Upstream: `gaussx`
 
@@ -173,7 +173,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `cov_transform` | function | Covariance propagation through a linear map, J Σ Jᵀ. |
 | `create_grid` | function | Regular grid axes g_d = linspace(lo_d, hi_d, N_d), one per dimension. |
 | `cubature_points` | function | Spherical-radial cubature points and weights, 2 D_x of them. |
-| `cubic_interpolation_weights` | function | Sparse rows of the cubic SKI interpolation matrix W_interp. |
+| `cubic_interpolation_weights` | function | Deprecated: sparse rows of the cubic SKI interpolation matrix W_interp. |
 | `cur` | function | Randomized CUR decomposition (Voronin & Martinsson, 2017, §4). |
 | `cvi_update_sites` | function | Damped natural-gradient update of CVI sites. |
 | `damped_natural_update` | function | Damped update in natural-parameter space. |
@@ -268,7 +268,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `leave_one_out_cv` | function | LOO-CV via the bordered-system identity, without refitting N times. |
 | `ledoit_wolf_shrinkage` | function | Ledoit-Wolf shrinkage of an ensemble covariance, without forming it. |
 | `linear_gaussian_update` | function | Matrix-free posterior of a linear-Gaussian observation. |
-| `linear_interpolation_weights` | function | Sparse rows of the multilinear interpolation matrix on a rectilinear grid. |
+| `linear_interpolation_weights` | function | Deprecated: sparse rows of the multilinear interpolation matrix on a grid. |
 | `linear_solve` | function | Solve A x = b through the unified front door. |
 | `linearize_sde` | function | Optimal linear drift of a nonlinear SDE along a Gaussian path. |
 | `localization_matrix` | function | Pairwise Gaspari-Cohn taper ρ(d(aₙ, bₘ); c). |

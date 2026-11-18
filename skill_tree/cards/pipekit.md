@@ -1,0 +1,5 @@
+- **Provides.** Carrier-agnostic operator graphs: the `Operator` base class, composition into pipelines and graphs, named-array operators, JAX and Equinox operators, and time-stepping and data-assimilation cycles, split over seven packages that each have their own import name.
+- **Start from.** `pipekit_ops.Operator`, `pipekit_ops.Sequential`, `pipekit_ops.Graph`, `pipekit_ops.Input`, `pipekit_ops.Lambda`, `pipekit_ops.StatefulOperator`, `pipekit_array.DimArray`, `pipekit_jax.JaxOperator`.
+- **Keep.** Subclass `Operator` and implement `_apply`, and store each `__init__` argument as an attribute of the same name so `get_config()` and the serialised state round-trip; import names from `pipekit_ops`, `pipekit_array`, `pipekit_cycle` or `pipekit_jax`, because `import pipekit` exports nothing.
+- **Never.** Override `__call__` on an operator; implement `_apply`, because `__call__` decides between running eagerly and recording a `Node` in a `Graph`.
+- **Open the repository when.** You need cycles, stores, caching or parallel maps, or more than these names: it has no skill yet, so read its `AGENTS.md` and its section of GeoStack's capability index.

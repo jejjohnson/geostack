@@ -1,0 +1,5 @@
+- **Provides.** Third-party raster reading for geoscience: the `GeoTensor` array with CRS and affine transform, lazy file readers, windowed reads and reprojection, mosaicking and COG writing.
+- **Start from.** `georeader.geotensor.GeoTensor`, `georeader.rasterio_reader.RasterioReader`, `georeader.read.read_from_window`, `georeader.read.read_reproject_like`, `georeader.read.read_reproject`, `georeader.mosaic.spatial_mosaic`, `georeader.save.save_cog`, `georeader.window_utils`.
+- **Keep.** A `GeoTensor` is a numpy `ndarray` subclass carrying `transform` and `crs`, shaped `(H, W)`, `(C, H, W)` or `(T, C, H, W)`; a `RasterioReader` is lazy and reads nothing until you call `load()` or `read_from_window`.
+- **Never.** Import `GeoTensor` from the `georeader` package root, whose `__init__.py` does not export it; import it from `georeader.geotensor`.
+- **Open the repository when.** You need more than these names: georeader is third party (spaceml-org) and read-only, so read its source and its section of GeoStack's capability index (`docs/api/capabilities.md`), and never edit it or open issues there.

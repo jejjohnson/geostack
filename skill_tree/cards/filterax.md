@@ -1,0 +1,5 @@
+- **Provides.** Differentiable ensemble Kalman filters, smoothers and ensemble-Kalman inversion processes in JAX, with the ensemble algebra, localization and inflation they are built from.
+- **Start from.** `filterax.ETKF`, `filterax.LETKF`, `filterax.EKI`, `filterax.AbstractDynamics`, `filterax.AbstractObsOperator`, `filterax.kalman_gain`, `filterax.localization_matrix`, `filterax.differentiable_assimilate`.
+- **Keep.** An ensemble is an array of shape `(N_e, N_x)` with at least two members; dynamics and observation operators act on one state and the filter vmaps them; observation noise is a lineax operator, and `ETKF(...).assimilate(init_ensemble, [(y, t), ...], obs_noise)` takes a sequence of observation and time pairs.
+- **Never.** Build a dense `N_x` by `N_x` covariance from the ensemble; use `filterax.ensemble_covariance` or `filterax.kalman_gain`, which keep it as a low-rank operator.
+- **Open the repository when.** You need more than these names: it has no skill yet, so read its `AGENTS.md` and its section of GeoStack's capability index.

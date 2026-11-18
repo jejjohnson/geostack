@@ -1,0 +1,5 @@
+- **Provides.** Optimisation with uncertainty at the minimum, for JAX: Gauss-Newton solves, the Laplace posterior and its covariance, averaging kernels and evidence, and adjoints for early-stopped minimisers.
+- **Start from.** `argminax.solve.GaussNewtonCG`, `argminax.solve.laplace_mode`, `argminax.curvature.gauss_newton`, `argminax.curvature.Laplace`, `argminax.curvature.marginal_variance`, `argminax.diagnose.averaging_kernel`, `argminax.diagnose.degrees_of_freedom`, `argminax.adjoint.OneStep`.
+- **Keep.** Pass `gauss_newton` residuals that stack the measurement and prior residuals, each whitened by its covariance; the library never calls `jax.jit` itself, so the caller jits once at the top, and every random routine takes a `key`.
+- **Never.** Form or invert the posterior precision yourself to get a covariance; ask the `Laplace` for `marginal_variance` or `averaging_kernel`, which keep it matrix-free.
+- **Open the repository when.** You need the BLR optax transforms, dual solves or site-wise Laplace results, or more than these names: it has no skill yet, so read its `AGENTS.md` and its section of GeoStack's capability index.
