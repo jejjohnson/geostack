@@ -25,4 +25,10 @@ Design docs for the new libraries that the [GeoStack layer map](../stack_layer_m
 | [tracerax](tracerax.md) ([details](tracerax_details.md)) | Lagrangian particles: advection, binning, footprints, FTLE, residence and connectivity | GeoNumerics, tier 2 |
 | [xrcf](xrcf.md) ([details](xrcf_details.md)) | the xarray side's conventions: the CF variable registry, coordinates, the CRS, validation, requests | GeoStack (xrtoolz), tier 0 |
 
+pyrox-ssm is not a new library, but its design page sits here with the others.
+
+| Package | Owns | Layer, tier |
+| --- | --- | --- |
+| [pyrox-ssm](pyrox_ssm.md) | temporal GPs and linear, nonlinear and ensemble state-space models as NumPyro models, with gaussx's and filterax's numerics | GeoML, tier 3 (in the pyrox workspace) |
+
 functax, integrix and argminax meet at two seams. A quadrature rule is data, and functax's; what sums, adapts or marches with it is integrix's. A backward sweep through time is integrix's; a derivative through an optimiser's iterations, or at its minimum, is argminax's.
