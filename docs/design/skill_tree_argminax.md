@@ -52,6 +52,8 @@ argminax is small, new, and extends another library's protocols, so most of what
 <!-- shelf:uses:begin -->
 | Dependent package | Names used | Solvers and adjoints | Curvature | Diagnostics |
 |---|---|---|---|---|
+| vardax | 6 | 5 | 1 | 0 |
+| plumax | 1 | 0 | 1 | 0 |
 <!-- shelf:uses:end -->
 :::
 
@@ -92,6 +94,8 @@ Its `AGENTS.md` puts the boundary in one line, "one step is gaussx's; the loop i
 <!-- shelf:cards:begin -->
 | Dependent package | Cards | Also uses |
 |---|---|---|
+| vardax | Solvers and adjoints (subclasses `KStep`) | Curvature (1) |
+| plumax | none | Curvature (1) |
 <!-- shelf:cards:end -->
 :::
 

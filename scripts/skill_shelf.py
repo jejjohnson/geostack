@@ -204,7 +204,7 @@ SHELVES: dict[str, Shelf] = {
     "pipekit": Shelf(
         page="docs/design/skill_tree_pipekit.md",
         packages=(
-            "pipekit",
+            "pipekit-ops",
             "pipekit-array",
             "pipekit-cycle",
             "pipekit-jax",
@@ -213,20 +213,27 @@ SHELVES: dict[str, Shelf] = {
             "pipekit-experiment",
         ),
         units=(
-            Unit("Operators and composition", "⑤ ⑥", "geoscience, data", ("pipekit",)),
+            Unit(
+                "Operators and composition", "⑤ ⑥", "geoscience, data", ("pipekit_ops",)
+            ),
             Unit(
                 "Control and execution",
                 "⑥",
                 "data",
                 (
-                    "pipekit.control",
-                    "pipekit.parallel",
-                    "pipekit.cache",
-                    "pipekit.qc",
-                    "pipekit.observe",
+                    "pipekit_ops.control",
+                    "pipekit_ops.parallel",
+                    "pipekit_ops.cache",
+                    "pipekit_ops.qc",
+                    "pipekit_ops.observe",
                 ),
             ),
-            Unit("Recipes as data", "⑥", "data", ("pipekit.serial", "pipekit.hashing")),
+            Unit(
+                "Recipes as data",
+                "⑥",
+                "data",
+                ("pipekit_ops.serial", "pipekit_ops.hashing"),
+            ),
             Unit("Named arrays", "⓪ ① ⑤", "geoscience, ML", ("pipekit_array",)),
             Unit("Cycles", "⑥", "ML, geoscience", ("pipekit_cycle",)),
             Unit("JAX bridge", "⑤ ⑥", "ML", ("pipekit_jax",)),

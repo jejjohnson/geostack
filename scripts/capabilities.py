@@ -292,6 +292,18 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         "pipekit_array.stack adds a leading dim on any named carrier and never"
         " aligns; geoarray.stack stacks GeoArrays on one grid."
     ),
+    "Reduce": (
+        "pipekit_ops.Reduce is a left fold of an operator over a sequence;"
+        " pipekit_array.Reduce reduces a named array over named dims."
+    ),
+    "Rename": (
+        "pipekit_ops.Rename renames the keys of a dict carrier;"
+        " pipekit_array.Rename renames the dims of a named array."
+    ),
+    "pad": (
+        "pipekit_array.pad pads named dims of any named carrier;"
+        " geoarray.pad pads a GeoArray's spatial axes and moves its transform."
+    ),
     "Composite": (
         "geoops.Composite builds a band composite; pipekit_train.Composite is"
         " a weighted sum of losses."
