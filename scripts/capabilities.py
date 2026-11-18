@@ -366,6 +366,18 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         "functax and argminax each raise their own MissingExtraError, naming"
         " the extra of that library to install."
     ),
+    "GaussianRegressionHead": (
+        "geonnax.GaussianRegressionHead is the mean plus log-scale head;"
+        " pyrox_nn.GaussianRegressionHead wraps it and samples its four weight"
+        " arrays under Gaussian priors."
+    ),
+    "SphericalHarmonicFeatures": (
+        "kernellib.SphericalHarmonicFeatures is the deterministic feature map"
+        " of a zonal kernel truncated at degree L;"
+        " pyrox_nn.SphericalHarmonicFeatures is the weight-space GP on the same"
+        " harmonics and Funk-Hecke coefficients, with a standard normal prior"
+        " on the weights."
+    ),
 }
 
 # Name clashes the layers above GeoStack ship today, as {layer: {name: why}}.
@@ -389,6 +401,7 @@ _SESMAX_IMEX = (
 _SESMAX = "sesmax-core is somax's successor; somax keeps its copy until it is archived"
 _STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
 _TRANSFORMS = "moved from spectraldiffx to functax.transform (spectraldiffx#166)"
+_NN_LAYERS = "layers in both geonnax and pyrox-nn"
 _SOMAX = "somax's own name for a different object"
 _NUMERICS = "the same solver or grid in several GeoNumerics libraries"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
@@ -431,17 +444,23 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "Augment": "different objects in gauss_flows and xrtoolz",
         "Axis": "functax.geometry.Axis beside pipekit-evaluate's evaluation Axis",
         "Cubic": _FX_KERNELS,
+        "DenseRank1": _NN_LAYERS,
         "Graph": "kernellib's Graph beside pipekit's operator Graph",
         "Identity": "functax.interp.Identity beside geoops' Identity operator",
         "ImplicitAdjoint": _VARDAX,
         "Kernel": "functax.interp's RBF kernel protocol beside pyrox-gp's Kernel",
         "Kronecker": "Kronecker structures in both gaussx and pyrox-lgm",
+        "LayerNormEnsemble": _NN_LAYERS,
         "Linear": _FX_KERNELS,
         "LinearBasis": "functax.interp.LinearBasis beside vardax's LinearBasis",
         "LinearObs": _VARDAX,
+        "MCSigmoidDenseFA": _NN_LAYERS,
+        "MCSoftmaxDenseFA": _NN_LAYERS,
+        "MultiHeadAttentionBE": _NN_LAYERS,
         "OrthogonalRandomFeatures": "random features in geonnax, kernellib, pyrox-nn",
         "Prior": "different objects in pipekit-evaluate and vardax",
         "RBF": _FX_KERNELS,
+        "RandomFeatureGaussianProcess": _NN_LAYERS,
         "RecursiveCheckpointAdjoint": _VARDAX,
         "ReducedBasis": _VARDAX,
         "SphericalHarmonicTransform": "spherical harmonics, geonnax and spectraldiffx",
