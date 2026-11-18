@@ -10,6 +10,7 @@ on the submodules at their pins. It reads files only.
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -181,11 +182,33 @@ def test_description_length_reads_plain_and_folded_scalars() -> None:
     assert st.description_length(folded) == len("two words")
 
 
+def test_marketplace_lists_each_plugin_with_the_plugins_it_builds_on(tree) -> None:
+    for repo in ("base", "mid", "top"):
+        manifest = tree.nodes[repo].plugin_dir / ".claude-plugin" / "plugin.json"
+        manifest.write_text(json.dumps({"name": repo, "description": f"Use {repo}."}))
+    urls = {repo: f"owner/{repo}" for repo in tree.nodes}
+    plugins = json.loads(st.marketplace(tree, urls))["plugins"]
+    assert [p["name"] for p in plugins] == [st.ROOT_PLUGIN, "base", "mid", "top"]
+    assert plugins[0]["source"] == f"./plugins/{st.ROOT_PLUGIN}"
+    by_name = {p["name"]: p for p in plugins}
+    assert by_name["mid"]["source"] == {
+        "source": "git-subdir",
+        "url": "owner/mid",
+        "path": "plugins/mid",
+    }
+    # a shelf is written in the role ladder, so it depends on the root plugin
+    assert by_name["base"]["dependencies"] == [st.ROOT_PLUGIN]
+    assert by_name["mid"]["dependencies"] == ["base"]
+    # bare has no plugin, so top cannot depend on it
+    assert by_name["top"]["dependencies"] == ["base", "mid"]
+
+
 @pytest.mark.skipif(not HAVE_SUBMODULES, reason="the submodules are not checked out")
 def test_the_tree_at_the_pins_passes_its_gates() -> None:
     graph = st.dg.build()
     tree = st.build(graph)
     assert st.violations(tree) == [], "python scripts/skill_tree.py"
+    assert not st.marketplace_stale(tree), "python scripts/skill_tree.py"
     assert {(r, e.parent) for r, es in tree.edges.items() for e in es} == {
         (e.source, e.target) for e in graph.edges
     }

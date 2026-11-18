@@ -37,6 +37,7 @@ not into a local package.
 | `marimo_notebooks/` | marimo notebooks (`01_exploration.py`) |
 | `docs/`, `myst.yml`, `references.bib` | MyST documentation (notes, tutorials, API pages, capability indexes) and its bibliography |
 | `CITATION.cff` | How to cite the project |
+| `.claude-plugin/marketplace.json`, `plugins/geostack/`, `skill_tree/cards/` | The skill tree for projects that build on the stack: the generated marketplace of every library's plugin, geostack's root plugin (the `role-ladder` skill), and the contract cards geostack holds for libraries that ship none |
 
 ### The layers
 
@@ -240,7 +241,7 @@ The step-by-step for each is a skill (see "Recipes").
 | `tests/test_capabilities.py` | each layer's capability index is current; no new name bound to two objects (GeoStack in `ci.yml`'s test job, the other layers in its `layers` job) |
 | `tests/test_dependency_graph.py` | no cycle, no upward or same-tier edge, no undeclared import beyond `KNOWN`; the diagram in `README.md` and `docs/api/dependency_graph.md` is current |
 | `tests/test_skill_shelf.py` | the measured tables of the skill-shelf pages (`docs/design/skill_tree_<library>.md`) match the submodules; every public name of a shelf's library belongs to a unit; a dependent that subclasses a unit's name receives its card |
-| `tests/test_skill_tree.py` | the skill tree at the pins: no cycle; a "Builds on" block that a repository's `SKILL.md` carries equals what `scripts/skill_tree.py` generates; skills, descriptions and contract cards stay within their budgets; no skill names a skill of a repository that is not below it |
+| `tests/test_skill_tree.py` | the skill tree at the pins: no cycle; a "Builds on" block that a repository's `SKILL.md` carries equals what `scripts/skill_tree.py` generates; skills, descriptions and contract cards stay within their budgets; no skill names a skill of a repository that is not below it; `.claude-plugin/marketplace.json` is current |
 | `pixi-lock.yml` | on a feature branch whose `pixi.toml`, submodules or `capabilities.py` changed: regenerates `pixi.lock` and the indexes and commits them |
 | ruff (`make lint`), ty (`make typecheck`) | Lint (`E F I UP B SIM RUF`) and types on `scripts/` |
 | `.pre-commit-config.yaml` (`make precommit`) | ruff, ruff-format, whitespace, YAML / JSON syntax, files over 5 MB |
@@ -276,6 +277,13 @@ A research project is not a library other projects build on, so the
 template ships no downstream plugin or `llms.txt`; the skills above are for
 work inside the project.
 
+geostack does publish one thing for other projects: the skill tree.
+`.claude-plugin/marketplace.json` lists every library's Claude Code plugin,
+each with the plugins of the libraries it builds on, and geostack's own
+plugin (`plugins/geostack/`, the `role-ladder` skill). It is generated
+(`make skill-tree`); the design is
+[`docs/design/skill_tree.md`](docs/design/skill_tree.md).
+
 ## Working in the repo
 
 Two environment managers share the repo. uv (via `make`) is the local
@@ -292,7 +300,7 @@ make precommit            # pre-commit on every file
 make capabilities         # regenerate the four capability indexes (one per layer)
 make dependency-graph     # regenerate the dependency graph (README.md, docs/api/)
 make skill-shelves        # regenerate the measured tables of the skill-shelf pages
-make skill-tree           # print the skill tree (scripts/skill_tree.py --write <repo> writes a repository's blocks)
+make skill-tree           # regenerate the plugin marketplace and print the skill tree (scripts/skill_tree.py --write <repo> writes a repository's blocks)
 make docs                 # myst build --html  (into _build/html)
 make docs-serve           # myst start (live preview)
 make help                 # every target

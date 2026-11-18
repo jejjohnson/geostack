@@ -176,7 +176,7 @@ dependency-graph: ## Regenerate the dependency graph in README.md, docs/api/depe
 skill-shelves: ## Regenerate the measured tables of the skill-shelf pages (docs/design/skill_tree_*.md)
 	uv run python scripts/skill_shelf.py
 
-skill-tree: ## Print the skill tree: each repository's skills and what they build on
+skill-tree: ## Regenerate the plugin marketplace (.claude-plugin/marketplace.json) and print the skill tree
 	uv run python scripts/skill_tree.py
 
 docs-deploy: ## Deploy documentation to GitHub Pages
