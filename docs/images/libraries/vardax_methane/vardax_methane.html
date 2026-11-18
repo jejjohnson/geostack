@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>vardax — a methane overpass, end to end</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  #diagram { width: 1560px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 290px 320px 320px 320px;
+    column-gap: 76px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 12px; }
+  .node { position: relative; }
+  .node .name { padding-right: 84px; }
+  .node .name sub, .node .desc sub, .eq sub, .eq sup, .node .desc sup { font-size: 0.75em; }
+  .st {
+    position: absolute; top: 9px; right: 10px;
+    font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+    border-radius: 6px; padding: 1px 6px; white-space: nowrap;
+  }
+  .st.today { color: #166534; background: #dcfce7; border: 1.2px solid #22c55e; }
+  .st.sketched { color: #166534; background: #f0fdf4; border: 1.2px dashed #22c55e; }
+  .st.user { color: #374151; background: #f3f4f6; border: 1.2px solid #9ca3af; }
+  .st.unpinned { color: #92400e; background: #fffbeb; border: 1.2px dashed #f59e0b; }
+  .node.unpinned { border-style: dashed; }
+  .eq {
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink-accent);
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
+    padding: 8px 11px; margin-top: 12px; line-height: 1.5;
+  }
+  .w {
+    display: inline-flex; flex-direction: column; vertical-align: middle;
+    font-size: 0.9em; line-height: 1.05; margin-left: 1px;
+  }
+  .w sub, .w sup { font-size: 0.85em; }
+  .eq .lbl { font-family: var(--sans); font-size: 11.5px; color: var(--muted); display: block; margin-bottom: 2px; }
+  .band-head { display: flex; align-items: baseline; gap: 12px; margin: 34px 0 10px 2px; }
+  .band-head .verb {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b;
+  }
+  .band-head .pkg { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .band-head .note { font-size: 12.5px; color: var(--muted); margin-left: auto; }
+  .tiers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .tier {
+    background: var(--card); border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 12px 14px;
+    position: relative;
+  }
+  .tier.off { border-style: dashed; }
+  .tier .t { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; }
+  .tier .name { font-size: 14.5px; font-weight: 700; color: var(--ink); margin-top: 2px; padding-right: 84px; }
+  .tier .mod { font-family: var(--mono); font-size: 12px; color: #3f6fb5; margin-top: 4px; }
+  .tier .desc { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 6px; }
+  .tier code, .node code, .cycle code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); overflow-wrap: anywhere; }
+  .cycle { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .cstep {
+    border-radius: 10px; padding: 9px 11px; background: var(--base-bg); border: 1.5px solid #cbd5e1;
+    font-size: 12px; color: var(--muted); line-height: 1.4;
+  }
+  .cstep.here { background: var(--card); border: 2px solid #3f6fb5; }
+  .cstep b { color: var(--ink); font-size: 12.5px; display: block; margin-bottom: 2px; }
+  .key { display: flex; gap: 22px; margin-top: 18px; font-size: 12.5px; color: var(--muted); align-items: center; flex-wrap: wrap; }
+  .key span.k { display: inline-flex; align-items: center; gap: 8px; }
+  .key .st { position: static; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">vardax — a methane overpass, end to end</div>
+  <div class="subtitle">Page 17's single-overpass inversion of one point source, x = (log Q, s<sub>1</sub>, s<sub>2</sub>, H<sub>eff</sub>), and the plumax tiers that fill its forward slot. Each box says whether its call ships today, is your code, or lives in a library the page has not pinned.</div>
+
+  <div class="grid">
+    <!-- inputs -->
+    <div class="lane find" id="lane-in">
+      <div class="lane-head"><span class="verb">inputs</span><span class="pkg">one event</span></div>
+      <div class="node unpinned">
+        <span class="st unpinned">not pinned</span>
+        <div class="name">overpasses y</div>
+        <div class="desc">TROPOMI, EMIT and GHGSat L2 within 50 km and 2 h: XCH<sub>4</sub>, averaging kernel, quality mask, variance; a GeoCatalog query</div>
+      </div>
+      <div class="node">
+        <span class="st user">your code</span>
+        <div class="name">met</div>
+        <div class="desc">ERA5 or WRF wind, boundary-layer height and stability; static, not a control</div>
+      </div>
+      <div class="node">
+        <span class="st user">your code</span>
+        <div class="name">prior μ<sub>x</sub>, Σ<sub>x</sub></div>
+        <div class="desc">μ<sub>x</sub> = (log Q<sub>EDGAR</sub>, 0, 0, 50 m) from the inventory; Σ<sub>x</sub> = diag(1, 500², 500², 25²) as a <code>lx.DiagonalLinearOperator</code></div>
+      </div>
+    </div>
+
+    <!-- operators -->
+    <div class="lane compute" id="lane-ops">
+      <div class="lane-head"><span class="verb">operators</span><span class="pkg">h ∘ f and Σ<sub>ε</sub></span></div>
+      <div class="node">
+        <span class="st today">today</span>
+        <div class="name">observation h</div>
+        <div class="desc">one <code>AveragingKernel</code> per instrument, built from its L2 by your code, in an <code>InstrumentSpec</code> and an <code>InstrumentRegistry</code>; <code>MultiInstrumentFusion.to_observation_operator()</code> stacks them</div>
+      </div>
+      <div class="node">
+        <span class="st today">today</span>
+        <div class="name">noise Σ<sub>ε</sub></div>
+        <div class="desc">diag(σ<sub>i</sub><sup>2</sup>) per instrument, one <code>lx.DiagonalLinearOperator</code> in sorted instrument order</div>
+      </div>
+      <div class="node unpinned" id="fwd">
+        <span class="st unpinned">not pinned</span>
+        <div class="name">forward f</div>
+        <div class="desc">the plume given the met, x ↦ XCH<sub>4</sub>; page 17 sketches <code>plumax.tier1.GaussianPlume</code>, which plumax does not export; the tiers below fill this slot</div>
+      </div>
+    </div>
+
+    <!-- inversion -->
+    <div class="lane cut" id="lane-inv">
+      <div class="lane-head"><span class="verb">inversion</span><span class="pkg">incremental 4D-Var</span></div>
+      <div class="node">
+        <span class="st sketched">today*</span>
+        <div class="name">IncrementalFourDVar</div>
+        <div class="desc"><code>forward=f</code>, <code>obs_op=h</code>, the prior and Σ<sub>ε</sub>, <code>config=IncrementalConfig(n_outer=5, n_inner=20, cvt=True)</code></div>
+      </div>
+      <div class="eq"><span class="lbl">the cost, one observation time</span>𝒥(x) = ½‖x − μ<sub>x</sub>‖<span class="w"><span>2</span><span>Σ<sub>x</sub><sup>−1</sup></span></span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ ½‖m ⊙ (y − h(f(x)))‖<span class="w"><span>2</span><span>Σ<sub>ε</sub><sup>−1</sup></span></span></div>
+      <div class="node">
+        <span class="st today">today</span>
+        <div class="name">x<sup>⋆</sup> = inversion(batch)</div>
+        <div class="desc">the batch, a <code>Batch1D</code> of shape (1, 1, D<sub>y</sub>), is built from the overpasses by your code</div>
+      </div>
+    </div>
+
+    <!-- out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">a posterior, handed on</span></div>
+      <div class="node">
+        <span class="st today">today</span>
+        <div class="name">posterior</div>
+        <div class="desc"><code>inversion.posterior(batch, adapter=GaussNewtonHessian())</code>: x<sup>⋆</sup> and a lazy Σ<sub>x∣y</sub> = (Σ<sub>x</sub><sup>−1</sup> + (HF)<sup>⊤</sup>Σ<sub>ε</sub><sup>−1</sup>HF)<sup>−1</sup></div>
+      </div>
+      <div class="node solid">
+        <span class="st today">today</span>
+        <div class="name">mark likelihood</div>
+        <div class="desc"><code>GaussianMarkLikelihood(posterior, event_metadata).to_dict()</code>: the mean, variances, samples, provenance and event metadata</div>
+      </div>
+      <div class="node unpinned">
+        <span class="st unpinned">not pinned</span>
+        <div class="name">catalogue and population</div>
+        <div class="desc">a GeoCatalog write per event; many events feed a population model such as TMTPP. vardax ships neither</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="band-head"><span class="verb">the forward slot</span><span class="pkg">plumax's tiers, as they call vardax on main</span><span class="note">through plumax's <code>assim</code> extra; only the forward changes</span></div>
+  <div class="tiers" id="tiers">
+    <div class="tier off">
+      <span class="st user" style="top:10px">no vardax</span>
+      <div class="t">tier I</div>
+      <div class="name">Gaussian plume</div>
+      <div class="mod">plumax.gauss_plume</div>
+      <div class="desc">fits Q with NumPyro in its own <code>inference</code> module; its forward, <code>simulate_plume</code>, does not call vardax</div>
+    </div>
+    <div class="tier">
+      <span class="st today" style="top:10px">today</span>
+      <div class="t">tier II</div>
+      <div class="name">Lagrangian particles</div>
+      <div class="mod">plumax.lagrangian.linear_gaussian_inversion · lognormal_inversion</div>
+      <div class="desc"><code>footprint_operator</code> wraps the footprint as a <code>CallableObs</code>; the inversions solve with <code>OptimalInterpolation</code> and <code>LaplaceCovariance</code></div>
+    </div>
+    <div class="tier">
+      <span class="st today" style="top:10px">today</span>
+      <div class="t">tier III</div>
+      <div class="name">Eulerian finite volume</div>
+      <div class="mod">plumax.les_fvm.FourDVarProblem · solve_4dvar</div>
+      <div class="desc"><code>ThreeDVar</code> or <code>IncrementalFourDVar</code> over a <code>LinearParameterization</code> of a <code>linear_basis</code>, with <code>OptimistixMinimiser</code></div>
+    </div>
+    <div class="tier">
+      <span class="st today" style="top:10px">today</span>
+      <div class="t">tier IV</div>
+      <div class="name">coupled with radiance</div>
+      <div class="mod">plumax.coupled.solve_coupled · fuse_observations</div>
+      <div class="desc"><code>ThreeDVar</code> with <code>LaplaceCovariance</code> over a linear basis; <code>fuse_observations</code> runs <code>OptimalInterpolation</code> with <code>LinearObs</code></div>
+    </div>
+  </div>
+
+  <div class="band-head"><span class="verb">the six-step cycle</span><span class="pkg">where this inversion sits</span></div>
+  <div class="cycle">
+    <div class="cstep"><b>1 physics</b>a plumax forward model</div>
+    <div class="cstep here"><b>2 classical</b>the inversion above, the oracle for later steps</div>
+    <div class="cstep"><b>3 emulator</b>a neural plume, its adjoint gated by <code>assert_emulator_calibrated</code></div>
+    <div class="cstep"><b>4 emulator inference</b>swap <code>forward=</code> for the emulator; the vardax code is unchanged</div>
+    <div class="cstep"><b>5 amortized</b>an <code>AmortizedPosterior</code> trained on simulated (Q, y) pairs</div>
+    <div class="cstep"><b>6 improve</b>swap any block; the previous step validates it</div>
+  </div>
+
+  <div class="key">
+    <span class="k"><span class="st today">today</span> the call ships, as written</span>
+    <span class="k"><span class="st sketched">today*</span> the name ships, the arguments are sketched</span>
+    <span class="k"><span class="st user">your code</span> written for the event</span>
+    <span class="k"><span class="st unpinned">not pinned</span> a library whose API the page has not checked</span>
+  </div>
+</div>
+<script src="_connect.js"></script>
+<script>
+  wire("lane-in", "lane-ops", { label: "<span class='t'>y · met · prior</span>", color: "#7b6bb5" });
+  wire("lane-ops", "lane-inv", { label: "<span class='t'>h ∘ f · Σε</span>", color: "#cf9418" });
+  wire("lane-inv", "lane-out", { label: "<span class='t'>x⋆</span>", color: "#3f6fb5" });
+  wire("tiers", "fwd", { from: "top", to: "bottom", fromShift: -170, toShift: 30, color: "#94a3b8", dashed: true });
+  ready();
+</script>
+</body>
+</html>
