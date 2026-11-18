@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.6.12, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.7, integrix 0.0.5.
+Listed at gaussx 0.6.15, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.6, argminax 0.0.7, integrix 0.0.5.
 
 ## Upstream: `gaussx`
 
@@ -46,6 +46,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `BlockTriDiag` | class | Block-tridiagonal operator A with a symmetric off-diagonal band. |
 | `CGSolver` | class | Conjugate-gradient solve with a stochastic log-determinant. |
 | `CUR` | class | CUR decomposition A ≈ C U R, with C = A_:,J and R = A_I,:. |
+| `CallableLikelihood` | class | A factorised likelihood from a per-site log density. |
 | `CapacitanceSolver` | class | Solve a base system subject to homogeneous point constraints. |
 | `Chandrupatla` | class | Chandrupatla's hybrid inverse-quadratic / bisection root finder. |
 | `ColumnID` | class | Column interpolative decomposition A ≈ A_:,J X. |
@@ -86,6 +87,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `LOOResult` | class | Result of `leave_one_out_cv`: the LOO log-likelihood and predictives. |
 | `LOVECache` | class | Cached rank-k Lanczos approximation Q diag(θ)⁻¹ Qᵀ of Σ_y⁻¹. |
 | `LSMRSolver` | class | LSMR iterative least-squares solver (Fong & Saunders 2011). |
+| `LaplaceModel` | class | The latent Gaussian model of `laplace_mode`, with the maps one Newton step needs. |
 | `LaplaceResult` | class | The Gaussian approximation 𝒩(x̂, Λ_x\|y⁻¹) at the mode. |
 | `LinearGaussianPosterior` | class | Posterior 𝒩(x_a, P_a) of `linear_gaussian_update`. |
 | `LinearizedSDE` | class | Linear surrogate dx(t) = (F_c,t x(t) + c_t) dt + L_c db(t) of an SDE. |
@@ -261,6 +263,8 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `kronecker_sum_tag` | constant | `kronecker_sum_tag` |
 | `kronecker_tag` | constant | `kronecker_tag` |
 | `laplace_mode` | function | Mode, Hessian and log-marginal of the Laplace approximation, in precision form. |
+| `laplace_model` | function | Collect and check the pieces of the latent Gaussian model of `laplace_mode`. |
+| `laplace_result` | function | The Gaussian approximation and the Laplace log-marginal at a mode. |
 | `leave_one_out_cv` | function | LOO-CV via the bordered-system identity, without refitting N times. |
 | `ledoit_wolf_shrinkage` | function | Ledoit-Wolf shrinkage of an ensemble covariance, without forming it. |
 | `linear_gaussian_update` | function | Matrix-free posterior of a linear-Gaussian observation. |

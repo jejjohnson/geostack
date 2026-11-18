@@ -114,6 +114,9 @@ flowchart TB
   plumax --> radtrax
   plumax -.-> vardax
   plumax -.-> xtremax
+  pyrox --> argminax
+  pyrox -.-> filterax
+  pyrox --> functax
   pyrox -.-> gauss_flows
   pyrox --> kernellib
   radtrax --> argminax
@@ -132,7 +135,7 @@ flowchart TB
 ```
 :::
 
-20 repositories, 40 packages and 49 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+20 repositories, 41 packages and 52 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -325,9 +328,12 @@ cannot import, so most of its tests could no longer be collected.
 | kernellib | geonnax | base | `kernellib → geonnax` |
 | manipy | gaussx | base | `manipy-jax → gaussx` |
 | manipy | kernellib | base | `manipy-jax → kernellib` |
+| pyrox | argminax | base | `pyrox-lgm → argminax` |
+| pyrox | filterax | extra | `pyrox-ssm → filterax` |
+| pyrox | functax | base | `pyrox-gp → functax` |
 | pyrox | gauss_flows | extra | `pyrox-gp → gauss-flows` |
 | pyrox | gaussx | base | `pyrox-gp → gaussx` |
-| pyrox | geonnax | base | `pyrox-gp → geonnax` |
+| pyrox | geonnax | base | `pyrox-nn → geonnax` |
 | pyrox | kernellib | base | `pyrox-gp → kernellib` |
 | vardax | argminax | base | `vardax → argminax` |
 | vardax | gaussx | base | `vardax → gaussx` |

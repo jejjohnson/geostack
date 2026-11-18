@@ -2139,6 +2139,7 @@ environments:
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
+      - pypi: ./references/geoml/pyrox/packages/pyrox-ssm
       - pypi: ./references/geoml/vardax
       - pypi: ./references/geoml/xtremax
       - pypi: ./references/geostack/georeader
@@ -2577,6 +2578,7 @@ environments:
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
+      - pypi: ./references/geoml/pyrox/packages/pyrox-ssm
       - pypi: ./references/geoml/vardax
       - pypi: ./references/geoml/xtremax
       - pypi: ./references/geostack/georeader
@@ -3078,6 +3080,7 @@ environments:
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
+      - pypi: ./references/geoml/pyrox/packages/pyrox-ssm
       - pypi: ./references/geoml/vardax
       - pypi: ./references/geoml/xtremax
       - pypi: ./references/geomodels/plumax
@@ -3522,6 +3525,7 @@ environments:
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
+      - pypi: ./references/geoml/pyrox/packages/pyrox-ssm
       - pypi: ./references/geoml/vardax
       - pypi: ./references/geoml/xtremax
       - pypi: ./references/geomodels/plumax
@@ -19281,9 +19285,9 @@ packages:
   name: pyrox-gp
   requires_dist:
   - pyrox @ ./references/geoml/pyrox/packages/pyrox
-  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.6.5
-  - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.17
-  - geonnax @ git+https://github.com/jejjohnson/geonnax.git@v0.0.9
+  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.6.15
+  - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.22
+  - functax[jax] @ git+https://github.com/jejjohnson/functax.git@v0.0.7
   - lineax>=0.1.1
   - einx>=0.4.3
   - flowjax>=0.9
@@ -19297,26 +19301,50 @@ packages:
   name: pyrox-lgm
   requires_dist:
   - pyrox @ ./references/geoml/pyrox/packages/pyrox
-  - gaussx[numpyro] @ git+https://github.com/jejjohnson/gaussx.git@v0.6.5
-  - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.17
+  - einx>=0.4.3
+  - gaussx[numpyro] @ git+https://github.com/jejjohnson/gaussx.git@v0.6.15
+  - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.22
   - matfree>=0.6.0
   - numpyro>=0.21
-  - optax>=0.2.8
+  - argminax[numpyro] @ git+https://github.com/jejjohnson/argminax.git@v0.0.6
+  - optimistix>=0.1.0
+  - functax[jax] @ git+https://github.com/jejjohnson/functax.git@v0.0.7
   - xarray>=2025.1 ; extra == 'xarray'
   requires_python: '>=3.12'
 - pypi: ./references/geoml/pyrox/packages/pyrox-nn
   name: pyrox-nn
   requires_dist:
   - pyrox @ ./references/geoml/pyrox/packages/pyrox
-  - pyrox-gp @ ./references/geoml/pyrox/packages/pyrox-gp
-  - geonnax @ git+https://github.com/jejjohnson/geonnax.git@v0.0.9
+  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.6.15
+  - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.22
+  - lineax>=0.1.1
+  - geonnax @ git+https://github.com/jejjohnson/geonnax.git@v0.0.11
+  - functax[jax] @ git+https://github.com/jejjohnson/functax.git@v0.0.7
   - einx>=0.4.3
+  - argminax @ git+https://github.com/jejjohnson/argminax.git@v0.0.6
   - optax>=0.2.8 ; extra == 'optax'
   - pandas>=3.0.3 ; extra == 'bnf'
   - optax>=0.2.8 ; extra == 'bnf'
+  - pandas>=3.0.3 ; extra == 'xarray'
+  - optax>=0.2.8 ; extra == 'xarray'
+  - xarray>=2025.1 ; extra == 'xarray'
   - matplotlib>=3.10.9 ; extra == 'colab'
   - watermark>=2.6.0 ; extra == 'colab'
   - pandas>=3.0.3 ; extra == 'colab'
+  requires_python: '>=3.12'
+- pypi: ./references/geoml/pyrox/packages/pyrox-ssm
+  name: pyrox-ssm
+  requires_dist:
+  - pyrox @ ./references/geoml/pyrox/packages/pyrox
+  - gaussx[numpyro] @ git+https://github.com/jejjohnson/gaussx.git@v0.6.15
+  - equinox>=0.13.8
+  - lineax>=0.1.1
+  - einx>=0.4.3
+  - numpyro>=0.21
+  - optimistix>=0.1.0
+  - flowjax>=0.9 ; extra == 'flows'
+  - gauss-flows @ git+https://github.com/jejjohnson/gauss_flows.git@bdb23f076ebaaf1ba042aa52ea593487cef3204e ; extra == 'flows'
+  - filterax @ git+https://github.com/jejjohnson/filterax@v0.0.8 ; extra == 'ensemble'
   requires_python: '>=3.12'
 - pypi: ./references/geoml/vardax
   name: vardax

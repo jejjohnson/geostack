@@ -91,6 +91,7 @@ pyrox = { path = "references/geoml/pyrox/packages/pyrox", editable = true }
 pyrox-gp = { path = "references/geoml/pyrox/packages/pyrox-gp", editable = true }
 pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = true }
 pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
+pyrox-ssm = { path = "references/geoml/pyrox/packages/pyrox-ssm", editable = true }
 manipy-jax = { path = "references/geoml/manipy", editable = true }
 plumax = { path = "references/geomodels/plumax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
@@ -177,6 +178,7 @@ pyrox = { path = "references/geoml/pyrox/packages/pyrox", editable = true }
 pyrox-gp = { path = "references/geoml/pyrox/packages/pyrox-gp", editable = true }
 pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = true }
 pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
+pyrox-ssm = { path = "references/geoml/pyrox/packages/pyrox-ssm", editable = true }
 manipy-jax = { path = "references/geoml/manipy", editable = true }
 
 [feature.geomodels.pypi-dependencies]

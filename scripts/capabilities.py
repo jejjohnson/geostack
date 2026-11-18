@@ -116,6 +116,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "pyrox-gp": "Gaussian processes for pyrox.",
     "pyrox-lgm": "Latent Gaussian models for pyrox.",
     "pyrox-nn": "Bayesian neural networks for pyrox.",
+    "pyrox-ssm": "State-space models for pyrox.",
     "manipy-jax": "Manifold learning and alignment, and hyperspectral workflows.",
     # GeoModels
     "plumax": "Plume transport: Gaussian plume and puff, Lagrangian and LES.",
@@ -185,6 +186,7 @@ GEOML: dict[str, list[str]] = {
     "pyrox-gp": ["pyrox_gp"],
     "pyrox-lgm": ["pyrox_lgm"],
     "pyrox-nn": ["pyrox_nn"],
+    "pyrox-ssm": ["pyrox_ssm"],
     # manipy.sklearn needs scikit-learn (manipy's sklearn extra), which no
     # environment installs
     "manipy-jax": ["manipy", "manipy.datasets", "manipy.hsi", "manipy.metrics"],
@@ -374,6 +376,18 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
     "MissingExtraError": (
         "functax and argminax each raise their own MissingExtraError, naming"
         " the extra of that library to install."
+    ),
+    "GaussianRegressionHead": (
+        "geonnax.GaussianRegressionHead is the mean plus log-scale head;"
+        " pyrox_nn.GaussianRegressionHead wraps it and samples its four weight"
+        " arrays under Gaussian priors."
+    ),
+    "SphericalHarmonicFeatures": (
+        "kernellib.SphericalHarmonicFeatures is the deterministic feature map"
+        " of a zonal kernel truncated at degree L;"
+        " pyrox_nn.SphericalHarmonicFeatures is the weight-space GP on the same"
+        " harmonics and Funk-Hecke coefficients, with a standard normal prior"
+        " on the weights."
     ),
 }
 

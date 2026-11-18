@@ -2,7 +2,7 @@
 title: "argminax's skill shelf: a small strategy library that stands on optimistix"
 subtitle: "Design · the skill tree for a library whose floor is mostly third party"
 short_title: Skill tree · argminax
-description: "argminax's shelf of agent skills: nine use skills over three units, one listed. argminax is the smallest shelf so far and the first where a third-party library, optimistix, is most of the floor, so this page also drafts the first substrate card. No package uses argminax at the pins yet, so its cards exist before their readers. Measured at the submodule pins by scripts/skill_shelf.py."
+description: "argminax's shelf of agent skills: nine use skills over three units, one listed. argminax is the smallest shelf so far and the first where a third-party library, optimistix, is most of the floor, so this page also drafts the first substrate card. At the pins four packages use argminax, and only vardax uses enough of a unit to receive its card, so most of its cards exist before their readers. Measured at the submodule pins by scripts/skill_shelf.py."
 date: 2026-11-12
 keywords:
   - agents
@@ -47,18 +47,20 @@ argminax is small, new, and extends another library's protocols, so most of what
 <!-- shelf:units:end -->
 :::
 
-:::{table} Which part of argminax each dependent package uses. The table is empty at these pins.
+:::{table} Which part of argminax each dependent package uses.
 :label: tbl-am-consumers
 
 <!-- shelf:uses:begin -->
 | Dependent package | Names used | Solvers and adjoints | Curvature | Diagnostics | Bayesian learning rule |
 |---|---|---|---|---|---|
 | vardax | 6 | 5 | 1 | 0 | 0 |
+| pyrox-nn | 3 | 0 | 1 | 2 | 0 |
+| pyrox-lgm | 2 | 2 | 0 | 0 | 0 |
 | plumax | 1 | 0 | 1 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
 
-No package in the stack imports argminax at the pins of this commit.
+Four packages import argminax at the pins of this commit. vardax takes five names of the solvers and adjoints, subclassing `KStep`, and one of the curvature; pyrox-lgm takes `laplace_mode` and its result; pyrox-nn takes the Laplace curvature and two diagnostics; plumax takes one curvature name.
 Its `AGENTS.md` @ `c7bd0c3` names the consumers that are to switch over: vardax, radtrax, plumax, pyrox-gp, pyrox-lgm, pyrox-nn and gaussx.
 The table fills in as their pins move, and the test fails until the page is regenerated.
 
@@ -89,18 +91,20 @@ Its `AGENTS.md` puts the boundary in one line, "one step is gaussx's; the loop i
 (st-am-units)=
 ## Units and cards
 
-:::{table} The cards each dependent package would receive from argminax. The table is empty at these pins.
+:::{table} The cards each dependent package would receive from argminax. Only vardax receives one at these pins.
 :label: tbl-am-cards
 
 <!-- shelf:cards:begin -->
 | Dependent package | Cards | Also uses |
 |---|---|---|
 | vardax | Solvers and adjoints (subclasses `KStep`) | Curvature (1) |
+| pyrox-nn | none | Curvature (1); Diagnostics (2) |
+| pyrox-lgm | none | Solvers and adjoints (2) |
 | plumax | none | Curvature (1) |
 <!-- shelf:cards:end -->
 :::
 
-The three cards are written before anything reads them.
+Only vardax reads a card at these pins, the solvers-and-adjoints card, so the curvature and diagnostics cards are written before anything reads them.
 That order is right for a new library: a consumer's switch-over then brings the card into its block in the same change that brings the import.
 
 (st-am-listed)=
@@ -139,7 +143,7 @@ The optimistix card is the first substrate card drafted for the tree, from argmi
 
 1. **The floor can be larger than the shelf.** Most of what an argminax caller must know is optimistix's and gaussx's. The listed skill is short, and its cards do the work.
 2. **Substrate cards have an owner by first use.** No library of ours owns optimistix, so geostack keeps the card; the library that leans on it hardest drafts it, here argminax.
-3. **Cards before readers.** With no dependent at the pins, the generated tables are empty. The shelf is still written, so each switch-over is one change.
+3. **Cards before readers.** At the pins only vardax uses enough of a unit to receive its card. The shelf is still written, so each switch-over is one change.
 4. **A boundary is a line on two cards.** "One step is gaussx's; the loop is argminax's" belongs on gaussx's inference card and on argminax's solver card, in the same words.
 5. **A small library keeps one listed skill.** Three units, one front door, and no second band.
 

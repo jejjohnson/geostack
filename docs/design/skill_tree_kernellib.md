@@ -54,14 +54,15 @@ kernellib has seven kinds of thing, each of its dependents uses one to three of 
 <!-- shelf:uses:begin -->
 | Dependent package | Names used | Kernels | Geostatistical kernels | Operators and feature maps | Graphs | Estimators | Decomposition | Dependence measures |
 |---|---|---|---|---|---|---|---|---|
-| pyrox-gp | 21 | 14 | 0 | 3 | 2 | 0 | 2 | 0 |
+| pyrox-gp | 25 | 17 | 0 | 4 | 2 | 0 | 2 | 0 |
 | manipy-jax | 13 | 3 | 0 | 0 | 6 | 0 | 4 | 0 |
 | pyrox-lgm | 5 | 0 | 0 | 0 | 5 | 0 | 0 | 0 |
+| pyrox-nn | 3 | 2 | 0 | 1 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
 
-Three packages depend on kernellib, and none of them uses its estimators, its dependence measures or its geostatistical kernels.
-pyrox-gp takes kernels and a few feature maps; manipy takes graphs, decompositions and a few kernels; pyrox-lgm takes graphs only.
+Four packages depend on kernellib, and none of them uses its estimators, its dependence measures or its geostatistical kernels.
+pyrox-gp takes kernels and a few feature maps; manipy takes graphs, decompositions and a few kernels; pyrox-lgm takes graphs only; pyrox-nn takes two kernels and a feature map, too few for a card.
 The 73 names of the estimators, the dependence measures and the geostatistical kernels are used by people, not by another library.
 
 (sk-shelf)=
@@ -114,6 +115,7 @@ A dependent package receives the card of each unit it uses at least three names 
 | pyrox-gp | Kernels; Operators and feature maps | Graphs (2); Decomposition (2) |
 | manipy-jax | Kernels; Graphs; Decomposition |  |
 | pyrox-lgm | Graphs |  |
+| pyrox-nn | none | Kernels (2); Operators and feature maps (1) |
 <!-- shelf:cards:end -->
 :::
 
