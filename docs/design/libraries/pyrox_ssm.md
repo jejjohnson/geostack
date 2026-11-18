@@ -37,7 +37,7 @@ A stationary GP with a rational spectral density is an exact linear SDE, and a g
 
 ## What the code holds
 
-Read at pyrox `38feb4b`, gaussx `6f98b68` and filterax `807bb53`, the pins of geostack's submodules.
+Read at pyrox `38feb4b`, gaussx `6f98b68` and filterax `9b9736a`, the pins of geostack's submodules.
 
 | Piece | Lives in | Names |
 | --- | --- | --- |
@@ -299,6 +299,6 @@ The decisions of 10 Nov 2026 below are the ones carried by an issue, each in its
 
 - pyrox at `38feb4b` (geostack's submodule pin): `packages/pyrox-ssm/pyproject.toml` and `src/pyrox_ssm/`, `packages/pyrox-lgm/src/pyrox_lgm/_components/_markov.py`, `packages/pyrox/src/pyrox/inference/_ensemble.py`, and the notebooks in `docs/notebooks/ssm/`.
 - gaussx at `6f98b68`: `src/gaussx/__init__.py` and `src/gaussx/_ssm/`.
-- filterax at `807bb53`: `src/filterax/__init__.py` and `src/filterax/filters/`.
+- filterax at `9b9736a`: `src/filterax/__init__.py` and `src/filterax/filters/`.
 - gauss_flows at `caa4be4`, for the `[flows]` extra only.
 - The issue bodies of geostack#144, #146 and #147 and of pyrox#356 to #376.
