@@ -345,6 +345,18 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         "functax and argminax each raise their own MissingExtraError, naming"
         " the extra of that library to install."
     ),
+    "GaussianRegressionHead": (
+        "geonnax.GaussianRegressionHead is the mean plus log-scale head;"
+        " pyrox_nn.GaussianRegressionHead wraps it and samples its four weight"
+        " arrays under Gaussian priors."
+    ),
+    "SphericalHarmonicFeatures": (
+        "kernellib.SphericalHarmonicFeatures is the deterministic feature map"
+        " of a zonal kernel truncated at degree L;"
+        " pyrox_nn.SphericalHarmonicFeatures is the weight-space GP on the same"
+        " harmonics and Funk-Hecke coefficients, with a standard normal prior"
+        " on the weights."
+    ),
 }
 
 # Name clashes the layers above GeoStack ship today, as {layer: {name: why}}.
