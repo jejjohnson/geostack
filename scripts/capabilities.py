@@ -370,6 +370,7 @@ _STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
 _TRANSFORMS = "moved from spectraldiffx to functax.transform (spectraldiffx#166)"
 _KERNELS = "kernels in both kernellib and pyrox-gp"
 _LIKELIHOODS = "likelihoods in both gaussx and pyrox-gp"
+_NN_LAYERS = "layers in both geonnax and pyrox-nn"
 _SOMAX = "somax's own name for a different object"
 _NUMERICS = "the same solver or grid in several GeoNumerics libraries"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
@@ -415,6 +416,7 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "Constant": _KERNELS,
         "Cosine": _KERNELS,
         "Cubic": _FX_KERNELS,
+        "DenseRank1": _NN_LAYERS,
         "GaussianLikelihood": _LIKELIHOODS,
         "Graph": "kernellib's Graph beside pipekit's operator Graph",
         "HeteroscedasticGaussianLikelihood": _LIKELIHOODS,
@@ -422,16 +424,21 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "ImplicitAdjoint": _VARDAX,
         "Kernel": "functax.interp's RBF kernel protocol beside pyrox-gp's Kernel",
         "Kronecker": "Kronecker structures in both gaussx and pyrox-lgm",
+        "LayerNormEnsemble": _NN_LAYERS,
         "Linear": _KERNELS,
         "LinearBasis": "functax.interp.LinearBasis beside vardax's LinearBasis",
         "LinearObs": _VARDAX,
+        "MCSigmoidDenseFA": _NN_LAYERS,
+        "MCSoftmaxDenseFA": _NN_LAYERS,
         "Matern": _KERNELS,
+        "MultiHeadAttentionBE": _NN_LAYERS,
         "OrthogonalRandomFeatures": "random features in geonnax, kernellib, pyrox-nn",
         "Periodic": _KERNELS,
         "PoissonLikelihood": _LIKELIHOODS,
         "Polynomial": _KERNELS,
         "Prior": "different objects in pipekit-evaluate and vardax",
         "RBF": _KERNELS,
+        "RandomFeatureGaussianProcess": _NN_LAYERS,
         "RationalQuadratic": _KERNELS,
         "RecursiveCheckpointAdjoint": _VARDAX,
         "ReducedBasis": _VARDAX,
