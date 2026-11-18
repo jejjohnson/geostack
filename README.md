@@ -133,8 +133,8 @@ The rules that keep this graph free of cycles (each one is checked by
 `tests/test_dependency_graph.py`; the reasons, and where the graph breaks
 them today, are on the [dependency graph page](docs/api/dependency_graph.md)):
 
-1. **Layers point down.** GeoModels → GeoML → GeoNumerics / GeoStack; GeoStack
-   and GeoNumerics never import each other.
+1. **Layers point down.** GeoModels → GeoML → GeoNumerics / GeoStack → Core;
+   GeoStack and GeoNumerics never import each other.
 2. **Within a layer, tiers point down.** A repository imports only lower
    tiers of its own layer; in GeoModels only plumax imports another (radtrax).
 3. **Every library edge counts:** base dependencies, extras and imports,
