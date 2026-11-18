@@ -1,0 +1,102 @@
+{
+  "name": "geostack",
+  "owner": {
+    "name": "jejjohnson"
+  },
+  "description": "The GeoStack skill tree: each library's use skills, installed together with the skills of the libraries it builds on.",
+  "plugins": [
+    {
+      "name": "geostack",
+      "source": "./plugins/geostack",
+      "description": "The root of the GeoStack skill tree: the role ladder (structure, primitive, strategy, model, algorithm, step, recipe) that every library's skills are written in."
+    },
+    {
+      "name": "finitevolx",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/finitevolX",
+        "path": "plugins/finitevolx"
+      },
+      "description": "Write finite-volume ocean and atmosphere models in JAX on finitevolX — Arakawa C-grids with ghost rings, raw stencils and difference / interpolation operators, WENO / TVD advection, land-sea masks with coastal stencil fallback, boundary conditions, diagnostics, forcing, spectral / CG / multigrid elliptic solvers and SSP time steppers — instead of hand-writing shifted slices, ghost-cell fills, Poisson solvers and Runge–Kutta loops.",
+      "dependencies": [
+        "gaussx",
+        "spectraldiffx"
+      ]
+    },
+    {
+      "name": "gaussx",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/gaussx",
+        "path": "plugins/gaussx"
+      },
+      "description": "Write structured linear algebra and Gaussian code in JAX on gaussx — Kronecker / block / low-rank / banded / sparse operators, structure-aware solve / logdet / Cholesky, Gaussian distributions, GP, Kalman and quadrature recipes — instead of re-implementing them with dense jnp.linalg."
+    },
+    {
+      "name": "geonnax",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/geonnax",
+        "path": "plugins/geonnax"
+      },
+      "description": "Write geoscientific neural networks in JAX on geonnax — Fourier / spherical / wavelet neural operators, dimension-flexible U-Nets, SIREN and multiplicative filter networks with FiLM and hypernetwork conditioning, lon/lat and spherical-harmonic encoders, spectral and localized bases with their eigenvalues or geometry, random Fourier features, spectral normalisation, SNGP heads and other deterministic cores for uncertainty-aware models — instead of hand-rolling FFT convolutions, spherical harmonics, sine-network inits and random features."
+    },
+    {
+      "name": "geotoolz",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/geotoolz",
+        "path": "plugins/geotoolz"
+      },
+      "description": "Build geospatial pipelines on the geotoolz stack — find and index files (geocatalog), read EO products (geoproducts), tile and stitch (geopatcher), compute (geotoolz), object storage (geocloud) — instead of re-implementing them."
+    },
+    {
+      "name": "kernellib",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/kernellib",
+        "path": "plugins/kernellib"
+      },
+      "description": "Write kernel methods in JAX on kernellib — kernels as Equinox modules, Gram matrices as gaussx operators, matrix-free and preconditioned solves, random-feature and Nyström approximations, kernel ridge regression at scale, HSIC / CKA / MMD tests, graph kernels and eigenmaps — instead of hand-rolling distance matrices, Cholesky solves and random features.",
+      "dependencies": [
+        "gaussx",
+        "geonnax"
+      ]
+    },
+    {
+      "name": "pyrox",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/pyrox",
+        "path": "plugins/pyrox"
+      },
+      "description": "Write probabilistic models in JAX with Equinox and NumPyro on pyrox — modules that own their sample / param sites, kernels with priors and guides, exact / sparse / Markov / multi-output GPs, Bayesian layers, ensemble MAP / VI, latent Gaussian models with INLA — instead of hand-wiring numpyro.sample into Equinox modules.",
+      "dependencies": [
+        "gaussx",
+        "geonnax",
+        "kernellib"
+      ]
+    },
+    {
+      "name": "spectraldiffx",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/spectraldiffx",
+        "path": "plugins/spectraldiffx"
+      },
+      "description": "Write pseudospectral code in JAX on spectraldiffx — Fourier, Chebyshev and spherical-harmonic grids, spectral derivatives with correct dealiasing, DCT / DST transforms, Poisson and Helmholtz solvers with per-axis boundary conditions, masked-domain capacitance solves and spectral filters — instead of hand-rolling wavenumbers, FFT tricks and divide-by-k² solvers.",
+      "dependencies": [
+        "gaussx"
+      ]
+    },
+    {
+      "name": "xtremax",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/xtremax",
+        "path": "plugins/xtremax"
+      },
+      "description": "Write extreme value analyses in JAX and NumPyro on xtremax — GEV, GPD, Gumbel, Fréchet and Weibull as NumPyro distributions that work in NUTS and SVI, stable densities, quantiles and return levels through ξ = 0, non-stationary return levels, temporal / spatial / spatiotemporal point processes (Poisson, renewal, Hawkes, marked, thinned) as equinox operators and NumPyro likelihoods, and xarray block maxima, thresholds and declustering — instead of hand-rolling EVT formulas, Poisson likelihoods and extraction code."
+    }
+  ]
+}
