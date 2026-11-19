@@ -495,7 +495,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     </div>
     <div class="canvas">
       <svg class="graph" id="graph" viewBox="0 0 1490 1450" role="img" aria-labelledby="graph-desc">
-        <desc id="graph-desc">Dependency graph of the GeoStack libraries in the proposed layers. Third-party foundations at the bottom: JAX, Equinox, jaxtyping, lineax, optimistix, diffrax, einx, optax, NumPyro, FlowJAX, interpax, NumPy, SciPy, xarray, pyproj, Shapely, rasterio and georeader. Core above them holds four repos: the proposed geocore (gaussx, functax, integrix, kernellib, geonnax), pipekit above it (pipekit-ops, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate), the proposed geo-inference (argminax, gauss_flows, filterax, vardax, manipy) and pyrox on top (pyrox, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm, pyrox-xtreme). GeoNumerics above Core is two proposed repos: geogrids (geophysix, gridax, spectraldiffx, finitevolX) and geofields above it (diagnostix, tracerax, radiomax). GeoStack sits above GeoNumerics: the geotoolz repo (geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrproducts, xrops), with georeader among the third-party foundations. GeoModels (radtrax, sesmax-core, plumax, and the planned sesmax-ocean and sesmax-atmos) sit above both, and applications on top.</desc>
+        <desc id="graph-desc">Dependency graph of the GeoStack libraries in the proposed layers. Third-party foundations at the bottom: JAX, Equinox, jaxtyping, lineax, optimistix, diffrax, einx, optax, NumPyro, FlowJAX, interpax, NumPy, SciPy, xarray, pyproj, Shapely, rasterio and georeader. Core above them holds four repos: the proposed geocore (gaussx, functax, integrix, kernellib, geonnax), pipekit above it (pipekit-ops, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate), the proposed geo-inference (argminax, gauss_flows, filterax, vardax, manipy) and pyrox on top (pyrox, the proposed pyrox-gauss, pyrox-xtreme, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm). GeoNumerics above Core is two proposed repos: geogrids (geophysix, gridax, spectraldiffx, finitevolX) and geofields above it (diagnostix, tracerax, radiomax). GeoStack sits above GeoNumerics: the geotoolz repo (geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrproducts, xrops), with georeader among the third-party foundations. GeoModels (radtrax, sesmax-core, plumax, and the planned sesmax-ocean and sesmax-atmos) sit above both, and applications on top.</desc>
         <defs>
           <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-default"/></marker>
           <marker id="arrow-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-hot"/></marker>
@@ -525,7 +525,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
           <tr><td class="lib">geotoolz</td><td>GeoStack</td><td>geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrops, xrproducts; xrcf proposed</td><td>today: the xrtoolz repo was folded in, November 2026; the <code>geotoolz</code> and <code>xrtoolz</code> umbrellas hold no code</td><td>geofields and below</td></tr>
           <tr><td class="lib">geofields (name open)</td><td>GeoNumerics</td><td>diagnostix, tracerax, radiomax</td><td>proposed: one repo today, two libraries not started. What you compute from fields and observations; radiomax needs only geophysix and could sit in either repo</td><td>geogrids and below</td></tr>
           <tr><td class="lib">geogrids (name open)</td><td>GeoNumerics</td><td>geophysix, gridax, spectraldiffx, finitevolX</td><td>proposed: two repos today, two libraries not started. Constants, grids and the discretisations on them; geophysix sits here because gridax needs it and geofields needs gridax</td><td>the Core repos</td></tr>
-          <tr><td class="lib">pyrox</td><td>Core</td><td>pyrox, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm, pyrox-xtreme</td><td>today, as a workspace of five; xtremax would join as pyrox-xtreme, since its classes are NumPyro distributions</td><td>geo-inference and below</td></tr>
+          <tr><td class="lib">pyrox</td><td>Core</td><td>pyrox, pyrox-gauss, pyrox-xtreme, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm</td><td>today, as a workspace of five. Two packages of NumPyro distributions would join: pyrox-gauss (the Gaussian classes now in gaussx) and pyrox-xtreme (today's xtremax)</td><td>geo-inference and below</td></tr>
           <tr><td class="lib">geo-inference</td><td>Core</td><td>argminax, gauss_flows, filterax, vardax, manipy</td><td>proposed: five repos today</td><td>geocore and pipekit</td></tr>
           <tr><td class="lib">pipekit</td><td>Core</td><td>pipekit-ops, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate; pipekit-experiment until it moves to geobench</td><td>today</td><td>geocore: pipekit-jax takes its scans and adjoints from integrix</td></tr>
           <tr><td class="lib">geocore</td><td>Core</td><td>gaussx, functax, integrix, kernellib, geonnax</td><td>proposed: five repos today</td><td>the foundations</td></tr>
@@ -533,6 +533,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
       </table>
     </div>
     <p class="sub"><b>The test between geocore and geo-inference.</b> geocore is maths with no data in it: operators, bases, quadrature, kernels, network layers. geo-inference takes a cost or a likelihood and returns an estimate with its uncertainty. So argminax (curvature at the minimum, Laplace, the Bayesian learning rule) and manipy (manifold alignment fitted to data) sit in geo-inference, and nothing in geocore imports either. pipekit sits between the two: it needs integrix from geocore, and vardax in geo-inference needs pipekit. pyrox sits on top: its packages import argminax, filterax and gauss_flows, and nothing in geo-inference imports pyrox, which also keeps filterax and vardax out of the NumPyro packages.</p>
+    <p class="sub"><b>pyrox-gauss, proposed.</b> gaussx holds eight NumPyro distribution classes behind an optional extra: three multivariate normals, <code>LGSSM</code>, <code>MarkovGaussian</code> and the GMRFs. They move to pyrox-gauss, so gaussx imports no NumPyro and every NumPyro distribution class of the stack is released from the pyrox repo. <b>pyrox-gauss imports gaussx and NumPyro, not pyrox</b>: the bridge takes any distribution as an argument (<code>pyrox_sample(name, dist)</code>), a NumPyro <code>Distribution</code> cannot also be an Equinox module (the two metaclasses conflict), and the model packages already build the distribution from the hyperparameters they sample. So pyrox and pyrox-gauss sit side by side, and pyrox-gp, pyrox-lgm and pyrox-ssm import both. The multivariate normals, <code>LGSSM</code>, <code>MarkovGaussian</code> and the KL registration move as they are; the GMRFs are split, a plain core staying in gaussx for its Laplace and VB code and for argminax, and the <code>Distribution</code> wrapper going to pyrox-gauss.</p>
     <p class="sub"><b>Still open.</b> The names geogrids and geofields. The model registry now in pipekit-experiment, which should stay in pipekit when the tracking adapters move to geobench, because the applications will need it and must not import a benchmark repo. <b>optax_bayes is retired:</b> the Bayesian learning rule lives in <code>argminax.blr</code> from argminax 0.0.7.</p>
   </section>
 
@@ -580,7 +581,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
         <div class="rel-from"><span class="pill ext">numpyro</span></div>
         <div class="rel-kind k-extends">extends</div>
         <div class="rel-to"><span class="pill c-core">pyrox-xtreme</span><span class="pill c-core">gaussx</span><span class="pill c-core">pyrox</span></div>
-        <div class="rel-note">28 distribution classes: 18 in pyrox-xtreme (today's xtremax), 6 in gaussx, 4 in pyrox, each a different family</div>
+        <div class="rel-note">28 distribution classes: 18 in pyrox-xtreme (today's xtremax), 6 in gaussx (moving to the proposed pyrox-gauss), 4 in pyrox, each a different family</div>
       </div>
       <div class="rel-row">
         <div class="rel-topic">Normalising flows</div>
@@ -645,6 +646,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
           <tr><td class="lib">vardax</td><td class="lib">argminax</td><td>adjoint strategies (k-step, one-step, mapping), <code>GaussNewtonHessian</code>, <code>LaplaceCovariance</code></td></tr>
           <tr><td class="lib">pyrox</td><td class="lib">pyrox-nn</td><td><code>last_layer_laplace</code>, which is the core's only gaussx; unreleased, so it moves without a deprecation (<a href="https://github.com/jejjohnson/pyrox/issues/332">pyrox#332</a>). Its GGN curvature and evidence then go to argminax</td></tr>
           <tr><td class="lib">gaussx</td><td class="lib">argminax</td><td>the Newton loop inside <code>laplace_mode</code>; gaussx keeps one step's algebra (<code>newton_update</code>, <code>gauss_newton_precision</code>), its root finder and the whole filtering stack: <code>kalman_filter</code> and <code>rts_smoother</code> with their parallel forms, <code>nonlinear_kalman_filter</code> and <code>ssm_to_naturals</code></td></tr>
+          <tr><td class="lib">gaussx</td><td class="lib">pyrox-gauss (proposed)</td><td>the NumPyro distribution classes behind the <code>numpyro</code> extra: the multivariate normals, <code>LGSSM</code>, <code>MarkovGaussian</code> and the KL registration as they are; the GMRFs split, a plain core staying in gaussx and the <code>Distribution</code> wrapper moving</td></tr>
           <tr><td class="lib">gaussx</td><td class="lib">stays</td><td>Gauss–Hermite, unscented and sigma-point rules (Gaussian expectations); the FEM projector, rebuilt on functax geometry</td></tr>
         </tbody>
       </table>
@@ -951,6 +953,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     { id: "pyrox-lgm",     layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 360, y: 560, why: "pyrox-lgm: latent Gaussian models: GMRF components, PC priors, inla(); 4.7k lines" },
     { id: "pyrox-nn",      layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 420, y: 480, why: "pyrox-nn: Bayesian and uncertainty-aware layers and the Bayesian neural field estimator; 7.2k lines" },
     { id: "pyrox-ssm",     layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 0, y: 0, why: "pyrox-ssm: state-space models as NumPyro models: Markov GPs, linear-Gaussian and nonlinear SSMs, non-Gaussian Markov inference, ensemble likelihoods; 5.8k lines" },
+    { id: "pyrox-gauss",   layer: "core",     tier: 1, today: "none",     ws: "pyrox", x: 0, y: 0, why: "pyrox-gauss: gaussx's Gaussians as NumPyro distributions (multivariate normals, LGSSM, Markov Gaussian, GMRFs) and their KL; imports gaussx, not pyrox", proposed: true },
     { id: "manipy",        layer: "core",     tier: 2, today: "outside",  x: 520, y: 560, why: "manifold alignment, dimensionality reduction and hyperspectral workflows on kernellib" },
     { id: "geophysix",     layer: "numerics", tier: 0, today: "none",     x: 330, y: 668, why: "constants, ellipsoid and sphere metrics, Coriolis, geodesics, thermodynamics, equations of state, column units", proposed: true },
     { id: "gridax",        layer: "numerics", tier: 1, today: "none",     x: 330, y: 616, why: "geophysical grids, vertical coordinates and remapping, masks, metric arrays, diagnostic finite differences", proposed: true },
@@ -1003,7 +1006,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   const REPO = {
     gaussx: "geocore", functax: "geocore", integrix: "geocore", kernellib: "geocore", geonnax: "geocore",
     argminax: "geo-inference", gauss_flows: "geo-inference", filterax: "geo-inference", vardax: "geo-inference", manipy: "geo-inference",
-    pyrox: "pyrox", "pyrox-gp": "pyrox", "pyrox-lgm": "pyrox", "pyrox-nn": "pyrox", "pyrox-ssm": "pyrox", "pyrox-xtreme": "pyrox",
+    pyrox: "pyrox", "pyrox-gauss": "pyrox", "pyrox-gp": "pyrox", "pyrox-lgm": "pyrox", "pyrox-nn": "pyrox", "pyrox-ssm": "pyrox", "pyrox-xtreme": "pyrox",
     geophysix: "geogrids", gridax: "geogrids", spectraldiffx: "geogrids", finitevolX: "geogrids",
     diagnostix: "geofields", tracerax: "geofields", radiomax: "geofields",
   };
@@ -1017,7 +1020,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     // geo-inference
     argminax: 415, gauss_flows: 526, filterax: 637, manipy: 526, vardax: 526,
     // pyrox
-    pyrox: 845, "pyrox-xtreme": 952, "pyrox-gp": 756, "pyrox-nn": 855, "pyrox-lgm": 958, "pyrox-ssm": 1065,
+    pyrox: 845, "pyrox-xtreme": 952, "pyrox-gauss": 912, "pyrox-gp": 756, "pyrox-nn": 855, "pyrox-lgm": 958, "pyrox-ssm": 1065,
     // pipekit
     "pipekit-ops": 1295, "pipekit-array": 1215, "pipekit-train": 1375, "pipekit-cycle": 1295, "pipekit-jax": 1210, "pipekit-evaluate": 1370,
   };
@@ -1077,7 +1080,8 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     ["xrops", "xrcf"], ["xrproducts", "xrcf"],
     ["gauss_flows", "functax"],
     // pyrox-nn takes its bases and spectral densities from below, not from pyrox-gp
-    ["pyrox-nn", "functax"], ["pyrox-nn", "kernellib"]
+    ["pyrox-nn", "functax"], ["pyrox-nn", "kernellib"],
+    ["pyrox-gauss", "gaussx"], ["pyrox-gp", "pyrox-gauss"], ["pyrox-lgm", "pyrox-gauss"], ["pyrox-ssm", "pyrox-gauss"]
   ];
   const to = (target, sources) => sources.map((s) => [s, target]);
   PLANNED.push(
@@ -1135,6 +1139,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     functax: ["jax", "jaxtyping", "equinox", "lineax", "einx", "numpy", "scipy"],
     integrix: ["jax", "jaxtyping", "equinox", "lineax", "diffrax"],
     argminax: ["jax", "jaxtyping", "equinox", "lineax", "optimistix", "optax"],
+    "pyrox-gauss": ["jax", "jaxtyping", "lineax", "numpyro"],
     geophysix: ["jax", "numpy"],
     gridax: ["jax", "numpy", "equinox"],
     diagnostix: ["jax", "numpy", "scipy"],
@@ -1213,7 +1218,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
    { name: "geofields repo · proposed, name open", x: 700, y: 725, w: 265, h: 114 },
    { name: "geocore repo · proposed", x: 20, y: 1110, w: 329, h: 123 },
    { name: "geo-inference repo · proposed", x: 361, y: 927, w: 329, h: 306 },
-   { name: "pyrox repo · 5 today, 6 proposed", x: 702, y: 1049, w: 420, h: 184 },
+   { name: "pyrox repo · 5 today, 7 proposed", x: 702, y: 1049, w: 420, h: 184 },
    { name: "pipekit repo · 6 in Core", x: 1134, y: 918, w: 326, h: 312 }].forEach((w) => {
     el("rect", { x: w.x, y: w.y, width: w.w, height: w.h, rx: 8, class: "workspace" }, bandsG);
     const t = el("text", { x: w.x + w.w - 10, y: w.y + 14, "text-anchor": "end", class: "workspace-label" }, bandsG);
@@ -1442,6 +1447,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
                   "the inner Newton fit and the outer L-BFGS search of <code>inla()</code> → <b>argminax</b>; sparse precision algebra stays on <b>gaussx</b>; <code>to_xarray</code> is an export at the edge. Declares pyrox but never imports it"],
     "pyrox-nn": ["Bayesian and uncertainty-aware layers (SNGP, VSSGP, SIREN, MFN, Slepian features, ensembles, heteroscedastic heads), last-layer Laplace posteriors and the Bayesian neural field estimator API",
                  "plain layers and encoders stay in <b>geonnax</b>; bases come from <b>functax</b> and spectral densities from <b>kernellib</b>, not from pyrox-gp: the two are siblings. A pyrox-gp kernel passed to <code>HSGPFeatures</code> is the caller's composition, not an import"],
+    "pyrox-gauss": ["gaussx's Gaussians as NumPyro distributions: the multivariate normals on a covariance or a precision operator, <code>LGSSM</code>, <code>MarkovGaussian</code>, the GMRF wrappers and the KL registration", "the maths of each (precision, log-density, sampling, conditioning) stays in <b>gaussx</b> as plain cores; registering sites and priors → <b>pyrox</b>, which it never imports"],
     "pyrox-ssm": ["state-space models as NumPyro models: Markov GPs over gaussx's SDE kernels, linear-Gaussian SSM priors, sparse Markov GPs, nonlinear SSM factors, masks for ragged sites, shared-plus-site GPs, non-Gaussian Markov inference and ensemble likelihoods",
                   "filters, smoothers, SDE kernels and moment transforms stay in <b>gaussx</b>; ensemble assimilation in <b>filterax</b>, behind the <code>[ensemble]</code> extra; the non-Gaussian fixed-point loops run on optimistix, not <b>argminax</b> (<a href=\"https://github.com/jejjohnson/pyrox/issues/367\">pyrox#367</a>). Never imports pyrox-gp or pyrox-lgm, which builds its own Markov GP precision on <b>gaussx</b>"],
     "vardax": ["variational DA (3D/4D-Var, OI), observation operators, background covariances, control transforms", "solvers, curvature, adjoints → <b>argminax</b>; bilinear stencils → <b>functax</b>"],
@@ -1527,6 +1533,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     "pyrox-gp": "Gaussian processes: kernels, likelihoods, sparse GPs, pathwise sampling",
     "pyrox-lgm": "latent Gaussian models: GMRF components, PC priors, inla()",
     "pyrox-nn": "Bayesian neural layers and the Bayesian neural field estimator",
+    "pyrox-gauss": "gaussx's Gaussians as NumPyro distributions; imports gaussx, not pyrox",
     "pyrox-ssm": "state-space models: Markov GPs, linear-Gaussian and nonlinear SSMs, ensemble likelihoods",
     vardax: "variational DA: 3D/4D-Var, OI, observation operators, background covariances",
     manipy: "manifold learning, hyperspectral unmixing, MNF and PCA",
@@ -1568,7 +1575,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     plumax: "plume physics, mass enhancement and flux, inversions",
   };
   const EXTENDS = {
-    gaussx: ["lineax"], gauss_flows: ["flowjax"], pyrox: ["numpyro"], "pyrox-xtreme": ["numpyro"],
+    gaussx: ["lineax"], "pyrox-gauss": ["numpyro"], gauss_flows: ["flowjax"], pyrox: ["numpyro"], "pyrox-xtreme": ["numpyro"],
     integrix: ["diffrax"], argminax: ["optimistix", "optax"], geonnax: ["equinox"],
   };
   const REPLACES = { functax: ["interpax", "orthax", "quadax"], integrix: ["quadax (adaptive)"] };
