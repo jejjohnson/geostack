@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: diagnoses-a-failing-repro
+expected_outcome: |
+  Four diagnoses: a Hydra defaults group named under params, a dependency that changes on every run (Hydra's outputs directory) and a git-tracked file inside an output, a changed upstream library that is not in the stage's deps, and unseeded or non-deterministic computation; each with its fix and the corrected stage.

@@ -9,6 +9,19 @@ Read contracts 3 and 4 in `AGENTS.md` first. The pipeline is `dvc.yaml`;
 `dvc.lock` records the hashes of every dependency, parameter and output of
 the last committed run, so a clean reproduction changes nothing.
 
+## 0. Is there anything to reproduce?
+
+Read `dvc.yaml` and look for `dvc.lock` first. This repo starts with
+`stages: {}` and no `dvc.lock`: until the first stage lands there is no
+pipeline result, and the honest answer is that nothing can be reproduced.
+Then say, without claiming a match:
+
+- where the repo's figures and numbers come from today (notebooks run by
+  hand, their figures saved under `docs/images/`), and that those are not
+  reproducible through `dvc repro`;
+- the commands of steps 1 to 3 that apply once a stage exists;
+- what a matching reproduction will mean (step 3).
+
 ## 1. Environment and data
 
 ```bash
@@ -32,7 +45,8 @@ pixi run dvc repro --force        # rerun everything, to prove it reproduces
 ```
 
 Never run the scripts by hand to produce reported results: only `dvc repro`
-records what produced them in `dvc.lock`.
+records what produced them in `dvc.lock`. Say this whenever you hand back
+a fixed stage.
 
 ## 3. Compare
 
@@ -63,14 +77,19 @@ Commit `dvc.lock` (and the `cache: false` metrics) after a run you keep;
 | `Parameters '<key>' are missing from '<file>'` | `params:` names something that is not a key of the file (a Hydra defaults group such as `model`) | List real keys; depend on the group's YAML file in `deps` |
 | `bad DVC file name … is git-ignored` on `dvc add` | A `.gitignore` rule hides the `.dvc` pointer | Add a `!<dir>/*.dvc` exception (`data/raw/` and `data/external/` have one) |
 | `ValueError: badly formed help string` from Hydra's argparse | Hydra 1.3 on Python 3.14 (the environment is not the one `pixi.lock` pins, or the `python` pin in `pixi.toml` was lifted) | `pixi install`; keep `python` below 3.14 in `pixi.toml` until Hydra supports it, then `pixi lock` |
-| `ConfigAttributeError: Key '<k>' is not in struct`, or a `TypeError` from `instantiate` | The chosen config group option lacks a key the script reads, or its keys do not match its `_target_`'s constructor | Make the option's YAML provide every key the script reads (for `model=`, the class's constructor arguments); `tests/test_configs.py` builds every option |
+| `ConfigAttributeError: Key '<k>' is not in struct`, or a `TypeError` from `instantiate` | The chosen config group option lacks a key the script reads, or its keys do not match its `_target_`'s constructor | Make the option's YAML provide every key the script reads (for `model=`, the class's constructor arguments); a test that builds every option catches it |
 | Metrics change between identical runs | An unseeded draw, a global RNG used across stages, unordered file listings, threads / GPU non-determinism | The `reproducibility-reviewer` subagent; seed from the config, sort listings |
 | Every multirun job reports the same metrics file | Jobs write one fixed path | One `dvc exp run -S …` per point instead |
 | A stage reruns every time | A dependency changes on every run (a timestamp, a log, Hydra's `outputs/` inside a dep directory) | Narrow the `deps`, keep run directories out of them |
-| A stage never reruns after a code change | The changed file is not in its `deps` | Add the script / package directory / config file |
+| A stage never reruns after a code change | The changed file is not in its `deps` | Add the script or the config file. Code that changed in an upstream library: add the library's submodule folder (`references/<layer>/<library>`) or `pixi.lock` |
+
+When diagnosing a stage someone sends you, read all of it, not only the
+lines the errors name: a git-tracked file inside an `outs` directory or a
+run directory among the `deps` is there before it bites. Give the corrected
+stage as YAML that runs as written, with real paths and no placeholder.
 
 ## 5. Report
 
 Say which commit, which stages ran, whether `dvc status` is clean, and the
 metrics before and after (`dvc metrics diff`), with any tolerance and its
-source.
+source. Say what you did not run and why.
