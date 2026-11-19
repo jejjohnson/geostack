@@ -153,6 +153,19 @@ def test_sh3_a_card_over_its_budget(one) -> None:
     ]
 
 
+def test_cards_below_a_skill_go_when_it_stops_building_on_units(one) -> None:
+    path = sc.skill_file("use-lib")
+    begin, end = sc.BELOW
+    path.write_text(f"{path.read_text()}\n{begin}\nan old card\n{end}\n", "utf-8")
+    shelf = sc.load()
+    assert shelf.skills["use-lib"] == ()
+    _write(shelf)
+    text = path.read_text(encoding="utf-8")
+    assert "an old card" not in text
+    assert f"{begin}\n{end}" in text
+    assert sc.violations(shelf, sc.public_names(shelf)) == []
+
+
 def test_examples_are_the_python_blocks_of_the_plugin(one) -> None:
     page = sc.plugin_dir() / "skills/use-lib/shelf/all.md"
     page.write_text("# All\n\n```python\nx = 1\n```\n", encoding="utf-8")
