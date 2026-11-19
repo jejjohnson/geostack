@@ -5,7 +5,7 @@ description: The GeoStack standard for a library's mathematical reference, the n
 
 # Library mathematical reference
 
-Draft 4 · 19 Nov 2026 · taken from the mathematical references of filterax (`docs/math/`, 20 chapters), vardax (`docs/`, 23 chapters) and integrix (`docs/theory/`, 13 chapters), and from functax's guide pages (`docs/guide/`), which set how a real problem motivates and carries the explanation.
+Draft 5 · 19 Nov 2026 · taken from the mathematical references of filterax (`docs/math/`, 20 chapters), vardax (`docs/`, 23 chapters) and integrix (`docs/theory/`, 13 chapters), and from functax's guide pages (`docs/guide/`), which set how a real problem motivates and carries the explanation.
 
 A stack library's docs have a mathematical reference: numbered chapters that write down what the library computes, derive it, run it and say when it fails. This skill is the standard for those chapters. The three references it was taken from are examples, not the standard: each was written before this skill, each does some things the others do better, and §9 lists what each would change to meet it. Where an example and this skill disagree, follow the skill, and where the skill is silent, copy the example named for that rule.
 
@@ -26,8 +26,9 @@ It builds on five other skills and does not repeat them: `role-ladder` (in this 
 
    Numerics has no rung of its own: it holds the exact methods the others are checked against, and what precision and gradients do to them. A library need not have every rung, so it need not have every group.
 3. **Order the chapters so each needs only the ones before it.** A chapter cites earlier equations by label and never a later one, except in its "See also".
-4. **One idea per chapter.** A chapter that needs two unrelated agreement checks is two chapters. The examples run from about 120 to 1,200 lines; a method chapter is usually 400 to 800.
-5. **Propose the list before writing**, with one line per chapter saying what it derives and which public names it covers, then write one chapter at a time and show it before the next.
+4. **One idea per chapter, not one name per chapter.** A chapter that needs two unrelated agreement checks is two chapters, but a family of names that share one derivation (the rules on an interval, the local interpolation schemes) is one chapter with a table of its members. The examples run from about 120 to 1,200 lines; a method chapter is usually 400 to 800.
+5. **Size the list against the examples, and lead with a first wave.** The three references have 13 to 23 chapters. A list much longer than that is a sign that names were given chapters, so merge before proposing. When the library really is larger, the proposal opens with the first wave (the chapters a reader needs to use the library end to end, about ten) and lists the rest as later waves, so there is something small to agree and to write first.
+6. **Propose the list before writing**, with one line per chapter saying what it derives and which public names it covers, then write one chapter at a time and show it before the next.
 
 ## 2. The kinds of chapter
 
@@ -100,7 +101,7 @@ How maths is written belongs to `style-math`, and a chapter follows it whole: ev
 
 ## 5. Code on the page
 
-Every block follows `style-code-sketch`: a `# Shapes:` header, and above each line its status marker, its equation and its shape. A chapter uses two markers: `# today (<pkg>)` on a call into the stack and `# user` on a function the reader would write.
+Every block follows `style-code-sketch`: a `# Shapes:` header, and above each line its status marker, its equation and its shape, in that order. A chapter uses two markers: `# today (<pkg>)` on a call into the stack and `# user` on a function the reader would write.
 
 ````markdown
 ```{code-block} python
@@ -163,6 +164,17 @@ functax has guide pages and no mathematical reference yet; its reference is plan
 
 A move of folder changes every chapter's URL, so the PR that does it lists the old and new paths and the pages that link in from outside the section.
 
+## 10. Reviewing a chapter
+
+A review reads the mathematics before the form. A chapter that has every section and every label and derives something wrongly has failed at its one job, and a review that only compares the page with this skill will not see it.
+
+1. **Check the mathematics.** Follow each derivation and each "because". Is the stated reason for a result the real one? Does every symbol mean one thing on the page (`style-math`'s rule), including across the prose around an equation? Does an exactness or convergence claim hold for the example it is made about, with the degree or the rate counted out?
+2. **Check the numbers against the claims.** Read each printed output next to the sentence that interprets it: the factor per doubling, the size of the error, the comparison with another chapter's number. Run the page's test, or say that it was not run.
+3. **Check the promises**: the real problem carried through to the last number, the sections of the chapter's kind, a failure that is shown and not described, every named strategy checked.
+4. **Check the form last**: labels, where-sentences, code in sketch form, cite roles, links, and `style-math`'s checker.
+
+Write the review most important first, which means a wrong derivation above a missing label. Give the place of each finding, say what the chapter already does well, flag nothing the chapter does not have, and separate what belongs to this chapter's PR from what is a change to the whole reference (a folder move, a bibliography).
+
 ## Checklist
 
 - [ ] Every public name is on one rung, and the chapter list was proposed and agreed before any chapter was written, in the five groups, each chapter needing only those before it.
@@ -176,3 +188,4 @@ A move of folder changes every chapter's URL, so the PR that does it lists the o
 - [ ] `tests/test_math_pages.py` passes on the chapter.
 - [ ] Citations are cite roles on checked `.bib` entries; public names are `xref:` links; cited tables and figures are labelled.
 - [ ] The strict build passes with the latest mystmd.
+- [ ] A review checked the mathematics and the printed numbers before the form.
