@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>integrix — one integral, three operations</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+
+  /* the one object */
+  .ix-obj { width: 900px; margin: 0 auto; }
+  .ix-integral { text-align: center; margin: 2px 0 12px; color: var(--ink-accent); }
+  #diagram .ix-integral .katex { font-size: 1.65em; }
+  .ix-terms { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ix-term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .ix-term .eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 12px; min-height: 42px; text-align: center;
+  }
+  #diagram .ix-term .eq .katex { font-size: 1.3em; }
+
+  /* one card per operation, then one per shared concern */
+  .ix-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
+  .ix-ops { margin-top: 104px; }
+  .ix-band {
+    margin-top: 30px; padding: 14px 16px 16px; border-radius: 16px;
+    background: var(--read-bg); border: 1.5px dashed var(--read);
+  }
+  .ix-band-head { font-size: 13px; font-weight: 700; color: var(--read-ink); margin: 0 0 12px 2px; }
+  .ix-band-head span { font-weight: 400; color: var(--muted); margin-left: 8px; }
+  .ix-card .lane-head { margin-bottom: 8px; }
+  .ix-card .lane-head .verb { font-size: 13px; }
+  .ix-mod { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink-accent); }
+  .ix-eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 10px; min-height: 70px; line-height: 1.9;
+  }
+  #diagram .ix-eq .katex { font-size: 1.22em; white-space: nowrap; }
+  .ix-eq .k { font-size: 12px; color: var(--muted); margin-right: 4px; }
+  .nowrap { white-space: nowrap; }
+  .ix-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 10px 2px 0; min-height: 54px; }
+  .ix-names { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .ix-names code {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink);
+    background: var(--card); border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 6px;
+  }
+
+  /* the floor: what integrix builds on */
+  .ix-floor { margin-top: 30px; display: grid; gap: 12px; }
+  .ix-slab {
+    display: grid; grid-template-columns: 190px 280px 1fr; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .ix-slab .lib { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--cut-ink); }
+  .ix-slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .ix-slab .list { font-size: 12.5px; color: var(--ink); line-height: 1.6; }
+  .ix-slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">integrix — one integral, three operations</div>
+  <div class="subtitle">Every integral in the stack is one integral against a measure. A rule sums it, a scan keeps its running value, and a march steps it when the integrand depends on the solution. Adaptivity, adjoints and expectations cut across them, and everything is pure JAX, so jit, vmap and grad go through.</div>
+
+  <div class="lane compute ix-obj" id="obj">
+    <div class="lane-head"><span class="verb">one integral</span><span class="pkg">an integrand <span class="m">f</span> against a measure <span class="m">\mu</span> on a domain <span class="m">\Omega</span></span></div>
+    <div class="ix-integral"><span class="m">\displaystyle I = \int_\Omega f(x) \, \mathrm{d}\mu(x)</span></div>
+    <div class="ix-terms">
+      <div class="ix-term">
+        <div class="lbl">the domain: a band, a column, an image, a time interval or a probability space</div>
+        <div class="eq"><span class="m">\Omega, \quad \mu, \quad f : \Omega \to \mathbb{R}</span></div>
+      </div>
+      <div class="ix-term">
+        <div class="lbl">on <span class="m">N</span> nodes <span class="m">x_n</span>, a rule with weights <span class="m">w_n</span></div>
+        <div class="eq"><span class="m">I \approx \hat{I} = \sum_{n=1}^{N} w_n \, f(x_n)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ix-row ix-ops">
+    <div class="lane cut ix-card" id="op-rule">
+      <div class="lane-head"><span class="verb">sum</span><span class="ix-mod">integrix.rule</span></div>
+      <div class="ix-eq"><span class="m">\hat{I} = \sum_n w_n \, f(x_n)</span><br><span class="k">in log space</span> <span class="m">\log \hat{I} = \mathrm{logsumexp}_n (\log w_n + \log f_n)</span></div>
+      <div class="ix-desc">Weights against samples: a band radiance, a column amount, an area mean. Grid-shaped weights meet an image cell by cell, with <code>where=</code> masks and <code>nan_policy=</code>.</div>
+      <div class="ix-names"><code>integrate</code><code>log_integrate</code><code>weighted_mean</code><code>Integral</code></div>
+    </div>
+
+    <div class="lane cut ix-card" id="op-scan">
+      <div class="lane-head"><span class="verb">scan</span><span class="ix-mod">integrix.scan</span></div>
+      <div class="ix-eq"><span class="m">F_k = F_{k-1} + \tfrac{1}{2} (x_k - x_{k-1}) (f_{k-1} + f_k)</span><br><span class="k">so</span> <span class="m">F_k \approx \int_{x_0}^{x_k} f(x) \, \mathrm{d}x</span></div>
+      <div class="ix-desc">The running integral to every node, from either end: the optical depth down a column. A prefix sum of depth <span class="m">O(\log N)</span>, and its gradient is a reversed one.</div>
+      <div class="ix-names"><code>cumulative</code></div>
+    </div>
+
+    <div class="lane cut ix-card" id="op-march">
+      <div class="lane-head"><span class="verb">march</span><span class="ix-mod">integrix.march</span></div>
+      <div class="ix-eq"><span class="m">\frac{\mathrm{d}\mathbf{y}}{\mathrm{d}t} = f(t, \mathbf{y})</span><br><span class="k">one step</span> <span class="m">\mathbf{y}_{n+1} = \Phi(\mathbf{y}_n, t_n, h)</span></div>
+      <div class="ix-desc">The integrand depends on the solution, so it is stepped. Most steppers are diffrax solvers, so <code>diffeqsolve</code> takes them; <code>run</code> also marches the integrix steppers that carry history.</div>
+      <div class="ix-names"><code>run</code><code>RK3SSP</code><code>RK4Classic</code><code>AB3Solver</code><code>IMEX_SSP2</code><code>SplitExplicitRKSolver</code><code>rk3_ssp_step</code></div>
+    </div>
+  </div>
+
+  <div class="ix-band">
+    <div class="ix-band-head">cross-cutting<span>adaptivity refines a rule or a scan, adjoints run back through a scan or a march, and an expectation is an integral against a probability</span></div>
+    <div class="ix-row">
+      <div class="lane read ix-card" id="op-adapt">
+        <div class="lane-head"><span class="verb">adapt</span><span class="ix-mod">integrix.adapt</span></div>
+        <div class="ix-eq"><span class="k">refine until</span> <span class="m">\lvert I - \hat{I} \rvert \le \epsilon_\text{tol}</span><br><span class="k">returns</span> <span class="m">\hat{I}</span> <span class="k">and an error estimate</span></div>
+        <div class="ix-desc">Adaptive rules under jit: Gauss–Kronrod (with a custom JVP), tanh–sinh for endpoint singularities and infinite limits, and Romberg.</div>
+        <div class="ix-names"><code>GaussKronrod</code><code>TanhSinh</code><code>Romberg</code><code>cumulative_adaptive</code></div>
+      </div>
+
+      <div class="lane read ix-card" id="op-adjoint">
+        <div class="lane-head"><span class="verb">differentiate</span><span class="ix-mod">integrix.adjoint</span></div>
+        <div class="ix-eq"><span class="m">\bar{\mathbf{y}}_n = \Big( \frac{\partial \Phi}{\partial \mathbf{y}_n} \Big)^{\!\top} \bar{\mathbf{y}}_{n+1}</span></div>
+        <div class="ix-desc">The backward sweep through a scan or a march: checkpointed (store every <span class="m">k</span>-th state, recompute between) or truncated, and the same specs for diffrax.</div>
+        <div class="ix-names"><code>Checkpointed</code><code>Truncated</code><code>checkpointed_scan</code><code>truncated_scan</code><code>to_diffrax_adjoint</code></div>
+      </div>
+
+      <div class="lane read ix-card" id="op-expect">
+        <div class="lane-head"><span class="verb">expect</span><span class="ix-mod">integrix.expect</span></div>
+        <div class="ix-eq"><span class="m">\mathbb{E}_p[f] \approx \frac{1}{M} \sum_{m=1}^{M} f(x^{(m)})</span><br><span class="k">with a standard error</span></div>
+        <div class="ix-desc">When <span class="m">\mu</span> is a probability: Monte Carlo, randomised QMC and importance sampling, with the effective sample size and Pareto-smoothed weights.</div>
+        <div class="ix-names"><code>Expectation</code><code>monte_carlo</code><code>qmc</code><code>importance</code><code>effective_sample_size</code><code>pareto_smoothed_log_weights</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ix-floor">
+    <div class="ix-slab">
+      <div class="lib">functax</div>
+      <div class="what">the rules: nodes <span class="m">x_n</span> and weights <span class="m">w_n</span> as data</div>
+      <div class="list"><code>quad.trapezoid</code> · <code>quad.simpson</code> · <code>quad.gauss_legendre</code> · <code>quad.clenshaw_curtis</code> · <code>quad.cell_area</code> · <code>quad.Rule</code></div>
+    </div>
+    <div class="ix-slab">
+      <div class="lib">diffrax</div>
+      <div class="what">the solver protocol the steppers implement</div>
+      <div class="list"><code>diffeqsolve</code> · <code>AbstractERK</code> · <code>AbstractSolver</code> · <code>SaveAt</code> · <code>RecursiveCheckpointAdjoint</code></div>
+    </div>
+    <div class="ix-slab">
+      <div class="lib">lineax · optimistix</div>
+      <div class="what">the Newton and GMRES solves behind <code>stable_step</code>, the IMEX step-size control</div>
+      <div class="list"><code>optx.Newton</code> · <code>lx.GMRES</code> · and JAX, Equinox, einx and jaxtyping under everything</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  const AMBER = "#cf9418";
+  const down = (id, shift, label) =>
+    wire("obj", id, { from: "bottom", to: "top", fromShift: shift, label, color: AMBER, at: 0.55, bend: 60 });
+
+  typeset(document);
+  document.fonts.ready.then(() => {
+    down("op-rule", -300, "<span class='m'>f(x_n)</span> on fixed nodes");
+    down("op-scan", 0, "<span class='m'>f</span> to every node");
+    down("op-march", 300, "<span class='m'>f(t, \\mathbf{y})</span> needs the solution");
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>

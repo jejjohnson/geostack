@@ -32,6 +32,14 @@ Where integrix sits · core tier 1.
 
 integrix sits one tier above the rules it sums with, so every model, numerics library and assimilation library that steps or integrates can import it. This page is the design; core types, algorithms and the code survey are in [integrix: design details](integrix_details.md).
 
+```{figure} ../../images/libraries/integrix_ecosystem/integrix_ecosystem-light.svg
+:alt: integrix at the top; below it finitevolX in GeoNumerics uses its march, vardax in GeoML its adjoint, and plumax (rule, expect, march) and sesmax-core (march) in GeoModels; plumax and sesmax-core build on finitevolX, and on vardax through an extra; integrix itself builds on functax, diffrax, lineax, optimistix, JAX, Equinox, einx and jaxtyping
+:width: 100%
+:label: fig-integrix-ecosystem
+
+Who imports integrix today, and what it builds on. The edges are the [dependency graph](../../api/dependency_graph.md) and each card's modules are that package's imports on `main`, so the figure shows today's users, where the table above lists the planned ones. `make_svgs.py` in the same folder writes the light and dark versions; the integrix README embeds both.
+```
+
 ## The problem
 
 Every library in the stack integrates something, and each writes its own integrator. Turning one satellite methane plume into an emission rate takes six integrals; four are coded in different places today, and two are not written yet:
@@ -74,6 +82,14 @@ Two pieces of machinery are shared by all three:
 
 The weights w of a rule come from functax: they are a property of a basis on a domain. integrix owns what is done with them: summing, scanning, marching, adapting and differentiating.
 
+```{figure} ../../images/libraries/integrix_overview/integrix_overview.png
+:alt: integrix in one picture: one integral of f against a measure, with its rule form; a rule sums it, a scan keeps its running value and a march steps it, one module each; adaptivity, adjoints and expectations cut across them; functax, diffrax, and lineax with optimistix underneath
+:width: 100%
+:label: fig-integrix-overview
+
+integrix in one picture: one integral, three operations. The source is `integrix_overview.html` in the same folder; the integrix README and docs embed this PNG.
+```
+
 ## Modules and boundaries
 
 Six modules: one per operation, plus adaptivity, adjoints and probability. integrix owns the machinery, not the domains: spectral responses stay in radtrax and plumax, mass enhancement in plumax and exceedance events in xtremax; they pass in weights, measures or integrands.
@@ -109,6 +125,14 @@ The test for every name: does it sum, scan, march or adapt over a domain, or dif
 | pipekit-jax | `truncated_scan`, `to_diffrax_adjoint` | integrix; pipekit keeps composition |
 | somax / sesmax-core | generic step-size control (`imex_stepsize_controller`); model terms stay | integrix |
 | plumax, radtrax, xrtoolz | hand-written trapezoid sums | `integrix.rule` with functax rules |
+
+```{figure} ../../images/libraries/integrix_roles/integrix_roles-light.svg
+:alt: integrix on the role ladder: run and the checkpointed and truncated scans as algorithms; the split-explicit terms beside diffrax's terms as the model; adaptive rules, diffrax solvers, steppers, IMEX schemes and adjoint options as strategies; sums, running integrals, expectations, weight diagnostics and step functions as primitives; the results beside functax's rules as structures
+:width: 100%
+:label: fig-integrix-roles
+
+integrix's public names on the role ladder, each placed by the role-ladder skill's test (integrix's shelf groups them into entries, whose roles need not be each name's). `make_svgs.py` in the same folder writes the light and dark versions; the integrix README embeds both.
+```
 
 ## In use
 
