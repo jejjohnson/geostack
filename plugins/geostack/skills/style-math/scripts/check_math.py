@@ -21,7 +21,7 @@ from _macros import (
     MACROS_FILE,
     Span,
     fenced_lines,
-    indented_code_lines,
+    literal_lines,
     load_macros,
     math_spans,
 )
@@ -221,19 +221,39 @@ def _emphasis_in_text(text: str) -> bool:
         return any(start <= at < end for start, end in spans)
 
     for mark in "_*":
-        # A stack of open runs, so emphasis nested in emphasis does not hide an
-        # outer opener that later pairs with a delimiter inside maths.
-        openers: list[int] = []
+        # A stack of open runs (position, length, whether it can also close),
+        # so emphasis nested in emphasis does not hide an outer opener that
+        # later pairs with a delimiter inside maths.
+        openers: list[tuple[int, int, bool]] = []
         for run in re.finditer(r"(?<!\\)" + re.escape(mark) + "+", masked):
-            at = run.start()
+            at, length = run.start(), run.end() - run.start()
             can_open, can_close = _delimiter_roles(masked, at, run.end())
-            if can_close and openers:
-                opener = openers.pop()
+            match = None
+            if can_close:
+                for index in range(len(openers) - 1, -1, -1):
+                    if _may_pair(openers[index], length, can_open):
+                        match = index
+                        break
+            if match is not None:
+                opener = openers[match][0]
+                del openers[match:]
                 if in_maths(opener) or in_maths(at):
                     return True
             elif can_open:
-                openers.append(at)
+                openers.append((at, length, can_close))
     return False
+
+
+def _may_pair(opener: tuple[int, int, bool], length: int, closer_opens: bool) -> bool:
+    """CommonMark's rule of three: when either run can both open and close, the
+    two do not pair if their lengths sum to a multiple of three, unless both
+    lengths are multiples of three."""
+    _, opener_length, opener_closes = opener
+    if not (opener_closes or closer_opens):
+        return True
+    if (opener_length + length) % 3:
+        return True
+    return opener_length % 3 == 0 and length % 3 == 0
 
 
 _HEADING = re.compile(r"#{1,6}(\s|$)")
@@ -244,8 +264,7 @@ _QUOTE = re.compile(r"(?:>[ \t]?)+")
 def emphasis_findings(text: str) -> list[Finding]:
     """Paragraphs and table cells where GitHub's Markdown would eat inline maths."""
     findings: list[Finding] = []
-    fenced = fenced_lines(text)
-    fenced |= indented_code_lines(text, fenced)
+    fenced = literal_lines(text)
     paragraph: list[str] = []
     start = 0
 
