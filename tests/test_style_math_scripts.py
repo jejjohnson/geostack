@@ -232,3 +232,35 @@ def test_runs_that_the_rule_of_three_keeps_apart_are_not_an_error(tmp_path) -> N
     stars.write_text("The blocks $K_{*X}$ and $K_{X*}$ of the kernel matrix.\n")
     found = check_math.check_file(stars, check_math.Target.github, [])
     assert [f.rule for f in found] == ["inline-emphasis"]
+
+
+# Each case was rendered through GitHub's Markdown API on 19 Nov 2026; the flag
+# says whether GitHub lost the maths to emphasis.
+GITHUB_CASES = [
+    ("**bold* and $x_{*}$", False),
+    ("*Note **important** $x_{*}$", True),
+    ("* `code` and $x_{*}$", False),
+    ("*`code` and $x_{*}$", True),
+    ("$K_{*X}$ and $K_{**}$", False),
+    ("$K_{*X}$ and $K_{X*}$", True),
+    ("$x_{**}$ and $y_{**}$", True),
+    ("The mean $\\boldsymbol{\\mu}_x$ and the size $N_{b}$ pair up.", True),
+]
+
+
+@pytest.mark.parametrize(("source", "eaten"), GITHUB_CASES)
+def test_the_emphasis_rule_agrees_with_github(tmp_path, source, eaten) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "case.md"
+    page.write_text(source + "\n")
+    found = check_math.check_file(page, check_math.Target.github, [])
+    assert [f.rule for f in found] == (["inline-emphasis"] if eaten else [])
+
+
+def test_backtick_inline_leaves_a_fence_on_a_list_item_alone() -> None:
+    source = '- ~~~sh\n  echo "$HOME$PATH"\n  ~~~\n- then $x_n$\n'
+    expected = '- ~~~sh\n  echo "$HOME$PATH"\n  ~~~\n- then $`x_n`$\n'
+    assert mc.backtick_inline(source) == expected

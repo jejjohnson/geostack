@@ -76,6 +76,7 @@ def expand(text: str, macros: list[Macro]) -> str:
 
 
 FENCE = re.compile(r"^\s*(```+|~~~+)\s*(\S*)")
+_LIST_PREFIX = re.compile(r"^\s*(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)+")
 _QUOTE_PREFIX = re.compile(r"^ {0,3}(?:>[ \t]?)+")
 INLINE = re.compile(r"(?<![\\$])\$(`?)(?!\$)(.+?)\1(?<![\\$])\$(?!\$)")
 TICK_MATH = re.compile(r"\$`(?!\s)(.+?)(?<!\s)`\$")
@@ -145,7 +146,9 @@ def fenced_lines(markdown: str) -> set[int]:
         # A fence may sit in a block quote: the quote's markers come off before
         # the fence is looked for, and such a fence ends where the quote does.
         marks = _QUOTE_PREFIX.match(line)
-        match = FENCE.match(line[marks.end() :] if marks else line)
+        rest = line[marks.end() :] if marks else line
+        # A fence may also open on a list item's own line, after its marker.
+        match = FENCE.match(_LIST_PREFIX.sub("", rest) if fence is None else rest)
         if fence is not None and quoted and not marks:
             fence = None
         if fence is None:

@@ -213,47 +213,72 @@ def _delimiter_roles(text: str, start: int, end: int) -> tuple[bool, bool]:
 
 def _emphasis_in_text(text: str) -> bool:
     """True when Markdown would pair two delimiter runs, one of them in plain
-    ``$…$``. A run is one or more ``_`` or ``*``, so strong emphasis counts."""
+    ``$…$``. This is CommonMark's delimiter algorithm: runs of ``_`` or ``*``
+    are matched closer by closer against the nearest opener of the same
+    character, one or two characters at a time, under the rule of three."""
     spans = [m.span(2) for m in INLINE.finditer(text) if not m.group(1)]
-    masked = CODE_SPAN.sub(lambda m: " " * len(m.group(0)), text)
+    # A code span keeps its length and reads as punctuation, as its backticks do,
+    # so a delimiter that borders it keeps its role.
+    masked = CODE_SPAN.sub(lambda m: "`" * len(m.group(0)), text)
 
     def in_maths(at: int) -> bool:
         return any(start <= at < end for start, end in spans)
 
-    for mark in "_*":
-        # A stack of open runs (position, length, whether it can also close),
-        # so emphasis nested in emphasis does not hide an outer opener that
-        # later pairs with a delimiter inside maths.
-        openers: list[tuple[int, int, bool]] = []
-        for run in re.finditer(r"(?<!\\)" + re.escape(mark) + "+", masked):
-            at, length = run.start(), run.end() - run.start()
-            can_open, can_close = _delimiter_roles(masked, at, run.end())
-            match = None
-            if can_close:
-                for index in range(len(openers) - 1, -1, -1):
-                    if _may_pair(openers[index], length, can_open):
-                        match = index
-                        break
-            if match is not None:
-                opener = openers[match][0]
-                del openers[match:]
-                if in_maths(opener) or in_maths(at):
-                    return True
-            elif can_open:
-                openers.append((at, length, can_close))
+    runs: list[_Run] = []
+    for found in re.finditer(r"(?<!\\)(?:_+|\*+)", masked):
+        can_open, can_close = _delimiter_roles(masked, found.start(), found.end())
+        length = found.end() - found.start()
+        runs.append(
+            _Run(found.group(0)[0], found.start(), length, length, can_open, can_close)
+        )
+    for index, closer in enumerate(runs):
+        while closer.can_close and closer.left:
+            opener = next(
+                (
+                    candidate
+                    for candidate in reversed(runs[:index])
+                    if candidate.can_open
+                    and candidate.left
+                    and candidate.mark == closer.mark
+                    and _may_pair(candidate, closer)
+                ),
+                None,
+            )
+            if opener is None:
+                break
+            if in_maths(opener.start) or in_maths(closer.start):
+                return True
+            used = 2 if opener.left >= 2 and closer.left >= 2 else 1
+            opener.left -= used
+            closer.left -= used
+            # Every run between a matched pair is out of play.
+            for between in runs[runs.index(opener) + 1 : index]:
+                between.left = 0
     return False
 
 
-def _may_pair(opener: tuple[int, int, bool], length: int, closer_opens: bool) -> bool:
+@dataclass
+class _Run:
+    """A run of one delimiter character: where it is, how long it was, how many
+    of its characters are still unmatched, and whether it can open and close."""
+
+    mark: str
+    start: int
+    length: int
+    left: int
+    can_open: bool
+    can_close: bool
+
+
+def _may_pair(opener: _Run, closer: _Run) -> bool:
     """CommonMark's rule of three: when either run can both open and close, the
     two do not pair if their lengths sum to a multiple of three, unless both
     lengths are multiples of three."""
-    _, opener_length, opener_closes = opener
-    if not (opener_closes or closer_opens):
+    if not (opener.can_close or closer.can_open):
         return True
-    if (opener_length + length) % 3:
+    if (opener.length + closer.length) % 3:
         return True
-    return opener_length % 3 == 0 and length % 3 == 0
+    return opener.length % 3 == 0 and closer.length % 3 == 0
 
 
 _HEADING = re.compile(r"#{1,6}(\s|$)")
