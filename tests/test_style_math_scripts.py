@@ -63,3 +63,24 @@ def test_expansion_resumes_after_a_nested_fence() -> None:
     expanded = mc.expand_markdown(page, mc.load_macros())
     assert expanded.endswith("$\\mathbf{y}$\n")
     assert "\\vect{x}" in expanded
+
+
+def test_fenced_lines_cover_a_block_and_its_delimiters() -> None:
+    page = "a\n```python\nx = 1\n```\nb\n"
+    assert mc.fenced_lines(page) == {2, 3, 4}
+
+
+def test_dollars_in_a_code_fence_are_not_a_display_finding(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math as cm
+
+    page = tmp_path / "page.md"
+    page.write_text(
+        '```python\ntext = """\n$$ not mathematics\n"""\n```\n\n$$ a = b\nmore\n',
+        encoding="utf-8",
+    )
+    findings = cm.check_file(page, cm.Target.github, [])
+    assert [(f.line, f.rule) for f in findings if f.rule == "display"] == [
+        (7, "display")
+    ]
