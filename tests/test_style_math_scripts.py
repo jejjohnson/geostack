@@ -161,3 +161,29 @@ def test_a_quoted_paragraph_over_several_lines_is_one_paragraph(tmp_path) -> Non
         "> > The step $\\alpha_k$.\n"
     )
     assert check_math.check_file(apart, check_math.Target.github, []) == []
+
+
+def test_backtick_inline_leaves_an_indented_code_block_alone() -> None:
+    source = (
+        'Run:\n\n    echo "$HOME$PATH"\n\nthen $x_n$.\n\n'
+        "- an item\n\n    its second paragraph, $y_n$\n"
+    )
+    expected = (
+        'Run:\n\n    echo "$HOME$PATH"\n\nthen $`x_n`$.\n\n'
+        "- an item\n\n    its second paragraph, $`y_n`$\n"
+    )
+    assert mc.backtick_inline(source) == expected
+
+
+def test_strong_emphasis_runs_across_inline_maths_are_an_error(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "strong.md"
+    page.write_text("The blocks $x_{**}$ and $y_{**}$ pair up.\n")
+    found = check_math.check_file(page, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+    code = tmp_path / "code.md"
+    code.write_text("Run:\n\n    a_b = c_d * e_f * g\n")
+    assert check_math.check_file(code, check_math.Target.github, []) == []
