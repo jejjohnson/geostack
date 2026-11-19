@@ -31,7 +31,7 @@ Markdown runs before MathJax, and the mobile app renders a subset.
 GitHub has no custom macros, so expand them before filing:
 
 ```bash
-python <skill folder>/scripts/expand_macros.py body.md
+uv run <skill folder>/scripts/expand_macros.py body.md
 ```
 
 ## MyST
@@ -39,7 +39,7 @@ python <skill folder>/scripts/expand_macros.py body.md
 1. Write the macro block into the project's `myst.yml`, under `project:`:
 
 ```bash
-python <skill folder>/scripts/emit_macros.py myst
+uv run <skill folder>/scripts/emit_macros.py myst
 ```
 
 2. Label an equation with the directive form, or after the closing `$$` on the same line:
@@ -59,7 +59,7 @@ KaTeX cannot bold Latin and Greek letters with one macro (`\boldsymbol{\mathrm{#
 2. Write the engine config into `docs/javascripts/`:
 
 ```bash
-python <skill folder>/scripts/emit_macros.py mkdocs-mathjax --output docs/javascripts/mathjax.js
+uv run <skill folder>/scripts/emit_macros.py mkdocs-mathjax --output docs/javascripts/mathjax.js
 ```
 
 3. List that file before the engine in `extra_javascript` (for KaTeX, use `mkdocs-katex` and load KaTeX's `auto-render`):

@@ -15,7 +15,7 @@ from enum import StrEnum
 from pathlib import Path
 
 import cyclopts
-from _macros import MACROS_FILE, Span, load_macros, math_spans
+from _macros import MACROS_FILE, Span, fenced_lines, load_macros, math_spans
 from loguru import logger
 
 
@@ -193,10 +193,12 @@ def check_file(path: Path, target: Target, macro_names: list[str]) -> list[Findi
     for span in math_spans(text):
         findings.extend(check_span(span, target, macro_names))
     if target is Target.github:
+        fenced = fenced_lines(text)
         for number, line in enumerate(text.splitlines(), start=1):
             stripped = line.strip()
             if (
-                stripped.startswith("$$")
+                number not in fenced
+                and stripped.startswith("$$")
                 and stripped != "$$"
                 and not stripped.endswith("$$")
             ):
