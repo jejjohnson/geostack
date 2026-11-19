@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: explains-kalman-filter
+expected_outcome: |
+  An explanation in the ladder's order: the one-line sentence first, the structures with their shapes, the primitives with an equation each, the strategies as what a caller can swap without changing the maths, the model and its state, then the filter as a function over the model; a piece, rung, kind and used-by table; pitched at rungs 2 to 4 with primitives as the floor, and nothing above the algorithm unless said to be outside the reader's band.

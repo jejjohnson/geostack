@@ -5,7 +5,7 @@ description: The role ladder of the GeoStack — structure, primitive, strategy,
 
 # The role ladder
 
-Draft 1 · 12 Nov 2026 · from GeoStack's kinds-and-roles design page (`docs/design/kinds_and_roles.md` and `docs/design/pages/kinds-and-roles.html` @ `343d60e`). Where this file and that page disagree, the page wins.
+Draft 2 · 19 Nov 2026 · a word in a name is not its role, a model is explained with what builds its state, and every name an explanation uses gets a rung. From GeoStack's kinds-and-roles design page (`docs/design/kinds_and_roles.md` and `docs/design/pages/kinds-and-roles.html` @ `343d60e`). Where this file and that page disagree, the page wins.
 
 Every library in the stack exposes names that do different jobs.
 The ladder names the jobs, and it reads as grammar: structures are the nouns, primitives the verbs that act on them, strategies the adverbs that say how, models the noun phrases, algorithms the sentences, steps a sentence with its own settings, and recipes the paragraphs.
@@ -44,6 +44,8 @@ Ask in this order, and stop at the first yes.
 7. Is it one call on an object, with no state of its own? ① primitive.
 8. Is it the thing the calls act on? ⓪ structure.
 
+**A word in the name is not the role.** Answer from what the thing holds and does, and when the name carries a word that also names a kind or a rung, say which meaning applies: `Kronecker` is a linear operator and a ⓪ structure, not pipekit's Operator; `UnscentedIntegrator` is a ② strategy, not an algorithm; a forward "model" with no fitted state may be a function.
+
 A name sits on exactly one rung.
 When it seems to sit on two, it is two things packaged together, and the explanation gets clearer once they are split: a matched filter that fits its own background is a model (the background) and an algorithm (the filter).
 
@@ -55,7 +57,7 @@ Use this whenever asked to explain an algorithm, a method or a library.
 2. **Name the nouns.** What does it act on? Give each structure its shape and its unit.
 3. **Name the verbs.** Which primitives does it call on those nouns? One line each, with the equation.
 4. **Name the adverbs.** What can the caller swap without changing the maths? Those are the strategies.
-5. **Name the noun phrases.** What is fitted or held between calls? That is the model, and say what its state is.
+5. **Name the noun phrases.** What is fitted or held between calls? That is the model. Say what its state is and what builds it: a `fit`, a setup function, or the caller who passes the values in.
 6. **Return to the sentence.** Now write the algorithm as a function over the model, using only the verbs and adverbs already named.
 7. **Go up only if the reader works there.** A step wraps the algorithm with settings; a recipe chains steps. Leave them out for a reader who lives below them.
 
@@ -76,6 +78,7 @@ Three habits keep an explanation honest.
 - **Pitch it at the reader's band (§4) and treat the rung below as given.** Say what the floor guarantees in one line, and do not open it.
 - **Go one rung down, never two.** If the reader needs more, name the rung below and stop there.
 - **Say what is swappable.** Every adverb named is a claim that the maths does not change when it is replaced. Check that claim.
+- **Give every name its rung.** A helper the algorithm calls and an object it returns are pieces too. Each one the page names goes in the table with its rung, or is left out.
 
 ## 4. Who works where
 
@@ -98,7 +101,8 @@ Each kind of user works in a band of the ladder and treats the rung below it as 
 
 ## 6. Checklist
 
-- [ ] Every piece named sits on one rung, and the rung is stated.
+- [ ] Every piece named sits on one rung, and the rung is stated, helpers and return types included.
+- [ ] A name with "operator", "model", "step" or "primitive" in it is placed by what it holds and does, and the page says which meaning applies.
 - [ ] Nouns come before verbs, verbs before adverbs.
 - [ ] Each adverb is something a caller can really swap.
 - [ ] The model's state is said in words, with what builds it.

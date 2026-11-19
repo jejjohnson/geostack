@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: places-names-on-rungs
+expected_outcome: |
+  Each name on one rung with its kind: Kronecker a structure, solve a primitive, CGSolver, Tsit5 and UnscentedIntegrator strategies, Background a model, matched_filter an algorithm, MatchedFilter a step, Sequential a recipe; randomized_svd as setup and the Airflow DAG as orchestration, both beside the ladder and not rungs; AutoMatchedFilter split into a model and an algorithm.
