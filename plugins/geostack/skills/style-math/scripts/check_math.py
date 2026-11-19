@@ -234,7 +234,8 @@ def _emphasis_in_text(text: str) -> bool:
 
 
 _HEADING = re.compile(r"#{1,6}(\s|$)")
-_BLOCK_START = re.compile(r"([-+*]|\d{1,9}[.)])\s|>")
+_BLOCK_START = re.compile(r"([-+*]|\d{1,9}[.)])\s")
+_QUOTE = re.compile(r"(?:>[ \t]?)+")
 
 
 def emphasis_findings(text: str) -> list[Finding]:
@@ -258,8 +259,21 @@ def emphasis_findings(text: str) -> list[Finding]:
             )
         paragraph.clear()
 
+    depth = 0
     for number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
+        # A block quote's markers are not text. The lines of one quoted
+        # paragraph stay together; a deeper quote starts a new block, and an
+        # unquoted line after a quoted one continues its paragraph.
+        quote = _QUOTE.match(stripped)
+        marks = quote.group(0).count(">") if quote else 0
+        if quote:
+            stripped = stripped[quote.end() :].strip()
+            line = stripped
+        if marks > depth:
+            flush()
+        if marks or not stripped:
+            depth = marks
         if number in fenced or not stripped:
             flush()
         elif stripped.startswith("|"):
@@ -285,8 +299,8 @@ def emphasis_findings(text: str) -> list[Finding]:
             paragraph.append(line)
             flush()
         else:
-            # A list item or a block quote starts a new block; Markdown never
-            # pairs emphasis across two of them.
+            # A list item starts a new block; Markdown never pairs emphasis
+            # across two of them.
             if _BLOCK_START.match(stripped):
                 flush()
             if not paragraph:
