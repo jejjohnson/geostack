@@ -105,7 +105,7 @@ class Entry:
 
 @dataclass(frozen=True)
 class Shelf:
-    """The shelf file: modules, listed skills (with the units below each), units, entries."""
+    """The shelf file: modules, skills (with the units below each), units, entries."""
 
     modules: dict[str, str]
     skills: dict[str, tuple[str, ...]]
