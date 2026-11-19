@@ -100,6 +100,7 @@ flowchart TB
   finitevolX --> integrix
   finitevolX -.-> pipekit
   finitevolX --> spectraldiffx
+  gauss_flows --> functax
   gauss_flows --> gaussx
   geonnax --> functax
   geotoolz --> functax
@@ -111,6 +112,7 @@ flowchart TB
   kernellib --> gaussx
   manipy --> kernellib
   plumax --> finitevolX
+  plumax --> kernellib
   plumax --> pipekit
   plumax --> radtrax
   plumax -.-> vardax
@@ -137,7 +139,7 @@ flowchart TB
 ```
 :::
 
-20 repositories, 41 packages and 54 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+20 repositories, 41 packages and 57 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -303,10 +305,12 @@ cannot import, so most of its tests could no longer be collected.
 |---|---|---|---|
 | plumax | argminax | extra | `plumax → argminax` |
 | plumax | finitevolX | base | `plumax → finitevolx` |
+| plumax | functax | base | `plumax → functax` |
 | plumax | gaussx | base | `plumax → gaussx` |
 | plumax | georeader | extra | `plumax → georeader-spaceml` |
 | plumax | geotoolz | extra | `plumax → geotoolz-ops` |
 | plumax | integrix | base | `plumax → integrix` |
+| plumax | kernellib | base | `plumax → kernellib` |
 | plumax | pipekit | base | `plumax → pipekit-ops` |
 | plumax | radtrax | base | `plumax → radtrax` |
 | plumax | vardax | extra | `plumax → vardax` |
@@ -325,6 +329,7 @@ cannot import, so most of its tests could no longer be collected.
 | sesmax | spectraldiffx | base | `sesmax-core → spectraldiffx` |
 | sesmax | vardax | extra | `sesmax-core → vardax` |
 | filterax | gaussx | base | `filterax → gaussx` |
+| gauss_flows | functax | base | `gauss-flows → functax` |
 | gauss_flows | gaussx | import | `gauss-flows → gaussx` |
 | geonnax | functax | base | `geonnax → functax` |
 | kernellib | functax | base | `kernellib → functax` |
