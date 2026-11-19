@@ -84,3 +84,34 @@ def test_dollars_in_a_code_fence_are_not_a_display_finding(tmp_path) -> None:
     assert [(f.line, f.rule) for f in findings if f.rule == "display"] == [
         (7, "display")
     ]
+
+
+def test_backtick_inline_wraps_plain_inline_maths_only() -> None:
+    source = "a $x_n$ and $`y_n`$ and `$z$` code\n\n```math\nx_n\n```\n$$x$$\n"
+    expected = "a $`x_n`$ and $`y_n`$ and `$z$` code\n\n```math\nx_n\n```\n$$x$$\n"
+    assert mc.backtick_inline(source) == expected
+
+
+def test_underscores_that_pair_across_inline_maths_are_an_error(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "body.md"
+    page.write_text("The mean $\\boldsymbol{\\mu}_x$ and the size $N_{b}$ pair up.\n")
+    found = check_math.check_file(page, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+    assert check_math.check_file(page, check_math.Target.myst, []) == []
+
+
+def test_backticked_inline_maths_is_not_an_emphasis_error(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "body.md"
+    page.write_text("The size $`N_{b}`$ and the mean $`\\boldsymbol{\\mu}_x`$.\n")
+    assert check_math.check_file(page, check_math.Target.github, []) == []
+    lone = tmp_path / "lone.md"
+    lone.write_text("One subscript, $\\boldsymbol{\\mu}_x$, pairs with nothing.\n")
+    assert check_math.check_file(lone, check_math.Target.github, []) == []

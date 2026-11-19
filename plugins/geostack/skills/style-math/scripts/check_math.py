@@ -15,7 +15,15 @@ from enum import StrEnum
 from pathlib import Path
 
 import cyclopts
-from _macros import MACROS_FILE, Span, fenced_lines, load_macros, math_spans
+from _macros import (
+    CODE_SPAN,
+    INLINE,
+    MACROS_FILE,
+    Span,
+    fenced_lines,
+    load_macros,
+    math_spans,
+)
 from loguru import logger
 
 
@@ -187,12 +195,100 @@ def check_span(span: Span, target: Target, macro_names: list[str]) -> list[Findi
     return found
 
 
+def _delimiter_roles(text: str, at: int) -> tuple[bool, bool]:
+    """Whether the ``_`` or ``*`` at ``at`` can open and close emphasis (CommonMark)."""
+    before = text[at - 1] if at > 0 else " "
+    after = text[at + 1] if at + 1 < len(text) else " "
+    before_space, after_space = before.isspace(), after.isspace()
+    before_punct = not before_space and not before.isalnum()
+    after_punct = not after_space and not after.isalnum()
+    left = not after_space and (not after_punct or before_space or before_punct)
+    right = not before_space and (not before_punct or after_space or after_punct)
+    if text[at] == "*":
+        return left, right
+    return left and (not right or before_punct), right and (not left or after_punct)
+
+
+def _emphasis_in_text(text: str) -> bool:
+    """True when Markdown would pair two delimiters, one of them in plain ``$…$``."""
+    spans = [m.span(2) for m in INLINE.finditer(text) if not m.group(1)]
+    masked = CODE_SPAN.sub(lambda m: " " * len(m.group(0)), text)
+
+    def in_maths(at: int) -> bool:
+        return any(start <= at < end for start, end in spans)
+
+    for mark in "_*":
+        opener: int | None = None
+        for found in re.finditer(r"(?<![\\" + mark + "])" + re.escape(mark), masked):
+            at = found.start()
+            if masked[at + 1 : at + 2] == mark:
+                continue
+            can_open, can_close = _delimiter_roles(masked, at)
+            if can_close and opener is not None and (in_maths(opener) or in_maths(at)):
+                return True
+            if can_close and opener is not None:
+                opener = None
+            elif can_open and opener is None:
+                opener = at
+    return False
+
+
+def emphasis_findings(text: str) -> list[Finding]:
+    """Paragraphs and table cells where GitHub's Markdown would eat inline maths."""
+    findings: list[Finding] = []
+    fenced = fenced_lines(text)
+    paragraph: list[str] = []
+    start = 0
+
+    def flush() -> None:
+        if paragraph and _emphasis_in_text("\n".join(paragraph)):
+            findings.append(
+                Finding(
+                    start,
+                    "inline-emphasis",
+                    "Markdown pairs a _ or * in plain $…$ as emphasis here and the "
+                    "maths is lost; write each inline expression as $`…`$ "
+                    "(expand_macros.py does it)",
+                    True,
+                )
+            )
+        paragraph.clear()
+
+    for number, line in enumerate(text.splitlines(), start=1):
+        stripped = line.strip()
+        if number in fenced or not stripped:
+            flush()
+        elif stripped.startswith("|"):
+            flush()
+            cells = re.split(r"(?<!\\)\|", stripped)
+            if any(_emphasis_in_text(cell) for cell in cells):
+                start = number
+                paragraph.append("")
+                findings.append(
+                    Finding(
+                        number,
+                        "inline-emphasis",
+                        "Markdown pairs a _ or * in plain $…$ as emphasis in this "
+                        "cell and the maths is lost; write it as $`…`$",
+                        True,
+                    )
+                )
+                paragraph.clear()
+        else:
+            if not paragraph:
+                start = number
+            paragraph.append(line)
+    flush()
+    return findings
+
+
 def check_file(path: Path, target: Target, macro_names: list[str]) -> list[Finding]:
     findings: list[Finding] = []
     text = path.read_text(encoding="utf-8")
     for span in math_spans(text):
         findings.extend(check_span(span, target, macro_names))
     if target is Target.github:
+        findings.extend(emphasis_findings(text))
         fenced = fenced_lines(text)
         for number, line in enumerate(text.splitlines(), start=1):
             stripped = line.strip()

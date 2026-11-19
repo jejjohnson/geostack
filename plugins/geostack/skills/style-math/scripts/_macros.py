@@ -84,6 +84,35 @@ DOLLARS_LINE = re.compile(r"^\s*\$\$(?!\$)(.+?)\$\$" + LABEL + r"\s*$")
 DOLLARS_CLOSE = re.compile(r"^\s*\$\$" + LABEL + r"\s*$")
 
 
+CODE_SPAN = re.compile(r"(`+)(?!`).*?(?<!`)\1(?!`)")
+
+
+def _blank(match: re.Match) -> str:
+    return "\0" * len(match.group(0))
+
+
+def backtick_inline(markdown: str) -> str:
+    """Rewrite each plain inline ``$…$`` as ``$`…`$``, the form GitHub's Markdown
+    leaves alone. Fenced blocks, code spans and maths already in backticks are
+    not touched."""
+    fenced = fenced_lines(markdown)
+    lines = markdown.split("\n")
+    for index, line in enumerate(lines):
+        if index + 1 in fenced or "$" not in line:
+            continue
+        masked = CODE_SPAN.sub(_blank, TICK_MATH.sub(_blank, line))
+        pieces: list[str] = []
+        end = 0
+        for match in INLINE.finditer(masked):
+            if match.group(1):
+                continue
+            start, stop = match.span(2)
+            pieces.append(line[end : match.start()] + "$`" + line[start:stop] + "`$")
+            end = match.end()
+        lines[index] = "".join(pieces) + line[end:]
+    return "\n".join(lines)
+
+
 def _opens(match: re.Match) -> tuple[str, str]:
     """The kind of block a fence opens (math or code) and the fence itself."""
     kind = "math" if match.group(2) in {"math", "{math}"} else "code"
