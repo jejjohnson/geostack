@@ -413,7 +413,7 @@ ST-5 was run by hand with Claude Code 2.1.327: installing `pyrox@geostack` from 
 A repository's own marketplace stays as it is, and installs that plugin alone.
 
 **Cards.** Every repository that another builds on now has a card, 17 of the 20.
-gaussx ships its seven unit cards in its plugin, and finitevolX, geonnax, kernellib, spectraldiffx and xtremax each ship their one card in `plugins/<name>/tree/card.md`; the other 11, georeader among them, have theirs in `skill_tree/cards/` here until each library takes its own.
+gaussx ships its seven unit cards in its plugin and functax its eight, and finitevolX, geonnax, kernellib, spectraldiffx and xtremax each ship their one card in `plugins/<name>/tree/card.md`; the other 10, georeader among them, have theirs in `skill_tree/cards/` here until each library takes its own.
 manipy, plumax and sesmax have no dependent, so no block quotes them and they have none.
 ST-7 is checked with the other gates: a card may name its library only by a path that exists and is public, read from the source at the pin.
 The lines of a card that say what to keep and what never to do are read from each library's `AGENTS.md` and code, and no test checks them.
