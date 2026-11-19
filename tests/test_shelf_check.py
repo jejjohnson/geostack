@@ -139,8 +139,8 @@ def test_sh2_a_card_cites_only_public_names_of_the_longest_module(two) -> None:
         ("lib", "nope"),
     ]
     assert sc.violations(shelf, sc.public_names(shelf)) == [
-        "SH-2 core: no public name lib.geometry.Gone",
         "SH-2 core: no public name lib.nope",
+        "SH-2 core: no public name lib.geometry.Gone",
     ]
 
 
