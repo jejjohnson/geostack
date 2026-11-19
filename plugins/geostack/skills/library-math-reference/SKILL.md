@@ -1,13 +1,13 @@
 ---
 name: library-math-reference
-description: The GeoStack standard for a library's mathematical reference, the numbered chapters of its docs that derive what the code computes. How to plan the chapter list from the library's public names (foundation, methods or operations, cross-cutting, numerics, worked examples, notation, references), the section order of each kind of chapter, and the MyST forms every chapter uses (numbered and labelled equations with a where-sentence of shapes, labelled code-block directives in the code-sketch format with their printed output, labelled tables, cite roles on a bibliography, xref links into the API), the notation page with its classic-letters table, the test that runs every block and checks what it prints, and the myst.yml wiring. vardax, filterax and integrix are the examples it was taken from, not the standard itself, and the skill says where each still differs. Use when planning, writing, reviewing or extending a stack library's mathematical reference, when adding a chapter for a new method, or when bringing an existing reference up to the standard.
+description: The GeoStack standard for a library's mathematical reference, the numbered chapters of its docs that derive what the code computes. How to plan the chapter list from the library's public names (foundation, methods or operations, cross-cutting, numerics, worked examples, notation, references), the section order of each kind of chapter, the real problem from remote sensing, geoscience or mathematical modelling that motivates each chapter and carries its explanation, and the MyST forms every chapter uses (numbered and labelled equations with a where-sentence of shapes, labelled code-block directives in the code-sketch format with their printed output, labelled tables, cite roles on a bibliography, xref links into the API), the notation page with its classic-letters table, the test that runs every block and checks what it prints, and the myst.yml wiring. vardax, filterax, integrix and functax are the examples it was taken from, not the standard itself, and the skill says where each still differs. Use when planning, writing, reviewing or extending a stack library's mathematical reference, when adding a chapter for a new method, or when bringing an existing reference up to the standard.
 ---
 
 # Library mathematical reference
 
-Draft 2 · 19 Nov 2026 · taken from the mathematical references of filterax (`docs/math/`, 20 chapters), vardax (`docs/`, 23 chapters) and integrix (`docs/theory/`, 13 chapters).
+Draft 3 · 19 Nov 2026 · taken from the mathematical references of filterax (`docs/math/`, 20 chapters), vardax (`docs/`, 23 chapters) and integrix (`docs/theory/`, 13 chapters), and from functax's guide pages (`docs/guide/`), which set how a real problem motivates and carries the explanation.
 
-A stack library's docs have a mathematical reference: numbered chapters that write down what the library computes, derive it, run it and say when it fails. This skill is the standard for those chapters. The three references it was taken from are examples, not the standard: each was written before this skill, each does some things the others do better, and §8 lists what each would change to meet it. Where an example and this skill disagree, follow the skill, and where the skill is silent, copy the example named for that rule.
+A stack library's docs have a mathematical reference: numbered chapters that write down what the library computes, derive it, run it and say when it fails. This skill is the standard for those chapters. The three references it was taken from are examples, not the standard: each was written before this skill, each does some things the others do better, and §9 lists what each would change to meet it. Where an example and this skill disagree, follow the skill, and where the skill is silent, copy the example named for that rule.
 
 It builds on five other skills and does not repeat them: `role-ladder` (in this plugin) for the roles the library's names play, which decide the chapter list and the order inside a chapter; `eman-style-math` for the notation; `code-sketch` for the code on the page; `eman-prose-tech` for the voice; and `library-docs-figures` (in this plugin) for any figure a chapter carries.
 
@@ -31,7 +31,7 @@ It builds on five other skills and does not repeat them: `role-ladder` (in this 
 
 ## 2. The kinds of chapter
 
-Every chapter opens with a concrete problem before any equation: a scenario from geoscience (integrix's `01_integral.md` follows one day of a methane satellite) or the limit of the previous chapter that this one removes (filterax's `06_etkf.md`). The opening ends with a short paragraph that says what the chapter covers, in order.
+Every chapter is written on a real problem (§3): it opens with one before any equation, and the opening ends with a short paragraph that says what the chapter covers, in order. A chapter may also say which limit of the previous chapter it removes, as filterax's `06_etkf.md` does, but that comes after the problem and does not replace it.
 
 | Kind | Derives | Sections, in order | Copy from |
 |---|---|---|---|
@@ -64,14 +64,36 @@ A method chapter explains in the order `role-ladder` gives (§3 there): nouns, v
 
 A reference is written for readers who work at ② to ④ and treat the rung below as given. A chapter says in one line what that floor guarantees and links to the chapter of the library that owns it; it goes one rung down, never two. So a derivation lives in the reference of the library that owns the rung: filterax's ETKF chapter derives the gradient rule that gaussx installs, and under this rule gaussx's reference derives it and filterax cites it. Where the lower library has no chapter yet, the derivation stays where it is, with a note naming where it belongs.
 
-## 3. Equations and notation
+## 3. Real problems
+
+A chapter is motivated by a real problem and explained on it. The problem comes from remote sensing, the geosciences or mathematical modelling, it is one a reader of the stack would meet in their own work, and it stays on the page from the first paragraph to the last printed number. functax's guides and integrix's chapters are the examples; filterax's and vardax's method chapters mostly run on abstract states and are the ones to change (§9).
+
+- **Open on the problem, in physical terms.** Say what is measured or modelled, in which units, and what goes wrong without the chapter's idea. integrix's `05_rules.md` opens on a global mean surface temperature that a plain average gets 5 K too cold; functax's `regridding.md` opens on a flux that loses mass at every coarsening.
+- **Let the problem ask for each equation.** An equation enters because the problem needs it, and the sentence before it says so. The general form comes second: integrix's `01_integral.md` writes five integrals from one day of a methane satellite, then reads the domain, the measure and the integrand off each.
+- **Run the code on the problem.** Variables carry the names of the physical quantities (`wavelength`, `band_areas`, `wind`), sizes are of a real kind (30 m pixels, a 2° grid, 20 observed sites of 40) even when their count is toy, and constants are physical and stated with units. A block that draws a random matrix with no meaning is not an example.
+- **Read the printed numbers back in the problem's terms.** "The middle band loses about 4 % of its light", not "the second entry is 0.9602".
+- **Declare the problem's symbols in a table on the page**, with shapes and units, as `01_integral.md` and functax's `methane.md` do.
+- **Simulate the data and say where real data drops in.** The problem is real and the data is toy: a few lines build the scene, so the chapter runs anywhere, and one sentence names the product whose values would replace it ("the pixel centres and values of an L2 product drop in for `pixels` and `observations`").
+- **Quote nothing about an instrument or a product that was not read.** A resolution, a noise level or a band is either cited or called a toy value.
+- **Keep one problem per chapter where one will do**, and prefer a problem an earlier chapter already set up. An abstract case (a polynomial a rule integrates exactly, the linear-Gaussian limit) belongs in the Agreement section, after the real problem, because it is what has an exact answer.
+- **The worked example uses the stack's running example where the library can.** functax's `methane.md` names it: one methane overpass, mapped over a 100 × 100 grid. integrix's `13_methane_example.md` takes a plume from spectrum to emission rate through every module.
+
+Problems the examples already use, as a place to start:
+
+| Field | Problem | In |
+|---|---|---|
+| Remote sensing | a band radiance under a spectral response; a column average of methane; a plume's emission rate from its mass or its flux across a transect; reading a grid at a swath's pixels | integrix `01_integral.md`, `13_methane_example.md`; functax `quadrature.md`, `methane.md` |
+| Geoscience | a global mean on a latitude–longitude grid; ocean heat content; conservative regridding with a coastal mask; gridding stations | integrix `01_integral.md`, `05_rules.md`; functax `regridding.md`, `gridding.md` |
+| Mathematical modelling | a Lorenz-96 twin experiment; 4D-Var on an inertial oscillation | filterax `19_lorenz96_example.md`; integrix `09_adjoints.md` |
+
+## 4. Equations and notation
 
 - **Every display equation is on one source line and labelled**: `$$ … $$ (eq-<chapter>-<name>)`. It is followed by a sentence starting "where" that gives each new symbol and its shape, and it is cited as `[](#eq-…)`. The frontmatter `numbering: enumerator: "N.%s"` numbers it with the chapter.
 - **The notation is `eman-style-math`'s**, with the kind-named macros (`\vect`, `\mat`, `\gvect`, `\gmat`, `\op`) installed in `myst.yml`. A library that departs from it says so at the top of its notation page with the reason, as integrix does for $f$ (the integrand there, the dynamics elsewhere).
 - **The notation page** has one labelled table per topic with the columns Symbol, Shape, Meaning and In code, where "In code" is the argument or attribute that holds the symbol. It ends with a "Classic letters" table that maps the literature's letters to the house ones, so a reader coming from a paper can find their $\mat{K}$. Physical symbols carry units in the Shape column. Copy from integrix `notation.md` for the tables and filterax `notation.md` for the classic letters.
 - **A symbol used on one page only** is declared in a table on that page, not on the notation page.
 
-## 4. Code on the page
+## 5. Code on the page
 
 Every block is a `code-sketch`: a `# Shapes:` header, the equation in Unicode above each line, a shape comment on each array, and a status marker (`# today (<pkg>)`, `# user`) above each call into the stack or each function the reader would write.
 
@@ -94,11 +116,11 @@ print(f"{result.log_likelihood:.3f}")
 - **Toy sizes.** A chapter runs in under about half a minute on a laptop CPU.
 - **A block that cannot run** (a sketch with placeholders) starts with `# not run` and has no output fence.
 
-## 5. The test
+## 6. The test
 
 Each library has one test, `tests/test_math_pages.py`, in the slow tier: it runs every chapter's blocks in one namespace per chapter, each chapter in its own interpreter, and asserts that each block prints exactly the `text` fence that follows it. integrix's `tests/test_theory_pages.py` is the model; its pattern is extended to match the `{code-block}` directive with its option lines, as filterax's `tests/test_theory_code.py` does. A chapter is not finished until this test passes on it.
 
-## 6. The MyST forms
+## 7. The MyST forms
 
 The reference is written for mystmd and uses its directives and roles wherever one exists, so that everything a reader might cite has a label and everything that can be checked is checked by a strict build.
 
@@ -114,7 +136,7 @@ The reference is written for mystmd and uses its directives and roles wherever o
 
 A bibliography entry is added only from a source that was read: the authors, year, title and venue are checked against the paper or its publisher's page, and a DOI is included only when it resolves. The references page is the generated bibliography, grouped by the `.bib` file each entry is in.
 
-## 7. Wiring
+## 8. Wiring
 
 - **Folder.** `docs/math/`, with chapters `NN_slug.md`, `notation.md` and `references.md`.
 - **`myst.yml`.** The `math:` macros, `bibliography:` listing the `.bib` files, `references.api` for the API inventory, and a toc entry titled "Mathematical reference" with one child per group and "Reference" last. Copy filterax's.
@@ -122,22 +144,25 @@ A bibliography entry is added only from a source that was read: the authors, yea
 - **Build.** `myst build --html --strict` with the latest mystmd, so an unresolved label, citation or `xref:` fails.
 - **Landing page.** `index.md` links the first chapter with one sentence on what the reference covers.
 
-## 8. Bringing an existing reference to the standard
+## 9. Bringing an existing reference to the standard
 
 The three examples predate this skill. Each change below is a docs-only PR in the library, one group of chapters at a time.
 
 | Library | Already meets | To change |
 |---|---|---|
-| filterax | folder, section order, labelled code blocks, cite roles and `.bib` files, one sentence per line, a test that runs every block | outputs move from "It prints …" sentences into `text` fences and the test checks them; API links become `xref:`; cited tables get labels; the hand-written `references.md` gives way to the bibliography; openings get a concrete scenario where they have none; "Layer 1" and "Layer 2" become rung names; the derivations of what gaussx computes move to gaussx's reference once it has the chapter |
-| vardax | section order of the method chapters, labelled code blocks, the notation page | chapters move to `docs/math/`; hard-wrapped paragraphs are unwrapped; per-chapter reference lists become cite roles on `.bib` files; outputs move into `text` fences; a `tests/test_math_pages.py` is added; chapter mentions become links; decision numbers leave the chapters |
-| integrix | scenario openings, `text` output fences checked by the test, labelled tables, `xref:` links, units | the folder is renamed from `docs/theory/` to `docs/math/`; code blocks get captions and labels; author-and-year mentions become cite roles on `.bib` files; method and cross-cutting chapters gain "When it breaks" and "See also" where they lack them |
+| filterax | folder, section order, labelled code blocks, cite roles and `.bib` files, one sentence per line, a test that runs every block | outputs move from "It prints …" sentences into `text` fences and the test checks them; API links become `xref:`; cited tables get labels; the hand-written `references.md` gives way to the bibliography; method chapters move from abstract states to a real problem that runs through the chapter; "Layer 1" and "Layer 2" become rung names; the derivations of what gaussx computes move to gaussx's reference once it has the chapter |
+| vardax | section order of the method chapters, labelled code blocks, the notation page | chapters move to `docs/math/`; hard-wrapped paragraphs are unwrapped; per-chapter reference lists become cite roles on `.bib` files; outputs move into `text` fences; a `tests/test_math_pages.py` is added; chapter mentions become links; decision numbers leave the chapters; method chapters move from abstract states to a real problem |
+| integrix | real problems throughout, `text` output fences checked by the test, labelled tables, `xref:` links, units | the folder is renamed from `docs/theory/` to `docs/math/`; code blocks get captions and labels; author-and-year mentions become cite roles on `.bib` files; method and cross-cutting chapters gain "When it breaks" and "See also" where they lack them |
+
+functax has guide pages and no mathematical reference yet; its reference is planned from §1, and its guides keep their job of showing how to call the library.
 
 A move of folder changes every chapter's URL, so the PR that does it lists the old and new paths and the pages that link in from outside the section.
 
 ## Checklist
 
 - [ ] Every public name is on one rung, and the chapter list was proposed and agreed before any chapter was written, in the five groups, each chapter needing only those before it.
-- [ ] Each chapter opens with a concrete problem and a paragraph that says what it covers.
+- [ ] Each chapter opens on a real problem in physical terms, with a paragraph that says what it covers; the problem asks for each equation, the code runs on it with physical names and units, and the printed numbers are read back in its terms.
+- [ ] The data is simulated, the chapter says where real data drops in, and no fact about an instrument or product is uncited.
 - [ ] Each chapter has the sections of its kind, in order; a method chapter has Algorithm, Implementation, Agreement and When it breaks, the last with a demonstrated failure.
 - [ ] A method chapter names structures, then primitives and strategies, then the model, then the algorithm; it carries the pieces table when it names more than three pieces, and checks every strategy it names.
 - [ ] A chapter goes one rung below its own at most, and links to the owning library's chapter for anything lower.
