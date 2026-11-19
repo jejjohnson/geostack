@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: adds-a-citation
+expected_outcome: |
+  The paper is already in references.bib, so the existing key is cited with the right syntax and no second entry is added; the entry's fields are not rewritten from memory.

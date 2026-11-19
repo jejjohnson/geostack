@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-a-results-page
+expected_outcome: |
+  The page drafted in docs/notes/ and added to the myst.yml toc, with the figure through a figure directive from docs/images/<notebook>/, and the number not written as fact: the answer says the repo has no pipeline output that holds it and what has to exist first.
