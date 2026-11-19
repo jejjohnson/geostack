@@ -1,0 +1,5 @@
+_target_: kernellib.KRR
+name: krr
+kernel: rbf
+lengthscale: 1.0
+ridge: 1.0e-3

@@ -1,0 +1,13 @@
+defaults:
+  - model: linear
+  - data: small
+  - _self_
+
+training:
+  seed: 0
+  epochs: 20
+  lr: 1.0e-3
+
+retrieval:
+  regularisation: 0.1
+  wind_speed_prior: 3.0
