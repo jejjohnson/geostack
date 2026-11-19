@@ -17,7 +17,7 @@ This page is the GeoML layer. It may import GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at geonnax 0.0.11, kernellib 0.0.22, filterax 0.0.8, vardax 0.3.6, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.3.0, pyrox-gp 0.3.0, pyrox-lgm 0.1.3, pyrox-nn 0.2.0, pyrox-ssm 0.2.0, manipy-jax 0.1.0.
+Listed at geonnax 0.0.11, kernellib 0.0.22, filterax 0.0.8, vardax 0.3.6, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.3.0, pyrox-gp 0.3.0, pyrox-lgm 0.1.3, pyrox-nn 0.2.0, pyrox-ssm 0.2.0, pyrox-gauss 0.0.0, manipy-jax 0.1.0.
 
 ## Upstream: `geonnax`
 
@@ -946,6 +946,23 @@ State-space models for pyrox.
 | `pad_sites` | function | Pad ragged site series to ``(S, N)`` with strictly increasing padded times. |
 | `sparse_markov_elbo` | function | Sparse variational ELBO for `SparseMarkovGPPrior`. |
 | `sparse_markov_factor` | function | Register `sparse_markov_elbo` as a NumPyro factor site. |
+
+## Upstream: `pyrox-gauss`
+
+Gaussian NumPyro distributions on gaussx operators.
+
+### `pyrox_gauss`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AbstractMultivariateNormal` | class | Common surface of `MultivariateNormal` and `MultivariateNormalPrecision`. |
+| `GMRFDistribution` | class | A GMRF field as a NumPyro distribution, for ``numpyro.sample``. |
+| `LGSSM` | class | Linear-Gaussian state-space model as a density over observations ``(T, M)``. |
+| `LGSSMFactory` | class | Callable ``obs_mask -> MaskedLGSSM``, for conditional use. |
+| `MarkovGaussian` | class | Gauss-Markov chain over the states x_0:T−1 as a density over ``(T, d)``. |
+| `MaskedLGSSM` | class | `LGSSM` whose ``log_prob`` marginalises unobserved channels exactly. |
+| `MultivariateNormal` | class | Multivariate normal 𝒩(μ, Σ) whose covariance Σ is a lineax operator. |
+| `MultivariateNormalPrecision` | class | Multivariate normal 𝒩(μ, Λ⁻¹) whose precision Λ = Σ⁻¹ is a lineax operator. |
 
 ## Upstream: `manipy-jax`
 

@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.6.16, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6.
+Listed at gaussx 0.7.0, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6.
 
 ## Upstream: `gaussx`
 
@@ -30,7 +30,6 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `AbstractIntegrator` | class | Protocol for Gaussian integral approximation. |
 | `AbstractLikelihood` | class | Base class for likelihood functions with optional analytical ELL. |
 | `AbstractLogdetStrategy` | class | Protocol for a log-determinant strategy. |
-| `AbstractMultivariateNormal` | class | Common surface of `MultivariateNormal` and `MultivariateNormalPrecision`. |
 | `AbstractPreconditioner` | class | Protocol for preconditioners that produce an approximate inverse. |
 | `AbstractSketch` | class | A random sketching matrix S ∈ ℝ^(d × M), sampled once. |
 | `AbstractSolveStrategy` | class | Protocol for a linear-solve strategy. |
@@ -82,8 +81,6 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `Kronecker` | class | Kronecker product A = A_1 ⊗ … ⊗ A_D, applied one factor at a time. |
 | `KroneckerSum` | class | Kronecker sum A_1 ⊕ A_2 = A_1 ⊗ I + I ⊗ A_2 of two square operators. |
 | `KroneckerSumSqrt` | class | Symmetric square root S of A_1 ⊕ A_2 from the factor eigenvectors. |
-| `LGSSM` | class | Linear-Gaussian state-space model as a density over observations ``(T, M)``. |
-| `LGSSMFactory` | class | Callable ``obs_mask -> MaskedLGSSM``, for conditional use. |
 | `LOOResult` | class | Result of `leave_one_out_cv`: the LOO log-likelihood and predictives. |
 | `LOVECache` | class | Cached rank-k Lanczos approximation Q diag(θ)⁻¹ Qᵀ of Σ_y⁻¹. |
 | `LSMRSolver` | class | LSMR iterative least-squares solver (Fong & Saunders 2011). |
@@ -95,14 +92,10 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `LowRankUpdate` | class | Low-rank update A = A₀ + U D Vᵀ of a base operator, with D = diag(d). |
 | `LowerBlockTriDiag` | class | Lower block-bidiagonal operator L, the block Cholesky factor of A. |
 | `MINRESSolver` | class | MINRES solver for symmetric, possibly indefinite, systems. |
-| `MarkovGaussian` | class | Gauss-Markov chain over the states x_0:T−1 as a density over ``(T, d)``. |
-| `MaskedLGSSM` | class | `LGSSM` whose ``log_prob`` marginalises unobserved channels exactly. |
 | `MaskedOperator` | class | Masked view A = A₀[m_r, m_c] of a square base operator A₀. |
 | `MaternSDE` | class | State-space form of the Matérn kernel of order p, smoothness p + ½. |
 | `MomentMatchResult` | class | Tilted log-normaliser and its derivatives with respect to the cavity mean. |
 | `MonteCarloIntegrator` | class | Monte Carlo moment matching: sample, propagate, take empirical moments. |
-| `MultivariateNormal` | class | Multivariate normal 𝒩(μ, Σ) whose covariance Σ is a lineax operator. |
-| `MultivariateNormalPrecision` | class | Multivariate normal 𝒩(μ, Λ⁻¹) whose precision Λ = Σ⁻¹ is a lineax operator. |
 | `NegativeBinomialLikelihood` | class | Negative-binomial likelihood with log link (NB2, a gamma-Poisson mixture). |
 | `NystromLogdet` | class | Nyström-preconditioned SLQ log-determinant of K + σ² I (Wenger et al., 2022). |
 | `NystromPreconditioner` | class | Randomized Nyström preconditioner for K + σ² I. |
