@@ -28,6 +28,11 @@ The units follow the two things a caller asks for instead: an integral that does
 :label: tbl-integrix-units
 
 <!-- shelf:units:begin -->
+| Unit | Rungs | Home band | Subpackages | Names |
+|---|---|---|---|---|
+| Integrals | ⓪ ① ② | numerics, ML | `integrix.expect` 8, `integrix.adapt` 4, `integrix.rule` 4, `integrix.exceptions` 2, `integrix` 1, `integrix.scan` 1 | 20 |
+| Marches | ① ② ④ | numerics, geoscience | `integrix.march` 26, `integrix.adjoint` 5 | 31 |
+| **All** | | | | **51** |
 <!-- shelf:units:end -->
 :::
 
@@ -46,6 +51,12 @@ Each unit is a listed skill, because a caller asks for one without mentioning th
 :label: tbl-integrix-uses
 
 <!-- shelf:uses:begin -->
+| Dependent package | Names used | Integrals | Marches |
+|---|---|---|---|
+| finitevolx | 8 | 0 | 8 |
+| plumax | 4 | 3 | 1 |
+| sesmax-core | 3 | 0 | 3 |
+| vardax | 1 | 0 | 1 |
 <!-- shelf:uses:end -->
 :::
 
@@ -53,6 +64,12 @@ Each unit is a listed skill, because a caller asks for one without mentioning th
 :label: tbl-integrix-cards
 
 <!-- shelf:cards:begin -->
+| Dependent package | Cards | Also uses |
+|---|---|---|
+| finitevolx | Marches |  |
+| plumax | Integrals | Marches (1) |
+| sesmax-core | Marches |  |
+| vardax | none | Marches (1) |
 <!-- shelf:cards:end -->
 :::
 
