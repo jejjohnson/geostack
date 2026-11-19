@@ -233,6 +233,10 @@ def _emphasis_in_text(text: str) -> bool:
     return False
 
 
+_HEADING = re.compile(r"#{1,6}(\s|$)")
+_BLOCK_START = re.compile(r"([-+*]|\d{1,9}[.)])\s|>")
+
+
 def emphasis_findings(text: str) -> list[Finding]:
     """Paragraphs and table cells where GitHub's Markdown would eat inline maths."""
     findings: list[Finding] = []
@@ -274,7 +278,17 @@ def emphasis_findings(text: str) -> list[Finding]:
                     )
                 )
                 paragraph.clear()
+        elif _HEADING.match(stripped):
+            # A heading is a block of its own.
+            flush()
+            start = number
+            paragraph.append(line)
+            flush()
         else:
+            # A list item or a block quote starts a new block; Markdown never
+            # pairs emphasis across two of them.
+            if _BLOCK_START.match(stripped):
+                flush()
             if not paragraph:
                 start = number
             paragraph.append(line)
