@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: sketches-target-state
+expected_outcome: |
+  A target-state sketch: prose that defines the symbols, a shapes header, carrier annotations in the GeoArray["…"] form, a '# ← CS-Fn' tag above each line that depends on a finding in place of status markers, equations above the mathematical lines, shapes above bare array assignments, and under the block a paragraph that says what is missing today for each finding.
