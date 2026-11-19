@@ -1,26 +1,17 @@
 ---
 name: style-code-sketch
-description: Eman's pseudocode standard for READMEs, design pages, reports and GitHub issues: shapes header, equation above each line, shape column, status markers. Use for any pseudocode about his stack.
+description: Eman's pseudocode standard for READMEs, docs pages, design pages, reports and GitHub issues: a shapes header, then above each line a status marker, the equation and the shape. Use for any pseudocode about his stack.
 ---
 
 # Code-sketch standard
 
-Draft 1 · 24 Oct 2026 · merges three earlier versions of the standard.
+Draft 2 · 19 Nov 2026 · the shape comment moves above the line, and what `style-python` already says is no longer repeated here.
 
-A sketch reads as maths first and Python second: the equation sits above each operation, the shapes run down the right margin, and every call into the stack says whether it exists today.
+A sketch reads as maths first and Python second: above each operation sit its status, its equation and its shape, and the code comes last.
 
-Everything in `style-python` applies too (imports, einx, lineax, naming, one operation per line, 88 columns).
-This skill adds what only sketches need, because a sketch may call names that do not exist yet.
-
-## Sources
-
-This standard replaces three versions, which did not fully agree:
-
-1. "Design-plan structure & formatting guide" (artifact, 7 Oct 2026), exported as the GeoStack project's Report Formats doc: the shapes header, the equation above, the shape column and the first markers.
-2. geostack `docs/overview_examples.md`, "Design sketches and status markers": the full marker vocabulary.
-3. geostack `docs/design/case_studies.md`, "How to read the code": carrier annotations and finding tags.
-
-Where they conflict, this file wins; fix the old page when you touch it.
+A sketch is Python, so everything in `style-python` holds: the imports, einx and lineax, typed signatures, descriptive names, one operation per line, the equation above each mathematical line, comments above the line and never beside it, 88 columns.
+The symbols and the Unicode in the comments follow `style-math`.
+This skill adds only what a sketch needs beyond real code: a sketch states its sizes, shows the shape of each result, and may call names that do not exist yet.
 
 ## 1. Shapes header
 
@@ -31,39 +22,39 @@ The block opens with one comment naming every dimension and its size, if known:
 ```
 
 A dimension keeps its name in every block of a page; rename on collision.
-Header names are the maths sizes of `style-math`: `D_x` for a vector's length, and a count named by its set (`N_Ωx` grid cells, `N_Ωy` observation points, `N_Sy` spectral channels, `N_E` ensemble members).
-Each has a matching jaxtyping dim in `style-python`: `N_Ωx` is `cell`, `N_Ωy` is `obs`, `N_Sy` is `channel`, `N_E` is `member`.
+Header names are the maths sizes of `style-math` (`references/indices.md`), and each has a matching jaxtyping dim in the table of `style-python` §3.
 
-## 2. Equation above each operation
+## 2. Above each line: marker, equation, shape
 
-A unicode equation sits on its own line above the line that computes it.
-Every symbol is defined in the prose before the block, or in the shapes header.
+Each operation carries up to three comment lines above it, in this order:
 
 ```python
-# Λ_x|y = Hᵀ Λ_ε H + Λ_x
-posterior_precision = gauss_newton_term + prior_precision
+# today (kernellib)
+# Σ_x = K_SS = [k(sᵢ, sⱼ; θ)]ᵢⱼ
+# (N_Ωx, 3) → (N_Ωx, N_Ωx) operator
+prior_cov = kl.to_operator(kernel.frozen(), cell_xyz)
 ```
 
-## 3. Shapes: types on signatures, a column on assignments
+- **The marker** (§3) is there on every call into the stack.
+- **The equation** is there on every mathematical line, as in `style-python` §7. In a sketch every symbol in it is defined in the prose before the block, or in the shapes header.
+- **The shape** is there on every bare assignment of an array: the transition `# (N_Ωx, 2) → (N_Ωx, 3)`, or `# → (N_Ωx,)` when the inputs are plain from the lines above. Scalars are `# → ()`; distributions give their event shape, `# event (T, N_Ωy)`; operators say so, `# (N_Ωx, N_Ωx) PSD operator`.
 
-- **Signatures** carry jaxtyping types with named dims, and carriers use the same style:
+Real code has no shape comments, because its types carry the shapes (`style-python` §3). A sketch shows intermediate results that have no signature, so it writes their shapes, and it writes them above the line like every other comment.
 
-  | Annotation | Means |
-  | --- | --- |
-  | `Float[Array, "obs channel"]` | a raw array; dims from the `style-python` vocabulary |
-  | `GeoArray["patch band y x"]` | a geoarray carrier; the string keeps the library's dim names |
-  | `GeoSwath["band row col"]`, `GeoPoints["time variable obs"]` | swath and point carriers |
-  | `DataArray["time lat lon"]`, `Dataset["time lat lon"]` | xarray carriers |
+**Signatures** are typed as in `style-python` §3. Carriers use the same form, and the string keeps the library's own dim names:
 
-- **Bare assignments** end with the shape transition in one aligned column: `# (N_Ωx, 2) → (N_Ωx, 3)`.
-  Scalars are `→ ()`; distributions give their event shape, `# event (T, N_Ωy)`; operators say so, `# (N_Ωx, N_Ωx) PSD operator`.
-- This column is the one exception to "comments go above the line".
-- A call wrapped over several lines puts its shape on the first line.
-- Repeated long types get a short alias, defined once: `Op = lx.AbstractLinearOperator`.
+| Annotation | Means |
+| --- | --- |
+| `Float[Array, "obs channel"]` | a raw array |
+| `GeoArray["patch band y x"]` | a geoarray carrier |
+| `GeoSwath["band row col"]`, `GeoPoints["time variable obs"]` | swath and point carriers |
+| `DataArray["time lat lon"]`, `Dataset["time lat lon"]` | xarray carriers |
 
-## 4. Status markers
+Repeated long types get a short alias, defined once: `Op = lx.AbstractLinearOperator`.
 
-Every call into the stack has a marker on its own line, above the equation:
+## 3. Status markers
+
+Every call into the stack has a marker on its own line, first of the comment lines above it:
 
 | Marker | Means |
 | --- | --- |
@@ -74,19 +65,21 @@ Every call into the stack has a marker on its own line, above the equation:
 | `# not pinned (pkg)` | lives in a library whose API was not checked for this page |
 
 Never mark a name `today` without checking it in the repo.
+A marker names the package and not its version; the page's pin list says which version was checked.
 
-## 5. Target-state pages
+## 4. Target-state pages
 
-A design page that shows the end state, with every finding applied, tags each line that depends on a finding:
+A design page that shows the end state, with every finding applied, tags each line that depends on a finding, in place of the marker:
 
 ```python
-alpha: GeoArray["patch y x"] = enhancement(scene)          # ← CS-F3
+# ← CS-F3
+alpha: GeoArray["patch y x"] = enhancement(scene)
 ```
 
 The gap under the block says what is missing today.
 Use this form instead of status markers only when the page's subject is the target state.
 
-## 6. Refactors: before and after
+## 5. Refactors: before and after
 
 A refactor shows both versions in one block, current code first:
 
@@ -98,11 +91,11 @@ tapered = taper_matrix * covariance
 tapered = kl.TaperLocalizer(taper)(covariance)
 ```
 
-## 7. Verification
+## 6. Verification
 
 - Every `today` block is run as written before it ships; README blocks always are.
 - `proposed` blocks are not run, but their `today` calls are checked by name.
-- Symbols, shapes and Unicode in comments follow `style-math`; maths in the surrounding Markdown passes its `check_math.py`.
+- Maths in the surrounding Markdown passes `check_math.py` from `style-math`.
 
 ## Conforming sketch
 
@@ -117,33 +110,29 @@ import vardax as vdx
 
 # today (geonnax)
 # s(λ, φ) = (cos φ cos λ, cos φ sin λ, sin φ) ∈ S²
-cell_xyz = gnx.geo.lonlat_to_cartesian3d(cell_lonlat)    # (N_Ωx, 2) → (N_Ωx, 3)
+# (N_Ωx, 2) → (N_Ωx, 3)
+cell_xyz = gnx.geo.lonlat_to_cartesian3d(cell_lonlat)
 
 # today (kernellib)
 # Σ_x = K_SS = [k(sᵢ, sⱼ; θ)]ᵢⱼ
-prior_cov = kl.to_operator(kernel.frozen(), cell_xyz)    # (N_Ωx, 3) → (N_Ωx, N_Ωx) op
+# (N_Ωx, 3) → (N_Ωx, N_Ωx) operator
+prior_cov = kl.to_operator(kernel.frozen(), cell_xyz)
 
 # proposed (C)
 # log p(y; θ) = log 𝒩(y; H μ_x, H Σ_x Hᵀ + Σ_ε)
-log_evidence = vdx.oi_marginal(                          # → ()
+# → ()
+log_evidence = vdx.oi_marginal(
     background_mean, prior_cov, obs_cov, mask=observed
 )
 ```
 
-The names here come from the 7 Oct guide; re-check them before reusing this block.
+The names here come from a design guide of 7 Oct 2026; re-check them before reusing this block.
 
 ## Review checklist
 
-- [ ] Shapes header first; letters consistent across the page.
-- [ ] Unicode equation above every mathematical line, in `style-math` notation; symbols defined before the block.
-- [ ] Typed signatures; aligned shape column on bare assignments.
-- [ ] A marker on every stack call; every `today` name checked in the repo.
-- [ ] einx, not `axis=`, `.T`, `reshape` or `[:, None]`; lineax for solves.
-- [ ] One operation per line, within 88 columns.
+- [ ] The block passes the `style-python` checklist where it applies to a sketch (einx and lineax, one operation per line, descriptive names, 88 columns).
+- [ ] Shapes header first; names consistent across the page.
+- [ ] Above each line, in order: the marker on a stack call, the equation on a mathematical line, the shape on a bare array assignment. No comment beside a line.
+- [ ] Every symbol defined before the block or in the header.
+- [ ] Every `today` name checked in the repo; `today` blocks run as written.
 - [ ] Refactors shown as `# Today:` / `# After:`.
-- [ ] `today` blocks run as written.
-
-## Open questions
-
-- Descriptive names (as in `style-python`) or the paper's symbols? Symbols make the shape column fit; this draft uses descriptive names.
-- Should `today` always name its pin (`today (kernellib 0.0.18)`), or is the page's pin list enough?
