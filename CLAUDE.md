@@ -42,7 +42,8 @@ specific to Claude Code.
   - GitHub housekeeping: `create-gh-issue`, `link-gh-issues`;
   - the README, docs figures and mathematical reference of a stack
     library: `repo-readme`, `repo-docs-figures` and
-    `repo-math-reference`, kept in `plugins/geostack/skills/` so the
+    `repo-math-reference`, with `repo-design-docs` for its design docs,
+    kept in `plugins/geostack/skills/` so the
     geostack plugin installs them in every repository;
   - the stack's three organising axes: `data-levels`, `modeling-cycle` and
     `six-step-cycle`, in the same place;
