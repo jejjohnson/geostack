@@ -5,16 +5,26 @@ description: The GeoStack standard for a library's mathematical reference, the n
 
 # Library mathematical reference
 
-Draft 1 · 19 Nov 2026 · taken from the mathematical references of filterax (`docs/math/`, 20 chapters), vardax (`docs/`, 23 chapters) and integrix (`docs/theory/`, 13 chapters).
+Draft 2 · 19 Nov 2026 · taken from the mathematical references of filterax (`docs/math/`, 20 chapters), vardax (`docs/`, 23 chapters) and integrix (`docs/theory/`, 13 chapters).
 
 A stack library's docs have a mathematical reference: numbered chapters that write down what the library computes, derive it, run it and say when it fails. This skill is the standard for those chapters. The three references it was taken from are examples, not the standard: each was written before this skill, each does some things the others do better, and §8 lists what each would change to meet it. Where an example and this skill disagree, follow the skill, and where the skill is silent, copy the example named for that rule.
 
-It builds on four other skills and does not repeat them: `eman-style-math` for the notation, `code-sketch` for the code on the page, `eman-prose-tech` for the voice, and `library-docs-figures` (in this plugin) for any figure a chapter carries.
+It builds on five other skills and does not repeat them: `role-ladder` (in this plugin) for the roles the library's names play, which decide the chapter list and the order inside a chapter; `eman-style-math` for the notation; `code-sketch` for the code on the page; `eman-prose-tech` for the voice; and `library-docs-figures` (in this plugin) for any figure a chapter carries.
 
 ## 1. Planning the reference
 
-1. **List what the library computes.** Read `__all__` on `main` and group the public names by the job they do, using the rungs of `role-ladder`: each algorithm or model is a candidate method chapter, and each strategy that several methods share (an adjoint, a localization, a rule for precision) is a candidate cross-cutting chapter.
-2. **Write the chapter list in five groups.** Foundation, methods (or operations, for a toolbox library), cross-cutting, numerics, worked examples. A reference page for notation and one for references close the section. All three examples use these groups in `myst.yml`.
+1. **Put every public name on a rung.** Read `__all__` on `main` and ask the eight questions of `role-ladder` (§2 there) of each name. A name that seems to sit on two rungs is two things packaged together; split it before planning its chapter, because the chapter will have to explain them apart.
+2. **Write the chapter list in five groups, from the rungs.** Foundation, methods (or operations, for a toolbox library), cross-cutting, numerics, worked examples. A reference page for notation and one for references close the section. All three examples use these groups in `myst.yml`.
+
+   | Rung | Goes in | Example |
+   |---|---|---|
+   | ⓪ structure, ③ model | Foundation: what the library acts on and what it holds | vardax's observation-model and dynamical-model chapters |
+   | ① primitive | Foundation, or Operations in a toolbox library | integrix's rules and scans |
+   | ② strategy | Cross-cutting, one chapter per strategy that several methods share | filterax's localization and inflation, vardax's adjoints |
+   | ④ algorithm | Methods, one chapter each | filterax's ETKF, vardax's 3DVar |
+   | ⑤ step, ⑥ recipe | the chapter on the cycle, and the worked examples | filterax's assimilation cycle |
+
+   Numerics has no rung of its own: it holds the exact methods the others are checked against, and what precision and gradients do to them. A library need not have every rung, so it need not have every group.
 3. **Order the chapters so each needs only the ones before it.** A chapter cites earlier equations by label and never a later one, except in its "See also".
 4. **One idea per chapter.** A chapter that needs two unrelated agreement checks is two chapters. The examples run from about 120 to 1,200 lines; a method chapter is usually 400 to 800.
 5. **Propose the list before writing**, with one line per chapter saying what it derives and which public names it covers, then write one chapter at a time and show it before the next.
@@ -31,12 +41,28 @@ Every chapter opens with a concrete problem before any equation: a scenario from
 | Numerics | exact reference methods, precision, gradients | what they compute; Algorithm; the library's methods against the reference; When it breaks; See also | filterax `17_exact_references.md`, integrix `11_precision.md` |
 | Worked example | one end-to-end problem that uses most of the library | the setup; one run, end to end; the methods against each other; what the failures look like; When this setup is the right answer; See also | filterax `19_lorenz96_example.md`, integrix `13_methane_example.md` |
 
-Section headings are sentences about the content ("Why the symmetric square root", "A scan's adjoint is a reversed scan"), not generic labels, except the fixed ones in the table. Four of the fixed sections carry the standard's main promises:
+Section headings are sentences about the content ("Why the symmetric square root", "A scan's adjoint is a reversed scan"), not generic labels and not rung names, except the fixed ones in the table. Four of the fixed sections carry the standard's main promises:
 
 - **Algorithm** writes the method out by hand in plain JAX, with the dense quantities the production code avoids, so a reader can match every line to an equation.
 - **Implementation in `<pkg>`** calls the public API on a small stated problem and prints a result.
 - **Agreement with …** checks the library against an exact answer (a closed form, a dense solve, the linear-Gaussian limit) and against the by-hand algorithm, and prints the differences.
 - **When it breaks** demonstrates a failure with code and a printed number, then names the chapter that treats it. A list of other limits may follow, but one failure is always shown.
+
+### The order inside a chapter
+
+A method chapter explains in the order `role-ladder` gives (§3 there): nouns, verbs, adverbs, the noun phrase, then the sentence. The sections above already follow it, and the chapter keeps to it.
+
+- **The opening equations name the structures**, each with its shape and, for a physical quantity, its unit.
+- **The "Why …" sections name the primitives and the strategies**: what is called on those structures, and what a caller can swap.
+- **Algorithm is the sentence.** It uses only pieces the chapter has already named.
+- **Implementation is the step** that wraps the algorithm with its settings. It says in words what state the model holds between calls and what builds it.
+- **A chapter that names more than three pieces carries the pieces table** (Piece, Rung, Kind, Used by) as a labelled `{table}`, before the Algorithm section.
+- **Every strategy named is checked.** Naming a strategy claims that the maths does not change when it is swapped, so the Agreement section prints that check for each one, or says what does change. filterax's `06_etkf.md` does this for its two routes, which agree in float64 and part in float32.
+- **Write rung names, not layer numbers**: "the analysis step" and "the algorithm it wraps", not "Layer 2" and "Layer 1".
+
+### The floor, and who owns a derivation
+
+A reference is written for readers who work at ② to ④ and treat the rung below as given. A chapter says in one line what that floor guarantees and links to the chapter of the library that owns it; it goes one rung down, never two. So a derivation lives in the reference of the library that owns the rung: filterax's ETKF chapter derives the gradient rule that gaussx installs, and under this rule gaussx's reference derives it and filterax cites it. Where the lower library has no chapter yet, the derivation stays where it is, with a note naming where it belongs.
 
 ## 3. Equations and notation
 
@@ -102,7 +128,7 @@ The three examples predate this skill. Each change below is a docs-only PR in th
 
 | Library | Already meets | To change |
 |---|---|---|
-| filterax | folder, section order, labelled code blocks, cite roles and `.bib` files, one sentence per line, a test that runs every block | outputs move from "It prints …" sentences into `text` fences and the test checks them; API links become `xref:`; cited tables get labels; the hand-written `references.md` gives way to the bibliography; openings get a concrete scenario where they have none |
+| filterax | folder, section order, labelled code blocks, cite roles and `.bib` files, one sentence per line, a test that runs every block | outputs move from "It prints …" sentences into `text` fences and the test checks them; API links become `xref:`; cited tables get labels; the hand-written `references.md` gives way to the bibliography; openings get a concrete scenario where they have none; "Layer 1" and "Layer 2" become rung names; the derivations of what gaussx computes move to gaussx's reference once it has the chapter |
 | vardax | section order of the method chapters, labelled code blocks, the notation page | chapters move to `docs/math/`; hard-wrapped paragraphs are unwrapped; per-chapter reference lists become cite roles on `.bib` files; outputs move into `text` fences; a `tests/test_math_pages.py` is added; chapter mentions become links; decision numbers leave the chapters |
 | integrix | scenario openings, `text` output fences checked by the test, labelled tables, `xref:` links, units | the folder is renamed from `docs/theory/` to `docs/math/`; code blocks get captions and labels; author-and-year mentions become cite roles on `.bib` files; method and cross-cutting chapters gain "When it breaks" and "See also" where they lack them |
 
@@ -110,9 +136,11 @@ A move of folder changes every chapter's URL, so the PR that does it lists the o
 
 ## Checklist
 
-- [ ] The chapter list was proposed and agreed before any chapter was written, in the five groups, each chapter needing only those before it.
+- [ ] Every public name is on one rung, and the chapter list was proposed and agreed before any chapter was written, in the five groups, each chapter needing only those before it.
 - [ ] Each chapter opens with a concrete problem and a paragraph that says what it covers.
 - [ ] Each chapter has the sections of its kind, in order; a method chapter has Algorithm, Implementation, Agreement and When it breaks, the last with a demonstrated failure.
+- [ ] A method chapter names structures, then primitives and strategies, then the model, then the algorithm; it carries the pieces table when it names more than three pieces, and checks every strategy it names.
+- [ ] A chapter goes one rung below its own at most, and links to the owning library's chapter for anything lower.
 - [ ] Every display equation is on one line, labelled, and followed by a where-sentence with shapes; every symbol is on the notation page or in a table on its own page.
 - [ ] Every code block is a labelled, captioned `code-sketch` followed by its exact output; no number in the prose lacks a block that prints it.
 - [ ] `tests/test_math_pages.py` passes on the chapter.
