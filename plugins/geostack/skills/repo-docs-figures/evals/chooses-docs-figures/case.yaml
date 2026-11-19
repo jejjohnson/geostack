@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: chooses-docs-figures
+expected_outcome: |
+  A proposal that gives gridax the operations figure in place of the overview, the role ladder and dependencies on the architecture page, a code map that replaces the hand-drawn mermaid graph after checking it against the imports, an exception hierarchy on the exceptions page, a comparison for the three interpolation schemes, a gallery for the five grid families, a specimen for the HEALPix grid drawn by the library's own script, and a pipeline with status marks that replaces the ASCII sketch; no figure for the short edge-handling paragraph; each with its form, its geostack folder and its placement; drawn one at a time after the list is agreed.
