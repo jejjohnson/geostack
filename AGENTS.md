@@ -183,7 +183,9 @@ The step-by-step for each is a skill (see "Recipes").
 ### 3. The pipeline: DVC stages declare everything
 
 - Each stage in `dvc.yaml` has a `cmd` and lists as `deps` the script, the
-  package code it imports and the data it reads; as `params` the config
+  upstream code it imports (the submodule folder of each library,
+  `references/<layer>/<library>`, or `pixi.lock`, so a moved pin reruns the
+  stage) and the data it reads; as `params` the config
   keys it uses (keys that exist in the params file — a Hydra defaults group
   such as `model` is not a key of `configs/train.yaml`; depend on the group
   file instead); as `outs` what it writes. An output path must not contain

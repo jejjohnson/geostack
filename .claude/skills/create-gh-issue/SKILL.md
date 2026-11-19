@@ -56,7 +56,7 @@ Before opening any issue, confirm these five inputs with the user (or infer from
    - Epic wave: `[EPIC] Wave N: <title>`
    - Epic theme: `[EPIC] <theme title>`
 3. **Parent theme/wave epic** (if any) — the issue number this child rolls up to
-4. **Wave / milestone** — which `wave:*` label + which `vX.Y-<slug>` milestone
+4. **Wave / milestone** — which `wave:*` label + which `vX.Y-<slug>` milestone (`gh api repos/:owner/:repo/milestones --jq '.[].title'` lists them; if the wave has none, leave `--milestone` out and say so, never make up a title)
 5. **Additional labels** — which `area:*` and `priority:*` apply (see Step 4)
 
 ### Step 2 — Draft the body
@@ -95,7 +95,8 @@ Fill in sections according to the template's intent. **Minimum required sections
   ````
 
 - **Code-first, prose-last** — Design Snapshot and Proposed API should LEAD with the exact snippet the implementer will reproduce; prose goes after.
-- **Concrete implementation steps** — each step should name the file path + function, not a generic `...`. Example: `Add \`load_sst\` in \`src/geostack/data/loading.py\``
+- **Concrete implementation steps** — each step should name the file path + function, not a generic `...`. geostack has no package of its own, so code goes upstream: name the library that will hold it and the path inside it, read from its submodule (`references/<layer>/<library>`). Example: `Add \`read_tropomi_l2\` in \`references/geostack/geotoolz/packages/<package>/src/…\``. When the submodule is not checked out, still name the library that owns the code and say the path inside it is to be confirmed; do not invent one, and do not invent variable or function names of a product you have not opened.
+- **Which repository** — an issue about code that lands upstream is filed on the repository that will hold the code, or here with that repository named in the body; ask which when it is not clear. georeader is not ours: never file an issue there.
 
 ### Step 4 — Pick labels
 
@@ -112,6 +113,7 @@ Every issue carries exactly one `type:*`, one or more `area:*`, one `wave:*`, an
 | Design / ADR | `type:design`, `area:code` (or the relevant area), `wave:N` |
 | Research / literature survey | `type:research`, the relevant area |
 | Engineering / CI / packaging / DVC remote | `type:chore`, `area:engineering`, `wave:0` |
+| A wave epic / a theme epic | `type:epic-wave` / `type:epic-theme`, the area of its children, `wave:N` |
 
 The labels come from `.github/scripts/create-labels.sh` (`make gh-labels`): `type:{epic-wave,epic-theme,feature,bug,design,chore,docs,research}`, `area:{engineering,testing,docs,data,models,experiments,code}`, `dependencies`, `wave:0`…`wave:4`, `priority:{p0,p1,p2}`. `CONTRIBUTING.md` describes the taxonomy and the epic model; `gh label list` shows what exists and `gh api repos/:owner/:repo/milestones` the milestones.
 
@@ -159,7 +161,7 @@ Keep the prose `## Relationships` lines in the body — they coexist with the na
 
 ### Step 7 — Verify
 
-Confirm the filed issue by URL + a one-line summary. If opening multiple issues from a backlog, echo a mapping:
+Confirm the filed issue by URL + a one-line summary. When asked for a draft and not a filed issue, hand back the body, the exact command, the inputs still to confirm (the parent's number, the milestone, the priority) and the linking step that follows creation (Step 6); leave no empty `Blocked by: #` line or placeholder in the body, and use no value in the command that you marked as unknown. If opening multiple issues from a backlog, echo a mapping:
 
 ```
 Draft ID  → GH issue
@@ -169,7 +171,7 @@ RP-06     → #43   feat(models): ...
 
 ## Bulk workflow — publishing a wave-backlog
 
-When the user has a `.plans/<wave>-backlog.md` file drafted from `docs/templates/wave-backlog.md`:
+When the user has a `.plans/<wave>-backlog.md` file drafted from `docs/templates/wave-backlog.md` (`.plans/` is gitignored and may not exist yet):
 
 1. **Parse** the backlog into discrete issue sections. Each draft starts with `# <title>` followed by `Draft ID: \`<PREFIX>-NN\``. Sections are separated by `---`.
 2. **Identify** which template each draft corresponds to (epic-wave → body starts with `## Goal`; epic-theme → `## Theme`; feature → `## Problem / Request`; design → `## Problem / Question`; research → `## Context` with `## 1.` numbered sections).

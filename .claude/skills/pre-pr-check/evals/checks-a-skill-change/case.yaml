@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: checks-a-skill-change
+expected_outcome: |
+  The always-run checks, then what a change to the plugin's skills triggers: the skill-tree test and its budgets, the marketplace regenerated if it changed, and no pipeline, capability or docs checks that this change does not need.

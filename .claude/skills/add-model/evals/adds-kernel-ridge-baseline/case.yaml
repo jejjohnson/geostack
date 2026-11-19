@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: adds-kernel-ridge-baseline
+expected_outcome: |
+  The capability index is searched first and kernellib's KRR is found, so no class is written: the model is a config option whose _target_ is the upstream class, the training script needs no change because it builds any option from its _target_, and a test builds the option.

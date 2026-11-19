@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: applies-an-epic-body
+expected_outcome: |
+  Each issue in the checklist, done or not, as a sub-issue of #41; #41 as a sub-issue of its parent wave #40; #41 blocked by #38 and #52 blocked by #41; the Related lines left as prose; the helper script used for the batch; a read-back.

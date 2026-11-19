@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reproduces-this-commit
+expected_outcome: |
+  The answer reads dvc.yaml and finds no stages and no dvc.lock, so there are no pipeline results to reproduce; it says so plainly, says what the notebooks' figures are and are not, and gives the commands that would apply once a stage exists.

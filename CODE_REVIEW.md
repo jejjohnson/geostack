@@ -72,7 +72,8 @@ order, unused imports); review what they cannot see.
 
 ### 3. The DVC pipeline
 
-- Every stage lists as `deps` its script, the package modules it imports
+- Every stage lists as `deps` its script, the upstream code it imports
+  (each library's submodule folder under `references/`, or `pixi.lock`)
   and the data it reads; as `params` the config keys it uses (keys that
   exist in the params file); as `outs` / `metrics` / `plots` exactly what
   the script writes.

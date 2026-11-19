@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: squashes-a-breaking-change
+expected_outcome: |
+  A feat with its breaking mark and BREAKING CHANGE footer kept, the scope of the dominant change, the docs and test commits folded into the body, no invented co-author, printed alone in a code block.

@@ -24,14 +24,20 @@ Focus on the "why" and overall effect, not per-commit details.>
 Co-authored-by: <preserve all unique Co-authored-by lines from the individual commits>
 ```
 
+The `Co-authored-by` block is there only when a commit has such a line;
+never add one, and add no tool-attribution trailer.
+
 ### Rules
 
 - Conventional Commits types: `feat`, `fix`, `docs`, `style`, `refactor`,
   `perf`, `test`, `build`, `ci`, `chore`, `revert`; a lowercase subject
-  (`conventional-commits.yml` checks PR titles). The scope is usually the
-  area: `data`, `models`, `trainers`, `utils` (the package), `configs`,
-  `pipeline` (`dvc.yaml`, stages), `experiments`, `notebooks`, `docs`,
-  `deps`, `ci`, `agents`. <!-- template-example: the package scopes are the example's subpackages. -->
+  (`conventional-commits.yml` checks PR titles). The scope is the area,
+  as this repo's history names it (`git log --format=%s -40 origin/main`):
+  `plugins` (`plugins/geostack/`, its skills and their eval cases),
+  `skills` (`.claude/skills/`), `scripts`, `design` (`docs/design/`),
+  `images` (`docs/images/`), `stack` or `references` (submodule pins),
+  `configs`, `pipeline` (`dvc.yaml`, stages), `notebooks`, `deps`, `ci`,
+  `agents` (`AGENTS.md`, `CLAUDE.md`).
 - release-please (`release-please-config.json`, one Python package at `.`)
   builds `CHANGELOG.md` and the version bump from these messages: `feat` is
   a minor bump (a patch bump while the version is below 1.0, since
@@ -42,8 +48,11 @@ Co-authored-by: <preserve all unique Co-authored-by lines from the individual co
   rest in the body.
 - A breaking change keeps its `!` and `BREAKING CHANGE:` footer.
 - Collapse redundant or incremental commits into one coherent description.
+  The body says what changed for someone reading the repo; it leaves out
+  how the PR got there (a typo fix, a wip commit, a review round).
 - Preserve ALL unique `Co-authored-by` lines.
-- Keep the summary line under 72 characters.
+- Keep the summary line under 72 characters, with the PR number at its
+  end as the history has it (`… (#242)`).
 - Do NOT list the individual commit messages as bullet points — this is a
   squash, not a merge.
 
