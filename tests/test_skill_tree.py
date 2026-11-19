@@ -208,6 +208,14 @@ def test_units_are_folded_over_the_packages_of_a_skill(workspace) -> None:
     assert one[0] == st.Edge("base", "base", ("core",))
     both = st._edges(graph, tree.nodes, units, "ws", {"ws", "ws-gp"})
     assert both[0] == st.Edge("base", "base", ("core", "state-space"))
+    # a measured unit that the parent's shelf lacks reaches ST-1
+    units["ws-gp", "base"] = {"core", "gone"}
+    tree.edges["ws"] = st._edges(graph, tree.nodes, units, "ws", {"ws-gp"})
+    assert tree.edges["ws"][0].units == ("core", "gone")
+    assert st.graph_violations(tree) == [
+        "ST-1 ws → base: skill_shelf.py measures the unit 'gone', which base's"
+        " shelf.toml lacks"
+    ]
 
 
 def test_st1_a_skill_names_only_packages_of_its_repository(workspace) -> None:

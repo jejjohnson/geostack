@@ -252,11 +252,10 @@ def _edges(
     out = []
     for parent in sorted(kinds, key=lambda r: (dg.LAYER_RANK[layers[r]], r)):
         got = set().union(*(units.get((d, parent), set()) for d in sorted(dists)))
-        out.append(
-            Edge(
-                parent, kinds[parent], tuple(u for u in nodes[parent].units if u in got)
-            )
-        )
+        shelf = [u for u in nodes[parent].units if u in got]
+        # a measured unit the parent's shelf lacks is kept, for ST-1 to report
+        missing = sorted(got - set(shelf))
+        out.append(Edge(parent, kinds[parent], (*shelf, *missing)))
     return tuple(out)
 
 
