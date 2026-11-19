@@ -1,5 +1,5 @@
 ---
-name: library-math-reference
+name: repo-math-reference
 description: The GeoStack standard for a library's mathematical reference, the numbered chapters of its docs that derive what the code computes. How to plan the chapter list from the library's public names (foundation, methods or operations, cross-cutting, numerics, worked examples, notation, references), the section order of each kind of chapter, the real problem from remote sensing, geoscience or mathematical modelling that motivates each chapter and carries its explanation, and the MyST forms every chapter uses (numbered and labelled equations with a where-sentence of shapes, labelled code-block directives in the style-code-sketch form with their printed output, labelled tables, cite roles on a bibliography, xref links into the API), the notation page with its classic-letters table, the test that runs every block and checks what it prints, and the myst.yml wiring. vardax, filterax, integrix and functax are the examples it was taken from, not the standard itself, and the skill says where each still differs. Use when planning, writing, reviewing or extending a stack library's mathematical reference, when adding a chapter for a new method, or when bringing an existing reference up to the standard.
 ---
 

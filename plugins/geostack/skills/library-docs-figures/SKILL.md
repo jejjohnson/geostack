@@ -7,9 +7,9 @@ description: The GeoStack standard for a library's documentation figures, set by
 
 Draft 3 · 18 Nov 2026 · taken from argminax's docs figures ([geostack#198](https://github.com/jejjohnson/geostack/pull/198), [geostack#200](https://github.com/jejjohnson/geostack/pull/200)) and the argminax pages that place them, which Eman named as the standard, and from vardax's ([geostack#204](https://github.com/jejjohnson/geostack/pull/204) to [geostack#211](https://github.com/jejjohnson/geostack/pull/211)), which add the pipeline and the forms a large library needs, and from functax's, which add the operations figure and the specimen.
 
-A library's README carries three figures: the overview, the role ladder and the dependencies (the `library-readme` skill in this plugin, §10). Its docs carry those three and more: a figure wherever a page explains an idea that a picture says faster. This skill is for the docs. Every schematic is drawn once in geostack, under `docs/images/libraries/<pkg>_<name>/`, and the library's pages embed it from geostack's `main`, so the stack's figures stay in one place and in one style. A specimen is the exception: it is a plot of what the library computes, so the library's own docs code draws it.
+A library's README carries three figures: the overview, the role ladder and the dependencies (the `repo-readme` skill in this plugin, §10). Its docs carry those three and more: a figure wherever a page explains an idea that a picture says faster. This skill is for the docs. Every schematic is drawn once in geostack, under `docs/images/libraries/<pkg>_<name>/`, and the library's pages embed it from geostack's `main`, so the stack's figures stay in one place and in one style. A specimen is the exception: it is a plot of what the library computes, so the library's own docs code draws it.
 
-It builds on three other skills: `role-ladder` (in this plugin) for the ladder figure, `style-math` for the notation on every figure, and `library-readme` (in this plugin) for the README's three.
+It builds on three other skills: `role-ladder` (in this plugin) for the ladder figure, `style-math` for the notation on every figure, and `repo-readme` (in this plugin) for the README's three.
 
 ## 1. The catalogue
 
@@ -86,7 +86,7 @@ Merge the geostack PR first. A library's docs build downloads remote images, and
 ````
 
 - **A specimen** is embedded by a relative path from the library's `docs/assets/`, in the docs and the README alike, since it lives in the same repo and needs no geostack PR.
-- **An SVG pair** goes in as its light file: a MyST figure has one source. The README uses `<picture>` for both (`library-readme`, §10).
+- **An SVG pair** goes in as its light file: a MyST figure has one source. The README uses `<picture>` for both (`repo-readme`, §10).
 - **Put it next to the text it summarises**: after the paragraph that introduces the idea, or above the table it condenses. Never between a sentence and the next one that continues its thought.
 - **An API page** built by mkdocs or zensical takes a Markdown image of the same URL, under the module's summary.
 - **Build the docs.** Before the geostack PR merges, point the URLs at its branch, build, and point them back at `main`. Use the latest mystmd, as CI does (`npx -y mystmd`): an older local `myst` stops at the theme step. Check every image URL returns 200.

@@ -1,5 +1,5 @@
 ---
-name: library-readme
+name: repo-readme
 description: Eman's README standard for his JAX library repos (argminax, vardax and the rest of the GeoStack): centred header, one central equation, an overview schematic, highlights, the core-idea table, install, one runnable style-code-sketch quickstart, module and ecosystem tables with a role-ladder figure and a dependency figure drawn in geostack, with everything else moved to the docs quickstart. Use when writing, rebuilding or reviewing a library README, or drawing a library's schematics.
 ---
 
