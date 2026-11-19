@@ -8,7 +8,7 @@
     {
       "name": "geostack",
       "source": "./plugins/geostack",
-      "description": "The root of the GeoStack skill tree: the role ladder (structure, primitive, strategy, model, algorithm, step, recipe) that every library's skills are written in, and the standards for a library's README and its documentation figures, drawn in geostack."
+      "description": "The root of the GeoStack skill tree: the role ladder (structure, primitive, strategy, model, algorithm, step, recipe) that every library's skills are written in, and the standards for a library's README, its documentation figures, drawn in geostack, and its mathematical reference."
     },
     {
       "name": "finitevolx",
