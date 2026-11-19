@@ -43,6 +43,7 @@ exclude = [
     "references/",
     "docs/overview.md",
     "plugins/**/evals/*/files/",
+    ".claude/**/evals/*/files/",
 ]
 
 [tool.ruff.lint]

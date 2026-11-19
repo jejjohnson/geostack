@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: splits-station-series
+expected_outcome: |
+  The CSV tracked by DVC, a split by station or by time (stated which and why) so the same station or period is never on both sides, made once from config fractions and a seed and saved, statistics fitted on the training split only, a stage that declares what it reads and writes, and a test of the split on a tiny fixture.
