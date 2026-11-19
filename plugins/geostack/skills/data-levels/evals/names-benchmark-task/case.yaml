@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: names-benchmark-task
+expected_outcome: |
+  An answer that names the task as gap filling from along-track observations to a regular grid, gives its transition, and states that two conventions exist (the overview has it as L2 to L3, while the benchmark code's level names make it L1 to L2), recommending that the contract say which one it follows.

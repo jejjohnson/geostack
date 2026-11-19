@@ -5,7 +5,7 @@ description: The L0–L5 data lifecycle of the GeoStack, on its two axes. The sc
 
 # The data levels
 
-Draft 1 · 19 Nov 2026 · from the overview's second axis (`docs/overview.md`, "The L0–L5 data lifecycle", @ `854276a`). Where this file and that page disagree, the page wins.
+Draft 2 · 19 Nov 2026 · from the overview's second axis (`docs/overview.md`, "The L0–L5 data lifecycle", @ `854276a`). Where this file and that page disagree, the page wins.
 
 Data in the stack has a level, from L0 to L5, which says how far it has come from the instrument. The level is read on two axes. The science axis says what the data is. The engineering axis says which tool handles it. Together they answer the two questions asked of any dataset or operation: what is this, and where does the code for it live.
 
@@ -67,6 +67,8 @@ The lifecycle is not one chain. In-situ networks (in every domain) have no L0 or
 
 The misfits that matchup produces are what drive the loops of the `modeling-cycle`.
 
+The overview does not give in-situ data a carrier or a set of tools. Profiles and station records are points, not rasters or grids, and the geoarray design has a `GeoPoints` carrier for them; say that this is open, and check the capability index, before naming one.
+
 ## 5. Three layers on the way into a model
 
 What is done to a field before a model sees it is a third reading of the same data:
@@ -88,6 +90,11 @@ Ask in this order.
 3. **In-situ?** It has no L0 or L1. Say "in-situ" and where it joins (matchup or assimilation), not a level.
 4. **Which side of the carrier line?** L0 to L2 uses the observation tools, L3 to L5 the state tools (§3).
 5. **Which package computes the step?** The compute row of §3, then the capability index for the name.
+6. **What does that package ship today?** A level says where a step belongs, not that it exists. Read the library before a plan names a stage as available, and mark what is shipped and what is only designed.
+
+**Place by the stack's definitions, not by a product's label.** Agencies and providers number their levels by their own schemes: a gridded, gap-free map made by interpolating observations is often sold as "L4", and here it is L3, because no dynamical model produced it. Give the stack's level, and note the provider's label beside it so a reader can find the product.
+
+**The levels describe data between packages, not inside a computation.** Inside a model or an analysis step the data is plain arrays: labels and geometry are dropped at the entry and put back at the exit (the kinds in `role-ladder`: array, named array, carrier). A pipeline plan names those two crossings as well as the switch of carrier between L2 and L3, since a coordinate or a unit lost there is lost silently.
 
 Name a task by its transition: "L1 → L2 retrieval", "L2 → L3 mapping". A benchmark's task is a transition and what it does (gap filling, forecast, fusion), and both go into its contract.
 
@@ -105,5 +112,7 @@ Say these when they matter, and do not paper over them.
 - [ ] In-situ data is called in-situ, with where it joins.
 - [ ] The carrier and the tools match the side of the L2 and L3 line the data is on.
 - [ ] A task or benchmark is named by its transition.
+- [ ] A product is placed by the stack's definitions, with its provider's label noted beside it.
+- [ ] A plan says what each stage's package ships today, and where the data becomes plain arrays and comes back.
 - [ ] "L" means a data level; code is described by kind and rung.
 - [ ] Where gap filling is given a transition, the page says which L2 convention it follows.

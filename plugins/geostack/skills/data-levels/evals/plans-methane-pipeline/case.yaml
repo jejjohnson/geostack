@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: plans-methane-pipeline
+expected_outcome: |
+  A staged plan from L2 pixels to an L3 gap-free field to L4 assimilated states and emission rates, naming the transition of each stage, the package family that computes it, the switch from the raster carrier to xarray between L2 and L3, and the ground sites joining by matchup before L3 and by assimilation at L4, with no code.
