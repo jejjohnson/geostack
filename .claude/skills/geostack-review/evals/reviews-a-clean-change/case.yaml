@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-a-clean-change
+expected_outcome: |
+  A short review that says what was checked, confirms the sentence against AGENTS.md, and does not invent problems; at most small suggestions marked as optional.
