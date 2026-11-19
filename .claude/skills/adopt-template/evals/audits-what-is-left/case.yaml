@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: audits-what-is-left
+expected_outcome: |
+  An audit from the greps: the example names are gone, but template-example markers remain in the skills, the two subagents and the template notes, and several skills still describe a package, configs and scripts this repo does not have; the answer lists each with its file and does not claim the adoption is finished.

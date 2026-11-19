@@ -96,7 +96,8 @@ The example package, configs, stages and notebooks are placeholders:
   config groups, stages and test files. Add a skill for each new kind of
   thing people will add; delete the ones that do not apply.
 - Rename `.claude/skills/myproject-review/` to
-  `<your-project>-review/` (and its `name:`), and update the names in the
+  `<your-project>-review/` (and its `name:`), using the distribution name
+  with hyphens (`coastal-sst-review`), and update the names in the
   "Recipes" table of `AGENTS.md` and in `CLAUDE.md`.
 - Point the two subagents in `.claude/agents/` at your domain: add your
   package's shared helpers to `reuse-reviewer`, and your field's pitfalls
@@ -122,6 +123,26 @@ make docs
 
 …and the grep of step 1 prints nothing outside `CHANGELOG.md` and this
 skill.
+
+## Checking whether an adoption is finished
+
+When asked what is left, change nothing and report from three searches,
+showing each command and what it printed, with counts that match the
+lists:
+
+1. the grep of step 1 for the example names;
+2. the `template-example:` grep of step 4, listing every file and line
+   that still carries a marker;
+3. leftovers outside the markers: paths the example had and the project
+   does not (`grep -rnE 'src/|configs/train|scripts/train|test_configs|test_models|test_data' .claude .github AGENTS.md CODE_REVIEW.md`),
+   checked against what exists (`ls src configs scripts tests`).
+
+A project may drop a part of the template on purpose (geostack has no
+package of its own: reusable code goes upstream). Then the building skills
+that still describe that part are the leftover, not the missing folder.
+Say the adoption is finished only when all three searches are clean, and
+that the "Template note" in `AGENTS.md` and the template bullet in
+`CLAUDE.md` stay until then.
 
 ## 6. GitHub
 

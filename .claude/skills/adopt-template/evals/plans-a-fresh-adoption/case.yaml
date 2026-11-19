@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: plans-a-fresh-adoption
+expected_outcome: |
+  A checklist in the skill's order: names chosen first, the grep that finds every reference, the rename with CHANGELOG and the lock files left out of sed, the lock regenerated and never edited, the example replaced, the template-example passages and building skills rewritten, the review skill renamed, the checks, and the GitHub setup.
