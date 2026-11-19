@@ -328,6 +328,7 @@ A skill tree can grow a cycle in three ways the import graph cannot, and each ha
 | ST-4 Downward | 0 load instructions name a skill of an equal or higher tier |
 | ST-5 Installs | on a clean machine, installing `pyrox@geostack` installs exactly pyrox, kernellib, geonnax and gaussx |
 | ST-7 Cards name real symbols | every `package.name` a card writes in backticks is a public name, by a path that exists |
+| ST-8 One shelf check | every copy of `scripts/skill_shelf.py` that a library carries equals `scripts/templates/skill_shelf.py` here |
 | ST-6 Cards suffice | on 10 pyrox tasks that call gaussx without changing it, the agent opens the gaussx skill in at most 2 (proposed threshold) |
 :::
 
@@ -364,7 +365,9 @@ A repository that ships no card yet, or that is third party, has its card in `sk
 A parent with neither a skill nor a card gets one line in the block that sends the agent to its `AGENTS.md`.
 
 **Who generates what.** A part that follows from the library alone is generated and checked in the library, so its own CI keeps it current.
-In gaussx that is `scripts/skill_shelf.py`: the table of entries in each listed skill, the cards of the units of gaussx below that skill, and the gates GX-1 to GX-3 against `gaussx.__all__`.
+That is `scripts/skill_shelf.py` in the library: the table of entries in each listed skill, the cards of the library's own units below that skill, and the gates SH-1 to SH-3 against the `__all__` of each module the shelf file lists.
+It is one file for every library: geostack holds it as `scripts/templates/skill_shelf.py` and writes a copy with `python scripts/skill_tree.py --shelf-check <repository> --into <checkout>`, and gate ST-8 fails when a copy differs from it (#196).
+[The recipe](./skill_shelf_recipe.md) lists the files and the order of pull requests for a new shelf.
 A part that follows from the graph is generated here: the "Builds on" block, from `dependency_graph.py`'s edges.
 `python scripts/skill_tree.py --write <repository> --into <checkout>` writes a repository's blocks into a checkout of it, for a pull request there; geostack never commits into a submodule.
 

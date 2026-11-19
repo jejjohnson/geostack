@@ -351,6 +351,33 @@ def test_the_tree_at_the_pins_passes_its_gates() -> None:
     }
 
 
+def test_st8_a_copy_of_the_shelf_check_is_held_to_geostacks(tree, tmp_path) -> None:
+    current = st.SHELF_CHECK.read_text(encoding="utf-8")
+    assert st.SHELF_CHECK_MARK in current
+    copy = tmp_path / "base" / st.SHELF_CHECK_PATH
+    copy.parent.mkdir()
+    copy.write_text("# a script of the library's own\n", encoding="utf-8")
+    assert st.shelf_check_violations(tree) == []
+    copy.write_text(current, encoding="utf-8")
+    assert st.shelf_check_violations(tree) == []
+    copy.write_text(current + "# edited\n", encoding="utf-8")
+    assert st.shelf_check_violations(tree) == [
+        "ST-8 stale: base scripts/skill_shelf.py"
+        " (python scripts/skill_tree.py --shelf-check base)"
+    ]
+
+
+def test_shelf_check_is_written_into_a_checkout_with_a_shelf(tmp_path, capsys) -> None:
+    assert st.main(["--shelf-check", "gaussx", "--into", str(tmp_path)]) == 1
+    assert "has no plugins/*/tree/shelf.toml" in capsys.readouterr().out
+    (tmp_path / "plugins/gaussx/tree").mkdir(parents=True)
+    (tmp_path / "plugins/gaussx/tree/shelf.toml").write_text("", encoding="utf-8")
+    assert st.main(["--shelf-check", "gaussx", "--into", str(tmp_path)]) == 0
+    assert (tmp_path / st.SHELF_CHECK_PATH).read_text(
+        encoding="utf-8"
+    ) == st.SHELF_CHECK.read_text(encoding="utf-8")
+
+
 def test_write_refuses_a_checkout_behind_its_default_branch(tmp_path) -> None:
     def git(cwd, *args) -> None:
         subprocess.run(
