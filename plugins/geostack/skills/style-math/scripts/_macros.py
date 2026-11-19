@@ -94,9 +94,10 @@ def _blank(match: re.Match) -> str:
 
 def backtick_inline(markdown: str) -> str:
     """Rewrite each plain inline ``$…$`` as ``$`…`$``, the form GitHub's Markdown
-    leaves alone. Fenced blocks, code spans and maths already in backticks are
-    not touched."""
+    leaves alone. Fenced and indented code blocks, code spans and maths already
+    in backticks are not touched."""
     fenced = fenced_lines(markdown)
+    fenced |= indented_code_lines(markdown, fenced)
     lines = markdown.split("\n")
     # Code spans are found over the whole document, so one that runs over
     # several lines still protects the maths inside it.
@@ -147,6 +148,34 @@ def fenced_lines(markdown: str) -> set[int]:
         inside.add(number)
         if _closes(match, fence[1]):
             fence = None
+    return inside
+
+
+_LIST_ITEM = re.compile(r"([-+*]|\d{1,9}[.)])\s")
+
+
+def indented_code_lines(markdown: str, fenced: set[int]) -> set[int]:
+    """The numbers of the lines of indented code blocks: four spaces or a tab,
+    after a blank line, and not under a list item (where the indent is the
+    item's own)."""
+    inside: set[int] = set()
+    after_blank, in_code, in_list = True, False, False
+    for number, line in enumerate(markdown.splitlines(), start=1):
+        if number in fenced:
+            after_blank, in_code = False, False
+            continue
+        if not line.strip():
+            after_blank = True
+            continue
+        indented = line.startswith(("    ", "\t"))
+        if indented and not in_list and (after_blank or in_code):
+            inside.add(number)
+            in_code = True
+        else:
+            in_code = False
+            if not indented:
+                in_list = bool(_LIST_ITEM.match(line.lstrip()))
+        after_blank = False
     return inside
 
 
