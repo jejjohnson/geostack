@@ -141,3 +141,23 @@ def test_emphasis_is_not_paired_across_list_items_or_a_heading(tmp_path) -> None
     item.write_text("- the mean $\\boldsymbol{\\mu}_x$ and\n  the size $N_{b}$\n")
     found = check_math.check_file(item, check_math.Target.github, [])
     assert [f.rule for f in found] == ["inline-emphasis"]
+
+
+def test_a_quoted_paragraph_over_several_lines_is_one_paragraph(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    quoted = tmp_path / "quoted.md"
+    quoted.write_text("> The mean $\\boldsymbol{\\mu}_x$ and\n> the size $N_{b}$.\n")
+    found = check_math.check_file(quoted, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+    apart = tmp_path / "apart.md"
+    apart.write_text(
+        "The mean $\\boldsymbol{\\mu}_x$.\n"
+        "> The size $N_{b}$.\n"
+        ">\n"
+        "> The noise $\\sigma_y$.\n"
+        "> > The step $\\alpha_k$.\n"
+    )
+    assert check_math.check_file(apart, check_math.Target.github, []) == []
