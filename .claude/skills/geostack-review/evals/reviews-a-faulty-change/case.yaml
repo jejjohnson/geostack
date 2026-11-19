@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-a-faulty-change
+expected_outcome: |
+  A review in the CODE_REVIEW.md format that finds the local package, the re-implemented reader, the committed .ipynb, the literals and the unseeded split, the statistics fitted on all the data, the incomplete stage with a tracked output directory and no metrics, and the script that runs on import.
