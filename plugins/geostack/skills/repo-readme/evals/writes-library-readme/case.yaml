@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-library-readme
+expected_outcome: |
+  A README in the standard's section order: the centred header with a tagline naming the upstream libraries and badges only for the two workflows that exist, an opening that starts from the problem and gives the central equation with shapes, no embed for the three schematics, which are not drawn yet, with the hand-over saying which are owed and where each goes, five to seven traceable highlights, a core-idea table, an install section that matches pyproject.toml and says it is not on PyPI, one quickstart in code-sketch form that runs as written with its real printed output, and module, ecosystem, layout, development, references and license sections that name only what the repo has.

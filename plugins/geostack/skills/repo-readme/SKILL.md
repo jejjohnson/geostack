@@ -5,7 +5,7 @@ description: Eman's README standard for his JAX library repos (argminax, vardax 
 
 # Library README standard
 
-Draft 2 · 18 Nov 2026 · argminax's README is the standard: its text from argminax PRs #76 and #82, and its three schematics (overview, role ladder, dependencies), which live in geostack. Draft 1 took the text from vardax's README and argminax PR #76.
+Draft 3 · 19 Nov 2026 · a README written before its figures exist leaves them out and says so, a highlight is checked against the code path and not the docstring, the central equation is one expression, and rungs named in prose follow the role-ladder test. argminax's README is the standard: its text from argminax PRs #76 and #82, and its three schematics (overview, role ladder, dependencies), which live in geostack. Draft 1 took the text from vardax's README and argminax PR #76.
 
 A library README answers four questions in this order: what problem the library solves, what the one idea is, how to install it, and what a first run looks like. Everything else (derivations, second examples, variants, calling conventions, training loops) goes to the docs quickstart, and the README links there.
 
@@ -81,13 +81,13 @@ Each heading starts with one emoji. Headings are plain names, never "Title: Subt
 Two to four short paragraphs with no heading, in this order:
 
 1. **The problem**, in the reader's terms, before the library's name: "A retrieval is not finished when the optimiser stops." Then what the library treats as its central object.
-2. **The central equation** in a `math` fence, with every symbol defined and given its shape in the sentence after it.
+2. **The central equation** in a `math` fence, with every symbol defined and given its shape in the sentence after it. It is one expression: a second result (the prediction, the evidence) goes in the core-idea table, never beside the first with `\qquad`, which `check_math.py` rejects for GitHub.
 3. **A sketch** of three to five lines in `style-code-sketch` form showing the library's main calls. It may use names the quickstart defines; its shapes header says so.
 4. **Composed, not coded**: one paragraph naming each upstream library with a link and saying what the package takes from it ("its solvers are optimistix solvers, so `optx.minimise` keeps working").
 
 ## 4. Highlights
 
-Five to seven bullets, each `- <emoji> **<Label>**: <one sentence>.` Each bullet states a capability that ships today and can be traced to a public name. No adjectives without a fact behind them, and no claim about speed or scale unless a benchmark in the repo measured it.
+Five to seven bullets, each `- <emoji> **<Label>**: <one sentence>.` Each bullet states a capability that ships today and can be traced to a public name. No adjectives without a fact behind them, and no claim about speed or scale unless a benchmark in the repo measured it. Read the claim off the code path, not off a docstring: if a solver's docstring says "matrix-free" and the function that calls it builds the dense matrix first, the README does not repeat the word.
 
 ## 5. The core idea
 
@@ -127,7 +127,7 @@ The docs page keeps the same notation as the README. When the move touches a pag
 
 ## 9. The tables at the bottom
 
-- **What else is in the box**: `Module | Symbols | Notes`, or `Area | Symbols | Notes` when the package has one public module. Every name comes from the module's `__all__` on `main`.
+- **What else is in the box**: `Module | Symbols | Notes`, or `Area | Symbols | Notes` when the package has one public module. Every name comes from the module's `__all__` on `main`. A sentence that names rungs in prose places them by the `role-ladder` §2 test, as the figure does: a class that holds fitted state is a ③ model and not a structure, and the function that builds that state is setup and not an algorithm.
 - **Tutorials**: `# | Tutorial | What it shows`, linking each notebook.
 - **Documentation**: bold link, colon, what the reader finds there.
 - **Ecosystem**: `Concern | Owner`, one row per upstream library the package extends or composes, with links. Below it, one sentence on the dependency direction and the consumers, with their live status ("their switch-over is Wave 4 (#12)"), checked against the issue before writing.
@@ -179,7 +179,7 @@ and one slab per upstream library the package extends, saying what it takes from
 
 **Making them.** The scripts use cyclopts and loguru and run with `uv run --no-project --with …` as their docstrings say. Render every figure in Chromium before committing, both themes for the SVGs: cairosvg mis-spaces bold `tspan` runs, so its previews are not a check. The overview's PNG needs Chromium anyway; where it cannot find `libgbm.so.1`, take it from conda-forge with `pixi exec -s libgbm`.
 
-**Embedding them.** Merge the geostack PR first: the library's docs build downloads remote images, and a 404 fails a strict build. Then embed from geostack's `main`:
+**Embedding them.** Merge the geostack PR first: the library's docs build downloads remote images, and a 404 fails a strict build. A README written before its figures are on geostack's `main` leaves the three embeds out, never puts a local image or a dead URL in their place, and says in the hand-over and the PR which figures are owed and where each goes. Then embed from geostack's `main`:
 
 ```html
 <p align="center"><img src="https://raw.githubusercontent.com/jejjohnson/geostack/main/docs/images/libraries/<pkg>_overview/<pkg>_overview.png" alt="<what it shows>" width="100%"></p>
@@ -217,8 +217,8 @@ Both scripts come with the `style-math` and `eman-prose-tech` skills. Without th
 
 - [ ] Sections in the order of §1; optional ones only where the material exists.
 - [ ] The tagline, the opening and the ecosystem table name every upstream library the package extends.
-- [ ] One central equation, every symbol defined with its shape.
-- [ ] Highlights traceable to public names; no unmeasured claims.
+- [ ] One central equation, one expression in its fence, every symbol defined with its shape.
+- [ ] Highlights traceable to public names and true of the code path; no unmeasured claims.
 - [ ] One runnable quickstart in `style-code-sketch` form, with its real printed output.
 - [ ] Derivations, later examples and training loops moved to the docs quickstart, which uses the same notation.
 - [ ] Every table name in `__all__`, every URL 200, every status claim checked live.

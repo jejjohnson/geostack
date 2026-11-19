@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: plans-three-schematics
+expected_outcome: |
+  A plan for the overview, the role ladder and the dependency figure: the overview's four columns and its slabs with a title that says the idea, the role ladder's rows highest first with their role and grammar word and chips from __all__, the rungs krigax leaves out, the lineax floor in a dashed side box and a built-on row, the dependency figure's cards for plumax and (dashed, through its extra) pyrox with the modules or names each uses and a strip of what krigax builds on, the geostack folders and scripts, the Chromium render in both themes, and the rule that the geostack PR merges before the README embeds them.
