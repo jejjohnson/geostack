@@ -21,6 +21,7 @@ from _macros import (
     MACROS_FILE,
     Span,
     fenced_lines,
+    indented_code_lines,
     load_macros,
     math_spans,
 )
@@ -195,22 +196,24 @@ def check_span(span: Span, target: Target, macro_names: list[str]) -> list[Findi
     return found
 
 
-def _delimiter_roles(text: str, at: int) -> tuple[bool, bool]:
-    """Whether the ``_`` or ``*`` at ``at`` can open and close emphasis (CommonMark)."""
-    before = text[at - 1] if at > 0 else " "
-    after = text[at + 1] if at + 1 < len(text) else " "
+def _delimiter_roles(text: str, start: int, end: int) -> tuple[bool, bool]:
+    """Whether the run of ``_`` or ``*`` at ``text[start:end]`` can open and close
+    emphasis (CommonMark's left- and right-flanking rules)."""
+    before = text[start - 1] if start > 0 else " "
+    after = text[end] if end < len(text) else " "
     before_space, after_space = before.isspace(), after.isspace()
     before_punct = not before_space and not before.isalnum()
     after_punct = not after_space and not after.isalnum()
     left = not after_space and (not after_punct or before_space or before_punct)
     right = not before_space and (not before_punct or after_space or after_punct)
-    if text[at] == "*":
+    if text[start] == "*":
         return left, right
     return left and (not right or before_punct), right and (not left or after_punct)
 
 
 def _emphasis_in_text(text: str) -> bool:
-    """True when Markdown would pair two delimiters, one of them in plain ``$…$``."""
+    """True when Markdown would pair two delimiter runs, one of them in plain
+    ``$…$``. A run is one or more ``_`` or ``*``, so strong emphasis counts."""
     spans = [m.span(2) for m in INLINE.finditer(text) if not m.group(1)]
     masked = CODE_SPAN.sub(lambda m: " " * len(m.group(0)), text)
 
@@ -219,11 +222,9 @@ def _emphasis_in_text(text: str) -> bool:
 
     for mark in "_*":
         opener: int | None = None
-        for found in re.finditer(r"(?<![\\" + mark + "])" + re.escape(mark), masked):
-            at = found.start()
-            if masked[at + 1 : at + 2] == mark:
-                continue
-            can_open, can_close = _delimiter_roles(masked, at)
+        for run in re.finditer(r"(?<!\\)" + re.escape(mark) + "+", masked):
+            at = run.start()
+            can_open, can_close = _delimiter_roles(masked, at, run.end())
             if can_close and opener is not None and (in_maths(opener) or in_maths(at)):
                 return True
             if can_close and opener is not None:
@@ -242,6 +243,7 @@ def emphasis_findings(text: str) -> list[Finding]:
     """Paragraphs and table cells where GitHub's Markdown would eat inline maths."""
     findings: list[Finding] = []
     fenced = fenced_lines(text)
+    fenced |= indented_code_lines(text, fenced)
     paragraph: list[str] = []
     start = 0
 
