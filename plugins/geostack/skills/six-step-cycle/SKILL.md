@@ -5,7 +5,7 @@ description: The six-step cycle of the GeoStack, the path from a simple model to
 
 # The six-step cycle
 
-Draft 2 · 19 Nov 2026 · from the overview's third axis (`docs/overview.md`, "The six-step cycle"), the report that ran it on the pinned code (`docs/reports/17_cycle.md`) and the esmax page that writes it in probabilities (`docs/geomodels/esmax/ocean/01_six_step_cycle.md`), all @ `854276a`. The rule for skipping steps 3 and 4 and the check of an emulator's derivative are from plumax's design pages (`docs/design/01_tier1_gaussian.md`, `04_rtm_stack.md`). Where this file and those pages disagree, the pages win, and the report wins over the overview.
+Draft 3 · 19 Nov 2026 · from the overview's third axis (`docs/overview.md`, "The six-step cycle"), the report that ran it on the pinned code (`docs/reports/17_cycle.md`) and the esmax page that writes it in probabilities (`docs/geomodels/esmax/ocean/01_six_step_cycle.md`), all @ `854276a`. The rule for skipping steps 3 and 4 and the check of an emulator's derivative are from plumax's design pages (`docs/design/01_tier1_gaussian.md`, `04_rtm_stack.md`). Where this file and those pages disagree, the pages win, and the report wins over the overview.
 
 The six-step cycle is the journey from research to production. It is the third of the stack's three organising axes; the other two are `data-levels` and `modeling-cycle`, both in this plugin.
 
@@ -98,6 +98,16 @@ Each learned density is trained by a KL divergence to the distribution it replac
 
 **Steps 3 and 4 may be skipped; step 2 may not.** The emulator exists to make an expensive forward model cheap. Where the forward model is already cheap and the cost is the sampler, as in plumax's Gaussian plume, the route goes from step 2 to step 5, which is trained on simulations and does not need step 4. Time the classical route first to see where the cost is, say that the steps were skipped and what would bring them back, and state what the skipped steps would have been trained on and scored against, so the route is still complete when a costlier model replaces the simple one.
 
+**To write the plan down**, give a table of highlights and put the detail below it. The table has one row per step and a few words per cell: the step, what it is, what it is trained on, its reference, and whether it ships. Nothing in a cell runs to a second sentence. Below the table, each step gets a paragraph that opens with its name in bold and then says what the table could not: the checks and their thresholds, what was found in the library, what is uncertain. Caveats that belong to no single step follow in the same form.
+
+```markdown
+| Step | What it is | Trained on | Reference | Ships |
+|---|---|---|---|---|
+| 2 · Classical inference | NUTS posterior of $Q$ | nothing | none; it is the oracle | yes |
+
+**Step 2 · Classical inference.** The posterior of the emission rate by NUTS, with the same noise model as the simulator. Before step 5 starts, it recovers a known rate on a synthetic release and ...
+```
+
 **To review a claimed result**, ask which step it is, what it was trained on, which reference it was scored against, and how strong that reference is. The usual faults are these.
 
 - The emulator was scored against observations, which mixes its error with the model's and the instrument's.
@@ -122,4 +132,5 @@ Each learned density is trained by a KL divergence to the distribution it replac
 - [ ] The classical method exists and runs before anything learned is trusted, and still runs afterwards.
 - [ ] A fast inversion is scored on mean and spread, against the oracle and against the truth, and its cost per query is measured.
 - [ ] A skipped step is named, with the reason and what would bring it back.
+- [ ] A written plan is a table of highlights, a few words per cell, with a bold-led paragraph per step below it.
 - [ ] After a step changes, what depends on it is rerun.
