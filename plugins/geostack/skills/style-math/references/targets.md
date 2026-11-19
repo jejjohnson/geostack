@@ -72,7 +72,7 @@ extra_javascript:
 
 ## Unicode in code comments and docstrings
 
-Code comments carry the equation above the line that computes it (`style-code-sketch`), in plain Unicode; the shape column carries what bold carries in maths.
+Code comments carry the equation above the line that computes it (`style-python` §7), in plain Unicode. This section is the one place that says which characters to use; `style-python` and `style-code-sketch` point here. In a sketch, the shape comment carries what bold carries in maths (`style-code-sketch` §2).
 
 | LaTeX | Unicode | LaTeX | Unicode |
 | --- | --- | --- | --- |
@@ -90,7 +90,8 @@ Code comments carry the equation above the line that computes it (`style-code-sk
 
 ```python
 # Λ_x|y = Hᵀ Λ_ε H + Λ_x
-posterior_precision = gauss_newton_term + prior_precision      # (D_x, D_x)
+# → (D_x, D_x)
+posterior_precision = gauss_newton_term + prior_precision
 ```
 
 ## Verified

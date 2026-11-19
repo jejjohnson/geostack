@@ -90,12 +90,12 @@ Problems the examples already use, as a place to start:
 
 - **Every display equation is on one source line and labelled**: `$$ … $$ (eq-<chapter>-<name>)`. It is followed by a sentence starting "where" that gives each new symbol and its shape, and it is cited as `[](#eq-…)`. The frontmatter `numbering: enumerator: "N.%s"` numbers it with the chapter.
 - **The notation is `style-math`'s**, with the kind-named macros (`\vect`, `\mat`, `\gvect`, `\gmat`, `\op`) installed in `myst.yml`. A library that departs from it says so at the top of its notation page with the reason, as integrix does for $f$ (the integrand there, the dynamics elsewhere).
-- **The notation page** has one labelled table per topic with the columns Symbol, Shape, Meaning and In code, where "In code" is the argument or attribute that holds the symbol. It ends with a "Classic letters" table that maps the literature's letters to the house ones, so a reader coming from a paper can find their $\mat{K}$. Physical symbols carry units in the Shape column. Copy from integrix `notation.md` for the tables and filterax `notation.md` for the classic letters.
+- **The notation page** has one labelled table per topic with the columns Symbol, Shape, Meaning and In code, where "In code" is the argument or attribute that holds the symbol. It ends with a "Classic letters" table that maps the literature's letters to the house ones, so a reader coming from a paper can find their $\mathbf{K}$. Physical symbols carry units in the Shape column. Copy from integrix `notation.md` for the tables and filterax `notation.md` for the classic letters.
 - **A symbol used on one page only** is declared in a table on that page, not on the notation page.
 
 ## 5. Code on the page
 
-Every block follows `style-code-sketch`: a `# Shapes:` header, the equation in Unicode above each line, a shape comment on each array, and a status marker (`# today (<pkg>)`, `# user`) above each call into the stack or each function the reader would write.
+Every block follows `style-code-sketch`: a `# Shapes:` header, and above each line its status marker, its equation and its shape. A chapter uses two markers: `# today (<pkg>)` on a call into the stack and `# user` on a function the reader would write.
 
 ````markdown
 ```{code-block} python
@@ -150,9 +150,9 @@ The three examples predate this skill. Each change below is a docs-only PR in th
 
 | Library | Already meets | To change |
 |---|---|---|
-| filterax | folder, section order, labelled code blocks, cite roles and `.bib` files, one sentence per line, a test that runs every block | outputs move from "It prints …" sentences into `text` fences and the test checks them; API links become `xref:`; cited tables get labels; the hand-written `references.md` gives way to the bibliography; method chapters move from abstract states to a real problem that runs through the chapter; "Layer 1" and "Layer 2" become rung names; the derivations of what gaussx computes move to gaussx's reference once it has the chapter |
-| vardax | section order of the method chapters, labelled code blocks, the notation page | chapters move to `docs/math/`; hard-wrapped paragraphs are unwrapped; per-chapter reference lists become cite roles on `.bib` files; outputs move into `text` fences; a `tests/test_math_pages.py` is added; chapter mentions become links; decision numbers leave the chapters; method chapters move from abstract states to a real problem |
-| integrix | real problems throughout, `text` output fences checked by the test, labelled tables, `xref:` links, units | the folder is renamed from `docs/theory/` to `docs/math/`; code blocks get captions and labels; author-and-year mentions become cite roles on `.bib` files; method and cross-cutting chapters gain "When it breaks" and "See also" where they lack them |
+| filterax | folder, section order, labelled code blocks, cite roles and `.bib` files, one sentence per line, a test that runs every block | shape comments move from beside the line to above it; outputs move from "It prints …" sentences into `text` fences and the test checks them; API links become `xref:`; cited tables get labels; the hand-written `references.md` gives way to the bibliography; method chapters move from abstract states to a real problem that runs through the chapter; "Layer 1" and "Layer 2" become rung names; the derivations of what gaussx computes move to gaussx's reference once it has the chapter |
+| vardax | section order of the method chapters, labelled code blocks, the notation page | shape comments move above the line; chapters move to `docs/math/`; hard-wrapped paragraphs are unwrapped; per-chapter reference lists become cite roles on `.bib` files; outputs move into `text` fences; a `tests/test_math_pages.py` is added; chapter mentions become links; decision numbers leave the chapters; method chapters move from abstract states to a real problem |
+| integrix | real problems throughout, `text` output fences checked by the test, labelled tables, `xref:` links, units | shape comments move above the line; the folder is renamed from `docs/theory/` to `docs/math/`; code blocks get captions and labels; author-and-year mentions become cite roles on `.bib` files; method and cross-cutting chapters gain "When it breaks" and "See also" where they lack them |
 
 functax has guide pages and no mathematical reference yet; its reference is planned from §1, and its guides keep their job of showing how to call the library.
 

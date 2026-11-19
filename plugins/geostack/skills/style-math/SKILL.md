@@ -9,6 +9,7 @@ Draft 1 · 29 Oct 2026 · built round by round with Eman.
 
 Maths reads the same in every output format: the letter says what kind of object a symbol is, the subscript says which variable it belongs to, and every symbol comes with its shape.
 This file holds the principles, the core symbols, a quick reference and the vocabularies; each topic's full rules are in `references/`.
+How a symbol becomes a variable name or a dim name in code is in `style-python` (§3 and §6), and pseudocode is in `style-code-sketch`; neither is repeated here.
 
 ## How to use it
 

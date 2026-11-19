@@ -5,10 +5,9 @@ description: Eman's Python house style for JAX/Equinox scientific code — docst
 
 # Python house style
 
-Draft 3 · 29 Oct 2026 · built from five rounds of choices; notation aligned with `style-math`.
+Draft 4 · 19 Nov 2026 · the open questions are settled, and what `style-math` and `style-code-sketch` own is pointed to instead of repeated.
 
-Pseudocode in READMEs, design pages and issues follows the `style-code-sketch` skill, which builds on this one.
-Symbols in comments and docstrings follow the `style-math` skill; this file says how they meet the code.
+Three skills share the ground, and each rule lives in one of them. `style-math` owns the symbols, their roles, the sizes and how maths is written in Unicode. This skill owns how they meet real code: the dim names, the variable names, the comments, the modules. `style-code-sketch` builds on this one and owns what only pseudocode needs: the shapes header, the shape comment and the status markers.
 
 Code reads as maths first and Python second.
 Each line does one thing, the equation it computes sits above it, and the types carry the shapes.
@@ -38,8 +37,8 @@ from jaxtyping import Array, Bool, Float, PRNGKeyArray
 ## 3. Types and shapes
 
 - Every array argument and return is annotated with jaxtyping and named dims: `Float[Array, "obs channel"]`.
-- Shapes live in types, never in comments.
-- Dim names come from one vocabulary, shared with the maths sizes of `style-math` and with xarray dims:
+- Shapes live in types, never in comments. A sketch is the one place that writes a shape in a comment, above the line (`style-code-sketch` §2).
+- Dim names come from one vocabulary, shared with xarray dims. Each stands for one maths size, and the sizes themselves are defined in `style-math` (`references/indices.md`):
 
 | Dim | Maths size | Meaning |
 | --- | --- | --- |
@@ -49,14 +48,13 @@ from jaxtyping import Array, Bool, Float, PRNGKeyArray
 | `batch`, `patch`, `tile` | $N_\text{batch}$, $N_\text{patch}$, $N_\text{tile}$ | pieces of a dataset or domain |
 | `time` | $N_{\mathcal{T}_x}$ | model time steps |
 | `cell` | $N_{\Omega_x}$ | grid cells where the state lives |
-| `obs` | $N_{\Omega_y}$ | observation points (pixels, stations) |
+| `obs` | $N_{\Omega_y}$, or $D_y$ | observation points (pixels, stations); the whole observation vector when it is flat and not split into points and channels |
 | `channel` | $N_{\mathcal{S}_y}$ | spectral channels |
 | `var`, `level` | $N_{\mathcal{V}_x}$, $N_{\mathcal{P}_x}$ | physical variables, vertical levels |
 | `inducing` | $N_{\mathcal{I}}$ | inducing points |
 | `state`, `latent`, `param` | $D_x$, $D_z$, $D_\theta$ | lengths of flattened vectors |
-| `obs` | $D_y$ | length of a flattened observation vector, when it is not split into points and channels |
 
-  Library carriers keep their own dim strings (`GeoArray["patch band y x"]`); those names stay inside the type and never reach an equation, where space is $\mathbf{s}$.
+  Library carriers keep their own dim strings (`GeoArray["patch band y x"]`; the forms are in `style-code-sketch` §2); those names stay inside the type and never reach an equation, where space is $\mathbf{s}$.
 - Types are checked at runtime in tests only, through the import hook in `conftest.py`:
 
 ```python
@@ -94,7 +92,7 @@ with install_import_hook("radtrax", "beartype.beartype"):
 
 - Descriptive names everywhere: `posterior_precision`, not `Lam`.
 - The symbol appears only in the equation comment above the line, so that comment is mandatory on every mathematical line.
-- Names come from the symbol's role and subscript, so each name points back to one symbol:
+- Names come from the symbol's role and subscript, so each name points back to one symbol. The symbols and their roles are `style-math` §3 and §4; this table gives each its name in code, and a symbol added there gets its name here:
 
 | Symbol | Name | Symbol | Name |
 | --- | --- | --- | --- |
@@ -110,7 +108,7 @@ with install_import_hook("radtrax", "beartype.beartype"):
 ## 7. Comments
 
 - Comments go above the line, never beside it.
-- A unicode equation above each mathematical operation, in the notation of `style-math`: `# Λ_x|y = Hᵀ Λ_ε H + Λ_x`. Subscripts are ASCII `_` unless Unicode has the character (`xₖ`, `x₀`); no bold characters (`references/targets.md` in that skill).
+- A unicode equation above each mathematical operation, in the notation of `style-math`: `# Λ_x|y = Hᵀ Λ_ε H + Λ_x`. Which characters to use is in that skill's `references/targets.md`.
 - Step headers split a long function into stages: `# --- whiten ---`.
 - Elsewhere, comments say *why*, never *what*.
 
@@ -131,6 +129,7 @@ Google layout, types left to jaxtyping:
 - Static checks on fields in `__check_init__`.
 - Value checks on traced arrays with `eqx.error_if`, so they survive `jit`.
 - One base class per package (`RadtraxError`); subclasses are named by what failed (`TableRangeError`, `ConvergenceError`, `GeometryError`).
+- Each error also inherits the closest standard-library exception (`TableRangeError(RadtraxError, ValueError)`), so a caller who knows nothing of the package still catches it. integrix does this for every error.
 
 ## 10. Precision
 
@@ -143,12 +142,16 @@ Tests that need float64 enable x64 themselves.
 Objects round-trip through `get_config()` / `from_config()`; arrays are excluded.
 Applications build configs with hydra-zen on top.
 
-## 12. DRY
+## 12. Scripts and CLIs
+
+`cyclopts` for arguments and `loguru` for output. Never argparse, click or typer, and never `print` for progress or stdlib `logging`.
+
+## 13. DRY
 
 Extract only real duplicates: code that must change together.
 Code that merely looks alike stays separate.
 
-## 13. Tests
+## 14. Tests
 
 Every public forward function gets all four:
 
@@ -298,13 +301,11 @@ class MatchedFilter(eqx.Module):
 - [ ] Lines within 88 columns.
 - [ ] Docstring: summary, equation, numbered algorithm, untyped Args, 2–3 doctested Examples.
 - [ ] Field checks in `__check_init__`, array checks with `eqx.error_if`.
-- [ ] Errors subclass the package base and name what failed.
+- [ ] Errors subclass the package base and the closest builtin, and name what failed.
 - [ ] No silent dtype casts.
 - [ ] `key` keyword-only and last.
 - [ ] Oracle, property, gradient and transform tests for each public forward.
 
-## Open questions
+## Not covered yet
 
-- Domain errors: also inherit the matching builtin (`TableRangeError(RadtraxError, ValueError)`)?
-- Notebooks: jupytext percent pairs with executed `.ipynb` (gaussx's docs rule), or no pairs (the geo-ml memory)?
-- Not yet covered: control flow under `jit` (`jnp.where` vs `lax.cond`), logging and warnings, CLI entry points, public `__all__`.
+Control flow under `jit` (`jnp.where` against `lax.cond`), warnings, and public `__all__`. Notebooks follow each repository's own rule in its `AGENTS.md`, since the repositories differ on committing executed `.ipynb` files.

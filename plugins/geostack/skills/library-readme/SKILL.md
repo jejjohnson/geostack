@@ -108,7 +108,7 @@ The section that makes the library one idea instead of a list of functions. Name
 
 - **One example**, small enough to run on a laptop in seconds, with toy data built in the block.
 - **Prose before the block** defines every symbol the comments use, in `style-math` GitHub form.
-- **The block follows `style-code-sketch`**: a shapes header, the equation above each mathematical line, a status marker on every call into the stack, the shape column on bare assignments, einx for contractions, one operation per line, 88 columns.
+- **The block follows `style-code-sketch`**: a shapes header, the equation above each mathematical line, a status marker on every call into the stack, the shape comment above bare assignments, einx for contractions, one operation per line, 88 columns.
 - **It runs as written** and ends with one `print`.
 - **"This prints `...`"** follows the block, with the real output pasted from a run, and a sentence that reads each number.
 - **One closing paragraph** says what transfers ("swap `forward` for a radiative transfer code ...") and links the docs quickstart for the rest.
