@@ -269,3 +269,12 @@ def test_write_refuses_a_checkout_behind_its_default_branch(tmp_path) -> None:
     git(origin, "commit", "-q", "-m", "three")
     git(tmp_path / "clone", "fetch", "-q")
     assert st.behind(tree) == ["lib is behind its default branch in 1 files"]
+    # a feature checkout's own changes are not the default branch's
+    clone = tmp_path / "clone"
+    git(clone, "checkout", "-q", "-b", "feature", "origin/main")
+    (clone / "new.py").write_text("", encoding="utf-8")
+    git(clone, "add", "new.py")
+    git(clone, "commit", "-q", "-m", "four")
+    git(origin, "commit", "-q", "--allow-empty", "-m", "five")
+    git(clone, "fetch", "-q")
+    assert st.behind(tree) == []

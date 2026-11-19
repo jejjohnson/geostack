@@ -641,9 +641,14 @@ def behind(tree: Tree) -> list[str]:
     for repo, node in sorted(tree.nodes.items()):
         if git(node.path, "rev-list", "--count", "HEAD..origin/HEAD") in (None, "0"):
             continue
-        files = git(
-            node.path, "diff", "--name-only", "HEAD", "origin/HEAD", "--", *READ
-        )
+        # what the default branch changed since the checkout left it, so that a
+        # feature checkout's own changes do not count; a shallow clone has no
+        # merge base, and there the two ends are compared directly
+        files = git(node.path, "diff", "--name-only", "HEAD...origin/HEAD", "--", *READ)
+        if files is None:
+            files = git(
+                node.path, "diff", "--name-only", "HEAD", "origin/HEAD", "--", *READ
+            )
         if files:
             count = len(files.splitlines())
             found.append(f"{repo} is behind its default branch in {count} files")
