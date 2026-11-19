@@ -1,6 +1,6 @@
 ---
 name: library-readme
-description: Eman's README standard for his JAX library repos (argminax, vardax and the rest of the GeoStack): centred header, one central equation, an overview schematic, highlights, the core-idea table, install, one runnable code-sketch quickstart, module and ecosystem tables with a role-ladder figure and a dependency figure drawn in geostack, with everything else moved to the docs quickstart. Use when writing, rebuilding or reviewing a library README, or drawing a library's schematics.
+description: Eman's README standard for his JAX library repos (argminax, vardax and the rest of the GeoStack): centred header, one central equation, an overview schematic, highlights, the core-idea table, install, one runnable style-code-sketch quickstart, module and ecosystem tables with a role-ladder figure and a dependency figure drawn in geostack, with everything else moved to the docs quickstart. Use when writing, rebuilding or reviewing a library README, or drawing a library's schematics.
 ---
 
 # Library README standard
@@ -9,7 +9,7 @@ Draft 2 · 18 Nov 2026 · argminax's README is the standard: its text from argmi
 
 A library README answers four questions in this order: what problem the library solves, what the one idea is, how to install it, and what a first run looks like. Everything else (derivations, second examples, variants, calling conventions, training loops) goes to the docs quickstart, and the README links there.
 
-It builds on four other skills, which still apply in full: `eman-prose-tech` (docs register) for every sentence, `eman-style-math` (GitHub target) for every symbol, `code-sketch` for every code block and `python-style` for the code inside it.
+It builds on four other skills, which still apply in full: `eman-prose-tech` (docs register) for every sentence, `style-math` (GitHub target) for every symbol, `style-code-sketch` for every code block and `style-python` for the code inside it.
 
 This standard is for libraries. A research project made from the GeoStack template keeps the template's README layout.
 
@@ -82,7 +82,7 @@ Two to four short paragraphs with no heading, in this order:
 
 1. **The problem**, in the reader's terms, before the library's name: "A retrieval is not finished when the optimiser stops." Then what the library treats as its central object.
 2. **The central equation** in a `math` fence, with every symbol defined and given its shape in the sentence after it.
-3. **A sketch** of three to five lines in `code-sketch` form showing the library's main calls. It may use names the quickstart defines; its shapes header says so.
+3. **A sketch** of three to five lines in `style-code-sketch` form showing the library's main calls. It may use names the quickstart defines; its shapes header says so.
 4. **Composed, not coded**: one paragraph naming each upstream library with a link and saying what the package takes from it ("its solvers are optimistix solvers, so `optx.minimise` keeps working").
 
 ## 4. Highlights
@@ -107,8 +107,8 @@ The section that makes the library one idea instead of a list of functions. Name
 ## 7. The quickstart
 
 - **One example**, small enough to run on a laptop in seconds, with toy data built in the block.
-- **Prose before the block** defines every symbol the comments use, in `eman-style-math` GitHub form.
-- **The block follows `code-sketch`**: a shapes header, the equation above each mathematical line, a status marker on every call into the stack, the shape column on bare assignments, einx for contractions, one operation per line, 88 columns.
+- **Prose before the block** defines every symbol the comments use, in `style-math` GitHub form.
+- **The block follows `style-code-sketch`**: a shapes header, the equation above each mathematical line, a status marker on every call into the stack, the shape column on bare assignments, einx for contractions, one operation per line, 88 columns.
 - **It runs as written** and ends with one `print`.
 - **"This prints `...`"** follows the block, with the real output pasted from a run, and a sentence that reads each number.
 - **One closing paragraph** says what transfers ("swap `forward` for a radiative transfer code ...") and links the docs quickstart for the rest.
@@ -196,7 +196,7 @@ The dependency figure is embedded like the role ladder. The library's design pag
 
 ## 11. Maths and prose
 
-- Maths is the `eman-style-math` GitHub target: no macros, inline `` $`…`$ ``, display in a `math` fence, `\mid` inside table cells, one expression per line. The letters match the package's docstrings.
+- Maths is the `style-math` GitHub target: no macros, inline `` $`…`$ ``, display in a `math` fence, `\mid` inside table cells, one expression per line. The letters match the package's docstrings.
 - Prose is the `eman-prose-tech` docs register: "we" for the maintainers, plain words, parentheses for glosses, no em dashes. One paragraph per line, never hard-wrapped.
 - No ASCII box-and-arrow diagrams; a figure is one of the schematics of §10, an image from `docs/assets/` (the logo) or a Mermaid block.
 
@@ -206,12 +206,12 @@ Run these before the README ships:
 
 1. Extract every Python block and run the runnable ones against the repo's `main`, in float64 if the package's tests use it. Paste the printed output into the "This prints" sentence.
 2. Lint and format each block with the repo's own ruff config, by passing it on stdin with a path inside the repo: `ruff check --stdin-filename docs/readme_block.py < block.py` (ruff's ambiguous-Unicode rule, RUF003, may be ignored for maths comments).
-3. Check the maths with `check_math.py` from the `eman-style-math` skill, on the README with `--target github` and on any docs page the change touched with `--target myst`. The script declares its dependencies inline, so `uv run` installs them: `uv run ~/.claude/skills/eman-style-math/scripts/check_math.py README.md --target github`.
+3. Check the maths with `check_math.py` from the `style-math` skill, on the README with `--target github` and on any docs page the change touched with `--target myst`. The script is in that skill's `scripts/` folder, under the base directory given when `style-math` loads, and it declares its dependencies inline, so `uv run` installs them: `uv run <style-math folder>/scripts/check_math.py README.md --target github`.
 4. Check the prose with `style_check.py` from the `eman-prose-tech` skill, which needs only the standard library: `python ~/.claude/skills/eman-prose-tech/scripts/style_check.py prose.md --register docs`, on the prose with code blocks and HTML removed. Tables and the reference list skew its sentence metrics, so read the flags instead of chasing the bands.
 5. Check every name in the tables and on the figures against `__all__`, every URL (the figure URLs included) with `curl -s -o /dev/null -w '%{http_code}'`, and every status claim ("ships", "Wave 4") against the live issue.
 6. Build the docs when the change touched a docs page.
 
-Both scripts come with the `eman-style-math` and `eman-prose-tech` skills. Without them, do steps 3 and 4 by hand against §11 (no macros, inline `` $`…`$ ``, display maths in `math` fences, `\mid` in table cells, no em dashes, no hard wraps), and say in the PR that the two scripts were not run.
+Both scripts come with the `style-math` and `eman-prose-tech` skills. Without them, do steps 3 and 4 by hand against §11 (no macros, inline `` $`…`$ ``, display maths in `math` fences, `\mid` in table cells, no em dashes, no hard wraps), and say in the PR that the two scripts were not run.
 
 ## Checklist
 
@@ -219,7 +219,7 @@ Both scripts come with the `eman-style-math` and `eman-prose-tech` skills. Witho
 - [ ] The tagline, the opening and the ecosystem table name every upstream library the package extends.
 - [ ] One central equation, every symbol defined with its shape.
 - [ ] Highlights traceable to public names; no unmeasured claims.
-- [ ] One runnable quickstart in `code-sketch` form, with its real printed output.
+- [ ] One runnable quickstart in `style-code-sketch` form, with its real printed output.
 - [ ] Derivations, later examples and training loops moved to the docs quickstart, which uses the same notation.
 - [ ] Every table name in `__all__`, every URL 200, every status claim checked live.
 - [ ] The three schematics of §10 drawn in geostack, rendered in Chromium in both themes, and embedded from geostack's `main` after the geostack PR merged; every chip in `__all__`, every edge in the dependency graph or on `main`.
