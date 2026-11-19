@@ -65,7 +65,7 @@
 <body>
 <div id="diagram">
   <div class="title">integrix — one integral, three operations</div>
-  <div class="subtitle">Every integral in the stack is one integral against a measure. A rule sums it, a scan keeps its running value, and a march steps it when the integrand depends on the solution. Adaptivity, adjoints and expectations are shared by all three, and everything is pure JAX, so jit, vmap and grad go through.</div>
+  <div class="subtitle">Every integral in the stack is one integral against a measure. A rule sums it, a scan keeps its running value, and a march steps it when the integrand depends on the solution. Adaptivity, adjoints and expectations cut across them, and everything is pure JAX, so jit, vmap and grad go through.</div>
 
   <div class="lane compute ix-obj" id="obj">
     <div class="lane-head"><span class="verb">one integral</span><span class="pkg">an integrand <span class="m">f</span> against a measure <span class="m">\mu</span> on a domain <span class="m">\Omega</span></span></div>
@@ -100,13 +100,13 @@
     <div class="lane cut ix-card" id="op-march">
       <div class="lane-head"><span class="verb">march</span><span class="ix-mod">integrix.march</span></div>
       <div class="ix-eq"><span class="m">\frac{\mathrm{d}\mathbf{y}}{\mathrm{d}t} = f(t, \mathbf{y})</span><br><span class="k">one step</span> <span class="m">\mathbf{y}_{n+1} = \Phi(\mathbf{y}_n, t_n, h)</span></div>
-      <div class="ix-desc">The integrand depends on the solution, so it is stepped. The Runge–Kutta and IMEX schemes are diffrax solvers; <code>run</code> marches those and the multistep schemes that carry history.</div>
+      <div class="ix-desc">The integrand depends on the solution, so it is stepped. Most steppers are diffrax solvers, so <code>diffeqsolve</code> takes them; <code>run</code> also marches the integrix steppers that carry history.</div>
       <div class="ix-names"><code>run</code><code>RK3SSP</code><code>RK4Classic</code><code>AB3Solver</code><code>IMEX_SSP2</code><code>SplitExplicitRKSolver</code><code>rk3_ssp_step</code></div>
     </div>
   </div>
 
   <div class="ix-band">
-    <div class="ix-band-head">shared by all three<span>each works with any rule, scan or march</span></div>
+    <div class="ix-band-head">cross-cutting<span>adaptivity refines a rule or a scan, adjoints run back through a scan or a march, and an expectation is an integral against a probability</span></div>
     <div class="ix-row">
       <div class="lane read ix-card" id="op-adapt">
         <div class="lane-head"><span class="verb">adapt</span><span class="ix-mod">integrix.adapt</span></div>
@@ -144,8 +144,8 @@
     </div>
     <div class="ix-slab">
       <div class="lib">lineax · optimistix</div>
-      <div class="what">the implicit solves of the IMEX step-size control</div>
-      <div class="list"><code>stable_step</code> · <code>imex_stepsize_controller</code> · JAX, Equinox, einx and jaxtyping under everything</div>
+      <div class="what">the Newton and GMRES solves behind <code>stable_step</code>, the IMEX step-size control</div>
+      <div class="list"><code>optx.Newton</code> · <code>lx.GMRES</code> · and JAX, Equinox, einx and jaxtyping under everything</div>
     </div>
   </div>
 </div>
