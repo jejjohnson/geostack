@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: plans-fast-inversion-route
+expected_outcome: |
+  A staged route that starts from the plume simulator and a classical inversion kept as the reference, then an emulator trained on simulations and scored against the simulator, the inversion rerun with the emulator and scored against the classical posterior, and an amortized map trained on simulations and scored against the classical posterior, with what the library ships today stated from its code.
