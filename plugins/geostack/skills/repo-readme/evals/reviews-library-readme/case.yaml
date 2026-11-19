@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-library-readme
+expected_outcome: |
+  A review that finds the section order, the tagline with no upstream library, the badges for workflows that do not exist, the opening that starts from the library and has no central equation, the ASCII diagram, the figure kept in the repo and the two missing schematics, the unmeasured speed claim, the names that are not in __all__, the title-and-subtitle heading, the derivation and the five equations, the wrong Python version and PyPI claim and the missing extras, the three examples and the training loop, the quickstart that is not in code-sketch form and has no printed output, the plain inline maths and \bm, the em dash and the hard wrap, the thin ecosystem table and the wrong consumer, the uncited reference, and the missing sections.
