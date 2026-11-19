@@ -45,7 +45,7 @@ not into a local package.
 |---|---|---|---|---|
 | GeoStack | `geostack/` | pipekit, geotoolz (uv workspaces; members under `packages/`; geotoolz holds xrtoolz too), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
 | GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, finitevolX, spectraldiffx | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
-| GeoML | `geoml/` | geonnax, kernellib, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn, -ssm), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
+| GeoML | `geoml/` | geonnax, kernellib, filterax, vardax, gauss_flows, xtremax, pyrox (a workspace: pyrox, -gp, -lgm, -nn, -ssm, -gauss), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
 | GeoModels | `geomodels/` | plumax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
 
 Edges between layers point down: GeoModels may import GeoML, GeoNumerics and

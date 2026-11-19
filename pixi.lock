@@ -2136,6 +2136,7 @@ environments:
       - pypi: ./references/geoml/kernellib
       - pypi: ./references/geoml/manipy
       - pypi: ./references/geoml/pyrox/packages/pyrox
+      - pypi: ./references/geoml/pyrox/packages/pyrox-gauss
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
@@ -2575,6 +2576,7 @@ environments:
       - pypi: ./references/geoml/kernellib
       - pypi: ./references/geoml/manipy
       - pypi: ./references/geoml/pyrox/packages/pyrox
+      - pypi: ./references/geoml/pyrox/packages/pyrox-gauss
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
@@ -3077,6 +3079,7 @@ environments:
       - pypi: ./references/geoml/kernellib
       - pypi: ./references/geoml/manipy
       - pypi: ./references/geoml/pyrox/packages/pyrox
+      - pypi: ./references/geoml/pyrox/packages/pyrox-gauss
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
@@ -3522,6 +3525,7 @@ environments:
       - pypi: ./references/geoml/kernellib
       - pypi: ./references/geoml/manipy
       - pypi: ./references/geoml/pyrox/packages/pyrox
+      - pypi: ./references/geoml/pyrox/packages/pyrox-gauss
       - pypi: ./references/geoml/pyrox/packages/pyrox-gp
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
@@ -19282,11 +19286,23 @@ packages:
   - watermark>=2.6.0 ; extra == 'colab'
   - pandas>=3.0.3 ; extra == 'colab'
   requires_python: '>=3.12'
+- pypi: ./references/geoml/pyrox/packages/pyrox-gauss
+  name: pyrox-gauss
+  requires_dist:
+  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.7.0
+  - numpyro>=0.21
+  - jax>=0.10.1
+  - equinox>=0.13.8
+  - lineax>=0.1.1
+  - einx>=0.4.3
+  - jaxtyping>=0.2.36
+  requires_python: '>=3.12'
 - pypi: ./references/geoml/pyrox/packages/pyrox-gp
   name: pyrox-gp
   requires_dist:
   - pyrox @ ./references/geoml/pyrox/packages/pyrox
-  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.6.15
+  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.7.0
+  - pyrox-gauss @ ./references/geoml/pyrox/packages/pyrox-gauss
   - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.22
   - functax[jax] @ git+https://github.com/jejjohnson/functax.git@v0.0.7
   - lineax>=0.1.1
@@ -19303,7 +19319,8 @@ packages:
   requires_dist:
   - pyrox @ ./references/geoml/pyrox/packages/pyrox
   - einx>=0.4.3
-  - gaussx[numpyro] @ git+https://github.com/jejjohnson/gaussx.git@v0.6.15
+  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.7.0
+  - pyrox-gauss @ ./references/geoml/pyrox/packages/pyrox-gauss
   - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.22
   - matfree>=0.6.0
   - numpyro>=0.21
@@ -19316,7 +19333,7 @@ packages:
   name: pyrox-nn
   requires_dist:
   - pyrox @ ./references/geoml/pyrox/packages/pyrox
-  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.6.15
+  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.7.0
   - kernellib @ git+https://github.com/jejjohnson/kernellib.git@v0.0.22
   - lineax>=0.1.1
   - geonnax @ git+https://github.com/jejjohnson/geonnax.git@v0.0.11
@@ -19337,7 +19354,8 @@ packages:
   name: pyrox-ssm
   requires_dist:
   - pyrox @ ./references/geoml/pyrox/packages/pyrox
-  - gaussx[numpyro] @ git+https://github.com/jejjohnson/gaussx.git@v0.6.15
+  - gaussx @ git+https://github.com/jejjohnson/gaussx.git@v0.7.0
+  - pyrox-gauss @ ./references/geoml/pyrox/packages/pyrox-gauss
   - equinox>=0.13.8
   - lineax>=0.1.1
   - einx>=0.4.3
@@ -19923,7 +19941,6 @@ packages:
   - jaxtyping>=0.3
   - einx>=0.4.3
   - optimistix>=0.1.0
-  - numpyro>=0.21 ; extra == 'numpyro'
   requires_python: '>=3.12'
 - pypi: ./references/numerics/integrix
   name: integrix
