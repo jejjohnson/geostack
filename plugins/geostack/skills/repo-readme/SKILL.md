@@ -145,7 +145,7 @@ Every library README carries three figures, drawn once in geostack and embedded 
 | Role ladder | the public names on the rungs of the GeoStack role ladder | `docs/images/libraries/<pkg>_roles/` | `make_svgs.py`, light and dark SVGs | What else is in the box |
 | Dependencies | who imports the library, which of its modules each uses, and what it builds on | `docs/images/libraries/<pkg>_ecosystem/` | `make_svgs.py`, light and dark SVGs | Ecosystem |
 
-A detail figure for one module (argminax's `argminax_blr/`) follows the overview's form and sits in the docs guide for that module, not in the README. The docs carry these three and more; the `library-docs-figures` skill (`plugins/geostack/skills/library-docs-figures/`) is the standard for them.
+A detail figure for one module (argminax's `argminax_blr/`) follows the overview's form and sits in the docs guide for that module, not in the README. The docs carry these three and more; the `repo-docs-figures` skill (`plugins/geostack/skills/repo-docs-figures/`) is the standard for them.
 
 **The overview** has four columns joined by labelled arrows, and a row of slabs underneath:
 
@@ -156,9 +156,9 @@ A detail figure for one module (argminax's `argminax_blr/`) follows the overview
 
 and one slab per upstream library the package extends, saying what it takes from it. The title says the idea in a few words ("argminax: five questions, one minimum").
 
-**A toolbox library gets the operations figure instead.** When the library is one object with several operations, each taking different inputs and giving different outputs, supply and out lanes would invent a pipeline it does not have. Draw the object at the top with its equation, one card per operation below it (the verb, its equation, its module, its public names), and the library's lower modules as slabs underneath; it still lives in `<pkg>_overview/`. functax is the example (one expansion; interpolate, differentiate, integrate, project, transform). The `library-docs-figures` skill has its layout under "Operations".
+**A toolbox library gets the operations figure instead.** When the library is one object with several operations, each taking different inputs and giving different outputs, supply and out lanes would invent a pipeline it does not have. Draw the object at the top with its equation, one card per operation below it (the verb, its equation, its module, its public names), and the library's lower modules as slabs underneath; it still lives in `<pkg>_overview/`. functax is the example (one expansion; interpolate, differentiate, integrate, project, transform). The `repo-docs-figures` skill has its layout under "Operations".
 
-**The gallery** holds specimens, not schematics: plots of what the library computes on toy data, drawn by the library's own `docs/assets/readme/figures.py` and embedded by relative path. Use it when a picture of the output proves something the text only claims (functax: Slepian functions leaking out of their cap past the Shannon number). The `library-docs-figures` skill has the rules under "Specimen".
+**The gallery** holds specimens, not schematics: plots of what the library computes on toy data, drawn by the library's own `docs/assets/readme/figures.py` and embedded by relative path. Use it when a picture of the output proves something the text only claims (functax: Slepian functions leaking out of their cap past the Shannon number). The `repo-docs-figures` skill has the rules under "Specimen".
 
 **The role ladder** takes its rungs from the `role-ladder` skill (`plugins/geostack/skills/role-ladder/` here):
 
@@ -175,7 +175,7 @@ and one slab per upstream library the package extends, saying what it takes from
 - A strip underneath lists what the library itself builds on.
 - The edges come from geostack's `docs/api/dependency_graph.md`. When a package's `main` and the graph disagree, draw `main` and say so in the PR.
 
-**Maths on them.** The overview's equations are typeset with KaTeX, as on every HTML figure, so they read as the README's maths and not as code; the SVGs write maths in Unicode. The `library-docs-figures` skill (§3) has the rule and `functax_overview/` is the example.
+**Maths on them.** The overview's equations are typeset with KaTeX, as on every HTML figure, so they read as the README's maths and not as code; the SVGs write maths in Unicode. The `repo-docs-figures` skill (§3) has the rule and `functax_overview/` is the example.
 
 **Making them.** The scripts use cyclopts and loguru and run with `uv run --no-project --with …` as their docstrings say. Render every figure in Chromium before committing, both themes for the SVGs: cairosvg mis-spaces bold `tspan` runs, so its previews are not a check. The overview's PNG needs Chromium anyway; where it cannot find `libgbm.so.1`, take it from conda-forge with `pixi exec -s libgbm`.
 

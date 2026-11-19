@@ -1,5 +1,5 @@
 ---
-name: library-docs-figures
+name: repo-docs-figures
 description: The GeoStack standard for a library's documentation figures, set by argminax, vardax and functax. Which figures a stack library's docs carry beyond the README's three (an operations figure in place of the overview for a toolbox library, a code map of its modules and imports, a hub of what builds and reads its central object, a comparison of the ways to do one job, a gallery of the structures or families a module offers, a detail figure per module, a pipeline for an end-to-end example, specimen plots of what the code computes), where each goes in the docs, how each is drawn (once in geostack as HTML rendered to PNG or light and dark SVGs written from data, or, for a specimen, by the library's own docs code), how every fact on a figure is traced to the code or the docs, and how the library's pages embed them from geostack's main. Use when drawing, placing, reviewing or updating the figures of a stack library's docs, or when a docs page explains in prose an idea that a figure would say faster.
 ---
 

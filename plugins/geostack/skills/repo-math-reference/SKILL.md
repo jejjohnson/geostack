@@ -9,7 +9,7 @@ Draft 3 · 19 Nov 2026 · taken from the mathematical references of filterax (`d
 
 A stack library's docs have a mathematical reference: numbered chapters that write down what the library computes, derive it, run it and say when it fails. This skill is the standard for those chapters. The three references it was taken from are examples, not the standard: each was written before this skill, each does some things the others do better, and §9 lists what each would change to meet it. Where an example and this skill disagree, follow the skill, and where the skill is silent, copy the example named for that rule.
 
-It builds on five other skills and does not repeat them: `role-ladder` (in this plugin) for the roles the library's names play, which decide the chapter list and the order inside a chapter; `style-math` for the notation; `style-code-sketch` for the code on the page; `eman-prose-tech` for the voice; and `library-docs-figures` (in this plugin) for any figure a chapter carries.
+It builds on five other skills and does not repeat them: `role-ladder` (in this plugin) for the roles the library's names play, which decide the chapter list and the order inside a chapter; `style-math` for the notation; `style-code-sketch` for the code on the page; `eman-prose-tech` for the voice; and `repo-docs-figures` (in this plugin) for any figure a chapter carries.
 
 ## 1. Planning the reference
 
@@ -132,7 +132,7 @@ The reference is written for mystmd and uses its directives and roles wherever o
 | A citation | `` {cite:p}`key` `` or `` {cite:t}`key` ``, with the entry in `docs/bib/*.bib` | "(Higham, 2002)" in the text, or a hand-written list |
 | A public name | `` [`weighted_mean`](xref:api#<pkg>.<name>) ``, by the top-level name | an absolute URL into the API site |
 | Another chapter | `[chapter 5](05_stochastic_enkf.md)` | "chapter 5" as plain text |
-| A figure | `{figure}` with `:alt:` and `:label: fig-…`, drawn as `library-docs-figures` says | a mermaid block or an image in the repo |
+| A figure | `{figure}` with `:alt:` and `:label: fig-…`, drawn as `repo-docs-figures` says | a mermaid block or an image in the repo |
 
 A bibliography entry is added only from a source that was read: the authors, year, title and venue are checked against the paper or its publisher's page, and a DOI is included only when it resolves. The references page is the generated bibliography, grouped by the `.bib` file each entry is in.
 
