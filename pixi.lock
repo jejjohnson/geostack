@@ -19206,7 +19206,7 @@ packages:
   - einops>=0.8
   - einx>=0.4.3
   - equinox>=0.13.8
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@cd6264c
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.14
   - jax>=0.10
   - jaxlib>=0.10
   - jaxtyping>=0.3
@@ -19228,7 +19228,7 @@ packages:
   - scikit-learn>=1.3
   - diffrax>=0.7.2,<0.8
   - matfree>=0.6,<0.7
-  - interpax>=0.3.13 ; extra == 'interp'
+  - functax[jax] @ git+https://github.com/jejjohnson/functax.git@v0.0.6
   requires_python: '>=3.12,<3.14'
 - pypi: ./references/geoml/geonnax
   name: geonnax
@@ -19422,10 +19422,12 @@ packages:
   - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
   - radtrax @ git+https://github.com/jejjohnson/radtrax@v0.1.0
   - einx>=0.4
-  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.5
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.6
+  - functax @ git+https://github.com/jejjohnson/functax@v0.0.11
+  - kernellib @ git+https://github.com/jejjohnson/kernellib@v0.0.22
   - numpyro>=0.21 ; extra == 'inference'
-  - xrtoolz-ops @ git+https://github.com/jejjohnson/geotoolz@df8c228090b675365abd3fe272890f6a055434c6#subdirectory=packages/xrtoolz-ops ; extra == 'io'
-  - xrtoolz-products @ git+https://github.com/jejjohnson/geotoolz@df8c228090b675365abd3fe272890f6a055434c6#subdirectory=packages/xrtoolz-products ; extra == 'io'
+  - xrtoolz-ops @ git+https://github.com/jejjohnson/geotoolz@5742376a6b00acffd6761a8b1a70115e8eb4d3f9#subdirectory=packages/xrtoolz-ops ; extra == 'io'
+  - xrtoolz-products @ git+https://github.com/jejjohnson/geotoolz@5742376a6b00acffd6761a8b1a70115e8eb4d3f9#subdirectory=packages/xrtoolz-products ; extra == 'io'
   - pyproj ; extra == 'io'
   - matplotlib ; extra == 'notebooks'
   - ipython ; extra == 'notebooks'
@@ -19435,8 +19437,9 @@ packages:
   - numpyro>=0.21 ; extra == 'population'
   - pyyaml>=6 ; extra == 'population'
   - xtremax @ git+https://github.com/jejjohnson/xtremax@eeec71e732c5aaee63f57934ce9f7e1226b9dc6a ; extra == 'population'
+  - functax @ git+https://github.com/jejjohnson/functax@v0.0.11 ; extra == 'geo'
   - georeader-spaceml>=2.4.1 ; extra == 'geo'
-  - geotoolz-ops[morph] @ git+https://github.com/jejjohnson/geotoolz@df8c228090b675365abd3fe272890f6a055434c6#subdirectory=packages/geotoolz-ops ; extra == 'geo'
+  - geotoolz-ops[morph] @ git+https://github.com/jejjohnson/geotoolz@5742376a6b00acffd6761a8b1a70115e8eb4d3f9#subdirectory=packages/geotoolz-ops ; extra == 'geo'
   - scikit-learn>=1.4 ; extra == 'geo'
   - tqdm>=4 ; extra == 'geo'
   - typing-extensions>=4 ; extra == 'geo'
@@ -19744,6 +19747,7 @@ packages:
   - loguru>=0.7.3 ; extra == 'aemet'
   - netcdf4>=1.6 ; extra == 'aemet'
   - netcdf4>=1.6 ; extra == 'local'
+  - pyproj>=3.6 ; extra == 'local'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/pipekit/packages/pipekit
   name: pipekit
@@ -19932,7 +19936,7 @@ packages:
   - lineax>=0.1.1
   - optimistix>=0.1.0
   - diffrax>=0.7.2,<0.8
-  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.6
+  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.11
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   requires_python: '>=3.12'
 - pypi: ./references/numerics/spectraldiffx

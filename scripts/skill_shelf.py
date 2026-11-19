@@ -99,6 +99,22 @@ SHELVES: dict[str, Shelf] = {
             Unit("Inference and ensembles", "④", "ML", ("gaussx._inference",)),
         ),
     ),
+    "functax": Shelf(
+        page="docs/design/skill_tree_functax.md",
+        packages=("functax",),
+        # one unit per public module; a unit's name is its key in functax's
+        # shelf.toml, where the title a reader sees is written
+        units=(
+            Unit("Geometry", "⓪", "numerics, geoscience", ("functax.geometry",)),
+            Unit("Errors", "⓪", "numerics", ("functax", "functax.exceptions")),
+            Unit("Interp", "① ②, setup", "numerics", ("functax.interp",)),
+            Unit("Basis", "①", "numerics, ML", ("functax.basis",)),
+            Unit("Quad", "⓪ ①", "numerics", ("functax.quad",)),
+            Unit("Diffops", "①", "numerics", ("functax.diffops",)),
+            Unit("Project", "① ④", "numerics", ("functax.project",)),
+            Unit("Transform", "setup", "numerics", ("functax.transform",)),
+        ),
+    ),
     "kernellib": Shelf(
         page="docs/design/skill_tree_kernellib.md",
         packages=("kernellib",),
@@ -314,6 +330,8 @@ def exports(pkg: dg.Package) -> dict[str, str]:
     The public names are the static ``__all__`` of each import root's
     ``__init__.py``, then the static ``__all__`` of each public submodule (one
     whose name has no leading underscore) for names the root does not export.
+    A public subpackage's own public modules, at any depth, count for that
+    subpackage: ``functax.basis.sphere`` gives its names to ``functax.basis``.
     A name added to ``__all__`` at run time (behind an extra) is not counted.
     Without a static ``__all__``, every name the root imports that does not
     start with an underscore counts.
@@ -347,6 +365,18 @@ def exports(pkg: dg.Package) -> dict[str, str]:
                 continue
             for name in _static_all(subtree) or []:
                 out.setdefault(name, f"{module}.{sub}")
+            if child.is_dir():
+                # a public subpackage's own public modules (functax.basis.sphere)
+                # count for the subpackage
+                for nested in sorted(child.rglob("*.py")):
+                    parts = nested.relative_to(child).with_suffix("").parts
+                    if nested.name == "__init__.py" and len(parts) == 1:
+                        continue
+                    if any(part[:1] == "_" and part != "__init__" for part in parts):
+                        continue
+                    below = _parse(nested.read_text(encoding="utf-8"))
+                    for name in (_static_all(below) if below else None) or []:
+                        out.setdefault(name, f"{module}.{sub}")
     return out
 
 

@@ -58,6 +58,7 @@ kernellib has seven kinds of thing, each of its dependents uses one to three of 
 | manipy-jax | 13 | 3 | 0 | 0 | 6 | 0 | 4 | 0 |
 | pyrox-lgm | 5 | 0 | 0 | 0 | 5 | 0 | 0 | 0 |
 | pyrox-nn | 3 | 2 | 0 | 1 | 0 | 0 | 0 | 0 |
+| plumax | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
 
@@ -116,6 +117,7 @@ A dependent package receives the card of each unit it uses at least three names 
 | manipy-jax | Kernels; Graphs; Decomposition |  |
 | pyrox-lgm | Graphs |  |
 | pyrox-nn | none | Kernels (2); Operators and feature maps (1) |
+| plumax | none | Kernels (1) |
 <!-- shelf:cards:end -->
 :::
 

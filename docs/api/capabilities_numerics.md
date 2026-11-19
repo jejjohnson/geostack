@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.6.16, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.10, argminax 0.0.7, integrix 0.0.5.
+Listed at gaussx 0.6.16, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6.
 
 ## Upstream: `gaussx`
 
@@ -822,7 +822,7 @@ Function approximation: bases, quadrature rules, interpolation.
 |---|---|---|
 | `FunctaxError` | class | Base class for every exception raised by ``functax``. |
 | `GeometryError` | class | Raised when an axis, grid or point set is malformed. |
-| `MissingExtraError` | class | Raised when a module needs the ``functax[jax]`` extra and it is missing. |
+| `MissingExtraError` | class | Raised when a module or a plan needs an optional extra that is missing. |
 | `NonlinearSchemeError` | class | Raised when a linear-only operation meets a plan whose fit is nonlinear in y. |
 | `OutsideDomainError` | class | Raised under ``outside="raise"`` when a target lies outside the domain. |
 | `PolicyError` | class | Raised when an interpolation policy names an option that does not exist. |
@@ -832,12 +832,12 @@ Function approximation: bases, quadrature rules, interpolation.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `curl2d` | function | The scalar curl (vorticity) ∂_x u_y − ∂_y u_x of a planar field. |
+| `curl2d` | function | The scalar curl (vorticity) ∂u₁/∂x₀ − ∂u₀/∂x₁ of a planar field. |
 | `divergence` | function | The divergence ∇ · u = ∑_d ∂u_d/∂x_d of a vector field. |
 | `gradient` | function | The gradient ∇f of a scalar field. |
-| `jacobian_field` | function | The Jacobian J_kd = ∂u_k/∂x_d of a vector field. |
-| `laplace_beltrami` | function | The Laplace–Beltrami operator Δ_S f of a field on the unit sphere. |
-| `laplacian` | function | The Laplacian Δf = ∑_d ∂²f/∂x_d² of a scalar field. |
+| `jacobian_field` | function | The Jacobian [J_u]_kd = ∂u_k/∂x_d of a vector field. |
+| `laplace_beltrami` | function | The Laplace–Beltrami operator ∇²_S f of a field on the unit sphere. |
+| `laplacian` | function | The Laplacian ∇²f = ∑_d ∂²f/∂x_d² of a scalar field. |
 | `surface_grad` | function | The surface gradient ∇_S f of a field on the unit sphere. |
 | `surface_grad_enu` | function | The east and north components of the surface gradient, at a (λ, φ). |
 
@@ -851,7 +851,7 @@ Function approximation: bases, quadrature rules, interpolation.
 | `Metric` | constant | `Metric` |
 | `Points` | class | Scattered sites, with the metric their distances use. |
 | `RectilinearGrid` | class | A tensor-product grid with one `Axis` per dimension. |
-| `cartesian_to_tangent` | function | 3-D vectors to their east and north components (v · ê, v · n̂). |
+| `cartesian_to_tangent` | function | 3-D vectors w to their east and north components (w · e_east, w · e_north). |
 | `chebyshev_nodes` | function | The Chebyshev nodes of degree N on [a, b], from b down to a. |
 | `chord_distance` | function | The straight-line distance through the sphere between every pair. |
 | `ecef_to_lonlat` | function | Earth-centred, Earth-fixed coordinates to geodetic (λ, φ) and height. |
@@ -869,10 +869,10 @@ Function approximation: bases, quadrature rules, interpolation.
 | `mesh_vertex_areas` | function | The lumped (barycentric) vertex areas of a triangle mesh. |
 | `pairwise_distance` | function | The distance from every source to every target, in their shared metric. |
 | `pixel_centres` | function | The x and y of every pixel centre of a grid, each of shape (rows, cols). |
-| `rotation_to_pole` | function | The rotation R with R û(centre) = (0, 0, 1). |
+| `rotation_to_pole` | function | The rotation Q with Q e_up(centre) = (0, 0, 1). |
 | `slice_transform` | function | The transform of the slice ``[row0::row_step, col0::col_step]`` of a raster. |
 | `spherical_polygon_area` | function | The signed area of a spherical polygon with great-circle edges. |
-| `tangent_to_cartesian` | function | East and north components (u, v) to the 3-D tangent vector u ê + v n̂. |
+| `tangent_to_cartesian` | function | East and north components (u, v) to the tangent vector u e_east + v e_north. |
 | `to_pixel` | function | Map coordinates (x, y) to fractional pixel (row, col), centres at integers. |
 | `unit_to_lonlat` | function | Longitude and latitude of vectors on (or off) the unit sphere. |
 | `window` | function | The row and column slices of the pixels that cover ``bounds``. |
@@ -890,7 +890,7 @@ Function approximation: bases, quadrature rules, interpolation.
 | `BinningPlan` | class | A plan from N samples to M cells: the sums, means or counts per cell. |
 | `BrownianBridge` | class | The Brownian bridge between the knots of one axis, cell by cell. |
 | `Chebyshev` | class | The Chebyshev series of samples on Chebyshev nodes, read at arbitrary points. |
-| `ChebyshevFit` | class | c = P C y: the first K Chebyshev coefficients of samples on Chebyshev nodes. |
+| `ChebyshevFit` | class | c = Π C y: the first D_c Chebyshev coefficients of samples on Chebyshev nodes. |
 | `ChebyshevInterpolant` | class | A fitted Chebyshev series f̂(x) = ∑ₖ cₖ Tₖ(ξ(x)), read at targets by `clenshaw`. |
 | `ComposedPlan` | class | ``outer @ inner``: H_outer H_inner 𝒮_inner, one plan with the product stencil. |
 | `Conservative` | class | First-order conservative remapping: each target cell's area-weighted mean. |
@@ -898,19 +898,19 @@ Function approximation: bases, quadrature rules, interpolation.
 | `CubicBasis` | class | Keys cubic convolution: taps i − 1 … i + 2, weights W(1 + t) … W(2 − t). |
 | `CubicSpline` | class | The interpolating C² cubic spline, as ``scipy.interpolate.CubicSpline``. |
 | `Delaunay` | class | Linear interpolation on a triangulation of the sources: D + 1 taps per target. |
-| `DerivativePlan` | class | A plan whose read-out holds basis derivatives: ∂ᵐf̂/∂x_cᵐ at the targets. |
+| `DerivativePlan` | class | A plan whose read-out holds basis derivatives: ∂ᵐf̂/∂x_dᵐ at the targets. |
 | `Fit` | class | c = 𝒮(y), applied once per field before the read-out. |
 | `Fourier` | class | Band-limited Fourier resampling from N to M nodes of one periodic axis. |
-| `FourierReadout` | class | H y = (M/N) Re F⁻¹_M[S F_N y], band-limited resampling by two FFTs. |
-| `GaussianPlan` | class | A plan read as a Gaussian posterior: f(X*) ∣ y ~ 𝒩(H 𝒮(y), Σ*). |
-| `HermiteFit` | class | [y; m] from y: the values in increasing-knot order and their slopes. |
+| `FourierReadout` | class | H y = (M/N) Re(F_M⁻¹ S F_N y), band-limited resampling by two FFTs. |
+| `GaussianPlan` | class | A plan read as a Gaussian posterior: f(X_*) ∣ y ~ 𝒩(H 𝒮(y), Σ_{*∣y}). |
+| `HermiteFit` | class | [y; d] from y: the values in increasing-knot order and their slopes. |
 | `HermiteGeometry` | class | What a 1-D series plan's Hermite read-out was built from. |
 | `Identity` | class | The fit of every local scheme: c = y. |
 | `Interpolant` | class | A fitted field f̂(x) = ∑ₛ wₛ(t(x)) c_{iₛ(x)}, read at any targets. |
 | `InverseDistance` | class | Inverse-distance weighting of the Q nearest scattered sources. |
 | `Kernel` | class | k(x, x′): the (M, N) cross-kernel of M targets and N sources. |
-| `KernelCovariance` | class | Σ*(x, x′) = k(x, x′) − h(x)ᵀ A⁻¹ h(x′), the posterior covariance of a kernel fit. |
-| `KernelReadout` | class | The dense read-out of a kernel scheme: f̂(X*) = K* c + P* b. |
+| `KernelCovariance` | class | Σ_{*∣y} = K_** − H A⁻¹ Hᵀ, the posterior covariance of a kernel fit. |
+| `KernelReadout` | class | The dense read-out of a kernel scheme: f̂(X_*) = K_*X c + P_* b. |
 | `KernelSolve` | class | [c; b] = A⁻¹ [y; 0], the saddle-point system of a kernel and a tail. |
 | `Kriging` | class | Kriging: the best linear unbiased predictor under a covariance k and a drift. |
 | `Linear` | class | Linear on every axis: 2ᴰ taps per target, weights ∏_d (1 − t_d or t_d). |
@@ -922,30 +922,30 @@ Function approximation: bases, quadrature rules, interpolation.
 | `NonlinearDerivativePlan` | class | ∂ᵐf̂/∂xᵐ of a nonlinear series plan: it reads, but has no fixed operator. |
 | `NonlinearPlan` | class | A plan whose fit depends on y: no fixed operator or adjoint, but `linearize`. |
 | `Pchip` | class | Monotone piecewise cubic Hermite (Fritsch-Carlson), as SciPy's PCHIP. |
-| `Plan` | class | f̂(X*) = H 𝒮(y), fitted once, applied to many fields. |
+| `Plan` | class | f̂(X_*) = H 𝒮(y), fitted once, applied to many fields. |
 | `Policies` | class | Outside the domain, at missing samples, and at the edges. |
-| `Polyharmonic` | class | The polyharmonic spline φ(r) = ±rᵏ for odd k, ±rᵏ log r for even k. |
-| `PosteriorCovariance` | class | Σ*, the (M, M) posterior covariance of the field at M targets. |
+| `Polyharmonic` | class | The polyharmonic spline φ(r) = ±rᵖ for odd p, ±rᵖ log r for even p. |
+| `PosteriorCovariance` | class | Σ_{*∣y}, the (M, M) posterior covariance of the field at M targets. |
 | `RBF` | class | Radial basis function interpolation: f̂(x) = ∑ⱼ cⱼ k(x, xⱼ) + ∑ₚ bₚ pₚ(x). |
 | `RadialKernel` | class | k(x, x′) = φ(‖x − x′‖), Euclidean in the coordinates as given. |
 | `ReadGeometry` | class | What a plan's stencil was built from, so `Plan.derivative` can rebuild it. |
-| `Readout` | class | c → f̂(X*): the read-out of a plan, from coefficients to target values. |
+| `Readout` | class | c ↦ f̂(X_*): the read-out of a plan, from coefficients to target values. |
 | `Scheme` | class | An interpolation scheme: configuration, frozen into a `Plan` by `plan`. |
 | `SeriesInterpolant` | class | A 1-D series field f̂ read at targets chosen inside the trace. |
 | `SeriesScheme` | class | A scheme on one axis with a cubic Hermite read-out and its own slopes. |
 | `Steffen` | class | Steffen's monotone cubic: no overshoot between knots, by construction. |
 | `Stencil` | class | A sparse read-out H: row k reads S source values at flat indices. |
 | `Tensor` | class | One local scheme per source axis, as one tensor stencil. |
-| `TransposedStencil` | class | f̂ = diag(s) Hᵀ y: a sampling stencil H used backwards, scaled per cell. |
+| `TransposedStencil` | class | f̂ = diag(w) Hᵀ y: a sampling stencil H used backwards, scaled per cell. |
 | `Wendland` | class | The compact Wendland kernel φ(r) = ψ(r/ρ), zero for r ≥ ρ. |
 | `WindowedPlan` | class | ``plan[window]``: the rows of a grid target inside a window, sources unchanged. |
 | `bspline` | function | The centred B-spline βᵏ of degree k at x. |
 | `check_outside` | function | Enforce ``outside="raise"`` on the host; no-op for every other policy. |
-| `clenshaw` | function | The Chebyshev series f(x) = ∑ₖ aₖ Tₖ(ξ(x)) by Clenshaw's recurrence. |
+| `clenshaw` | function | The Chebyshev series f(x) = ∑ₖ cₖ Tₖ(ξ(x)) by Clenshaw's recurrence. |
 | `compose` | function | H = H_outer H_inner: apply ``inner`` first, then ``outer``, as one stencil. |
 | `index_positions` | function | The fractional index position u of each target, so node j sits at u = j. |
 | `locate` | function | The cell index i, the offset t ∈ [0, 1) and the inside flag of each target. |
-| `locate_curvilinear` | function | The cell (r, c), the offset (s, t) and the inside flag of targets on a swath. |
+| `locate_curvilinear` | function | The cell (i, j), the offset (s, t) and the inside flag of targets on a swath. |
 | `overlap_weights_1d` | function | The (M, N) overlap lengths \|cⱼ ∩ Cᵢ\| of every target and source cell. |
 | `plan_key` | function | sha256 hex of the scheme, the policies and both geometries' bytes. |
 | `remap_taps` | function | Bring tap indices back onto [0, N − 1] by a boundary rule. |
@@ -956,26 +956,26 @@ Function approximation: bases, quadrature rules, interpolation.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `Variational` | class | x = argmin (Hx − y)ᵀR⁻¹(Hx − y) + λ‖Lx‖², the variational smoothing fit. |
-| `fill_gaps` | function | The image with its holes filled: Δx = 0 (Laplace) or Δ²x = 0 (biharmonic). |
+| `Variational` | class | c = argmin_c (Hc − y)ᵀΛ_ε(Hc − y) + β‖Lc‖₂², the variational smoothing fit. |
+| `fill_gaps` | function | The image with its holes filled: ∇²x = 0 (Laplace) or ∇⁴x = 0 (biharmonic). |
 | `galerkin` | function | c = (ΦᵀWΦ)⁻¹ ΦᵀW y, the Galerkin projection with quadrature weights W. |
-| `least_squares` | function | c = argmin ‖Φc − y‖² + α‖c‖², the ridge least-squares coefficients. |
+| `least_squares` | function | c = argmin_c ‖Φc − y‖₂² + β‖c‖₂², the ridge least-squares coefficients. |
 
 ### `functax.quad`
 
 | Name | Kind | What it does |
 |---|---|---|
-| `CurveRule` | class | A rule on a curve L: ∫_L c dℓ ≈ ∑ₖ Δsₖ c(xₖ), with the unit normal nₖ. |
+| `CurveRule` | class | A rule on a curve L: ∫_L g ds ≈ ∑ₖ Δsₖ g(xₖ), with the unit normal nₖ. |
 | `Rule` | class | A quadrature rule as data: nodes xₙ and weights wₙ, ∫ g dx ≈ ∑ₙ wₙ g(xₙ). |
-| `SphereRule` | class | A rule on a sphere of radius a: ∫_{S²} g dA ≈ ∑_q w_q g(u_q). |
+| `SphereRule` | class | A rule on a sphere of radius R: ∫_{S²} g dA ≈ ∑_q w_q g(u_q). |
 | `cell_area` | function | The cell-area rule of a grid: ∫ g dA ≈ ∑ₖ \|Cₖ\| g(xₖ) over its cells Cₖ. |
 | `clenshaw_curtis` | function | The n-point Clenshaw–Curtis rule on [a, b], at the Chebyshev extreme points. |
 | `gauss_legendre` | function | The n-point Gauss–Legendre rule on an interval [a, b]. |
 | `polyline` | function | A rule along a polyline: n nodes per segment, arc-length weights and normals. |
 | `simpson` | function | The composite Simpson rule on given nodes, as ``scipy.integrate.simpson``. |
-| `sphere_fibonacci` | function | The Fibonacci rule: n near-uniform points of equal weight 4πa²/n. |
+| `sphere_fibonacci` | function | The Fibonacci rule: n near-uniform points of equal weight 4πR²/n. |
 | `sphere_gauss_legendre` | function | The Gauss–Legendre × uniform-longitude rule on the sphere, exact to a degree. |
-| `sphere_healpix` | function | The HEALPix rule: 12 N_side² pixel centres of equal weight 4πa²/Q. |
+| `sphere_healpix` | function | The HEALPix rule: 12 N_side² pixel centres of equal weight 4πR²/Q. |
 | `sphere_latlon` | function | The cell-centred lon/lat rule: equiangular cells weighted by their exact areas. |
 | `trapezoid` | function | The composite trapezoid rule on given nodes, uniform or not. |
 

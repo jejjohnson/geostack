@@ -38,20 +38,20 @@ geotoolz is the widest surface in the stack, and one skill of 245 lines covers i
 <!-- shelf:units:begin -->
 | Unit | Rungs | Home band | Subpackages | Names |
 |---|---|---|---|---|
-| Carriers and grids | ⓪ ① | geoscience | `geoarray.types` 18, `geoarray.coords` 12, `geoarray` 8, `geoarray.geometry` 7, `geoarray.errors` 5, `geoarray.adapter` 4, `geoarray.grid` 4, `geoarray.array` 3, `geoarray.carriers` 3, `geoarray.options` 3, `geoarray.attrs` 2, `geoarray.source` 2, `geoarray.sampling` 1 | 72 |
-| Operator framework | ⑤ ⑥ | geoscience | `geoops.carrier` 47, `geoops` 35, `geoops.einx` 7, `geoops.patch_ops` 6, `geoops.testing` 5 | 100 |
+| Carriers and grids | ⓪ ① | geoscience | `geoarray.types` 18, `geoarray.coords` 12, `geoarray.interop` 10, `geoarray` 8, `geoarray.geometry` 7, `geoarray.errors` 5, `geoarray.adapter` 4, `geoarray.grid` 4, `geoarray.array` 3, `geoarray.carriers` 3, `geoarray.options` 3, `geoarray.attrs` 2, `geoarray.source` 2, `geoarray.sampling` 1 | 82 |
+| Operator framework | ⑤ ⑥ | geoscience | `geoops.carrier` 47, `geoops` 35, `geoops.einx` 7, `geoops.testing` 5, `geoops.patch_ops` 3 | 97 |
 | Geometry and I/O | ⑤ | geoscience | `geoops.geom` 70, `geoops.io` 17 | 87 |
 | Radiometry and spectra | ⑤ | geoscience | `geoops.indices` 42, `geoops.normalize` 29, `geoops.radiometry` 24, `geoops.spectral` 16 | 111 |
-| Masks and quality | ⑤ | geoscience | `geoops.mask` 35, `geoops.qa` 25 | 60 |
+| Masks and quality | ⑤ | geoscience | `geoops.mask` 35, `geoops.qa` 29 | 64 |
 | Image processing | ⑤ | geoscience | `geoops.restore` 32, `geoops.segment` 18, `geoops.feature` 14, `geoops.measure` 13 | 77 |
 | Detection and plumes | ⑤ | geoscience | `geoops.matched_filter` 33, `geoops.plume` 14 | 47 |
 | Display and composites | ⑤ | geoscience | `geoops.viz` 21, `geoops.compositing` 20 | 41 |
 | Learning | ⑤ | geoscience, ML | `geoops.augment` 19, `geoops.learn` 14 | 33 |
-| Patching | ⑥, ② | geoscience, data | `geopatcher.run` 14, `geopatcher.fields` 13, `geopatcher.observe` 8, `geopatcher` 7, `geopatcher.spatial` 6, `geopatcher.config` 4, `geopatcher.patch` 3, `geopatcher.protocols` 3, `geopatcher.temporal` 2, `geopatcher.spatial_time` 1 | 61 |
+| Patching | ⑥, ② | geoscience, data | `geopatcher.spatial` 50, `geopatcher.temporal` 23, `geopatcher.run` 14, `geopatcher.fields` 13, `geopatcher.observe` 8, `geopatcher` 7, `geopatcher.integrations` 5, `geopatcher.config` 4, `geopatcher.patch` 3, `geopatcher.protocols` 3, `geopatcher.spatial_time` 1 | 131 |
 | Catalogs | ⓪ ① | data | `geocatalog` 11, `geocatalog.states` 11, `geocatalog.matchup` 10, `geocatalog.sources` 10, `geocatalog.storage` 9, `geocatalog.utils` 9, `geocatalog.backends` 7, `geocatalog.grid` 7, `geocatalog.build` 5, `geocatalog.load` 5, `geocatalog.ops` 3, `geocatalog.patch` 2, `geocatalog.base` 1, `geocatalog.factory` 1, `geocatalog.geoslice` 1, `geocatalog.staging` 1 | 93 |
-| Cloud storage | ① | data | `geocloud.hdf` 16, `geocloud.files` 13, `geocloud.cog` 12, `geocloud.store` 9, `geocloud.credentials` 8, `geocloud` 7, `geocloud.cache` 3, `geocloud.fs` 2 | 70 |
-| Product readers | ⓪ | data, geoscience | `geoproducts.carbonmapper` 65, `geoproducts.goes` 17, `geoproducts` 4, `geoproducts.himawari` 3, `geoproducts.toy_sensor` 2, `geoproducts.base` 1, `geoproducts.stack` 1 | 93 |
-| **All** | | | | **945** |
+| Cloud storage | ① | data | `geocloud.hdf` 16, `geocloud.cog` 12, `geocloud.files` 12, `geocloud.store` 9, `geocloud.credentials` 8, `geocloud` 7, `geocloud.cache` 3, `geocloud.fs` 2 | 69 |
+| Product readers | ⓪ | data, geoscience | `geoproducts.carbonmapper` 70, `geoproducts.goes` 51, `geoproducts.himawari` 21, `geoproducts.toy_sensor` 6, `geoproducts` 4, `geoproducts.base` 1, `geoproducts.stack` 1 | 154 |
+| **All** | | | | **1086** |
 <!-- shelf:units:end -->
 :::
 
@@ -61,7 +61,7 @@ geotoolz is the widest surface in the stack, and one skill of 245 lines covers i
 <!-- shelf:uses:begin -->
 | Dependent package | Names used | Carriers and grids | Operator framework | Geometry and I/O | Radiometry and spectra | Masks and quality | Image processing | Detection and plumes | Display and composites | Learning | Patching | Catalogs | Cloud storage | Product readers |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| plumax | 25 | 1 | 17 | 0 | 0 | 0 | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| plumax | 27 | 1 | 19 | 0 | 0 | 0 | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | radtrax | 16 | 1 | 15 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | xrtoolz-ops | 3 | 1 | 0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->

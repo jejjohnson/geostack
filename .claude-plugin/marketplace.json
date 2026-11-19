@@ -24,6 +24,18 @@
       ]
     },
     {
+      "name": "functax",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/functax",
+        "path": "plugins/functax"
+      },
+      "description": "Write function approximation in JAX on functax — CRS-free axes, grids and point sets, interpolation plans with hand-written adjoints, conservative remapping and gridding, kriging, quadrature rules, bases on boxes and on the sphere, differential operators, projections and transforms — instead of re-implementing them with gather, searchsorted and lstsq.",
+      "dependencies": [
+        "geostack"
+      ]
+    },
+    {
       "name": "gaussx",
       "source": {
         "source": "git-subdir",
@@ -42,7 +54,10 @@
         "url": "jejjohnson/geonnax",
         "path": "plugins/geonnax"
       },
-      "description": "Write geoscientific neural networks in JAX on geonnax — Fourier / spherical / wavelet neural operators, dimension-flexible U-Nets, SIREN and multiplicative filter networks with FiLM and hypernetwork conditioning, lon/lat and spherical-harmonic encoders, spectral and localized bases with their eigenvalues or geometry, random Fourier features, spectral normalisation, SNGP heads and other deterministic cores for uncertainty-aware models — instead of hand-rolling FFT convolutions, spherical harmonics, sine-network inits and random features."
+      "description": "Write geoscientific neural networks in JAX on geonnax — Fourier / spherical / wavelet neural operators, dimension-flexible U-Nets, SIREN and multiplicative filter networks with FiLM and hypernetwork conditioning, lon/lat and spherical-harmonic encoders, spectral and localized bases with their eigenvalues or geometry, random Fourier features, spectral normalisation, SNGP heads and other deterministic cores for uncertainty-aware models — instead of hand-rolling FFT convolutions, spherical harmonics, sine-network inits and random features.",
+      "dependencies": [
+        "functax"
+      ]
     },
     {
       "name": "geotoolz",
@@ -51,7 +66,10 @@
         "url": "jejjohnson/geotoolz",
         "path": "plugins/geotoolz"
       },
-      "description": "Build geospatial pipelines on the geotoolz stack — find and index files (geocatalog), read EO products (geoproducts), tile and stitch (geopatcher), compute (geotoolz), object storage (geocloud) — instead of re-implementing them."
+      "description": "Build geospatial pipelines on the geotoolz stack — find and index files (geocatalog), read EO products (geoproducts), tile and stitch (geopatcher), compute (geotoolz), object storage (geocloud) — instead of re-implementing them.",
+      "dependencies": [
+        "functax"
+      ]
     },
     {
       "name": "kernellib",
@@ -62,6 +80,7 @@
       },
       "description": "Write kernel methods in JAX on kernellib — kernels as Equinox modules, Gram matrices as gaussx operators, matrix-free and preconditioned solves, random-feature and Nyström approximations, kernel ridge regression at scale, HSIC / CKA / MMD tests, graph kernels and eigenmaps — instead of hand-rolling distance matrices, Cholesky solves and random features.",
       "dependencies": [
+        "functax",
         "gaussx"
       ]
     },
@@ -74,6 +93,7 @@
       },
       "description": "Write probabilistic models in JAX with Equinox and NumPyro on pyrox — modules that own their sample / param sites, kernels with priors and guides, exact / sparse / Markov / multi-output GPs, Bayesian layers, ensemble MAP / VI, latent Gaussian models with INLA — instead of hand-wiring numpyro.sample into Equinox modules.",
       "dependencies": [
+        "functax",
         "gaussx",
         "geonnax",
         "kernellib"
@@ -88,6 +108,7 @@
       },
       "description": "Write pseudospectral code in JAX on spectraldiffx — Fourier, Chebyshev and spherical-harmonic grids, spectral derivatives with correct dealiasing, DCT / DST transforms, Poisson and Helmholtz solvers with per-axis boundary conditions, masked-domain capacitance solves and spectral filters — instead of hand-rolling wavenumbers, FFT tricks and divide-by-k² solvers.",
       "dependencies": [
+        "functax",
         "gaussx"
       ]
     },

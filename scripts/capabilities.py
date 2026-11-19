@@ -536,7 +536,6 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "PosteriorCovariance": (
             "functax.interp's kriging covariance beside plumax.les_fvm's"
         ),
-        "STABILITY_CLASSES": _PLUME_PUFF,
         "Scaled": _SAME_NAME,
         "Sum": _SAME_NAME,
         "infer_emission_rate": _PLUME_PUFF,
