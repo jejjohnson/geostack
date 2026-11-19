@@ -5,7 +5,7 @@ description: Eman's pseudocode standard for READMEs, docs pages, design pages, r
 
 # Code-sketch standard
 
-Draft 2 · 19 Nov 2026 · the shape comment moves above the line, and what `style-python` already says is no longer repeated here.
+Draft 3 · 19 Nov 2026 · a target-state page carries no status markers, the symbols a block introduces are defined in the prose too, and a review goes line by line.
 
 A sketch reads as maths first and Python second: above each operation sit its status, its equation and its shape, and the code comes last.
 
@@ -36,7 +36,7 @@ prior_cov = kl.to_operator(kernel.frozen(), cell_xyz)
 ```
 
 - **The marker** (§3) is there on every call into the stack.
-- **The equation** is there on every mathematical line, as in `style-python` §7. In a sketch every symbol in it is defined in the prose before the block, or in the shapes header.
+- **The equation** is there on every mathematical line, as in `style-python` §7. In a sketch every symbol in it is defined in the prose before the block, or in the shapes header. That includes a symbol the block introduces for an intermediate result: if a comment writes `a = Σ_y⁻¹ y`, the prose says what a and Σ_y are.
 - **The shape** is there on every bare assignment of an array: the transition `# (N_Ωx, 2) → (N_Ωx, 3)`, or `# → (N_Ωx,)` when the inputs are plain from the lines above. Scalars are `# → ()`; distributions give their event shape, `# event (T, N_Ωy)`; operators say so, `# (N_Ωx, N_Ωx) PSD operator`.
 
 Real code has no shape comments, because its types carry the shapes (`style-python` §3). A sketch shows intermediate results that have no signature, so it writes their shapes, and it writes them above the line like every other comment.
@@ -76,7 +76,9 @@ A design page that shows the end state, with every finding applied, tags each li
 alpha: GeoArray["patch y x"] = enhancement(scene)
 ```
 
-The gap under the block says what is missing today.
+The tag sits where the marker would, first of the comment lines above the line, and the equation and the shape follow it as in §2.
+A target-state page carries no status markers at all, no `# today` and no `# proposed`: a line without a tag ships today, and the page says so once in the prose before the block.
+The gap under the block says, for each finding, what is missing today.
 Use this form instead of status markers only when the page's subject is the target state.
 
 ## 5. Refactors: before and after
@@ -96,6 +98,16 @@ tapered = kl.TaperLocalizer(taper)(covariance)
 - Every `today` block is run as written before it ships; README blocks always are.
 - `proposed` blocks are not run, but their `today` calls are checked by name.
 - Maths in the surrounding Markdown passes `check_math.py` from `style-math`.
+
+## 7. Reviewing a sketch
+
+A review goes through the block line by line and reports each fault on its own, with the line it is on, so that none hides behind a neighbour.
+
+- **For each line:** is there a marker if it calls into the stack, an equation if it is mathematical, a shape if it assigns an array, are they in that order, and are they above the line? A call with no marker and a mathematical line with no equation are two findings, even on the same line.
+- **For each line as Python:** the `style-python` faults a sketch is most often caught with are an explicit inverse where a solve belongs, `@` or `jnp.dot` where einx or an operator's own method belongs, two statements on one line, and single-letter names.
+- **For the page:** the shapes header, one name per dimension across every block, every symbol defined before its block, every `today` name found in the index or the repo, no version in a marker, and a refactor in one block as `# Today:` and `# After:`.
+
+A corrected page comes with the review, and the review says which of its names and markers are still open.
 
 ## Conforming sketch
 
@@ -133,6 +145,7 @@ The names here come from a design guide of 7 Oct 2026; re-check them before reus
 - [ ] The block passes the `style-python` checklist where it applies to a sketch (einx and lineax, one operation per line, descriptive names, 88 columns).
 - [ ] Shapes header first; names consistent across the page.
 - [ ] Above each line, in order: the marker on a stack call, the equation on a mathematical line, the shape on a bare array assignment. No comment beside a line.
-- [ ] Every symbol defined before the block or in the header.
+- [ ] Every symbol defined before the block or in the header, including the ones the block introduces for intermediate results.
+- [ ] A target-state page has finding tags and no status markers, and the gap under the block covers every finding.
 - [ ] Every `today` name checked in the repo; `today` blocks run as written.
 - [ ] Refactors shown as `# Today:` / `# After:`.

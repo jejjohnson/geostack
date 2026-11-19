@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-faulty-sketch
+expected_outcome: |
+  A review that finds the missing shapes header, the shape comments beside lines, the marker with a version, the today marker on a name that is not in the capability index, the unmarked stack call, the missing equation, the equation and shape in the wrong order, the explicit inverse and the @ products, two operations on one line, the single-letter names, the dimension that changes its name, the undefined symbol and the refactor split over two blocks; and a corrected page that fixes them.
