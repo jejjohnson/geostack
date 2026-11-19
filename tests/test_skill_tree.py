@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -241,3 +242,30 @@ def test_the_tree_at_the_pins_passes_its_gates() -> None:
     assert {(r, e.parent) for r, es in tree.edges.items() for e in es} == {
         (e.source, e.target) for e in graph.edges
     }
+
+
+def test_write_refuses_a_checkout_behind_its_default_branch(tmp_path) -> None:
+    def git(cwd, *args) -> None:
+        subprocess.run(
+            ["git", "-c", "user.name=t", "-c", "user.email=t@t", *args],
+            cwd=cwd,
+            check=True,
+            capture_output=True,
+        )
+
+    origin = tmp_path / "origin"
+    origin.mkdir()
+    git(origin, "init", "-q", "-b", "main")
+    git(origin, "commit", "-q", "--allow-empty", "-m", "one")
+    git(tmp_path, "clone", "-q", str(origin), "clone")
+    node = st.Node(repo="lib", path=tmp_path / "clone", plugin=None, skills=())
+    tree = st.Tree(nodes={"lib": node}, edges={})
+    assert st.behind(tree) == []
+    git(origin, "commit", "-q", "--allow-empty", "-m", "two")
+    git(tmp_path / "clone", "fetch", "-q")
+    assert st.behind(tree) == []  # nothing the generator reads changed
+    (origin / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+    git(origin, "add", "pyproject.toml")
+    git(origin, "commit", "-q", "-m", "three")
+    git(tmp_path / "clone", "fetch", "-q")
+    assert st.behind(tree) == ["lib is behind its default branch in 1 files"]

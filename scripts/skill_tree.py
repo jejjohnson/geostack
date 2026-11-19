@@ -30,6 +30,10 @@ blocks into a checkout of it, for a pull request there, like
     python scripts/skill_tree.py --check               # exit 1 if a gate fails
     python scripts/skill_tree.py --write kernellib     # into its submodule
     python scripts/skill_tree.py --write gaussx --into ../gaussx
+
+``--write`` refuses while any checkout lacks changes of its default branch, as
+last fetched, to its Python files, ``pyproject.toml`` or plugin, because every
+block reads every checkout; ``--allow-behind`` lifts it.
 """
 
 from __future__ import annotations
@@ -40,6 +44,7 @@ import configparser
 import graphlib
 import json
 import re
+import subprocess
 import sys
 import tomllib
 from dataclasses import dataclass, field
@@ -612,6 +617,39 @@ def marketplace_stale(tree: Tree) -> bool:
     ) != marketplace(tree, sources())
 
 
+#: what the generator reads in a checkout: imports, dependencies and plugins
+READ = ("*.py", "*pyproject.toml", "plugins")
+
+
+def behind(tree: Tree) -> list[str]:
+    """Repositories whose checkout lacks changes of its default branch.
+
+    A block is generated from every checkout at once: a repository's "Used by"
+    line and the parents it quotes come from the others. A checkout that lacks
+    commits of its default branch, as last fetched, which change a file the
+    generator reads, therefore writes a block that is already out of date.
+    A checkout with no ``origin/HEAD`` is not judged.
+    """
+
+    def git(path: Path, *args: str) -> str | None:
+        run = subprocess.run(
+            ["git", "-C", str(path), *args], capture_output=True, text=True, check=False
+        )
+        return run.stdout.strip() if run.returncode == 0 else None
+
+    found = []
+    for repo, node in sorted(tree.nodes.items()):
+        if git(node.path, "rev-list", "--count", "HEAD..origin/HEAD") in (None, "0"):
+            continue
+        files = git(
+            node.path, "diff", "--name-only", "HEAD", "origin/HEAD", "--", *READ
+        )
+        if files:
+            count = len(files.splitlines())
+            found.append(f"{repo} is behind its default branch in {count} files")
+    return found
+
+
 def pending(tree: Tree) -> list[str]:
     """Repositories with a skill whose block is not generated yet."""
     return [r for r, n in tree.nodes.items() if n.skills and not adopted(tree, r)]
@@ -648,9 +686,16 @@ def main(argv: list[str] | None = None) -> int:
         help="with --write: another checkout of REPO, read and written in"
         " place of its submodule",
     )
+    parser.add_argument(
+        "--allow-behind",
+        action="store_true",
+        help="with --write: write even if a checkout is behind its default branch",
+    )
     args = parser.parse_args(argv)
     if args.into and not args.write:
         parser.error("--into needs --write")
+    if args.allow_behind and not args.write:
+        parser.error("--allow-behind needs --write")
     if args.write in dg.THIRD_PARTY:
         print(f"{args.write} is third party: geostack never writes to it")
         return 1
@@ -665,6 +710,12 @@ def main(argv: list[str] | None = None) -> int:
         for message in found:
             print(message)
         if found:
+            return 1
+        late = [] if args.allow_behind else behind(tree)
+        for message in late:
+            print(message)
+        if late:
+            print("move those pins first, or pass --allow-behind")
             return 1
         for path, text in render(tree, args.write).items():
             if path.read_text(encoding="utf-8") != text:

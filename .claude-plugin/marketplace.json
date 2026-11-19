@@ -62,8 +62,7 @@
       },
       "description": "Write kernel methods in JAX on kernellib — kernels as Equinox modules, Gram matrices as gaussx operators, matrix-free and preconditioned solves, random-feature and Nyström approximations, kernel ridge regression at scale, HSIC / CKA / MMD tests, graph kernels and eigenmaps — instead of hand-rolling distance matrices, Cholesky solves and random features.",
       "dependencies": [
-        "gaussx",
-        "geonnax"
+        "gaussx"
       ]
     },
     {

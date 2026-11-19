@@ -107,8 +107,8 @@ flowchart TB
   geotoolz --> pipekit
   integrix --> functax
   integrix --> gaussx
+  kernellib --> functax
   kernellib --> gaussx
-  kernellib --> geonnax
   manipy --> kernellib
   plumax --> finitevolX
   plumax --> pipekit
@@ -118,6 +118,7 @@ flowchart TB
   pyrox --> argminax
   pyrox -.-> filterax
   pyrox -.-> gauss_flows
+  pyrox --> geonnax
   pyrox --> kernellib
   radtrax --> argminax
   radtrax --> geonnax
@@ -127,6 +128,7 @@ flowchart TB
   sesmax --> geonnax
   sesmax --> pipekit
   sesmax -.-> vardax
+  spectraldiffx --> functax
   spectraldiffx --> gaussx
   vardax --> argminax
   vardax --> geonnax
@@ -135,7 +137,7 @@ flowchart TB
 ```
 :::
 
-20 repositories, 41 packages and 53 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+20 repositories, 41 packages and 54 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -325,8 +327,8 @@ cannot import, so most of its tests could no longer be collected.
 | filterax | gaussx | base | `filterax → gaussx` |
 | gauss_flows | gaussx | import | `gauss-flows → gaussx` |
 | geonnax | functax | base | `geonnax → functax` |
+| kernellib | functax | base | `kernellib → functax` |
 | kernellib | gaussx | base | `kernellib → gaussx` |
-| kernellib | geonnax | base | `kernellib → geonnax` |
 | manipy | gaussx | base | `manipy-jax → gaussx` |
 | manipy | kernellib | base | `manipy-jax → kernellib` |
 | pyrox | argminax | base | `pyrox-lgm → argminax` |
@@ -345,6 +347,7 @@ cannot import, so most of its tests could no longer be collected.
 | finitevolX | integrix | base | `finitevolx → integrix` |
 | finitevolX | pipekit | extra | `finitevolx → pipekit-jax` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
+| spectraldiffx | functax | base | `spectraldiffx → functax` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
 | geotoolz | functax | base | `geotoolz-array → functax` |
 | geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
