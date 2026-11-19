@@ -1,12 +1,11 @@
 """Write integrix's role ladder as light and dark SVGs.
 
 The layout and palettes follow functax's ladder (``functax_roles/``), so the
-libraries' ladders read alike. Every public name of integrix is on it, placed
-by the role its entry has in integrix's skill shelf
-(``plugins/integrix/tree/shelf.toml``). Two rungs are drawn dashed: integrix
-has no structures of its own (a rule is functax's data) and no models (the
-integrand and the right-hand side are the caller's). Re-run after editing the
-rows below, from the repo root::
+libraries' ladders read alike. Every public name of integrix is on it, each
+placed by the role-ladder skill's §2 test. Beside integrix's own names, the
+structures hold functax's rules (a rule is functax's data) and the models hold
+diffrax's terms (the integrand and the right-hand side are the caller's).
+Re-run after editing the rows below, from the repo root::
 
     uv run --no-project --with loguru --with cyclopts \\
         python docs/images/libraries/integrix_roles/make_svgs.py
@@ -28,29 +27,18 @@ SANS = "ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
 MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
 
 # The rungs of the GeoStack role ladder (the role-ladder skill), top to bottom,
-# with integrix's public names on each, by the role of their shelf entry. Each
-# row is (badge, role, grammar, caption, groups, palette key, borrowed), and
-# each group is (label, chips): the label starts a new line and the chips wrap
-# after it.
+# with integrix's public names on each, each placed by the skill's §2 test
+# (integrix's shelf groups names into entries, and an entry's role need not be
+# each name's). Each row is (badge, role, grammar, caption, groups, palette key,
+# borrowed), and each group is (label, chips): the label starts a new line and
+# the chips wrap after it.
 ROWS = [
     (
         "4",
         "algorithm",
         "the sentence",
-        "march a state through N steps",
-        [
-            (None, ["run"]),
-            (
-                "steppers",
-                [
-                    "AbstractStepper",
-                    "AB2Solver",
-                    "LeapfrogRAFSolver",
-                    "SplitExplicitRKSolver",
-                    "SplitExplicitTerms",
-                ],
-            ),
-        ],
+        "march or scan a state through N steps",
+        [(None, ["run", "checkpointed_scan", "truncated_scan"])],
         "pink",
         False,
     ),
@@ -58,10 +46,13 @@ ROWS = [
         "3",
         "model",
         "the noun phrase",
-        "none of integrix's own: f is the caller's",
-        [("diffrax terms", ["diffrax.ODETerm", "diffrax.MultiTerm"])],
+        "the vector field: integrix's split terms, else the caller's",
+        [
+            (None, ["SplitExplicitTerms"]),
+            ("diffrax terms", ["diffrax.ODETerm", "diffrax.MultiTerm"]),
+        ],
         "violet",
-        True,
+        False,
     ),
     (
         "2",
@@ -70,19 +61,6 @@ ROWS = [
         "how to integrate: settings only, no data",
         [
             ("adaptive", ["GaussKronrod", "TanhSinh", "Romberg"]),
-            (
-                "expectations",
-                [
-                    "Expectation",
-                    "monte_carlo",
-                    "qmc",
-                    "importance",
-                    "effective_sample_size",
-                    "pareto_smoothed_log_weights",
-                    "log_gauss_hermite",
-                    "log_simpson",
-                ],
-            ),
             (
                 "diffrax solvers",
                 [
@@ -96,25 +74,16 @@ ROWS = [
                 ],
             ),
             (
-                "IMEX",
+                "steppers",
                 [
-                    "IMEX_SSP2",
-                    "imex_solver",
-                    "imex_ssp2_step",
-                    "imex_stepsize_controller",
-                    "stable_step",
+                    "AbstractStepper",
+                    "AB2Solver",
+                    "LeapfrogRAFSolver",
+                    "SplitExplicitRKSolver",
                 ],
             ),
-            (
-                "adjoints",
-                [
-                    "Checkpointed",
-                    "Truncated",
-                    "checkpointed_scan",
-                    "truncated_scan",
-                    "to_diffrax_adjoint",
-                ],
-            ),
+            ("IMEX", ["IMEX_SSP2", "imex_solver", "imex_stepsize_controller"]),
+            ("adjoints", ["Checkpointed", "Truncated"]),
         ],
         "blue",
         False,
@@ -123,10 +92,21 @@ ROWS = [
         "1",
         "primitive",
         "the verb",
-        "one call: sum, scan or step",
+        "one call: sum, scan, average or step",
         [
-            ("sums", ["integrate", "log_integrate", "weighted_mean", "Integral"]),
+            ("sums", ["integrate", "log_integrate", "weighted_mean"]),
             ("running", ["cumulative", "cumulative_adaptive"]),
+            (
+                "expectations",
+                [
+                    "monte_carlo",
+                    "qmc",
+                    "importance",
+                    "log_gauss_hermite",
+                    "log_simpson",
+                ],
+            ),
+            ("weights", ["effective_sample_size", "pareto_smoothed_log_weights"]),
             (
                 "step functions",
                 [
@@ -138,8 +118,10 @@ ROWS = [
                     "ab3_step",
                     "leapfrog_raf_step",
                     "split_explicit_step",
+                    "imex_ssp2_step",
                 ],
             ),
+            ("bounds, specs", ["stable_step", "to_diffrax_adjoint"]),
         ],
         "teal",
         False,
@@ -148,10 +130,13 @@ ROWS = [
         "0",
         "structure",
         "the noun",
-        "none of integrix's own: a rule is functax's",
-        [("functax.quad", ["Rule", "SphereRule", "CurveRule"])],
+        "the results, and functax's rules",
+        [
+            ("results", ["Integral", "Expectation"]),
+            ("functax.quad", ["Rule", "SphereRule", "CurveRule"]),
+        ],
         "cyan",
-        True,
+        False,
     ),
 ]
 # Boxes beside the ladder: (title, caption, chips, rung the arrow points at).
@@ -389,12 +374,13 @@ def build(theme: str) -> str:
         )
     height = base_y + base_h + 20
     label = (
-        "integrix on the GeoStack role ladder: run and the history steppers as "
-        "algorithms; no models of its own (the integrand is the caller's, in a "
-        "diffrax term); adaptive rules, expectations, diffrax solvers, IMEX "
-        "schemes and adjoints as strategies; sums, running integrals and step "
-        "functions as primitives; and functax's rules as the structures; diffrax, "
-        "optimistix and lineax and the setup names sit beside the ladder."
+        "integrix on the GeoStack role ladder: run and the checkpointed and "
+        "truncated scans as algorithms; the split-explicit terms, beside diffrax's "
+        "terms, as the model; adaptive rules, diffrax solvers, steppers, IMEX "
+        "schemes and adjoint options as strategies; sums, running integrals, "
+        "expectations, weight diagnostics and step functions as primitives; and the "
+        "results with functax's rules as structures; diffrax, optimistix and lineax "
+        "and the setup names sit beside the ladder."
     )
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="960" height="{height:.0f}" '
