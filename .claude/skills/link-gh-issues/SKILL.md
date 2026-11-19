@@ -88,13 +88,20 @@ If the user says "A blocks B", apply `addBlockedBy(issueId=B, blockingIssueId=A)
 When applying the relationships from a theme epic or wave epic:
 
 1. Fetch the epic's body: `gh issue view <N> --json body --jq .body`
-2. Parse the `## Issues` (or `## Canonical Child Issues`) checklist: every `#NNN` reference becomes a sub-issue of the epic.
+2. Parse the `## Issues` (or `## Canonical Child Issues`) checklist: every `#NNN` reference becomes a sub-issue of the epic, the checked ones too. Link them in one call: `make gh-sub PARENT=<epic> CHILDREN="<a> <b> <c>"`.
+   The epic's own parent (`## Parent Wave`, or a `Parent:` line under `## Relationships`) makes the epic a sub-issue of that issue.
 3. Parse the `## Relationships` block for `Blocked by:` and `Blocks:` lines — apply accordingly.
 4. Skip `Related:` lines — they stay as prose only (no native feature).
 
-Confirm each link applied with a brief summary to the user.
+Confirm each link applied with a brief summary to the user, and end every batch with a read-back (Step 4).
 
 ### Step 4 — Verify / read back
+
+```bash
+make gh-show ISSUE=<number>     # parent, sub-issues, blocked-by and blocking, from the helper script
+```
+
+or the query behind it:
 
 ```bash
 # Show parent + all sub-issues of an issue
@@ -150,7 +157,7 @@ The prose `## Relationships` block in the issue body is the human-readable recor
 - Related: #38
 ```
 
-Leave those lines in place — they're readable in diffs, search, and tools that don't resolve GraphQL. The native link is for GitHub's UI + automation. Both coexist.
+Leave those lines in place — they're readable in diffs, search, and tools that don't resolve GraphQL. The native link is for GitHub's UI + automation. Both coexist, and they must agree: when you add a native link whose prose line is missing from the body, add the line too, and say so.
 
 `Related:` has no native equivalent; mention only.
 
