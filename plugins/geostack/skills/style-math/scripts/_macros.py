@@ -99,6 +99,23 @@ def _closes(match: re.Match | None, opening: str) -> bool:
     return fence[0] == opening[0] and len(fence) >= len(opening)
 
 
+def fenced_lines(markdown: str) -> set[int]:
+    """The numbers of the lines inside a code or math fence, delimiters included."""
+    inside: set[int] = set()
+    fence: tuple[str, str] | None = None
+    for number, line in enumerate(markdown.splitlines(), start=1):
+        match = FENCE.match(line)
+        if fence is None:
+            if match:
+                fence = _opens(match)
+                inside.add(number)
+            continue
+        inside.add(number)
+        if _closes(match, fence[1]):
+            fence = None
+    return inside
+
+
 @dataclass(frozen=True)
 class Span:
     line: int

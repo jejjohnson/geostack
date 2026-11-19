@@ -14,20 +14,20 @@ How a symbol becomes a variable name or a dim name in code is in `style-python` 
 ## How to use it
 
 1. Write with the macros, giving every symbol its shape.
-2. Check the file against the standard and the target renderer. The scripts are in this skill's `scripts/` folder; `<skill folder>` below is the base directory given when the skill loads:
+2. Check the file against the standard and the target renderer. The scripts are in this skill's `scripts/` folder; `<skill folder>` below is the base directory given when the skill loads. Each script declares its dependencies (cyclopts, loguru, pyyaml) inline, so `uv run` installs them; plain `python` works only where they are already installed:
 
 ```bash
-python <skill folder>/scripts/check_math.py notes.md --target myst
+uv run <skill folder>/scripts/check_math.py notes.md --target myst
 ```
 
 3. For GitHub, expand the macros, then check again:
 
 ```bash
-python <skill folder>/scripts/expand_macros.py body.md
+uv run <skill folder>/scripts/expand_macros.py body.md
 ```
 
 ```bash
-python <skill folder>/scripts/check_math.py body.md --target github
+uv run <skill folder>/scripts/check_math.py body.md --target github
 ```
 
 4. For a MyST or mkdocs project, install the macros once with `scripts/emit_macros.py` (`references/targets.md`).
