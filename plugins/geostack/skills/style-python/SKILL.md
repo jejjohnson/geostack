@@ -5,7 +5,7 @@ description: Eman's Python house style for JAX/Equinox scientific code — docst
 
 # Python house style
 
-Draft 4 · 19 Nov 2026 · the open questions are settled, and what `style-math` and `style-code-sketch` own is pointed to instead of repeated.
+Draft 5 · 19 Nov 2026 · the open questions are settled, and what `style-math` and `style-code-sketch` own is pointed to instead of repeated.
 
 Three skills share the ground, and each rule lives in one of them. `style-math` owns the symbols, their roles, the sizes and how maths is written in Unicode. This skill owns how they meet real code: the dim names, the variable names, the comments, the modules. `style-code-sketch` builds on this one and owns what only pseudocode needs: the shapes header, the shape comment and the status markers.
 
@@ -72,7 +72,7 @@ with install_import_hook("radtrax", "beartype.beartype"):
 - A function over the repo's size limit is split into private helpers that take everything as arguments (`_kalman_predict`, `_kalman_update`). Docstrings and equation comments are never cut to fit; where a repo counts them, its limit should count code lines only.
 - lineax for linear solves; solve, never invert.
 - One operation per line. No nested calls that hide an intermediate result.
-- Lines stay within ruff's 88 columns; wrap a long call over several lines rather than shortening names.
+- Lines stay within ruff's 88 columns; wrap a long call over several lines rather than shortening names. A long einx call is the usual offender, in tests as much as in the library, so run `ruff check` and `ruff format` on every file before handing it over.
 
 ## 5. Modules and functions
 
@@ -82,7 +82,7 @@ with install_import_hook("radtrax", "beartype.beartype"):
 - **Hyperparameters are fields of a callable module; data goes into `__call__`.** This is the semicolon of the maths: in $f(\mathbf{x}, \mathbf{u}; \boldsymbol{\theta})$ the fixed $\boldsymbol{\theta}$ are fields and the variables are arguments, `dynamics(state, inputs)`.
 - **One parameterisation per module.** A module stores a covariance or a precision as a lineax operator, never both; the other is reached by a solve.
 - **Inputs that travel together form their own small module** (μ and Σ become `Background`).
-- **Protocols are abstract modules** with `eqx.AbstractVar`.
+- **Protocols are abstract modules** with `eqx.AbstractVar`. In a repo whose modules open with `from __future__ import annotations` (plumax, and any repo whose `AGENTS.md` asks for it), `AbstractVar` is not seen: the attribute becomes an ordinary field and a subclass that gives it a default breaks the field order. There, declare it on the base as an abstract property (`@property` over `@abc.abstractmethod`) and let each subclass provide it as a field.
 - **Many inputs:** few positionals, the rest keyword-only after `*`.
 - **PRNG keys** are keyword-only, named `key`, last. Split once at the top into named keys, one per stochastic stage.
 - **Updates.** Public `with_*` methods. Config fields use `dataclasses.replace` so `__check_init__` re-runs; array leaves use `eqx.tree_at`.
@@ -159,6 +159,8 @@ Every public forward function gets all four:
 2. **Property-based** invariants with hypothesis.
 3. **Gradient check:** `jacrev` against central differences.
 4. **Transform invariance:** eager, `jit` and `vmap` agree with a Python loop.
+
+Test code keeps the rules of §4 and §6: einx in place of `axis=`, `.T`, `reshape` and `[:, None]`, descriptive names, and the tolerance of each comparison stated. A property test that cannot use a drawn case rejects it with `hypothesis.assume`; a bare `return` counts it as a pass.
 
 ## Conforming example
 
@@ -289,6 +291,8 @@ class MatchedFilter(eqx.Module):
 ```
 
 ## Review checklist
+
+A style review is still a review. A fault in what the code computes that is met on the way (a scaling applied twice, a division by zero for one member, state that is stored and never read) is reported first, ahead of every style point.
 
 - [ ] Logic only under `_src`; public modules re-export.
 - [ ] Every array typed with named dims; no shape comments.

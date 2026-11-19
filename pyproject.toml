@@ -36,7 +36,14 @@ docs = [
 target-version = "py312"
 line-length = 88
 # docs/overview.md: keep the design document's Python sketches as written.
-exclude = ["notebooks/", "marimo_notebooks/", "references/", "docs/overview.md"]
+# plugins/**/evals/*/files/: inputs of the skills' eval cases, some wrong on purpose.
+exclude = [
+    "notebooks/",
+    "marimo_notebooks/",
+    "references/",
+    "docs/overview.md",
+    "plugins/**/evals/*/files/",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

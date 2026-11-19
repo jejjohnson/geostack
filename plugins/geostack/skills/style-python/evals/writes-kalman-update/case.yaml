@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-kalman-update
+expected_outcome: |
+  A module in the house style: module docstring, aliased imports, jaxtyping annotations with dims from the shared vocabulary, a lineax solve in place of an inverse, einx or operator methods in place of .T and axis=, one operation per line with a unicode equation comment above each mathematical line, descriptive names from the symbol table, and a Google docstring with the equation, a numbered algorithm, untyped Args and doctested examples.
