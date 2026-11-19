@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: varies-one-setting
+expected_outcome: |
+  A different value of an existing setting is an override run as a tracked DVC experiment, not new code or a new config file; the two results are compared through the tracked metrics.

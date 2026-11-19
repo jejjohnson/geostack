@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: sweeps-three-values
+expected_outcome: |
+  One tracked DVC experiment per value rather than a Hydra multirun that overwrites the single metrics file, the table read from the tracked metrics, no numbers invented for runs that were not made, and the rule that a number in the docs comes from a committed pipeline output.
