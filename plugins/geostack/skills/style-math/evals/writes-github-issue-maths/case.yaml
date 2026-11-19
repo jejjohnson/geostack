@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-github-issue-maths
+expected_outcome: |
+  A GitHub-ready section: display maths in math code fences, macros expanded, kernel matrices subscripted by their inputs, inducing inputs and values named as in the standard, variational parameters nu after a semicolon, the loss as the minimised negative ELBO with its sign stated and the minibatch scaling, a shape for every symbol, and a clean run of the checker for GitHub.
