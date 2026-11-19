@@ -5,7 +5,7 @@ description: The modeling cycle of the GeoStack, the research loop that every pa
 
 # The modeling cycle
 
-Draft 1 · 19 Nov 2026 · from the overview's first axis (`docs/overview.md`, "The modeling cycle", @ `854276a`). Where this file and that page disagree, the page wins.
+Draft 2 · 19 Nov 2026 · from the overview's first axis (`docs/overview.md`, "The modeling cycle", @ `854276a`). Where this file and that page disagree, the page wins.
 
 The modeling cycle is the research loop: model, observe, compare, refine. Every package in the stack exists to make one or more of its steps composable. It is the first of the stack's three organising axes; the other two are `data-levels` and `six-step-cycle`, both in this plugin.
 
@@ -47,6 +47,16 @@ When a model and the data disagree, ask in this order. The overview gives the tw
 
 State each judgement on the page, with its evidence.
 
+**Write the diagnosis or the plan as a table of highlights with the detail below it.** The table has one row per judgement or per step of the plan and a few words per cell: the question, the answer, the evidence in a phrase, and the loop it leads to. Nothing in a cell runs to a second sentence. Below the table, each row gets a paragraph that opens with its name in bold and then says what the table could not: the statistic and its value, the pattern seen, what is uncertain. Caveats that belong to no single row follow in the same form.
+
+```markdown
+| Question | Answer | Evidence | Leads to |
+|---|---|---|---|
+| Does the error model explain the misfit? | no | bias follows the stratified regime | outer loop, model track |
+
+**Does the error model explain the misfit?** The innovation statistic is ... over the stratified cases and ...
+```
+
 ## 5. Where the cycle meets the other axes
 
 - **The inner loop is where data assimilation lives.** On `data-levels` it is the compute step into L4 (model and assimilate). On `six-step-cycle` it is step 2, model-based inference, the oracle.
@@ -59,3 +69,4 @@ State each judgement on the page, with its evidence.
 - [ ] The evidence for that call is given: the residual statistic, and the pattern or its absence.
 - [ ] A random misfit leads to estimation with the same model; a systematic one to a change of structure or of the observing system.
 - [ ] Each structural change is the smallest that addresses the pattern, and is scored against the model before it.
+- [ ] A written diagnosis or plan is a table of highlights, a few words per cell, with a bold-led paragraph per row below it.
