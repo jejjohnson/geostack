@@ -41,8 +41,8 @@ specific to Claude Code.
   - shipping: `pre-pr-check`, `geostack-review`, `squash-commit`;
   - GitHub housekeeping: `create-gh-issue`, `link-gh-issues`;
   - the README, docs figures and mathematical reference of a stack
-    library: `library-readme`, `library-docs-figures` and
-    `library-math-reference`, kept in `plugins/geostack/skills/` so the
+    library: `repo-readme`, `repo-docs-figures` and
+    `repo-math-reference`, kept in `plugins/geostack/skills/` so the
     geostack plugin installs them in every repository;
   - the house styles for Python, maths notation and pseudocode:
     `style-python`, `style-math` and `style-code-sketch`, in the same place.

@@ -37,7 +37,7 @@ not into a local package.
 | `marimo_notebooks/` | marimo notebooks (`01_exploration.py`) |
 | `docs/`, `myst.yml`, `references.bib` | MyST documentation (notes, tutorials, API pages, capability indexes) and its bibliography |
 | `CITATION.cff` | How to cite the project |
-| `.claude-plugin/marketplace.json`, `plugins/geostack/`, `skill_tree/cards/` | The skill tree for projects that build on the stack: the generated marketplace of every library's plugin, geostack's root plugin (`role-ladder`, the three `library-*` standards and the three `style-*` house styles), and the contract cards geostack holds for libraries that ship none |
+| `.claude-plugin/marketplace.json`, `plugins/geostack/`, `skill_tree/cards/` | The skill tree for projects that build on the stack: the generated marketplace of every library's plugin, geostack's root plugin (`role-ladder`, the `repo-readme`, `repo-docs-figures` and `repo-math-reference` standards and the three `style-*` house styles), and the contract cards geostack holds for libraries that ship none |
 
 ### The layers
 
@@ -272,9 +272,9 @@ agent can read and follow them), and two read-only review checklists in
 | Verify before a PR | `pre-pr-check` |
 | Review a change | `geostack-review` (+ the read-only `.claude/agents/reuse-reviewer.md` and `reproducibility-reviewer.md`) |
 | Write a squash commit message | `squash-commit` |
-| Write, rebuild or review the README of a stack library (vardax, argminax, …) | `library-readme`, in `plugins/geostack/skills/` |
-| Draw, place or update the figures of a stack library's docs | `library-docs-figures`, in `plugins/geostack/skills/` |
-| Plan, write or review the mathematical reference of a stack library's docs | `library-math-reference`, in `plugins/geostack/skills/` |
+| Write, rebuild or review the README of a stack library (vardax, argminax, …) | `repo-readme`, in `plugins/geostack/skills/` |
+| Draw, place or update the figures of a stack library's docs | `repo-docs-figures`, in `plugins/geostack/skills/` |
+| Plan, write or review the mathematical reference of a stack library's docs | `repo-math-reference`, in `plugins/geostack/skills/` |
 | Write or review Python, maths notation or pseudocode in a stack library | `style-python`, `style-math`, `style-code-sketch`, in `plugins/geostack/skills/` |
 | Open or link GitHub issues | `create-gh-issue`, `link-gh-issues` (templates in `.github/ISSUE_TEMPLATE/`; `make gh-labels`, `gh-sub`, `gh-block`, `gh-show`) |
 
@@ -285,8 +285,8 @@ work inside the project.
 geostack does publish one thing for other projects: the skill tree.
 `.claude-plugin/marketplace.json` lists every library's Claude Code plugin,
 each with the plugins of the libraries it builds on, and geostack's own
-plugin (`plugins/geostack/`: `role-ladder`, the `library-readme`,
-`library-docs-figures` and `library-math-reference` standards, and the
+plugin (`plugins/geostack/`: `role-ladder`, the `repo-readme`,
+`repo-docs-figures` and `repo-math-reference` standards, and the
 `style-python`, `style-math` and `style-code-sketch` house styles). It is generated
 (`make skill-tree`); the design is
 [`docs/design/skill_tree.md`](docs/design/skill_tree.md).
