@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: plans-a-backlog-publish
+expected_outcome: |
+  The wave epic first, then the theme epic, then the two leaf issues, with the template of each identified, a draft-ID-to-issue mapping, cross-references replaced by real numbers before or after creation, the native links applied once all exist, labels and milestone per issue, and the backlog updated or archived.
