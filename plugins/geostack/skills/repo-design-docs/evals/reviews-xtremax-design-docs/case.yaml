@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-xtremax-design-docs
+expected_outcome: |
+  A review of xtremax's design docs that lists the real gaps against the standard (the folder name, design_overview.md in place of a README, file names that repeat the folder, Layer 0, 1, 2 in place of rungs, the form of its decision records, pages that have drifted from the code) with where each occurs, credits what already meets it, and invents no problem the docs do not have.
