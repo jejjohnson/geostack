@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: starts-diagnostix-design
+expected_outcome: |
+  Three design pages for diagnostix (README with the folder tree and reading order, vision, boundaries) that follow the proposal's content, say what the library is not, give an ownership map and a way to place new code, and stop before architecture, API or code.

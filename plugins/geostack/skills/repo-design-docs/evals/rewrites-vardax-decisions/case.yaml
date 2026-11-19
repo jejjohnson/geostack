@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: rewrites-vardax-decisions
+expected_outcome: |
+  D1 to D4 as decision records with a status, context, options, decision and consequences, keeping their IDs and what was decided, and saying so wherever the source gives no options or consequences instead of inventing them.
