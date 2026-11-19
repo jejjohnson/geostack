@@ -1,6 +1,6 @@
 ---
 name: library-math-reference
-description: The GeoStack standard for a library's mathematical reference, the numbered chapters of its docs that derive what the code computes. How to plan the chapter list from the library's public names (foundation, methods or operations, cross-cutting, numerics, worked examples, notation, references), the section order of each kind of chapter, the real problem from remote sensing, geoscience or mathematical modelling that motivates each chapter and carries its explanation, and the MyST forms every chapter uses (numbered and labelled equations with a where-sentence of shapes, labelled code-block directives in the code-sketch format with their printed output, labelled tables, cite roles on a bibliography, xref links into the API), the notation page with its classic-letters table, the test that runs every block and checks what it prints, and the myst.yml wiring. vardax, filterax, integrix and functax are the examples it was taken from, not the standard itself, and the skill says where each still differs. Use when planning, writing, reviewing or extending a stack library's mathematical reference, when adding a chapter for a new method, or when bringing an existing reference up to the standard.
+description: The GeoStack standard for a library's mathematical reference, the numbered chapters of its docs that derive what the code computes. How to plan the chapter list from the library's public names (foundation, methods or operations, cross-cutting, numerics, worked examples, notation, references), the section order of each kind of chapter, the real problem from remote sensing, geoscience or mathematical modelling that motivates each chapter and carries its explanation, and the MyST forms every chapter uses (numbered and labelled equations with a where-sentence of shapes, labelled code-block directives in the style-code-sketch form with their printed output, labelled tables, cite roles on a bibliography, xref links into the API), the notation page with its classic-letters table, the test that runs every block and checks what it prints, and the myst.yml wiring. vardax, filterax, integrix and functax are the examples it was taken from, not the standard itself, and the skill says where each still differs. Use when planning, writing, reviewing or extending a stack library's mathematical reference, when adding a chapter for a new method, or when bringing an existing reference up to the standard.
 ---
 
 # Library mathematical reference
@@ -9,7 +9,7 @@ Draft 3 · 19 Nov 2026 · taken from the mathematical references of filterax (`d
 
 A stack library's docs have a mathematical reference: numbered chapters that write down what the library computes, derive it, run it and say when it fails. This skill is the standard for those chapters. The three references it was taken from are examples, not the standard: each was written before this skill, each does some things the others do better, and §9 lists what each would change to meet it. Where an example and this skill disagree, follow the skill, and where the skill is silent, copy the example named for that rule.
 
-It builds on five other skills and does not repeat them: `role-ladder` (in this plugin) for the roles the library's names play, which decide the chapter list and the order inside a chapter; `eman-style-math` for the notation; `code-sketch` for the code on the page; `eman-prose-tech` for the voice; and `library-docs-figures` (in this plugin) for any figure a chapter carries.
+It builds on five other skills and does not repeat them: `role-ladder` (in this plugin) for the roles the library's names play, which decide the chapter list and the order inside a chapter; `style-math` for the notation; `style-code-sketch` for the code on the page; `eman-prose-tech` for the voice; and `library-docs-figures` (in this plugin) for any figure a chapter carries.
 
 ## 1. Planning the reference
 
@@ -89,13 +89,13 @@ Problems the examples already use, as a place to start:
 ## 4. Equations and notation
 
 - **Every display equation is on one source line and labelled**: `$$ … $$ (eq-<chapter>-<name>)`. It is followed by a sentence starting "where" that gives each new symbol and its shape, and it is cited as `[](#eq-…)`. The frontmatter `numbering: enumerator: "N.%s"` numbers it with the chapter.
-- **The notation is `eman-style-math`'s**, with the kind-named macros (`\vect`, `\mat`, `\gvect`, `\gmat`, `\op`) installed in `myst.yml`. A library that departs from it says so at the top of its notation page with the reason, as integrix does for $f$ (the integrand there, the dynamics elsewhere).
+- **The notation is `style-math`'s**, with the kind-named macros (`\vect`, `\mat`, `\gvect`, `\gmat`, `\op`) installed in `myst.yml`. A library that departs from it says so at the top of its notation page with the reason, as integrix does for $f$ (the integrand there, the dynamics elsewhere).
 - **The notation page** has one labelled table per topic with the columns Symbol, Shape, Meaning and In code, where "In code" is the argument or attribute that holds the symbol. It ends with a "Classic letters" table that maps the literature's letters to the house ones, so a reader coming from a paper can find their $\mat{K}$. Physical symbols carry units in the Shape column. Copy from integrix `notation.md` for the tables and filterax `notation.md` for the classic letters.
 - **A symbol used on one page only** is declared in a table on that page, not on the notation page.
 
 ## 5. Code on the page
 
-Every block is a `code-sketch`: a `# Shapes:` header, the equation in Unicode above each line, a shape comment on each array, and a status marker (`# today (<pkg>)`, `# user`) above each call into the stack or each function the reader would write.
+Every block follows `style-code-sketch`: a `# Shapes:` header, the equation in Unicode above each line, a shape comment on each array, and a status marker (`# today (<pkg>)`, `# user`) above each call into the stack or each function the reader would write.
 
 ````markdown
 ```{code-block} python
@@ -167,7 +167,7 @@ A move of folder changes every chapter's URL, so the PR that does it lists the o
 - [ ] A method chapter names structures, then primitives and strategies, then the model, then the algorithm; it carries the pieces table when it names more than three pieces, and checks every strategy it names.
 - [ ] A chapter goes one rung below its own at most, and links to the owning library's chapter for anything lower.
 - [ ] Every display equation is on one line, labelled, and followed by a where-sentence with shapes; every symbol is on the notation page or in a table on its own page.
-- [ ] Every code block is a labelled, captioned `code-sketch` followed by its exact output; no number in the prose lacks a block that prints it.
+- [ ] Every code block is a labelled, captioned block in `style-code-sketch` form, followed by its exact output; no number in the prose lacks a block that prints it.
 - [ ] `tests/test_math_pages.py` passes on the chapter.
 - [ ] Citations are cite roles on checked `.bib` entries; public names are `xref:` links; cited tables and figures are labelled.
 - [ ] The strict build passes with the latest mystmd.

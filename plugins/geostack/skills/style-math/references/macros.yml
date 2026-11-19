@@ -1,0 +1,10 @@
+# Master list of maths macros for the style-math standard.
+# emit_macros.py (planned) writes these into myst.yml (`math:`) and mkdocs (MathJax `tex.macros` or KaTeX `macros`);
+# expand_macros.py (planned) replaces them with their expansion for GitHub, which has no custom macros.
+# Each kind has a Latin and a Greek macro because KaTeX cannot bold both alphabets with one definition.
+
+vect: '\mathbf{#1}'        # Latin vector, x in R^{D}
+mat: '\mathbf{#1}'         # Latin matrix, K in R^{N x N}
+gvect: '\boldsymbol{#1}'   # Greek vector, mu in R^{D}
+gmat: '\boldsymbol{#1}'    # Greek matrix, Sigma in R^{D x D}
+op: '\mathrm{#1}'          # upright operator name: diag, argmin, KL
