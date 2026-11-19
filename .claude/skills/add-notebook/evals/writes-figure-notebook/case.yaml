@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-figure-notebook
+expected_outcome: |
+  A jupytext percent-format .py notebook in notebooks/ with the YAML header, a numbered name, seeded draws, the figure saved under docs/images/<notebook>/ and then shown, no .ipynb, and the commands that parse and run it.
