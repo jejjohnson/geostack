@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-integrix-rules-chapter
+expected_outcome: |
+  A review of integrix's rules chapter that lists the real gaps against the standard (the folder, unlabelled and uncaptioned code blocks, shape comments beside the line, citations that are not cite roles, missing sections) with the place each occurs, credits what already meets it, and invents no problem the chapter does not have.
