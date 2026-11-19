@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: diagnoses-retrieval-bias
+expected_outcome: |
+  A diagnosis that notes no observation error model is stated, calls the misfit systematic, places it on the observing track because it follows the viewing geometry and the surface and not the dynamics or the emissions, advises against the sink term, proposes a fix to the retrieval or its bias correction checked against independent data, and says the comparison is repeated before the model is touched.

@@ -5,7 +5,7 @@ description: The modeling cycle of the GeoStack, the research loop that every pa
 
 # The modeling cycle
 
-Draft 2 · 19 Nov 2026 · from the overview's first axis (`docs/overview.md`, "The modeling cycle", @ `854276a`). Where this file and that page disagree, the page wins.
+Draft 3 · 19 Nov 2026 · from the overview's first axis (`docs/overview.md`, "The modeling cycle", @ `854276a`). Where this file and that page disagree, the page wins.
 
 The modeling cycle is the research loop: model, observe, compare, refine. Every package in the stack exists to make one or more of its steps composable. It is the first of the stack's three organising axes; the other two are `data-levels` and `six-step-cycle`, both in this plugin.
 
@@ -41,9 +41,11 @@ When a model and the data disagree, ask in this order. The overview gives the tw
 
 1. **Is there an error model?** State what the observation error and the model error are assumed to be, with their covariances $`\boldsymbol{\Sigma}_\varepsilon`$ and $`\boldsymbol{\Sigma}_\eta`$. Without one, no misfit can be called random or systematic.
 2. **Does the error model explain the misfit?** Compare the residuals with what it predicts. For a Gaussian error model the innovation statistic $`\chi^2 = \bar{\mathbf{r}}^\top \hat{\boldsymbol{\Sigma}}_y^{-1} \bar{\mathbf{r}}`$ has expectation $`D_y`$, and filterax's diagnostics compute it. Residuals of the expected size with no pattern in space, time or regime are random.
-3. **Random: run the inner loop.** Estimate the state when the misfit changes from window to window, and the parameters when it is constant over time and sample. The same model runs again.
-4. **Systematic: decide which track is at fault before changing either.** A bias that follows the instrument, the retrieval or the viewing geometry points at the observing track. One that follows a regime of the dynamics points at the model.
+3. **Random: run the inner loop.** Estimate the state when the misfit changes from window to window, and the parameters when it is constant over time and sample. The same model runs again. "Random" is the overview's word for any misfit this loop can remove, so a parameter that is wrong by the same amount everywhere belongs here even though it is not noise.
+4. **Systematic: decide which track is at fault before changing either.** A bias that follows the instrument, the retrieval or the viewing geometry points at the observing track. One that follows a regime of the dynamics points at the model. Before either, check the comparison itself: that the observation operator puts the model and the observations on the same footing (averaging kernel, prior profile, units, footprint). A fault on the observing track is confirmed against independent measurements, such as in-situ data joined by matchup, then corrected, and the comparison is repeated; the model is changed only for what remains.
 5. **Outer loop on the model: make the smallest structural change** that addresses the pattern, and keep the previous model as the reference it is scored against.
+
+**The inner loop's own output is evidence for the outer loop.** An analysis increment with the same sign window after window is not random, and it points at a parameter or at the structure. A calibrated parameter can absorb a structural error and give a good fit with a value that means nothing, so after calibration check that the residuals have no pattern left and that the value is physical.
 
 State each judgement on the page, with its evidence.
 
@@ -68,5 +70,7 @@ State each judgement on the page, with its evidence.
 - [ ] The error model is stated before a misfit is called random or systematic.
 - [ ] The evidence for that call is given: the residual statistic, and the pattern or its absence.
 - [ ] A random misfit leads to estimation with the same model; a systematic one to a change of structure or of the observing system.
+- [ ] A systematic misfit is placed on a track with its evidence, after the comparison itself is checked; a fault on the observing track is confirmed against independent measurements.
+- [ ] After estimation, the increments and the fitted values are checked for a pattern.
 - [ ] Each structural change is the smallest that addresses the pattern, and is scored against the model before it.
 - [ ] A written diagnosis or plan is a table of highlights, a few words per cell, with a bold-led paragraph per row below it.

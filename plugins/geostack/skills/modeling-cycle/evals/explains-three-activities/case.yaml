@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: explains-three-activities
+expected_outcome: |
+  A page that sets out the modelling and observing tracks meeting at the comparison, puts data assimilation and calibration in the inner loop as state and parameter estimation with the structure fixed, puts model development in the outer loop with changes to the observing system, maps the three ocean examples onto them, and says complexity is added only for a misfit that estimation did not remove.
