@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-specimen-script
+expected_outcome: |
+  A figures.py in the library's docs/assets that uses cyclopts and loguru, takes the page's Python blocks verbatim and in order and runs them in one namespace, switches float64 on at the top, logs the numbers the page quotes, writes the specimen at 150 dpi next to itself with a suptitle and a subtitle that names the calls and their arguments, takes --only, and runs as given; and a page that embeds the PNG by a relative path with alt text and a caption, next to the text it summarises.
