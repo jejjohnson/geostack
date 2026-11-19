@@ -23,6 +23,108 @@ Listed at geonnax 0.0.11, kernellib 0.0.22, filterax 0.0.6, vardax 0.3.5, gauss-
 
 Basis functions, neural layers and coordinate transforms in Equinox.
 
+### `geonnax`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AbstractConditioner` | class | Duck-typed protocol for ``(h, z) -> y`` conditioning layers. |
+| `AffineModulation` | class | Feature-wise Linear Modulation (FiLM): ``y = γ(z) ⊙ h + β(z)``. |
+| `AntiAliasedActivation` | class | A pointwise nonlinearity between band-limited function spaces. |
+| `Attention` | class | Pre-norm multi-head self-attention with cosine (QK-normalised) similarity. |
+| `BasisSpectralConv` | class | Spectral convolution in a precomputed basis: per-mode channel mixing. |
+| `BasisTransform` | class | Frozen analysis / synthesis pair for a precomputed basis. |
+| `Block` | class | Conv → GroupNorm → SiLU, the residual-block primitive. |
+| `CNO` | class | Convolutional Neural Operator: lift → U-Net of band-limited blocks → project. |
+| `CNOBlock` | class | Convolution then band-limited activation: the CNO I, D and U blocks. |
+| `CNOResBlock` | class | The CNO residual (R) block, $v \mapsto v + K_2\,\Sigma\,K_1 v$. |
+| `CPTensor` | class | Canonical-Polyadic (CP / PARAFAC) factorization. |
+| `Cartesian3DEncoder` | class | Lift a single lon/lat coordinate onto the unit sphere $S^2$. |
+| `ConcatConditioner` | class | Concatenate ``h`` and ``z`` then apply a single ``Linear``. |
+| `ConditionedINR` | class | Wrap an inner network's per-layer activations with conditioners. |
+| `ConvNeXtBlock` | class | ConvNeXt-V2 block: depthwise conv → norm → MLP with GRN (Woo et al., 2023). |
+| `CyclicEncoder` | class | Encode a single periodic input as concatenated cos/sin features. |
+| `DeepVSSGPCore` | class | Deterministic deep RFF spectral core. |
+| `Deg2Rad` | class | Element-wise degrees-to-radians conversion. |
+| `DenseRank1` | class | Rank-1 ensemble dense layer (deterministic BatchEnsemble core). |
+| `DenseTensor` | class | A full, un-factorised tensor. |
+| `DomainPadding` | class | Zero-pad spatial axes by a fraction of their size, then crop back. |
+| `Downsample` | class | Memory-efficient factor-2 downsample: space-to-depth, then ``1x1`` conv. |
+| `FNO` | class | Fourier Neural Operator: lifting → Fourier blocks → projection. |
+| `FNOBlock` | class | One Fourier layer: spectral conv + pointwise skip, then an activation. |
+| `FourierFilter` | class | Single Fourier filter: $g(x) = \sin(\Omega x + \varphi)$. |
+| `FourierNet` | class | Multiplicative Fourier Filter Network (Fathony et al., ICLR 2021). |
+| `GaborFilter` | class | Single Gabor filter: $g(x) = \sin(\Omega x + \varphi) \odot \exp(-\tfrac{\gamma}{2}\\|x - \mu\\|^2)$. |
+| `GaborNet` | class | Multiplicative Gabor Filter Network (Fathony et al., ICLR 2021). |
+| `GaussianFourierEncoder` | class | Gaussian random Fourier-feature positional encoding (Tancik et al., 2020). |
+| `GaussianRegressionHead` | class | Heteroscedastic Gaussian regression head (mean plus log-scale). |
+| `GeneratedSiren` | class | Wrapper around a SIREN whose layers consume generated weights. |
+| `GeoContextEncoder` | class | Encode geoscience metadata into a single context vector. |
+| `GeoFNO` | class | Geo-FNO: a Fourier neural operator on per-sample point clouds. |
+| `GlobalResponseNorm` | class | Global Response Normalization (Woo et al., 2023, "ConvNeXt-V2"). |
+| `HeteroscedasticHead` | class | Shared state and init for the FA-noise heteroscedastic layers. |
+| `HybridSphericalSlepianEncoder` | class | Concatenate low-bandwidth global SHs with local Slepian cap modes. |
+| `HyperLinear` | class | Generate a target ``Linear``'s ``(W, b)`` from ``z``, then apply. |
+| `HyperSIREN` | function | NIF-style ShapeNet/ParameterNet composite (Pan, Brunton, Kutz — JMLR 2023). |
+| `LNO` | class | Local Neural Operator: pad → local core → crop, marched with `jax.lax.scan`. |
+| `LaplaceRandomFeatureCovariance` | class | Laplace-approximation precision for an SNGP output head. |
+| `LayerNormEnsemble` | class | Per-ensemble-member LayerNorm (deterministic core). |
+| `LearnedDeformation` | class | A learned chart from the physical domain onto the latent torus (Geo-FNO). |
+| `LinearAttention` | class | Pre-norm linear attention — ``O(n)`` in the number of spatial positions. |
+| `LinearChainCRF` | class | Deterministic linear-chain CRF — forward algorithm plus Viterbi decoding. |
+| `LonLatScale` | class | Affine-rescale a single lon/lat pair into ``[-1, 1]``. |
+| `MCSigmoidDenseFA` | class | Heteroscedastic multi-label output layer (FA noise + sigmoid). |
+| `MCSoftmaxDenseFA` | class | Heteroscedastic multi-class output layer (FA noise + softmax). |
+| `MSWT` | class | Multi-Scale Wavelet Transformer operator (Wang et al., 2026). |
+| `MSWTBlock` | class | Pre-norm wavelet-attention block: an attention residual, then an FFN residual. |
+| `ManifoldNO` | class | Manifold Neural Operator: lifting → basis blocks → projection. |
+| `ManifoldNOBlock` | class | One manifold-operator layer: basis spectral conv + pointwise skip. |
+| `MixtureOfGaussiansDenseHead` | class | Deterministic mixture-density-network output head. |
+| `MultiHeadAttentionBE` | class | Multi-head attention with BatchEnsemble rank-1 projections. |
+| `MultiScaleSIREN` | class | Parallel frequency-banded SIRENs summed at the readout. |
+| `NCPContinuousPerturb` | class | Input perturbation for the Noise Contrastive Prior pattern. |
+| `NestedResidualUNet` | class | A small residual U-Net used as one stage block (Qin et al., 2020, "U²-Net"). |
+| `NeuralFieldMLP` | class | The BayesNF spatiotemporal network as a deterministic `equinox.Module`. |
+| `OrthogonalRandomFeatures` | class | Orthogonal Random Features (Yu et al., 2016) — variance-reduced RFF. |
+| `RandomFeatureGaussianProcess` | class | SNGP output layer (Liu et al., 2020) — deterministic core. |
+| `Rank1ProjInit` | class | Per-projection BatchEnsemble inits used by `MultiHeadAttentionBE`. |
+| `ResnetBlock` | class | Two `Block`s with squeeze-excitation and a residual skip. |
+| `SFNO` | class | Spherical Fourier Neural Operator: lift → spherical blocks → project. |
+| `SIREN` | class | Multi-layer sinusoidal representation network (Sitzmann et al., NeurIPS 2020). |
+| `SeparableINR` | class | A rank-$r$ separable neural field over $A$ input axes. |
+| `SirenDense` | class | Sine-activated dense layer: ``y = sin(ω · (W x + b))`` or ``y = W x + b``. |
+| `SirenLayerSpec` | class | Static per-layer metadata shared by deterministic and Bayesian SIRENs. |
+| `SirenLayerType` | function | Re-exported from `typing`. |
+| `SlepianEncoder` | class | Deterministic Slepian-cap positional encoder on $S^2$. |
+| `SpectralConv` | class | Fourier spectral convolution over ``num_spatial_dims = len(n_modes)`` axes. |
+| `SpectralNormalization` | class | Wrap an Equinox linear layer to be $c$-Lipschitz via power iteration. |
+| `SphericalFNOBlock` | class | One spherical Fourier layer: spherical spectral conv + pointwise skip. |
+| `SphericalHarmonicEncoder` | class | Real spherical-harmonic features on the unit 2-sphere for a single point. |
+| `SphericalSpectralConv` | class | Spherical spectral convolution: per-degree channel mixing in SH space. |
+| `SphericalWaveletConv` | class | Per-scale channel mixing in the spherical-wavelet domain. |
+| `SqueezeExcitation` | class | Squeeze-and-Excitation channel gating (Hu et al., 2018). |
+| `Stage` | class | One encoder/decoder stage: a leaf block, then an optional nested U-Net. |
+| `StandardizedConv` | class | Convolution with optional on-the-fly weight standardization. |
+| `TTTensor` | class | Tensor-Train (Matrix-Product) factorization. |
+| `TuckerTensor` | class | Tucker factorization: a small core contracted with per-mode factor matrices. |
+| `UNet` | class | Dimension-flexible U-Net with modern blocks, attention, and nested stages. |
+| `Upsample` | class | Factor-2 upsample via pixel-shuffle: ``1x1`` conv, then depth-to-space. |
+| `WNO` | class | Wavelet Neural Operator: lifting → wavelet blocks → projection. |
+| `WNOBlock` | class | One wavelet layer: wavelet conv + pointwise skip, then an activation. |
+| `WaveletAttention` | class | Self-attention performed inside the wavelet domain (Wang et al., 2026). |
+| `WaveletConv` | class | Wavelet-domain channel mixing — the wavelet analogue of ``SpectralConv``. |
+| `WindowedAttention` | class | Swin-style windowed multi-head self-attention with cosine similarity. |
+| `apply_rank1_proj` | function | Apply ``y_i = ((x ⊙ s_i) @ W) ⊙ r_i + b_i`` per ensemble member. |
+| `band_limited_resize` | function | Resample a periodic field onto a new grid by Fourier truncation / zero-padding. |
+| `build_siren_specs` | function | Produce per-layer specs for a depth-``depth`` SIREN, first + hidden… + last. |
+| `cno_receptive_radius` | function | Effective receptive radius, in grid points, of a `CNO` run on its input grid. |
+| `hetero_noisy_logits` | function | Sample ``num_mc_samples`` heteroscedastic logits for one example. |
+| `init_factorized_tensor` | function | Construct a factorized tensor of the requested kind. |
+| `init_rank1_proj` | function | Glorot-init shared kernel + per-member rank-1 vectors + zero bias. |
+| `log_spaced_omegas` | function | Return ``num_scales`` log-spaced frequencies spanning the closed band. |
+| `mfn_forward` | function | Pure-JAX MFN forward pass given user-supplied filter and linear callables. |
+| `orthogonal_blocks` | function | Build the ORF frequency matrix as ``[Q_1 S_1, ..., Q_K S_K]``. |
+| `siren_W_limit` | function | Return the half-width ``a`` of the ``U(-a, a)`` weight init for a SIREN layer. |
+
 ## Upstream: `kernellib`
 
 Covariance kernels and scalable kernel methods on gaussx.
@@ -236,6 +338,149 @@ Differentiable ensemble Kalman filters and smoothers.
 ## Upstream: `vardax`
 
 Variational data assimilation: BLUE/OI, 3D-Var, 4D-Var and kin.
+
+### `vardax`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AmortizedConfig` | class | Configuration of an ``AmortizedPosterior`` q(x \| y; ν). |
+| `AmortizedPosterior` | class | Amortized variational posterior q(x \| y; ν). |
+| `AnalysisStep` | class | Re-exported from `pipekit_cycle`. |
+| `AveragingKernel` | class | Averaging-kernel observation operator of an L2 retrieval. |
+| `Batch1D` | class | Batch of 1-D spatiotemporal data. |
+| `Batch2D` | class | Batch of 2-D spatiotemporal data. |
+| `Batch2DMultivar` | class | Batch of 2-D multivariate spatiotemporal data. |
+| `BilinAEPrior1D` | class | Bilinear autoencoder prior for 1-D data. |
+| `BilinAEPrior2D` | class | Bilinear autoencoder prior for 2-D data. |
+| `BilinAEPrior2DMultivar` | class | Bilinear autoencoder prior for 2-D multivariate data. |
+| `CallableObs` | class | Observation operator h from any differentiable JAX function. |
+| `CompositeBasis` | class | Concatenate several reduced bases into one control vector. |
+| `ConditionalFlowHead` | class | Conditional normalising flow head (stub). |
+| `ConfigurationError` | class | A hyperparameter or constructor argument has an invalid value. |
+| `ConvAEPrior1D` | class | Convolutional autoencoder prior for 1-D spatially-structured data. |
+| `ConvLSTMGradMod1D` | class | 1-D ConvLSTM gradient modulator. |
+| `ConvLSTMGradMod2D` | class | 2-D ConvLSTM gradient modulator. |
+| `CostFunction` | class | Variational cost function over the state. |
+| `DataError` | class | A dataset cannot be processed (no observed values, too few samples). |
+| `DualThreeDVar` | class | 3D variational analysis of a single time, solved in observation space (PSAS). |
+| `DynIncrements` | class | One-step-increment dynamical prior. |
+| `DynTrajectory` | class | Full-rollout dynamical prior. |
+| `DynamicalPrior` | class | Base class for ODE-based dynamical priors. |
+| `EnsembleCovariance` | class | Sample-covariance posterior from an ensemble ℰ of analyses. |
+| `FieldPointObs` | class | Callable field evaluated at scattered points. |
+| `ForwardModel` | class | Re-exported from `pipekit_cycle`. |
+| `FourDVarNet1D` | class | End-to-end 4DVarNet model for 1-D spatiotemporal reconstruction. |
+| `FourDVarNet2D` | class | End-to-end 4DVarNet model for 2-D spatiotemporal reconstruction. |
+| `GaussNewtonHessian` | class | Gauss–Newton posterior at the analysis, with a Krylov budget. |
+| `GaussianMarkLikelihood` | class | Serialise a Gaussian posterior into a mark-likelihood dict. |
+| `GradModulator` | class | Learned gradient modulator for the FourDVarNet inner solver. |
+| `GridError` | class | Grid axes or coordinates are malformed (too few points, not increasing). |
+| `GridPointObs` | class | Gridded state or trajectory at scattered, time-stamped points. |
+| `IdentityObsEncoder` | class | Concatenate ``input`` and ``mask`` into a flat context vector. |
+| `IdentityPrior` | class | Trivial identity prior: x̂ = g_ae(x; θ) = x. |
+| `ImplicitAdjoint` | class | Re-exported from `optimistix`. |
+| `IncrementalConfig` | class | Solver switches of ``IncrementalFourDVar``, and its deprecated budget. |
+| `IncrementalFourDVar` | class | Operational incremental 4D-Var of an assimilation window. |
+| `InputTypeError` | class | An argument has the wrong type. |
+| `InstrumentRegistry` | class | Keyed lookup of ``InstrumentSpec`` by ``instrument_id``. |
+| `InstrumentSpec` | class | One instrument's operator hᵢ, quality mask mᵢ, covariance Σ_ε,i and name. |
+| `InterpObs` | class | Sparse bilinear interpolation from a 2-D grid to scattered observations. |
+| `KStepAdjoint` | class | Deprecated alias of ``argminax.adjoint.KStep``; use that name instead. |
+| `L63Prior` | class | Learned prior for the Lorenz-63 system. |
+| `L96Prior` | class | Learned prior for the Lorenz-96 system. |
+| `LSTMState1D` | class | Hidden state for a 1-D ConvLSTM gradient modulator. |
+| `LSTMState2D` | class | Hidden state for a 2-D ConvLSTM gradient modulator. |
+| `LaplaceCovariance` | class | Laplace approximation of the posterior at the analysis. |
+| `LinearBasis` | class | Generic linear reduced basis with a diagonal prior over the coefficients. |
+| `LinearObs` | class | Linear observation operator H held as a lineax operator. |
+| `LinearParameterization` | class | Adapter from a `ReducedBasis` to a parameterization. |
+| `Lorenz63` | class | Lorenz-63 vector field as an Equinox module. |
+| `Lorenz96` | class | Lorenz-96 vector field as an Equinox module. |
+| `MLPAEPrior1D` | class | MLP autoencoder prior for 1-D data. |
+| `MLPObsEncoder` | class | MLP encoder from the flat ``(input, mask)`` to the context c. |
+| `MaskedIdentity` | class | Identity observation operator with an optional element-wise mask m. |
+| `MinimiseResult` | class | Outcome of a minimisation: the optimum θ⋆ and its diagnostics. |
+| `Minimiser` | class | Minimises a cost ``cost_fn(x, batch)`` from an initial guess. |
+| `MissingInputError` | class | A required input (a key, a target, a covariance) was not given. |
+| `ModelErrorBasis` | class | Separable space-time basis of the model error, with a Kronecker prior. |
+| `MultiInstrumentFusion` | class | Compose per-instrument operators at the likelihood level. |
+| `NeuralFieldParameterization` | class | A coordinate network evaluated on the grid as the state. |
+| `OEResult` | class | The output of `optimal_estimation`. |
+| `ObservationError` | class | Observations are inconsistent with the model or the assimilation window. |
+| `ObservationOperator` | class | Re-exported from `pipekit_cycle`. |
+| `OneStepAdjoint` | class | Deprecated alias of ``argminax.adjoint.OneStep``; use that name instead. |
+| `OptaxMinimiser` | class | First-order minimisation with an ``optax`` optimiser. |
+| `OptimalInterpolation` | class | Best linear unbiased estimate: the linear-Gaussian analysis in closed form. |
+| `OptimistixMinimiser` | class | An ``optimistix`` minimiser behind the `Minimiser` protocol. |
+| `PointObsBatch` | class | Scattered point observations, padded to a fixed count. |
+| `Posterior` | class | Posterior of an analysis, with optional samples and provenance. |
+| `PosteriorAdapter` | class | Turns an analysis output into a `Posterior` container. |
+| `Prior` | class | Prior model: maps a state to its regularised reconstruction. |
+| `RecursiveCheckpointAdjoint` | class | Re-exported from `optimistix`. |
+| `ReducedBasis` | class | Reduced-basis control-vector operator. |
+| `ReducedBasisFourDVar` | class | Strong-constraint 4D-Var with the control in a reduced basis. |
+| `RegressionHead` | class | Gaussian regression head with diagonal covariance. |
+| `ResidualPenalty` | class | PDE residual of a continuous field at collocation points, as a cost. |
+| `ScoreDiffusionHead` | class | Score-based diffusion head (stub). |
+| `ShapeError` | class | An array or batch has a shape the operation cannot use. |
+| `SoftBoundedForward` | class | ``ForwardModel`` adapter that softly confines states to a box. |
+| `SolverState1D` | class | Carry of the 1-D solver loop: iterate, ConvLSTM carry and iteration index. |
+| `SolverState2D` | class | Carry of the 2-D solver loop: iterate, ConvLSTM carry and iteration index. |
+| `SpaceTimeFieldResult` | class | A fitted space-time field and its minimisation diagnostics. |
+| `SpaceTimeFieldVar` | class | Neural-field 4D-Var: fit one continuous field x(t, s; θ) to a whole window. |
+| `StateParameterization` | class | Control-to-state map with its own penalty. |
+| `StrongFourDVar` | class | Strong-constraint 4D-Var analysis of an assimilation window. |
+| `SupportsForwardAdjoint` | class | A ``ForwardModel`` whose integrator can take a ``diffrax`` adjoint. |
+| `TemporalPrior` | class | Time-dependent prior: dynamics-aware regularisation over a window. |
+| `ThreeDVar` | class | 3D variational analysis of a single time. |
+| `UnsupportedInputError` | class | The input is valid in general but this operation does not support it. |
+| `VarDACycle` | function | Build a ``pipekit_cycle.DACycle`` from a vardax model. |
+| `VarSmootherCycle` | function | Build a ``pipekit_cycle.SmootherCycle`` from a vardax model. |
+| `VardaxError` | class | Base class for every error vardax raises on purpose. |
+| `WeakFourDVar` | class | Weak-constraint 4D-Var analysis of an assimilation window. |
+| `amortized_nll_loss_fn` | function | Negative log-likelihood for amortized inference. |
+| `amortized_train_step` | function | Single training step for ``AmortizedPosterior``. |
+| `assert_adjoint_calibrated` | function | Random-vector probe of the Jacobian agreement at ``y``. |
+| `assert_posterior_agreement` | function | Check that the fast posterior mean lies near the oracle's, per component. |
+| `background_cost` | function | Background cost: the mean square of the departure from the first guess. |
+| `composite_basis` | function | Build a `CompositeBasis` from a sequence of `ReducedBasis` components. |
+| `decomposed_loss` | function | Decomposed variational loss: the weighted terms alongside their sum. |
+| `eof_basis` | function | Data-driven EOF (PCA) reduced basis from a sample matrix. |
+| `eval_step` | function | Compute the evaluation loss for a single batch (no gradient). |
+| `fourier_basis` | function | Laplacian-eigenfunction reduced basis on a box, Dirichlet or HSGP. |
+| `fp_solver_step_1d` | function | Perform a single 1-D fixed-point projection step. |
+| `init_solver_state_1d` | function | Initialise a 1-D solver state from a batch. |
+| `init_solver_state_2d` | function | Initialise a 2-D solver state from a batch. |
+| `interp_obs_from_coords` | function | Build an `InterpObs` from grid axis arrays and observation locations. |
+| `linear_basis` | function | Build a `LinearBasis` from an arbitrary precomputed design matrix. |
+| `obs_cost_1d` | function | Observation cost for 1-D data: the masked mean-squared error. |
+| `obs_cost_2d` | function | Observation cost for 2-D data: the masked mean-squared error. |
+| `one_step_solve_4dvarnet_1d` | function | Solve 4DVarNet-1D using k-step differentiation (Bolte et al., 2023). |
+| `one_step_solve_4dvarnet_2d` | function | Solve 4DVarNet-2D using k-step differentiation (Bolte et al., 2023). |
+| `optimal_estimation` | function | Rodgers optimal estimation of x from y = h(x) + ε. |
+| `plot_l96_grid` | function | Hovmöller-style image of Lorenz-96 states over time. |
+| `plot_l96_trajectories` | function | Line plot of selected Lorenz-96 variables over time. |
+| `plot_reconstruction_comparison` | function | Side-by-side comparison of target, masked input, and reconstruction. |
+| `point_obs_cost` | function | Masked, σ-weighted observation cost of a point batch. |
+| `prior_cost` | function | Prior cost of a learned autoencoder: the reconstruction mean square. |
+| `rbf_basis` | function | Radial-basis reduced basis of Gaussian or Wendland atoms. |
+| `reconstruction_loss` | function | Mean-squared reconstruction loss. |
+| `simulate_lorenz63` | function | Simulate the Lorenz-63 system and return the state trajectory. |
+| `simulate_lorenz96` | function | Simulate the Lorenz-96 system and return the state trajectory. |
+| `simulation_based_calibration` | function | Rank histogram of true draws within posterior samples (Talts et al. 2018). |
+| `solve_4dvarnet_1d` | function | Run the full 1-D 4DVarNet solver for ``n_steps`` iterations. |
+| `solve_4dvarnet_1d_fixedpoint` | function | Run ``n_fp_steps`` fixed-point projection steps using ``jax.lax.scan``. |
+| `solve_4dvarnet_2d` | function | Run the full 2-D 4DVarNet solver for ``n_steps`` iterations. |
+| `solver_step_1d` | function | Perform a single 1-D solver iteration. |
+| `solver_step_2d` | function | Perform a single 2-D solver iteration. |
+| `strong_variational_cost` | function | Strong-constraint variational cost of the initial state. |
+| `time_patches` | function | Overlapping consecutive time pairs for one-step increment losses. |
+| `to_optimistix_adjoint` | function | Map an adjoint spec onto an ``optimistix.AbstractAdjoint``. |
+| `train_loss_fn` | function | Compute the training loss for a single batch. |
+| `train_step` | function | Perform a single training step (forward, backward and update). |
+| `variational_cost` | function | Variational cost, the weighted sum of observation and prior mean squares. |
+| `variational_cost_grad` | function | Gradient of `variational_cost` w.r.t. ``x``. |
+| `wavelet_basis` | function | Orthonormal wavelet (DWT) reduced basis on a periodic grid. |
 
 ## Upstream: `gauss-flows`
 
@@ -597,6 +842,65 @@ Latent Gaussian models for pyrox.
 ## Upstream: `pyrox-nn`
 
 Bayesian neural networks for pyrox.
+
+### `pyrox_nn`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ArcCosineFourierFeatures` | class | Random features for the arc-cosine kernel (Cho & Saul, 2009). |
+| `BayesianAffineModulation` | class | `geonnax.AffineModulation` with Normal priors on the FiLM generator. |
+| `BayesianConcatConditioner` | class | `geonnax.ConcatConditioner` with Normal priors on the projection. |
+| `BayesianFourierNet` | class | FourierNet with Bayesian priors on all filter and linear weights. |
+| `BayesianGaborNet` | class | GaborNet with Bayesian priors on all filter and linear weights. |
+| `BayesianHyperLinear` | class | `geonnax.HyperLinear` with Normal priors on the generator only. |
+| `BayesianNeuralField` | class | The full Bayesian Neural Field architecture, wrapping `geonnax.NeuralFieldMLP`. |
+| `BayesianSIREN` | class | SIREN with regime-scaled Normal priors on all layer weights. |
+| `BayesianSlepianEncoder` | class | Slepian encoder with NumPyro sites for cap radius and centre. |
+| `ConditionedRFFNet` | class | Conditional analogue of `pyrox_nn.RandomKitchenSinks`. |
+| `DeepVSSGP` | class | Deep Random Feature Expansion for Variational SSGP (Cutajar et al. 2017). |
+| `DenseDVI` | class | Deterministic Variational Inference dense layer (Wu et al., 2018). |
+| `DenseFlipout` | class | Bayesian dense layer with Flipout sign-flip structure. |
+| `DenseHierarchical` | class | Hierarchical Bayesian dense layer with multiplicative shrinkage. |
+| `DenseNCP` | class | Noise Contrastive Prior dense layer (Hafner et al., 2019). |
+| `DenseRank1` | class | Rank-1 ensemble dense layer. |
+| `DenseReparameterization` | class | Bayesian dense layer via the reparameterization trick. |
+| `DenseVariational` | class | Dense layer with a user-supplied prior factory. |
+| `DenseVariationalDropout` | class | Sparse variational dropout dense layer. |
+| `FourierFeatures` | class | Per-input dyadic-frequency Fourier basis. |
+| `GaussianRegressionHead` | class | Bayesian heteroscedastic regression head (mean plus log-scale). |
+| `HSGPFeatures` | class | Hilbert-Space Gaussian Process feature layer (Riutort-Mayol et al., 2023). |
+| `HyperFourierFeatures` | class | Random Fourier features with ``(W, b, log_lengthscale)`` from a parameter net. |
+| `InteractionFeatures` | class | Element-wise products on selected pairs of input columns. |
+| `LaplaceCosineFeatures` | class | Cosine-bias variant of random Fourier features for the Laplace kernel. |
+| `LaplaceFourierFeatures` | class | SSGP-style RFF layer with Laplace (Matern-1/2) spectral density. |
+| `LastLayerLaplace` | class | Gaussian posterior over a selected parameter group of a fitted model. |
+| `LayerNormEnsemble` | class | Per-ensemble-member LayerNorm. |
+| `MCSigmoidDenseFA` | class | Heteroscedastic multi-label output layer (FA noise + sigmoid). |
+| `MCSoftmaxDenseFA` | class | Heteroscedastic multi-class output layer (FA noise + softmax). |
+| `MaternCosineFeatures` | class | Cosine-bias variant of random Fourier features for the Matern kernel. |
+| `MaternFourierFeatures` | class | SSGP-style RFF layer with Matern spectral density. |
+| `MultiHeadAttentionBE` | class | Multi-head attention with BatchEnsemble rank-1 projections. |
+| `NCPNormalOutput` | class | Output-side Noise Contrastive Prior layer (Hafner et al., 2018). |
+| `RBFCosineFeatures` | class | Cosine-bias variant of random Fourier features for the RBF kernel. |
+| `RBFFourierFeatures` | class | SSGP-style RFF layer with RBF spectral density. |
+| `RandomFeatureGaussianProcess` | class | SNGP output layer (Liu et al., 2020). |
+| `RandomKitchenSinks` | class | Random Kitchen Sinks: RFF + a learned linear head. |
+| `SeasonalFeatures` | class | Period-and-harmonic cos/sin basis on a scalar time axis. |
+| `SphericalHarmonicFeatures` | class | Weight-space GP on the sphere $S^2$ from real spherical harmonics. |
+| `Standardization` | class | Apply a fixed-coefficient affine standardization. |
+| `VariationalFourierFeatures` | class | VSSGP — RFF with a learnable variational posterior over frequencies. |
+| `cyclic_encode` | function | Re-exported from `geonnax`. |
+| `deg2rad` | function | Re-exported from `geonnax`. |
+| `fourier_features` | function | Re-exported from `functax`. |
+| `interaction_features` | function | Re-exported from `geonnax`. |
+| `last_layer_laplace` | function | Fit a post-hoc GGN Laplace posterior over a parameter group. |
+| `lonlat_scale` | function | Re-exported from `geonnax`. |
+| `lonlat_to_cartesian3d` | function | Re-exported from `geonnax`. |
+| `seasonal_features` | function | Re-exported from `functax`. |
+| `seasonal_frequencies` | function | Re-exported from `functax`. |
+| `spherical_harmonic_encode` | function | Re-exported from `geonnax`. |
+| `standardize` | function | Re-exported from `geonnax`. |
+| `unstandardize` | function | Re-exported from `geonnax`. |
 
 ## Upstream: `pyrox-ssm`
 
