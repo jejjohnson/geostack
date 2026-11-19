@@ -115,3 +115,29 @@ def test_backticked_inline_maths_is_not_an_emphasis_error(tmp_path) -> None:
     lone = tmp_path / "lone.md"
     lone.write_text("One subscript, $\\boldsymbol{\\mu}_x$, pairs with nothing.\n")
     assert check_math.check_file(lone, check_math.Target.github, []) == []
+
+
+def test_backtick_inline_leaves_a_code_span_over_several_lines_alone() -> None:
+    source = "see `first line\n$x_n$\nlast line` and $y_n$\n\nthen $z_n$\n"
+    expected = "see `first line\n$x_n$\nlast line` and $`y_n`$\n\nthen $`z_n`$\n"
+    assert mc.backtick_inline(source) == expected
+
+
+def test_emphasis_is_not_paired_across_list_items_or_a_heading(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "list.md"
+    page.write_text(
+        "# The mean $\\boldsymbol{\\mu}_x$\n"
+        "Sizes are $N_{b}$ here.\n"
+        "- $\\boldsymbol{\\mu}_x$\n"
+        "- $N_{b}$\n"
+        "1. $\\boldsymbol{\\Sigma}_x$\n"
+    )
+    assert check_math.check_file(page, check_math.Target.github, []) == []
+    item = tmp_path / "item.md"
+    item.write_text("- the mean $\\boldsymbol{\\mu}_x$ and\n  the size $N_{b}$\n")
+    found = check_math.check_file(item, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]

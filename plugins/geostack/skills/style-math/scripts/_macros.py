@@ -84,11 +84,12 @@ DOLLARS_LINE = re.compile(r"^\s*\$\$(?!\$)(.+?)\$\$" + LABEL + r"\s*$")
 DOLLARS_CLOSE = re.compile(r"^\s*\$\$" + LABEL + r"\s*$")
 
 
-CODE_SPAN = re.compile(r"(`+)(?!`).*?(?<!`)\1(?!`)")
+# A code span may run over several lines of one paragraph, never over a blank line.
+CODE_SPAN = re.compile(r"(`+)(?!`)(?:(?!\n[ \t]*\n).)*?(?<!`)\1(?!`)", re.DOTALL)
 
 
 def _blank(match: re.Match) -> str:
-    return "\0" * len(match.group(0))
+    return re.sub(r"[^\n]", "\0", match.group(0))
 
 
 def backtick_inline(markdown: str) -> str:
@@ -97,10 +98,14 @@ def backtick_inline(markdown: str) -> str:
     not touched."""
     fenced = fenced_lines(markdown)
     lines = markdown.split("\n")
+    # Code spans are found over the whole document, so one that runs over
+    # several lines still protects the maths inside it.
+    body = "\n".join("" if n + 1 in fenced else line for n, line in enumerate(lines))
+    masked_lines = CODE_SPAN.sub(_blank, TICK_MATH.sub(_blank, body)).split("\n")
     for index, line in enumerate(lines):
         if index + 1 in fenced or "$" not in line:
             continue
-        masked = CODE_SPAN.sub(_blank, TICK_MATH.sub(_blank, line))
+        masked = masked_lines[index]
         pieces: list[str] = []
         end = 0
         for match in INLINE.finditer(masked):
