@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: checks-a-docs-change
+expected_outcome: |
+  The always-run checks, then the docs checks: the page in the myst.yml toc, the docs build with its error and warning lines read, the citation keys present in references.bib, CITATION.cff validated, and the numbers on the page traced to pipeline outputs.
