@@ -1,21 +1,31 @@
 ---
 name: add-dataset
-description: Add a dataset to the research project — raw files tracked with DVC (never git), a loader in the package's data subpackage, a Hydra data config (size, split fractions), the preprocess stage that makes deterministic train / val / test splits, and tests on a tiny fixture. Use when asked to add, ingest, download, load, split or preprocess a dataset, or to add a data loader or data config in src/geostack/data, configs/data or scripts/preprocess.py.
+description: Add a dataset to the research project — raw files tracked with DVC (never git), a reader taken from an upstream library (geostack has no package of its own), a Hydra data config (size, split fractions, seed), the preprocess stage that makes deterministic train / val / test splits, and a test on a tiny fixture. Use when asked to add, ingest, download, load, split or preprocess a dataset, or to add a data config in configs/data or a preprocess script and stage.
 ---
 
 # Add a dataset
 
-<!-- template-example: example-specific paths (src/geostack/data, configs/data, scripts/preprocess.py); keep the procedure, rewrite the names after adoption. -->
-
 Read "Boundaries" and contracts 1, 3 and 4 in `AGENTS.md` first; this is
 the step-by-step.
 
+**Where this repo stands.** geostack has no package of its own (no `src/`),
+and until the first dataset lands it has no `configs/` directory, no
+preprocess script and no pipeline stage (`dvc.yaml` is `stages: {}`). So the
+first dataset creates them, and a reader is not written here: it is taken
+from an upstream library. Look before you assume a file exists
+(`ls configs scripts`, `cat dvc.yaml`), and say in your report what you had
+to create.
+
 ## 1. Make sure it does not exist yet
 
-- `docs/api/capabilities.md` (`geostack.data.loading`): a loader for the
-  format may exist — extend it rather than writing a second one.
-- `configs/data/` (`small.yaml`, `full.yaml`): a new *size* of the same data
-  is a new option there, not a new loader.
+- The capability indexes, one per layer: `docs/api/capabilities.md`
+  (GeoStack: the readers of georeader, geotoolz and xrtoolz),
+  `capabilities_numerics.md`, `capabilities_geoml.md`,
+  `capabilities_geomodels.md`. A reader for the format may exist: use it.
+  Say in your report which file you searched and what you found.
+- `configs/data/`, if it exists: a new *size* of the same data is a new
+  option there, mirroring the keys of the one that exists and chosen with
+  `data=<name>`; it is not a new reader, generator or script.
 - `pixi run dvc status` and the `*.dvc` pointers: the raw files may already
   be tracked.
 
@@ -25,7 +35,7 @@ the step-by-step.
 cp /path/to/source.nc data/raw/            # or download into data/raw/
 pixi run dvc add data/raw/source.nc        # writes data/raw/source.nc.dvc
 git add data/raw/source.nc.dvc
-pixi run dvc push                          # needs a remote: dvc remote add -d <name> <url>
+pixi run dvc push                          # needs a remote: pixi run dvc remote list
 ```
 
 - `.gitignore` ignores `data/raw/*` but not the `.dvc` pointers
@@ -36,25 +46,32 @@ pixi run dvc push                          # needs a remote: dvc remote add -d <
   or `dvc import-url <url> data/raw/<file>`, so the download is recorded.
 - Keep credentials out of the repo (`.env`, `.dvc/config.local`, both
   gitignored).
+- Do not guess what is in a file you have not opened: variable names, the
+  name of the time dimension and units are read from the file, or marked
+  in the config as to be confirmed.
 
-## 3. The loader (`src/geostack/data/`)
+## 3. The reader comes from upstream
 
-- A function in `loading.py` (or a new module for a new family of
-  formats) that takes the path as `str | Path` and returns arrays /
-  `xarray` objects / a dict of them, raising `FileNotFoundError` with the
-  path when it is missing — as `load_raw_data` does.
-- No config, no global state, no hard-coded path, no randomness: the
-  script passes the path and the seed.
-- Type hints and a Google-style docstring saying what is returned (shapes,
-  units, dims).
-- A new third-party reader (netCDF4, xarray, pandas, …) goes into
-  `pixi.toml` (then `pixi lock`); xarray and netCDF4 are already there.
+- Use the reader the index lists. The preprocess script calls it with the
+  path from the config.
+- If no library reads the format, the reader is reusable code and goes
+  upstream, into the library that owns the concept, in the lowest layer
+  that may hold it, with its tests there (`AGENTS.md`, "Reuse before you
+  write"). georeader is not ours and is never changed. Name the library and
+  say the dataset waits for that change; do not put the reader in a script,
+  a notebook or a new `src/` folder here.
+- What is specific to this one dataset and to this one script (which
+  variables to keep, how to stack them) may stay in the script as a small
+  function that takes plain arguments. The day a second script or a
+  notebook needs it, it moves upstream.
+- A new third-party library goes into `pixi.toml` (then `pixi lock`);
+  xarray, netCDF4, hydra-core and dvc are already there. Check `pixi.toml`
+  before importing anything else.
 
 ## 4. The config (`configs/data/<name>.yaml`)
 
-Mirror `configs/data/small.yaml`: a `name`, the size, and the split
-fractions; choose it with `data=<name>` (or as the default in
-`configs/train.yaml`'s `defaults` list).
+A `name`, the size, and the split fractions; choose it with `data=<name>`
+or in the `defaults` list of the entry config.
 
 ```yaml
 name: small
@@ -64,45 +81,80 @@ val_split: 0.15
 test_split: 0.15
 ```
 
+The entry config (`configs/<entry>.yaml`, created with the first dataset)
+holds the `defaults` list and the seed:
+
+```yaml
+defaults:
+  - data: small
+  - _self_
+
+seed: 0
+```
+
+The seed is a config key even when this split needs no random draw (a
+split by time), so that every later random step has one source. No path,
+fraction, size or seed is a literal in the script.
+
 ## 5. Splits and preprocessing (`scripts/preprocess.py`, the `preprocess` stage)
 
 - Split once, here, from the config fractions and the seed
-  (`np.random.default_rng(cfg.training.seed).permutation(n)`), and save
-  the splits under `data/processed/`; training and evaluation read the
-  saved splits, they never re-split.
+  (`np.random.default_rng(cfg.seed).permutation(n)`), and save the splits
+  under `data/processed/`; training and evaluation read the saved splits,
+  they never re-split.
+- Grouped or temporal data split by group or by time, not by row, so the
+  same station or period is never on both sides. Say which you chose and
+  why; neighbouring hours of a reanalysis are not independent samples.
 - Statistics that transform the data (means, scales, vocabularies,
   imputers) are fitted on the training split only, and saved with it.
-- Grouped or temporal data split by group / time, not by row, so the same
-  site or period is never on both sides.
-- The `preprocess` stage in `dvc.yaml` lists the raw files, the script,
-  `src/geostack/data` and the data config as `deps`, and `data/processed`
-  as its `outs`. No git-tracked file may sit inside an output directory
-  (a `.gitkeep` makes DVC refuse the stage): the script creates the
-  directory (`mkdir(parents=True, exist_ok=True)`), and `.gitignore`
-  ignores all of `data/processed/`.
+- The script is a Hydra entry point that writes under the project root
+  (`Path(get_original_cwd()) / "data" / "processed"`), not into Hydra's run
+  directory.
+- The stage declares everything it reads and writes:
 
-## 6. Tests (`tests/test_data.py`)
+  ```yaml
+  stages:
+    preprocess:
+      cmd: python scripts/preprocess.py
+      deps:
+        - scripts/preprocess.py
+        - data/raw/source.nc
+        - configs
+      outs:
+        - data/processed
+  ```
 
-- Write a tiny file into `tmp_path` in the format the loader reads, load
-  it, and check values, shapes and dtypes — as
-  `test_load_raw_data_returns_dict` does with an empty directory.
+  No git-tracked file may sit inside an output directory (a `.gitkeep`
+  makes DVC refuse the stage): the script creates the directory
+  (`mkdir(parents=True, exist_ok=True)`), and `.gitignore` ignores all of
+  `data/processed/`. `dvc repro` is started through pixi, so the bare
+  `python` in `cmd` is the environment's.
+
+## 6. Tests (`tests/test_<name>.py`)
+
+- Write a tiny file into `tmp_path` in the format the reader reads, run the
+  preprocessing on it, and check the splits: disjoint, exhaustive, the
+  configured sizes, identical for the same seed, and no group or period on
+  both sides.
 - The missing-path error: `pytest.raises(FileNotFoundError)`.
-- A split helper in the package: disjoint, exhaustive, the configured
-  sizes, identical for the same seed.
-- No real data and no network in tests.
+- No real data and no network in tests. A test that needs Hydra starts
+  with `pytest.importorskip("hydra")` and runs under pixi.
 
-## 7. Export and index
-
-`make capabilities` after adding a public function, and commit
-`docs/api/capabilities.md`.
-
-## 8. Verify
+## 7. Verify
 
 ```bash
-uv run pytest tests/test_data.py -v -o addopts=
+pixi run pytest tests/test_<name>.py -v -o addopts=
+pixi run dvc dag
 pixi run dvc status
 pixi run dvc repro preprocess
-make capabilities && uv run pytest tests/test_capabilities.py -o addopts=
 ```
 
-Then the `pre-pr-check` skill.
+Commit the configs, the script, `dvc.yaml`, `dvc.lock` and the `.dvc`
+pointer; never the data. Then the `pre-pr-check` skill.
+
+## 8. Report
+
+Say what you added and what you had to create because the repo did not
+have it, which index you searched for a reader and what it holds, what
+you ran and what you did not run and why, what is still unconfirmed (names
+read from a file you could not open), and what the user has to do next.
