@@ -720,7 +720,7 @@ def shelf_check_violations(tree: Tree) -> list[str]:
 
 
 def violations(tree: Tree, pkgs: dict[str, dg.Package] | None = None) -> list[str]:
-    """Every gate checked here: ST-1, then ST-2 to ST-4 and ST-8; ST-7 given ``pkgs``."""
+    """Every gate here: ST-1, then ST-2 to ST-4 and ST-8; ST-7 given ``pkgs``."""
     found = graph_violations(tree)
     if pkgs is not None:
         found += package_violations(tree, pkgs)
