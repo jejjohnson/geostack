@@ -20,6 +20,7 @@
       "description": "Write finite-volume ocean and atmosphere models in JAX on finitevolX — Arakawa C-grids with ghost rings, raw stencils and difference / interpolation operators, WENO / TVD advection, land-sea masks with coastal stencil fallback, boundary conditions, diagnostics, forcing, spectral / CG / multigrid elliptic solvers and SSP time steppers — instead of hand-writing shifted slices, ghost-cell fills, Poisson solvers and Runge–Kutta loops.",
       "dependencies": [
         "gaussx",
+        "integrix",
         "spectraldiffx"
       ]
     },
@@ -69,6 +70,20 @@
       "description": "Build geospatial pipelines on the geotoolz stack — find and index files (geocatalog), read EO products (geoproducts), tile and stitch (geopatcher), compute (geotoolz), object storage (geocloud) — instead of re-implementing them.",
       "dependencies": [
         "functax"
+      ]
+    },
+    {
+      "name": "integrix",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/integrix",
+        "path": "plugins/integrix"
+      },
+      "description": "Write integration in JAX on integrix — sums against a quadrature rule over one axis or several, band-weighted means, log-integrals, running integrals, adaptive Gauss–Kronrod, tanh–sinh and Romberg quadrature, Monte Carlo, quasi-Monte Carlo and importance-sampling expectations, fixed-step and IMEX time steppers that extend diffrax, and checkpointed or truncated adjoints — instead of re-implementing them with trapz, scipy.integrate and hand-written loops.",
+      "dependencies": [
+        "geostack",
+        "functax",
+        "gaussx"
       ]
     },
     {
