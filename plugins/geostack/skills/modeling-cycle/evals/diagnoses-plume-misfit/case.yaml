@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: diagnoses-plume-misfit
+expected_outcome: |
+  A diagnosis that states the error model, calls the misfit systematic from the stratified statistic and the spatial pattern, places it on the modelling track because it follows a regime of the dynamics and not the viewing geometry, notes that parameter estimation was tried and did not remove it, rejects inflating the observation error, and recommends the smallest structural change for the stable and low-wind regime scored against the current model, in place of the large-eddy simulation for every scene.
