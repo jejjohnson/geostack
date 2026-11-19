@@ -17,7 +17,7 @@ This page is the GeoModels layer. It may import GeoML, GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at plumax 0.2.5, radtrax 0.1.0, sesmax 0.0.0, sesmax-core 0.1.0.
+Listed at plumax 0.3.0, radtrax 0.1.0, sesmax 0.0.0, sesmax-core 0.1.0.
 
 ## Upstream: `plumax`
 
@@ -29,9 +29,10 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 |---|---|---|
 | `BRIGGS_DISPERSION_PARAMS` | constant | `{'A': Array([ 2.2e-01,  1.0e-04, -5.0e-01,  2.0e-01,  0.0...` |
 | `BriggsPlumeRise` | class | Briggs plume rise Δh(x) of a stack plume, from its buoyancy and momentum. |
+| `CentrelinePrior` | class | Prior covariance of the centreline knots. |
 | `ColumnObservation` | class | Averaging-kernel-weighted column at a set of receptors. |
 | `ColumnPlume` | class | Column of a steady Gaussian plume per unit line density. |
-| `ColumnPlumeSource` | class | A column plume as a ``coupled.TransportBackend``. |
+| `ColumnPlumeSource` | class | A column plume as a controlled ``coupled`` transport backend. |
 | `EmissionRateSamples` | class | NUTS draws by site name, with the per-event payload Tier V reads. |
 | `GaussianNoise` | class | Homoscedastic Gaussian noise, ε ~ 𝒩(0, σ²). |
 | `GolderDispersion` | class | PG σ_y, σ_z with the class chosen from Monin–Obukhov scales (Golder 1972). |
@@ -46,6 +47,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `StudentTNoise` | class | Heavy-tailed Student-t noise, ε ~ t_ν(0, s), for outliers near the detection floor. |
 | `briggs_plume_rise` | function | Briggs plume rise Δh(x) [m]; see :class:`BriggsPlumeRise`. |
 | `calculate_briggs_dispersion` | function | Evaluate σ_y(x), σ_z(x) from Briggs parameters. |
+| `centreline_offset` | function | Crosswind offset of the centreline at each downwind distance. |
 | `effective_height` | function | Effective release height H_eff(x) = H_stack + Δh(x) [m]. |
 | `gaussian_plume_model` | function | NumPyro model for the steady-state Gaussian plume. |
 | `get_dispersion_params` | function | Return the Briggs parameter vector for a stability class. |
@@ -71,7 +73,6 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `OUTurbulence` | class | Ornstein-Uhlenbeck turbulence for puff-release position disturbances. |
 | `PG_DISPERSION_PARAMS` | constant | `{'A': Array([-1.104 ,  0.9878, -0.0076,  4.679 , -1.7172,...` |
 | `PuffState` | class | Container for the Lagrangian state of a puff ensemble at a single time. |
-| `STABILITY_CLASSES` | constant | `('A', 'B', 'C', 'D', 'E', 'F')` |
 | `WindSchedule` | class | Piecewise-linear time-varying wind field. |
 | `calculate_briggs_dispersion_xyz` | function | Evaluate σ_x(s), σ_y(s), σ_z(s) from Briggs parameters. |
 | `calculate_pg_dispersion` | function | Evaluate σ_x(s), σ_y(s), σ_z(s) from Pasquill-Gifford parameters. |
@@ -206,7 +207,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `EventEvidence` | class | Nodes and log-weights of one event's (or a stack of events') mark integral. |
 | `FacilityConfig` | class | Immutable physical configuration of a single leaking facility. |
 | `FullVaryingCoefficientPOD` | class | Full varying-coefficient GLM with spectral and radiometric controls. |
-| `INTENSITY_REGISTRY` | constant | `{'constant': <class 'plumax.population.intensity.Constant...` |
+| `INTENSITY_REGISTRY` | constant | `{'constant': <class 'plumax.population._src.intensity.Con...` |
 | `InhomogeneousIntensityPosterior` | class | Posterior over a log-linear inhomogeneous intensity model. |
 | `InstrumentPOD` | class | One instrument's detection curve with its published calibration. |
 | `LandfillIntensity` | class | Multi-component intensity for municipal solid waste landfills. |
@@ -223,7 +224,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `OffshorePlatformIntensity` | class | Combined tidal and operational intensity for offshore oil & gas platforms. |
 | `OperationalScheduleIntensity` | class | Step-function intensity for facilities with fixed shift schedules. |
 | `PODRetention` | class | A probability-of-detection curve as an xtremax retention callable. |
-| `POD_REGISTRY` | constant | `{'logistic': <class 'plumax.population.pod.LogisticPOD'>,...` |
+| `POD_REGISTRY` | constant | `{'logistic': <class 'plumax.population._src.pod.LogisticP...` |
 | `ParadoxResult` | class | Container for a single Monte Carlo paradox simulation. |
 | `PerEventPosterior` | class | Structural type for a per-event ``Q`` posterior (payload v2). |
 | `PeriodicBatchIntensity` | class | Periodic narrow-pulse intensity for scheduled batch venting. |
@@ -286,11 +287,13 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 
 | Name | Kind | What it does |
 |---|---|---|
+| `AbstractControlledSource` | class | A transport backend whose response depends on fitted parameters. |
 | `CoupledForward` | class | Multi-instrument coupled forward: a list of per-instrument observations. |
 | `CoupledPrior` | class | Gaussian prior N(μ_θ, Σ_θ) on the stacked control, by named block. |
 | `CoupledProblem` | class | The coupled forward, its prior and every instrument's observations. |
 | `CoupledResult` | class | MAP and Laplace posterior of the coupled inversion. |
 | `EulerianSource` | class | Tier III transport: the ``les_fvm`` finite-volume run through the shared column. |
+| `FitDiagnostics` | class | Information content and residual statistics of a coupled fit. |
 | `FlagPolicy` | class | What a rejected pixel becomes: dropped, or kept with an inflated variance. |
 | `FusionPosterior` | class | Closed-form joint posterior over ``(Q, bias₁ … bias_M)``. |
 | `Instrument` | class | Fixed observation geometry + error budget for one satellite instrument. |
@@ -298,6 +301,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `LayeredRadianceOperator` | class | Map a column-mass enhancement to band radiance through radtrax's layered model. |
 | `LinearisedRadianceOperator` | class | Tangent-linear radiance operator — the linearised counterpart of the RTM. |
 | `MaskedKPrior` | class | The slot prior: how many slots, how likely each is on, and its Q_k. |
+| `MultistartResult` | class | Every start's outcome, and the one that won. |
 | `PlumeSource` | class | Static source + meteorology for the Tier I coupled forward. |
 | `QualityFlag` | class | Per-pixel quality bits, ``0`` = clear. |
 | `QualityPolicy` | class | Which flags reject a pixel, and how a rejected pixel enters the fusion. |
@@ -311,6 +315,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `column_response` | function | Per-receptor column enhancement at **unit emission** for one instrument. |
 | `contribution_report` | function | Pixels each instrument contributes at full weight, by name. |
 | `default_prior` | function | Build a diagonal prior ``(θ_b, B)`` for ``(Q, bias₁ … bias_M)``. |
+| `fit_diagnostics` | function | Diagnostics of a solved coupled problem. |
 | `fuse_observations` | function | Closed-form joint posterior over ``(Q, bias_inst)`` from fused observations. |
 | `infer_masked_k_sources` | function | Posterior over the active count and the per-slot Q_k, from every instrument. |
 | `linearise` | function | Build the :class:`LinearisedRadianceOperator` tangent to ``operator`` at 0. |
@@ -321,6 +326,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `saturation_rate` | function | Fraction of overpasses whose most probable active count is K_max. |
 | `slot_responses` | function | Unit-emission column of every slot, as one design matrix per instrument. |
 | `solve_coupled` | function | MAP and Laplace posterior of the coupled problem, on vardax. |
+| `solve_coupled_multistart` | function | The coupled solve from each start, keeping the lowest cost. |
 | `stack_observations` | function | Stack the instruments' observations, masks and variances for vardax. |
 
 ### `plumax.operators`

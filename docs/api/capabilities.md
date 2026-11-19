@@ -17,7 +17,7 @@ This page is the GeoStack layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at pipekit-ops 0.2.1, pipekit 0.2.0, pipekit-array 0.1.1, pipekit-cycle 0.1.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.1.0, pipekit-train 0.2.0, georeader-spaceml 2.4.1, geotoolz-ops 0.18.1, geotoolz-array 0.4.1, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.14.3, geotoolz-products 0.7.1, xrtoolz-ops 0.5.1, xrtoolz-products 0.5.0.
+Listed at pipekit-ops 0.2.1, pipekit 0.2.0, pipekit-array 0.1.1, pipekit-cycle 0.1.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.1.0, pipekit-train 0.2.0, georeader-spaceml 2.4.2, geotoolz-ops 0.18.1, geotoolz-array 0.4.1, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.14.3, geotoolz-products 0.7.1, xrtoolz-ops 0.5.1, xrtoolz-products 0.5.0.
 
 ## Upstream: `pipekit-ops`
 
@@ -496,6 +496,8 @@ Composable remote-sensing operators on GeoTensor.
 | `Divergence1D` | class | Divergence of a flux along one dim, :math:`\partial u / \partial s`. |
 | `Divergence2D` | class | Divergence of a gridded 2-D vector field in map axes, NaN- and mask-aware. |
 | `Divergence3D` | class | Divergence of a gridded 3-D vector field on vertical levels. |
+| `EMITBandMask` | class | Saturation mask from EMIT's packed band mask; True = mask out. |
+| `EMITL2AMask` | class | Named flags of the EMIT L2A mask product, OR-combined; True = mask out. |
 | `EVI` | class | Enhanced Vegetation Index — Huete et al. 2002. |
 | `EVI2` | class | Two-band Enhanced Vegetation Index — Jiang et al. 2008. |
 | `EarthSunDistanceCorrection` | class | Compute the Earth–Sun distance ``d`` (in AU) for an acquisition date. |
@@ -851,7 +853,9 @@ Archive readers (CMEMS, CDS, AEMET) and the CF registry.
 | `INSITU` | constant | `CDSFormProfile(family='insitu-land', format_key='data_for...` |
 | `Issue` | class | Single validation finding. |
 | `LocalL2Source` | class | Open satellite L2 product files from the local filesystem. |
+| `MissingPropertyError` | class | A plume-complex feature lacks a property the opener needs. |
 | `PressureLevels` | class | Discrete pressure levels in hPa (CDS-style). |
+| `ProductGridError` | class | A companion raster is not on the grid of the scene it belongs to. |
 | `REANALYSIS` | constant | `CDSFormProfile(family='reanalysis', format_key='format', ...` |
 | `REGISTRY` | constant | `{'sst': Variable(name='sst', standard_name='sea_surface_t...` |
 | `Request` | class | Canonical request payload consumed by data adapters. |
@@ -867,10 +871,13 @@ Archive readers (CMEMS, CDS, AEMET) and the CF registry.
 | `load_aemet` | function | Load AEMET credentials, or ``None`` if none could be found. |
 | `load_cds` | function | Load CDS credentials, or ``None`` if none could be found. |
 | `load_cmems` | function | Load CMEMS credentials, or ``None`` if none could be found. |
+| `open_av3_ch4_l2b` | function | Open an AVIRIS-3 L2B CH4 enhancement scene as a flat CF Dataset. |
 | `open_ch4_inventory` | function | Open a gridded CH₄ emission inventory as a flux in kg m⁻² s⁻¹. |
+| `open_ch4_plume_complexes` | function | The plume-complex GeoJSON as a Dataset on ``plume``, with ragged outlines. |
 | `open_emit_ch4_l2b` | function | Open an EMIT L2B CH4 enhancement scene as a flat CF Dataset. |
 | `open_ghgsat_ch4_l2` | function | Open a GHGSat per-plume NetCDF as a flat CF Dataset. |
 | `open_tropomi_ch4_l2` | function | Flatten a TROPOMI CH4 L2 granule into one CF Dataset. |
+| `plume_outline` | function | Exterior ring of one plume as ``(lon, lat)`` rows, shape ``(V_p, 2)``. |
 | `register` | function | Add ``variable`` to :data:`REGISTRY` (keyed on :attr:`Variable.name`). |
 | `resolve` | function | Return a :class:`Variable` given an instance or its canonical name. |
 | `subset_bbox` | function | Keep points whose ``(lon, lat)`` fall inside a bounding box. |
