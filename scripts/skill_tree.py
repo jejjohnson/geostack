@@ -10,6 +10,13 @@ repository whose plugin ships a shelf (``plugins/<name>/tree/shelf.toml``)
 is carded by unit: a dependent's block carries only the cards of the units
 ``skill_shelf.py`` measures it using.
 
+A workspace is one plugin with a listed skill per package. Its ``shelf.toml``
+names the packages of a skill (``packages = ["pyrox-gp"]`` under
+``[skills.<skill>]``), and that skill's block is measured from those packages
+alone: their parents, the units they use, and the skills of the sibling
+packages they depend on. A skill that names no package stands for the whole
+repository.
+
 A card is read from the first of these that exists:
 
 - ``plugins/<name>/tree/cards/<unit>.md`` in the repository, for a unit;
@@ -104,6 +111,9 @@ class Node:
     plugin: str | None  # the plugin's directory name under plugins/
     skills: tuple[str, ...]  # listed skills; the first is the front door
     units: dict[str, Unit] = field(default_factory=dict)  # empty without a shelf
+    #: the distributions a listed skill stands for; a skill left out stands
+    #: for the whole repository
+    packages: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
     @property
     def plugin_dir(self) -> Path:
@@ -128,6 +138,14 @@ class Tree:
 
     nodes: dict[str, Node]
     edges: dict[str, tuple[Edge, ...]]
+    #: by ``(repository, skill)``, for a skill that names its packages: what
+    #: those packages build on, and the skills of their sibling packages
+    skill_edges: dict[tuple[str, str], tuple[Edge, ...]] = field(default_factory=dict)
+    siblings: dict[tuple[str, str], tuple[str, ...]] = field(default_factory=dict)
+
+    def builds_on(self, repo: str, skill: str | None = None) -> tuple[Edge, ...]:
+        """What ``skill`` builds on: its packages' edges, else the repository's."""
+        return self.skill_edges.get((repo, str(skill)), self.edges[repo])
 
     def children(self, repo: str) -> list[str]:
         """Repositories that depend directly on ``repo``."""
@@ -175,9 +193,14 @@ def read_node(repo: str, path: Path) -> Node:
         skills = tuple(raw["skills"])
         units = {
             key: Unit(key, u["title"], u["rungs"], u["skill"])
-            for key, u in raw["units"].items()
+            for key, u in raw.get("units", {}).items()
         }
-    except (KeyError, TypeError) as exc:
+        packages = {
+            skill: tuple(table["packages"])
+            for skill, table in raw["skills"].items()
+            if "packages" in table
+        }
+    except (KeyError, TypeError, AttributeError) as exc:
         raise ValueError(f"{shelf_file}: missing key {exc}") from exc
     for unit in units.values():
         if unit.skill not in skills:
@@ -185,30 +208,55 @@ def read_node(repo: str, path: Path) -> Node:
     for skill in skills:
         if skill not in found:
             raise ValueError(f"{shelf_file}: no SKILL.md for {skill}")
-    return Node(repo, path, plugin.name, skills, units)
+    return Node(repo, path, plugin.name, skills, units, packages)
 
 
 def measured_units(
     pkgs: dict[str, dg.Package], parents: set[str]
-) -> dict[tuple[str, str], tuple[str, ...]]:
-    """The units of each parent shelf that each dependent repository is carded.
+) -> dict[tuple[str, str], set[str]]:
+    """The units of each parent shelf that each dependent package is carded.
 
-    A repository receives a unit's card when one of its packages does, by
-    ``skill_shelf.carded``. Keys are ``(dependent, parent)``; the unit keys
-    come in shelf order.
+    A package receives a unit's card by ``skill_shelf.carded``. Keys are
+    ``(distribution, parent repository)``; the values are unit keys.
     """
-    out: dict[tuple[str, str], tuple[str, ...]] = {}
+    out: dict[tuple[str, str], set[str]] = {}
     for parent in sorted(parents & set(ss.SHELVES)):
         shelf = ss.SHELVES[parent]
         m = ss.measure(shelf, pkgs)
-        got: dict[str, set[str]] = {}
         for dist in m.used:
-            got.setdefault(pkgs[dist].repo, set()).update(ss.carded(shelf, m, dist))
-        for repo, names in got.items():
-            out[repo, parent] = tuple(
-                slug(u.name) for u in shelf.units if u.name in names
-            )
+            out[dist, parent] = {slug(name) for name in ss.carded(shelf, m, dist)}
     return out
+
+
+def _edges(
+    g: dg.Graph,
+    nodes: dict[str, Node],
+    units: dict[tuple[str, str], set[str]],
+    repo: str,
+    dists: set[str],
+) -> tuple[Edge, ...]:
+    """What the packages ``dists`` of ``repo`` build on, bottom-up.
+
+    A parent comes with the strongest evidence any of the packages has for
+    it, and with the units any of them is carded, in the parent's shelf order.
+    """
+    kinds: dict[str, str] = {}
+    for e in g.pkg_edges:
+        parent = g.pkgs[e.target].repo
+        if e.source not in dists or parent == repo:
+            continue
+        old = kinds.get(parent)
+        if old is None or dg.KIND_RANK[e.kind] < dg.KIND_RANK[old]:
+            kinds[parent] = e.kind
+    layers = g.repos
+    out = []
+    for parent in sorted(kinds, key=lambda r: (dg.LAYER_RANK[layers[r]], r)):
+        got = set().union(*(units.get((d, parent), set()) for d in sorted(dists)))
+        shelf = [u for u in nodes[parent].units if u in got]
+        # a measured unit the parent's shelf lacks is kept, for ST-1 to report
+        missing = sorted(got - set(shelf))
+        out.append(Edge(parent, kinds[parent], (*shelf, *missing)))
+    return tuple(out)
 
 
 def build(g: dg.Graph | None = None, paths: dict[str, Path] | None = None) -> Tree:
@@ -222,18 +270,30 @@ def build(g: dg.Graph | None = None, paths: dict[str, Path] | None = None) -> Tr
     g = g if g is not None else dg.build()
     paths = paths or {}
     nodes = {
-        repo: read_node(repo, paths.get(repo, dg.repo_path(repo)))
+        repo: read_node(repo, paths[repo] if repo in paths else dg.repo_path(repo))
         for repo in sorted(g.repos)
     }
     shelved = {repo for repo, node in nodes.items() if node.units}
     units = measured_units(g.pkgs, shelved)
-    rank = {repo: (dg.LAYER_RANK[layer], repo) for repo, layer in g.repos.items()}
-    edges: dict[str, list[Edge]] = {repo: [] for repo in nodes}
-    for e in sorted(g.edges, key=lambda e: rank[e.target]):
-        edges[e.source].append(
-            Edge(e.target, e.kind, units.get((e.source, e.target), ()))
-        )
-    return Tree(nodes, {repo: tuple(es) for repo, es in edges.items()})
+    own: dict[str, set[str]] = {repo: set() for repo in nodes}
+    for pkg in g.pkgs.values():
+        own[pkg.repo].add(pkg.name)
+    tree = Tree(nodes, {r: _edges(g, nodes, units, r, own[r]) for r in nodes})
+    for repo, node in nodes.items():
+        for skill, named in node.packages.items():
+            dists = set(named) & own[repo]  # ST-1 reports a name that is not one
+            tree.skill_edges[repo, skill] = _edges(g, nodes, units, repo, dists)
+            needs = {
+                e.target
+                for e in g.pkg_edges
+                if e.source in dists and e.target in own[repo] - dists
+            }
+            tree.siblings[repo, skill] = tuple(
+                other
+                for other in node.skills
+                if other != skill and needs & set(node.packages.get(other, ()))
+            )
+    return tree
 
 
 def graph_violations(tree: Tree) -> list[str]:
@@ -255,6 +315,18 @@ def graph_violations(tree: Tree) -> list[str]:
                         f" unit {unit!r}, which {e.parent}'s shelf.toml lacks"
                     )
     return out
+
+
+def package_violations(tree: Tree, pkgs: dict[str, dg.Package]) -> list[str]:
+    """Gate ST-1, for a workspace: a skill names only packages of its repository."""
+    return [
+        f"ST-1 {repo}: shelf.toml gives the skill {skill} the package {dist},"
+        f" which is not one of {repo}'s"
+        for repo, node in tree.nodes.items()
+        for skill, dists in node.packages.items()
+        for dist in dists
+        if dist not in pkgs or pkgs[dist].repo != repo
+    ]
 
 
 def card_file(tree: Tree, repo: str, unit: str | None = None) -> Path | None:
@@ -308,10 +380,22 @@ def edge_section(tree: Tree, edge: Edge) -> str:
     return f"### {edge.parent} · {declared} · {head}\n\n{body}"
 
 
-def render_block(tree: Tree, repo: str) -> str:
-    """The "Builds on" block of every skill of ``repo``, markers included."""
+def render_block(tree: Tree, repo: str, skill: str | None = None) -> str:
+    """The "Builds on" block of a skill of ``repo``, markers included.
+
+    Every skill of a repository carries the same block, except a skill that
+    names its packages: its block is theirs alone.
+    """
     lines = [BLOCK_BEGIN, "## Builds on", ""]
-    edges = tree.edges[repo]
+    edges = tree.builds_on(repo, skill)
+    siblings = tree.siblings.get((repo, str(skill)), ())
+    if siblings:
+        plugin = tree.nodes[repo].plugin
+        named = ", ".join(f"`{plugin}:{s}`" for s in siblings)
+        lines += [
+            f"In this repository, load when the task reaches into it: {named}.",
+            "",
+        ]
     if edges:
         lines += [
             "Each card below says what a library under this skill guarantees.",
@@ -321,7 +405,7 @@ def render_block(tree: Tree, repo: str) -> str:
         ]
         for edge in edges:
             lines += [edge_section(tree, edge), ""]
-    else:
+    elif not siblings:
         lines += ["Nothing else in the stack: this is a base skill.", ""]
     children = tree.children(repo)
     if children:
@@ -354,10 +438,10 @@ def replace_block(text: str, block: str) -> str:
 def render(tree: Tree, repo: str) -> dict[Path, str]:
     """Every ``SKILL.md`` of ``repo`` with its block regenerated, by path."""
     node = tree.nodes[repo]
-    block = render_block(tree, repo)
     return {
         node.skill_file(skill): replace_block(
-            node.skill_file(skill).read_text(encoding="utf-8"), block
+            node.skill_file(skill).read_text(encoding="utf-8"),
+            render_block(tree, repo, skill),
         )
         for skill in node.skills
     }
@@ -604,7 +688,10 @@ def content_violations(tree: Tree) -> list[str]:
 
 def violations(tree: Tree, pkgs: dict[str, dg.Package] | None = None) -> list[str]:
     """Every gate checked here: ST-1, then ST-2 to ST-4, and ST-7 given ``pkgs``."""
-    found = graph_violations(tree) or content_violations(tree)
+    found = graph_violations(tree)
+    if pkgs is not None:
+        found += package_violations(tree, pkgs)
+    found = found or content_violations(tree)
     if pkgs is not None and not found:
         found = card_names(tree, pkgs)
     return found
@@ -714,7 +801,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.write not in tree.nodes or not tree.nodes[args.write].skills:
             print(f"{args.write} has no plugin with a skill")
             return 1
-        found = graph_violations(tree)
+        found = graph_violations(tree) + package_violations(tree, graph.pkgs)
         for message in found:
             print(message)
         if found:

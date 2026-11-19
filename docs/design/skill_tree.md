@@ -372,6 +372,23 @@ A part that follows from the graph is generated here: the "Builds on" block, fro
 A repository receives a unit's card when one of its packages does by the rule of `skill_shelf.py` (three names used, or one subclassed), and the unit's key is its title in lower case with hyphens.
 ST-1 fails when a measured unit is missing from the parent's `shelf.toml`.
 
+**A workspace.** A workspace stays one plugin, with one listed skill per package (decided in #197).
+Its `plugins/<name>/tree/shelf.toml` names the packages a skill stands for, by distribution name, and needs no units:
+
+```toml
+[skills.bayesian-models-with-pyrox]
+packages = ["pyrox"]
+
+[skills.gaussian-processes-with-pyrox-gp]
+packages = ["pyrox-gp"]
+```
+
+The block of such a skill is measured from those packages alone: the repositories they depend on, with the strongest evidence any of them has, the units any of them is carded, and one line that names the skills of the sibling packages they depend on.
+A skill that names no package stands for the whole repository, which is what every skill did before, so a repository with one package changes nothing.
+ST-1 fails when a skill names a package that is not one of its repository's.
+Measured on pyrox at the pins with a scratch `shelf.toml` of five skills: the repository's block is 14 154 characters with all seven gaussx cards, and the per-package blocks carry six cards for pyrox-gp (9 921 characters), four for pyrox-ssm (6 575), three for pyrox-lgm (6 930), one for pyrox-nn (5 653) and none for the core package (180).
+The "Used by" line and gate ST-4 stay per repository.
+
 **When ST-2 applies.** A repository is held to its block once every one of its skills carries one; `python scripts/skill_tree.py` lists the others.
 A block quotes the parents' cards at geostack's pins.
 So when a card changes, the pin of its repository and the pins of the repositories that quote it move in one pull request here, after each of those has regenerated its block.
@@ -406,7 +423,7 @@ ST-6 has no evaluation beyond the two runs recorded in jejagents#6.
 
 - [x] `feat(scripts): emit each skill's builds-on block and plugin dependencies from the dependency graph` — the generator and gates ST-1, ST-2 and ST-4
 - [x] `feat(plugins): a geostack marketplace that lists every repository's plugin` — option B and gate ST-5
-- [ ] `docs(skills): a contract card for each of the eight repositories with a skill` — bottom-up, gaussx first; done for gaussx, finitevolX, geonnax, kernellib, spectraldiffx and xtremax, and geotoolz and pyrox wait on a block per package (#197)
+- [ ] `docs(skills): a contract card for each of the eight repositories with a skill` — bottom-up, gaussx first; done for gaussx, finitevolX, geonnax, kernellib, spectraldiffx and xtremax, and geotoolz and pyrox wait on their per-package skills, which the generator now supports (#197)
 - [ ] `[EPIC] a use skill for each of the fifteen repositories without one` — bottom-up by tier: functax, pipekit and gauss_flows first
 - [ ] `[Design] capstone skills for the case studies` — which jobs get a skill and what they are called
 
