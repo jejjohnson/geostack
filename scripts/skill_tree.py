@@ -621,7 +621,7 @@ def marketplace_stale(tree: Tree) -> bool:
 READ = ("*.py", "*pyproject.toml", "plugins")
 
 
-def behind(tree: Tree) -> list[str]:
+def behind(tree: Tree, pins: dict[str, Path] | None = None) -> list[str]:
     """Repositories whose checkout lacks changes of its default branch.
 
     A block is generated from every checkout at once: a repository's "Used by"
@@ -629,6 +629,9 @@ def behind(tree: Tree) -> list[str]:
     commits of its default branch, as last fetched, which change a file the
     generator reads, therefore writes a block that is already out of date.
     A checkout with no ``origin/HEAD`` is not judged.
+
+    ``pins`` names the pinned checkout of a repository whose plugin is read
+    from another one: the graph still comes from the pin, so both are judged.
     """
 
     def git(path: Path, *args: str) -> str | None:
@@ -638,20 +641,20 @@ def behind(tree: Tree) -> list[str]:
         return run.stdout.strip() if run.returncode == 0 else None
 
     found = []
-    for repo, node in sorted(tree.nodes.items()):
-        if git(node.path, "rev-list", "--count", "HEAD..origin/HEAD") in (None, "0"):
+    checkouts = [(repo, node.path, repo) for repo, node in tree.nodes.items()]
+    checkouts += [(repo, path, f"{repo}'s pin") for repo, path in (pins or {}).items()]
+    for _, path, name in sorted(checkouts):
+        if git(path, "rev-list", "--count", "HEAD..origin/HEAD") in (None, "0"):
             continue
         # what the default branch changed since the checkout left it, so that a
         # feature checkout's own changes do not count; a shallow clone has no
         # merge base, and there the two ends are compared directly
-        files = git(node.path, "diff", "--name-only", "HEAD...origin/HEAD", "--", *READ)
+        files = git(path, "diff", "--name-only", "HEAD...origin/HEAD", "--", *READ)
         if files is None:
-            files = git(
-                node.path, "diff", "--name-only", "HEAD", "origin/HEAD", "--", *READ
-            )
+            files = git(path, "diff", "--name-only", "HEAD", "origin/HEAD", "--", *READ)
         if files:
             count = len(files.splitlines())
-            found.append(f"{repo} is behind its default branch in {count} files")
+            found.append(f"{name} is behind its default branch in {count} files")
     return found
 
 
@@ -716,7 +719,8 @@ def main(argv: list[str] | None = None) -> int:
             print(message)
         if found:
             return 1
-        late = [] if args.allow_behind else behind(tree)
+        pins = {repo: dg.repo_path(repo) for repo in paths}
+        late = [] if args.allow_behind else behind(tree, pins)
         for message in late:
             print(message)
         if late:

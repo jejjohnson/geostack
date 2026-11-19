@@ -278,3 +278,12 @@ def test_write_refuses_a_checkout_behind_its_default_branch(tmp_path) -> None:
     git(origin, "commit", "-q", "--allow-empty", "-m", "five")
     git(clone, "fetch", "-q")
     assert st.behind(tree) == []
+    # with --into, the pinned checkout that supplies the graph is judged too
+    git(tmp_path, "clone", "-q", str(origin), "pin")
+    (origin / "mod.py").write_text("", encoding="utf-8")
+    git(origin, "add", "mod.py")
+    git(origin, "commit", "-q", "-m", "six")
+    git(tmp_path / "pin", "fetch", "-q")
+    assert st.behind(tree, {"lib": tmp_path / "pin"}) == [
+        "lib's pin is behind its default branch in 1 files"
+    ]
