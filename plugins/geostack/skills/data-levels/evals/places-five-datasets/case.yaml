@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: places-five-datasets
+expected_outcome: |
+  A placement of the five datasets on the stack's data levels: (a) L2 on the raster carrier with the observation tools, (b) L3 by the stack's own definition with a note that the provider's L4 label follows a different convention, (c) in-situ with no level and where it joins, (d) L4 on xarray with the state tools, (e) L5 with a note that L5 is not settled; each with the packages that read, index and transform it.
