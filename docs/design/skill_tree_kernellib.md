@@ -37,14 +37,14 @@ kernellib has seven kinds of thing, each of its dependents uses one to three of 
 <!-- shelf:units:begin -->
 | Unit | Rungs | Home band | Subpackages | Names |
 |---|---|---|---|---|
-| Kernels | ⓪ ① | ML | `kernellib.functional` 31, `kernellib._kernels` 29, `kernellib._derivatives` 6, `kernellib._heuristics` 4, `kernellib` 2 | 72 |
+| Kernels | ⓪ ① | ML | `kernellib.functional` 30, `kernellib._kernels` 29, `kernellib._derivatives` 8, `kernellib._heuristics` 4, `kernellib` 2, `kernellib._density` 1 | 74 |
 | Geostatistical kernels | ⓪ | ML, geoscience | `kernellib._geo` 41 | 41 |
-| Operators and feature maps | ⓪, setup | numerics, ML | `kernellib._spectral` 19, `kernellib._operators` 16 | 35 |
+| Operators and feature maps | ⓪, setup | numerics, ML | `kernellib._spectral` 19, `kernellib._operators` 17 | 36 |
 | Graphs | ⓪ ① | ML | `kernellib._graph` 36 | 36 |
 | Estimators | ③ ④ | ML | `kernellib._regression` 15, `kernellib.sklearn` 5 | 20 |
 | Decomposition | ③ | ML | `kernellib._decomposition` 14 | 14 |
 | Dependence measures | ④ | ML | `kernellib._dependence` 12 | 12 |
-| **All** | | | | **230** |
+| **All** | | | | **233** |
 <!-- shelf:units:end -->
 :::
 

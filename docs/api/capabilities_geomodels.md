@@ -190,9 +190,324 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `pbl_height_bulk_richardson` | function | PBL height h from the bulk Richardson number of the analysis profiles. |
 | `to_prescribed_wind` | function | Expose a :class:`MetField` as the wind object the Eulerian solver takes. |
 
+### `plumax.population`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AdditiveMultiCovariatePOD` | class | Additive GLM with separate coefficients for each covariate. |
+| `CloglogPOD` | class | Complementary log-log GLM for asymmetric detection tails. |
+| `CoalMineVentilationIntensity` | class | Multi-scale operational intensity for underground coal mines. |
+| `ConcentrationProxyPOD` | class | GLM on the log-concentration proxy ln(Q/(U·p)). |
+| `ConstantIntensity` | class | Constant intensity for passive, continuously leaking infrastructure. |
+| `DiurnalSeasonalIntensity` | class | Additive diurnal + seasonal intensity for thermally active biogenic sources. |
+| `DiurnalSinusoidalIntensity` | class | Diurnal sinusoidal intensity for thermally driven infrastructure. |
+| `EmissionCatalog` | class | A population of detected emission events. |
+| `EmissionEvent` | class | A single detected emission event with its per-event posterior summary. |
+| `EventEvidence` | class | Nodes and log-weights of one event's (or a stack of events') mark integral. |
+| `FacilityConfig` | class | Immutable physical configuration of a single leaking facility. |
+| `FullVaryingCoefficientPOD` | class | Full varying-coefficient GLM with spectral and radiometric controls. |
+| `INTENSITY_REGISTRY` | constant | `{'constant': <class 'plumax.population.intensity.Constant...` |
+| `InhomogeneousIntensityPosterior` | class | Posterior over a log-linear inhomogeneous intensity model. |
+| `InstrumentPOD` | class | One instrument's detection curve with its published calibration. |
+| `LandfillIntensity` | class | Multi-component intensity for municipal solid waste landfills. |
+| `LivestockFeedlotIntensity` | class | Bimodal diurnal + seasonal intensity for concentrated livestock operations. |
+| `LogIntensity` | class | A registry intensity as an xtremax log-intensity on window time. |
+| `LogLogisticPOD` | class | Logistic POD on log-flux: the lognormal CDF approximation. |
+| `LogisticPOD` | class | Single-covariate logistic POD: the classic S-curve. |
+| `LognormalMark` | class | Lognormal f(q) = LN(q; μ, σ²). |
+| `LognormalParetoMark` | class | Lognormal body spliced to a Pareto tail at Q_break, continuous there. |
+| `MARKS` | constant | `{'powerlaw': <class 'plumax.population._src.marks.PowerLa...` |
+| `Mark` | class | A mark family f(Q \| θ), with θ passed by keyword. |
+| `MarkPosterior` | class | Posterior over a mark family's parameters, with importance diagnostics. |
+| `MixtureLognormalMark` | class | Mixture of K lognormals f(q) = Σₖ wₖ LN(q; μₖ, σₖ²). |
+| `OffshorePlatformIntensity` | class | Combined tidal and operational intensity for offshore oil & gas platforms. |
+| `OperationalScheduleIntensity` | class | Step-function intensity for facilities with fixed shift schedules. |
+| `PODRetention` | class | A probability-of-detection curve as an xtremax retention callable. |
+| `POD_REGISTRY` | constant | `{'logistic': <class 'plumax.population.pod.LogisticPOD'>,...` |
+| `ParadoxResult` | class | Container for a single Monte Carlo paradox simulation. |
+| `PerEventPosterior` | class | Structural type for a per-event ``Q`` posterior (payload v2). |
+| `PeriodicBatchIntensity` | class | Periodic narrow-pulse intensity for scheduled batch venting. |
+| `PoissonRatePosterior` | class | Gamma posterior over a homogeneous Poisson rate ``lambda``. |
+| `PowerLawMark` | class | Pareto power law f(q) = (α − 1)/q_min · (q/q_min)^(−α) on q ≥ q_min. |
+| `ProbitPOD` | class | Probit GLM on the concentration proxy. |
+| `Regime` | class | How an event's per-event posterior enters the mark integral. |
+| `SNRBasedPOD` | class | GLM on log-SNR: radiometric first-principles detection model. |
+| `SeasonalSinusoidalIntensity` | class | Annual sinusoidal intensity for biogenic / climate-driven sources. |
+| `SeasonallyModulatedDiurnalIntensity` | class | Diurnal intensity whose amplitude is seasonally modulated. |
+| `SizeDistributionPosterior` | class | Posterior over the lognormal population size-distribution parameters. |
+| `SpectralAwarePOD` | class | GLM with spectral band count and resolution as covariates. |
+| `TMTPPPosterior` | class | Posterior draws of the full TMTPP, by the site names of its model. |
+| `TotalEmission` | class | Posterior samples of a total emission, split into detected and missing mass. |
+| `VaryingCoefficientPOD` | class | Varying coefficient GLM: sensitivity β₁ depends on environment. |
+| `WeibullRenewalIntensity` | class | Weibull hazard function for pressure-driven, recharging sources. |
+| `WetlandPermafrostIntensity` | class | Sigmoid-gated seasonal intensity for high-latitude wetland/permafrost. |
+| `X_MAX_DEFAULT` | constant | `1000000.0` |
+| `X_MIN_DEFAULT` | constant | `10.0` |
+| `build_canonical_scenarios` | function | Six canonical test scenarios spanning the paradox regime. |
+| `calibration_prior` | function | Sample each instrument's (Q₅₀, k) under its published calibration. |
+| `catalog_evidence` | function | :func:`event_evidence` for every event, stacked along a leading axis. |
+| `compute_E_Pd` | function | Compute E[P_d] = ∫₀^∞ P_d(Q) · f(Q) dQ by log-space quadrature. |
+| `detection_process` | function | The detected-event process: POD-thinned, marked ground process. |
+| `effective_sample_size` | function | Deprecated alias of `integrix.expect.effective_sample_size` (plumax#253). |
+| `ess_report` | function | Per-event ESS of the importance weights at one θ, with a collapse warning. |
+| `event_evidence` | function | Nodes and log-weights of one event's importance-corrected mark integral. |
+| `event_from_posterior` | function | Build an :class:`EmissionEvent` from any Tier I-IV posterior. |
+| `expected_count` | function | Expected number of events in the horizon, E[N(t, t + h)] = Λ(t, t + h). |
+| `expected_wait_time` | function | Expected wait until the next event, E[Δt \| t] = ∫₀^∞ exp(−Λ(t, t + s)) ds. |
+| `fit_inhomogeneous_intensity` | function | Log-linear inhomogeneous Poisson-process intensity fit via NUTS. |
+| `fit_lognormal_size_distribution` | function | Hierarchical-Bayes fit of the lognormal population size distribution. |
+| `fit_poisson_rate` | function | Closed-form Gamma-Poisson posterior for a homogeneous event rate. |
+| `fit_size_distribution_iw` | function | Importance-corrected NUTS fit of the population size distribution. |
+| `load_pod_calibrations` | function | Read per-instrument calibrations from a CSV or YAML table. |
+| `log_gauss_hermite` | function | Deprecated alias of `integrix.expect.log_gauss_hermite`. |
+| `log_pod_union` | function | log P_d^∪ as the callable the TMTPP model and ``total_emission`` take. |
+| `log_simpson` | function | Deprecated alias of `integrix.expect.log_simpson`. |
+| `logistic_pod` | function | Parametric probability of detection (logistic sigmoid). |
+| `lognorm_cdf` | function | Lognormal CDF used as the probability-of-detection curve. |
+| `lognormal_pdf` | function | Evaluate the Lognormal probability density function. |
+| `make_mark` | function | Build a registry mark family by name. |
+| `make_process` | function | An xtremax inhomogeneous Poisson process for a registry intensity. |
+| `mark_iw_model` | function | NumPyro model of the marks given the detections, importance-corrected. |
+| `occurrence_probability` | function | Probability of at least one event, P(N(t, t + h) ≥ 1) = 1 − exp(−Λ(t, t + h)). |
+| `padded_event_buffer` | function | Detection times as xtremax's padded buffer on window time. |
+| `pareto_smoothed_log_weights` | function | Deprecated alias of `integrix.expect.pareto_smoothed_log_weights`. |
+| `pod_powerlaw_model` | function | NumPyro model for a POD-modified power law on observed fluxes. |
+| `pod_union` | function | Probability that any covering instrument detects a rate Q, at published values. |
+| `posterior_metric` | function | Posterior samples of a persistency metric, and their quantiles. |
+| `power_law` | function | Un-normalised power-law PDF: x⁻ᵅ. |
+| `run_mcmc` | function | Run NumPyro NUTS on the POD-modified power-law model. |
+| `run_scenario_grid` | function | Run the paradox simulation across multiple scenarios. |
+| `simulate_paradox` | function | Run a single Monte Carlo realisation of the Missing Mass Paradox. |
+| `tmtpp_iw_model` | function | NumPyro model of the full importance-corrected TMTPP likelihood. |
+| `tod_bin_index` | function | The hour-of-day bin of each time. |
+| `total_emission` | function | Posterior samples of the basin total, with the inferred missing mass. |
+
+### `plumax.coupled`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `CoupledForward` | class | Multi-instrument coupled forward: a list of per-instrument observations. |
+| `CoupledPrior` | class | Gaussian prior N(μ_θ, Σ_θ) on the stacked control, by named block. |
+| `CoupledProblem` | class | The coupled forward, its prior and every instrument's observations. |
+| `CoupledResult` | class | MAP and Laplace posterior of the coupled inversion. |
+| `EulerianSource` | class | Tier III transport: the ``les_fvm`` finite-volume run through the shared column. |
+| `FlagPolicy` | class | What a rejected pixel becomes: dropped, or kept with an inflated variance. |
+| `FusionPosterior` | class | Closed-form joint posterior over ``(Q, bias₁ … bias_M)``. |
+| `Instrument` | class | Fixed observation geometry + error budget for one satellite instrument. |
+| `LagrangianSource` | class | Tier II transport: met-ensemble backward footprints through the shared column. |
+| `LayeredRadianceOperator` | class | Map a column-mass enhancement to band radiance through radtrax's layered model. |
+| `LinearisedRadianceOperator` | class | Tangent-linear radiance operator — the linearised counterpart of the RTM. |
+| `MaskedKPrior` | class | The slot prior: how many slots, how likely each is on, and its Q_k. |
+| `PlumeSource` | class | Static source + meteorology for the Tier I coupled forward. |
+| `QualityFlag` | class | Per-pixel quality bits, ``0`` = clear. |
+| `QualityPolicy` | class | Which flags reject a pixel, and how a rejected pixel enters the fusion. |
+| `RadianceObservationOperator` | class | Map a per-receptor column-enhancement field to band radiances via the RTM. |
+| `StackedObservations` | class | Every instrument's observations, mask and variance on one stacked axis. |
+| `TransportBackend` | class | A transport tier as the coupled forward sees it. |
+| `apply_quality` | function | The instrument with its flags and the policy's mask or inflation set. |
+| `build_coupled_forward` | function | Assemble a :class:`CoupledForward`, precomputing unit-``Q`` responses. |
+| `build_masked_k_problem` | function | The coupled problem of one active set, for the MAP and Laplace path. |
+| `column_mass_to_delta_vmr` | function | Convert a plume column **mass** enhancement [kg/m²] to a gas ``ΔVMR``. |
+| `column_response` | function | Per-receptor column enhancement at **unit emission** for one instrument. |
+| `contribution_report` | function | Pixels each instrument contributes at full weight, by name. |
+| `default_prior` | function | Build a diagonal prior ``(θ_b, B)`` for ``(Q, bias₁ … bias_M)``. |
+| `fuse_observations` | function | Closed-form joint posterior over ``(Q, bias_inst)`` from fused observations. |
+| `infer_masked_k_sources` | function | Posterior over the active count and the per-slot Q_k, from every instrument. |
+| `linearise` | function | Build the :class:`LinearisedRadianceOperator` tangent to ``operator`` at 0. |
+| `masked_k_coupled_model` | function | NumPyro masked-K model over every instrument's columns. |
+| `predict_observation` | function | Predict one instrument's observation vector ``y_inst``. |
+| `radiance_response` | function | Per-receptor band radiances for one instrument under the RTM operator. |
+| `radiance_response_linear` | function | Per-receptor linearised radiances for one instrument (differentiable). |
+| `saturation_rate` | function | Fraction of overpasses whose most probable active count is K_max. |
+| `slot_responses` | function | Unit-emission column of every slot, as one design matrix per instrument. |
+| `solve_coupled` | function | MAP and Laplace posterior of the coupled problem, on vardax. |
+| `stack_observations` | function | Stack the instruments' observations, masks and variances for vardax. |
+
+### `plumax.operators`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `EulerianDispersion` | class | Eulerian finite-volume dispersion runner as a pipekit operator. |
+| `GaussianPlume` | class | Steady-state Gaussian plume forward model as a pipekit operator. |
+| `GaussianPuff` | class | Time-resolved Gaussian puff forward model as a pipekit operator. |
+| `LagrangianDispersion` | class | Markov-1 Lagrangian dispersion forward model as a pipekit operator. |
+
+### `plumax.adapters`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `EulerianForwardModel` | class | Expose an Eulerian dispersion RHS as a ``pipekit_cycle.ForwardModel``. |
+| `RadtranObservationOperator` | class | Expose the normalised Beer–Lambert forward as an ``ObservationOperator``. |
+
 ## Upstream: `radtrax`
 
 Differentiable radiative transfer for methane remote sensing.
+
+### `radtrax`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ArgumentTypeError` | class | An argument is of a type the function does not accept. |
+| `DegenerateInputError` | class | Well-shaped input that cannot be used: too few samples, no data yet, or a zero norm. |
+| `ForwardModel` | class | State → opacity → solver → instrument: band values for one pixel. |
+| `GridError` | class | A grid is not strictly monotone, has too few points, or does not match another grid. |
+| `MissingExtraError` | class | An optional dependency is not installed; the message names the extra. |
+| `MissingFileError` | class | An input file or glob pattern matched nothing. |
+| `MissingKeyError` | class | A gas, band or variable is missing from a state, table or dataset. |
+| `MissingTableError` | class | A table (cross sections, a solar spectrum) is not in the cache; its message names the command that builds or fetches it. |
+| `ParameterError` | class | A scalar or option is outside its allowed range or set, or a required one is missing. |
+| `RadtraxError` | class | Base class for every exception raised by ``radtrax``. |
+| `ShapeError` | class | An array has the wrong shape or rank, or two arrays disagree in shape. |
+| `TableBuildError` | class | Building a cross-section table failed: a HITRAN fetch or a line-by-line computation. |
+| `unit_absorption_target` | function | Matched-filter target ``t = ∂ ln y / ∂ΔX`` at ``ΔX = 0`` [per mol/m²]. |
+
+### `radtrax.atmosphere`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AFGL_GASES` | constant | `('H2O', 'CO2', 'O3', 'N2O', 'CO', 'CH4')` |
+| `ATM_TO_PA` | constant | `101325.0` |
+| `AVOGADRO_PER_MOL` | constant | `6.02214076e+23` |
+| `AtmosphericState` | class | Pressure, temperature, altitude, thickness and gases, per layer. |
+| `BOLTZMANN_J_PER_K` | constant | `1.380649e-23` |
+| `CM2_PER_M2` | constant | `10000.0` |
+| `CM3_PER_M3` | constant | `1000000.0` |
+| `DRY_AIR_MOLAR_MASS_KG_PER_MOL` | constant | `0.0289644` |
+| `STANDARD_GRAVITY_M_PER_S2` | constant | `9.80665` |
+| `ViewingGeometry` | class | Sun and sensor directions as seen from the surface. |
+| `afgl_us_standard` | function | The AFGL US Standard atmosphere as layers between its levels. |
+| `air_mass_factor` | function | Plane-parallel two-way air-mass factor, sun → surface → sensor. |
+| `layers_from_levels` | function | An :class:`AtmosphericState` of ``L`` layers from ``L + 1`` levels. |
+| `number_density` | function | Total number density from the ideal-gas law [molecules / cm³]. |
+
+### `radtrax.spectroscopy`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `CrossSectionTable` | class | One gas's cross sections σ(ν; p, T) on a ``(ln p, T)`` grid. |
+| `OpacityProvider` | class | Protocol: an atmospheric state in, per-layer optical depth out. |
+| `SumOpacity` | class | Optical depth from several sources on one wavenumber grid. |
+| `TableGrid` | class | The ``(ν, p, T)`` grid a cross-section table is built on. |
+| `TableOpacity` | class | Optical depth from per-gas cross-section tables. |
+| `V0_GRID` | constant | `TableGrid(name='v0', nu_min_cm=4000.0, nu_max_cm=6500.0, ...` |
+| `absorption_coefficient` | function | α(ν) = σ(ν) · N_gas [1/cm]. |
+| `beers_law_from_lut` | function | End-to-end: σ-from-LUT → α → τ(ν) for a single homogeneous layer. |
+| `earth_sun_distance` | function | The Earth–Sun distance [AU] on a day of the year. |
+| `fetch_solar_spectrum` | function | Download a solar spectrum into the cache, once, and check its SHA-256. |
+| `interpolate_cross_section` | function | Return σ(ν) at a given (T, p) via bilinear LUT interpolation. |
+| `load_opacity` | function | A :class:`~radtrax.spectroscopy.TableOpacity` from cached tables. |
+| `load_table` | function | Open ``gas``'s cached table (lazily, with xarray). |
+| `plume_ratio_spectrum` | function | Differential-Beer-Lambert ratio τ_total(ν) / τ_bg(ν). |
+| `solar_irradiance` | function | Solar irradiance $E_0(\nu)$ at 1 AU, interpolated onto a wavenumber grid. |
+| `table_cache_dir` | function | Where tables are cached. |
+| `transmittance` | function | τ(ν) = exp(-α · L_vert · AMF). |
+
+### `radtrax.solvers`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BeerLambert` | class | Beer–Lambert along the two-way path; no scattering, no emission. |
+| `RTSolver` | class | Protocol: optical properties, a surface and a geometry in, radiance out. |
+
+### `radtrax.surface`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Lambertian` | class | A Lambertian surface: ``R = A`` in every direction. |
+| `PolynomialAlbedo` | class | A Lambertian surface whose albedo is a Legendre series in wavenumber. |
+| `RossLi` | class | The Ross–Li kernel BRDF: ``R = f_iso + f_vol K_vol + f_geo K_geo``. |
+| `Surface` | class | Protocol: the surface's bidirectional reflectance factor. |
+
+### `radtrax.instrument`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BandInstrument` | class | Band integration with a spectral shift, ``y_b = Σ_g f_bg L(ν_g + δ)``. |
+| `DiagonalNoise` | class | Independent noise with a fixed standard deviation per band, ``S_ε = diag(σ²)``. |
+| `GaussianInstrument` | class | Gaussian bands built in JAX, shifted analytically in cm⁻¹ or in nm. |
+| `GroundSamplingDistance` | class | Block-mean down-sampling operator for a fixed integer factor. |
+| `Instrument` | class | Protocol: radiance on a wavenumber grid in, one value per band out. |
+| `NEdTNoise` | class | Thermal-band noise from a noise-equivalent temperature difference. |
+| `NoiseModel` | class | Protocol: the measurement-noise covariance ``S_ε(y)`` and draws from it. |
+| `PointSpreadFunction` | class | 2D PSF blur applied independently per spectral channel. |
+| `SNRNoise` | class | Signal-dependent noise from a signal-to-noise ratio and a floor. |
+| `SpectralResponseFunction` | class | Band-integration operator for a multispectral / hyperspectral instrument. |
+
+### `radtrax.slab`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ATM_TO_PA` | constant | `101325.0` |
+| `BOLTZMANN_J_PER_K` | constant | `1.380649e-23` |
+| `CM3_PER_M3` | constant | `1000000.0` |
+| `ForwardResult` | class | Bundle of (radiance, Jacobian, transmittance) returned by the forward models. |
+| `InstrumentSpec` | class | Multispectral instrument description. |
+| `NBLookup` | class | Pre-computed normalised-brightness table, indexed by band and ΔX. |
+| `ObservationGeometry` | class | Viewing geometry for a single pixel. |
+| `build_nb_lut` | function | Pre-tabulate band-integrated nB over a column-enhancement grid. |
+| `forward_maclaurin` | function | Maclaurin-series forward model: expand ``exp(-τ(VMR))`` around VMR = 0. |
+| `forward_maclaurin_normalized` | function | Maclaurin expansion of ``exp(-Δτ)`` around ``ΔVMR = 0``. |
+| `forward_nonlinear` | function | Exact Beer-Lambert forward model. |
+| `forward_nonlinear_normalized` | function | Exact Beer-Lambert *normalised* by the background radiance. |
+| `forward_taylor` | function | First-order Taylor expansion around ``vmr_background``. |
+| `forward_taylor_normalized` | function | Taylor expansion of ``L_norm`` around ``ΔVMR = 0``. |
+| `inject_plume` | function | Multiplicative plume injection: ``scene_plume = scene · nB(ΔX)``. |
+| `lookup_nb` | function | Look up per-band nB for every pixel of a 2-D column map. |
+| `number_density_cm3` | function | Ideal-gas total number density [molecules / cm³]. |
+
+### `radtrax.geo`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AdaptiveBackground` | class | Local window statistics, in the layout of the cube they came from. |
+| `AdaptiveWindowBackground` | class | Per-pixel local mean and variance over a square window. |
+| `ApplyAdaptiveMF` | class | Matched filter against each pixel's local diagonal background. |
+| `ApplyClusterMF` | class | Matched filter with each pixel's own cluster background. |
+| `ColumnEnhancement` | class | Trace-gas enhancement map: mean, covariance, target and matched filter. |
+| `DetectionThreshold` | class | Score threshold with a given false-alarm rate under the Gaussian null. |
+| `ECOSTRESS_3BAND` | constant | `('B2', 'B4', 'B5')` |
+| `ECOSTRESS_3BAND_PERIOD` | constant | `(datetime.date(2019, 5, 15), datetime.date(2023, 4, 28))` |
+| `ECOSTRESS_BANDS` | constant | `('B1', 'B2', 'B3', 'B4', 'B5')` |
+| `ECOSTRESS_BAND_CENTRES_UM` | constant | `mappingproxy({'B1': 8.285, 'B2': 8.785, 'B3': 9.06, 'B4':...` |
+| `ECOSTRESS_NETD_K` | constant | `mappingproxy({'B1': 0.1, 'B2': 0.1, 'B3': 0.1, 'B4': 0.1,...` |
+| `EstimateCovEmpirical` | class | Empirical (``1/n``) covariance operator of a cube's valid pixels. |
+| `EstimateCovLowRank` | class | Low-rank plus Tikhonov covariance ``λI + V D Vᵀ`` of a cube's valid pixels. |
+| `EstimateCovShrunk` | class | Ledoit–Wolf or OAS covariance operator of a cube's valid pixels. |
+| `EstimateMean` | class | Background mean spectrum ``(B,)`` of a cube's valid pixels. |
+| `GMMClusterBackground` | class | Per-cluster backgrounds from a Gaussian mixture over the valid pixels. |
+| `LANDSAT_CALIBRATION_K` | constant | `mappingproxy({'L9': mappingproxy({'B10': 0.16, 'B11': 0.6...` |
+| `LANDSAT_NETD_K` | constant | `mappingproxy({'L8': mappingproxy({'B10': 0.048, 'B11': 0....` |
+| `LinearTargetFromObs` | class | Tangent-linear target signature ``(B,)`` from an observation model. |
+| `MBMP` | class | Sentinel-2 multi-band multi-pass methane signal, with or without scale factors. |
+| `MBSP` | class | Sentinel-2 multi-band single-pass signal, ``−ln(c R₁₂ / R₁₁)``. |
+| `MatchedFilter` | class | Per-pixel matched-filter score map. |
+| `MatchedFilterPixel` | class | Matched-filter score of one pixel spectrum, as a ``float``. |
+| `MatchedFilterSNR` | class | Theoretical detection SNR ``amplitude · √(tᵀ Σ⁻¹ t)``. |
+| `MatchedFilterSensitivity` | class | Per-pixel sensitivity map on the input's carrier. |
+| `NonlinearTargetFromObs` | class | Finite-amplitude target ``H(x_b + α δx) − H(x_b)``, ``(B,)``. |
+| `SBMP` | class | Sentinel-2 single-band multi-pass signal, ``−ln(c_s R₁₂ / R′₁₂)``. |
+| `StreamingBackground` | class | Mean and covariance accumulated over an iterable of cubes. |
+| `StreamingBackgroundResult` | class | Background from :class:`StreamingBackground`. |
+| `UnitAbsorptionTarget` | class | Target ``(B,)`` from v0's layered :class:`~radtrax.ForwardModel`. |
+| `ValidateMFInputs` | class | Pass-through guard: fail early on a zero target or a singular covariance. |
+| `ecostress_bands` | function | The TIR bands with data in a granule. |
+| `ecostress_geometry` | function | Per-pixel viewing geometry from the L1B geolocation angles. |
+| `ecostress_instrument` | function | ECOSTRESS bands as a :class:`~radtrax.instrument.BandInstrument`. |
+| `ecostress_noise` | function | NEΔT as a noise model on ``instrument``'s bands. |
+| `ecostress_radiance` | function | L1B radiance per band and pixel, fill values as NaN. |
+| `ecostress_srf` | function | Build the ECOSTRESS SRF from the bundled science-team responses. |
+| `emit_geometry` | function | Per-pixel viewing geometry of an EMIT image, on its grid ``(H, W)``. |
+| `emit_instrument` | function | EMIT bands as a :class:`~radtrax.instrument.BandInstrument` on a wavenumber grid. |
+| `landsat_geometry` | function | Per-pixel viewing geometry from the Collection 2 angle bands. |
+| `landsat_instrument` | function | Landsat 8/9 bands as a :class:`~radtrax.instrument.BandInstrument`. |
+| `landsat_noise` | function | The thermal bands' NEΔT as a noise model on ``instrument``'s bands. |
+| `landsat_radiance` | function | TOA radiance from Level-1 digital numbers, per band and pixel. |
+| `landsat_srf` | function | Build a Landsat 8/9 SRF from the bundled USGS band-average RSRs. |
+| `sentinel2_band_responses` | function | Sentinel-2 band 11 and 12 responses, interpolated onto a wavelength grid. |
+| `sentinel2_geometry` | function | Per-pixel viewing geometry of an L1C image, on its grid ``(H, W)``. |
+| `sentinel2_instrument` | function | Sentinel-2 bands as a :class:`~radtrax.instrument.BandInstrument`. |
+| `sentinel2_radiance` | function | TOA radiance from an L1C image's reflectance, per band and pixel. |
+| `sentinel2_srf` | function | Build a Sentinel-2 SRF from the agency table georeader bundles. |
 
 ## Upstream: `sesmax`
 
@@ -272,6 +587,17 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `tile_in_time` | function | Lift a spatial dictionary into a separable space-time frame. |
 | `trainable_mask` | function | Boolean pytree marking which leaves an optimiser may update. |
 | `transform_attrs` | function | Per-variable ``loc`` / ``scale`` attrs for an affine transform. |
+
+### `sesmax_core.da`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `FilteraxDynamics` | class | Adapt a sesmax forward model to filterax's flat-vector dynamics. |
+| `SubsampleObs` | class | Linear sub-sampling observation operator ``H(x) = x[indices]``. |
+| `VardaxForwardModel` | class | Adapt a sesmax model to vardax's flat-vector ``ForwardModel``. |
+| `WindowOperator` | class | A control through a whole model run to the stacked observations. |
+| `make_ensemble` | function | Build a Gaussian-perturbed flat ensemble around a base state. |
+| `state_to_vector` | function | Flatten a state pytree to a 1-D vector plus its inverse. |
 
 ### `sesmax_core.domain`
 
