@@ -37,7 +37,7 @@ not into a local package.
 | `marimo_notebooks/` | marimo notebooks (`01_exploration.py`) |
 | `docs/`, `myst.yml`, `references.bib` | MyST documentation (notes, tutorials, API pages, capability indexes) and its bibliography |
 | `CITATION.cff` | How to cite the project |
-| `.claude-plugin/marketplace.json`, `plugins/geostack/`, `skill_tree/cards/` | The skill tree for projects that build on the stack: the generated marketplace of every library's plugin, geostack's root plugin (the `role-ladder` and `library-docs-figures` skills), and the contract cards geostack holds for libraries that ship none |
+| `.claude-plugin/marketplace.json`, `plugins/geostack/`, `skill_tree/cards/` | The skill tree for projects that build on the stack: the generated marketplace of every library's plugin, geostack's root plugin (the `role-ladder`, `library-readme`, `library-docs-figures` and `library-math-reference` skills), and the contract cards geostack holds for libraries that ship none |
 
 ### The layers
 
@@ -273,6 +273,7 @@ agent can read and follow them), and two read-only review checklists in
 | Write a squash commit message | `squash-commit` |
 | Write, rebuild or review the README of a stack library (vardax, argminax, …) | `library-readme`, in `plugins/geostack/skills/` |
 | Draw, place or update the figures of a stack library's docs | `library-docs-figures`, in `plugins/geostack/skills/` |
+| Plan, write or review the mathematical reference of a stack library's docs | `library-math-reference`, in `plugins/geostack/skills/` |
 | Open or link GitHub issues | `create-gh-issue`, `link-gh-issues` (templates in `.github/ISSUE_TEMPLATE/`; `make gh-labels`, `gh-sub`, `gh-block`, `gh-show`) |
 
 A research project is not a library other projects build on, so the
@@ -282,8 +283,8 @@ work inside the project.
 geostack does publish one thing for other projects: the skill tree.
 `.claude-plugin/marketplace.json` lists every library's Claude Code plugin,
 each with the plugins of the libraries it builds on, and geostack's own
-plugin (`plugins/geostack/`, the `role-ladder`, `library-readme` and
-`library-docs-figures` skills). It is generated
+plugin (`plugins/geostack/`, the `role-ladder`, `library-readme`,
+`library-docs-figures` and `library-math-reference` skills). It is generated
 (`make skill-tree`); the design is
 [`docs/design/skill_tree.md`](docs/design/skill_tree.md).
 
