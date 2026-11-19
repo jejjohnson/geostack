@@ -44,6 +44,8 @@ specific to Claude Code.
     library: `repo-readme`, `repo-docs-figures` and
     `repo-math-reference`, kept in `plugins/geostack/skills/` so the
     geostack plugin installs them in every repository;
+  - the stack's three organising axes: `data-levels`, `modeling-cycle` and
+    `six-step-cycle`, in the same place;
   - the house styles for Python, maths notation and pseudocode:
     `style-python`, `style-math` and `style-code-sketch`, in the same place.
 - **Subagents** (`.claude/agents/`), both read-only, both used by
