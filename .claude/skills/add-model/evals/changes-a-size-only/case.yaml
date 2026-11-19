@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: changes-a-size-only
+expected_outcome: |
+  A model that differs only in its settings is a new config option or an override for the existing class, not a new class, wrapper or script.
