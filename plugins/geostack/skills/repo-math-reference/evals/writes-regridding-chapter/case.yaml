@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-regridding-chapter
+expected_outcome: |
+  One MyST chapter on conservative regridding that opens on a real problem, derives the method with labelled equations and shapes, shows code that runs on functax with its printed output, checks it against an exact answer, and demonstrates a failure.

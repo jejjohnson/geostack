@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: plans-chapter-list-functax
+expected_outcome: |
+  A proposed chapter list for functax's mathematical reference, built from its real public names, in ordered groups, with one line per chapter saying what it derives and which names it covers, and no chapter written.

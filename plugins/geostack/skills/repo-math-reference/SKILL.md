@@ -5,7 +5,7 @@ description: The GeoStack standard for a library's mathematical reference, the n
 
 # Library mathematical reference
 
-Draft 3 · 19 Nov 2026 · taken from the mathematical references of filterax (`docs/math/`, 20 chapters), vardax (`docs/`, 23 chapters) and integrix (`docs/theory/`, 13 chapters), and from functax's guide pages (`docs/guide/`), which set how a real problem motivates and carries the explanation.
+Draft 5 · 19 Nov 2026 · taken from the mathematical references of filterax (`docs/math/`, 20 chapters), vardax (`docs/`, 23 chapters) and integrix (`docs/theory/`, 13 chapters), and from functax's guide pages (`docs/guide/`), which set how a real problem motivates and carries the explanation.
 
 A stack library's docs have a mathematical reference: numbered chapters that write down what the library computes, derive it, run it and say when it fails. This skill is the standard for those chapters. The three references it was taken from are examples, not the standard: each was written before this skill, each does some things the others do better, and §9 lists what each would change to meet it. Where an example and this skill disagree, follow the skill, and where the skill is silent, copy the example named for that rule.
 
@@ -26,8 +26,9 @@ It builds on five other skills and does not repeat them: `role-ladder` (in this 
 
    Numerics has no rung of its own: it holds the exact methods the others are checked against, and what precision and gradients do to them. A library need not have every rung, so it need not have every group.
 3. **Order the chapters so each needs only the ones before it.** A chapter cites earlier equations by label and never a later one, except in its "See also".
-4. **One idea per chapter.** A chapter that needs two unrelated agreement checks is two chapters. The examples run from about 120 to 1,200 lines; a method chapter is usually 400 to 800.
-5. **Propose the list before writing**, with one line per chapter saying what it derives and which public names it covers, then write one chapter at a time and show it before the next.
+4. **One idea per chapter, not one name per chapter.** A chapter that needs two unrelated agreement checks is two chapters, but a family of names that share one derivation (the rules on an interval, the local interpolation schemes) is one chapter with a table of its members. The examples run from about 120 to 1,200 lines; a method chapter is usually 400 to 800.
+5. **Size the list against the examples, and lead with a first wave.** The three references have 13 to 23 chapters. A list much longer than that is a sign that names were given chapters, so merge before proposing. When the library really is larger, the proposal opens with the first wave (the chapters a reader needs to use the library end to end, about ten) and lists the rest as later waves, so there is something small to agree and to write first.
+6. **Propose the list before writing**, with one line per chapter saying what it derives and which public names it covers, then write one chapter at a time and show it before the next.
 
 ## 2. The kinds of chapter
 
@@ -88,14 +89,19 @@ Problems the examples already use, as a place to start:
 
 ## 4. Equations and notation
 
-- **Every display equation is on one source line and labelled**: `$$ … $$ (eq-<chapter>-<name>)`. It is followed by a sentence starting "where" that gives each new symbol and its shape, and it is cited as `[](#eq-…)`. The frontmatter `numbering: enumerator: "N.%s"` numbers it with the chapter.
-- **The notation is `style-math`'s**, with the kind-named macros (`\vect`, `\mat`, `\gvect`, `\gmat`, `\op`) installed in `myst.yml`. A library that departs from it says so at the top of its notation page with the reason, as integrix does for $f$ (the integrand there, the dynamics elsewhere).
-- **The notation page** has one labelled table per topic with the columns Symbol, Shape, Meaning and In code, where "In code" is the argument or attribute that holds the symbol. It ends with a "Classic letters" table that maps the literature's letters to the house ones, so a reader coming from a paper can find their $\mathbf{K}$. Physical symbols carry units in the Shape column. Copy from integrix `notation.md` for the tables and filterax `notation.md` for the classic letters.
-- **A symbol used on one page only** is declared in a table on that page, not on the notation page.
+How maths is written belongs to `style-math`, and a chapter follows it whole: every symbol with its shape, bold by kind, one role per letter, the kind-named macros, each expression on one source line, and no spacing or sizing macros. Its `references/targets.md` has the MyST syntax, and its topic files (`probability.md`, `indices.md`, `kernels.md`, `geoscience.md` and the rest) have the rules for each kind of maths. None of that is repeated here. This section holds only what a mathematical reference adds.
+
+- **Every display equation is labelled** `(eq-<chapter>-<name>)` after its closing dollars, so any chapter can cite it as `[](#eq-…)`. The frontmatter `numbering: enumerator: "N.%s"` numbers it with the chapter.
+- **A where-sentence follows each equation**, starting "where" and giving each new symbol with its shape. This is how a chapter meets `style-math`'s first principle: the shape sits next to the equation, in prose, and not in a list at the end of the page.
+- **The notation page collects the library's symbols.** One labelled table per topic, with the columns Symbol, Shape, Meaning and In code, where "In code" is the argument or attribute that holds the symbol (its name follows `style-python` §6). The symbols themselves are the ones `style-math` §3 and §4 give for each role; the page lists the ones this library uses and adds none of its own without saying so. Copy the layout from integrix `notation.md`.
+- **It ends with a "Classic letters" table**, so a reader coming from a paper can find their $\mathbf{K}$. Take the rows from `style-math`'s `references/crosswalks.md`, which already maps the letters of the data-assimilation, retrieval, GP and extremes literature, and keep only the ones the library's sources use. filterax `notation.md` is the example.
+- **Physical symbols follow `style-math`'s `references/geoscience.md`**: the classic letter, declared with its units in a symbol table on the page that uses it, with one meaning per page. A symbol used on one page only is declared there and not on the notation page.
+- **A departure is stated, with its reason,** at the top of the notation page, as integrix does for $f$ (the integrand there, the dynamics elsewhere). A departure that several libraries need is a change to `style-math`, not a line in each notation page.
+- **Each chapter passes `style-math`'s checker** with `--target myst` before it is shown. The checker reads the labelled one-line form, so every display equation is checked.
 
 ## 5. Code on the page
 
-Every block follows `style-code-sketch`: a `# Shapes:` header, and above each line its status marker, its equation and its shape. A chapter uses two markers: `# today (<pkg>)` on a call into the stack and `# user` on a function the reader would write.
+Every block follows `style-code-sketch`: a `# Shapes:` header, and above each line its status marker, its equation and its shape, in that order. A chapter uses two markers: `# today (<pkg>)` on a call into the stack and `# user` on a function the reader would write.
 
 ````markdown
 ```{code-block} python
@@ -139,7 +145,7 @@ A bibliography entry is added only from a source that was read: the authors, yea
 ## 8. Wiring
 
 - **Folder.** `docs/math/`, with chapters `NN_slug.md`, `notation.md` and `references.md`.
-- **`myst.yml`.** The `math:` macros, `bibliography:` listing the `.bib` files, `references.api` for the API inventory, and a toc entry titled "Mathematical reference" with one child per group and "Reference" last. Copy filterax's.
+- **`myst.yml`.** The `math:` macro block, written by `style-math`'s `emit_macros.py` and never by hand, `bibliography:` listing the `.bib` files, `references.api` for the API inventory, and a toc entry titled "Mathematical reference" with one child per group and "Reference" last. Copy filterax's.
 - **Line breaks.** One sentence per source line in a new reference; in an existing one, whatever its pages already use. Never a hard wrap at a column.
 - **Build.** `myst build --html --strict` with the latest mystmd, so an unresolved label, citation or `xref:` fails.
 - **Landing page.** `index.md` links the first chapter with one sentence on what the reference covers.
@@ -158,6 +164,17 @@ functax has guide pages and no mathematical reference yet; its reference is plan
 
 A move of folder changes every chapter's URL, so the PR that does it lists the old and new paths and the pages that link in from outside the section.
 
+## 10. Reviewing a chapter
+
+A review reads the mathematics before the form. A chapter that has every section and every label and derives something wrongly has failed at its one job, and a review that only compares the page with this skill will not see it.
+
+1. **Check the mathematics.** Follow each derivation and each "because". Is the stated reason for a result the real one? Does every symbol mean one thing on the page (`style-math`'s rule), including across the prose around an equation? Does an exactness or convergence claim hold for the example it is made about, with the degree or the rate counted out?
+2. **Check the numbers against the claims.** Read each printed output next to the sentence that interprets it: the factor per doubling, the size of the error, the comparison with another chapter's number. Run the page's test, or say that it was not run.
+3. **Check the promises**: the real problem carried through to the last number, the sections of the chapter's kind, a failure that is shown and not described, every named strategy checked.
+4. **Check the form last**: labels, where-sentences, code in sketch form, cite roles, links, and `style-math`'s checker.
+
+Write the review most important first, which means a wrong derivation above a missing label. Give the place of each finding, say what the chapter already does well, flag nothing the chapter does not have, and separate what belongs to this chapter's PR from what is a change to the whole reference (a folder move, a bibliography).
+
 ## Checklist
 
 - [ ] Every public name is on one rung, and the chapter list was proposed and agreed before any chapter was written, in the five groups, each chapter needing only those before it.
@@ -166,8 +183,9 @@ A move of folder changes every chapter's URL, so the PR that does it lists the o
 - [ ] Each chapter has the sections of its kind, in order; a method chapter has Algorithm, Implementation, Agreement and When it breaks, the last with a demonstrated failure.
 - [ ] A method chapter names structures, then primitives and strategies, then the model, then the algorithm; it carries the pieces table when it names more than three pieces, and checks every strategy it names.
 - [ ] A chapter goes one rung below its own at most, and links to the owning library's chapter for anything lower.
-- [ ] Every display equation is on one line, labelled, and followed by a where-sentence with shapes; every symbol is on the notation page or in a table on its own page.
+- [ ] Every display equation is labelled and followed by a where-sentence with shapes; every symbol is on the notation page or in a table on its own page; `style-math`'s `check_math.py --target myst` is clean on the chapter.
 - [ ] Every code block is a labelled, captioned block in `style-code-sketch` form, followed by its exact output; no number in the prose lacks a block that prints it.
 - [ ] `tests/test_math_pages.py` passes on the chapter.
 - [ ] Citations are cite roles on checked `.bib` entries; public names are `xref:` links; cited tables and figures are labelled.
 - [ ] The strict build passes with the latest mystmd.
+- [ ] A review checked the mathematics and the printed numbers before the form.
