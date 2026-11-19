@@ -221,16 +221,18 @@ def _emphasis_in_text(text: str) -> bool:
         return any(start <= at < end for start, end in spans)
 
     for mark in "_*":
-        opener: int | None = None
+        # A stack of open runs, so emphasis nested in emphasis does not hide an
+        # outer opener that later pairs with a delimiter inside maths.
+        openers: list[int] = []
         for run in re.finditer(r"(?<!\\)" + re.escape(mark) + "+", masked):
             at = run.start()
             can_open, can_close = _delimiter_roles(masked, at, run.end())
-            if can_close and opener is not None and (in_maths(opener) or in_maths(at)):
-                return True
-            if can_close and opener is not None:
-                opener = None
-            elif can_open and opener is None:
-                opener = at
+            if can_close and openers:
+                opener = openers.pop()
+                if in_maths(opener) or in_maths(at):
+                    return True
+            elif can_open:
+                openers.append(at)
     return False
 
 

@@ -187,3 +187,26 @@ def test_strong_emphasis_runs_across_inline_maths_are_an_error(tmp_path) -> None
     code = tmp_path / "code.md"
     code.write_text("Run:\n\n    a_b = c_d * e_f * g\n")
     assert check_math.check_file(code, check_math.Target.github, []) == []
+
+
+def test_backtick_inline_leaves_a_fence_inside_a_block_quote_alone() -> None:
+    source = '> ~~~sh\n> echo "$HOME$PATH"\n> ~~~\n> and $x_n$\n\nthen $y_n$\n'
+    expected = '> ~~~sh\n> echo "$HOME$PATH"\n> ~~~\n> and $`x_n`$\n\nthen $`y_n`$\n'
+    assert mc.backtick_inline(source) == expected
+    unclosed = "> ```\n> $a_n$\n\nafter the quote, $b_n$\n"
+    after = "> ```\n> $a_n$\n\nafter the quote, $`b_n`$\n"
+    assert mc.backtick_inline(unclosed) == after
+
+
+def test_nested_emphasis_does_not_hide_an_opener_that_pairs_in_maths(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "nested.md"
+    page.write_text("*Note **important** $x_{*}$\n")
+    found = check_math.check_file(page, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+    fine = tmp_path / "fine.md"
+    fine.write_text("*Note **important** here*, then $x_{b}$ alone.\n")
+    assert check_math.check_file(fine, check_math.Target.github, []) == []
