@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: moves-helper-upstream
+expected_outcome: |
+  The helper leaves the notebook: the capability index is searched for an existing equivalent, and if there is none the function goes upstream into the library that owns the concept, not into a local package or a shared notebook module; the notebook then imports it.

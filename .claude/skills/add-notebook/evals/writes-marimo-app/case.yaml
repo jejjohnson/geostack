@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-marimo-app
+expected_outcome: |
+  A marimo app in marimo_notebooks/ with a PEP 723 header listing what it imports, app = marimo.App(...), one @app.cell function per cell returning the names later cells use, and the marimo check and run commands.
