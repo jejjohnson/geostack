@@ -60,6 +60,7 @@ project:
         - file: docs/design/stack_layer_map.md
         - file: docs/design/kinds_and_roles.md
         - file: docs/design/skill_tree.md
+        - file: docs/design/skill_shelf_recipe.md
         - file: docs/design/skill_tree_gaussx.md
         - file: docs/design/skill_tree_kernellib.md
         - file: docs/design/skill_tree_geotoolz.md
