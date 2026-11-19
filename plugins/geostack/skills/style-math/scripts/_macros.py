@@ -76,6 +76,7 @@ def expand(text: str, macros: list[Macro]) -> str:
 
 
 FENCE = re.compile(r"^\s*(```+|~~~+)\s*(\S*)")
+_QUOTE_PREFIX = re.compile(r"^ {0,3}(?:>[ \t]?)+")
 INLINE = re.compile(r"(?<![\\$])\$(`?)(?!\$)(.+?)\1(?<![\\$])\$(?!\$)")
 TICK_MATH = re.compile(r"\$`(?!\s)(.+?)(?<!\s)`\$")
 # MyST allows a label after the closing dollars: `$$ … $$ (eq-name)`.
@@ -135,14 +136,22 @@ def _closes(match: re.Match | None, opening: str) -> bool:
 
 
 def fenced_lines(markdown: str) -> set[int]:
-    """The numbers of the lines inside a code or math fence, delimiters included."""
+    """The numbers of the lines inside a code or math fence, delimiters included.
+    A fence inside a block quote counts."""
     inside: set[int] = set()
     fence: tuple[str, str] | None = None
+    quoted = False
     for number, line in enumerate(markdown.splitlines(), start=1):
-        match = FENCE.match(line)
+        # A fence may sit in a block quote: the quote's markers come off before
+        # the fence is looked for, and such a fence ends where the quote does.
+        marks = _QUOTE_PREFIX.match(line)
+        match = FENCE.match(line[marks.end() :] if marks else line)
+        if fence is not None and quoted and not marks:
+            fence = None
         if fence is None:
             if match:
                 fence = _opens(match)
+                quoted = bool(marks)
                 inside.add(number)
             continue
         inside.add(number)
