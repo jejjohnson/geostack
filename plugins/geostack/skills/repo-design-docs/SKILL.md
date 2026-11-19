@@ -5,7 +5,7 @@ description: The GeoStack standard for a library's design docs, the pages writte
 
 # Library design docs
 
-Draft 1 · 19 Nov 2026 · taken from the design docs of filterax (`docs/design_docs/`), vardax (`docs/design/`), xtremax (`docs/design_docs/`) and xr_toolz (`docs/design/`), which share one layout, and from the conventions of geostack's own design pages (`docs/overview.md`, "How the pages are written").
+Draft 2 · 19 Nov 2026 · taken from the design docs of filterax (`docs/design_docs/`), vardax (`docs/design/`), xtremax (`docs/design_docs/`) and xr_toolz (`docs/design/`), which share one layout, and from the conventions of geostack's own design pages (`docs/overview.md`, "How the pages are written").
 
 A stack library is designed on the page before it is built. Its design docs say what the library is and is not, what it owns, how its pieces fit, and why each contested choice went the way it did. The four sets this skill was taken from are examples, not the standard: they agree on the layout, and §8 lists where each differs from what is written here.
 
@@ -93,6 +93,7 @@ The layers and the import rules of the stack are in geostack's `AGENTS.md` and i
 
 - **A decision is recorded when there were real options.** A choice nobody would contest is prose on the page it belongs to.
 - **A record is never deleted or rewritten.** When it is overturned, its status becomes "Superseded by D12" and D12 says what changed.
+- **An older record is brought to this form without adding to it.** Keep its ID, its title and what it decided. Fill a field only from what the source says; where the source gives no status, names no alternative or lists no consequence, write that the field is implied or not recorded, in the record itself. A rewrite that supplies a confident "Accepted" or a plausible rejected option has invented history.
 - **Decision IDs stay in the design docs.** The mathematical reference and the code do not cite them (`repo-math-reference` §9).
 
 ## 6. API contracts and examples
@@ -120,13 +121,22 @@ The layers and the import rules of the stack are in geostack's `AGENTS.md` and i
 - **The maths moves out.** Once a method ships, its derivation lives in the mathematical reference, and the feature page links to the chapter instead of keeping a second copy.
 - **Every number on a page comes from code that asserts it.**
 
+**Reviewing a set.** Start with whether the docs describe the library that exists, and only then look at their form.
+
+1. **Read what the repository says about its own docs.** Its `AGENTS.md` or README may already say that the design pages are a draft or a roadmap, and which wins where they disagree with the code.
+2. **Compare the docs with the package.** List the modules and the public names the pages describe and the ones the code has. What is documented and missing, and what exists and is undesigned, are the first findings: xtremax's pages describe a model zoo, max-stable processes and plotting that were never built, and barely mention the point-process package that was.
+3. **Check the decisions against the code.** A record the code has overturned is superseded, and a choice the code plainly made with no record needs one.
+4. **Then check the form** against §1 to §6.
+
+Write the review most important first, say what can stay, and separate what one page's PR can fix from what needs a decision first (cut the unbuilt scope, or keep it as `proposed`).
+
 ## 8. Bringing an existing set to the standard
 
 | Library | Already meets | To change |
 |---|---|---|
 | filterax | the full set with `features/`, `integrations/` and `research/`; decision records with status, context, options, decision and consequences | the folder is `docs/design_docs/`; pages still carry the library's earlier names (ekalmX, filterX) in their titles; "Layer 0, 1, 2" becomes the rungs; the API pages use the literature's letters and spacing macros; the README's count of decisions is stale; the wave backlog is kept as pages under `issues/` |
 | vardax | the set, with the "where does X go" test and the list of what it does not do | paragraphs are hard-wrapped; "three-layer stack" becomes the rungs; decision records are prose without the five fields; extra pages (`latent_da.md`, `posterior.md`, `pipekit_composition.md`) sit at the top level where `features/` and `integrations/` would hold them |
-| xtremax | the core set | the folder is `docs/design_docs/`; the README is `design_overview.md`; files repeat their folder's name (`api/api_primitives.md`); "Layer 0, 1, 2" becomes the rungs |
+| xtremax | the core set of pages | the pages describe a library that was not built (a model zoo, max-stable processes, GP, plotting and dataset modules) and leave out the point-process package that was, so the first change is to decide what is cut and what stays as `proposed`; its `AGENTS.md` already calls them a draft roadmap; the folder is `docs/design_docs/`; the README is `design_overview.md`; files repeat their folder's name (`api/api_primitives.md`); "Layer 0, 1, 2" becomes the rungs |
 | xr_toolz | the core set, with extra folders of its own | pages for single features sit at the top level; the layout of its `bridges/` and `conventions/` folders is its own and may stay |
 
 A move of folder changes every page's URL, so the PR that does it lists the old and new paths.
@@ -140,4 +150,5 @@ A move of folder changes every page's URL, so the PR that does it lists the old 
 - [ ] Each decision has an ID, a status, the context, the options, the decision and the consequences; none was deleted.
 - [ ] Every signature is a code sketch in the house notation, marked `today` or `proposed` with the decision or issue that adds it.
 - [ ] Each page was agreed before the next was written, and the backlog is issues.
+- [ ] An older record brought to the standard form marks every field its source does not supply.
 - [ ] Where code exists, the pages were checked against it: no stale `proposed`, a "Differs" box where they disagree, derivations in the mathematical reference.
