@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: squashes-a-skill-pr
+expected_outcome: |
+  One Conventional Commits message with the dominant type and the scope this repo uses for the plugin's skills, a lowercase summary under 72 characters, a one-to-three sentence body on the overall effect, both co-authors once each, no list of the commits, printed alone in a code block.
