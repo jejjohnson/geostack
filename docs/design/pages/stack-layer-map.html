@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="A proposed layering of the GeoStack libraries: the foundations, Core, GeoNumerics, GeoStack (geotoolz + xrtoolz), GeoModels, GeoBench and GeoApps, with every import between them, the boundaries of each library, and the vocabulary (role, kind, data, layer, tier, level) that places any name in the stack.">
+<meta name="description" content="A proposed layering of the GeoStack libraries: the foundations, Core, GeoNumerics, GeoStack (the geotoolz repo), GeoModels, GeoBench and GeoApps, with every import between them, the boundaries of each library, and the vocabulary (role, kind, data, layer, tier, level) that places any name in the stack.">
 <title>GeoStack Layer Map</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,7 +70,7 @@ body {
   line-height: 1.55;
 }
 .page {
-  max-width: 1080px;
+  max-width: 1240px;
   margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
@@ -143,9 +143,10 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
 .legend i.dashed { background: transparent !important; border: 1.5px dashed var(--accent); }
+.legend i.repo { background: transparent !important; border: 1.2px dashed var(--toolkits); }
 
 .canvas { overflow-x: auto; }
-svg.graph { display: block; width: 100%; min-width: 860px; height: auto; }
+svg.graph { display: block; width: 100%; min-width: 1030px; height: auto; }
 .band { stroke: none; }
 .band-label {
   font-family: var(--display);
@@ -465,10 +466,11 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
 <nav class="series-nav" aria-label="Docs navigation"><span class="crumbs"><a href="../">GeoStack docs</a> · Design</span><a href="../stack-layer-map">← Landing page: abstract and contents</a></nav>
 <div class="page">
   <header>
-    <div class="eyebrow">Proposal · 5 November 2026</div>
+    <div class="eyebrow">Proposal · 5 November 2026 · repos revised 19 November 2026</div>
     <h1>GeoStack layer map</h1>
     <p class="lead">The same number of layers as today, cut by a different test. Core holds the maths and plumbing that knows no geography, so GeoML dissolves into it. GeoNumerics holds geophysical maths on plain arrays; the data toolkits sit above it and wrap its kernels in carriers; the physics models sit on top.</p>
     <p class="lead">Beneath Core sit the third-party foundations the whole stack is built on: JAX, Equinox, lineax, optimistix, diffrax, optax, NumPyro and the array libraries. The function-approximation core, <span class="mono">functax</span>, goes in Core tier 0, the one placement where geotoolz and finitevolX can both import it; integrix (integration over time, space and spectrum) and argminax (optimisation with uncertainty at the optimum) sit just above it.</p>
+    <p class="lead">The libraries are released from <b>nine repos</b>, drawn as dotted outlines in the figures: geocore, pipekit, geo-inference and pyrox in Core, geogrids and geofields in GeoNumerics, then geotoolz, geomodels and geobench. A repo imports only from repos below it, and none is so large that one task needs more than a small part of it.</p>
   </header>
 
   <section class="figure" aria-labelledby="clean-title">
@@ -492,8 +494,8 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
       <div class="legend" id="legend" aria-label="Legend"></div>
     </div>
     <div class="canvas">
-      <svg class="graph" id="graph" viewBox="0 0 1240 1450" role="img" aria-labelledby="graph-desc">
-        <desc id="graph-desc">Dependency graph of the GeoStack libraries in the proposed layers. Third-party foundations at the bottom: JAX, Equinox, jaxtyping, lineax, optimistix, diffrax, einx, optax, NumPyro, FlowJAX, interpax, NumPy, SciPy, xarray, pyproj, Shapely, rasterio and georeader. Core above them holds the pipekit workspace (pipekit, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate), gaussx, functax, geonnax, xtremax, kernellib, optax_bayes, gauss_flows, filterax, vardax and the pyrox workspace (pyrox, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm). GeoNumerics above Core holds geophysix, gridax, spectraldiffx, diagnostix, radiomax, finitevolX and tracerax. GeoStack sit above GeoNumerics: the geotoolz workspace (geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts) and the xrtoolz workspace (xrproducts, xrops), with georeader among the third-party foundations. GeoModels (radtrax, sesmax-core, plumax, and the planned sesmax-ocean and sesmax-atmos) sit above both, and applications on top. functax, integrix and argminax are proposed.</desc>
+      <svg class="graph" id="graph" viewBox="0 0 1490 1450" role="img" aria-labelledby="graph-desc">
+        <desc id="graph-desc">Dependency graph of the GeoStack libraries in the proposed layers. Third-party foundations at the bottom: JAX, Equinox, jaxtyping, lineax, optimistix, diffrax, einx, optax, NumPyro, FlowJAX, interpax, NumPy, SciPy, xarray, pyproj, Shapely, rasterio and georeader. Core above them holds four repos: the proposed geocore (gaussx, functax, integrix, kernellib, geonnax), pipekit above it (pipekit-ops, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate), the proposed geo-inference (argminax, gauss_flows, filterax, vardax, manipy) and pyrox on top (pyrox, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm, pyrox-xtreme). GeoNumerics above Core is two proposed repos: geogrids (geophysix, gridax, spectraldiffx, finitevolX) and geofields above it (diagnostix, tracerax, radiomax). GeoStack sits above GeoNumerics: the geotoolz repo (geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrproducts, xrops), with georeader among the third-party foundations. GeoModels (radtrax, sesmax-core, plumax, and the planned sesmax-ocean and sesmax-atmos) sit above both, and applications on top.</desc>
         <defs>
           <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-default"/></marker>
           <marker id="arrow-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-hot"/></marker>
@@ -508,6 +510,30 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     <div class="panel" id="panel" aria-live="polite"></div>
     <div class="check" id="check"></div>
     <p class="caption">Arrows point from a library to what it imports. Solid arrows are imports found in each library's source on 4 November 2026, at geostack's submodule pins, with tests, docs and notebooks left out; arrows into the foundations are thicker where a library imports them in more places. Dotted red arrows are imports today that are planned to go away. Dashed arrows are planned: the users of the three new libraries, functax, integrix and argminax. Arrows between the foundations themselves show their main published dependencies, which were not scanned. Foundation arrows appear when you select a library, or all at once with the toggle.</p>
+  </section>
+
+  <section class="section" aria-labelledby="repos-title">
+    <h2 id="repos-title">Nine repos</h2>
+    <p class="sub">The layers say what a library may import; the repos say where it is released from. Each repo is a uv workspace whose packages install on their own, with one lockfile, one CI and per-package versions. <b>A repo imports only from repos below it</b>, and inside a repo the tiers hold, checked by an import linter. Moving code between two libraries of the same repo is one pull request, and a new library needs no new repo. Today the same libraries are spread over about 25 repos.</p>
+    <p class="sub"><b>A repo is split when it holds two clusters that one task rarely touches together</b> and the cut leaves the imports running one way. That is what separates pyrox from geo-inference and geogrids from geofields, and it keeps every repo small enough for one person or one agent to hold.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Repo</th><th>Layer</th><th>Packages</th><th>Status</th><th>Imports only from</th></tr></thead>
+        <tbody>
+          <tr><td class="lib">geobench</td><td>GeoBench</td><td>geobench-core (tasks, splits, leaderboards, runner), geobench-experiment (today's pipekit-experiment), geobench-data (frozen, versioned datasets), geobench-suites (one submodule per domain)</td><td>planned</td><td>everything below; nothing imports it</td></tr>
+          <tr><td class="lib">geomodels</td><td>GeoModels</td><td>sesmax-core, sesmax-ocean, sesmax-atmos, radtrax, plumax</td><td>proposed: the sesmax repo plus two repos today. Open: sesmax and the methane pair as two repos</td><td>geotoolz and below</td></tr>
+          <tr><td class="lib">geotoolz</td><td>GeoStack</td><td>geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrops, xrproducts; xrcf proposed</td><td>today: the xrtoolz repo was folded in, November 2026; the <code>geotoolz</code> and <code>xrtoolz</code> umbrellas hold no code</td><td>geofields and below</td></tr>
+          <tr><td class="lib">geofields (name open)</td><td>GeoNumerics</td><td>diagnostix, tracerax, radiomax</td><td>proposed: one repo today, two libraries not started. What you compute from fields and observations; radiomax needs only geophysix and could sit in either repo</td><td>geogrids and below</td></tr>
+          <tr><td class="lib">geogrids (name open)</td><td>GeoNumerics</td><td>geophysix, gridax, spectraldiffx, finitevolX</td><td>proposed: two repos today, two libraries not started. Constants, grids and the discretisations on them; geophysix sits here because gridax needs it and geofields needs gridax</td><td>the Core repos</td></tr>
+          <tr><td class="lib">pyrox</td><td>Core</td><td>pyrox, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm, pyrox-xtreme</td><td>today, as a workspace of five; xtremax would join as pyrox-xtreme, since its classes are NumPyro distributions</td><td>geo-inference and below</td></tr>
+          <tr><td class="lib">geo-inference</td><td>Core</td><td>argminax, gauss_flows, filterax, vardax, manipy</td><td>proposed: five repos today</td><td>geocore and pipekit</td></tr>
+          <tr><td class="lib">pipekit</td><td>Core</td><td>pipekit-ops, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate; pipekit-experiment until it moves to geobench</td><td>today</td><td>geocore: pipekit-jax takes its scans and adjoints from integrix</td></tr>
+          <tr><td class="lib">geocore</td><td>Core</td><td>gaussx, functax, integrix, kernellib, geonnax</td><td>proposed: five repos today</td><td>the foundations</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub"><b>The test between geocore and geo-inference.</b> geocore is maths with no data in it: operators, bases, quadrature, kernels, network layers. geo-inference takes a cost or a likelihood and returns an estimate with its uncertainty. So argminax (curvature at the minimum, Laplace, the Bayesian learning rule) and manipy (manifold alignment fitted to data) sit in geo-inference, and nothing in geocore imports either. pipekit sits between the two: it needs integrix from geocore, and vardax in geo-inference needs pipekit. pyrox sits on top: its packages import argminax, filterax and gauss_flows, and nothing in geo-inference imports pyrox, which also keeps filterax and vardax out of the NumPyro packages.</p>
+    <p class="sub"><b>Still open.</b> The names geogrids and geofields. The model registry now in pipekit-experiment, which should stay in pipekit when the tracking adapters move to geobench, because the applications will need it and must not import a benchmark repo. <b>optax_bayes is retired:</b> the Bayesian learning rule lives in <code>argminax.blr</code> from argminax 0.0.7.</p>
   </section>
 
   <section class="section" aria-labelledby="map-title">
@@ -525,36 +551,36 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
         <div class="rel-topic">Function approximation</div>
         <div class="rel-from"><span class="pill ext">interpax</span><span class="pill ext">orthax</span><span class="pill ext">quadax rules</span><span class="pill ext">scipy.interpolate</span></div>
         <div class="rel-kind k-replaces">replaces</div>
-        <div class="rel-to"><span class="pill c-core new">functax</span></div>
+        <div class="rel-to"><span class="pill c-core">functax</span></div>
         <div class="rel-note">one basis-and-plan design for interpolation, orthogonal polynomials and quadrature rules, borrowing from all three. No import and no dependency: interpax, orthax and quadax drop out of the stack, and gauss_flows (the one importer of interpax today) moves to functax</div>
       </div>
       <div class="rel-row">
         <div class="rel-topic">Integration</div>
         <div class="rel-from"><span class="pill ext">diffrax</span><span class="pill ext">quadax adaptive</span><span class="pill ext">scipy.integrate</span></div>
         <div class="rel-kind k-extends">extends</div>
-        <div class="rel-to"><span class="pill c-core new">integrix</span></div>
+        <div class="rel-to"><span class="pill c-core">integrix</span></div>
         <div class="rel-note">the 10 diffrax time steppers now in finitevolX (its semi-Lagrangian scheme stays there) and the adjoint strategies now in pipekit-jax; adaptive quadrature written here, drawing on quadax's design (adaptive Gauss–Kronrod, tanh–sinh, Romberg, cumulative integrals) without depending on it</div>
       </div>
       <div class="rel-row">
         <div class="rel-topic">Nonlinear solves</div>
         <div class="rel-from"><span class="pill ext">optimistix</span></div>
         <div class="rel-kind k-extends">extends</div>
-        <div class="rel-to"><span class="pill c-core new">argminax</span></div>
+        <div class="rel-to"><span class="pill c-core">argminax</span></div>
         <div class="rel-note">Gauss–Newton and Levenberg–Marquardt solvers, curvature at the optimum (Laplace covariance, averaging kernels) and adjoints; now spread over gaussx, pyrox and vardax</div>
       </div>
       <div class="rel-row">
         <div class="rel-topic">Optimisers</div>
         <div class="rel-from"><span class="pill ext">optax</span></div>
         <div class="rel-kind k-extends">extends</div>
-        <div class="rel-to"><span class="pill c-core">optax_bayes</span></div>
-        <div class="rel-note">the Bayesian learning rule as optax gradient transformations</div>
+        <div class="rel-to"><span class="pill c-core">argminax</span></div>
+        <div class="rel-note">the Bayesian learning rule as optax gradient transformations, in <code>argminax.blr</code>; optax_bayes is retired</div>
       </div>
       <div class="rel-row">
         <div class="rel-topic">Probabilistic programming</div>
         <div class="rel-from"><span class="pill ext">numpyro</span></div>
         <div class="rel-kind k-extends">extends</div>
-        <div class="rel-to"><span class="pill c-core">xtremax</span><span class="pill c-core">gaussx</span><span class="pill c-core">pyrox</span></div>
-        <div class="rel-note">28 distribution classes: 18 in xtremax, 6 in gaussx, 4 in pyrox, each a different family</div>
+        <div class="rel-to"><span class="pill c-core">pyrox-xtreme</span><span class="pill c-core">gaussx</span><span class="pill c-core">pyrox</span></div>
+        <div class="rel-note">28 distribution classes: 18 in pyrox-xtreme (today's xtremax), 6 in gaussx, 4 in pyrox, each a different family</div>
       </div>
       <div class="rel-row">
         <div class="rel-topic">Normalising flows</div>
@@ -589,7 +615,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
 
   <section class="section" aria-labelledby="core2-title">
     <h2 id="core2-title">Core, reorganised</h2>
-    <p class="sub">Every foundation gets at most one home in Core, and a new library is created only once a second consumer exists. Three new libraries meet that bar today: functax, integrix and argminax. Each card says what the library is, which foundation it extends (◇) or replaces outright (↺, no longer a dependency), what it builds on in the stack (↓) and who builds on it (↑). pyrox (five packages) and pipekit (six in Core, one in the apps) are workspaces, drawn one card per package.</p>
+    <p class="sub">Every foundation gets at most one home in Core, and a new library is created only once a second consumer exists. Three new libraries meet that bar today: functax, integrix and argminax. Each card says what the library is, which foundation it extends (◇) or replaces outright (↺, no longer a dependency), what it builds on in the stack (↓) and who builds on it (↑). Core's packages are released from four repos, geocore, pipekit, geo-inference and pyrox (see Nine repos above), drawn as dotted outlines in the figures and one card per package here.</p>
     <div class="legend-kinds"><span class="chip">imports today</span><span class="chip planned">planned</span><span class="chip ext">foundation it extends</span><span class="chip gone">replaced: design borrowed, no dependency</span><span class="lk-arrow">◇ extends</span><span class="lk-arrow">↺ replaces</span><span class="lk-arrow">↓ builds on</span><span class="lk-arrow">↑ used by</span></div>
     <div class="tiers band-core" id="tiers-core"></div>
     <h3 class="minor">What moves</h3>
@@ -631,7 +657,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     <div class="legend-kinds"><span class="chip">imports today</span><span class="chip planned">planned</span><span class="lk-arrow">↓ builds on</span><span class="lk-arrow">↑ used by</span></div>
 
     <h3 class="minor layer-h" style="--lc:var(--numerics)">GeoNumerics</h3>
-    <p class="sub">Numerical methods on geophysical domains, on plain arrays: the grids, spheres and physics geophysics uses, but no CRS and no data files. Seven libraries, five of them new; most of what fills them is already written, spread over geotoolz, xrtoolz and the models.</p>
+    <p class="sub">Numerical methods on geophysical domains, on plain arrays: the grids, spheres and physics geophysics uses, but no CRS and no data files. Seven libraries, five of them new; most of what fills them is already written, spread over geotoolz and the models. They are released from two repos: geogrids (geophysix, gridax, spectraldiffx, finitevolX) and, above it, geofields (diagnostix, tracerax, radiomax).</p>
     <div class="tiers band-numerics" id="tiers-numerics"></div>
     <h3 class="minor small">What moves in</h3>
     <div class="table-wrap">
@@ -653,10 +679,10 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     </div>
 
     <h3 class="minor layer-h" style="--lc:var(--toolkits)">GeoStack</h3>
-    <p class="sub"><b>GeoStack here means exactly geotoolz + xrtoolz</b>, the two workspaces below; the whole project keeps the name too, and pipekit, which today's geostack dependency graph puts in its GeoStack layer, moves to Core. Real data: carriers, CRS, I/O and products. Two uv workspaces, eight packages, about 150k lines: the geotoolz workspace (six packages, raster and swath data on GeoArray) and the xrtoolz workspace (two packages, data cubes on xarray, with a third proposed below). Each package installs on its own; the <code>geotoolz</code> and <code>xrtoolz</code> umbrellas hold no code. georeader is not one of them: it is spaceml-org's GDAL reader, reached only through <code>geoarray.interop.georeader</code> as an engine behind a few readers and warps, so it sits with the third-party foundations.</p>
+    <p class="sub"><b>GeoStack here means exactly the geotoolz repo</b>, which has held the xarray packages too since the xrtoolz repo was folded into it in November 2026; the whole project keeps the name too, and pipekit, which today's geostack dependency graph puts in its GeoStack layer, moves to Core. Real data: carriers, CRS, I/O and products. One uv workspace, eight packages, about 150k lines: six geotoolz packages (raster and swath data on GeoArray) and two xrtoolz packages (data cubes on xarray, with a third proposed below). Each package installs on its own; the <code>geotoolz</code> and <code>xrtoolz</code> umbrellas hold no code. georeader is not one of them: it is spaceml-org's GDAL reader, reached only through <code>geoarray.interop.georeader</code> as an engine behind a few readers and warps, so it sits with the third-party foundations.</p>
     <div class="table-wrap">
       <table class="kinds">
-        <thead><tr><th>Workspace</th><th>Package (import)</th><th>Lines</th><th>What it is</th><th>Namespaces</th></tr></thead>
+        <thead><tr><th>Family</th><th>Package (import)</th><th>Lines</th><th>What it is</th><th>Namespaces</th></tr></thead>
         <tbody>
           <tr><td class="lib" rowspan="6">geotoolz</td><td class="lib">geotoolz-array (<code>geoarray</code>)</td><td>7.5k</td><td>the carriers and their geometry</td><td><code>GeoArray</code>, <code>GeoSwath</code>, <code>GeoPoints</code>, <code>Grid</code>, <code>PixelWindow</code>, <code>RasterSource</code>, <code>interop</code></td></tr>
           <tr><td class="lib">geotoolz-cloud (<code>geocloud</code>)</td><td>6.5k</td><td>object storage</td><td><code>store</code>, <code>files</code>, <code>credentials</code>, <code>cog</code>, <code>hdf</code>, <code>cache</code>, <code>fs</code></td></tr>
@@ -669,7 +695,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
         </tbody>
       </table>
     </div>
-    <p class="sub"><b>Mirrored by role, not by workspace.</b> The geotoolz and xrtoolz workspaces are how the code is released; the roles are the same on both sides, and the plumbing is shared. GeoArray carries observations (L0 to L2); xarray carries model states and analyses (L3 and up). Read across a row:</p>
+    <p class="sub"><b>Mirrored by role.</b> Both families are released from the one geotoolz repo; the roles are the same on both sides, and the plumbing is shared. GeoArray carries observations (L0 to L2); xarray carries model states and analyses (L3 and up). Read across a row:</p>
     <div class="table-wrap">
       <table class="kinds">
         <thead><tr><th>Role</th><th>Observations · GeoArray</th><th>States · xarray</th></tr></thead>
@@ -685,7 +711,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
       </table>
     </div>
     <p class="sub"><b>The gap: a floor for the xarray side.</b> On the GeoArray side the carrier's vocabulary lives at the bottom, in geoarray, and geotoolz has a rule that geoops never depends on geoproducts. On the xarray side the same vocabulary is split between a reader and the operators: the CF <code>Variable</code> registry and the typed vocabulary live in <code>xrproducts.types</code>, CF validation in <code>xrops.cf</code>, CRS and subsetting in <code>xrops.geom</code>. So xrops imports a reader package (eight imports of <code>xrproducts.types</code>) to name a variable, which is exactly the edge geotoolz forbids. The proposal is one small package at the bottom of the xarray side, here called <span class="pill c-toolkits new">xrcf</span> (<code>xrtoolz-cf</code>; the name is open): CF conventions and the Variable registry, coordinate and CRS conventions, validation, subsetting and the typed vocabulary. It is not a new carrier (xarray is the carrier) but the conventions that make a DataArray a carrier. xrproducts and xrops both import it, and xrops stops importing xrproducts. The workspace has folded packages before (xrcore, xrgrad, xreinx and xrsklearn went into xrops), so this would be the one package that earns its place by holding the floor.</p>
-    <p class="sub">xrtoolz still sits on top of geotoolz: xrops's calculus runs on geoops's difference kernels, and <code>xrops.lift</code> runs any geoops Operator item by item over a cube.</p>
+    <p class="sub">The xarray packages still sit on top of the GeoArray ones: xrops's calculus runs on geoops's difference kernels, and <code>xrops.lift</code> runs any geoops Operator item by item over a cube.</p>
     <div class="tiers band-toolkits" id="tiers-toolkits"></div>
     <h3 class="minor small">What moves</h3>
     <div class="table-wrap">
@@ -698,7 +724,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
           <tr><td class="lib">xrproducts (<code>types</code>), xrops (<code>cf</code>, <code>geom</code> CRS and subsetting)</td><td class="lib">xrcf (proposed)</td><td>the CF Variable registry, the typed vocabulary, coordinate and CRS conventions; xrops then drops its import of xrproducts</td></tr>
           <tr><td class="lib">xrops</td><td class="lib out">GeoNumerics</td><td>diagnostics, spectra and metrics → diagnostix; Lagrangian → tracerax (table above)</td></tr>
           <tr><td class="lib">geoproducts (<code>presets</code>)</td><td class="lib">geoops</td><td>sensor presets become plain data specs and geoops builds the Operator (<code>RGBRecipe.from_spec</code>); the <code>[operators]</code> extra goes, and geoproducts drops from tier 4 to tier 2, below geoops, mirroring xrproducts below xrops</td></tr>
-          <tr><td class="lib">xtremax</td><td class="lib">xrops</td><td>moves in: extraction and simulations on xarray</td></tr>
+          <tr><td class="lib">pyrox-xtreme</td><td class="lib">xrops</td><td>moves in: extraction and simulations on xarray</td></tr>
           <tr><td class="lib">vardax</td><td class="lib">xrops</td><td>moves in: the xarray halves of <code>extract_patches</code> and the observation masks</td></tr>
           <tr><td class="lib">geoops, xrops</td><td class="lib out">functax (Core)</td><td>the gap-fill maths duplicated in geoops and xrops moves to one functax plan; each toolkit keeps a thin Operator on its own carrier</td></tr>
         </tbody>
@@ -761,7 +787,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     <h2 id="fg-title">functax and geonnax: where the line is</h2>
     <div class="rule tldr">
       <h3>functax says what a function family is and how to compute with it; geonnax says how to stack function families into a network.</h3>
-      <p><b>The test:</b> is it a function of coordinates used as an expansion, f(x) = Σⱼ cⱼ φⱼ(x; θ), together with its maths (evaluate, differentiate, transform, integrate, project, solve for c)? Then it is <span class="pill c-core new">functax</span>. Is it a stack of nonlinear layers, a map between fields, or a neural field, where the architecture is the point? Then it is <span class="pill c-core">geonnax</span>.</p>
+      <p><b>The test:</b> is it a function of coordinates used as an expansion, f(x) = Σⱼ cⱼ φⱼ(x; θ), together with its maths (evaluate, differentiate, transform, integrate, project, solve for c)? Then it is <span class="pill c-core">functax</span>. Is it a stack of nonlinear layers, a map between fields, or a neural field, where the architecture is the point? Then it is <span class="pill c-core">geonnax</span>.</p>
       <p class="muted"><b>Learned parameters are allowed on both sides.</b> A basis can carry trainable θ: RBF centres and widths, Gabor and Fourier-feature frequencies, a Slepian region. functax keeps θ as ordinary pytree leaves, so gradients flow and anyone can fit them; it ships no network conventions (initialisation schemes, layer specs, depth). Whether θ is learned does not decide the side; whether the thing is an expansion or a network does.</p>
     </div>
     <p class="sub"><b>Why split now.</b> geonnax describes itself as a network zoo, but a third of it (about 3.5k lines in <code>_basis</code>) is bases "shared by NN spectral layers and GP inducing features", and that is what most of its users import. kernellib imports only bases, sphere grids, random features and lon/lat helpers; vardax and sesmax-core import only <code>geonnax.basis</code>; pyrox-gp re-exports geonnax's bases and keeps only the kernel-aware pieces. pyrox-nn is the one library that uses geonnax as a network library. Four of five users depend on a network zoo for maths.</p>
@@ -769,13 +795,13 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
       <table class="kinds">
         <thead><tr><th>geonnax today</th><th>Goes to</th><th>Why</th></tr></thead>
         <tbody>
-          <tr><td class="topic">bases: Legendre and Gauss–Legendre, scalar and vector spherical harmonics, Slepian (caps and regions), needlets, box Fourier and divergence-free, RBF and Wendland, Gabor frames, DWT matrices, shell products</td><td><span class="pill c-core new">functax</span></td><td>expansions and their maths; trainable θ stays possible</td></tr>
-          <tr><td class="topic">sphere grids and quadrature, icosphere and meshes, Laplace–Beltrami eigenbasis</td><td><span class="pill c-core new">functax</span></td><td>CRS-free geometry and quadrature</td></tr>
-          <tr><td class="topic">EOF basis; graph-Laplacian eigenpairs</td><td><span class="pill c-core new">functax</span></td><td>a basis from data (weights as an argument) or from a given operator; diagnostix adds area weights and the analysis, kernellib builds the graph</td></tr>
-          <tr><td class="topic"><code>randfeat</code>: Fourier features at given frequencies</td><td><span class="pill c-core new">functax</span></td><td>drawing frequencies from a kernel's spectral density goes to <span class="pill c-core">kernellib</span>, with pyrox-gp's <code>_spectral_density</code></td></tr>
-          <tr><td class="topic"><code>diffops</code>: grad, Laplacian, surface gradient, Laplace–Beltrami of continuous fields</td><td><span class="pill c-core new">functax</span></td><td>derivatives of functions; derivatives on grids belong to gridax, finitevolX and spectraldiffx</td></tr>
-          <tr><td class="topic">spherical-harmonic transform, non-uniform FFT</td><td><span class="pill c-core new">functax</span></td><td>basis transforms; spectraldiffx uses the same SHT</td></tr>
-          <tr><td class="topic"><code>geo</code> and <code>_frames</code>: lon/lat ↔ unit vectors, rotations, tangent frames</td><td><span class="pill c-core new">functax</span></td><td>sphere geometry</td></tr>
+          <tr><td class="topic">bases: Legendre and Gauss–Legendre, scalar and vector spherical harmonics, Slepian (caps and regions), needlets, box Fourier and divergence-free, RBF and Wendland, Gabor frames, DWT matrices, shell products</td><td><span class="pill c-core">functax</span></td><td>expansions and their maths; trainable θ stays possible</td></tr>
+          <tr><td class="topic">sphere grids and quadrature, icosphere and meshes, Laplace–Beltrami eigenbasis</td><td><span class="pill c-core">functax</span></td><td>CRS-free geometry and quadrature</td></tr>
+          <tr><td class="topic">EOF basis; graph-Laplacian eigenpairs</td><td><span class="pill c-core">functax</span></td><td>a basis from data (weights as an argument) or from a given operator; diagnostix adds area weights and the analysis, kernellib builds the graph</td></tr>
+          <tr><td class="topic"><code>randfeat</code>: Fourier features at given frequencies</td><td><span class="pill c-core">functax</span></td><td>drawing frequencies from a kernel's spectral density goes to <span class="pill c-core">kernellib</span>, with pyrox-gp's <code>_spectral_density</code></td></tr>
+          <tr><td class="topic"><code>diffops</code>: grad, Laplacian, surface gradient, Laplace–Beltrami of continuous fields</td><td><span class="pill c-core">functax</span></td><td>derivatives of functions; derivatives on grids belong to gridax, finitevolX and spectraldiffx</td></tr>
+          <tr><td class="topic">spherical-harmonic transform, non-uniform FFT</td><td><span class="pill c-core">functax</span></td><td>basis transforms; spectraldiffx uses the same SHT</td></tr>
+          <tr><td class="topic"><code>geo</code> and <code>_frames</code>: lon/lat ↔ unit vectors, rotations, tangent frames</td><td><span class="pill c-core">functax</span></td><td>sphere geometry</td></tr>
           <tr><td class="topic">WGS84 constants and the ellipsoid</td><td><span class="pill c-numerics new">geophysix</span></td><td>Core functions take <code>a</code> and <code>f</code> as plain arguments; geophysix supplies them</td></tr>
           <tr><td class="topic">layers: spectral and spherical spectral convolution, FNO, SFNO, GeoFNO, WNO, LNO, CNO, U-Net, attention, norms, basis convolution</td><td><span class="pill c-core">geonnax</span></td><td>networks over fields; they call functax transforms and bases</td></tr>
           <tr><td class="topic">neural fields: SIREN, MFN, multi-scale SIREN, separable INR, NeuralFieldMLP, NCP</td><td><span class="pill c-core">geonnax</span></td><td>stacks of nonlinear layers</td></tr>
@@ -845,7 +871,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
       <ol>
         <li><b>Data assimilation.</b> vardax and filterax import only Core, so the test puts them there. If you read DA as geophysical state estimation, they move up to GeoNumerics.</li>
         <li><b>geonnax.</b> The name says geo, but its encoders and sphere grids are maths on the sphere, which passes the Core test.</li>
-        <li><b>xtremax.</b> Its "spatiotemporal data extraction" belongs in GeoStack if it reads products or CRS data; the modelling stays in Core.</li>
+        <li><b>pyrox-xtreme</b> (today's xtremax). Its "spatiotemporal data extraction" belongs in GeoStack if it reads products or CRS data; the modelling stays in Core.</li>
         <li><b>One diagnostics library, not two.</b> Physical diagnostics need statistics (eddy kinetic energy and eddy fluxes are built on anomalies) and spectral statistics need kinematics (spectral fluxes use velocities), so a split would make each import the other. diagnostix holds both, in submodules: <code>kinematics</code>, <code>column</code>, <code>budgets</code>, <code>stats</code>, <code>spectral</code>, <code>modes</code>, <code>skill</code>. What goes in: a quantity derived from a geophysical field, physical or statistical, that needs area weights, a calendar or a constant; signal processing that needs none of these is functax's.</li>
         <li><b>Eulerian or Lagrangian.</b> finitevolX and spectraldiffx hold operators on fields, whose state stays on the grid; tracerax holds positions carried forward in time and the analysis of their trajectories. Semi-Lagrangian advection traces a departure point for one step and discards it, so it stays with the field schemes. FTLE needs the flow map, so it is tracerax's; Okubo–Weiss uses the instantaneous field, so it is diagnostix's. The two sides never import each other: a model couples them through velocity in and concentration out.</li>
         <li><b>spectraldiffx.</b> Its package description is stale ("Pre-, Geo-, and ML processing for ocean applications") and should say what it does.</li>
@@ -862,7 +888,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     </div>
   </section>
 
-  <footer>Source: an import scan of each library under <code>references/&lt;layer&gt;/</code> in geostack, 4 November 2026; pyrox was read at its <code>main</code>, which is ahead of geostack's pin (its gaussx import arrived after the pin); pyrox-ssm and pyrox-gp's line count were read again at pyrox <code>38feb4b</code> (17 November 2026), after the Markov GPs moved to pyrox-ssm. Import counts are module-level, lazy and guarded imports alike; dev, docs and test files are excluded. The dependencies between the foundations come from their published requirements as known, not from a scan. Also found but left out of the figure: orbax (pipekit, sesmax-core), paramax and einops (sesmax-core), scikit-learn (manipy) and blackjax (pipekit). functax, integrix and argminax are proposed and do not exist yet.</footer>
+  <footer>Source: an import scan of each library under <code>references/&lt;layer&gt;/</code> in geostack, 4 November 2026; pyrox was read at its <code>main</code>, which is ahead of geostack's pin (its gaussx import arrived after the pin); pyrox-ssm and pyrox-gp's line count were read again at pyrox <code>38feb4b</code> (17 November 2026), after the Markov GPs moved to pyrox-ssm. Import counts are module-level, lazy and guarded imports alike; dev, docs and test files are excluded. The dependencies between the foundations come from their published requirements as known, not from a scan. Also found but left out of the figure: orbax (pipekit, sesmax-core), paramax and einops (sesmax-core), scikit-learn (manipy) and blackjax (pipekit). Repos were checked again on 18 November 2026: functax, integrix, argminax and diagnostix now exist, optax_bayes is retired into argminax, and xrtoolz-ops and xrtoolz-products are packages of the geotoolz repo. The imports of argminax and of pipekit-jax (on integrix) were read from each repo that day; the other arrows and all counts are still the 4 November scan.</footer>
 </div>
 
 
@@ -903,10 +929,10 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
 
   // x, y are node centres in the 1240 × 1450 viewBox (GeoNumerics shifted by NUM_SHIFT; Core and Foundations by CORE_SHIFT)
   const NODES = [
-    { id: "xtremax",       layer: "core",     tier: 0, today: "geoml",    x: 150, y: 728, why: "extreme-value statistics" },
+    { id: "pyrox-xtreme",  layer: "core",     tier: 0, today: "geoml",    ws: "pyrox", x: 150, y: 728, why: "pyrox-xtreme (today's xtremax): extreme-value distributions and models on NumPyro" },
     { id: "geonnax",       layer: "core",     tier: 1, today: "geoml",    x: 320, y: 640, why: "network layers, neural operators, neural fields and encoders, on functax bases" },
     { id: "gaussx",        layer: "core",     tier: 0, today: "numerics", x: 490, y: 728, why: "structured linear algebra; imported by almost everything" },
-    { id: "functax",    layer: "core",     tier: 0, today: "none",     x: 670, y: 728, why: "interpolation core: JAX, Equinox, lineax, einx only", proposed: true },
+    { id: "functax",    layer: "core",     tier: 0, today: "none",     x: 670, y: 728, why: "interpolation core: JAX, Equinox, lineax, einx only" },
     { id: "pipekit-array", layer: "core",     tier: 1, today: "geostack", ws: "pipekit", x: 0, y: 0, why: "pipekit-array: named arrays, dim Operators and KernelOp over the array API; 3.9k lines" },
     { id: "pipekit-train", layer: "core",     tier: 1, today: "geostack", ws: "pipekit", x: 0, y: 0, why: "pipekit-train: training loops for emulators and amortised inference; 4.5k lines" },
     { id: "pipekit-cycle", layer: "core",     tier: 2, today: "geostack", ws: "pipekit", x: 0, y: 0, why: "pipekit-cycle: time stepping, DA cycles, observation operators, adjoint specs; 2.1k lines" },
@@ -914,32 +940,31 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     { id: "pipekit-evaluate", layer: "core",  tier: 3, today: "geostack", ws: "pipekit", x: 0, y: 0, why: "pipekit-evaluate: Unit × Lens × Stage evaluation, scorers, benchmarks; 1.6k lines" },
     { id: "pipekit-experiment", layer: "bench", tier: 0, today: "geostack", ws: "pipekit", x: 505, y: 52, why: "pipekit-experiment: tracking adapters (MLflow, W&B, DVC, Hydra, Metaflow) and a model registry; 1.4k lines" },
     { id: "pipekit-ops",   layer: "core",     tier: 0, today: "geostack", ws: "pipekit", x: 865, y: 728, why: "pipekit-ops: the core, Operators, Sequential, Graph, configs, caching, control flow; no dependencies; 4.6k lines" },
-    { id: "optax_bayes",   layer: "core",     tier: 1, today: "geoml",    x: 205, y: 640, why: "Bayesian learning rules" },
     { id: "gauss_flows",   layer: "core",     tier: 1, today: "geoml",    x: 362, y: 640, why: "normalising flows" },
     { id: "kernellib",     layer: "core",     tier: 1, today: "geoml",    x: 511, y: 640, why: "kernels as operators" },
     { id: "filterax",      layer: "core",     tier: 1, today: "geoml",    x: 648, y: 640, why: "Kalman filters; localisation is distance maths" },
     { id: "vardax",        layer: "core",     tier: 4, today: "geoml",    x: 680, y: 560, why: "variational data assimilation and observation operators" },
-    { id: "argminax",      layer: "core",     tier: 1, today: "none",     x: 781, y: 640, why: "optimisation with uncertainty at the optimum: solvers, curvature, adjoints", proposed: true },
-    { id: "integrix",   layer: "core",     tier: 1, today: "none",     x: 914, y: 640, why: "integration over time, space, spectrum and probability: rules, scans, time stepping, adjoints", proposed: true },
+    { id: "argminax",      layer: "core",     tier: 1, today: "none",     x: 781, y: 640, why: "optimisation with uncertainty at the optimum: solvers, curvature, adjoints and the Bayesian learning rule (from optax_bayes)" },
+    { id: "integrix",   layer: "core",     tier: 1, today: "none",     x: 914, y: 640, why: "integration over time, space, spectrum and probability: rules, scans, time stepping, adjoints" },
     { id: "pyrox",         layer: "core",     tier: 0, today: "geoml",    ws: "pyrox", x: 73,  y: 640, why: "pyrox: the Equinox-to-NumPyro bridge (PyroxModule, Parameterized) and ensemble inference; 2k lines" },
     { id: "pyrox-gp",      layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 200, y: 560, why: "pyrox-gp: Gaussian-process building blocks: kernels, guides, likelihoods, sparse GPs, pathwise sampling; 8.9k lines" },
     { id: "pyrox-lgm",     layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 360, y: 560, why: "pyrox-lgm: latent Gaussian models: GMRF components, PC priors, inla(); 4.7k lines" },
     { id: "pyrox-nn",      layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 420, y: 480, why: "pyrox-nn: Bayesian and uncertainty-aware layers and the Bayesian neural field estimator; 7.2k lines" },
     { id: "pyrox-ssm",     layer: "core",     tier: 2, today: "geoml",    ws: "pyrox", x: 0, y: 0, why: "pyrox-ssm: state-space models as NumPyro models: Markov GPs, linear-Gaussian and nonlinear SSMs, non-Gaussian Markov inference, ensemble likelihoods; 5.8k lines" },
     { id: "manipy",        layer: "core",     tier: 2, today: "outside",  x: 520, y: 560, why: "manifold alignment, dimensionality reduction and hyperspectral workflows on kernellib" },
-    { id: "geophysix",     layer: "numerics", tier: 0, today: "none",     x: 450, y: 668, why: "constants, ellipsoid and sphere metrics, Coriolis, geodesics, thermodynamics, equations of state, column units", proposed: true },
+    { id: "geophysix",     layer: "numerics", tier: 0, today: "none",     x: 330, y: 668, why: "constants, ellipsoid and sphere metrics, Coriolis, geodesics, thermodynamics, equations of state, column units", proposed: true },
     { id: "gridax",        layer: "numerics", tier: 1, today: "none",     x: 330, y: 616, why: "geophysical grids, vertical coordinates and remapping, masks, metric arrays, diagnostic finite differences", proposed: true },
-    { id: "spectraldiffx", layer: "numerics", tier: 2, today: "numerics", x: 210, y: 564, why: "spectral and spherical-harmonic discretisations" },
-    { id: "diagnostix",    layer: "numerics", tier: 2, today: "none",     x: 450, y: 564, why: "diagnostics of geophysical fields: kinematics, columns, budgets, climatologies and anomalies, spectra, EOFs, skill scores", proposed: true },
-    { id: "radiomax",      layer: "numerics", tier: 1, today: "none",     x: 590, y: 616, why: "observation geometry, radiometry, empirical retrievals, SAR and altimetry corrections", proposed: true },
-    { id: "finitevolX",    layer: "numerics", tier: 3, today: "numerics", x: 450, y: 512, why: "Arakawa C-grid finite volumes" },
-    { id: "tracerax",      layer: "numerics", tier: 2, today: "none",     x: 690, y: 564, why: "Lagrangian particles, FTLE, residence time, connectivity, footprints", proposed: true },
+    { id: "spectraldiffx", layer: "numerics", tier: 2, today: "numerics", x: 330, y: 564, why: "spectral and spherical-harmonic discretisations" },
+    { id: "diagnostix",    layer: "numerics", tier: 2, today: "none",     x: 530, y: 564, why: "diagnostics of geophysical fields: kinematics, columns, budgets, climatologies and anomalies, spectra, EOFs, skill scores" },
+    { id: "radiomax",      layer: "numerics", tier: 1, today: "none",     x: 595, y: 616, why: "observation geometry, radiometry, empirical retrievals, SAR and altimetry corrections", proposed: true },
+    { id: "finitevolX",    layer: "numerics", tier: 3, today: "numerics", x: 330, y: 512, why: "Arakawa C-grid finite volumes" },
+    { id: "tracerax",      layer: "numerics", tier: 2, today: "none",     x: 660, y: 564, why: "Lagrangian particles, FTLE, residence time, connectivity, footprints", proposed: true },
     { id: "geoarray",      layer: "toolkits", tier: 0, today: "geostack", ws: "geotoolz", x: 250, y: 593, why: "geotoolz-array: the carriers (GeoArray, GeoSwath, GeoPoints), grids with a CRS, windows, RasterSource; 7.5k lines" },
     { id: "geocloud",      layer: "toolkits", tier: 1, today: "geostack", ws: "geotoolz", x: 530, y: 541, why: "geotoolz-cloud: the obstore client pool, file verbs, credentials, async COG and HDF reads; 6.5k lines" },
     { id: "geopatcher",    layer: "toolkits", tier: 2, today: "geostack", ws: "geotoolz", x: 530, y: 489, why: "geotoolz-patcher: split, process, stitch along geometry × sampler × window × aggregation; 18.6k lines" },
     { id: "geoops",        layer: "toolkits", tier: 3, today: "geostack", ws: "geotoolz", x: 290, y: 437, why: "geotoolz-ops: Operators on GeoArray in 19 families; 43k lines" },
     { id: "geocatalog",    layer: "toolkits", tier: 3, today: "geostack", ws: "geotoolz", x: 530, y: 437, why: "geotoolz-catalog: GeoParquet file index, GeoSlice queries, discovery, matchups, staging; 15.8k lines" },
-    { id: "geoproducts",   layer: "toolkits", tier: 2, today: "geostack", ws: "geotoolz", x: 175, y: 489, why: "geotoolz-products: EO product readers (GOES, Himawari, Carbon Mapper) as lazy RasterSources; 13k lines" },
+    { id: "geoproducts",   layer: "toolkits", tier: 2, today: "geostack", ws: "geotoolz", x: 200, y: 489, why: "geotoolz-products: EO product readers (GOES, Himawari, Carbon Mapper) as lazy RasterSources; 13k lines" },
     { id: "xrproducts",    layer: "toolkits", tier: 1, today: "geostack", ws: "xrtoolz",  x: 810, y: 541, why: "xrtoolz-products: archive readers (CMEMS, CDS, AEMET), methane L2 openers, typed requests; 9k lines" },
     { id: "xrcf",          layer: "toolkits", tier: 0, today: "none",     ws: "xrtoolz",  x: 810, y: 593, why: "proposed xrtoolz-cf: the xarray side's floor, mirroring geoarray: CF conventions and the Variable registry, coordinate and CRS conventions, validation, subsetting", proposed: true },
     { id: "xrops",         layer: "toolkits", tier: 4, today: "geostack", ws: "xrtoolz",  x: 810, y: 385, why: "xrtoolz-ops: Operators on DataArray, Dataset and DataTree in 17 families; 35.7k lines" },
@@ -975,20 +1000,32 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
       ["georeader", "spaceml-org's GDAL reader: a read-only engine behind a few geotoolz operators"]
     ] }
   ];
+  const REPO = {
+    gaussx: "geocore", functax: "geocore", integrix: "geocore", kernellib: "geocore", geonnax: "geocore",
+    argminax: "geo-inference", gauss_flows: "geo-inference", filterax: "geo-inference", vardax: "geo-inference", manipy: "geo-inference",
+    pyrox: "pyrox", "pyrox-gp": "pyrox", "pyrox-lgm": "pyrox", "pyrox-nn": "pyrox", "pyrox-ssm": "pyrox", "pyrox-xtreme": "pyrox",
+    geophysix: "geogrids", gridax: "geogrids", spectraldiffx: "geogrids", finitevolX: "geogrids",
+    diagnostix: "geofields", tracerax: "geofields", radiomax: "geofields",
+  };
+  const repoOf = (n) => REPO[n.id] || (n.layer === "toolkits" ? "geotoolz" : n.layer === "models" ? "geomodels" : n.ws);
+  const tagOf = (n) => (n.proposed ? "proposed" : n.today === "none" ? "new" : `today ${TODAY[n.today].name}`) + (repoOf(n) ? ` · ${repoOf(n)} repo` : "");
   const CORE_SHIFT = 474;
   const CORE_Y = { 0: 1210, 1: 1149, 2: 1088, 3: 1027, 4: 966 };
   const CORE_X = {
-    xtremax: 160, gaussx: 400, functax: 650, "pipekit-ops": 1045,
-    pyrox: 53, geonnax: 141, optax_bayes: 254, gauss_flows: 383, kernellib: 504, filterax: 613, argminax: 718, integrix: 823,
-    "pipekit-array": 965, "pipekit-train": 1125,
-    "pyrox-gp": 150, "pyrox-nn": 290, "pyrox-lgm": 430, manipy: 570, "pyrox-ssm": 710, vardax: 680, "pipekit-cycle": 1045,
-    "pipekit-jax": 960, "pipekit-evaluate": 1120,
+    // geocore
+    gaussx: 120, functax: 250, integrix: 80, kernellib: 189, geonnax: 294,
+    // geo-inference
+    argminax: 415, gauss_flows: 526, filterax: 637, manipy: 526, vardax: 526,
+    // pyrox
+    pyrox: 845, "pyrox-xtreme": 952, "pyrox-gp": 756, "pyrox-nn": 855, "pyrox-lgm": 958, "pyrox-ssm": 1065,
+    // pipekit
+    "pipekit-ops": 1295, "pipekit-array": 1215, "pipekit-train": 1375, "pipekit-cycle": 1295, "pipekit-jax": 1210, "pipekit-evaluate": 1370,
   };
   const NUM_SHIFT = 200;
   FOUND_ROWS.forEach((row) => {
     const widths = row.ids.map(([id]) => Math.round(id.length * 8.1 + 26));
     const total = widths.reduce((a, b) => a + b, 0);
-    const gap = (1180 - total) / (row.ids.length - 1);
+    const gap = (1430 - total) / (row.ids.length - 1);
     let x = 30;
     row.ids.forEach(([id, why], i) => {
       NODES.push({ id, layer: "found", tier: 0, today: "ext", x: x + widths[i] / 2, y: row.y, why, ext: true });
@@ -996,7 +1033,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     });
   });
   NODES.forEach((n) => { if (n.layer === "core" || n.layer === "found") n.y += CORE_SHIFT; if (n.layer === "numerics") n.y += NUM_SHIFT; if (n.layer === "core") { n.y = CORE_Y[n.tier]; n.x = CORE_X[n.id]; }
-    if (["models", "toolkits", "numerics"].includes(n.layer)) n.x += 110; });
+    if (["models", "toolkits", "numerics"].includes(n.layer)) n.x += 235; });
 
   // [importer, imported]: stack-to-stack imports from the source scan
   const EDGES = [
@@ -1007,7 +1044,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     ["pyrox-nn", "pyrox"], ["pyrox-nn", "geonnax"],
     ["pyrox-ssm", "pyrox"], ["pyrox-ssm", "gaussx"], ["pyrox-ssm", "filterax"], ["pyrox-ssm", "gauss_flows"],
     ["vardax", "gaussx"], ["vardax", "pipekit-ops"], ["vardax", "pipekit-cycle"], ["vardax", "pipekit-jax"], ["vardax", "pipekit-train"], ["vardax", "geonnax"],
-    ["optax_bayes", "gaussx"], ["gauss_flows", "gaussx"],
+    ["gauss_flows", "gaussx"],
     ["spectraldiffx", "gaussx"],
     ["finitevolX", "spectraldiffx"], ["finitevolX", "gaussx"],
     ["pipekit-array", "pipekit-ops"], ["pipekit-train", "pipekit-ops"], ["pipekit-cycle", "pipekit-ops"], ["pipekit-cycle", "pipekit-array"],
@@ -1023,7 +1060,10 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     ["radtrax", "gaussx"],
     ["sesmax-core", "finitevolX"], ["sesmax-core", "spectraldiffx"], ["sesmax-core", "pipekit-ops"], ["sesmax-core", "pipekit-cycle"], ["sesmax-core", "pipekit-jax"],
     ["sesmax-core", "geonnax"], ["sesmax-core", "filterax"], ["sesmax-core", "vardax"],
-    ["manipy", "kernellib"], ["manipy", "gaussx"]
+    ["manipy", "kernellib"], ["manipy", "gaussx"],
+    // read from each repo on 18 November 2026
+    ["argminax", "gaussx"], ["vardax", "argminax"], ["pyrox-lgm", "argminax"], ["pyrox-nn", "argminax"], ["radtrax", "argminax"], ["plumax", "argminax"],
+    ["pipekit-jax", "integrix"]
   ];
   // planned users of the interpolation core, from the integration survey
   const PLANNED = [
@@ -1032,8 +1072,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     ...["finitevolX", "spectraldiffx", "sesmax-core", "plumax", "vardax"].map((s) => [s, "integrix"]),
     ["sesmax-ocean", "sesmax-core"], ["sesmax-atmos", "sesmax-core"],
     ["integrix", "gaussx"],
-    ...["vardax", "pyrox-gp", "pyrox-lgm", "pyrox-nn", "radtrax", "plumax"].map((s) => [s, "argminax"]),
-    ["argminax", "gaussx"],
+    ["pyrox-gp", "argminax"],
     ["geonnax", "functax"],
     ["xrops", "xrcf"], ["xrproducts", "xrcf"],
     ["gauss_flows", "functax"],
@@ -1064,14 +1103,13 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     gauss_flows: { jax: 180, jaxtyping: 57, flowjax: 56, equinox: 27, numpyro: 5, numpy: 2, optimistix: 2, interpax: 2, lineax: 1, diffrax: 1 },
     geonnax: { jax: 95, jaxtyping: 57, equinox: 39, einx: 29, numpy: 14 },
     kernellib: { jax: 158, jaxtyping: 84, equinox: 51, einx: 41, lineax: 24, numpy: 19, scipy: 7 },
-    optax_bayes: { jax: 20, optax: 12, jaxtyping: 3, lineax: 1 },
     pyrox: { numpyro: 10, jax: 8, optax: 3, equinox: 3, jaxtyping: 2, einx: 2, lineax: 1 },
     "pyrox-gp": { jax: 44, jaxtyping: 25, numpyro: 21, equinox: 17, einx: 16, lineax: 13, numpy: 5, flowjax: 4, optax: 1 },
     "pyrox-lgm": { jax: 23, numpyro: 21, jaxtyping: 14, equinox: 10, lineax: 9, numpy: 8, xarray: 1, optax: 1 },
     "pyrox-nn": { numpyro: 28, jax: 28, jaxtyping: 16, equinox: 15, einx: 7, numpy: 3, xarray: 1 },
     "pyrox-ssm": { jax: 18, jaxtyping: 10, numpyro: 10, equinox: 7, lineax: 7, einx: 7, flowjax: 2, optimistix: 1, numpy: 1 },
     vardax: { jax: 48, jaxtyping: 37, equinox: 32, lineax: 14, numpy: 10, optimistix: 8, xarray: 7, optax: 2, diffrax: 2 },
-    xtremax: { jax: 118, jaxtyping: 58, numpyro: 47, equinox: 18, numpy: 8, xarray: 7, scipy: 5 },
+    "pyrox-xtreme": { jax: 118, jaxtyping: 58, numpyro: 47, equinox: 18, numpy: 8, xarray: 7, scipy: 5 },
     plumax: { jax: 77, numpyro: 61, numpy: 50, xarray: 22, jaxtyping: 18, lineax: 14, equinox: 14, scipy: 8, diffrax: 4, optimistix: 3 },
     radtrax: { jax: 22, numpy: 21, xarray: 10, lineax: 10, equinox: 6, jaxtyping: 6, scipy: 3, optimistix: 1, georeader: 1 },
     "sesmax-core": { jax: 61, jaxtyping: 44, equinox: 34, numpy: 7, diffrax: 6, flowjax: 3, xarray: 2, lineax: 1, optimistix: 1 },
@@ -1096,7 +1134,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   const PLANNED_USES = {
     functax: ["jax", "jaxtyping", "equinox", "lineax", "einx", "numpy", "scipy"],
     integrix: ["jax", "jaxtyping", "equinox", "lineax", "diffrax"],
-    argminax: ["jax", "jaxtyping", "equinox", "lineax", "optimistix"],
+    argminax: ["jax", "jaxtyping", "equinox", "lineax", "optimistix", "optax"],
     geophysix: ["jax", "numpy"],
     gridax: ["jax", "numpy", "equinox"],
     diagnostix: ["jax", "numpy", "scipy"],
@@ -1118,17 +1156,17 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   const TODAY_RANK = { geostack: 0, numerics: 0, geoml: 1, models: 2 };
   const TODAY_TIER = { xrcf: 0, "pipekit-ops": 0, "pipekit-array": 1, "pipekit-train": 1, "pipekit-cycle": 2, "pipekit-jax": 3, "pipekit-evaluate": 3, "pipekit-experiment": 1, geoarray: 1, geocloud: 1, geopatcher: 1, geoops: 1, geocatalog: 1, geoproducts: 1, xrproducts: 2, xrops: 2,
     gaussx: 0, spectraldiffx: 1, finitevolX: 2, functax: 0,
-    geonnax: 0, gauss_flows: 0, kernellib: 1, optax_bayes: 1, xtremax: 1,
+    geonnax: 0, gauss_flows: 0, kernellib: 1, "pyrox-xtreme": 1,
     filterax: 2, pyrox: 2, "pyrox-gp": 3, "pyrox-lgm": 3, "pyrox-nn": 4, "pyrox-ssm": 3, vardax: 3, radtrax: 0, "sesmax-core": 0, plumax: 1, integrix: 0, argminax: 0 };
 
   const BANDS = [
-    { key: "bench",    x: 10,  y: 10,  w: 600,  h: 72,  label: "GeoBench · planned", rule: "benchmarks and experiment runs; may import everything below" },
-    { key: "geoapps",  x: 620, y: 10,  w: 610,  h: 72,  label: "GeoApps · planned", rule: "applications; may import everything below" },
-    { key: "models",   x: 10,  y: 96,  w: 1220, h: 176, label: "GeoModels",       rule: "may import everything below" },
-    { key: "toolkits", x: 10,  y: 286, w: 1220, h: 350, label: "GeoStack · geotoolz + xrtoolz",        rule: "may import GeoNumerics, Core and the foundations" },
-    { key: "numerics", x: 10,  y: 650, w: 1220, h: 242, label: "GeoNumerics",     rule: "may import Core and the foundations" },
-    { key: "core",     x: 10,  y: 906, w: 1220, h: 348, label: "Core",            rule: "may import lower Core tiers and the foundations" },
-    { key: "found",    x: 10,  y: 1268, w: 1220, h: 172, label: "Foundations",     rule: "third-party: what the stack builds on" }
+    { key: "bench",    x: 10,  y: 10,  w: 725,  h: 72,  label: "GeoBench · planned repo", rule: "benchmarks and experiment runs; may import everything below" },
+    { key: "geoapps",  x: 745, y: 10,  w: 735,  h: 72,  label: "GeoApps · planned", rule: "applications; may import everything below" },
+    { key: "models",   x: 10,  y: 96,  w: 1470, h: 176, label: "GeoModels · the geomodels repo, proposed", rule: "may import everything below" },
+    { key: "toolkits", x: 10,  y: 286, w: 1470, h: 350, label: "GeoStack · the geotoolz repo",        rule: "may import GeoNumerics, Core and the foundations" },
+    { key: "numerics", x: 10,  y: 650, w: 1470, h: 242, label: "GeoNumerics",     rule: "may import Core and the foundations" },
+    { key: "core",     x: 10,  y: 906, w: 1470, h: 348, label: "Core",            rule: "may import lower Core tiers and the foundations" },
+    { key: "found",    x: 10,  y: 1268, w: 1470, h: 172, label: "Foundations",     rule: "third-party: what the stack builds on" }
   ];
   const TIER_ROWS = [
     { band: "core", y: 1210, t: "T0" }, { band: "core", y: 1149, t: "T1" }, { band: "core", y: 1088, t: "T2" }, { band: "core", y: 1027, t: "T3" }, { band: "core", y: 966, t: "T4" },
@@ -1167,16 +1205,21 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     const t = el("text", { x: b.x + b.w - 14, y: r.y + 4, "text-anchor": "end", class: "tier-label" }, bandsG);
     t.textContent = r.t;
   });
-  // the GeoStack layer: observations, shared, states, drawn as outlines around their packages
-  [{ name: "observations · GeoArray", x: 225, y: 352, w: 270, h: 272 },
-   { name: "shared · either carrier", x: 505, y: 352, w: 270, h: 272 },
-   { name: "states · xarray (third-party)", x: 785, y: 352, w: 270, h: 272 },
-   { name: "pipekit workspace · 6 in Core", x: 880, y: 918, w: 330, h: 312 }].forEach((w) => {
+  // dotted outlines: the three roles inside geotoolz, and the repos of GeoNumerics and Core
+  [{ name: "observations · GeoArray", x: 350, y: 352, w: 270, h: 272 },
+   { name: "shared · either carrier", x: 630, y: 352, w: 270, h: 272 },
+   { name: "states · xarray (third-party)", x: 910, y: 352, w: 270, h: 272 },
+   { name: "geogrids repo · proposed, name open", x: 455, y: 673, w: 220, h: 216 },
+   { name: "geofields repo · proposed, name open", x: 700, y: 725, w: 265, h: 114 },
+   { name: "geocore repo · proposed", x: 20, y: 1110, w: 329, h: 123 },
+   { name: "geo-inference repo · proposed", x: 361, y: 927, w: 329, h: 306 },
+   { name: "pyrox repo · 5 today, 6 proposed", x: 702, y: 1049, w: 420, h: 184 },
+   { name: "pipekit repo · 6 in Core", x: 1134, y: 918, w: 326, h: 312 }].forEach((w) => {
     el("rect", { x: w.x, y: w.y, width: w.w, height: w.h, rx: 8, class: "workspace" }, bandsG);
     const t = el("text", { x: w.x + w.w - 10, y: w.y + 14, "text-anchor": "end", class: "workspace-label" }, bandsG);
     t.textContent = w.name;
   });
-  const apps = el("text", { x: 1215, y: 34, "text-anchor": "end", class: "apps-text" }, bandsG);
+  const apps = el("text", { x: 1465, y: 34, "text-anchor": "end", class: "apps-text" }, bandsG);
   apps.textContent = "labelling · analysis · attribution · alerts";
 
   // ---------- edges ----------
@@ -1245,7 +1288,8 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
       : [["GeoStack", "--geostack"], ["GeoNumerics", "--numerics"], ["GeoML", "--geoml"], ["GeoModels", "--models"]];
     legend.innerHTML = items.map(([name, c]) => `<span><i style="background:var(${c})"></i>${name}</span>`).join("")
       + `<span><i style="background:var(--surface);border:1.5px solid var(--found)"></i>third-party</span>`
-      + `<span><i class="dashed"></i>proposed</span>`;
+      + `<span><i class="dashed"></i>proposed</span>`
+      + `<span><i class="repo"></i>repo</span>`;
     document.getElementById("mode-proposed").setAttribute("aria-pressed", String(mode === "proposed"));
     document.getElementById("mode-today").setAttribute("aria-pressed", String(mode === "today"));
   };
@@ -1362,7 +1406,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     "sesmax-ocean": ["shallow-water, QG and spherical ocean models, scenarios, model-consistent budgets", "diagnostics maths → <b>diagnostix</b>; drifters → <b>tracerax</b>"],
     "sesmax-atmos": ["atmosphere component", "thermodynamics → <b>geophysix</b>"],
     "xrops": ["Operators on DataArray, Dataset and DataTree in 17 families: geom, mask, cf, anomaly, extremes, grad, transforms, wavelets, interpolate, ocn, atm, budgets, metrics, learn, inference, viz; <code>lift</code> runs a geoops Operator per item over a cube",
-                "kinematics, columns, budgets, spectra, climatologies, metrics → <b>diagnostix</b>; Lagrangian → <b>tracerax</b>; constants and EOS → <b>geophysix</b>; differences → <b>gridax</b> (today through geoops); regrid and gap-fill maths → <b>functax</b>; extremes modelling → <b>xtremax</b>"],
+                "kinematics, columns, budgets, spectra, climatologies, metrics → <b>diagnostix</b>; Lagrangian → <b>tracerax</b>; constants and EOS → <b>geophysix</b>; differences → <b>gridax</b> (today through geoops); regrid and gap-fill maths → <b>functax</b>; extremes modelling → <b>pyrox-xtreme</b>"],
     "xrproducts": ["authenticated archive readers (CMEMS, CDS, AEMET), local methane L2 openers (TROPOMI, EMIT, GHGSat), emission inventories, the typed request vocabulary (BBox, TimeRange, Variable) and a CF variable registry",
                    "the typed vocabulary and the CF Variable registry → <b>xrcf</b>, so xrops stops importing a reader package; a shared request vocabulary with <b>geocatalog</b> is an open question"],
     "xrcf": ["proposed: the floor of the xarray side, as geoarray is of the GeoArray side. CF conventions and the Variable registry (from <code>xrproducts.types</code>), coordinate and CRS conventions (from <code>xrops.cf</code> and <code>xrops.geom</code>: validation, CRS, subsetting), the typed vocabulary (BBox, TimeRange, levels)",
@@ -1403,8 +1447,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     "vardax": ["variational DA (3D/4D-Var, OI), observation operators, background covariances, control transforms", "solvers, curvature, adjoints → <b>argminax</b>; bilinear stencils → <b>functax</b>"],
     "manipy": ["manifold learning, hyperspectral workflows, unmixing, MNF and PCA", "kernels and graphs → <b>kernellib</b>"],
     "integrix": ["integration over time, space, spectrum and probability: quadrature procedures, cumulative integrals, Monte Carlo, ODE steppers, step-size control, adjoints", "quadrature rules → <b>functax</b>; integrands and measures stay with their domains"],
-    "argminax": ["optimisation with uncertainty: Gauss–Newton and Levenberg–Marquardt, curvature, Laplace covariance, averaging kernels, optimistix adjoints", "one step's algebra → <b>gaussx</b>; training → <b>optax_bayes</b>"],
-    "optax_bayes": ["the Bayesian learning rule as optax transformations", "deterministic solves → <b>argminax</b>"],
+    "argminax": ["optimisation with uncertainty: Gauss–Newton and Levenberg–Marquardt, curvature, Laplace covariance, averaging kernels, optimistix adjoints", "one step's algebra → <b>gaussx</b>; training → <b>argminax</b>"],
     "gauss_flows": ["RBIG density estimation and information measures on flowjax", "—"],
     "kernellib": ["kernels as operators, variograms, graph Laplacians, kernel regression, spectral densities and frequency draws (from pyrox-gp)", "Legendre series and every basis it takes from geonnax today → <b>functax</b>"],
     "filterax": ["Kalman and ensemble filters; EKI, UKI and TEKI as optimistix minimisers", "localisation primitives → <b>gaussx</b>"],
@@ -1412,7 +1455,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     "gaussx": ["structured linear algebra on lineax, Gaussians and exponential families, SPDE and GMRF priors, Gaussian expectations, covariance estimators, one Newton step's algebra, and the filtering stack: Kalman filters and RTS smoothers (sequential and parallel), nonlinear Kalman filters with moment transforms, SDE kernels and their discretisation, a chain's precision (<code>ssm_to_naturals</code>)", "iteration to a tolerance → <b>argminax</b>; domain quadrature → <b>functax</b>"],
     "geonnax": ["networks: spectral and spherical layers, neural operators (FNO, SFNO, WNO, LNO, CNO), neural fields (SIREN, MFN, NeuralFieldMLP), SNGP and VSSGP cores, heads, encoders as thin Modules over functax features",
                 "bases, sphere grids and meshes, random-feature evaluation, <code>diffops</code>, spherical-harmonic transform, sphere geometry → <b>functax</b>; WGS84 → <b>geophysix</b>; frequency draws from spectral densities → <b>kernellib</b>"],
-    "xtremax": ["extreme-value distributions and models", "data wrangling stays in <b>xrops</b>"],
+    "pyrox-xtreme": ["extreme-value distributions and models", "data wrangling stays in <b>xrops</b>"],
     "pipekit-ops": ["the core of the pipekit workspace (the pipekit distribution is now a code-free umbrella): Operators, Sequential and Graph, configs and serialisation (dumps, loads, sandboxed loads), hashing and caching, control flow (Retry, Try, Branch, Coalesce), taps and QC, parallel maps, carry state, the adapter registry; no runtime dependencies",
                 "named arrays → <b>pipekit-array</b>; carriers → <b>geoarray</b>"],
     "pipekit-array": ["the named-array protocol (DimArray), dim Operators (ISel, Sel, Reduce, ArgReduce, TakeAlong, MapOver, Combine), KernelOp and run_kernel over the array API (NumPy, JAX, CuPy, torch, dask), the lazy xarray DataArray adapter, an sklearn estimator bridge",
@@ -1422,7 +1465,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     "pipekit-jax": ["JaxOperator (an Operator that is also an eqx.Module), JaxModelOp with weight blobs, Rollout, DiffraxForwardModel, pytree helpers",
                     "<code>truncated_scan</code>, <code>to_diffrax_adjoint</code> → <b>integrix</b>"],
     "pipekit-train": ["training loops for emulators and amortised inference: TrainingLoop, datasets, losses, callbacks, sweeps, Blackjax tasks, sharding; Lightning through an extra",
-                      "experiment tracking → <b>pipekit-experiment</b> (its <code>[experiment]</code> extra is declared but never imported: drop it); the Bayesian learning rule → <b>optax_bayes</b>"],
+                      "experiment tracking → <b>pipekit-experiment</b> (its <code>[experiment]</code> extra is declared but never imported: drop it); the Bayesian learning rule → <b>argminax</b>"],
     "pipekit-evaluate": ["the evaluation framework: the Unit × Lens × Stage taxonomy, scorers, reports, benchmark runs",
                          "the metrics themselves → <b>diagnostix</b>; xskillscore and proper scores through extras"],
     "pipekit-experiment": ["experiment tracking adapters (MLflow, W&B, DVC, Hydra, Metaflow), runs, a content-addressed model registry (local and S3)",
@@ -1436,8 +1479,8 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     return all.length ? `<div class="imports">${all.join("")}</div>` : `<span class="empty">nothing in the stack</span>`;
   };
   const KINDS = {
-    xtremax: ["P", "M"], geonnax: ["P", "M"], gaussx: ["P", "M"], functax: ["P", "M"], "pipekit-ops": ["Oa"],
-    optax_bayes: ["P", "M"], gauss_flows: ["M"], kernellib: ["P", "M"], filterax: ["P", "M"],
+    "pyrox-xtreme": ["P", "M"], geonnax: ["P", "M"], gaussx: ["P", "M"], functax: ["P", "M"], "pipekit-ops": ["Oa"],
+    gauss_flows: ["M"], kernellib: ["P", "M"], filterax: ["P", "M"],
     vardax: ["P", "M", "Oa"], "pipekit-array": ["Oa", "P"], "pipekit-cycle": ["Oa"], "pipekit-jax": ["Oa"], "pipekit-train": ["Oa"], "pipekit-evaluate": ["Oa", "P"], argminax: ["P", "M"], integrix: ["P", "M"], pyrox: ["P", "M"], "pyrox-gp": ["P", "M"], "pyrox-lgm": ["P", "M"], "pyrox-nn": ["M"], "pyrox-ssm": ["P", "M"], manipy: ["P", "M"],
     geophysix: ["P"], gridax: ["P", "M"], spectraldiffx: ["P", "M"], diagnostix: ["P"], radiomax: ["P", "M"],
     finitevolX: ["P", "M"], tracerax: ["P", "M"],
@@ -1447,9 +1490,9 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     radtrax: ["P", "M", "Oc:geo"], plumax: ["P", "M", "Oa", "Oc:geo"],
   };
   const RUNGS = {
-    gaussx: [0, 1, 2, 3, 4], functax: [0, 1, 2, 3], geonnax: [0, 3], xtremax: [1, 3, 4], "pipekit-ops": [5, 6],
+    gaussx: [0, 1, 2, 3, 4], functax: [0, 1, 2, 3], geonnax: [0, 3], "pyrox-xtreme": [1, 3, 4], "pipekit-ops": [5, 6],
     "pipekit-array": [0, 1, 5], "pipekit-train": [6], "pipekit-cycle": [6], "pipekit-jax": [5], "pipekit-evaluate": [4, 5],
-    optax_bayes: [2], gauss_flows: [0, 3, 4], kernellib: [0, 1, 2, 3, 4], filterax: [2, 3, 4], argminax: [2, 4], integrix: [0, 2, 4],
+    gauss_flows: [0, 3, 4], kernellib: [0, 1, 2, 3, 4], filterax: [2, 3, 4], argminax: [2, 4], integrix: [0, 2, 4],
     pyrox: [0, 4], "pyrox-gp": [0, 3, 4], "pyrox-lgm": [0, 3, 4], "pyrox-nn": [0, 3], "pyrox-ssm": [0, 3, 4], manipy: [3, 4], vardax: [0, 3, 4, 5],
     geophysix: [0, 1], gridax: [0, 1], spectraldiffx: [0, 1, 2], diagnostix: [1, 4], radiomax: [0, 1], finitevolX: [0, 1, 2], tracerax: [0, 4],
     geoarray: [0, 1], geocloud: [1], geopatcher: [2, 6], geoops: [1, 5], geocatalog: [0, 1, 4], geoproducts: [0, 1], xrcf: [0, 1],
@@ -1473,7 +1516,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     const head = `<tr class="group" style="--gc:var(${L.colour});--gb:var(${L.band})"><td colspan="4">${name}</td></tr>`;
     return head + libs.map((n) => {
       const [owns, hand] = BOUNDS[n.id] || ["", ""];
-      const tag = (n.proposed ? "proposed" : `today ${TODAY[n.today].name}`) + (n.ws ? ` · ${n.ws}` : "");
+      const tag = tagOf(n);
       return `<tr><td class="lib">${n.id}<small>tier ${n.tier} · ${tag}</small>${kindChips(n.id)}${rungChips(n.id)}</td><td>${owns}</td><td class="hand">${hand}</td><td>${importChips(n.id)}</td></tr>`;
     }).join("");
   }).join("");
@@ -1492,11 +1535,10 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     argminax: "optimisation with uncertainty: Gauss–Newton, Laplace covariance, averaging kernels",
     filterax: "Kalman and ensemble filters, ensemble Kalman inversion",
     gauss_flows: "RBIG density estimation and information measures",
-    optax_bayes: "the Bayesian learning rule as optax transformations",
     functax: "function approximation: CRS-free geometry, bases, quadrature rules, interpolation plans; replaces interpax and orthax",
     gaussx: "structured linear algebra, Gaussians, Gaussian integrals, one Newton step",
     geonnax: "networks: layers, neural operators, neural fields, encoders",
-    xtremax: "extreme-value distributions and models",
+    "pyrox-xtreme": "extreme-value distributions and models",
     "pipekit-ops": "the core: Operators, Sequential, Graph, configs, caching, control flow; no dependencies",
     "pipekit-array": "named arrays, dim Operators, KernelOp over the array API",
     "pipekit-train": "training loops, datasets, losses, sweeps",
@@ -1526,8 +1568,8 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     plumax: "plume physics, mass enhancement and flux, inversions",
   };
   const EXTENDS = {
-    gaussx: ["lineax"], optax_bayes: ["optax"], gauss_flows: ["flowjax"], pyrox: ["numpyro"], xtremax: ["numpyro"],
-    integrix: ["diffrax"], argminax: ["optimistix"], geonnax: ["equinox"],
+    gaussx: ["lineax"], gauss_flows: ["flowjax"], pyrox: ["numpyro"], "pyrox-xtreme": ["numpyro"],
+    integrix: ["diffrax"], argminax: ["optimistix", "optax"], geonnax: ["equinox"],
   };
   const REPLACES = { functax: ["interpax", "orthax", "quadax"], integrix: ["quadax (adaptive)"] };
   const relChips = (pairs, empty) => pairs.length
@@ -1542,7 +1584,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
                     ...PLANNED.filter(([a]) => a === n.id).map(([, b]) => [b, true])];
         const by = [...EDGES.filter(([, b]) => b === n.id).map(([a]) => [a, false]),
                     ...PLANNED.filter(([, b]) => b === n.id).map(([a]) => [a, true])];
-        const tag = (n.proposed ? "proposed" : `today ${TODAY[n.today].name}`) + (n.ws ? ` · ${n.ws} workspace` : "");
+        const tag = tagOf(n);
         return `<div class="lcard"><div><span class="pill ${L_PILL[key]}${n.proposed ? " new" : ""}">${n.id}</span></div>
           <div class="tagline">${tag}</div>${rungChips(n.id)}<div class="what">${SHORT[n.id] || n.why}</div>
           ${EXTENDS[n.id] ? `<div class="rel"><span>◇</span><span class="chips">${EXTENDS[n.id].map((f) => `<span class="chip ext">${f}</span>`).join("")}</span></div>` : ""}
