@@ -78,6 +78,25 @@ def expand(text: str, macros: list[Macro]) -> str:
 FENCE = re.compile(r"^\s*(```+|~~~+)\s*(\S*)")
 INLINE = re.compile(r"(?<![\\$])\$(`?)(?!\$)(.+?)\1(?<![\\$])\$(?!\$)")
 TICK_MATH = re.compile(r"\$`(?!\s)(.+?)(?<!\s)`\$")
+# MyST allows a label after the closing dollars: `$$ … $$ (eq-name)`.
+LABEL = r"(?:\s*\([^()\s]+\))?"
+DOLLARS_LINE = re.compile(r"^\s*\$\$(?!\$)(.+?)\$\$" + LABEL + r"\s*$")
+DOLLARS_CLOSE = re.compile(r"^\s*\$\$" + LABEL + r"\s*$")
+
+
+def _opens(match: re.Match) -> tuple[str, str]:
+    """The kind of block a fence opens (math or code) and the fence itself."""
+    kind = "math" if match.group(2) in {"math", "{math}"} else "code"
+    return kind, match.group(1)
+
+
+def _closes(match: re.Match | None, opening: str) -> bool:
+    """A fence closes a block when it has the same character, is at least as long
+    as the opening fence, and carries no info string."""
+    if match is None or match.group(2):
+        return False
+    fence = match.group(1)
+    return fence[0] == opening[0] and len(fence) >= len(opening)
 
 
 @dataclass(frozen=True)
@@ -92,34 +111,39 @@ def math_spans(markdown: str) -> list[Span]:
     """Find inline $…$, $`…`$, ```math, ```{math} and $$…$$ spans, with line numbers."""
     spans: list[Span] = []
     lines = markdown.splitlines()
-    fence: str | None = None
+    fence: tuple[str, str] | None = None
     block: list[str] = []
     block_start = 0
     in_dollars = False
     for number, line in enumerate(lines, start=1):
         match = FENCE.match(line)
-        if fence is None and match:
-            fence = "math" if match.group(2) in {"math", "{math}"} else "code"
+        if fence is None and match and not in_dollars:
+            fence = _opens(match)
             block, block_start = [], number + 1
             continue
         if fence is not None:
-            if match and not match.group(2):
-                if fence == "math":
+            if _closes(match, fence[1]):
+                if fence[0] == "math":
                     body = "\n".join(b for b in block if not b.strip().startswith(":"))
                     spans.append(Span(block_start, body, True, False))
                 fence = None
             else:
                 block.append(line)
             continue
-        if line.strip() == "$$":
-            if in_dollars:
-                spans.append(Span(block_start, "\n".join(block), True, False))
-            else:
-                block, block_start = [], number + 1
-            in_dollars = not in_dollars
-            continue
         if in_dollars:
-            block.append(line)
+            if DOLLARS_CLOSE.match(line):
+                spans.append(Span(block_start, "\n".join(block), True, False))
+                in_dollars = False
+            else:
+                block.append(line)
+            continue
+        if line.strip() == "$$":
+            block, block_start = [], number + 1
+            in_dollars = True
+            continue
+        one_line = DOLLARS_LINE.match(line)
+        if one_line:
+            spans.append(Span(number, one_line.group(1).strip(), True, False))
             continue
         in_table = line.lstrip().startswith("|")
         stripped = re.sub(r"``.+?``", lambda m: " " * len(m.group(0)), line)
@@ -135,19 +159,19 @@ def math_spans(markdown: str) -> list[Span]:
 def expand_markdown(markdown: str, macros: list[Macro]) -> str:
     """Expand macros outside code: fenced blocks and `inline code` are untouched."""
     out: list[str] = []
-    fence: str | None = None
+    fence: tuple[str, str] | None = None
     for line in markdown.splitlines(keepends=True):
         match = FENCE.match(line)
         if fence is None and match:
-            fence = "math" if match.group(2) in {"math", "{math}"} else "code"
+            fence = _opens(match)
             out.append(line)
             continue
         if fence is not None:
-            if match and not match.group(2):
+            if _closes(match, fence[1]):
                 fence = None
                 out.append(line)
             else:
-                out.append(expand(line, macros) if fence == "math" else line)
+                out.append(expand(line, macros) if fence[0] == "math" else line)
             continue
         protected: list[str] = []
 
