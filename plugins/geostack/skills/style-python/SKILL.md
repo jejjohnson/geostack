@@ -42,19 +42,19 @@ from jaxtyping import Array, Bool, Float, PRNGKeyArray
 
 | Dim | Maths size | Meaning |
 | --- | --- | --- |
-| `sample` | $N = \vert \mathcal{D} \vert$ | independent data pairs |
-| `test` | $M$ | test inputs |
-| `member` | $N_{\mathcal{E}}$ | ensemble members, Monte Carlo draws |
-| `batch`, `patch`, `tile` | $N_\text{batch}$, $N_\text{patch}$, $N_\text{tile}$ | pieces of a dataset or domain |
-| `time` | $N_{\mathcal{T}_x}$ | model time steps |
-| `cell` | $N_{\Omega_x}$ | grid cells where the state lives |
-| `obs` | $N_{\Omega_y}$, or $D_y$ | observation points (pixels, stations); the whole observation vector when it is flat and not split into points and channels |
-| `channel` | $N_{\mathcal{S}_y}$ | spectral channels |
-| `var`, `level` | $N_{\mathcal{V}_x}$, $N_{\mathcal{P}_x}$ | physical variables, vertical levels |
-| `inducing` | $N_{\mathcal{I}}$ | inducing points |
-| `state`, `latent`, `param` | $D_x$, $D_z$, $D_\theta$ | lengths of flattened vectors |
+| `sample` | $`N = \vert \mathcal{D} \vert`$ | independent data pairs |
+| `test` | $`M`$ | test inputs |
+| `member` | $`N_{\mathcal{E}}`$ | ensemble members, Monte Carlo draws |
+| `batch`, `patch`, `tile` | $`N_\text{batch}`$, $`N_\text{patch}`$, $`N_\text{tile}`$ | pieces of a dataset or domain |
+| `time` | $`N_{\mathcal{T}_x}`$ | model time steps |
+| `cell` | $`N_{\Omega_x}`$ | grid cells where the state lives |
+| `obs` | $`N_{\Omega_y}`$, or $`D_y`$ | observation points (pixels, stations); the whole observation vector when it is flat and not split into points and channels |
+| `channel` | $`N_{\mathcal{S}_y}`$ | spectral channels |
+| `var`, `level` | $`N_{\mathcal{V}_x}`$, $`N_{\mathcal{P}_x}`$ | physical variables, vertical levels |
+| `inducing` | $`N_{\mathcal{I}}`$ | inducing points |
+| `state`, `latent`, `param` | $`D_x`$, $`D_z`$, $`D_\theta`$ | lengths of flattened vectors |
 
-  Library carriers keep their own dim strings (`GeoArray["patch band y x"]`; the forms are in `style-code-sketch` §2); those names stay inside the type and never reach an equation, where space is $\mathbf{s}$.
+  Library carriers keep their own dim strings (`GeoArray["patch band y x"]`; the forms are in `style-code-sketch` §2); those names stay inside the type and never reach an equation, where space is $`\mathbf{s}`$.
 - Types are checked at runtime in tests only, through the import hook in `conftest.py`:
 
 ```python
@@ -79,7 +79,7 @@ with install_import_hook("radtrax", "beartype.beartype"):
 - **Arrays live in `eqx.Module`s** and are always leaves, never static fields.
 - **Host-side records that are never traced** (configs for offline tools, mutable NumPy accumulators) are plain frozen dataclasses.
 - **Modules carry state, functions carry transforms.**
-- **Hyperparameters are fields of a callable module; data goes into `__call__`.** This is the semicolon of the maths: in $f(\mathbf{x}, \mathbf{u}; \boldsymbol{\theta})$ the fixed $\boldsymbol{\theta}$ are fields and the variables are arguments, `dynamics(state, inputs)`.
+- **Hyperparameters are fields of a callable module; data goes into `__call__`.** This is the semicolon of the maths: in $`f(\mathbf{x}, \mathbf{u}; \boldsymbol{\theta})`$ the fixed $`\boldsymbol{\theta}`$ are fields and the variables are arguments, `dynamics(state, inputs)`.
 - **One parameterisation per module.** A module stores a covariance or a precision as a lineax operator, never both; the other is reached by a solve.
 - **Inputs that travel together form their own small module** (μ and Σ become `Background`).
 - **Protocols are abstract modules** with `eqx.AbstractVar`. In a repo whose modules open with `from __future__ import annotations` (plumax, and any repo whose `AGENTS.md` asks for it), `AbstractVar` is not seen: the attribute becomes an ordinary field and a subclass that gives it a default breaks the field order. There, declare it on the base as an abstract property (`@property` over `@abc.abstractmethod`) and let each subclass provide it as a field.
@@ -96,14 +96,14 @@ with install_import_hook("radtrax", "beartype.beartype"):
 
 | Symbol | Name | Symbol | Name |
 | --- | --- | --- | --- |
-| $\mathbf{x}$, $\mathbf{y}$, $\mathbf{z}$, $\mathbf{u}$ | `state`, `obs`, `latent`, `inputs` | $\boldsymbol{\theta}$, $\boldsymbol{\nu}$ | `params`, `variational_params` |
-| $\boldsymbol{\mu}_x$, $\boldsymbol{\Sigma}_x$, $\boldsymbol{\Lambda}_x$ | `prior_mean`, `prior_covariance`, `prior_precision` | $\boldsymbol{\Sigma}_\varepsilon$, $\boldsymbol{\Lambda}_\varepsilon$ | `obs_noise_covariance`, `obs_noise_precision` |
-| $\boldsymbol{\mu}_y$, $\boldsymbol{\Sigma}_y$ | `obs_mean`, `obs_covariance` | $\boldsymbol{\Sigma}_{xy}$ | `cross_covariance` |
-| $\boldsymbol{\mu}_{x \mid y}$, $\boldsymbol{\Lambda}_{x \mid y}$ | `posterior_mean`, `posterior_precision` | $\mathbf{G}$, $\mathbf{H}$ | `gain`, `obs_operator` |
-| $\mathbf{J}_h$, $\mathbf{J}_f$ | `obs_jacobian`, `dynamics_jacobian` | $\mathbf{K}_{XX}$, $`\mathbf{K}_{*X}`$ | `gram_train`, `gram_test_train` |
-| $\mathcal{J}$, $\mathcal{L}$ | `cost`, `loss` | $\mathbf{x}^{(e)}$, $\boldsymbol{\theta}^{(i)}$ | loop over `member`, `iteration` |
-| $\boldsymbol{\Sigma}_\eta$ | `model_noise_covariance` | $\mathbf{r}_t$ | `residual` |
-| $\mathbf{G}_{\text{smooth},t}$ | `smoother_gain` | $D_y$, $T$ | `obs_size`, `num_steps` |
+| $`\mathbf{x}`$, $`\mathbf{y}`$, $`\mathbf{z}`$, $`\mathbf{u}`$ | `state`, `obs`, `latent`, `inputs` | $`\boldsymbol{\theta}`$, $`\boldsymbol{\nu}`$ | `params`, `variational_params` |
+| $`\boldsymbol{\mu}_x`$, $`\boldsymbol{\Sigma}_x`$, $`\boldsymbol{\Lambda}_x`$ | `prior_mean`, `prior_covariance`, `prior_precision` | $`\boldsymbol{\Sigma}_\varepsilon`$, $`\boldsymbol{\Lambda}_\varepsilon`$ | `obs_noise_covariance`, `obs_noise_precision` |
+| $`\boldsymbol{\mu}_y`$, $`\boldsymbol{\Sigma}_y`$ | `obs_mean`, `obs_covariance` | $`\boldsymbol{\Sigma}_{xy}`$ | `cross_covariance` |
+| $`\boldsymbol{\mu}_{x \mid y}`$, $`\boldsymbol{\Lambda}_{x \mid y}`$ | `posterior_mean`, `posterior_precision` | $`\mathbf{G}`$, $`\mathbf{H}`$ | `gain`, `obs_operator` |
+| $`\mathbf{J}_h`$, $`\mathbf{J}_f`$ | `obs_jacobian`, `dynamics_jacobian` | $`\mathbf{K}_{XX}`$, $`\mathbf{K}_{*X}`$ | `gram_train`, `gram_test_train` |
+| $`\mathcal{J}`$, $`\mathcal{L}`$ | `cost`, `loss` | $`\mathbf{x}^{(e)}`$, $`\boldsymbol{\theta}^{(i)}`$ | loop over `member`, `iteration` |
+| $`\boldsymbol{\Sigma}_\eta`$ | `model_noise_covariance` | $`\mathbf{r}_t`$ | `residual` |
+| $`\mathbf{G}_{\text{smooth},t}`$ | `smoother_gain` | $`D_y`$, $`T`$ | `obs_size`, `num_steps` |
 
 ## 7. Comments
 

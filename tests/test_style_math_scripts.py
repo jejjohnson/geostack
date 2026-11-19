@@ -84,3 +84,183 @@ def test_dollars_in_a_code_fence_are_not_a_display_finding(tmp_path) -> None:
     assert [(f.line, f.rule) for f in findings if f.rule == "display"] == [
         (7, "display")
     ]
+
+
+def test_backtick_inline_wraps_plain_inline_maths_only() -> None:
+    source = "a $x_n$ and $`y_n`$ and `$z$` code\n\n```math\nx_n\n```\n$$x$$\n"
+    expected = "a $`x_n`$ and $`y_n`$ and `$z$` code\n\n```math\nx_n\n```\n$$x$$\n"
+    assert mc.backtick_inline(source) == expected
+
+
+def test_underscores_that_pair_across_inline_maths_are_an_error(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "body.md"
+    page.write_text("The mean $\\boldsymbol{\\mu}_x$ and the size $N_{b}$ pair up.\n")
+    found = check_math.check_file(page, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+    assert check_math.check_file(page, check_math.Target.myst, []) == []
+
+
+def test_backticked_inline_maths_is_not_an_emphasis_error(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "body.md"
+    page.write_text("The size $`N_{b}`$ and the mean $`\\boldsymbol{\\mu}_x`$.\n")
+    assert check_math.check_file(page, check_math.Target.github, []) == []
+    lone = tmp_path / "lone.md"
+    lone.write_text("One subscript, $\\boldsymbol{\\mu}_x$, pairs with nothing.\n")
+    assert check_math.check_file(lone, check_math.Target.github, []) == []
+
+
+def test_backtick_inline_leaves_a_code_span_over_several_lines_alone() -> None:
+    source = "see `first line\n$x_n$\nlast line` and $y_n$\n\nthen $z_n$\n"
+    expected = "see `first line\n$x_n$\nlast line` and $`y_n`$\n\nthen $`z_n`$\n"
+    assert mc.backtick_inline(source) == expected
+
+
+def test_emphasis_is_not_paired_across_list_items_or_a_heading(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "list.md"
+    page.write_text(
+        "# The mean $\\boldsymbol{\\mu}_x$\n"
+        "Sizes are $N_{b}$ here.\n"
+        "- $\\boldsymbol{\\mu}_x$\n"
+        "- $N_{b}$\n"
+        "1. $\\boldsymbol{\\Sigma}_x$\n"
+    )
+    assert check_math.check_file(page, check_math.Target.github, []) == []
+    item = tmp_path / "item.md"
+    item.write_text("- the mean $\\boldsymbol{\\mu}_x$ and\n  the size $N_{b}$\n")
+    found = check_math.check_file(item, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+
+
+def test_a_quoted_paragraph_over_several_lines_is_one_paragraph(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    quoted = tmp_path / "quoted.md"
+    quoted.write_text("> The mean $\\boldsymbol{\\mu}_x$ and\n> the size $N_{b}$.\n")
+    found = check_math.check_file(quoted, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+    apart = tmp_path / "apart.md"
+    apart.write_text(
+        "The mean $\\boldsymbol{\\mu}_x$.\n"
+        "> The size $N_{b}$.\n"
+        ">\n"
+        "> The noise $\\sigma_y$.\n"
+        "> > The step $\\alpha_k$.\n"
+    )
+    assert check_math.check_file(apart, check_math.Target.github, []) == []
+
+
+def test_backtick_inline_leaves_an_indented_code_block_alone() -> None:
+    source = (
+        'Run:\n\n    echo "$HOME$PATH"\n\nthen $x_n$.\n\n'
+        "- an item\n\n    its second paragraph, $y_n$\n"
+    )
+    expected = (
+        'Run:\n\n    echo "$HOME$PATH"\n\nthen $`x_n`$.\n\n'
+        "- an item\n\n    its second paragraph, $`y_n`$\n"
+    )
+    assert mc.backtick_inline(source) == expected
+
+
+def test_strong_emphasis_runs_across_inline_maths_are_an_error(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "strong.md"
+    page.write_text("The blocks $x_{**}$ and $y_{**}$ pair up.\n")
+    found = check_math.check_file(page, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+    code = tmp_path / "code.md"
+    code.write_text("Run:\n\n    a_b = c_d * e_f * g\n")
+    assert check_math.check_file(code, check_math.Target.github, []) == []
+
+
+def test_backtick_inline_leaves_a_fence_inside_a_block_quote_alone() -> None:
+    source = '> ~~~sh\n> echo "$HOME$PATH"\n> ~~~\n> and $x_n$\n\nthen $y_n$\n'
+    expected = '> ~~~sh\n> echo "$HOME$PATH"\n> ~~~\n> and $`x_n`$\n\nthen $`y_n`$\n'
+    assert mc.backtick_inline(source) == expected
+    unclosed = "> ```\n> $a_n$\n\nafter the quote, $b_n$\n"
+    after = "> ```\n> $a_n$\n\nafter the quote, $`b_n`$\n"
+    assert mc.backtick_inline(unclosed) == after
+
+
+def test_nested_emphasis_does_not_hide_an_opener_that_pairs_in_maths(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "nested.md"
+    page.write_text("*Note **important** $x_{*}$\n")
+    found = check_math.check_file(page, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+    fine = tmp_path / "fine.md"
+    fine.write_text("*Note **important** here*, then $x_{b}$ alone.\n")
+    assert check_math.check_file(fine, check_math.Target.github, []) == []
+
+
+def test_backtick_inline_leaves_a_pre_block_alone() -> None:
+    source = '<pre>\necho "$HOME$PATH"\n</pre>\n\nthen $x_n$ and <pre>$a$</pre>\n'
+    expected = '<pre>\necho "$HOME$PATH"\n</pre>\n\nthen $`x_n`$ and <pre>$`a`$</pre>\n'
+    assert mc.backtick_inline(source) == expected
+    one_line = "<pre>$a_n$ and $b_n$</pre>\nnext $c_n$\n"
+    assert mc.backtick_inline(one_line) == "<pre>$a_n$ and $b_n$</pre>\nnext $`c_n`$\n"
+
+
+def test_runs_that_the_rule_of_three_keeps_apart_are_not_an_error(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    kernels = tmp_path / "kernels.md"
+    kernels.write_text("The blocks $K_{*X}$ and $K_{**}$ of the kernel matrix.\n")
+    assert check_math.check_file(kernels, check_math.Target.github, []) == []
+    stars = tmp_path / "stars.md"
+    stars.write_text("The blocks $K_{*X}$ and $K_{X*}$ of the kernel matrix.\n")
+    found = check_math.check_file(stars, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
+
+
+# Each case was rendered through GitHub's Markdown API on 19 Nov 2026; the flag
+# says whether GitHub lost the maths to emphasis.
+GITHUB_CASES = [
+    ("**bold* and $x_{*}$", False),
+    ("*Note **important** $x_{*}$", True),
+    ("* `code` and $x_{*}$", False),
+    ("*`code` and $x_{*}$", True),
+    ("$K_{*X}$ and $K_{**}$", False),
+    ("$K_{*X}$ and $K_{X*}$", True),
+    ("$x_{**}$ and $y_{**}$", True),
+    ("The mean $\\boldsymbol{\\mu}_x$ and the size $N_{b}$ pair up.", True),
+]
+
+
+@pytest.mark.parametrize(("source", "eaten"), GITHUB_CASES)
+def test_the_emphasis_rule_agrees_with_github(tmp_path, source, eaten) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    page = tmp_path / "case.md"
+    page.write_text(source + "\n")
+    found = check_math.check_file(page, check_math.Target.github, [])
+    assert [f.rule for f in found] == (["inline-emphasis"] if eaten else [])
+
+
+def test_backtick_inline_leaves_a_fence_on_a_list_item_alone() -> None:
+    source = '- ~~~sh\n  echo "$HOME$PATH"\n  ~~~\n- then $x_n$\n'
+    expected = '- ~~~sh\n  echo "$HOME$PATH"\n  ~~~\n- then $`x_n`$\n'
+    assert mc.backtick_inline(source) == expected

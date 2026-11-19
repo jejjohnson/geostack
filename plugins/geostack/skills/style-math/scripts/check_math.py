@@ -15,7 +15,16 @@ from enum import StrEnum
 from pathlib import Path
 
 import cyclopts
-from _macros import MACROS_FILE, Span, fenced_lines, load_macros, math_spans
+from _macros import (
+    CODE_SPAN,
+    INLINE,
+    MACROS_FILE,
+    Span,
+    fenced_lines,
+    literal_lines,
+    load_macros,
+    math_spans,
+)
 from loguru import logger
 
 
@@ -187,12 +196,175 @@ def check_span(span: Span, target: Target, macro_names: list[str]) -> list[Findi
     return found
 
 
+def _delimiter_roles(text: str, start: int, end: int) -> tuple[bool, bool]:
+    """Whether the run of ``_`` or ``*`` at ``text[start:end]`` can open and close
+    emphasis (CommonMark's left- and right-flanking rules)."""
+    before = text[start - 1] if start > 0 else " "
+    after = text[end] if end < len(text) else " "
+    before_space, after_space = before.isspace(), after.isspace()
+    before_punct = not before_space and not before.isalnum()
+    after_punct = not after_space and not after.isalnum()
+    left = not after_space and (not after_punct or before_space or before_punct)
+    right = not before_space and (not before_punct or after_space or after_punct)
+    if text[start] == "*":
+        return left, right
+    return left and (not right or before_punct), right and (not left or after_punct)
+
+
+def _emphasis_in_text(text: str) -> bool:
+    """True when Markdown would pair two delimiter runs, one of them in plain
+    ``$…$``. This is CommonMark's delimiter algorithm: runs of ``_`` or ``*``
+    are matched closer by closer against the nearest opener of the same
+    character, one or two characters at a time, under the rule of three."""
+    spans = [m.span(2) for m in INLINE.finditer(text) if not m.group(1)]
+    # A code span keeps its length and reads as punctuation, as its backticks do,
+    # so a delimiter that borders it keeps its role.
+    masked = CODE_SPAN.sub(lambda m: "`" * len(m.group(0)), text)
+
+    def in_maths(at: int) -> bool:
+        return any(start <= at < end for start, end in spans)
+
+    runs: list[_Run] = []
+    for found in re.finditer(r"(?<!\\)(?:_+|\*+)", masked):
+        can_open, can_close = _delimiter_roles(masked, found.start(), found.end())
+        length = found.end() - found.start()
+        runs.append(
+            _Run(found.group(0)[0], found.start(), length, length, can_open, can_close)
+        )
+    for index, closer in enumerate(runs):
+        while closer.can_close and closer.left:
+            opener = next(
+                (
+                    candidate
+                    for candidate in reversed(runs[:index])
+                    if candidate.can_open
+                    and candidate.left
+                    and candidate.mark == closer.mark
+                    and _may_pair(candidate, closer)
+                ),
+                None,
+            )
+            if opener is None:
+                break
+            if in_maths(opener.start) or in_maths(closer.start):
+                return True
+            used = 2 if opener.left >= 2 and closer.left >= 2 else 1
+            opener.left -= used
+            closer.left -= used
+            # Every run between a matched pair is out of play.
+            for between in runs[runs.index(opener) + 1 : index]:
+                between.left = 0
+    return False
+
+
+@dataclass
+class _Run:
+    """A run of one delimiter character: where it is, how long it was, how many
+    of its characters are still unmatched, and whether it can open and close."""
+
+    mark: str
+    start: int
+    length: int
+    left: int
+    can_open: bool
+    can_close: bool
+
+
+def _may_pair(opener: _Run, closer: _Run) -> bool:
+    """CommonMark's rule of three: when either run can both open and close, the
+    two do not pair if their lengths sum to a multiple of three, unless both
+    lengths are multiples of three."""
+    if not (opener.can_close or closer.can_open):
+        return True
+    if (opener.length + closer.length) % 3:
+        return True
+    return opener.length % 3 == 0 and closer.length % 3 == 0
+
+
+_HEADING = re.compile(r"#{1,6}(\s|$)")
+_BLOCK_START = re.compile(r"([-+*]|\d{1,9}[.)])\s")
+_QUOTE = re.compile(r"(?:>[ \t]?)+")
+
+
+def emphasis_findings(text: str) -> list[Finding]:
+    """Paragraphs and table cells where GitHub's Markdown would eat inline maths."""
+    findings: list[Finding] = []
+    fenced = literal_lines(text)
+    paragraph: list[str] = []
+    start = 0
+
+    def flush() -> None:
+        if paragraph and _emphasis_in_text("\n".join(paragraph)):
+            findings.append(
+                Finding(
+                    start,
+                    "inline-emphasis",
+                    "Markdown pairs a _ or * in plain $…$ as emphasis here and the "
+                    "maths is lost; write each inline expression as $`…`$ "
+                    "(expand_macros.py does it)",
+                    True,
+                )
+            )
+        paragraph.clear()
+
+    depth = 0
+    for number, line in enumerate(text.splitlines(), start=1):
+        stripped = line.strip()
+        # A block quote's markers are not text. The lines of one quoted
+        # paragraph stay together; a deeper quote starts a new block, and an
+        # unquoted line after a quoted one continues its paragraph.
+        quote = _QUOTE.match(stripped)
+        marks = quote.group(0).count(">") if quote else 0
+        if quote:
+            stripped = stripped[quote.end() :].strip()
+            line = stripped
+        if marks > depth:
+            flush()
+        if marks or not stripped:
+            depth = marks
+        if number in fenced or not stripped:
+            flush()
+        elif stripped.startswith("|"):
+            flush()
+            cells = re.split(r"(?<!\\)\|", stripped)
+            if any(_emphasis_in_text(cell) for cell in cells):
+                start = number
+                paragraph.append("")
+                findings.append(
+                    Finding(
+                        number,
+                        "inline-emphasis",
+                        "Markdown pairs a _ or * in plain $…$ as emphasis in this "
+                        "cell and the maths is lost; write it as $`…`$",
+                        True,
+                    )
+                )
+                paragraph.clear()
+        elif _HEADING.match(stripped):
+            # A heading is a block of its own.
+            flush()
+            start = number
+            paragraph.append(line)
+            flush()
+        else:
+            # A list item starts a new block; Markdown never pairs emphasis
+            # across two of them.
+            if _BLOCK_START.match(stripped):
+                flush()
+            if not paragraph:
+                start = number
+            paragraph.append(line)
+    flush()
+    return findings
+
+
 def check_file(path: Path, target: Target, macro_names: list[str]) -> list[Finding]:
     findings: list[Finding] = []
     text = path.read_text(encoding="utf-8")
     for span in math_spans(text):
         findings.extend(check_span(span, target, macro_names))
     if target is Target.github:
+        findings.extend(emphasis_findings(text))
         fenced = fenced_lines(text)
         for number, line in enumerate(text.splitlines(), start=1):
             stripped = line.strip()

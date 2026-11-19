@@ -76,12 +76,49 @@ def expand(text: str, macros: list[Macro]) -> str:
 
 
 FENCE = re.compile(r"^\s*(```+|~~~+)\s*(\S*)")
+_LIST_PREFIX = re.compile(r"^\s*(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)+")
+_QUOTE_PREFIX = re.compile(r"^ {0,3}(?:>[ \t]?)+")
 INLINE = re.compile(r"(?<![\\$])\$(`?)(?!\$)(.+?)\1(?<![\\$])\$(?!\$)")
 TICK_MATH = re.compile(r"\$`(?!\s)(.+?)(?<!\s)`\$")
 # MyST allows a label after the closing dollars: `$$ … $$ (eq-name)`.
 LABEL = r"(?:\s*\([^()\s]+\))?"
 DOLLARS_LINE = re.compile(r"^\s*\$\$(?!\$)(.+?)\$\$" + LABEL + r"\s*$")
 DOLLARS_CLOSE = re.compile(r"^\s*\$\$" + LABEL + r"\s*$")
+
+
+# A code span may run over several lines of one paragraph, never over a blank line.
+CODE_SPAN = re.compile(r"(`+)(?!`)(?:(?!\n[ \t]*\n).)*?(?<!`)\1(?!`)", re.DOTALL)
+
+
+def _blank(match: re.Match) -> str:
+    return re.sub(r"[^\n]", "\0", match.group(0))
+
+
+def backtick_inline(markdown: str) -> str:
+    """Rewrite each plain inline ``$…$`` as ``$`…`$``, the form GitHub's Markdown
+    leaves alone. Fenced and indented code blocks, raw HTML blocks that keep
+    their text as written, code spans and maths already in backticks are not
+    touched."""
+    fenced = literal_lines(markdown)
+    lines = markdown.split("\n")
+    # Code spans are found over the whole document, so one that runs over
+    # several lines still protects the maths inside it.
+    body = "\n".join("" if n + 1 in fenced else line for n, line in enumerate(lines))
+    masked_lines = CODE_SPAN.sub(_blank, TICK_MATH.sub(_blank, body)).split("\n")
+    for index, line in enumerate(lines):
+        if index + 1 in fenced or "$" not in line:
+            continue
+        masked = masked_lines[index]
+        pieces: list[str] = []
+        end = 0
+        for match in INLINE.finditer(masked):
+            if match.group(1):
+                continue
+            start, stop = match.span(2)
+            pieces.append(line[end : match.start()] + "$`" + line[start:stop] + "`$")
+            end = match.end()
+        lines[index] = "".join(pieces) + line[end:]
+    return "\n".join(lines)
 
 
 def _opens(match: re.Match) -> tuple[str, str]:
@@ -100,20 +137,93 @@ def _closes(match: re.Match | None, opening: str) -> bool:
 
 
 def fenced_lines(markdown: str) -> set[int]:
-    """The numbers of the lines inside a code or math fence, delimiters included."""
+    """The numbers of the lines inside a code or math fence, delimiters included.
+    A fence inside a block quote counts."""
     inside: set[int] = set()
     fence: tuple[str, str] | None = None
+    quoted = False
     for number, line in enumerate(markdown.splitlines(), start=1):
-        match = FENCE.match(line)
+        # A fence may sit in a block quote: the quote's markers come off before
+        # the fence is looked for, and such a fence ends where the quote does.
+        marks = _QUOTE_PREFIX.match(line)
+        rest = line[marks.end() :] if marks else line
+        # A fence may also open on a list item's own line, after its marker.
+        match = FENCE.match(_LIST_PREFIX.sub("", rest) if fence is None else rest)
+        if fence is not None and quoted and not marks:
+            fence = None
         if fence is None:
             if match:
                 fence = _opens(match)
+                quoted = bool(marks)
                 inside.add(number)
             continue
         inside.add(number)
         if _closes(match, fence[1]):
             fence = None
     return inside
+
+
+_LIST_ITEM = re.compile(r"([-+*]|\d{1,9}[.)])\s")
+
+
+def indented_code_lines(markdown: str, fenced: set[int]) -> set[int]:
+    """The numbers of the lines of indented code blocks: four spaces or a tab,
+    after a blank line, and not under a list item (where the indent is the
+    item's own)."""
+    inside: set[int] = set()
+    after_blank, in_code, in_list = True, False, False
+    for number, line in enumerate(markdown.splitlines(), start=1):
+        if number in fenced:
+            after_blank, in_code = False, False
+            continue
+        if not line.strip():
+            after_blank = True
+            continue
+        indented = line.startswith(("    ", "\t"))
+        if indented and not in_list and (after_blank or in_code):
+            inside.add(number)
+            in_code = True
+        else:
+            in_code = False
+            if not indented:
+                in_list = bool(_LIST_ITEM.match(line.lstrip()))
+        after_blank = False
+    return inside
+
+
+# The HTML blocks whose contents Markdown leaves as written (CommonMark's first
+# kind of HTML block): they run from the opening tag to the closing one.
+_RAW_HTML_OPEN = re.compile(r"^ {0,3}<(pre|script|style|textarea)(?=[\s>]|$)", re.I)
+_RAW_HTML_CLOSE = re.compile(r"</(pre|script|style|textarea)>", re.I)
+
+
+def raw_html_lines(markdown: str, skip: set[int]) -> set[int]:
+    """The numbers of the lines of ``<pre>``, ``<script>``, ``<style>`` and
+    ``<textarea>`` blocks, tags included."""
+    inside: set[int] = set()
+    open_block = False
+    for number, line in enumerate(markdown.splitlines(), start=1):
+        if number in skip:
+            continue
+        if not open_block:
+            opening = _RAW_HTML_OPEN.match(line)
+            if not opening:
+                continue
+            open_block = True
+            line = line[opening.end() :]
+        inside.add(number)
+        if _RAW_HTML_CLOSE.search(line):
+            open_block = False
+    return inside
+
+
+def literal_lines(markdown: str) -> set[int]:
+    """Every line whose text Markdown shows as written: fenced code and maths,
+    indented code, and raw HTML blocks. Inline maths is not looked for there."""
+    literal = fenced_lines(markdown)
+    literal |= indented_code_lines(markdown, literal)
+    literal |= raw_html_lines(markdown, literal)
+    return literal
 
 
 @dataclass(frozen=True)

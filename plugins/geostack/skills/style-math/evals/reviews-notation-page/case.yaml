@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-notation-page
+expected_outcome: |
+  A review that finds the Greek letters in Latin macros and in \mathbf, the bold scalar, \bm and \operatorname, the star used for an optimum, ^T, the bare bar for conditioning and the parameters not after a semicolon, the italic L for a loss, K used for both a kernel matrix and a gain, the classic letters m, P and R, covariance and precision on one page, phi for variational parameters, and the missing shapes.
