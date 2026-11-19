@@ -92,6 +92,7 @@ pyrox-gp = { path = "references/geoml/pyrox/packages/pyrox-gp", editable = true 
 pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = true }
 pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
 pyrox-ssm = { path = "references/geoml/pyrox/packages/pyrox-ssm", editable = true }
+pyrox-gauss = { path = "references/geoml/pyrox/packages/pyrox-gauss", editable = true }
 manipy-jax = { path = "references/geoml/manipy", editable = true }
 plumax = { path = "references/geomodels/plumax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
@@ -147,8 +148,8 @@ plotly = ">=5"
 # never touches the default (GeoStack) solve.
 
 [feature.numerics.pypi-dependencies]
-# gaussx's distributions need its numpyro extra; the override above replaces
-# the whole requirement, extras included, so numpyro is listed itself.
+# gaussx v0.7.0 imports no NumPyro (its distributions moved to pyrox-gauss);
+# numpyro stays listed because argminax still declares a numpyro extra.
 gaussx = { path = "references/numerics/gaussx", editable = true }
 numpyro = ">=0.21"
 finitevolx = { path = "references/numerics/finitevolX", editable = true }
@@ -179,6 +180,7 @@ pyrox-gp = { path = "references/geoml/pyrox/packages/pyrox-gp", editable = true 
 pyrox-lgm = { path = "references/geoml/pyrox/packages/pyrox-lgm", editable = true }
 pyrox-nn = { path = "references/geoml/pyrox/packages/pyrox-nn", editable = true }
 pyrox-ssm = { path = "references/geoml/pyrox/packages/pyrox-ssm", editable = true }
+pyrox-gauss = { path = "references/geoml/pyrox/packages/pyrox-gauss", editable = true }
 manipy-jax = { path = "references/geoml/manipy", editable = true }
 
 [feature.geomodels.pypi-dependencies]

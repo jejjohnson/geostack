@@ -139,7 +139,7 @@ flowchart TB
 ```
 :::
 
-20 repositories, 41 packages and 57 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+20 repositories, 42 packages and 57 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -340,7 +340,7 @@ cannot import, so most of its tests could no longer be collected.
 | pyrox | filterax | extra | `pyrox-ssm → filterax` |
 | pyrox | functax | base | `pyrox-gp → functax` |
 | pyrox | gauss_flows | extra | `pyrox-gp → gauss-flows` |
-| pyrox | gaussx | base | `pyrox-gp → gaussx` |
+| pyrox | gaussx | base | `pyrox-gauss → gaussx` |
 | pyrox | geonnax | base | `pyrox-nn → geonnax` |
 | pyrox | kernellib | base | `pyrox-gp → kernellib` |
 | vardax | argminax | base | `vardax → argminax` |

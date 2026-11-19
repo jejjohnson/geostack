@@ -51,12 +51,12 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 |---|---|---|---|---|
 | Structures and primitives | ⓪ ① | numerics | `gaussx._operators` 41, `gaussx._primitives` 29, `gaussx._tags` 24, `gaussx._linalg` 20, `gaussx._gmrf` 12, `gaussx._sparse` 4 | 130 |
 | Strategies | ②, setup | numerics, ML | `gaussx._strategies` 20, `gaussx._randomized` 10, `gaussx._sketching` 7, `gaussx._preconditioners` 5, `gaussx._solve_frontend` 2 | 44 |
-| Gaussians | ③ | ML | `gaussx._expfam` 16, `gaussx._distributions` 15 | 31 |
+| Gaussians | ③ | ML | `gaussx._distributions` 19, `gaussx._expfam` 16 | 35 |
 | Gaussian processes | ④ | ML | `gaussx._gp` 29 | 29 |
 | State space | ④ | ML | `gaussx._ssm` 54 | 54 |
 | Quadrature | ② to ④ | ML | `gaussx._quadrature` 45 | 45 |
-| Inference and ensembles | ④ | ML | `gaussx._inference` 34 | 34 |
-| **All** | | | | **367** |
+| Inference and ensembles | ④ | ML | `gaussx._inference` 40 | 40 |
+| **All** | | | | **377** |
 <!-- shelf:units:end -->
 :::
 
@@ -70,11 +70,12 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 |---|---|---|---|---|---|---|---|---|
 | pyrox-gp | 46 | 10 | 6 | 3 | 9 | 0 | 14 | 4 |
 | filterax | 37 | 5 | 2 | 3 | 0 | 5 | 1 | 21 |
+| pyrox-lgm | 34 | 16 | 0 | 3 | 0 | 4 | 9 | 2 |
 | pyrox-ssm | 34 | 3 | 2 | 1 | 1 | 16 | 8 | 3 |
-| pyrox-lgm | 29 | 16 | 0 | 0 | 0 | 4 | 9 | 0 |
+| pyrox-gauss | 26 | 9 | 3 | 8 | 0 | 6 | 0 | 0 |
 | kernellib | 25 | 16 | 9 | 0 | 0 | 0 | 0 | 0 |
+| argminax | 22 | 10 | 6 | 0 | 0 | 0 | 0 | 6 |
 | vardax | 21 | 15 | 1 | 3 | 0 | 0 | 0 | 2 |
-| argminax | 20 | 10 | 6 | 0 | 0 | 0 | 0 | 4 |
 | finitevolx | 10 | 6 | 4 | 0 | 0 | 0 | 0 | 0 |
 | radtrax | 10 | 5 | 2 | 3 | 0 | 0 | 0 | 0 |
 | gauss-flows | 7 | 0 | 0 | 0 | 0 | 4 | 2 | 1 |
@@ -293,11 +294,12 @@ Below the threshold, with no subclass, the unit is named on an "also uses" line.
 |---|---|---|
 | pyrox-gp | Structures and primitives; Strategies (subclasses `AbstractPreconditioner`); Gaussians; Gaussian processes; Quadrature; Inference and ensembles |  |
 | filterax | Structures and primitives; Gaussians; State space; Inference and ensembles | Strategies (2); Quadrature (1) |
+| pyrox-lgm | Structures and primitives; Gaussians (subclasses `GaussianMRF`, `IntrinsicGMRF`); State space; Quadrature | Inference and ensembles (2) |
 | pyrox-ssm | Structures and primitives; State space; Quadrature; Inference and ensembles | Strategies (2); Gaussians (1); Gaussian processes (1) |
-| pyrox-lgm | Structures and primitives; State space; Quadrature |  |
+| pyrox-gauss | Structures and primitives; Strategies; Gaussians; State space |  |
 | kernellib | Structures and primitives; Strategies |  |
-| vardax | Structures and primitives; Gaussians | Strategies (1); Inference and ensembles (2) |
 | argminax | Structures and primitives; Strategies; Inference and ensembles |  |
+| vardax | Structures and primitives; Gaussians | Strategies (1); Inference and ensembles (2) |
 | finitevolx | Structures and primitives; Strategies |  |
 | radtrax | Structures and primitives; Gaussians | Strategies (2) |
 | gauss-flows | State space | Quadrature (2); Inference and ensembles (1) |

@@ -117,6 +117,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "pyrox-lgm": "Latent Gaussian models for pyrox.",
     "pyrox-nn": "Bayesian neural networks for pyrox.",
     "pyrox-ssm": "State-space models for pyrox.",
+    "pyrox-gauss": "Gaussian NumPyro distributions on gaussx operators.",
     "manipy-jax": "Manifold learning and alignment, and hyperspectral workflows.",
     # GeoModels
     "plumax": "Plume transport: Gaussian plume and puff, Lagrangian and LES.",
@@ -187,6 +188,7 @@ GEOML: dict[str, list[str]] = {
     "pyrox-lgm": ["pyrox_lgm"],
     "pyrox-nn": ["pyrox_nn"],
     "pyrox-ssm": ["pyrox_ssm"],
+    "pyrox-gauss": ["pyrox_gauss"],
     # manipy.sklearn needs scikit-learn (manipy's sklearn extra), which no
     # environment installs
     "manipy-jax": ["manipy", "manipy.datasets", "manipy.hsi", "manipy.metrics"],
