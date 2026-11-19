@@ -69,17 +69,17 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 | Dependent package | Names used | Structures and primitives | Strategies | Gaussians | Gaussian processes | State space | Quadrature | Inference and ensembles |
 |---|---|---|---|---|---|---|---|---|
 | pyrox-gp | 46 | 10 | 6 | 3 | 9 | 0 | 14 | 4 |
+| filterax | 37 | 5 | 2 | 3 | 0 | 5 | 1 | 21 |
 | pyrox-ssm | 34 | 3 | 2 | 1 | 1 | 16 | 8 | 3 |
 | pyrox-lgm | 29 | 16 | 0 | 0 | 0 | 4 | 9 | 0 |
 | kernellib | 25 | 16 | 9 | 0 | 0 | 0 | 0 | 0 |
 | vardax | 21 | 15 | 1 | 3 | 0 | 0 | 0 | 2 |
 | argminax | 20 | 10 | 6 | 0 | 0 | 0 | 0 | 4 |
-| filterax | 17 | 3 | 1 | 1 | 0 | 1 | 0 | 11 |
 | finitevolx | 10 | 6 | 4 | 0 | 0 | 0 | 0 | 0 |
 | radtrax | 10 | 5 | 2 | 3 | 0 | 0 | 0 | 0 |
 | gauss-flows | 7 | 0 | 0 | 0 | 0 | 4 | 2 | 1 |
+| plumax | 6 | 4 | 0 | 1 | 0 | 0 | 0 | 1 |
 | pyrox-nn | 6 | 5 | 0 | 0 | 0 | 0 | 0 | 1 |
-| plumax | 5 | 4 | 0 | 0 | 0 | 0 | 0 | 1 |
 | spectraldiffx | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 |
 | manipy-jax | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->
@@ -292,17 +292,17 @@ Below the threshold, with no subclass, the unit is named on an "also uses" line.
 | Dependent package | Cards | Also uses |
 |---|---|---|
 | pyrox-gp | Structures and primitives; Strategies (subclasses `AbstractPreconditioner`); Gaussians; Gaussian processes; Quadrature; Inference and ensembles |  |
+| filterax | Structures and primitives; Gaussians; State space; Inference and ensembles | Strategies (2); Quadrature (1) |
 | pyrox-ssm | Structures and primitives; State space; Quadrature; Inference and ensembles | Strategies (2); Gaussians (1); Gaussian processes (1) |
 | pyrox-lgm | Structures and primitives; State space; Quadrature |  |
 | kernellib | Structures and primitives; Strategies |  |
 | vardax | Structures and primitives; Gaussians | Strategies (1); Inference and ensembles (2) |
 | argminax | Structures and primitives; Strategies; Inference and ensembles |  |
-| filterax | Structures and primitives; Inference and ensembles | Strategies (1); Gaussians (1); State space (1) |
 | finitevolx | Structures and primitives; Strategies |  |
 | radtrax | Structures and primitives; Gaussians | Strategies (2) |
 | gauss-flows | State space | Quadrature (2); Inference and ensembles (1) |
+| plumax | Structures and primitives | Gaussians (1); Inference and ensembles (1) |
 | pyrox-nn | Structures and primitives | Inference and ensembles (1) |
-| plumax | Structures and primitives | Inference and ensembles (1) |
 | spectraldiffx | Structures and primitives |  |
 | manipy-jax | Structures and primitives |  |
 <!-- shelf:cards:end -->
