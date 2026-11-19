@@ -95,10 +95,10 @@ def _blank(match: re.Match) -> str:
 
 def backtick_inline(markdown: str) -> str:
     """Rewrite each plain inline ``$…$`` as ``$`…`$``, the form GitHub's Markdown
-    leaves alone. Fenced and indented code blocks, code spans and maths already
-    in backticks are not touched."""
-    fenced = fenced_lines(markdown)
-    fenced |= indented_code_lines(markdown, fenced)
+    leaves alone. Fenced and indented code blocks, raw HTML blocks that keep
+    their text as written, code spans and maths already in backticks are not
+    touched."""
+    fenced = literal_lines(markdown)
     lines = markdown.split("\n")
     # Code spans are found over the whole document, so one that runs over
     # several lines still protects the maths inside it.
@@ -186,6 +186,41 @@ def indented_code_lines(markdown: str, fenced: set[int]) -> set[int]:
                 in_list = bool(_LIST_ITEM.match(line.lstrip()))
         after_blank = False
     return inside
+
+
+# The HTML blocks whose contents Markdown leaves as written (CommonMark's first
+# kind of HTML block): they run from the opening tag to the closing one.
+_RAW_HTML_OPEN = re.compile(r"^ {0,3}<(pre|script|style|textarea)(?=[\s>]|$)", re.I)
+_RAW_HTML_CLOSE = re.compile(r"</(pre|script|style|textarea)>", re.I)
+
+
+def raw_html_lines(markdown: str, skip: set[int]) -> set[int]:
+    """The numbers of the lines of ``<pre>``, ``<script>``, ``<style>`` and
+    ``<textarea>`` blocks, tags included."""
+    inside: set[int] = set()
+    open_block = False
+    for number, line in enumerate(markdown.splitlines(), start=1):
+        if number in skip:
+            continue
+        if not open_block:
+            opening = _RAW_HTML_OPEN.match(line)
+            if not opening:
+                continue
+            open_block = True
+            line = line[opening.end() :]
+        inside.add(number)
+        if _RAW_HTML_CLOSE.search(line):
+            open_block = False
+    return inside
+
+
+def literal_lines(markdown: str) -> set[int]:
+    """Every line whose text Markdown shows as written: fenced code and maths,
+    indented code, and raw HTML blocks. Inline maths is not looked for there."""
+    literal = fenced_lines(markdown)
+    literal |= indented_code_lines(markdown, literal)
+    literal |= raw_html_lines(markdown, literal)
+    return literal
 
 
 @dataclass(frozen=True)

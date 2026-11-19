@@ -210,3 +210,25 @@ def test_nested_emphasis_does_not_hide_an_opener_that_pairs_in_maths(tmp_path) -
     fine = tmp_path / "fine.md"
     fine.write_text("*Note **important** here*, then $x_{b}$ alone.\n")
     assert check_math.check_file(fine, check_math.Target.github, []) == []
+
+
+def test_backtick_inline_leaves_a_pre_block_alone() -> None:
+    source = '<pre>\necho "$HOME$PATH"\n</pre>\n\nthen $x_n$ and <pre>$a$</pre>\n'
+    expected = '<pre>\necho "$HOME$PATH"\n</pre>\n\nthen $`x_n`$ and <pre>$`a`$</pre>\n'
+    assert mc.backtick_inline(source) == expected
+    one_line = "<pre>$a_n$ and $b_n$</pre>\nnext $c_n$\n"
+    assert mc.backtick_inline(one_line) == "<pre>$a_n$ and $b_n$</pre>\nnext $`c_n`$\n"
+
+
+def test_runs_that_the_rule_of_three_keeps_apart_are_not_an_error(tmp_path) -> None:
+    pytest.importorskip("cyclopts")
+    pytest.importorskip("loguru")
+    import check_math
+
+    kernels = tmp_path / "kernels.md"
+    kernels.write_text("The blocks $K_{*X}$ and $K_{**}$ of the kernel matrix.\n")
+    assert check_math.check_file(kernels, check_math.Target.github, []) == []
+    stars = tmp_path / "stars.md"
+    stars.write_text("The blocks $K_{*X}$ and $K_{X*}$ of the kernel matrix.\n")
+    found = check_math.check_file(stars, check_math.Target.github, [])
+    assert [f.rule for f in found] == ["inline-emphasis"]
