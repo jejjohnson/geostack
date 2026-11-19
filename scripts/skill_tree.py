@@ -271,7 +271,7 @@ def build(g: dg.Graph | None = None, paths: dict[str, Path] | None = None) -> Tr
     g = g if g is not None else dg.build()
     paths = paths or {}
     nodes = {
-        repo: read_node(repo, paths.get(repo, dg.repo_path(repo)))
+        repo: read_node(repo, paths[repo] if repo in paths else dg.repo_path(repo))
         for repo in sorted(g.repos)
     }
     shelved = {repo for repo, node in nodes.items() if node.units}

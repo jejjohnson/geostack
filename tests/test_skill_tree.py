@@ -126,6 +126,105 @@ def test_a_repo_below_the_card_threshold_gets_the_front_door(tree) -> None:
     assert "The front door is `base:front`." in block
 
 
+WORKSPACE = """
+[skills.front]
+packages = ["ws"]
+
+[skills.use-gp]
+packages = ["ws-gp"]
+
+[skills.use-all]
+"""
+
+
+@pytest.fixture
+def workspace(tmp_path: Path):
+    """ws (packages ws, ws-gp) above the shelf of base and above mid."""
+    for repo in ("base", "mid", "ws"):
+        (tmp_path / repo).mkdir()
+    _plugin(tmp_path / "base", "base", ["front", "recipes"])
+    (tmp_path / "base/plugins/base/tree").mkdir()
+    (tmp_path / "base/plugins/base/tree/shelf.toml").write_text(SHELF, "utf-8")
+    _plugin(tmp_path / "mid", "mid", ["use-mid"])
+    _plugin(tmp_path / "ws", "ws", ["front", "use-gp", "use-all"])
+    (tmp_path / "ws/plugins/ws/tree").mkdir()
+    (tmp_path / "ws/plugins/ws/tree/shelf.toml").write_text(WORKSPACE, "utf-8")
+    pkgs = {
+        name: st.dg.Package(name, repo, "geoml", tmp_path / repo)
+        for name, repo in [
+            ("base", "base"),
+            ("mid", "mid"),
+            ("ws", "ws"),
+            ("ws-gp", "ws"),
+        ]
+    }
+    pkg_edges = [
+        st.dg.Edge("ws", "base", "extra", ""),
+        st.dg.Edge("ws-gp", "base", "base", ""),
+        st.dg.Edge("ws-gp", "mid", "import", ""),
+        st.dg.Edge("ws-gp", "ws", "base", ""),
+    ]
+    graph = st.dg.Graph(pkgs, {}, pkg_edges, st.dg.repo_edges(pkgs, pkg_edges))
+    paths = {repo: tmp_path / repo for repo in ("base", "mid", "ws")}
+    return st.build(graph, paths=paths), graph
+
+
+def test_a_skill_that_names_its_packages_builds_on_what_they_do(workspace) -> None:
+    tree, _ = workspace
+    assert [(e.parent, e.kind) for e in tree.builds_on("ws", "front")] == [
+        ("base", "extra")
+    ]
+    assert [(e.parent, e.kind) for e in tree.builds_on("ws", "use-gp")] == [
+        ("base", "base"),
+        ("mid", "import"),
+    ]
+    # a skill that names no package stands for the repository
+    assert tree.builds_on("ws", "use-all") == tree.edges["ws"]
+    assert [(e.parent, e.kind) for e in tree.edges["ws"]] == [
+        ("base", "base"),
+        ("mid", "import"),
+    ]
+
+
+def test_a_package_skill_points_at_the_skill_of_a_sibling_it_depends_on(
+    workspace,
+) -> None:
+    tree, _ = workspace
+    gp = st.render_block(tree, "ws", "use-gp")
+    assert "In this repository, load when the task reaches into it: `ws:front`." in gp
+    assert "### mid · guarded import · skill `mid:use-mid`" in gp
+    front = st.render_block(tree, "ws", "front")
+    assert "In this repository" not in front
+    assert "### mid" not in front
+    blocks = {p.parent.name: text for p, text in st.render(tree, "ws").items()}
+    assert blocks["use-gp"].endswith(gp + "\n")
+    assert blocks["front"].endswith(front + "\n")
+
+
+def test_units_are_folded_over_the_packages_of_a_skill(workspace) -> None:
+    tree, graph = workspace
+    units = {("ws", "base"): {"state-space"}, ("ws-gp", "base"): {"core"}}
+    one = st._edges(graph, tree.nodes, units, "ws", {"ws-gp"})
+    assert one[0] == st.Edge("base", "base", ("core",))
+    both = st._edges(graph, tree.nodes, units, "ws", {"ws", "ws-gp"})
+    assert both[0] == st.Edge("base", "base", ("core", "state-space"))
+
+
+def test_st1_a_skill_names_only_packages_of_its_repository(workspace) -> None:
+    tree, graph = workspace
+    assert st.package_violations(tree, graph.pkgs) == []
+    node = tree.nodes["ws"]
+    tree.nodes["ws"] = st.Node(
+        node.repo, node.path, node.plugin, node.skills, {}, {"front": ("mid", "nope")}
+    )
+    assert st.package_violations(tree, graph.pkgs) == [
+        "ST-1 ws: shelf.toml gives the skill front the package mid,"
+        " which is not one of ws's",
+        "ST-1 ws: shelf.toml gives the skill front the package nope,"
+        " which is not one of ws's",
+    ]
+
+
 def test_replace_block_is_idempotent_and_keeps_text_after_an_old_block() -> None:
     block = f"{st.BLOCK_BEGIN}\nnew\n{st.BLOCK_END}"
     old = f"body\n\n{st.BLOCK_MARK} old marker -->\nold\n{st.BLOCK_END}\n\nafter\n"
