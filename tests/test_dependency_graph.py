@@ -118,11 +118,11 @@ def test_a_second_undeclared_import_is_new() -> None:
 
 
 def test_an_extra_does_not_declare_what_import_runs() -> None:
-    # xtremax is an extra of plumax: enough for an optional module only
+    # vardax is an extra of plumax: enough for an optional module only
     where = "src/plumax/new.py"
-    key = ("undeclared", f"plumax:{where}", "xtremax")
-    assert key not in dg.violations(_with_import("plumax", "xtremax", where))
-    eager = _with_import("plumax", "xtremax", where, eager=True)
+    key = ("undeclared", f"plumax:{where}", "vardax")
+    assert key not in dg.violations(_with_import("plumax", "vardax", where))
+    eager = _with_import("plumax", "vardax", where, eager=True)
     assert key in dg.violations(eager)
 
 

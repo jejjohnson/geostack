@@ -111,13 +111,13 @@ UPSTREAM_BLURB: dict[str, str] = {
     "filterax": "Differentiable ensemble Kalman filters and smoothers.",
     "vardax": "Variational data assimilation: BLUE/OI, 3D-Var, 4D-Var and kin.",
     "gauss-flows": "Gaussianization (RBIG) and normalizing flows.",
-    "xtremax": "Extreme-value and point-process models in NumPyro.",
     "pyrox": "Equinox modules with NumPyro sample and param sites.",
     "pyrox-gp": "Gaussian processes for pyrox.",
     "pyrox-lgm": "Latent Gaussian models for pyrox.",
     "pyrox-nn": "Bayesian neural networks for pyrox.",
     "pyrox-ssm": "State-space models for pyrox.",
     "pyrox-gauss": "Gaussian NumPyro distributions on gaussx operators.",
+    "pyrox-xtreme": "Extreme-value and point-process models in NumPyro.",
     "manipy-jax": "Manifold learning and alignment, and hyperspectral workflows.",
     # GeoModels
     "plumax": "Plume transport: Gaussian plume and puff, Lagrangian and LES.",
@@ -162,7 +162,7 @@ NUMERICS: dict[str, list[str]] = {
 GEOML: dict[str, list[str]] = {
     "geonnax": ["geonnax"],
     "kernellib": ["kernellib"],
-    # filterax, xtremax and pyrox export little at the top level, so their
+    # filterax, pyrox and pyrox-xtreme export little at the top level, so their
     # public subpackages are listed (as georeader's modules are above)
     "filterax": [
         "filterax",
@@ -175,20 +175,20 @@ GEOML: dict[str, list[str]] = {
     ],
     "vardax": ["vardax"],
     "gauss-flows": ["gauss_flows"],
-    "xtremax": [
-        "xtremax",
-        "xtremax.distributions",
-        "xtremax.extraction",
-        "xtremax.point_processes",
-        "xtremax.primitives",
-        "xtremax.simulations",
-    ],
     "pyrox": ["pyrox", "pyrox.inference"],
     "pyrox-gp": ["pyrox_gp"],
     "pyrox-lgm": ["pyrox_lgm"],
     "pyrox-nn": ["pyrox_nn"],
     "pyrox-ssm": ["pyrox_ssm"],
     "pyrox-gauss": ["pyrox_gauss"],
+    "pyrox-xtreme": [
+        "pyrox_xtreme",
+        "pyrox_xtreme.distributions",
+        "pyrox_xtreme.extraction",
+        "pyrox_xtreme.point_processes",
+        "pyrox_xtreme.primitives",
+        "pyrox_xtreme.simulations",
+    ],
     # manipy.sklearn needs scikit-learn (manipy's sklearn extra), which no
     # environment installs
     "manipy-jax": ["manipy", "manipy.datasets", "manipy.hsi", "manipy.metrics"],

@@ -65,7 +65,6 @@ TIERS: dict[str, dict[str, int]] = {
         "geonnax": 0,
         "gauss_flows": 0,
         "kernellib": 1,
-        "xtremax": 1,
         "filterax": 2,
         "manipy": 2,
         "pyrox": 3,
@@ -73,11 +72,13 @@ TIERS: dict[str, dict[str, int]] = {
     },
     "geomodels": {"radtrax": 0, "sesmax": 0, "plumax": 1},
 }
-#: packages that sit in a higher tier than the rest of their repository; inside
-#: the repository an edge may point down a package tier or stay level, and edges
-#: to other repositories use the package's tier
+#: packages that sit in a different tier from the rest of their repository;
+#: inside the repository an edge may point down a package tier or stay level, and
+#: edges to other repositories use the package's tier. pyrox-gauss and
+#: pyrox-xtreme import no other pyrox package, so they sit below the pyrox core.
 PACKAGE_TIERS: dict[str, dict[str, int]] = {
     "geotoolz": {"xrtoolz": 2, "xrtoolz-ops": 2, "xrtoolz-products": 2},
+    "pyrox": {"pyrox-gauss": 1, "pyrox-xtreme": 1},
 }
 #: what each tier holds, for the page
 TIER_ROLES = {
@@ -96,7 +97,7 @@ TIER_ROLES = {
     ),
     "geoml": (
         "layers and flows",
-        "kernels and extremes",
+        "kernels, Gaussian distributions and extremes",
         "ensemble filters and manifold learning",
         "probabilistic models and variational assimilation (may build on filterax)",
     ),
