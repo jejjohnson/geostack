@@ -31,10 +31,10 @@ MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monosp
 # with the public names of pyrox_ssm, pyrox_ssm.flows and pyrox_ssm.ensemble on
 # each. geostack has no skill_tree_pyrox_ssm.md yet, so every name is placed by
 # the role-ladder skill's §2 test. A chip that starts with a dot is a public
-# method; a "+N more" chip stands for the rest of a group, all of which the
-# README's module table lists. Each row is (badge, role, grammar, caption,
-# groups, palette key, borrowed), and each group is (label, chips): the label
-# starts a new line and the chips wrap after it.
+# method. Every public name is drawn, except in the gaussx side box, whose
+# "+N more" chip stands for the rest of the re-exported SDE kernels. Each row is
+# (badge, role, grammar, caption, groups, palette key, borrowed), and each group
+# is (label, chips): the label starts a new line and the chips wrap after it.
 ROWS = [
     (
         "4",
@@ -53,7 +53,11 @@ ROWS = [
                     "lgssm_factor",
                     "nonlinear_ssm_factor",
                     "markov_laplace_factor",
-                    "+5 more",
+                    "sparse_markov_factor",
+                    "sparse_markov_elbo",
+                    "markov_gp_sites_factor",
+                    "normalizing_kalman_factor",
+                    "ensemble_factor",
                 ],
             ),
             ("recursions", [".filter()", ".smooth()", ".log_marginal()"]),
@@ -81,7 +85,8 @@ ROWS = [
                     "MarkovGPPrior",
                     "LinearGaussianSSMPrior",
                     "SparseMarkovGPPrior",
-                    "+2 more",
+                    "SharedPlusSiteMarkovGP",
+                    "NormalizingKalmanPrior",
                 ],
             ),
             (
@@ -90,7 +95,8 @@ ROWS = [
                     "ConditionedMarkovGP",
                     "ConditionedLinearGaussianSSM",
                     "NonGaussConditionedMarkovGP",
-                    "+2 more",
+                    "SparseConditionedMarkovGP",
+                    "ConditionedSharedPlusSiteMarkovGP",
                 ],
             ),
         ],
