@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyrox-gp — one prior, four ways to condition it</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1600px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .joint .katex { font-size: 1.18em; }
+  #diagram .term .eq .katex { font-size: 1.05em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 270px 390px 380px 260px;
+    column-gap: 70px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .eq code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .term .eq .eg { margin-top: 4px; font-size: 11.5px; }
+  .term .eq .eg code { font-size: 11.5px; color: var(--muted); }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .joint { color: var(--ink-accent); margin: 2px 0 0 2px; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pyrox-gp — one prior, four ways to condition it</div>
+  <div class="subtitle">A kernel declares its hyperparameters as NumPyro sites with their priors, and a GP prior adds the latent function, so a model writes one joint density. The likelihood, the size of the data and what you need out pick the route to a posterior.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you write</span></div>
+      <div class="node">
+        <div class="name">data <span class="m">\mathbf{X}, \ \mathbf{y}</span></div>
+        <div class="desc">inputs and observations: values, counts or labels</div>
+      </div>
+      <div class="node">
+        <div class="name">a kernel with priors <span class="m">k_{\boldsymbol{\theta}}</span></div>
+        <div class="desc"><code>RBF</code>, <code>Matern</code>, … with <code>set_prior</code> on its variance and lengthscale</div>
+      </div>
+      <div class="node">
+        <div class="name">a likelihood <span class="m">p(y_n \mid f_n)</span></div>
+        <div class="desc">Gaussian noise, or Poisson, Bernoulli, Student-t, a warp, any NumPyro distribution</div>
+      </div>
+      <div class="node">
+        <div class="name">a NumPyro model</div>
+        <div class="desc">with <code>gp_factor</code> or <code>gp_sample</code> inside it, fitted by SVI or NUTS</div>
+      </div>
+    </div>
+
+    <!-- column 2: the one joint -->
+    <div class="lane compute" id="lane-joint">
+      <div class="lane-head"><span class="verb">one joint</span><span class="pkg">priors on the kernel</span></div>
+      <div class="joint"><span class="m">{p(\mathbf{y}, \mathbf{f}, \boldsymbol{\theta} \mid \mathbf{X}) = \prod_{n} p(y_n \mid f_n) \, \mathcal{N}(\mathbf{f} \mid \boldsymbol{\mu}, \mathbf{K}_{\boldsymbol{\theta}}) \, p(\boldsymbol{\theta})}</span></div>
+      <div class="term">
+        <div class="lbl">the sites the kernel records, under its <code>pyrox_name</code></div>
+        <div class="eq"><code>&lt;pyrox_name&gt;.&lt;param&gt;</code><div class="eg"><code>RBF.variance</code> · <code>RBF.lengthscale</code></div></div>
+      </div>
+      <div class="term">
+        <div class="lbl">with Gaussian noise, <span class="m">\mathbf{f}</span> integrates out</div>
+        <div class="eq"><span class="m">{\log p(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\theta}) = \log \mathcal{N}(\mathbf{y} \mid \boldsymbol{\mu}, \mathbf{K}_{\boldsymbol{\theta}} + \sigma^2 \mathbf{I})}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">or a few inducing values stand in for <span class="m">\mathbf{f}</span>, with <span class="m">M \ll N</span></div>
+        <div class="eq"><span class="m">{\mathbf{u} = f(\mathbf{Z}), \quad p(\mathbf{u}) = \mathcal{N}(\mathbf{0}, \mathbf{K}_{ZZ})}</span></div>
+      </div>
+    </div>
+
+    <!-- column 3: what pyrox-gp does -->
+    <div class="lane cut" id="lane-gp">
+      <div class="lane-head"><span class="verb">pyrox-gp</span><span class="pkg">the route to a posterior</span></div>
+      <div class="node">
+        <div class="name">Exact</div>
+        <div class="desc"><span class="mod">pyrox_gp</span> — <code>GPPrior</code> · <code>gp_factor</code> · <code>.condition()</code> · <code>ConditionedGP</code> · <code>preconditioned_cg_solver</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Sparse variational</div>
+        <div class="desc"><span class="mod">pyrox_gp</span> — <code>SparseGPPrior</code> · <code>WhitenedGuide</code> · <code>NaturalGuide</code> · <code>svgp_elbo</code> · <code>ConjugateVI</code> · …</div>
+      </div>
+      <div class="node">
+        <div class="name">Site-based, for other likelihoods</div>
+        <div class="desc"><span class="mod">pyrox_gp</span> — <code>.condition_nongauss()</code> · <code>LaplaceInference</code> · <code>ExpectationPropagation</code> · …</div>
+      </div>
+      <div class="node">
+        <div class="name">Pathwise</div>
+        <div class="desc"><span class="mod">pyrox_gp</span> — <code>PathwiseSampler</code> · <code>DecoupledPathwiseSampler</code> · <code>.sample_paths()</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Many outputs</div>
+        <div class="desc"><span class="mod">pyrox_gp</span> — <code>LMCKernel</code> · <code>OILMMGPPrior</code> · <code>LatentFactorGPPrior</code> · …</div>
+      </div>
+      <div class="note">Markov GPs on a time grid live in pyrox-ssm; their old names raise an <code>ImportError</code> that says so</div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">the posterior</span></div>
+      <div class="node">
+        <div class="name">the hyperparameters</div>
+        <div class="desc"><span class="m">\hat{\boldsymbol{\theta}}</span> by SVI, or draws <span class="m">\boldsymbol{\theta}^{(s)}</span> by NUTS, from the same model</div>
+      </div>
+      <div class="node solid">
+        <div class="name"><span class="m">p(\mathbf{f}_* \mid \mathbf{y})</span> at new inputs</div>
+        <div class="desc">a mean and a variance, exact or approximate, which widen away from the data</div>
+      </div>
+      <div class="node">
+        <div class="name">whole functions <span class="m">f^{(s)}(\cdot)</span></div>
+        <div class="desc">posterior draws callable at any input after one solve</div>
+      </div>
+      <div class="node">
+        <div class="name">the gradient <span class="m">\nabla f(\mathbf{x}_*)</span></div>
+        <div class="desc">its mean and covariance, from <code>.predict_gradient()</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">pyrox · pyrox-gauss</div>
+      <div class="what">The kernels are <code>Parameterized</code>; the multivariate normals over operators.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">kernellib</div>
+      <div class="what">The kernel functions, spectral densities and landmark selection.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">functax · flowjax</div>
+      <div class="what">The bases of the inducing features; the warps of the warped likelihood.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">gaussx · lineax</div>
+      <div class="what">Solves, log-determinants, KLs, EP updates and solver strategies.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-joint", { label: "<span class='m'>k_{\\boldsymbol{\\theta}}, \\ p(\\boldsymbol{\\theta})</span>", color: "#7b6bb5" });
+    wire("lane-joint", "lane-gp", { label: "sites", color: "#cf9418" });
+    wire("lane-gp", "lane-out", { label: "conditions", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
