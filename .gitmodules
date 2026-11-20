@@ -46,10 +46,6 @@
 	path = references/geoml/gauss_flows
 	url = https://github.com/jejjohnson/gauss_flows.git
 	branch = main
-[submodule "references/geoml/xtremax"]
-	path = references/geoml/xtremax
-	url = https://github.com/jejjohnson/xtremax.git
-	branch = main
 [submodule "references/geoml/geonnax"]
 	path = references/geoml/geonnax
 	url = https://github.com/jejjohnson/geonnax.git
