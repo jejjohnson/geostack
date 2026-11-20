@@ -29,7 +29,7 @@ app = App(help="Write the pyrox dependency figure as light and dark SVGs.")
 SANS = "ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
 MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
 
-LAYER = ("GeoML", "the pyrox workspace; pyrox-gauss does not import the core")
+LAYER = ("GeoML", "the pyrox workspace; its other packages do not import the core")
 # (package, what it is, the pyrox modules it uses)
 PACKAGES = [
     ("pyrox-gp", "Gaussian processes", "_core · likelihoods"),
