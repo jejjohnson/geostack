@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyrox-lgm — one latent field, many components</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1600px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .joint .katex { font-size: 0.98em; }
+  #diagram .term .eq .katex { font-size: 0.98em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 260px 440px 370px 260px;
+    column-gap: 70px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .eq code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .term .eq .eg { margin-top: 4px; font-size: 11.5px; }
+  .term .eq .eg code { font-size: 11.5px; color: var(--muted); }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .joint { color: var(--ink-accent); margin: 2px 0 0 2px; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pyrox-lgm — one latent field, many components</div>
+  <div class="subtitle">A trend, a spatial effect and a random intercept are each sparse in their precision, so their sum is a latent Gaussian model with one sparse precision. inla() integrates the field out by nested Laplace approximations, and the same components also sample inside NumPyro.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you write</span></div>
+      <div class="node">
+        <div class="name">a data table <span class="m">\mathbf{y}, \ \mathbf{o}</span></div>
+        <div class="desc">observations, an offset, the index of each component's node, and covariates</div>
+      </div>
+      <div class="node">
+        <div class="name">components with PC priors</div>
+        <div class="desc"><code>RW2(52)</code>, <code>BYM2(graph)</code>, <code>SPDE(mesh)</code>, … or <code>f("week", "rw2", n=52)</code></div>
+      </div>
+      <div class="node">
+        <div class="name">a likelihood <span class="m">p(y_i \mid \eta_i, \boldsymbol{\theta})</span></div>
+        <div class="desc"><code>Gaussian</code>, <code>Poisson</code>, <code>Bernoulli</code>, <code>Binomial</code> or <code>NegativeBinomial</code></div>
+      </div>
+      <div class="node">
+        <div class="name">a graph or a mesh</div>
+        <div class="desc">a kernellib graph for the areal components; a triangle mesh or a grid for the SPDE</div>
+      </div>
+    </div>
+
+    <!-- column 2: the one joint -->
+    <div class="lane compute" id="lane-joint">
+      <div class="lane-head"><span class="verb">one joint</span><span class="pkg">a sparse Gaussian field</span></div>
+      <div class="joint"><span class="m">{p(\mathbf{y}, \mathbf{x}, \boldsymbol{\theta}) = \prod_{i} p(y_i \mid \eta_i, \boldsymbol{\theta}) \, \mathcal{N}(\mathbf{x} \mid \mathbf{0}, \mathbf{Q}(\boldsymbol{\theta})^{-1}) \, p(\boldsymbol{\theta})}</span></div>
+      <div class="term">
+        <div class="lbl">each observation reads a few latent nodes</div>
+        <div class="eq"><span class="m">{\boldsymbol{\eta} = \mathbf{o} + \mathbf{X} \boldsymbol{\beta} + \textstyle\sum_c \mathbf{A}_c \mathbf{x}_c}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">one sparse block per component</div>
+        <div class="eq"><span class="m">{\mathbf{Q}(\boldsymbol{\theta}) = \mathrm{blockdiag}(\lambda \mathbf{I}, \mathbf{Q}_1(\boldsymbol{\theta}), \ldots, \mathbf{Q}_C(\boldsymbol{\theta}))}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">the field integrated out at each <span class="m">\boldsymbol{\theta}</span>, by Laplace</div>
+        <div class="eq"><span class="m">{\tilde{\pi}(\boldsymbol{\theta} \mid \mathbf{y}) \propto p(\mathbf{y}, \hat{\mathbf{x}}, \boldsymbol{\theta}) / \tilde{\pi}_G(\hat{\mathbf{x}} \mid \mathbf{y}, \boldsymbol{\theta})}</span></div>
+      </div>
+    </div>
+
+    <!-- column 3: what pyrox-lgm does -->
+    <div class="lane cut" id="lane-lgm">
+      <div class="lane-head"><span class="verb">pyrox-lgm</span><span class="pkg">the model and inla()</span></div>
+      <div class="node">
+        <div class="name">Temporal and unstructured</div>
+        <div class="desc"><span class="mod">pyrox_lgm</span> — <code>IID</code> · <code>RW1</code> · <code>RW2</code> · <code>AR1</code> · <code>MarkovGP</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Areal, spatial and combined</div>
+        <div class="desc"><span class="mod">pyrox_lgm</span> — <code>Besag</code> · <code>BYM2</code> · <code>CAR</code> · <code>Leroux</code> · <code>SPDE</code> · <code>Generic</code> · <code>Kronecker</code> · <code>Replicate</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Penalised-complexity priors</div>
+        <div class="desc"><span class="mod">pyrox_lgm</span> — <code>PCPrecision</code> · <code>PCAR1Rho</code> · <code>PCBYM2Phi</code> · <code>PCMatern</code></div>
+      </div>
+      <div class="node">
+        <div class="name">inla()</div>
+        <div class="desc"><span class="mod">pyrox_lgm</span> — <code>LGM</code> · <code>inla</code>, with the <code>vb</code>, <code>gaussian</code> or <code>sla</code> strategy · <code>diagnostics</code></div>
+      </div>
+      <div class="node">
+        <div class="name">The NumPyro face</div>
+        <div class="desc"><span class="mod">pyrox_lgm</span> — each component's <code>.sample()</code>: its hyperparameters and field as sample sites, for NUTS</div>
+      </div>
+      <div class="note">inla() matches R-INLA's latent means to within about 1e-3 on five reference cases</div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">the posterior</span></div>
+      <div class="node">
+        <div class="name">the hyperparameters</div>
+        <div class="desc"><span class="m">\tilde{\pi}(\theta_j \mid \mathbf{y})</span> for each precision, correlation or range, as a <code>Summary</code></div>
+      </div>
+      <div class="node solid">
+        <div class="name">the latent marginals <span class="m">\tilde{\pi}(x_j \mid \mathbf{y})</span></div>
+        <div class="desc">a mean, a standard deviation and quantiles for every node and fixed effect, with no sampling</div>
+      </div>
+      <div class="node">
+        <div class="name">checks without refits</div>
+        <div class="desc">DIC, WAIC, CPO, PIT and the log score, from one run</div>
+      </div>
+      <div class="node">
+        <div class="name">or NUTS draws</div>
+        <div class="desc">of the same components, to check <code>inla()</code> or to sample a parameter outside the model</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">pyrox · pyrox-gauss</div>
+      <div class="what">The observation-model base; <code>GMRFDistribution</code> for the NumPyro face.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">gaussx · lineax</div>
+      <div class="what">GMRF builders, sparse factorisations, the VB correction and the design over <span class="m">\boldsymbol{\theta}</span>.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">kernellib · functax</div>
+      <div class="what">Graphs and structure matrices; the SPDE's mesh geometry.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">argminax · optimistix</div>
+      <div class="what">The inner Laplace fit; the search for <span class="m">\hat{\boldsymbol{\theta}}</span>. Lanczos spectra come from matfree.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-joint", { label: "<span class='m'>\\mathbf{Q}_c(\\boldsymbol{\\theta}), \\ p(\\boldsymbol{\\theta})</span>", color: "#7b6bb5" });
+    wire("lane-joint", "lane-lgm", { label: "one sparse Q", color: "#cf9418" });
+    wire("lane-lgm", "lane-out", { label: "nested Laplace", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
