@@ -17,7 +17,7 @@ This page is the GeoML layer. It may import GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at geonnax 0.0.11, kernellib 0.0.22, filterax 0.0.8, vardax 0.3.6, gauss-flows 0.1.9, xtremax 0.0.4, pyrox 0.3.0, pyrox-gp 0.3.0, pyrox-lgm 0.1.3, pyrox-nn 0.2.0, pyrox-ssm 0.2.0, pyrox-gauss 0.0.0, manipy-jax 0.1.0.
+Listed at geonnax 0.0.11, kernellib 0.0.22, filterax 0.0.8, vardax 0.3.6, gauss-flows 0.1.9, pyrox 0.3.1, pyrox-gp 0.3.1, pyrox-lgm 0.1.4, pyrox-nn 0.2.1, pyrox-ssm 0.2.1, pyrox-gauss 0.1.0, pyrox-xtreme 0.0.4, manipy-jax 0.1.0.
 
 ## Upstream: `geonnax`
 
@@ -579,117 +579,6 @@ Gaussianization (RBIG) and normalizing flows.
 | `total_correlation_reduction` | function | Total correlation of ``x`` via a Gaussianization flow (RBIG-way). |
 | `unpack_time_control` | function | Unpack a packed ``(time, control)`` condition. |
 
-## Upstream: `xtremax`
-
-Extreme-value and point-process models in NumPyro.
-
-### `xtremax`
-
-| Name | Kind | What it does |
-|---|---|---|
-| `FrechetType2GEVD` | class | Fréchet Type II Generalized Extreme Value Distribution for NumPyro. |
-| `GeneralizedExtremeValueDistribution` | class | Generalized Extreme Value Distribution (GEVD) for NumPyro. |
-| `GeneralizedParetoDistribution` | class | Generalized Pareto Distribution (GPD) for NumPyro. |
-| `GumbelType1GEVD` | class | Gumbel Type I Generalized Extreme Value Distribution for NumPyro. |
-| `WeibullType3GEVD` | class | Weibull Type III Generalized Extreme Value Distribution for NumPyro. |
-| `assemble_nonstationary_gev_fields` | function | Build non-stationary spatio-temporal GEV parameter fields. |
-| `design_matrix` | function | Prepend an intercept column to a static-covariate matrix. |
-| `expected_exceedances` | function | Expected number of block exceedances of a threshold. |
-| `frechet_cdf` | function | Fréchet CDF. |
-| `frechet_icdf` | function | Fréchet quantile function. |
-| `frechet_log_prob` | function | Fréchet log PDF (assumes ``shape > 0``). |
-| `frechet_mean` | function | Fréchet mean (``+inf`` when ``shape >= 1``). |
-| `frechet_return_level` | function | T-period return level. |
-| `gev_cdf` | function | CDF of the Generalized Extreme Value distribution. |
-| `gev_icdf` | function | Quantile function (inverse CDF) of the GEV distribution. |
-| `gev_log_prob` | function | Log PDF of the Generalized Extreme Value distribution. |
-| `gev_log_survival` | function | Log survival function :math:`\log S(x) = \log(1 - F(x))` of the GEV. |
-| `gev_mean` | function | Mean of the GEV distribution (``+inf`` when :math:`\xi \ge 1`). |
-| `gev_return_level` | function | T-period return level: :math:`z_T = F^{-1}(1 - 1/T)`. |
-| `gev_survival` | function | Survival function :math:`S(x) = 1 - F(x)` of the GEV distribution. |
-| `gpd_cdf` | function | CDF of the Generalized Pareto Distribution. |
-| `gpd_icdf` | function | Quantile function (inverse CDF) of the GPD. |
-| `gpd_log_prob` | function | Log PDF of the Generalized Pareto Distribution (loc = 0). |
-| `gpd_log_survival` | function | Log survival :math:`\log S(x) = -\tfrac{1}{\xi}\log(1 + \xi x/\sigma)`. |
-| `gpd_mean` | function | GPD mean: :math:`\sigma / (1 - \xi)` for :math:`\xi < 1`, else ``+inf``. |
-| `gpd_return_level` | function | T-period return level: :math:`Q(1 - 1/T)`. |
-| `gpd_survival` | function | Survival function :math:`S(x) = (1 + \xi x/\sigma)^{-1/\xi}` of the GPD. |
-| `gumbel_cdf` | function | Gumbel CDF: :math:`F(x) = \exp(-\exp(-z))`. |
-| `gumbel_icdf` | function | Gumbel quantile: :math:`Q(p) = \mu - \sigma\log(-\log p)`. |
-| `gumbel_log_prob` | function | Gumbel log PDF: :math:`-\log\sigma - z - e^{-z}`, :math:`z=(x-\mu)/\sigma`. |
-| `gumbel_mean` | function | Gumbel mean: :math:`\mu + \sigma\gamma_E`. |
-| `gumbel_return_level` | function | T-period return level: :math:`Q(1 - 1/T)`. |
-| `nonstationary_return_level` | function | Return level for stationary or non-stationary GEV parameter fields. |
-| `nonstationary_return_period` | function | Return period associated with a threshold under (non-)stationary GEV. |
-| `pairwise_distances` | function | Euclidean distance matrix between sites. |
-| `two_range_correlation` | function | Two-range exponential correlation matrix with unit diagonal. |
-| `weibull_cdf` | function | Reverse-Weibull CDF. |
-| `weibull_icdf` | function | Reverse-Weibull quantile function. |
-| `weibull_log_prob` | function | Reverse-Weibull log PDF (assumes ``shape < 0``). |
-| `weibull_mean` | function | Reverse-Weibull mean (always finite for ``shape < 0``). |
-| `weibull_return_level` | function | T-period return level. |
-
-### `xtremax.extraction`
-
-| Name | Kind | What it does |
-|---|---|---|
-| `XarrayQuantileRegressor` | class | Quantile regressor that operates on :class:`xr.DataArray` inputs. |
-| `constant_threshold` | function | Return a constant threshold value. |
-| `decluster_runs` | function | Decluster exceedances using the runs method. |
-| `decluster_separation` | function | Decluster by enforcing minimum separation between peaks. |
-| `declustered_block_maxima` | function | Extract declustered block maxima by identifying independent extreme events. |
-| `estimate_extremal_index` | function | Estimate the extremal index (theta), a measure of clustering. |
-| `quantile_regression_threshold` | function | Estimate a time-varying threshold via linear quantile regression. |
-| `quantile_threshold` | function | Calculate threshold based on a percentile of the data. |
-| `r_largest_block_maxima` | function | Extract r-largest order statistics from each block. |
-| `rolling_threshold` | function | Calculate time-varying threshold using a rolling window. |
-| `seasonal_threshold` | function | Calculate seasonal threshold (backward compatibility wrapper). |
-| `sliding_block_maxima` | function | Extract block maxima using a sliding window approach. |
-| `spatial_block_maxima` | function | Extract spatial block maximum values from an xarray DataArray. |
-| `temporal_block_maxima` | function | Extract temporal block maximum values from an xarray DataArray. |
-| `temporal_threshold` | function | Calculate time-varying threshold based on temporal grouping. |
-
-### `xtremax.point_processes`
-
-| Name | Kind | What it does |
-|---|---|---|
-| `EventHistory` | class | Fixed-size buffer of events + optional marks. |
-| `GoodnessOfFit` | class | Bundle of diagnostics returned by ``goodness_of_fit``. |
-| `MarkedSampleResult` | class | Marked temporal sample: ``(times, mask, marks)``. |
-| `MarkedSpatialSampleResult` | class | Marked spatial sample: ``(locations, mask, marks)``. |
-| `MarkedSpatiotemporalSampleResult` | class | Marked spatiotemporal sample: ``(locations, times, mask, marks)``. |
-| `RectangularDomain` | class | Axis-aligned rectangle ``[lo, hi] ⊂ ℝᵈ``. |
-| `SampleResult` | class | Unmarked temporal sample: ``(times, mask, n_events)``. |
-| `SpatialSampleResult` | class | Unmarked spatial sample: ``(locations, mask, n_events)``. |
-| `SpatiotemporalSampleResult` | class | Unmarked spatiotemporal sample: ``(locations, times, mask, n_events)``. |
-| `TemporalDomain` | class | Half-open temporal interval ``[t0, t1) ⊂ ℝ``. |
-| `constant_mark_distribution` | function | Mark distribution that ignores time and history and returns ``d``. |
-| `constant_retention` | function | Retention that always returns the same probability ``p``. |
-| `cumulative_log_intensity` | function | Shorthand for :math:`\Lambda(t) = \int_0^t \lambda(s) ds`. |
-| `integrate_log_intensity` | function | Compute :math:`\int_{t_0}^{t_1} \exp(\log\lambda(s))\, ds`. |
-| `integrate_log_intensity_spatial` | function | Compute :math:`\int_D \exp(\log\lambda(s))\, ds`. |
-| `integrate_log_intensity_spatiotemporal` | function | Compute :math:`\int_{t_0}^{t_1} \int_D \exp(\log\lambda(s, t))\, ds\, dt`. |
-| `time_varying_marks` | function | Wrap a time → Distribution callable into the full signature. |
-| `time_varying_retention` | function | Wrap a pure function of time into the full retention signature. |
-
-### `xtremax.simulations`
-
-| Name | Kind | What it does |
-|---|---|---|
-| `SpatialFeatureExtractor` | class | Static methods to derive physical features from a Digital Elevation Model (DEM). |
-| `augment_spatial_features` | function | Pipeline to run all extractors and merge into Dataset. |
-| `compute_advanced_climate_signal` | function | Generates Tmax and Precip Mean fields using advanced physics proxies. |
-| `compute_climate_signal` | function | Combines Spatial and Temporal fields to create a mean climate signal (Mu). |
-| `create_iberian_domain` | function | Creates the master spatial dataset with Lat, Lon, Elevation, and Land Mask. |
-| `generate_fractal_terrain` | function | Generates coherent terrain using Fractal Brownian Motion (fBm). |
-| `generate_gmst_trajectory` | function | Generates a synthetic Global Mean Surface Temperature (GMST) anomaly curve. |
-| `generate_iberia_mask` | function | Procedurally generates a boolean mask approximating the Iberian Peninsula and Balearic Islands using geometrical primitives. |
-| `generate_physical_gmst` | function | Simulates Global Mean Surface Temperature (GMST) using a 0-D Energy Balance Model. |
-| `generate_spatial_field` | function | Generates static spatial data: Lat, Lon, Elevation, Distance to Coast. |
-| `simulate_precip_extremes` | function | Simulates Precipitation Extremes: 1. |
-| `simulate_temp_extremes` | function | Simulates Block Maxima Temperature via the GEV distribution. |
-| `simulate_wind_extremes` | function | Simulates Extreme Wind Speeds (Gusts) using Weibull distribution. |
-
 ## Upstream: `pyrox`
 
 Equinox modules with NumPyro sample and param sites.
@@ -963,6 +852,117 @@ Gaussian NumPyro distributions on gaussx operators.
 | `MaskedLGSSM` | class | `LGSSM` whose ``log_prob`` marginalises unobserved channels exactly. |
 | `MultivariateNormal` | class | Multivariate normal 𝒩(μ, Σ) whose covariance Σ is a lineax operator. |
 | `MultivariateNormalPrecision` | class | Multivariate normal 𝒩(μ, Λ⁻¹) whose precision Λ = Σ⁻¹ is a lineax operator. |
+
+## Upstream: `pyrox-xtreme`
+
+Extreme-value and point-process models in NumPyro.
+
+### `pyrox_xtreme`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `FrechetType2GEVD` | class | Fréchet Type II Generalized Extreme Value Distribution for NumPyro. |
+| `GeneralizedExtremeValueDistribution` | class | Generalized Extreme Value Distribution (GEVD) for NumPyro. |
+| `GeneralizedParetoDistribution` | class | Generalized Pareto Distribution (GPD) for NumPyro. |
+| `GumbelType1GEVD` | class | Gumbel Type I Generalized Extreme Value Distribution for NumPyro. |
+| `WeibullType3GEVD` | class | Weibull Type III Generalized Extreme Value Distribution for NumPyro. |
+| `assemble_nonstationary_gev_fields` | function | Build non-stationary spatio-temporal GEV parameter fields. |
+| `design_matrix` | function | Prepend an intercept column to a static-covariate matrix. |
+| `expected_exceedances` | function | Expected number of block exceedances of a threshold. |
+| `frechet_cdf` | function | Fréchet CDF. |
+| `frechet_icdf` | function | Fréchet quantile function. |
+| `frechet_log_prob` | function | Fréchet log PDF (assumes ``shape > 0``). |
+| `frechet_mean` | function | Fréchet mean (``+inf`` when ``shape >= 1``). |
+| `frechet_return_level` | function | T-period return level. |
+| `gev_cdf` | function | CDF of the Generalized Extreme Value distribution. |
+| `gev_icdf` | function | Quantile function (inverse CDF) of the GEV distribution. |
+| `gev_log_prob` | function | Log PDF of the Generalized Extreme Value distribution. |
+| `gev_log_survival` | function | Log survival function :math:`\log S(x) = \log(1 - F(x))` of the GEV. |
+| `gev_mean` | function | Mean of the GEV distribution (``+inf`` when :math:`\xi \ge 1`). |
+| `gev_return_level` | function | T-period return level: :math:`z_T = F^{-1}(1 - 1/T)`. |
+| `gev_survival` | function | Survival function :math:`S(x) = 1 - F(x)` of the GEV distribution. |
+| `gpd_cdf` | function | CDF of the Generalized Pareto Distribution. |
+| `gpd_icdf` | function | Quantile function (inverse CDF) of the GPD. |
+| `gpd_log_prob` | function | Log PDF of the Generalized Pareto Distribution (loc = 0). |
+| `gpd_log_survival` | function | Log survival :math:`\log S(x) = -\tfrac{1}{\xi}\log(1 + \xi x/\sigma)`. |
+| `gpd_mean` | function | GPD mean: :math:`\sigma / (1 - \xi)` for :math:`\xi < 1`, else ``+inf``. |
+| `gpd_return_level` | function | T-period return level: :math:`Q(1 - 1/T)`. |
+| `gpd_survival` | function | Survival function :math:`S(x) = (1 + \xi x/\sigma)^{-1/\xi}` of the GPD. |
+| `gumbel_cdf` | function | Gumbel CDF: :math:`F(x) = \exp(-\exp(-z))`. |
+| `gumbel_icdf` | function | Gumbel quantile: :math:`Q(p) = \mu - \sigma\log(-\log p)`. |
+| `gumbel_log_prob` | function | Gumbel log PDF: :math:`-\log\sigma - z - e^{-z}`, :math:`z=(x-\mu)/\sigma`. |
+| `gumbel_mean` | function | Gumbel mean: :math:`\mu + \sigma\gamma_E`. |
+| `gumbel_return_level` | function | T-period return level: :math:`Q(1 - 1/T)`. |
+| `nonstationary_return_level` | function | Return level for stationary or non-stationary GEV parameter fields. |
+| `nonstationary_return_period` | function | Return period associated with a threshold under (non-)stationary GEV. |
+| `pairwise_distances` | function | Euclidean distance matrix between sites. |
+| `two_range_correlation` | function | Two-range exponential correlation matrix with unit diagonal. |
+| `weibull_cdf` | function | Reverse-Weibull CDF. |
+| `weibull_icdf` | function | Reverse-Weibull quantile function. |
+| `weibull_log_prob` | function | Reverse-Weibull log PDF (assumes ``shape < 0``). |
+| `weibull_mean` | function | Reverse-Weibull mean (always finite for ``shape < 0``). |
+| `weibull_return_level` | function | T-period return level. |
+
+### `pyrox_xtreme.extraction`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `XarrayQuantileRegressor` | class | Quantile regressor that operates on :class:`xr.DataArray` inputs. |
+| `constant_threshold` | function | Return a constant threshold value. |
+| `decluster_runs` | function | Decluster exceedances using the runs method. |
+| `decluster_separation` | function | Decluster by enforcing minimum separation between peaks. |
+| `declustered_block_maxima` | function | Extract declustered block maxima by identifying independent extreme events. |
+| `estimate_extremal_index` | function | Estimate the extremal index (theta), a measure of clustering. |
+| `quantile_regression_threshold` | function | Estimate a time-varying threshold via linear quantile regression. |
+| `quantile_threshold` | function | Calculate threshold based on a percentile of the data. |
+| `r_largest_block_maxima` | function | Extract r-largest order statistics from each block. |
+| `rolling_threshold` | function | Calculate time-varying threshold using a rolling window. |
+| `seasonal_threshold` | function | Calculate seasonal threshold (backward compatibility wrapper). |
+| `sliding_block_maxima` | function | Extract block maxima using a sliding window approach. |
+| `spatial_block_maxima` | function | Extract spatial block maximum values from an xarray DataArray. |
+| `temporal_block_maxima` | function | Extract temporal block maximum values from an xarray DataArray. |
+| `temporal_threshold` | function | Calculate time-varying threshold based on temporal grouping. |
+
+### `pyrox_xtreme.point_processes`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `EventHistory` | class | Fixed-size buffer of events + optional marks. |
+| `GoodnessOfFit` | class | Bundle of diagnostics returned by ``goodness_of_fit``. |
+| `MarkedSampleResult` | class | Marked temporal sample: ``(times, mask, marks)``. |
+| `MarkedSpatialSampleResult` | class | Marked spatial sample: ``(locations, mask, marks)``. |
+| `MarkedSpatiotemporalSampleResult` | class | Marked spatiotemporal sample: ``(locations, times, mask, marks)``. |
+| `RectangularDomain` | class | Axis-aligned rectangle ``[lo, hi] ⊂ ℝᵈ``. |
+| `SampleResult` | class | Unmarked temporal sample: ``(times, mask, n_events)``. |
+| `SpatialSampleResult` | class | Unmarked spatial sample: ``(locations, mask, n_events)``. |
+| `SpatiotemporalSampleResult` | class | Unmarked spatiotemporal sample: ``(locations, times, mask, n_events)``. |
+| `TemporalDomain` | class | Half-open temporal interval ``[t0, t1) ⊂ ℝ``. |
+| `constant_mark_distribution` | function | Mark distribution that ignores time and history and returns ``d``. |
+| `constant_retention` | function | Retention that always returns the same probability ``p``. |
+| `cumulative_log_intensity` | function | Shorthand for :math:`\Lambda(t) = \int_0^t \lambda(s) ds`. |
+| `integrate_log_intensity` | function | Compute :math:`\int_{t_0}^{t_1} \exp(\log\lambda(s))\, ds`. |
+| `integrate_log_intensity_spatial` | function | Compute :math:`\int_D \exp(\log\lambda(s))\, ds`. |
+| `integrate_log_intensity_spatiotemporal` | function | Compute :math:`\int_{t_0}^{t_1} \int_D \exp(\log\lambda(s, t))\, ds\, dt`. |
+| `time_varying_marks` | function | Wrap a time → Distribution callable into the full signature. |
+| `time_varying_retention` | function | Wrap a pure function of time into the full retention signature. |
+
+### `pyrox_xtreme.simulations`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `SpatialFeatureExtractor` | class | Static methods to derive physical features from a Digital Elevation Model (DEM). |
+| `augment_spatial_features` | function | Pipeline to run all extractors and merge into Dataset. |
+| `compute_advanced_climate_signal` | function | Generates Tmax and Precip Mean fields using advanced physics proxies. |
+| `compute_climate_signal` | function | Combines Spatial and Temporal fields to create a mean climate signal (Mu). |
+| `create_iberian_domain` | function | Creates the master spatial dataset with Lat, Lon, Elevation, and Land Mask. |
+| `generate_fractal_terrain` | function | Generates coherent terrain using Fractal Brownian Motion (fBm). |
+| `generate_gmst_trajectory` | function | Generates a synthetic Global Mean Surface Temperature (GMST) anomaly curve. |
+| `generate_iberia_mask` | function | Procedurally generates a boolean mask approximating the Iberian Peninsula and Balearic Islands using geometrical primitives. |
+| `generate_physical_gmst` | function | Simulates Global Mean Surface Temperature (GMST) using a 0-D Energy Balance Model. |
+| `generate_spatial_field` | function | Generates static spatial data: Lat, Lon, Elevation, Distance to Coast. |
+| `simulate_precip_extremes` | function | Simulates Precipitation Extremes: 1. |
+| `simulate_temp_extremes` | function | Simulates Block Maxima Temperature via the GEV distribution. |
+| `simulate_wind_extremes` | function | Simulates Extreme Wind Speeds (Gusts) using Weibull distribution. |
 
 ## Upstream: `manipy-jax`
 

@@ -92,8 +92,7 @@ walks a running example through each row, from detector counts to heatwave retur
 | | [filterax](https://github.com/jejjohnson/filterax) | Differentiable ensemble Kalman filters and smoothers |
 | | [vardax](https://github.com/jejjohnson/vardax) | Variational data assimilation (BLUE/OI, 3D-Var, 4D-Var, …) |
 | | [gauss_flows](https://github.com/jejjohnson/gauss_flows) | Gaussianization (RBIG) and normalizing flows |
-| | [xtremax](https://github.com/jejjohnson/xtremax) | Extreme-value and point-process models |
-| | [pyrox](https://github.com/jejjohnson/pyrox) | Equinox + NumPyro: GPs, Bayesian NNs, latent Gaussian models (`pyrox`, `-gp`, `-lgm`, `-nn`) |
+| | [pyrox](https://github.com/jejjohnson/pyrox) | Equinox + NumPyro: GPs, Bayesian NNs, latent Gaussian models, state-space models, Gaussian distributions, extremes (`pyrox`, `-gp`, `-lgm`, `-nn`, `-ssm`, `-gauss`, `-xtreme`) |
 | **GeoModels** · physics | [plumax](https://github.com/jejjohnson/plumax) | Plume transport: Gaussian plume and puff, Lagrangian, LES |
 | | [radtrax](https://github.com/jejjohnson/radtrax) | Differentiable radiative transfer for methane remote sensing |
 
@@ -124,7 +123,7 @@ run on both:
   <img alt="The repositories in four layer bands, with edges pointing down from each repository to those it depends on or imports" src="docs/images/overview/dependency_graph.svg" width="100%">
 </p>
 
-20 repositories, 42 packages and 57 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+19 repositories, 42 packages and 56 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 

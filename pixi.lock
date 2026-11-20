@@ -2141,8 +2141,8 @@ environments:
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
       - pypi: ./references/geoml/pyrox/packages/pyrox-ssm
+      - pypi: ./references/geoml/pyrox/packages/pyrox-xtreme
       - pypi: ./references/geoml/vardax
-      - pypi: ./references/geoml/xtremax
       - pypi: ./references/geostack/georeader
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-array
@@ -2581,8 +2581,8 @@ environments:
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
       - pypi: ./references/geoml/pyrox/packages/pyrox-ssm
+      - pypi: ./references/geoml/pyrox/packages/pyrox-xtreme
       - pypi: ./references/geoml/vardax
-      - pypi: ./references/geoml/xtremax
       - pypi: ./references/geostack/georeader
       - pypi: ./references/geostack/geotoolz/packages/geotoolz
       - pypi: ./references/geostack/geotoolz/packages/geotoolz-array
@@ -3084,8 +3084,8 @@ environments:
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
       - pypi: ./references/geoml/pyrox/packages/pyrox-ssm
+      - pypi: ./references/geoml/pyrox/packages/pyrox-xtreme
       - pypi: ./references/geoml/vardax
-      - pypi: ./references/geoml/xtremax
       - pypi: ./references/geomodels/plumax
       - pypi: ./references/geomodels/radtrax
       - pypi: ./references/geomodels/sesmax/packages/sesmax
@@ -3530,8 +3530,8 @@ environments:
       - pypi: ./references/geoml/pyrox/packages/pyrox-lgm
       - pypi: ./references/geoml/pyrox/packages/pyrox-nn
       - pypi: ./references/geoml/pyrox/packages/pyrox-ssm
+      - pypi: ./references/geoml/pyrox/packages/pyrox-xtreme
       - pypi: ./references/geoml/vardax
-      - pypi: ./references/geoml/xtremax
       - pypi: ./references/geomodels/plumax
       - pypi: ./references/geomodels/radtrax
       - pypi: ./references/geomodels/sesmax/packages/sesmax
@@ -19365,6 +19365,21 @@ packages:
   - gauss-flows @ git+https://github.com/jejjohnson/gauss_flows.git@bdb23f076ebaaf1ba042aa52ea593487cef3204e ; extra == 'flows'
   - filterax @ git+https://github.com/jejjohnson/filterax@v0.0.8 ; extra == 'ensemble'
   requires_python: '>=3.12'
+- pypi: ./references/geoml/pyrox/packages/pyrox-xtreme
+  name: pyrox-xtreme
+  requires_dist:
+  - jax>=0.4,<0.13
+  - jaxlib>=0.4,<0.13
+  - numpyro>=0.21
+  - xarray>=2024.0
+  - numpy>=1.26
+  - scipy>=1.11
+  - pandas>=2
+  - jaxtyping>=0.2
+  - einops>=0.7
+  - equinox>=0.11
+  - scikit-learn>=1.3 ; extra == 'threshold'
+  requires_python: '>=3.12'
 - pypi: ./references/geoml/vardax
   name: vardax
   requires_dist:
@@ -19408,21 +19423,6 @@ packages:
   - pipekit-train @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-train ; extra == 'train'
   - vardax[data,viz,exp,jlab,examples,persist,train] ; extra == 'all'
   requires_python: '>=3.12,<3.14'
-- pypi: ./references/geoml/xtremax
-  name: xtremax
-  requires_dist:
-  - jax>=0.4,<0.13
-  - jaxlib>=0.4,<0.13
-  - numpyro>=0.21
-  - xarray>=2024.0
-  - numpy>=1.26
-  - scipy>=1.11
-  - pandas>=2
-  - jaxtyping>=0.2
-  - einops>=0.7
-  - equinox>=0.11
-  - scikit-learn>=1.3 ; extra == 'threshold'
-  requires_python: '>=3.12'
 - pypi: ./references/geomodels/plumax
   name: plumax
   requires_dist:

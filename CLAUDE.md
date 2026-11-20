@@ -14,7 +14,8 @@ specific to Claude Code.
   library that owns it, in the lowest layer that may hold it. The layers are
   GeoStack (pipekit, geotoolz with xrtoolz, georeader), GeoNumerics (gaussx,
   functax, argminax, integrix, finitevolX, spectraldiffx), GeoML (geonnax,
-  kernellib, filterax, vardax, gauss_flows, xtremax, pyrox,
+  kernellib, filterax, vardax, gauss_flows, pyrox (a workspace: pyrox,
+  -gauss, -xtreme, -gp, -lgm, -nn, -ssm),
   manipy) and GeoModels (plumax, radtrax, sesmax), under
   `references/<layer>/`; edges between layers point down ("The layers" in
   `AGENTS.md`).

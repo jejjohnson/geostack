@@ -73,7 +73,6 @@ flowchart TB
     filterax["filterax"]
     manipy["manipy"]
     kernellib["kernellib"]
-    xtremax["xtremax"]
     gauss_flows["gauss_flows"]
     geonnax["geonnax"]
   end
@@ -116,7 +115,6 @@ flowchart TB
   plumax --> pipekit
   plumax --> radtrax
   plumax -.-> vardax
-  plumax -.-> xtremax
   pyrox --> argminax
   pyrox -.-> filterax
   pyrox -.-> gauss_flows
@@ -139,7 +137,7 @@ flowchart TB
 ```
 :::
 
-20 repositories, 42 packages and 57 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+19 repositories, 42 packages and 56 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -218,7 +216,7 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoModels | 0 | radtrax, sesmax | radiative transfer and Earth-system dynamics |
 | GeoML | 3 | pyrox, vardax | probabilistic models and variational assimilation (may build on filterax) |
 | GeoML | 2 | filterax, manipy | ensemble filters and manifold learning |
-| GeoML | 1 | kernellib, xtremax | kernels and extremes |
+| GeoML | 1 | kernellib, pyrox (pyrox-gauss, pyrox-xtreme) | kernels, Gaussian distributions and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
 | GeoNumerics | 1 | finitevolX | finite volume |
 | GeoNumerics | 0 | spectraldiffx | spectral methods |
@@ -314,7 +312,6 @@ cannot import, so most of its tests could no longer be collected.
 | plumax | pipekit | base | `plumax → pipekit-ops` |
 | plumax | radtrax | base | `plumax → radtrax` |
 | plumax | vardax | extra | `plumax → vardax` |
-| plumax | xtremax | extra | `plumax → xtremax` |
 | radtrax | argminax | base | `radtrax → argminax` |
 | radtrax | gaussx | base | `radtrax → gaussx` |
 | radtrax | geonnax | base | `radtrax → geonnax` |
