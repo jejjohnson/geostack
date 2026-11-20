@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyrox-xtreme — three routes into the tail</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1600px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .joint .katex { font-size: 1.18em; }
+  #diagram .term .eq .katex { font-size: 1.05em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 270px 390px 380px 260px;
+    column-gap: 70px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .eq code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .joint { color: var(--ink-accent); margin: 2px 0 0 2px; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pyrox-xtreme — three routes into the tail</div>
+  <div class="subtitle">Reduce a record to its extremes by block maxima, by peaks over a threshold or as events in time and space. Each route ends in a NumPyro likelihood, so the return levels come with a posterior.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you bring</span></div>
+      <div class="node">
+        <div class="name">a record <span class="m">x(t)</span></div>
+        <div class="desc">an xarray DataArray: a daily series, station records or a field on a grid</div>
+      </div>
+      <div class="node">
+        <div class="name">or events <span class="m">t_1 &lt; \ldots &lt; t_n</span></div>
+        <div class="desc">times (and places and marks) in a padded buffer with a mask</div>
+      </div>
+      <div class="node">
+        <div class="name">covariates</div>
+        <div class="desc">a warming index or a trend, for parameters that change, such as <span class="m">\mu(t)</span></div>
+      </div>
+      <div class="node">
+        <div class="name">a NumPyro model</div>
+        <div class="desc">priors on <span class="m">\mu, \sigma, \xi</span> or on <span class="m">\lambda</span>, and <code>numpyro.sample(…, obs=…)</code></div>
+      </div>
+    </div>
+
+    <!-- column 2: the one idea -->
+    <div class="lane compute" id="lane-joint">
+      <div class="lane-head"><span class="verb">one tail</span><span class="pkg">its shape is <span class="m">\xi</span></span></div>
+      <div class="joint"><span class="m">{F(z) = \exp\{ -[1 + \xi (z - \mu) / \sigma]^{-1/\xi} \}}</span></div>
+      <div class="term">
+        <div class="lbl">the maxima of blocks follow the GEV above, smooth through <span class="m">\xi = 0</span></div>
+        <div class="eq"><span class="m">{y_k \sim \mathrm{GEV}(\mu, \sigma, \xi)}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">excesses over a high threshold follow the GPD, with the same <span class="m">\xi</span></div>
+        <div class="eq"><span class="m">{\Pr(X - u > y \mid X > u) = (1 + \xi y / \sigma_u)^{-1/\xi}}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">events in time or space follow an intensity</div>
+        <div class="eq"><span class="m">{\log L = \sum_i \log \lambda(t_i) - \int \lambda(t) \mathrm{d}t}</span></div>
+      </div>
+    </div>
+
+    <!-- column 3: what pyrox-xtreme does -->
+    <div class="lane cut" id="lane-xtreme">
+      <div class="lane-head"><span class="verb">pyrox-xtreme</span><span class="pkg">a module per step</span></div>
+      <div class="node">
+        <div class="name">Extract the extremes</div>
+        <div class="desc"><span class="mod">extraction</span> — <code>temporal_block_maxima</code> · <code>quantile_threshold</code> · <code>decluster_runs</code> · <code>estimate_extremal_index</code> · …</div>
+      </div>
+      <div class="node">
+        <div class="name">EVT likelihoods</div>
+        <div class="desc"><span class="mod">distributions</span> — <code>GeneralizedExtremeValueDistribution</code> · <code>GeneralizedParetoDistribution</code> · <code>GumbelType1GEVD</code> · …</div>
+      </div>
+      <div class="node">
+        <div class="name">The maths, pure JAX</div>
+        <div class="desc"><span class="mod">primitives</span> — <code>gev_log_prob</code> · <code>gev_return_level</code> · <code>nonstationary_return_level</code> · …</div>
+      </div>
+      <div class="node">
+        <div class="name">Point processes</div>
+        <div class="desc"><span class="mod">point_processes</span> — <code>HomogeneousPoissonProcess</code> · <code>RenewalProcess</code> · <code>ExponentialHawkes</code> · <code>SpatioTemporalHawkes</code> · …</div>
+      </div>
+      <div class="node">
+        <div class="name">Synthetic climates</div>
+        <div class="desc"><span class="mod">simulations</span> — <code>simulate_temp_extremes</code> · <code>generate_gmst_trajectory</code> · <code>create_iberian_domain</code> · …</div>
+      </div>
+      <div class="note">the classes route every quantity to the primitives; each point process is pure functions, an equinox operator and a NumPyro wrapper</div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">with uncertainty</span></div>
+      <div class="node">
+        <div class="name">extremes on their grid</div>
+        <div class="desc">block maxima, declustered peaks and the extremal index, as DataArrays with their coordinates</div>
+      </div>
+      <div class="node">
+        <div class="name">a posterior over <span class="m">\mu, \sigma, \xi</span></div>
+        <div class="desc">draws by NUTS, or <span class="m">q</span> by SVI, from the same model</div>
+      </div>
+      <div class="node solid">
+        <div class="name">return levels <span class="m">z_T</span></div>
+        <div class="desc">one per posterior draw, so each comes with an interval; over changing parameters too</div>
+      </div>
+      <div class="node">
+        <div class="name">an intensity and its fit</div>
+        <div class="desc"><span class="m">\lambda(t)</span>, its compensator, and time-rescaled residuals with a KS distance</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">numpyro</div>
+      <div class="what">The <code>Distribution</code> base and its constraints; NUTS, SVI, <code>Predictive</code>, plates and masks.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">jax</div>
+      <div class="what">All the maths, under <code>jit</code>, <code>grad</code> and <code>vmap</code>, with explicit PRNG keys.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">equinox</div>
+      <div class="what">The point-process operators, domains and event histories, as pytrees.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">xarray · scipy</div>
+      <div class="what">Extraction in and out of DataArrays; the Gumbel characteristic function and the simulators' ODEs.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-joint", { label: "<span class='m'>y_k, \\ x - u, \\ t_i</span>", color: "#7b6bb5" });
+    wire("lane-joint", "lane-xtreme", { label: "<span class='m'>\\log p</span>", color: "#cf9418" });
+    wire("lane-xtreme", "lane-out", { label: "fits", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
