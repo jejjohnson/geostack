@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="356" viewBox="0 0 1180 356" role="img" aria-label="One Markov GP prior is scored as a NumPyro factor, gives its log marginal by one Kalman pass, conditions and predicts at any times, conditions on a non-Gaussian likelihood, and exposes its Kalman moments and its general state-space form.">
+<title>One prior, five uses</title>
+<defs><marker id="ssm-hub-dark-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6B7280"/></marker></defs>
+<rect x="20" y="108" width="400" height="140" rx="12" fill="#151838" stroke="#818CF8" stroke-width="2"/>
+<text x="38" y="142" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior: MarkovGPPrior</text>
+<text x="38" y="176" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" font-weight="400" fill="#E5E7EB" xml:space="preserve">sde = MaternSDE(variance, lengthscale, order=1)</text>
+<text x="38" y="198" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" font-weight="400" fill="#E5E7EB" xml:space="preserve">prior = MarkovGPPrior(sde, times, mean_fn=mu)</text>
+<text x="38" y="230" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" font-weight="600" fill="#A5B4FC" xml:space="preserve">one Kalman pass · gaps as masks · a pytree</text>
+<path d="M420 178.0 L465 178.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M465 46.0 L465 310.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M465 46.0 L517 46.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ssm-hub-dark-head)"/>
+<path d="M465 112.0 L517 112.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ssm-hub-dark-head)"/>
+<path d="M465 178.0 L517 178.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ssm-hub-dark-head)"/>
+<path d="M465 244.0 L517 244.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ssm-hub-dark-head)"/>
+<path d="M465 310.0 L517 310.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ssm-hub-dark-head)"/>
+<rect x="520" y="20.0" width="640" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="538" y="51.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">markov_gp_factor(&quot;y&quot;, prior, y, σ²)</text>
+<text x="1142" y="51.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">a NumPyro factor, for NUTS · SVI</text>
+<rect x="520" y="86.0" width="640" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="538" y="117.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior.log_marginal(y, σ², mask=mask)</text>
+<text x="1142" y="117.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">one Kalman pass, under jit · grad</text>
+<rect x="520" y="152.0" width="640" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="538" y="183.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior.condition(y, σ²).predict(t_*)</text>
+<text x="1142" y="183.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">smoothed marginals at any times</text>
+<rect x="520" y="218.0" width="640" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="538" y="249.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior.condition_nongauss(lik, y, strategy=…)</text>
+<text x="1142" y="249.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">Laplace · Gauss-Newton · PL · EP</text>
+<rect x="520" y="284.0" width="640" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="538" y="315.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior.filter · .smooth · .as_lgssm(σ²)</text>
+<text x="1142" y="315.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">Kalman moments, the general SSM</text>
+</svg>
