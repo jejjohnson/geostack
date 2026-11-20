@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyrox-ssm — one recursion, many models</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1600px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .joint .katex { font-size: 0.98em; }
+  #diagram .term .eq .katex { font-size: 0.98em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 260px 440px 370px 260px;
+    column-gap: 70px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .eq code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .term .eq .eg { margin-top: 4px; font-size: 11.5px; }
+  .term .eq .eg code { font-size: 11.5px; color: var(--muted); }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .joint { color: var(--ink-accent); margin: 2px 0 0 2px; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pyrox-ssm — one recursion, many models</div>
+  <div class="subtitle">A kernel for time is the covariance of a linear SDE, so the same prior is a Markov chain on a small state and a Kalman filter scores it in one pass. Every model in the package is that recursion over some state, written as a NumPyro model.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you write</span></div>
+      <div class="node">
+        <div class="name">a series with gaps <span class="m">t_k, \ y_k</span></div>
+        <div class="desc">sorted times, values or counts, and a <code>mask</code>; <code>NaN</code> on missing days is safe</div>
+      </div>
+      <div class="node">
+        <div class="name">an SDE kernel <span class="m">k_{\boldsymbol{\theta}}</span></div>
+        <div class="desc"><code>MaternSDE</code>, <code>PeriodicSDE</code>, <code>SumSDE</code>, … from gaussx, with <span class="m">\boldsymbol{\theta}</span> as <code>numpyro.sample</code> sites</div>
+      </div>
+      <div class="node">
+        <div class="name">a likelihood <span class="m">p(y_k \mid f_k)</span></div>
+        <div class="desc">Gaussian noise, or any NumPyro distribution through <code>DistLikelihood</code></div>
+      </div>
+      <div class="node">
+        <div class="name">or the matrices themselves</div>
+        <div class="desc"><span class="m">\mathbf{A}_k, \mathbf{H}_k, \mathbf{Q}_k, \mathbf{R}_k</span>, or nonlinear dynamics <span class="m">f</span> and observation <span class="m">h</span></div>
+      </div>
+    </div>
+
+    <!-- column 2: the one joint -->
+    <div class="lane compute" id="lane-joint">
+      <div class="lane-head"><span class="verb">one joint</span><span class="pkg">a Markov chain on the state</span></div>
+      <div class="joint"><span class="m">{p(\mathbf{y}, \mathbf{x} \mid \boldsymbol{\theta}) = p(\mathbf{x}_1) \prod_{k} \mathcal{N}(\mathbf{x}_k \mid \mathbf{A}_k \mathbf{x}_{k-1}, \mathbf{Q}_k) \, p(y_k \mid \mathbf{H} \mathbf{x}_k)}</span></div>
+      <div class="term">
+        <div class="lbl">an SDE kernel gives the step, on any grid</div>
+        <div class="eq"><span class="m">{\mathbf{A}_k = e^{\mathbf{F} \Delta t_k}, \quad \mathbf{Q}_k = \mathbf{P}_\infty - \mathbf{A}_k \mathbf{P}_\infty \mathbf{A}_k^\top}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">with Gaussian noise, the path integrates out in one pass</div>
+        <div class="eq"><span class="m">{\log p(\mathbf{y} \mid \boldsymbol{\theta}) = \sum_{k} \log \mathcal{N}(y_k \mid \mathbf{H} \mathbf{m}_k^-, \mathbf{H} \mathbf{P}_k^- \mathbf{H}^\top + \sigma^2)}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">a masked step runs the predict only</div>
+        <div class="eq"><span class="m">{o_k = 0 \ \Rightarrow \ \mathbf{m}_k = \mathbf{m}_k^-, \ \mathbf{P}_k = \mathbf{P}_k^-}</span></div>
+      </div>
+    </div>
+
+    <!-- column 3: what pyrox-ssm does -->
+    <div class="lane cut" id="lane-ssm">
+      <div class="lane-head"><span class="verb">pyrox-ssm</span><span class="pkg">the state and the likelihood</span></div>
+      <div class="node">
+        <div class="name">Markov GP</div>
+        <div class="desc"><span class="mod">pyrox_ssm</span> — <code>MarkovGPPrior</code> · <code>markov_gp_factor</code> · <code>.condition()</code> · <code>.predict()</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Linear-Gaussian SSM</div>
+        <div class="desc"><span class="mod">pyrox_ssm</span> — <code>LinearGaussianSSMPrior</code> · <code>lgssm_factor</code> · <code>.condition()</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Nonlinear SSM</div>
+        <div class="desc"><span class="mod">pyrox_ssm</span> — <code>nonlinear_ssm_factor</code>, by EKF, UKF, CKF or Gauss-Hermite</div>
+      </div>
+      <div class="node">
+        <div class="name">Non-Gaussian likelihoods</div>
+        <div class="desc"><span class="mod">pyrox_ssm</span> — <code>.condition_nongauss()</code> · <code>LaplaceMarkovInference</code> · <code>ExpectationPropagationMarkov</code> · <code>markov_laplace_factor</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Sparse and many sites</div>
+        <div class="desc"><span class="mod">pyrox_ssm</span> — <code>SparseMarkovGPPrior</code> · <code>pad_sites</code> · <code>markov_gp_sites_factor</code> · <code>SharedPlusSiteMarkovGP</code></div>
+      </div>
+      <div class="note">behind extras: the normalizing Kalman filter in <code>pyrox_ssm.flows</code>, and the ensemble Kalman likelihood of a filterax run in <code>pyrox_ssm.ensemble</code></div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">the posterior</span></div>
+      <div class="node">
+        <div class="name">the hyperparameters</div>
+        <div class="desc"><span class="m">\boldsymbol{\theta}^{(s)}</span> by NUTS or <span class="m">\hat{\boldsymbol{\theta}}</span> by SVI; the path is integrated out, so they see <span class="m">\boldsymbol{\theta}</span> only</div>
+      </div>
+      <div class="node solid">
+        <div class="name"><span class="m">p(f(t_*) \mid \mathbf{y})</span> through the gaps</div>
+        <div class="desc">a mean and a variance at any times: inside the record, across an outage, and past its end</div>
+      </div>
+      <div class="node">
+        <div class="name">the smoothed states</div>
+        <div class="desc"><span class="m">\mathbf{x}_k \mid \mathbf{y}</span> from <code>.filter()</code> and <code>.smooth()</code>, one pass each way</div>
+      </div>
+      <div class="node">
+        <div class="name">a Gaussian <span class="m">q(\mathbf{f})</span> for counts and labels</div>
+        <div class="desc">one Kalman pass per iteration of the strategy</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">pyrox · pyrox-gauss</div>
+      <div class="what">The likelihood and guide protocols and <code>DistLikelihood</code>; the multivariate normals.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">gaussx · lineax</div>
+      <div class="what">The SDE kernels, the Kalman and nonlinear filters, the RTS smoother.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">optimistix</div>
+      <div class="what">The fixed-point loop of the non-Gaussian strategies, inside NUTS.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">flowjax · filterax</div>
+      <div class="what">The observation warps and the ensemble filter, behind the extras.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-joint", { label: "<span class='m'>\\mathbf{A}_k, \\mathbf{Q}_k, \\ p(\\boldsymbol{\\theta})</span>", color: "#7b6bb5" });
+    wire("lane-joint", "lane-ssm", { label: "one recursion", color: "#cf9418" });
+    wire("lane-ssm", "lane-out", { label: "filters, smooths", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
