@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>gridax: one C-grid, six operations</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1800px; }
+  #diagram .katex { font-size: 1.12em; }
+
+  /* the one object */
+  .fx-obj { width: 1000px; margin: 0 auto; }
+  .fx-expansion { text-align: center; margin: 2px 0 12px; color: var(--ink-accent); }
+  #diagram .fx-expansion .katex { font-size: 1.5em; }
+  .fx-terms { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fx-term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .fx-term .eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 12px; min-height: 42px; text-align: center;
+  }
+  #diagram .fx-term .eq .katex { font-size: 1.15em; }
+
+  /* one card per operation */
+  .fx-ops {
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 18px; margin-top: 104px;
+  }
+  .fx-op .lane-head { margin-bottom: 8px; }
+  .fx-op .lane-head .verb { font-size: 13px; }
+  .fx-mod { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink-accent); }
+  .fx-eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 10px; min-height: 70px; line-height: 1.9;
+  }
+  #diagram .fx-eq .katex { font-size: 1.12em; white-space: nowrap; }
+  .fx-eq .k { font-size: 12px; white-space: nowrap; color: var(--muted); margin-right: 4px; }
+  .nowrap { white-space: nowrap; }
+  .fx-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 10px 2px 0; min-height: 90px; }
+  .fx-names { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .fx-names code {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink);
+    background: var(--card); border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 6px;
+  }
+
+  /* the floor: the library's own lower modules, then what it builds on */
+  .fx-floor { margin-top: 30px; display: grid; gap: 12px; }
+  .fx-slab {
+    display: grid; grid-template-columns: 170px 300px 1fr; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .fx-slab .lib { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--cut-ink); }
+  .fx-slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .fx-slab .list { font-size: 12.5px; color: var(--ink); line-height: 1.6; }
+  .fx-slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .fx-deps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .fx-dep {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px; background: #fff; border: 1.5px dashed #cbd5e1;
+  }
+  .fx-dep .lib { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .fx-dep .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .fx-dep code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+  /* connector labels hold maths, so they use the sans face, not the chip's mono */
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">gridax: one C-grid, six operations</div>
+  <div class="subtitle">A staggered grid with one ghost ring and a mask on every point. Each operation reads or writes a piece of the finite-volume equation, and every function runs on NumPy, or on JAX arrays under jit, vmap and grad.</div>
+
+  <div class="lane compute fx-obj" id="obj">
+    <div class="lane-head"><span class="verb">one C-grid</span><span class="pkg">a tracer <span class="m">\bar{q}</span> at T, the velocities <span class="m">u, v</span> at U and V, arrays of shape <span class="m">(N_y, N_x)</span> with the ghost ring</span></div>
+    <div class="fx-expansion"><span class="m">\displaystyle \frac{\mathrm{d}\bar{q}_{j,i}}{\mathrm{d}t} = -\frac{F^x_{j,i+1/2} - F^x_{j,i-1/2}}{\Delta x} - \frac{F^y_{j+1/2,i} - F^y_{j-1/2,i}}{\Delta y}</span></div>
+    <div class="fx-terms">
+      <div class="fx-term">
+        <div class="lbl">same-index staggering: index <span class="m">[j, i]</span> of each array sits at</div>
+        <div class="eq"><span class="m">T\,(j, i), \quad U\,(j, i + 1/2),</span><br><span class="m">V\,(j + 1/2, i), \quad X\,(j + 1/2, i + 1/2)</span></div>
+      </div>
+      <div class="fx-term">
+        <div class="lbl">the mask, derived once from the wet T points (<code>Mask2D.from_mask</code>)</div>
+        <div class="eq"><span class="m">h, \; u, \; v, \; \text{xy\_corner}</span>,<br>the coast classes and the stencil capability</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fx-ops">
+    <div class="lane cut fx-op" id="op-diff">
+      <div class="lane-head"><span class="verb">difference</span><span class="fx-mod">gridax</span></div>
+      <div class="fx-eq"><span class="k">T to U</span> <span class="m">\frac{h_{j,i+1} - h_{j,i}}{\Delta x}</span><br><span class="k">average</span> <span class="m">\tfrac{1}{2} (h_{j,i} + h_{j,i+1})</span></div>
+      <div class="fx-desc">Between the T, U, V and X points, scaled by the metric and zeroed on the dry points of the output; the <code>Spherical*</code> forms take <span class="nowrap"><span class="m">R \cos\varphi \, \Delta\lambda</span>.</span></div>
+      <div class="fx-names"><code>Difference2D</code><code>Interpolation2D</code><code>Divergence2D</code><code>SphericalDifference2D</code><code>SphericalLaplacian2D</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-adv">
+      <div class="lane-head"><span class="verb">advect</span><span class="fx-mod">gridax.advection</span></div>
+      <div class="fx-eq"><span class="k">flux</span> <span class="m">F^x_{j,i+1/2} = u_{j,i+1/2} \, \hat{q}_{j,i+1/2}</span><br><span class="k">face value</span> <span class="m">\hat{q}</span> <span class="k">by upwind, TVD or WENO</span></div>
+      <div class="fx-desc">Face values from the cells upwind of each face. Next to land a face falls back to the widest stencil that fits, and dry faces carry no flux.</div>
+      <div class="fx-names"><code>Advection2D</code><code>Reconstruction2D</code><code>reconstruct</code><code>WENO</code><code>TVD</code><code>upwind_flux</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-diffuse">
+      <div class="lane-head"><span class="verb">diffuse</span><span class="fx-mod">gridax</span></div>
+      <div class="fx-eq"><span class="k">harmonic</span> <span class="m">\nabla \cdot (\kappa \nabla h)</span><br><span class="k">biharmonic</span> <span class="m">-\kappa \nabla^4 h</span></div>
+      <div class="fx-desc">In flux form, from face fluxes, so the masked faces close exactly as they do for advection.</div>
+      <div class="fx-names"><code>Diffusion2D</code><code>BiharmonicDiffusion2D</code><code>diffusion_2d</code><code>SphericalDiffusion2D</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-rot">
+      <div class="lane-head"><span class="verb">rotate</span><span class="fx-mod">gridax</span></div>
+      <div class="fx-eq"><span class="k">vorticity at X</span> <span class="m">\zeta = \partial_x v - \partial_y u</span><br><span class="k">Jacobian</span> <span class="m">J(\psi, q)</span>, Arakawa</div>
+      <div class="fx-desc">Vorticity and potential-vorticity fluxes, the Coriolis terms in Sadourny's energy-conserving form, momentum advection, and a Jacobian that conserves energy and enstrophy.</div>
+      <div class="fx-names"><code>Vorticity2D</code><code>Coriolis2D</code><code>MomentumAdvection2D</code><code>ArakawaJacobian2D</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-bc">
+      <div class="lane-head"><span class="verb">fill the ghost ring</span><span class="fx-mod">gridax</span></div>
+      <div class="fx-eq"><span class="k">Dirichlet</span> <span class="m">q_0 = 2 g - q_1</span><br><span class="k">so that</span> <span class="m">\tfrac{1}{2} (q_0 + q_1) = g</span></div>
+      <div class="fx-desc">One atom per face, applied south, north, west, east, so that each condition holds on the face, half a cell out from the interior.</div>
+      <div class="fx-names"><code>BoundaryConditionSet</code><code>FieldBCSet</code><code>Dirichlet1D</code><code>Neumann1D</code><code>Periodic1D</code><code>Sponge1D</code></div>
+    </div>
+
+    <div class="lane cut fx-op" id="op-diag">
+      <div class="lane-head"><span class="verb">diagnose</span><span class="fx-mod">gridax</span></div>
+      <div class="fx-eq"><span class="k">total</span> <span class="m">\textstyle\sum_{j,i} A_{j,i} \, \bar{q}_{j,i}</span><br><span class="k">energy</span> <span class="m">\tfrac{1}{2} (\overline{u^2} + \overline{v^2})</span> at T</div>
+      <div class="fx-desc">Energy, enstrophy, potential vorticity, strain and Okubo–Weiss, and area and volume sums and means that skip the dry cells.</div>
+      <div class="fx-names"><code>area_sum</code><code>masked_mean</code><code>kinetic_energy</code><code>okubo_weiss</code><code>Energetics2D</code><code>Strain2D</code></div>
+    </div>
+  </div>
+
+  <div class="fx-floor">
+    <div class="fx-slab">
+      <div class="lib">gridax.stencils</div>
+      <div class="what">Layers 0 and 1: exact coefficients, and raw stencils with no metric and no mask</div>
+      <div class="list"><code>difference_coeffs</code>, <code>weno_stencils</code>, <code>optimal_weights</code>, <code>smoothness_matrix</code> from the Taylor conditions · the 32 named stencils (<code>diff_x_fwd_2d</code>, <code>avg_xfwd_yfwd_2d</code>, …) · <code>staggered_difference</code>, <code>staggered_average</code> · <code>interior</code></div>
+    </div>
+    <div class="fx-slab">
+      <div class="lib">gridax.analysis</div>
+      <div class="what">the collocated calculus, for fields with every variable at the cell centres</div>
+      <div class="list"><code>difference</code>, <code>adaptive_difference</code> · <code>gradient_2d</code>, <code>curl_2d</code>, <code>laplacian_2d</code> and their 1-D and 3-D forms · <code>remap_axis</code>, <code>remap_axis_columns</code></div>
+    </div>
+    <div class="fx-deps">
+      <div class="fx-dep">
+        <div class="lib">numpy</div>
+        <div class="what">The base: grids and masks are NumPy data, and every function follows the array API.</div>
+      </div>
+      <div class="fx-dep">
+        <div class="lib">scipy</div>
+        <div class="what">The dilations of the mask construction, on concrete values only.</div>
+      </div>
+      <div class="fx-dep">
+        <div class="lib">geophysix</div>
+        <div class="what">Physical constants as records, used only as parameter defaults.</div>
+      </div>
+      <div class="fx-dep">
+        <div class="lib">jax, when installed</div>
+        <div class="what">Grids, masks and operators become pytrees, so <code>jit</code>, <code>vmap</code> and <code>grad</code> go through.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  const AMBER = "#cf9418", BLUE = "#3f6fb5";
+  const down = (id, shift, label) =>
+    wire("obj", id, { from: "bottom", to: "top", fromShift: shift, label, color: AMBER, at: 0.55, bend: 60 });
+
+  typeset(document);
+  document.fonts.ready.then(() => {
+    down("op-diff", -400, "<span class='m'>h</span> at any point");
+    down("op-adv", -240, "<span class='m'>\\bar{q}, u, v</span>");
+    down("op-diffuse", -80, "<span class='m'>\\bar{q}</span> at T");
+    down("op-rot", 80, "<span class='m'>u, v</span> at U, V");
+    wire("op-bc", "obj", { from: "top", to: "bottom", toShift: 240, label: "writes the ghost ring", color: BLUE, at: 0.45, bend: 60 });
+    down("op-diag", 400, "any field, the mask");
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
