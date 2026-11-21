@@ -62,7 +62,7 @@ BASE = ["NumPy · SciPy", "jaxtyping", "geophysix", "JAX, when installed"]
 
 THEMES = {
     "light": {
-        "accent": "#0E7490",
+        "accent": "#1E3A5F",
         "card": "#FFFFFF",
         "ink": "#1F2937",
         "muted": "#6B7280",
@@ -72,7 +72,7 @@ THEMES = {
         "base": ("#F3F4F6", "#D1D5DB"),
     },
     "dark": {
-        "accent": "#2DD4BF",
+        "accent": "#38BDF8",
         "card": "#111827",
         "ink": "#E5E7EB",
         "muted": "#9CA3AF",
