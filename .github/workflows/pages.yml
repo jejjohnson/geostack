@@ -32,7 +32,7 @@ jobs:
           # Project Pages are served under /<repo>/, so assets need that prefix.
           BASE_URL: /${{ github.event.repository.name }}
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _build/html
 
