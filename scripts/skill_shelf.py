@@ -115,6 +115,32 @@ SHELVES: dict[str, Shelf] = {
             Unit("Transform", "setup", "numerics", ("functax.transform",)),
         ),
     ),
+    "integrix": Shelf(
+        page="docs/design/skill_tree_integrix.md",
+        packages=("integrix",),
+        # integrals that do not step in time, and marches with their adjoints
+        units=(
+            Unit(
+                "Integrals",
+                "⓪ ① ②",
+                "numerics, ML",
+                (
+                    "integrix",
+                    "integrix.exceptions",
+                    "integrix.rule",
+                    "integrix.scan",
+                    "integrix.adapt",
+                    "integrix.expect",
+                ),
+            ),
+            Unit(
+                "Marches",
+                "① ② ④",
+                "numerics, geoscience",
+                ("integrix.march", "integrix.adjoint"),
+            ),
+        ),
+    ),
     "kernellib": Shelf(
         page="docs/design/skill_tree_kernellib.md",
         packages=("kernellib",),
