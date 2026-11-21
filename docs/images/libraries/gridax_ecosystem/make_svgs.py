@@ -7,8 +7,8 @@ and what gridax builds on underneath. geostack's dependency graph
 so the cards and the names each package uses are read from its imports on
 ``main``: sesmax-core imports ``gridax``, and plumax only the deprecated
 ``finitevolx`` shim, drawn dashed until it switches (gridax#416).
-``_icon.svg`` is a provisional tile; gridax has no logo yet. Re-run after
-editing the data below, from the repo root::
+``_icon.svg`` is the tile of gridax's logo (``docs/assets/logo-light.svg``).
+Re-run after editing the data below, from the repo root::
 
     uv run --no-project --with loguru --with cyclopts \\
         python docs/images/libraries/gridax_ecosystem/make_svgs.py
