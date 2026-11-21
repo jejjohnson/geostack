@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.6](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.5...geostack-v0.2.6) (2026-11-21)
+
+
+### Documentation
+
+* **design:** layer map as nine repos, optax_bayes into argminax ([#241](https://github.com/jejjohnson/geostack/issues/241)) ([d8d8182](https://github.com/jejjohnson/geostack/commit/d8d8182ca1126cc40095849059cb355b0c1c7637))
+* **design:** the geophysix page lists geophysix.wind and Wave 5 ([#293](https://github.com/jejjohnson/geostack/issues/293)) ([30a70ae](https://github.com/jejjohnson/geostack/commit/30a70ae0860724985ca59a612eeef340bcd0ec8c)), closes [#292](https://github.com/jejjohnson/geostack/issues/292)
+* **design:** the gridax, integrix and libraries pages state the four rules for solvers and time integration ([#294](https://github.com/jejjohnson/geostack/issues/294)) ([9cf7b71](https://github.com/jejjohnson/geostack/commit/9cf7b7183a917d1617bfc6fc0bdfeca84fcb0d48)), closes [#291](https://github.com/jejjohnson/geostack/issues/291)
+* **images:** add pyrox-nn's overview, role-ladder and dependency figures ([#279](https://github.com/jejjohnson/geostack/issues/279)) ([357d324](https://github.com/jejjohnson/geostack/commit/357d324f8d672b3635816a7156075f05953c8ffd))
+* **images:** add pyrox-xtreme's overview, role-ladder and dependency figures ([#280](https://github.com/jejjohnson/geostack/issues/280)) ([8b10587](https://github.com/jejjohnson/geostack/commit/8b105873525de4d26589f1c79845adcd2e5ba844))
+* **images:** add the pyrox core's overview, role-ladder and dependency figures ([#277](https://github.com/jejjohnson/geostack/issues/277)) ([1d8949d](https://github.com/jejjohnson/geostack/commit/1d8949d27e8cf04e5551a0ec9d0e56a517fb5b68))
+* **images:** gridax gets its overview, role ladder and dependency figures ([#296](https://github.com/jejjohnson/geostack/issues/296)) ([e7c68e3](https://github.com/jejjohnson/geostack/commit/e7c68e3fe46e27d260e1d9c0f957a0d36008631b))
+* **images:** the core pyrox icon in the pyrox dependency figure, with its arrow clear of the rim ([#289](https://github.com/jejjohnson/geostack/issues/289)) ([4e889b3](https://github.com/jejjohnson/geostack/commit/4e889b39b0e50a77e22c24ef790d96a866e1752e))
+* **images:** the pyrox-gauss overview, role ladder and dependency figures ([#288](https://github.com/jejjohnson/geostack/issues/288)) ([24a3131](https://github.com/jejjohnson/geostack/commit/24a31318123f70d8043d6b25974e5ecdd76f3d0b))
+* **images:** the pyrox-gp overview, role ladder and dependency figures ([#281](https://github.com/jejjohnson/geostack/issues/281)) ([93f21c1](https://github.com/jejjohnson/geostack/commit/93f21c19b7341d8233e27296d9701536525f8504))
+* **images:** the pyrox-gp prior hub figure ([#295](https://github.com/jejjohnson/geostack/issues/295)) ([d27d838](https://github.com/jejjohnson/geostack/commit/d27d838748eddd529df28cf8ec83f0c9c03f7189))
+* **images:** the pyrox-lgm overview, role ladder and dependency figures ([#284](https://github.com/jejjohnson/geostack/issues/284)) ([fe5a56b](https://github.com/jejjohnson/geostack/commit/fe5a56b01c52bd4f96ce284c62fe341dc949cd8b))
+* **images:** the pyrox-ssm overview, role ladder, dependency and prior hub figures ([#283](https://github.com/jejjohnson/geostack/issues/283)) ([0cc2d6a](https://github.com/jejjohnson/geostack/commit/0cc2d6aa959674657db54173b6accce45b4ec31a))
+* **skills:** add-dataset takes its reader from upstream and says what the first dataset creates ([#260](https://github.com/jejjohnson/geostack/issues/260)) ([543af19](https://github.com/jejjohnson/geostack/commit/543af199cc066729ae701836e0021cb0aa8e2ca3))
+* **skills:** add-experiment runs through DVC experiments and names no file the repo lacks ([#261](https://github.com/jejjohnson/geostack/issues/261)) ([e20a085](https://github.com/jejjohnson/geostack/commit/e20a085dcd49e8c10b8cd671ecaf17564aa49ebb))
+
 ## [0.2.5](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.4...geostack-v0.2.5) (2026-11-19)
 
 
