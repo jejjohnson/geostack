@@ -1,0 +1,20 @@
+{
+ "n": 100000,
+ "py_scan_ms": 3.262,
+ "hits": 23,
+ "sqlite_scan_ms": 6.708,
+ "sqlite_btree_ms": 0.16,
+ "june_rows": 2120,
+ "sqlite_rtree_ms": 3.02,
+ "site_rows": 1178,
+ "sqlite_get_ms": 0.004,
+ "sqlite_agg_ms": 29.995,
+ "parquet_mb": 5.18,
+ "sqlite_mb": 24.11,
+ "row_groups": 10,
+ "duckdb_parquet_ms": 3.251,
+ "duckdb_agg_ms": 4.14,
+ "row_groups_touched": 1,
+ "upsert_count": 100000,
+ "after_rollback": "s3://sentinel-cogs/scene/000002/B12.tif"
+}

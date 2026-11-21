@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>The Modeling Cycle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], tags: 'none',
+    macros: { vect: ['\\mathbf{#1}', 1], mat: ['\\mathbf{#1}', 1], gvect: ['\\boldsymbol{#1}', 1], gmat: ['\\boldsymbol{#1}', 1], op: ['\\mathrm{#1}', 1] } },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" defer></script>
+<style>
+/* Layout: one 46rem reading column, GeoStack hydrographic palette (from the esmax ocean pages).
+   New in this kit: --unit (units chip + units-check box) and --ex (running-example card). */
+:root {
+  --paper: #F1F5F6; --panel: #E4ECEF; --ink: #0E1E28; --muted: #4E616C; --rule: #C6D3D9;
+  --sea: #0A6B68; --sea-soft: #D3E7E5; --oracle: #985710; --oracle-soft: #F3E4CF;
+  --code-bg: #E9EFF1; --unit: #5B4A9A; --unit-soft: #E6E2F3; --ex: #2F5E8C; --ex-soft: #DCE7F2;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step: clamp(15.5px, 1.05vw + 12px, 17.5px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+    --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+    --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A141A; --panel: #12212A; --ink: #DAE5EA; --muted: #8DA1AB; --rule: #23353F;
+  --sea: #52B9B1; --sea-soft: #12302F; --oracle: #E2A65C; --oracle-soft: #33240F; --code-bg: #0F1C23;
+  --unit: #B3A6EC; --unit-soft: #221D3A; --ex: #86B4E2; --ex-soft: #132536; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step); line-height: 1.62;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 5rem; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 4vw + 1rem, 2.9rem); font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3.2rem; margin-bottom: 0.9rem; }
+h3 { font-size: 1.08rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.5rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--sea); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--sea); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sea); }
+.lede { font-size: 1.12rem; color: var(--muted); margin-top: 0.9rem; }
+.tag { font-family: var(--display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; margin: 0.8rem 0 !important; }
+mjx-container { color: var(--ink); }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+/* kit annotation: names each component so it can be referred to in review */
+.kit { margin-top: 3.4rem; padding-top: 0.6rem; border-top: 2px solid var(--ink); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.kit .id { font-family: var(--mono); font-size: 0.82rem; font-weight: 500; color: var(--unit); }
+.kit .what { font-family: var(--display); font-size: 0.86rem; color: var(--muted); }
+.kit + h2, .kit + .tldr, .kit + h3 { margin-top: 0.9rem; }
+.kitnote { font-family: var(--display); font-size: 0.82rem; color: var(--muted); border: 1px dashed var(--rule); border-radius: 6px; padding: 0.5rem 0.75rem; margin: 0.6rem 0 1rem; }
+.kitnote b { color: var(--unit); font-weight: 600; }
+
+/* C1 TL;DR */
+.tldr { border-top: 2px solid var(--ink); padding-top: 1rem; margin-top: 2rem; }
+.tldr ul { margin: 0.6rem 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+
+/* C2 pipeline chart */
+.chart { display: grid; }
+.box { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 0 0.9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 6px; padding: 0.85rem 1rem; color: inherit; text-decoration: none; }
+.box:hover { border-color: var(--sea); }
+.box .num { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--sea); line-height: 1.25; }
+.box .name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.box .sub { color: var(--muted); font-size: 0.95rem; }
+.box.focus { background: var(--oracle-soft); border-color: var(--oracle); }
+.box.focus .num { color: var(--oracle); }
+.box .sig { grid-column: 1 / -1; display: grid; grid-template-columns: 2.4rem 1.15rem max-content minmax(0, 1fr); column-gap: 0.55rem; row-gap: 0.2rem; align-items: center; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px dashed var(--rule); font-size: 0.86rem; }
+.box .sig .d { font-family: var(--display); font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.box .sig .n { white-space: nowrap; }
+.box .sig .s { display: flex; flex-wrap: wrap; gap: 0.2rem 0.4rem; align-items: center; min-width: 0; }
+.box .sig code { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.link { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0 0.9rem; padding: 0.15rem 1rem; }
+.link span:first-child { justify-self: center; width: 1px; background: var(--rule); min-height: 1.6rem; }
+.link span:last-child { font-family: var(--display); font-size: 0.76rem; color: var(--muted); align-self: center; }
+svg.g { width: 1.15rem; height: 1.15rem; color: var(--sea); flex: none; }
+
+/* units chip (new) */
+.u { display: inline-block; font-family: var(--mono); font-size: 0.74rem; line-height: 1.5; padding: 0 0.4rem; border-radius: 4px; background: var(--unit-soft); color: var(--unit); white-space: nowrap; }
+
+/* tables */
+.tbl { overflow-x: auto; margin: 1rem 0 1.4rem; border-top: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem 0.55rem 0; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+td.gl { width: 1.6rem; }
+td.gl svg.g { width: 1.3rem; height: 1.3rem; display: block; }
+td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+td code { font-size: 0.8rem; white-space: nowrap; }
+
+/* C4 running-example card (new) */
+.ex { border: 1px solid var(--ex); border-radius: 6px; overflow: hidden; margin: 1rem 0 1.4rem; }
+.ex-h { background: var(--ex-soft); padding: 0.6rem 1rem; display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; border-bottom: 1px solid var(--ex); }
+.ex-h .tag { color: var(--ex); }
+.ex-h strong { font-family: var(--display); font-weight: 600; }
+.ex-b { padding: 0.7rem 1rem 0.3rem; font-size: 0.95rem; }
+.ex-b .tbl { margin: 0.4rem 0 0.6rem; border-top: 0; }
+.ex.mini { border-left: 3px solid var(--ex); border-top: 0; border-right: 0; border-bottom: 0; border-radius: 0 6px 6px 0; background: var(--ex-soft); padding: 0.7rem 1rem; font-size: 0.96rem; }
+.ex.mini .tag { color: var(--ex); display: block; margin-bottom: 0.25rem; }
+.ex.mini p:last-child { margin-bottom: 0; }
+
+/* C6 concept box */
+.def { background: var(--panel); border-radius: 6px; padding: 0.9rem 1rem; margin: 1rem 0 1.4rem; font-size: 0.97rem; }
+.def .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.def h3 { margin: 0 0 0.6rem; }
+.def p:last-child { margin-bottom: 0; }
+.where { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 0.3rem 0.8rem; align-items: baseline; margin: 0.4rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px dashed var(--rule); font-size: 0.92rem; }
+.where .wl { grid-column: 1 / -1; font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+/* C7 operator card */
+.op { border: 1px solid var(--rule); border-radius: 6px; margin: 0.4rem 0 1.6rem; overflow: hidden; }
+.op-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; padding: 0.6rem 1rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.phase { font-family: var(--display); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--sea-soft); color: var(--sea); }
+.phase.train { background: var(--oracle-soft); color: var(--oracle); }
+.op-h .opname { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; }
+.op-h .when { font-size: 0.88rem; color: var(--muted); }
+.io-group { display: grid; gap: 0.45rem; padding: 0.7rem 1rem; }
+.io-l { font-family: var(--display); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.io { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) minmax(0, max-content); gap: 0.6rem; align-items: start; font-size: 0.93rem; }
+.io .nm { min-width: 0; }
+.io .nm small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.io .sh { display: grid; justify-items: end; gap: 0.15rem; padding-top: 0.15rem; }
+.io .sh code { font-size: 0.8rem; text-align: right; }
+.op-arrow { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; padding: 0.55rem 1rem; border-block: 1px dashed var(--rule); font-size: 0.92rem; background: var(--sea-soft); }
+.op-arrow .ar { font-family: var(--display); font-weight: 700; color: var(--sea); text-align: center; }
+.op-arrow > div { min-width: 0; overflow-x: auto; }
+.op-foot { padding: 0.55rem 1rem 0.7rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); }
+@media (max-width: 560px) {
+  .io { grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .io .sh { grid-column: 2; justify-items: start; padding-top: 0; }
+  .where { grid-template-columns: max-content minmax(0, 1fr); }
+  .where .u { grid-column: 2; justify-self: start; }
+}
+
+/* C8 units check (new) */
+.uc { border: 1px solid var(--unit); border-radius: 6px; margin: 1rem 0 1.4rem; overflow: hidden; }
+.uc-h { background: var(--unit-soft); padding: 0.55rem 1rem; border-bottom: 1px solid var(--unit); display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.uc-h .tag { color: var(--unit); }
+.uc-h strong { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.uc-rows { padding: 0.4rem 1rem 0.6rem; display: grid; }
+.uc-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.2rem 1rem; align-items: center; padding: 0.35rem 0; border-bottom: 1px dashed var(--rule); font-size: 0.93rem; }
+.uc-row:last-child { border-bottom: 0; }
+.uc-row > div { min-width: 0; overflow-x: auto; }
+.uc-row .r { color: var(--muted); }
+.uc-row.ok .r { color: var(--sea); font-weight: 600; font-family: var(--display); font-size: 0.86rem; }
+@media (max-width: 560px) { .uc-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* C9 code sketch */
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 1rem 0 1.4rem; }
+pre .c { color: var(--sea); }
+pre .mk { color: var(--oracle); }
+pre .un { color: var(--unit); }
+pre.diagram { background: var(--paper); }
+
+/* C10 two cases */
+.case { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.8rem; margin: 1rem 0 1.4rem; }
+.case > div { border: 1px solid var(--rule); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.94rem; min-width: 0; overflow-x: auto; }
+.case .lin { border-top: 3px solid var(--sea); }
+.case .non { border-top: 3px solid var(--oracle); }
+.case .tag { display: block; margin-bottom: 0.2rem; }
+
+/* C11 watch-out */
+.note { border-left: 3px solid var(--oracle); background: var(--oracle-soft); padding: 0.85rem 1rem; border-radius: 0 6px 6px 0; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.note .tag { color: var(--oracle); display: block; margin-bottom: 0.3rem; }
+.note p:last-child { margin-bottom: 0; }
+
+/* C12 series nav */
+.series { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--display); font-size: 0.82rem; color: var(--muted); margin-bottom: 1.4rem; }
+.series a { text-decoration: none; }
+footer { margin-top: 3rem; font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 1rem; }
+
+/* v2: role rows in signatures — in / u / θ / est / out */
+.box .sig .d.par, .io-l.par { color: var(--oracle); }
+.box .sig .d.exo, .io-l.exo { color: var(--ex); }
+.box .sig .d.est, .io-l.est { color: var(--muted); font-style: italic; }
+.box .sig .none, .io .none { color: var(--muted); font-style: italic; font-size: 0.86rem; }
+.box .sig .rule { grid-column: 1 / -1; border-top: 1px dotted var(--rule); margin: 0.15rem 0; }
+.io-group.par { background: var(--oracle-soft); }
+.io-group.exo { background: var(--ex-soft); }
+.io-group.est { border-top: 1px dotted var(--rule); }
+.io-group + .io-group { border-top: 1px solid var(--rule); }
+.where { grid-template-columns: max-content minmax(0, 1fr) max-content max-content; }
+.where .sh { font-size: 0.86rem; }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .sh, .where .u { grid-column: 2; justify-self: start; } }
+
+/* v3: numbered equation stack inside boxes and operator arrows */
+.eqs { display: grid; gap: 0.2rem; margin-top: 0.35rem; font-size: 0.95rem; min-width: 0; }
+.eqs > div { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr); align-items: baseline; min-width: 0; overflow-x: auto; overflow-y: hidden; }
+.eqs .ln { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.op-arrow .eqs { margin-top: 0; }
+.box .sig .d.cst, .io-l.cst { color: var(--muted); }
+.box .sig .s .none { font-size: 0.78rem; }
+
+/* v4: model box steps, assumptions, compact Where grid */
+.mstep { display: flex; align-items: baseline; gap: 0.5rem; margin: 1.3rem 0 0.4rem; padding-top: 0.6rem; border-top: 1px solid var(--rule); }
+.mstep:first-of-type { border-top: 0; padding-top: 0; margin-top: 0.6rem; }
+.mstep .mn { font-family: var(--display); font-weight: 700; color: var(--sea); font-size: 0.95rem; }
+.mstep .ml { font-family: var(--display); font-weight: 600; font-size: 0.95rem; }
+.mstep .mu { font-family: var(--mono); font-size: 0.72rem; color: var(--oracle); }
+.asm { display: grid; gap: 0.55rem; margin: 0.4rem 0 0.6rem; }
+.asm .a { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 0.5rem; align-items: start; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 0.55rem 0.75rem; }
+.asm .a > div { min-width: 0; }
+.asm .aid { font-family: var(--mono); font-weight: 500; font-size: 0.82rem; color: var(--oracle); padding-top: 0.15rem; }
+.asm small { display: block; color: var(--muted); font-size: 0.84rem; line-height: 1.45; margin-top: 0.2rem; }
+.asm mjx-container[display="true"] { margin: 0.35rem 0 !important; }
+.where { grid-template-columns: max-content minmax(0, 1fr); column-gap: 0.8rem; row-gap: 0.45rem; align-items: baseline; }
+.where .me { min-width: 0; }
+.where .meta { display: inline-flex; flex-wrap: wrap; gap: 0.25rem 0.45rem; align-items: baseline; margin-left: 0.5rem; }
+.where .meta .sh { font-size: 0.86rem; color: var(--muted); }
+@media (max-width: 560px) { .where { grid-template-columns: max-content minmax(0, 1fr); } .where .meta { display: flex; margin-left: 0; margin-top: 0.1rem; } }
+
+/* visual figures */
+figure.viz { margin: 1.4rem 0 1.6rem; }
+.vwrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; }
+.vwrap svg.v { display: block; width: 100%; min-width: 560px; height: auto; }
+figure.viz figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.5rem; }
+svg.v text { font-family: var(--display); font-size: 13px; fill: var(--ink); }
+svg.v .h { font-weight: 600; font-size: 13.5px; }
+svg.v .mono { font-family: var(--mono); font-size: 11.5px; }
+svg.v .muted { fill: var(--muted); }
+svg.v .o { fill: var(--oracle); }
+svg.v .s { fill: var(--sea); }
+svg.v .e { fill: var(--ex); }
+svg.v .tile { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+svg.v .hit { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.4; }
+svg.v .skip { fill: var(--paper); stroke: var(--rule); stroke-dasharray: 3 3; }
+svg.v .win { fill: var(--oracle); }
+svg.v .hdr { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .ovr { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ref { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.3; }
+svg.v .keybox { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .panelbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .repobox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.4; }
+svg.v .file { fill: var(--panel); stroke: var(--rule); }
+svg.v .snap { fill: var(--paper); stroke: var(--sea); stroke-width: 2; }
+svg.v .snap.now { fill: var(--sea); }
+svg.v .step { fill: var(--sea); }
+svg.v .stepn { fill: var(--paper); font-weight: 700; font-size: 14px; }
+svg.v .stepbox { fill: var(--paper); stroke: var(--rule); stroke-width: 1.2; }
+svg.v .who { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .ln { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+svg.v .ln-o { stroke: var(--oracle); stroke-width: 1.6; fill: none; }
+svg.v .ln-s { stroke: var(--sea); stroke-width: 1.6; fill: none; }
+svg.v .ln-e { stroke: var(--ex); stroke-width: 1.6; fill: none; }
+svg.v .dash { stroke-dasharray: 4 3; }
+ol.steps { margin: 0 0 1.2rem; padding-left: 1.3rem; display: grid; gap: 0.3rem; }
+details.maths { border: 1px solid var(--rule); border-radius: 6px; margin: 1rem 0 1.6rem; background: var(--paper); }
+details.maths > summary { cursor: pointer; padding: 0.6rem 1rem; font-family: var(--display); font-weight: 600; font-size: 0.92rem; color: var(--unit); }
+details.maths > summary:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+details.maths .dbody { padding: 0 1rem 0.6rem; }
+
+.uses { border-left: 3px solid var(--sea); background: var(--sea-soft); border-radius: 0 6px 6px 0; padding: 0.85rem 1rem; margin: 1.2rem 0 1.4rem; font-size: 0.97rem; }
+.uses .tag { color: var(--sea); display: block; margin-bottom: 0.3rem; }
+.uses ul { margin: 0.2rem 0 0.6rem; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.uses p { margin-bottom: 0.5rem; }
+.uses p.less { color: var(--muted); margin-bottom: 0; }
+ul.verdicts { padding-left: 1.2rem; display: grid; gap: 0.45rem; margin: 0.4rem 0 1.2rem; }
+svg.v .cogbox { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1.2; }
+svg.v .zarrbox { fill: var(--ex-soft); stroke: var(--ex); stroke-width: 1.2; }
+svg.v .wait { fill: var(--sea-soft); stroke: var(--sea); stroke-width: 1; }
+svg.v .cpu { fill: var(--oracle); }
+svg.v .no { fill: var(--oracle-soft); stroke: var(--oracle); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg.v .lane { stroke: var(--rule); stroke-width: 1; }
+svg.v .tick { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg.v .bar { fill: var(--sea); }
+svg.v .bar.slow { fill: var(--oracle); }
+svg.v .yes { fill: var(--sea); font-weight: 600; }
+svg.v .cell { fill: var(--paper); stroke: var(--rule); }
+svg.v .cellh { fill: var(--code-bg); stroke: var(--rule); }
+svg.v .pt { fill: var(--oracle); stroke: var(--paper); stroke-width: 1.5; }
+svg.v .w { fill: var(--paper); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="a-s" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--sea)"/></marker>
+<marker id="a-o" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--oracle)"/></marker>
+<marker id="a-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker>
+<marker id="a-e" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--ex)"/></marker>
+</defs></svg>
+<main>
+
+<style>
+.chart, .box, .box > div { min-width: 0; }
+.box .sig { grid-template-columns: 2.4rem 1.15rem minmax(0, max-content) minmax(0, 1fr); }
+.box .sig .n { white-space: normal; overflow-wrap: anywhere; min-width: 0; }
+.box .eqs > div { overflow-x: auto; }
+@media (max-width: 560px) { .box .sig { grid-template-columns: 2.4rem 1.15rem minmax(0, 1fr); } .box .sig .s { grid-column: 3; } }
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-scalar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+    <symbol id="g-vector" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="15" y="9" width="6" height="6"/></g></symbol>
+    <symbol id="g-spectrum" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 20h18"/><path d="M3 14l3-4 3 2 2-6 2 9 2-3 3 1 3-4" stroke-linejoin="round"/></g></symbol>
+    <symbol id="g-field" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16"/><path d="M4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16" stroke-width="0.8"/></g></symbol>
+    <symbol id="g-mask" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 4h8v8H4zM12 12h8v8h-8z" fill="currentColor" opacity="0.55"/></symbol>
+    <symbol id="g-cube" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="2" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" fill="var(--paper)"/><rect x="3" y="9" width="13" height="13" fill="var(--paper)"/></g></symbol>
+    <symbol id="g-matrix" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16"/><path d="M4 4l16 16" stroke-width="1"/></g></symbol>
+    <symbol id="g-dataset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" stroke-width="1"/></g></symbol>
+    <symbol id="g-weights" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1"><path d="M5 6l7 6M5 18l7-6M12 5l7 7M12 12l7 0M12 19l7-7" fill="none"/></g><g fill="currentColor"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="12" r="2"/></g></symbol>
+    <symbol id="g-decision" viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  </defs>
+</svg>
+<nav class="series" aria-label="Series"><span>GeoStack · design</span><span>›</span><span>background</span><a href="./processing-levels.html">← Processing levels</a><a href="./role-ladder.html">The role ladder →</a></nav>
+<div class="eyebrow">GeoStack · background · predict → compare → improve</div>
+<h1>How does a model get better, and how does it get fast without getting wrong?</h1>
+<p class="lede">Two cycles organise the modelling in the stack. The <b>modeling cycle</b> says how a model improves: compare its predictions with observations, and let the kind of misfit decide whether to tune the model or to change it. The <b>six-step cycle</b> says how a trusted but slow method becomes a fast one, with each step checked against the one before. This page runs both on one methane plume, where the first model is wrong in a way that tuning cannot fix.</p>
+
+<section class="tldr" aria-label="TL;DR">
+  <span class="tag">TL;DR</span>
+  <h2>Two loops, and a ladder of references</h2>
+  <ul>
+    <li><strong>Compare decides.</strong> A misfit the noise explains is <em>random</em>: run the fast inner loop and estimate the state and parameters. A misfit with a pattern is <em>systematic</em>: run the slow outer loop and change the model or the data.</li>
+    <li><strong>The inner loop cannot repair a wrong model.</strong> Here it fits model 1 as well as it can, and returns a spread coefficient of 0.58 with a confident error bar; the true value is 0.30. The misfit map still shows a pattern (χ² 2.41, where 1 means noise).</li>
+    <li><strong>One structural change fixes it.</strong> Letting the wind direction be estimated gives χ² 0.95 and recovers all three parameters.</li>
+    <li><strong>Then make it fast, in steps.</strong> The careful inference takes 67 s per scene; with an emulator, 3.2 s; with an amortized map, 0.46 ms.</li>
+    <li><strong>Every fast step has a slower one as its referee.</strong> The emulator is scored against the simulator, emulator-based inference against the careful inference, the amortized map against emulator-based inference.</li>
+    <li><strong>Fast is not free.</strong> The first amortized map was off by up to 9.1 posterior widths and said so with wide error bars; the improve step brought that to at most 3.4.</li>
+  </ul>
+</section>
+
+<h2>The running example</h2>
+<div class="ex">
+  <div class="ex-h"><span class="tag">Running example</span><strong>One methane plume, and a forecast wind that is 12° off</strong></div>
+  <div class="ex-b">
+    <p>A facility leaks methane at a steady rate. A satellite scene shows the plume as a map of column mass, 32 × 32 pixels of 50 m, with noise. We want the emission rate \(Q\). The model is a Gaussian plume: gas blown downwind at speed \(U\), spreading sideways as it goes. The “real world” here is the same physics with one twist the first model does not know about: the wind blows 12° away from the forecast direction. Everything is synthetic, so the truth is known.</p>
+    <div class="tbl"><table><thead><tr><th>Quantity</th><th>Symbol</th><th>Value</th><th>Unit</th></tr></thead><tbody><tr><td>Emission rate (true)</td><td>\(Q\)</td><td>2.0</td><td>kg s⁻¹</td></tr><tr><td>Spread coefficient (true)</td><td>\(a\)</td><td>0.30</td><td>—</td></tr><tr><td>Wind direction (true; forecast says 0)</td><td>\(\varphi\)</td><td>12</td><td>degrees</td></tr><tr><td>Wind speed (given)</td><td>\(U\)</td><td>4</td><td>m s⁻¹</td></tr><tr><td>Noise per pixel</td><td>\(\sigma_\varepsilon\)</td><td>0.25</td><td>g m⁻²</td></tr><tr><td>Model 1 infers</td><td>\(\gvect{\theta} = (Q, a)\)</td><td>direction fixed at the forecast</td><td>—</td></tr><tr><td>Model 2 infers</td><td>\(\gvect{\theta} = (Q, a, \varphi)\)</td><td>direction estimated</td><td>—</td></tr><tr><td>One simulator call</td><td>—</td><td>11</td><td>ms</td></tr></tbody></table></div>
+  </div>
+</div>
+
+<h2 id="part1">Part 1 · The modeling cycle: how a model improves</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 684 500" role="img" aria-label="The modeling cycle: a modeling track and an observing track meet at compare; a random misfit goes to estimate and the fast inner loop, a systematic misfit goes to refine the model and the slow outer loop."><rect class="stepbox" x="250" y="12" width="180" height="38" rx="6"/><text class="h" x="340" y="30" text-anchor="middle">Real-world system</text><text class="tick" x="340" y="44" text-anchor="middle">a leaking facility</text><text class="s" x="60" y="78">MODELING</text><text class="e" x="440" y="78">OBSERVING</text><path class="ln" d="M250 31 H150 V86" marker-end="url(#a-m)"/><path class="ln" d="M430 31 H530 V86" marker-end="url(#a-m)"/><rect class="hdr" x="50" y="90" width="200" height="44" rx="6"/><text class="h" x="150" y="109" text-anchor="middle">Conceptual model</text><text class="tick" x="150" y="125" text-anchor="middle">a steady plume, blown downwind</text><path class="ln-s" d="M150 134 V150" marker-end="url(#a-s)"/><rect class="hdr" x="50" y="152" width="200" height="44" rx="6"/><text class="h" x="150" y="171" text-anchor="middle">Equations and code</text><text class="tick" x="150" y="187" text-anchor="middle">the Gaussian plume simulator</text><path class="ln-s" d="M150 196 V212" marker-end="url(#a-s)"/><rect class="hdr" x="50" y="214" width="200" height="44" rx="6"/><text class="h" x="150" y="233" text-anchor="middle">Predictions</text><text class="tick" x="150" y="249" text-anchor="middle">the expected column map</text><rect class="ref" x="430" y="90" width="200" height="44" rx="6"/><text class="h" x="530" y="109" text-anchor="middle">Sensor</text><text class="tick" x="530" y="125" text-anchor="middle">an imaging spectrometer</text><path class="ln-e" d="M530 134 V150" marker-end="url(#a-e)"/><rect class="ref" x="430" y="152" width="200" height="44" rx="6"/><text class="h" x="530" y="171" text-anchor="middle">Measurements</text><text class="tick" x="530" y="187" text-anchor="middle">radiance per pixel</text><path class="ln-e" d="M530 196 V212" marker-end="url(#a-e)"/><rect class="ref" x="430" y="214" width="200" height="44" rx="6"/><text class="h" x="530" y="233" text-anchor="middle">Observations</text><text class="tick" x="530" y="249" text-anchor="middle">the retrieved column map</text><path class="ln-s" d="M150 258 V316 H242" marker-end="url(#a-s)"/><path class="ln-e" d="M530 258 V316 H438" marker-end="url(#a-e)"/><rect class="hit" x="250" y="296" width="180" height="44" rx="6"/><text class="h" x="340" y="315" text-anchor="middle">Compare</text><text class="tick" x="340" y="331" text-anchor="middle">predictions vs observations</text><path class="ln" d="M300 340 V366 H150 V390" marker-end="url(#a-m)"/><text class="muted" x="160" y="360">random misfit</text><path class="ln" d="M380 340 V366 H530 V390" marker-end="url(#a-m)"/><text class="muted" x="520" y="360" text-anchor="end">systematic misfit</text><rect class="hdr" x="50" y="392" width="200" height="54" rx="6"/><text class="h" x="150" y="411" text-anchor="middle">Estimate</text><text class="tick" x="150" y="426" text-anchor="middle">state x: data assimilation</text><text class="tick" x="150" y="439" text-anchor="middle">parameters θ: calibration</text><rect class="stepbox" x="430" y="392" width="200" height="54" rx="6"/><text class="h" x="530" y="411" text-anchor="middle">Refine the model</text><text class="tick" x="530" y="426" text-anchor="middle">equations, code,</text><text class="tick" x="530" y="439" text-anchor="middle">sensors, processing</text><path class="ln-s" d="M50 419 H22 V236 H42" marker-end="url(#a-s)"/><text class="s" x="22" y="468">inner loop · fast: update x and θ, run the same model again</text><path class="ln" d="M630 419 H662 V2 H18 V112 H42" marker-end="url(#a-m)"/><path class="ln dash" d="M662 112 H638" marker-end="url(#a-m)"/><text class="tick" x="656" y="84" text-anchor="end">more or better data</text><text class="muted" x="30" y="488">outer loop · slow: change the structure only when validation demands it</text></svg></div><figcaption>The modeling cycle of the overview, with this page's example in the small print. Two tracks start from the same real system and meet at <b>compare</b>. What the misfit looks like decides which loop runs next.</figcaption></figure>
+<p>The <b>modeling track</b> turns an idea of how the system works into equations, then code, then predictions. The <b>observing track</b> turns the same system into measurements, then observations. Neither is the truth; each is a simplification, and <b>compare</b> is where they are confronted.</p>
+<pre>def plume(rate, spread, direction):
+    """f(θ): column mass of a time-averaged Gaussian plume, in g m⁻².
+
+    Ω(x, y) = Q / (U √(2π) σ_y(x)) · exp(−y² / 2σ_y(x)²),  σ_y(x) = a x^0.9
+    with (x, y) the downwind and crosswind distance from the source.
+    """
+    col, row = np.meshgrid(np.arange(SIDE), np.arange(SIDE))
+    east = (col[..., None, None] + SUB[:, None] - SOURCE[0]) * PIXEL_M      # (H, W, 3, 1) m
+    north = (row[..., None, None] + SUB[None, :] - SOURCE[1]) * PIXEL_M     # (H, W, 1, 3) m
+    angle = direction + MEANDER[:, None, None, None, None]                  # (K, 1, 1, 1, 1)
+    downwind = east * np.cos(angle) + north * np.sin(angle)                 # (K, H, W, 3, 3) m
+    crosswind = -east * np.sin(angle) + north * np.cos(angle)
+    sigma = spread * np.maximum(downwind, 1.0) ** 0.9                       # σ_y, m
+    column = rate / (WIND_M_S * np.sqrt(2 * np.pi) * sigma) * np.exp(-(crosswind**2) / (2 * sigma**2))
+    column = np.where(downwind &gt; 0, column, 0.0)
+    return 1e3 * column.mean(axis=(0, 3, 4))                                # (H, W) g m⁻²</pre>
+
+<h3 id="compare">Compare: is the misfit random or systematic?</h3>
+<p>Subtract the prediction from the observation and divide by the noise level. If the model is right, what is left is noise: it averages one when squared (\(\chi^2 \approx 1\)) and a pixel tells you nothing about its neighbour. If the model is wrong, what is left has a shape.</p>
+<pre>def compare(scene, prediction):
+    """Is the misfit random (the error model explains it) or systematic?"""
+    residual = (scene - prediction) / NOISE
+<span class="c">    # χ²: mean squared residual in units of the noise; 1 if the model is right</span>
+    chi2 = float(np.mean(residual**2))
+<span class="c">    # ρ₁: correlation of each residual with its right-hand neighbour; 0 if random</span>
+    neighbour = float(np.mean(residual[:, :-1] * residual[:, 1:]) / np.mean(residual**2))
+    count = residual.size
+    random = chi2 &lt; 1 + 3 * np.sqrt(2 / count) and abs(neighbour) &lt; 3 / np.sqrt(count)
+    return {"chi2": round(chi2, 3), "neighbour": round(neighbour, 3), "verdict": "random" if random else "systematic",
+            "chi2_limit": round(1 + 3 * np.sqrt(2 / count), 3), "neighbour_limit": round(3 / np.sqrt(count), 3)}</pre>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:0.9rem;margin:1rem 0 0.6rem"><figure style="margin:0"><img alt="Observation: the scene: plume plus noise" src="data:image/png;base64,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" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#000"><figcaption style="font-family:var(--display);font-size:0.8rem;color:var(--muted);margin-top:0.3rem"><b style="color:var(--ink)">Observation</b><br>the scene: plume plus noise</figcaption></figure><figure style="margin:0"><img alt="Model 1, fitted: wind along the forecast" src="data:image/png;base64,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" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#000"><figcaption style="font-family:var(--display);font-size:0.8rem;color:var(--muted);margin-top:0.3rem"><b style="color:var(--ink)">Model 1, fitted</b><br>wind along the forecast</figcaption></figure><figure style="margin:0"><img alt="Misfit 1: χ² 2.41: a pattern" src="data:image/png;base64,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" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:var(--paper)"><figcaption style="font-family:var(--display);font-size:0.8rem;color:var(--muted);margin-top:0.3rem"><b style="color:var(--ink)">Misfit 1</b><br>χ² 2.41: a pattern</figcaption></figure><figure style="margin:0"><img alt="Model 2, fitted: wind direction estimated" src="data:image/png;base64,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" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#000"><figcaption style="font-family:var(--display);font-size:0.8rem;color:var(--muted);margin-top:0.3rem"><b style="color:var(--ink)">Model 2, fitted</b><br>wind direction estimated</figcaption></figure><figure style="margin:0"><img alt="Misfit 2: χ² 0.95: noise" src="data:image/png;base64,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" style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:var(--paper)"><figcaption style="font-family:var(--display);font-size:0.8rem;color:var(--muted);margin-top:0.3rem"><b style="color:var(--ink)">Misfit 2</b><br>χ² 0.95: noise</figcaption></figure></div><p style="font-family:var(--display);font-size:0.85rem;color:var(--muted)">Column maps in g m⁻² (dark is zero); misfits in units of the noise, blue −4 to red +4. The scene is 1.6 km across; the source is at the left.</p>
+<div class="tbl"><table><thead><tr><th></th><th>χ² (1 if only noise)</th><th>Neighbour correlation (0 if only noise)</th><th>Verdict</th></tr></thead><tbody><tr><td>Limits for this scene</td><td>below 1.13</td><td>within ±0.09</td><td>—</td></tr><tr><td>Model 1 before estimating</td><td>3.30</td><td>0.72</td><td>systematic</td></tr><tr><td>Model 1 after the inner loop</td><td>2.41</td><td>0.62</td><td><b>systematic</b></td></tr><tr><td>Model 2 after the inner loop</td><td>0.95</td><td>0.01</td><td><b>random</b></td></tr></tbody></table></div>
+
+<h3 id="inner">The inner loop: estimate, with the model held fixed</h3>
+<p>The inner loop keeps the model's structure and adjusts its numbers: the <b>state</b> \(\vect{x}\) (data assimilation) or the <b>parameters</b> \(\gvect{\theta}\) (calibration). Here it is a sampler that proposes parameter values, runs the simulator, and keeps values in proportion to how well they explain the scene.</p>
+<pre>def log_posterior(theta, scene, forward, low, high):
+    """log p(θ | y) up to a constant: flat prior in a box, Gaussian noise."""
+    if np.any(theta &lt; low) or np.any(theta &gt; high):
+        return -np.inf
+    residual = scene - forward(theta)
+    return -0.5 * np.sum(residual**2) / NOISE**2
+
+
+def metropolis(scene, forward, start, low, high, steps, rng):
+    """Random-walk Metropolis; the proposal adapts to the chain during burn-in."""
+    dims = len(start)
+    theta, value = np.array(start, float), log_posterior(start, scene, forward, low, high)
+    step = np.diag(((high - low) * 0.02) ** 2)
+    chain, calls = [], 1
+    for index in range(steps):
+        if index in (300, 700, 1200):
+            step = 2.38**2 / dims * np.cov(np.array(chain[index // 2:]).T) + 1e-12 * np.eye(dims)
+        proposal = rng.multivariate_normal(theta, step)
+        proposed = log_posterior(proposal, scene, forward, low, high)
+        calls += 1
+        if np.log(rng.uniform()) &lt; proposed - value:
+            theta, value = proposal, proposed
+        chain.append(theta.copy())
+    return np.array(chain[1500:]), calls</pre>
+<div class="tbl"><table><thead><tr><th>Inner loop with</th><th>Emission rate (kg s⁻¹)</th><th>Spread coefficient</th><th>Wind direction (degrees)</th><th>Simulator calls</th><th>Time</th></tr></thead><tbody><tr><td>Truth</td><td>2.00</td><td>0.300</td><td>12.0</td><td>—</td><td>—</td></tr><tr><td>Model 1</td><td>2.09 ± 0.04</td><td>0.580 ± 0.013</td><td>fixed at 0</td><td>4 001</td><td>36 s</td></tr><tr><td>Model 2</td><td>2.00 ± 0.03</td><td>0.310 ± 0.010</td><td>11.96 ± 0.24</td><td>6 001</td><td>67 s</td></tr></tbody></table></div>
+<div class="note"><span class="tag">Watch out</span><p>With model 1 the inner loop did its job: χ² fell from 3.30 to 2.41. It did so by widening the plume to cover the direction error, so the spread coefficient came out at 0.58 ± 0.01, about twice the truth, with a small error bar. An estimate is only as good as the model it is conditioned on, and its error bar does not include the model being wrong.</p></div>
+
+<h3 id="outer">The outer loop: change the structure</h3>
+<p>A systematic misfit means something is missing. The misfit map says what: positive on one side of the plume, negative on the other, the mark of a plume pointing the wrong way. The refinement is one new parameter, the wind direction. The same inner loop then finds 12.0° and the misfit becomes noise. The other branch of the outer loop, dashed in the figure, changes the observing side instead: a better wind product, a second overpass, a finer sensor.</p>
+<div class="uses"><span class="tag">Which loop to take</span><ul><li><b>Inner loop</b> when the misfit passes the tests for noise, or fails them only because the numbers are not yet tuned. Cheap, automatic, repeated on every new scene.</li><li><b>Outer loop</b> when the inner loop has converged and a pattern remains. Expensive, done by people, and it invalidates what was built on the old model.</li><li><b>Start simple.</b> Add structure only when compare demands it; a model with more freedom than the data can constrain will pass the tests for the wrong reason.</li></ul><p class="less">The two tests here are the simplest that work. Real ones look at misfit by region, season, regime and lead time, and they are worth writing down as a benchmark before the model exists.</p></div>
+
+<h2 id="part2">Part 2 · The six-step cycle: how a trusted method becomes a fast one</h2>
+<p>Model 2 passes compare. The inference that established it takes about a minute per scene, which is fine for one plume and hopeless for a satellite archive. The six-step cycle makes it fast without losing track of whether it is still right.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 684 238" role="img" aria-label="Five steps in a row from simple model to amortized inference; step 2 validates steps 3 to 5, step 1 supplies training pairs for steps 3 and 5, and a shared improve step uses the previous step as ground truth."><rect class="hdr" x="20" y="70" width="124" height="40" rx="6"/><text class="h" x="82" y="94" text-anchor="middle">1 simple model</text><path class="ln" d="M144 90 H152"/><rect class="hit" x="152" y="70" width="124" height="40" rx="6"/><text class="h" x="214" y="94" text-anchor="middle">2 model-based</text><path class="ln" d="M276 90 H284"/><rect class="ref" x="284" y="70" width="124" height="40" rx="6"/><text class="h" x="346" y="94" text-anchor="middle">3 emulator</text><path class="ln" d="M408 90 H416"/><rect class="ref" x="416" y="70" width="124" height="40" rx="6"/><text class="h" x="478" y="94" text-anchor="middle">4 emulator-based</text><path class="ln" d="M540 90 H548"/><rect class="ref" x="548" y="70" width="124" height="40" rx="6"/><text class="h" x="610" y="94" text-anchor="middle">5 amortized</text><path class="ln-o dash" d="M210 70 V34 H606"/><path class="ln-o dash" d="M342 34 V62" marker-end="url(#a-o)"/><path class="ln-o dash" d="M474 34 V62" marker-end="url(#a-o)"/><path class="ln-o dash" d="M606 34 V62" marker-end="url(#a-o)"/><text class="o" x="218" y="26">oracle: step 2 is the trusted reference for steps 3 to 5</text><path class="ln-s dash" d="M78 110 V146 H606"/><path class="ln-s dash" d="M342 146 V118" marker-end="url(#a-s)"/><path class="ln-s dash" d="M606 146 V118" marker-end="url(#a-s)"/><text class="s" x="86" y="164">simulated (θ, y) pairs: the training data for steps 3 and 5</text><rect class="stepbox" x="20" y="182" width="644" height="44" rx="6"/><text class="h" x="34" y="200">6 improve</text><text class="tick" x="34" y="216">the outer loop</text><text x="214" y="200" text-anchor="middle">step 2</text><text class="tick" x="214" y="216" text-anchor="middle">against step 1</text><text x="346" y="200" text-anchor="middle">step 3</text><text class="tick" x="346" y="216" text-anchor="middle">against step 2</text><text x="478" y="200" text-anchor="middle">step 4</text><text class="tick" x="478" y="216" text-anchor="middle">against step 3</text><text x="610" y="200" text-anchor="middle">step 5</text><text class="tick" x="610" y="216" text-anchor="middle">against step 4</text></svg></div><figcaption>The six-step cycle of the overview. Arrows along the row are the order of work. Dashed arrows are the feedback: who trains whom (green) and who checks whom (orange).</figcaption></figure>
+<div class="chart"><a class="box" href="#s1"><span class="num">1</span><div><div class="name">Simple model</div><div class="sub">a generative story you can simulate</div><div class="eqs"><div><span class="ln">1</span>\(\vect{y} = h(f(\gvect{\theta})) + \gvect{\varepsilon}\)</div><div><span class="ln">2</span>\(\gvect{\varepsilon} \sim \mathcal{N}(\vect{0}, \sigma_\varepsilon^2 \mat{I})\)</div></div></div><div class="sig"><span class="d">in</span><svg class="g"><use href="#g-vector"/></svg><span class="n">\(\gvect{\theta} = (Q, a, \varphi)\)</span><span class="s"><code>(3,)</code><span class="u">kg s⁻¹</span><span class="u">—</span><span class="u">rad</span><span class="none">what we want to infer</span></span><span class="d exo">u</span><svg class="g"><use href="#g-scalar"/></svg><span class="n">\(U\)</span><span class="s"><code>()</code><span class="u">m s⁻¹</span><span class="none">wind speed, from a forecast</span></span><span class="d cst">const</span><svg class="g"><use href="#g-scalar"/></svg><span class="n">\(\sigma_\varepsilon\)</span><span class="s"><code>()</code><span class="u">g m⁻²</span><span class="none">noise level of the retrieval</span></span><span class="d">out</span><svg class="g"><use href="#g-field"/></svg><span class="n">\(\vect{y}\)</span><span class="s"><code>(row, col)</code><span class="u">g m⁻²</span><span class="none">11 ms per call</span></span></div></a><div class="link"><span></span><span>invert it, slowly and carefully</span></div><a class="box focus" href="#s2"><span class="num">2</span><div><div class="name">Model-based inference</div><div class="sub">the trusted reference; the inner loop</div><div class="eqs"><div><span class="ln">1</span>\(p(\gvect{\theta} \mid \vect{y}) \propto p(\vect{y} \mid \gvect{\theta}) p(\gvect{\theta})\)</div></div></div><div class="sig"><span class="d">in</span><svg class="g"><use href="#g-field"/></svg><span class="n">\(\vect{y}\)</span><span class="s"><code>(row, col)</code><span class="u">g m⁻²</span><span class="none">one scene</span></span><span class="d cst">const</span><svg class="g"><use href="#g-decision"/></svg><span class="n">\(f, h, p(\gvect{\theta})\)</span><span class="s"><code>—</code><span class="none">the simulator and the prior</span></span><span class="d">out</span><svg class="g"><use href="#g-dataset"/></svg><span class="n">samples of \(\gvect{\theta}\)</span><span class="s"><code>(sample, 3)</code><span class="none">6 001 simulator calls, 67 s</span></span></div></a><div class="link"><span></span><span>learn the simulator from its own output</span></div><a class="box" href="#s3"><span class="num">3</span><div><div class="name">Emulator</div><div class="sub">a fast stand-in for the simulator</div><div class="eqs"><div><span class="ln">1</span>\(\gvect{\theta}_\text{emu}^\star = \mathrm{argmin}_{\gvect{\theta}_\text{emu}} \mathbb{E}_{\gvect{\theta}} \Vert f(\gvect{\theta}) - \hat{f}(\gvect{\theta}; \gvect{\theta}_\text{emu}) \Vert_2^2\)</div></div></div><div class="sig"><span class="d">in</span><svg class="g"><use href="#g-dataset"/></svg><span class="n">pairs \((\gvect{\theta}, f(\gvect{\theta}))\)</span><span class="s"><code>(pair, …)</code><span class="none">from step 1</span></span><span class="d">out</span><svg class="g"><use href="#g-weights"/></svg><span class="n">\(\gvect{\theta}_\text{emu}^\star\)</span><span class="s"><code>—</code><span class="none">0.35 ms per call afterwards</span></span></div></a><div class="link"><span></span><span>rerun step 2 with the stand-in</span></div><a class="box" href="#s4"><span class="num">4</span><div><div class="name">Emulator-based inference</div><div class="sub">step 2 in seconds</div><div class="eqs"><div><span class="ln">1</span>\(p(\gvect{\theta} \mid \vect{y}) \propto p(\vect{y} \mid \gvect{\theta}; \hat{f}) p(\gvect{\theta})\)</div></div></div><div class="sig"><span class="d">in</span><svg class="g"><use href="#g-field"/></svg><span class="n">\(\vect{y}\)</span><span class="s"><code>(row, col)</code><span class="u">g m⁻²</span><span class="none">one scene</span></span><span class="d par">θ</span><svg class="g"><use href="#g-weights"/></svg><span class="n">\(\gvect{\theta}_\text{emu}^\star\)</span><span class="s"><code>—</code><span class="none">frozen</span></span><span class="d">out</span><svg class="g"><use href="#g-dataset"/></svg><span class="n">samples of \(\gvect{\theta}\)</span><span class="s"><code>(sample, 3)</code><span class="none">6 001 emulator calls, 3.2 s</span></span></div></a><div class="link"><span></span><span>skip the inversion altogether</span></div><a class="box" href="#s5"><span class="num">5</span><div><div class="name">Amortized inference</div><div class="sub">observations straight to a posterior</div><div class="eqs"><div><span class="ln">1</span>\(\gvect{\nu}^\star = \mathrm{argmin}_{\gvect{\nu}} \mathbb{E}_{(\gvect{\theta}, \vect{y})} [-\log q(\gvect{\theta} \mid \vect{y}; \gvect{\nu})]\)</div><div><span class="ln">2</span>\(q(\gvect{\theta} \mid \vect{y}; \gvect{\nu}^\star) \approx p(\gvect{\theta} \mid \vect{y})\)</div></div></div><div class="sig"><span class="d">in</span><svg class="g"><use href="#g-dataset"/></svg><span class="n">pairs \((\gvect{\theta}, \vect{y})\)</span><span class="s"><code>(pair, …)</code><span class="none">from step 1, with noise added</span></span><span class="d par">ν</span><svg class="g"><use href="#g-weights"/></svg><span class="n">\(\gvect{\nu}^\star\)</span><span class="s"><code>—</code><span class="none">trained once</span></span><span class="d">out</span><svg class="g"><use href="#g-vector"/></svg><span class="n">mean and spread of \(\gvect{\theta}\)</span><span class="s"><code>(3,), (3,)</code><span class="none">0.46 ms per scene</span></span></div></a></div>
+
+<h3 id="s1">Step 1 · Simple model</h3>
+<p>The generative story: parameters go through the physics \(f\) and the instrument \(h\), and noise is added. It serves twice: as the thing step 2 inverts, and as a source of as many labelled examples as you care to simulate. Here, 4 000 pairs took 45 s.</p>
+
+<h3 id="s2">Step 2 · Model-based inference: the oracle</h3>
+<p>The classical method, already run above as the inner loop: 6 001 simulator calls, 67 s. It is called the oracle because it is the most trusted reference available, and not because it is exact. Everything faster is judged against it.</p>
+
+<h3 id="s3">Step 3 · Emulator</h3>
+<p>A cheap function trained to imitate the simulator. This one compresses the simulated maps to 40 numbers and learns how those numbers depend on the parameters. Its referee is step 1: on 300 simulations it never saw, how far is it from the simulator, in units of the observation noise?</p>
+<pre>class Emulator:
+    """f̂(θ; θ_emu): θ → principal components of the field → field."""
+
+    def __init__(self, components=40, seed=0):
+        self.scale_in = sklearn.preprocessing.StandardScaler()
+        self.basis = sklearn.decomposition.PCA(components, random_state=seed)
+        self.scale_out = sklearn.preprocessing.StandardScaler()
+        self.network = sklearn.neural_network.MLPRegressor(
+            hidden_layer_sizes=(128, 128), max_iter=3000, tol=1e-6, random_state=seed
+        )
+
+    def fit(self, thetas, fields):
+<span class="c">        # the field is linear in Q, so emulate the field per unit rate</span>
+        unit = fields.reshape(len(fields), -1) / thetas[:, :1]
+        codes = self.scale_out.fit_transform(self.basis.fit_transform(unit))
+        self.network.fit(self.scale_in.fit_transform(thetas[:, 1:]), codes)
+        return self
+
+    def __call__(self, theta):
+        code = self.network.predict(self.scale_in.transform(np.atleast_2d(theta)[:, 1:]))
+        unit = self.basis.inverse_transform(self.scale_out.inverse_transform(code))
+        return (theta[0] * unit).reshape(SIDE, SIDE)</pre>
+<div class="tbl"><table><thead><tr><th>Training pairs</th><th>Error against the simulator</th><th>Time to fit</th></tr></thead><tbody><tr><td>250</td><td>0.23 × the noise</td><td>2 s</td></tr><tr><td>1 000</td><td>0.12 × the noise</td><td>7 s</td></tr><tr><td>4 000</td><td>0.07 × the noise</td><td>25 s</td></tr></tbody></table></div>
+<p>This table is step 6 at work on step 3: measure against the ground truth, change something (here, the amount of training data), measure again. At 0.07 × the noise the emulator's error is small beside the noise in the scene, and each call costs 0.35 ms where the simulator costs 11 ms.</p>
+
+<h3 id="s4">Step 4 · Emulator-based inference</h3>
+<p>Step 2 again, with the emulator in place of the simulator. Nothing else changes, which is what makes the comparison clean: any difference from step 2 is the emulator's doing.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 684 350" role="img" aria-label="Estimates of the emission rate, spread coefficient and wind direction from steps 2, 4 and 5, each with a 90 percent interval, against the true value."><text class="h" x="20" y="26">Q · emission rate</text><text class="tick" x="250" y="26">kg s⁻¹</text><line class="ln dash" x1="382.0" y1="36" x2="382.0" y2="104"/><text class="tick" x="382.02557898375403" y="118" text-anchor="middle">truth 2.00</text><text x="240" y="52" text-anchor="end">step 2 · simulator</text><line class="ln-o" x1="336.7" y1="48" x2="424.8" y2="48" style="stroke-width:3"/><circle cx="380.7" cy="48" r="4.5" class="pt"/><text class="mono" x="566" y="52">2.00 ± 0.03</text><text x="240" y="74" text-anchor="end">step 4 · emulator</text><line class="ln-s" x1="345.5" y1="70" x2="434.2" y2="70" style="stroke-width:3"/><circle cx="389.9" cy="70" r="4.5" class="pt"/><text class="mono" x="566" y="74">2.01 ± 0.03</text><text x="240" y="96" text-anchor="end">step 5 · amortized</text><line class="ln-e" x1="287.8" y1="92" x2="512.2" y2="92" style="stroke-width:3"/><circle cx="400.0" cy="92" r="4.5" class="pt"/><text class="mono" x="566" y="96">2.02 ± 0.08</text><text class="h" x="20" y="138">a · spread coefficient</text><text class="tick" x="250" y="138">—</text><line class="ln dash" x1="336.3" y1="148" x2="336.3" y2="216"/><text class="tick" x="336.3235883059672" y="230" text-anchor="middle">truth 0.300</text><text x="240" y="164" text-anchor="end">step 2 · simulator</text><line class="ln-o" x1="317.2" y1="160" x2="413.1" y2="160" style="stroke-width:3"/><circle cx="365.2" cy="160" r="4.5" class="pt"/><text class="mono" x="566" y="164">0.310 ± 0.010</text><text x="240" y="186" text-anchor="end">step 4 · emulator</text><line class="ln-s" x1="331.8" y1="182" x2="451.4" y2="182" style="stroke-width:3"/><circle cx="391.6" cy="182" r="4.5" class="pt"/><text class="mono" x="566" y="186">0.318 ± 0.012</text><text x="240" y="208" text-anchor="end">step 5 · amortized</text><line class="ln-e" x1="287.8" y1="204" x2="512.2" y2="204" style="stroke-width:3"/><circle cx="400.0" cy="204" r="4.5" class="pt"/><text class="mono" x="566" y="208">0.321 ± 0.023</text><text class="h" x="20" y="250">φ · wind direction</text><text class="tick" x="250" y="250">degrees</text><line class="ln dash" x1="378.0" y1="260" x2="378.0" y2="328"/><text class="tick" x="377.99734151588416" y="342" text-anchor="middle">truth 12.00</text><text x="240" y="276" text-anchor="end">step 2 · simulator</text><line class="ln-o" x1="351.1" y1="272" x2="399.7" y2="272" style="stroke-width:3"/><circle cx="375.4" cy="272" r="4.5" class="pt"/><text class="mono" x="566" y="276">11.96 ± 0.24</text><text x="240" y="298" text-anchor="end">step 4 · emulator</text><line class="ln-s" x1="352.6" y1="294" x2="402.4" y2="294" style="stroke-width:3"/><circle cx="377.5" cy="294" r="4.5" class="pt"/><text class="mono" x="566" y="298">11.99 ± 0.25</text><text x="240" y="320" text-anchor="end">step 5 · amortized</text><line class="ln-e" x1="287.8" y1="316" x2="512.2" y2="316" style="stroke-width:3"/><circle cx="400.0" cy="316" r="4.5" class="pt"/><text class="mono" x="566" y="320">12.36 ± 1.11</text></svg></div><figcaption>The same scene, three ways to infer from it. Bars are 90 % intervals. Step 4 lands on step 2; step 5 is close and says, with its wider bars, that it is less sure.</figcaption></figure>
+<div class="tbl"><table><thead><tr><th>Step 4 against step 2</th><th>Emission rate</th><th>Spread coefficient</th><th>Wind direction</th></tr></thead><tbody><tr><td>Shift of the mean, in step-2 widths</td><td>0.34</td><td>0.91</td><td>0.15</td></tr><tr><td>Ratio of the widths</td><td>1.01</td><td>1.24</td><td>1.02</td></tr></tbody></table></div>
+<p>The means agree to within one posterior width and the widths to within 20 %, for 3.2 s where step 2 took 67 s.</p>
+
+<h3 id="s5">Step 5 · Amortized inference</h3>
+<p>The last step removes the sampler. A network is trained on simulated scenes to output the answer directly: a mean and a spread for each parameter. All the cost is paid in training; a new scene takes one forward pass.</p>
+<pre>class Amortized:
+    """q(θ | y; ν): scene → a Gaussian over θ, in one forward pass."""
+
+    def __init__(self, hidden=(128, 128), seed=0):
+        self.basis = sklearn.decomposition.PCA(60, random_state=seed)
+        self.scale = sklearn.preprocessing.StandardScaler()
+        self.scale_theta = sklearn.preprocessing.StandardScaler()
+        options = dict(max_iter=600, tol=1e-6, early_stopping=True, random_state=seed)
+        self.mean = sklearn.neural_network.MLPRegressor(hidden_layer_sizes=hidden, **options)
+        self.spread = sklearn.neural_network.MLPRegressor(hidden_layer_sizes=(64, 64), **options)
+
+    def features(self, scenes):
+        return self.basis.transform(scenes.reshape(len(scenes), -1))
+
+    def fit(self, thetas, scenes):
+        half = len(thetas) // 2
+        self.basis.fit(scenes.reshape(len(scenes), -1))
+        features = self.scale.fit_transform(self.features(scenes))
+        targets = self.scale_theta.fit_transform(thetas)
+<span class="c">        # ν for the mean, on the first half</span>
+        self.mean.fit(features[:half], targets[:half])
+<span class="c">        # ν for the spread, on the second half's squared errors: log e² ≈ log σ² − 1.27</span>
+        error = targets[half:] - self.mean.predict(features[half:])
+        self.spread.fit(features[half:], np.log(error**2 + 1e-9) + 1.27)
+        return self
+
+    def __call__(self, scene):
+        features = self.scale.transform(self.features(scene[None]))
+        mean = self.scale_theta.inverse_transform(self.mean.predict(features))[0]
+        std = np.sqrt(np.exp(self.spread.predict(features)[0])) * self.scale_theta.scale_
+        return mean, std</pre>
+<div class="tbl"><table><thead><tr><th>Amortized map</th><th>Training scenes</th><th>Mean off by (step-4 widths): Q, a, φ</th><th>Its width ÷ step 4's: Q, a, φ</th><th>90 % intervals contain the truth</th><th>Time to fit</th></tr></thead><tbody><tr><td>First try</td><td>16 000</td><td>2.0, 3.1, 9.1</td><td>5.8, 7.0, 14.1</td><td>96%, 92%, 93%</td><td>7 s</td></tr><tr><td>After the improve step</td><td>48 000</td><td>1.6, 1.6, 3.4</td><td>2.6, 2.6, 4.6</td><td>93%, 94%, 88%</td><td>50 s</td></tr></tbody></table></div>
+<p>Step 5's referee is step 4, on twenty fresh scenes. The first map is blunt: its best guess sits 2.0 to 9.1 posterior widths from where the sampler puts it, depending on the parameter. It is honest about that, though: its own error bars are several times wider, and they contain the truth as often as they claim. A larger network on three times the data closes most of the gap. It is still less sharp than the sampler, at 0.46 ms a scene.</p>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 684 200" role="img" aria-label="Cost per query on a log scale: 64.8 seconds with the simulator, 3.0 seconds with the emulator, 0.42 milliseconds with the amortized map."><text class="h" x="20" y="20">Cost of one query (one scene in, one posterior out), log scale</text><text x="232" y="50" text-anchor="end">step 2 · simulator in the loop</text><rect class="bar slow" x="240" y="38" width="291.2" height="16" rx="2"/><text class="mono" x="537.2" y="51">66.6 s</text><text x="232" y="84" text-anchor="end">step 4 · emulator in the loop</text><rect class="bar" x="240" y="72" width="225.1" height="16" rx="2"/><text class="mono" x="471.1" y="85">3.2 s</text><text x="232" y="118" text-anchor="end">step 5 · one forward pass</text><rect class="bar" x="240" y="106" width="33.1" height="16" rx="2"/><text class="mono" x="279.1" y="119">0.46 ms</text><line class="lane" x1="240" y1="144" x2="540" y2="144"/><line class="lane" x1="240.0" y1="144" x2="240.0" y2="148"/><text class="tick" x="240.0" y="161" text-anchor="middle">0.1 ms</text><line class="lane" x1="340.0" y1="144" x2="340.0" y2="148"/><text class="tick" x="340.0" y="161" text-anchor="middle">10 ms</text><line class="lane" x1="440.0" y1="144" x2="440.0" y2="148"/><text class="tick" x="440.0" y="161" text-anchor="middle">1 s</text><line class="lane" x1="540.0" y1="144" x2="540.0" y2="148"/><text class="tick" x="540.0" y="161" text-anchor="middle">100 s</text><text class="muted" x="20" y="188">Paid once, up front: 45 s of simulations, 25 s to fit the emulator, 50 s to fit the amortized map.</text></svg></div><figcaption>Moving right along the six steps, each query gets cheaper by orders of magnitude, because work is moved to a one-off training stage. Here step 4 pays for itself by the second scene.</figcaption></figure>
+
+<h3 id="s6">Step 6 · Improve</h3>
+<div class="tbl"><table><thead><tr><th>To improve</th><th>Score it against</th><th>On this page</th></tr></thead><tbody><tr><td>Step 2, the inference</td><td>step 1: simulate with known parameters, check they are recovered</td><td>the truth lies inside the posterior of model 2: Q 2.00 ± 0.03 for a true 2.00</td></tr><tr><td>Step 3, the emulator</td><td>step 1: the simulator it replaces</td><td>error 0.23 → 0.07 × the noise as training grew</td></tr><tr><td>Step 4, emulator-based inference</td><td>step 2: the oracle's posterior</td><td>means within 0.9 widths, widths within 24 %</td></tr><tr><td>Step 5, the amortized map</td><td>step 4, and the truth on simulated scenes</td><td>up to 9.1 widths off → at most 3.4; error bars checked</td></tr><tr><td>The model itself</td><td>observations, through compare</td><td>the outer loop: model 1 → model 2</td></tr></tbody></table></div>
+<p>Step 6 is shared by all the others, and its last row is the outer loop of the modeling cycle. That is where the two cycles join.</p>
+
+<h2 id="join">How the two cycles fit together</h2>
+<figure class="viz"><div class="vwrap"><svg class="v" viewBox="0 0 684 298" role="img" aria-label="Step 2 is the inner loop: estimate, compare, and repeat. A systematic misfit, or an improve step that changes the structure, returns to the model, and steps 3 to 5 must then be retrained."><text class="h" x="20" y="20">How the two cycles nest</text><rect class="stepbox" x="170" y="34" width="260" height="42" rx="6"/><text class="h" x="300" y="52" text-anchor="middle">The model</text><text class="tick" x="300" y="68" text-anchor="middle">conceptual model, equations, code</text><path class="ln" d="M300 76 V90" marker-end="url(#a-m)"/><rect class="hit" x="170" y="92" width="260" height="42" rx="6"/><text class="h" x="300" y="110" text-anchor="middle">Step 2: estimate θ</text><text class="tick" x="300" y="126" text-anchor="middle">the inner loop of the modeling cycle</text><path class="ln" d="M300 134 V148" marker-end="url(#a-m)"/><rect class="stepbox" x="170" y="150" width="260" height="42" rx="6"/><text class="h" x="300" y="168" text-anchor="middle">Compare</text><text class="tick" x="300" y="184" text-anchor="middle">random or systematic?</text><path class="ln" d="M300 192 V206" marker-end="url(#a-m)"/><rect class="ref" x="170" y="208" width="260" height="42" rx="6"/><text class="h" x="300" y="226" text-anchor="middle">Steps 3 to 5</text><text class="tick" x="300" y="242" text-anchor="middle">emulator, emulator-based, amortized</text><text class="tick" x="310" y="203">random</text><path class="ln-s" d="M170 113 H130 V55 H162" marker-end="url(#a-s)"/><text class="s" x="122" y="80" text-anchor="end">update θ,</text><text class="s" x="122" y="96" text-anchor="end">run again</text><path class="ln-o" d="M430 171 H462 V62 H438" marker-end="url(#a-o)"/><text class="o" x="504" y="108">systematic misfit:</text><text class="o" x="504" y="124">change the model</text><path class="ln-o dash" d="M430 229 H490 V46 H438" marker-end="url(#a-o)"/><text class="o" x="504" y="196">step 6, when it</text><text class="o" x="504" y="212">changes the structure</text><text class="muted" x="20" y="286">A change of model sends everything trained on the old one (steps 3 to 5) back to be retrained.</text></svg></div><figcaption>The six-step cycle sits inside the modeling cycle. Step 2 <em>is</em> the inner loop; the outer loop is step 6 when it changes the model. The fast steps inherit whatever the model gets wrong, so they are built only after compare says “random”.</figcaption></figure>
+<div class="uses"><span class="tag">What the feedback buys, and what it costs</span><ul><li><b>The classical method is never retired.</b> It becomes the referee. Without step 2 there is nothing to say whether steps 3 to 5 are right.</li><li><b>Each fast step is trusted only as far as it was tested.</b> The emulator was trained inside a box of parameter values; outside it, nothing is promised.</li><li><b>Error bars need their own check.</b> A network's stated spread is a prediction like any other; count how often its intervals contain the truth.</li><li><b>A structural change resets the fast steps.</b> The emulator and the amortized map were trained on model 2's simulations. Change the model and they are confidently describing the old one.</li><li><b>Every arrow is a benchmark.</b> Each comparison in the table above has a fixed input, a reference and a score, so it can be rerun whenever anything changes.</li></ul><p class="less">The costs are real: a simulation budget up front, a training pipeline to maintain, and the discipline to rerun the referees.</p></div>
+
+<h2 id="stack">Where each piece lives</h2>
+<p>The same structure exists outside the stack: variational and ensemble data assimilation are step 2 in weather and ocean centres; learned weather models and learned radiative-transfer codes are step 3; simulation-based inference, in particular neural posterior estimation, is step 5. In the stack, from the overview:</p>
+<div class="tbl"><table><thead><tr><th>Step</th><th>Lives in</th></tr></thead><tbody><tr><td>1 · Simple model</td><td>the GeoModels layer: somax, plumax, radtrax</td></tr><tr><td>2 · Model-based inference</td><td>pipekit's cycle with classical analysis steps (filterax, vardax, pyrox)</td></tr><tr><td>3 · Emulator</td><td>pipekit-train's simulation dataset; the model registry of pipekit-experiment</td></tr><tr><td>4 · Emulator-based inference</td><td>pipekit's cycle with a neural forward model</td></tr><tr><td>5 · Amortized inference</td><td>pipekit-train with gauss_flows or pyrox</td></tr><tr><td>6 · Improve</td><td>pipekit-evaluate benchmarks, rerun and compared row by row, with lineage in pipekit-experiment</td></tr><tr><td>Compare</td><td>pipekit-evaluate; xrtoolz for verification of fields</td></tr></tbody></table></div>
+
+<h2>Where this goes next</h2>
+<div class="tbl"><table><thead><tr><th>Idea here</th><th>Shows up as</th></tr></thead><tbody><tr><td>The two loops and the six steps</td><td>axes 1 and 3 of the <a href="https://jejjohnson.github.io/geostack/overview/">overview</a>, with the equations in full</td></tr><tr><td>One model, one transition</td><td><a href="./processing-levels.html">processing levels</a>: every transition between levels can go through its own six steps</td></tr><tr><td>A model, an algorithm, a step, a recipe</td><td><a href="./role-ladder.html">the role ladder</a>: where the simulator, the sampler and the cycle sit in a library</td></tr><tr><td>Rerunning the referees</td><td><a href="./versions-identity.html">versions and identity</a> and <a href="./recipe-registries.html">recipe registries</a>: which model, which weights, which data made a score</td></tr></tbody></table></div>
+
+<footer>Sources: the modeling cycle and the six-step cycle are those of the GeoStack overview (axes 1 and 3), whose figures this page redraws and whose equations it uses. The example is <code>notebooks/background/modeling_cycle.py</code> (314 lines of NumPy, SciPy and scikit-learn), run as shown on a synthetic scene, with its recorded output in <code>docs/images/background_modeling_cycle/</code>; every random draw is seeded, and two runs on one machine gave the same numbers apart from the timings; no GeoStack package is used. The sampler is a plain random-walk Metropolis; the emulator and the amortized map are small multilayer networks on principal components, and the amortized map assumes a Gaussian posterior per parameter. Timings are from one 2-core machine. The examples from outside the stack are named from what I know and were not re-checked online.</footer>
+
+</main>
+</body>
+</html>

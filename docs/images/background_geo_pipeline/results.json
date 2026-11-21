@@ -1,0 +1,87 @@
+{
+ "clock": {
+  "search": 0.3,
+  "catalog": 55.6,
+  "save": 7.5,
+  "stream": 91.7,
+  "split": 3.7,
+  "apply": 10.9,
+  "combine": 3.9,
+  "write": 41.1,
+  "commit": 21.4,
+  "publish": 14.7
+ },
+ "archive_files": 24,
+ "archive_mb": 25.8,
+ "catalog_rows": 24,
+ "hits": 6,
+ "staged": 6,
+ "hits_mb": 6.4,
+ "field_shape": [
+  2,
+  400,
+  500
+ ],
+ "patches": 20,
+ "out_shape": [
+  400,
+  500
+ ],
+ "max_abs_diff": 2.220446049250313e-16,
+ "ndvi_mean": 0.41274600411523077,
+ "cog_kb": 1303.0,
+ "snapshot_id": "VA8A4RKN3DPMS833N72G",
+ "recipe_hash": "4b8c154a8762594f3212fa70805170ff6f9755f061166f02c72452ca50319ed0",
+ "record": {
+  "id": "ndvi_site_2026-06",
+  "start_time": "2026-06-01",
+  "end_time": "2026-06-30",
+  "bbox": [
+   723000.0,
+   4375000.0,
+   728000.0,
+   4379000.0
+  ],
+  "crs": "EPSG:32630",
+  "href": "products.icechunk",
+  "snapshot_id": "VA8A4RKN3DPMS833N72G",
+  "recipe_hash": "4b8c154a8762594f3212fa70805170ff6f9755f061166f02c72452ca50319ed0",
+  "sources": [
+   "S2_A_20260605.tif",
+   "S2_A_20260612.tif",
+   "S2_A_20260621.tif",
+   "S2_B_20260605.tif",
+   "S2_B_20260612.tif",
+   "S2_B_20260621.tif"
+  ]
+ },
+ "roundtrip": true,
+ "recipe_json": {
+  "class": "Sequential",
+  "config": {
+   "operators": [
+    {
+     "class": "DNToReflectance",
+     "config": {
+      "dim": "band",
+      "offset": 0.0,
+      "scale": 0.0001
+     },
+     "module": "geoops.radiometry._src.operators"
+    },
+    {
+     "class": "NDVI",
+     "config": {
+      "dim": "band",
+      "eps": 1e-10,
+      "nir": 1,
+      "red": 0
+     },
+     "module": "geoops.indices._src.operators"
+    }
+   ]
+  },
+  "module": "pipekit_ops._base.sequential"
+ },
+ "lines": 253
+}

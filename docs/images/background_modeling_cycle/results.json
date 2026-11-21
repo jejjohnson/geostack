@@ -1,0 +1,171 @@
+{
+ "simulate_ms": 11.08,
+ "v1": {
+  "mean": [
+   2.0918,
+   0.5798
+  ],
+  "std": [
+   0.0396,
+   0.0132
+  ],
+  "compare": {
+   "chi2": 2.408,
+   "neighbour": 0.62,
+   "verdict": "systematic",
+   "chi2_limit": 1.133,
+   "neighbour_limit": 0.094
+  },
+  "seconds": 35.7,
+  "calls": 4001
+ },
+ "v1_start": {
+  "chi2": 3.3,
+  "neighbour": 0.723,
+  "verdict": "systematic",
+  "chi2_limit": 1.133,
+  "neighbour_limit": 0.094
+ },
+ "v2": {
+  "mean": [
+   1.9985,
+   0.3096,
+   0.2087
+  ],
+  "std": [
+   0.031,
+   0.0097,
+   0.0042
+  ],
+  "compare": {
+   "chi2": 0.946,
+   "neighbour": 0.014,
+   "verdict": "random",
+   "chi2_limit": 1.133,
+   "neighbour_limit": 0.094
+  },
+  "seconds": 66.6,
+  "calls": 6001
+ },
+ "truth": [
+  2.0,
+  0.3,
+  0.20943951023931956
+ ],
+ "pairs": {
+  "count": 4000,
+  "seconds": 45.0
+ },
+ "emulator_curve": [
+  {
+   "pairs": 250,
+   "rmse_over_noise": 0.234,
+   "fit_seconds": 2.1
+  },
+  {
+   "pairs": 1000,
+   "rmse_over_noise": 0.122,
+   "fit_seconds": 7.3
+  },
+  {
+   "pairs": 4000,
+   "rmse_over_noise": 0.073,
+   "fit_seconds": 25.0
+  }
+ ],
+ "emulate_ms": 0.354,
+ "step4": {
+  "mean": [
+   2.0091,
+   0.3184,
+   0.2093
+  ],
+  "std": [
+   0.0312,
+   0.0121,
+   0.0043
+  ],
+  "seconds": 3.17,
+  "calls": 6001
+ },
+ "step5_curve": [
+  {
+   "label": "first",
+   "scenes": 16000,
+   "fit_seconds": 7.4,
+   "mean_shift_in_std": [
+    1.97,
+    3.13,
+    9.12
+   ],
+   "std_ratio": [
+    5.81,
+    6.95,
+    14.07
+   ],
+   "coverage_90": [
+    0.957,
+    0.917,
+    0.93
+   ]
+  },
+  {
+   "label": "improved",
+   "scenes": 48000,
+   "fit_seconds": 49.9,
+   "mean_shift_in_std": [
+    1.59,
+    1.6,
+    3.43
+   ],
+   "std_ratio": [
+    2.57,
+    2.62,
+    4.58
+   ],
+   "coverage_90": [
+    0.93,
+    0.937,
+    0.877
+   ]
+  }
+ ],
+ "step5": {
+  "mean": [
+   2.0208,
+   0.3212,
+   0.2157
+  ],
+  "std": [
+   0.0789,
+   0.0227,
+   0.0194
+  ],
+  "query_ms": 0.46
+ },
+ "step4_vs_step2": {
+  "mean_shift_in_std": [
+   0.34,
+   0.91,
+   0.15
+  ],
+  "std_ratio": [
+   1.01,
+   1.24,
+   1.02
+  ]
+ },
+ "step5_vs_step2": {
+  "mean_shift_in_std": [
+   0.72,
+   1.19,
+   1.69
+  ],
+  "std_ratio": [
+   2.55,
+   2.34,
+   4.66
+  ]
+ },
+ "lines": 314
+}

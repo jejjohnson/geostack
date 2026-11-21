@@ -1,0 +1,22 @@
+{
+ "v1": {
+  "snapshot_id": "DYQD9P6WW7ZXXC64SGZG",
+  "site_pixel": 3449,
+  "site_mean": 2001.2117
+ },
+ "v2": {
+  "snapshot_id": "981DA6145WQFHJTQE0XG",
+  "site_pixel": 3450,
+  "site_mean": 2002.2117
+ },
+ "back_at_v1": {
+  "snapshot_id": "DYQD9P6WW7ZXXC64SGZG",
+  "site_pixel": 3449
+ },
+ "second_repro_skipped": true,
+ "dvc_remote_files": 1,
+ "dvc_remote_kb": 22,
+ "ice_files": 138,
+ "ice_mb": 53,
+ "dvc_version": "3.67.1"
+}
