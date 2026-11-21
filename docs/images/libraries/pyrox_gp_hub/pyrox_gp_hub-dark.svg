@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="488" viewBox="0 0 1240 488" role="img" aria-label="One GP prior is scored as a NumPyro factor, gives its log marginal, conditions and predicts at any inputs, gives the gradient posterior and pathwise draws, conditions on a non-Gaussian likelihood, and scores its Laplace evidence as a factor.">
+<title>One prior, seven uses</title>
+<defs><marker id="gp-hub-dark-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6B7280"/></marker></defs>
+<rect x="20" y="174" width="430" height="140" rx="12" fill="#151838" stroke="#818CF8" stroke-width="2"/>
+<text x="38" y="208" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior: GPPrior</text>
+<text x="38" y="242" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" font-weight="400" fill="#E5E7EB" xml:space="preserve">kernel = RBF(init_variance=1.0, init_lengthscale=0.5)</text>
+<text x="38" y="264" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" font-weight="400" fill="#E5E7EB" xml:space="preserve">prior = GPPrior(kernel, X, mean_fn=mu)</text>
+<text x="38" y="296" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" font-weight="600" fill="#A5B4FC" xml:space="preserve">dense K_XX · gaussx solves · a pytree</text>
+<path d="M450 244.0 L495 244.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M495 46.0 L495 442.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M495 46.0 L547 46.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#gp-hub-dark-head)"/>
+<path d="M495 112.0 L547 112.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#gp-hub-dark-head)"/>
+<path d="M495 178.0 L547 178.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#gp-hub-dark-head)"/>
+<path d="M495 244.0 L547 244.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#gp-hub-dark-head)"/>
+<path d="M495 310.0 L547 310.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#gp-hub-dark-head)"/>
+<path d="M495 376.0 L547 376.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#gp-hub-dark-head)"/>
+<path d="M495 442.0 L547 442.0" fill="none" stroke="#6B7280" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#gp-hub-dark-head)"/>
+<rect x="550" y="20.0" width="670" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="568" y="51.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">gp_factor(&quot;y&quot;, prior, y, σ²)</text>
+<text x="1202" y="51.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">a NumPyro factor, for NUTS · SVI</text>
+<rect x="550" y="86.0" width="670" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="568" y="117.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior.log_marginal(y, σ²)</text>
+<text x="1202" y="117.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">the collapsed evidence, under jit · grad</text>
+<rect x="550" y="152.0" width="670" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="568" y="183.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior.condition(y, σ²).predict(X_*)</text>
+<text x="1202" y="183.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">mean and variance, include_noise for a band</text>
+<rect x="550" y="218.0" width="670" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="568" y="249.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior.condition(y, σ²).predict_gradient(X_*)</text>
+<text x="1202" y="249.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">∇f(x_*) and its covariance</text>
+<rect x="550" y="284.0" width="670" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="568" y="315.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">PathwiseSampler(posterior).sample_paths(key)</text>
+<text x="1202" y="315.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">callable posterior draws</text>
+<rect x="550" y="350.0" width="670" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="568" y="381.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">prior.condition_nongauss(lik, y, strategy=…)</text>
+<text x="1202" y="381.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">Laplace · Gauss-Newton · QN · PL · EP</text>
+<rect x="550" y="416.0" width="670" height="52" rx="12" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="568" y="447.0" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" fill="#E5E7EB" xml:space="preserve">gp_laplace_factor(&quot;y&quot;, prior, lik, y)</text>
+<text x="1202" y="447.0" text-anchor="end" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9CA3AF" xml:space="preserve">the Laplace evidence, for NUTS</text>
+</svg>
