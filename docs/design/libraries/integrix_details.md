@@ -279,9 +279,9 @@ Code read on 5 Nov 2026. Each entry gives the commit, the names, what they do, h
 | `IMEX_SSP2` | `dfx.AbstractRungeKutta`, `dfx.AbstractImplicitSolver` | IMEX SSP2 | yes |
 | `AB3Solver` | `dfx.AbstractSolver` | Adams–Bashforth 3, history in the solver state | yes |
 | `AB2Solver`, `LeapfrogRAFSolver`, `SplitExplicitRKSolver` | `eqx.Module`, with `init` and `step` | multistep and split schemes outside `diffeqsolve` | yes, as `AbstractStepper`s |
-| `SemiLagrangianSolver`, `SemiLagrangianTerm` | `dfx.AbstractSolver`, `dfx.AbstractTerm` | semi-Lagrangian advection | no: a field scheme |
+| `SemiLagrangianSolver`, `SemiLagrangianTerm` | `dfx.AbstractSolver`, `dfx.AbstractTerm` | semi-Lagrangian advection | rewritten in integrix on functax plans, with a midpoint trajectory (decision 6, revised 21 Nov 2026) |
 
-The pure step functions beside them move with the classes: `euler_step`, `heun_step`, `rk3_ssp_step`, `rk4_step` (`explicit_rk.py`), `imex_ssp2_step` (`imex.py`), `ab2_step`, `ab3_step`, `leapfrog_raf_step` (`multistep.py`) and `split_explicit_step` (`split_explicit.py`). `semi_lagrangian_step` stays. `solve_ocean_pde` (`_solve.py`) wraps `diffeqsolve` with a boundary-condition hook, so it stays with finitevolX's boundary conditions and calls integrix. Difference from the Design tab: `AB3Solver` is new since geostack's pin, so eleven classes move, not ten (eight diffrax solvers, three steppers).
+The pure step functions beside them move with the classes: `euler_step`, `heun_step`, `rk3_ssp_step`, `rk4_step` (`explicit_rk.py`), `imex_ssp2_step` (`imex.py`), `ab2_step`, `ab3_step`, `leapfrog_raf_step` (`multistep.py`) and `split_explicit_step` (`split_explicit.py`). `semi_lagrangian_step` is rewritten in integrix too. `solve_ocean_pde` (`_solve.py`) wraps `diffeqsolve` with a boundary-condition hook; it is a model-level recipe, so it moves to sesmax-core as `solve_pde` ([geostack#291](https://github.com/jejjohnson/geostack/issues/291), rule 3). Difference from the Design tab: `AB3Solver` is new since geostack's pin, so eleven classes move, not ten (eight diffrax solvers, three steppers).
 
 ### pipekit-jax, pipekit `f2b3522`
 

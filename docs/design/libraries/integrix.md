@@ -113,7 +113,7 @@ The test for every name: does it sum, scan, march or adapt over a domain, or dif
 | gaussx | expectations by sampling | Gaussian expectations: Gauss–Hermite, unscented, sigma points; the linear solves an implicit step needs | an integral under a Gaussian with a closed rule is gaussx's |
 | diffrax | the stack's steppers, as diffrax solvers, and its adjoints | `diffeqsolve`, its solver and adjoint protocols | integrix extends diffrax, as gaussx extends lineax |
 | argminax | adjoints of marches and scans | adjoints at an optimum: implicit differentiation, Gauss–Newton curvature | a backward sweep through time is integrix's; a derivative at a fixed point is argminax's |
-| finitevolX, spectraldiffx | generic stepping | spatial discretisation, and semi-Lagrangian advection (field in, field out) | a scheme that steps any right-hand side is integrix's |
+| finitevolX (gridax), spectraldiffx | generic stepping, and semi-Lagrangian advection: the back-trajectory and the step, reading the field with a functax plan | spatial discretisation, and the velocity sampler on the grid's points | a scheme that steps any right-hand side, or traces a trajectory, is integrix's; only the velocity sampling is the grid's ([geostack#291](https://github.com/jejjohnson/geostack/issues/291), rule 2) |
 | pipekit-jax | the adjoint maths | composition: `JaxOperator`, `Rollout`, `DiffraxForwardModel` | pipekit composes steps; integrix computes them |
 | the models | the integrator | integrands and measures: spectral responses, plume fields, turbulence | the model passes f and μ in |
 
@@ -248,9 +248,9 @@ Decisions 10 to 13, on integrals over space, are in [integrix: integrals over sp
 
 **Decided (5 Nov 2026).** Adaptive Gauss–Kronrod, tanh–sinh, Romberg and cumulative integrals are written in integrix, drawing on quadax's design, with no dependency on quadax. quadax's results serve as references in tests.
 
-### 6. Semi-Lagrangian advection stays in finitevolX
+### 6. Semi-Lagrangian advection: integrix's
 
-**Decided (5 Nov 2026).** It discards its departure points after each step, so it is a field scheme, not a stepper. 11 of finitevolX's 12 stepper classes move (0.1.0 added AB3Solver); `SemiLagrangianSolver` stays and takes its interpolation from functax.
+**Decided (21 Nov 2026), replacing the decision of 5 Nov 2026 that kept it in finitevolX.** A semi-Lagrangian step is a back-trajectory, which is an integration and integrix's, followed by a read-out of the old field at the departure points, which is a functax plan. Only the velocity sampled on the grid's points is the grid's, so the scheme moves to `integrix.march` ([integrix#92](https://github.com/jejjohnson/integrix/issues/92)) and gridax keeps the sampler. This is rule 2 of [geostack#291](https://github.com/jejjohnson/geostack/issues/291): integrix owns every time-integration scheme.
 
 ### 7. vardax's adjoints: argminax's, not integrix's
 

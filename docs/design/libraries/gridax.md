@@ -284,6 +284,17 @@ gridax names its own types for the geometry (`LonLatGeometry`, `CurvilinearGeome
 
 **Open.** The layer map plans finitevolX → gridax and spectraldiffx → gridax. After decisions 3 and 4 neither needs it. Leaning: drop both edges. A constructor that builds a finitevolX grid from an analysis grid, if one is wanted, lives in finitevolX and reads only arrays. Within GeoNumerics, spectraldiffx then imports only geophysix (tier 1, not 2) and finitevolX imports spectraldiffx and geophysix (tier 2, not 3).
 
+### 11. Solvers and time integration: four rules by role
+
+**Decided (21 Nov 2026), in [geostack#291](https://github.com/jejjohnson/geostack/issues/291).** Each piece of numerical machinery that gridax-jax held goes to the library whose role it is:
+
+1. gaussx owns every generic solve: Krylov methods with their convergence report, preconditioners, multigrid over caller-built levels, the capacitance method and known-value elimination.
+2. integrix owns every time-integration scheme, semi-Lagrangian advection included.
+3. sesmax-core owns the model-level recipes: the inversions (streamfunction from vorticity, pressure from divergence, QG PV inversion) in `sesmax_core.gfd`, and the PDE driver.
+4. gridax owns what is built from the grid and the mask: stencils and operators, the multigrid level hierarchy and its transfer stencils, the coast and boundary rings (`SolveDomain`), the capacitance wall placement, the masked Helmholtz stencil, the velocity sampler for semi-Lagrangian trajectories, and the pipekit adapter.
+
+gridax already imports gaussx, integrix and spectraldiffx, and sesmax-core already imports gridax, so the rules add no import edge. The work is the epic [geostack#290](https://github.com/jejjohnson/geostack/issues/290).
+
 ## Roadmap
 
 Five waves, each a GitHub issue epic in the gridax repository once it exists. Metrics and geometry come first, because geoarray's `pixel_area` and every area-weighted diagnostic need them.
