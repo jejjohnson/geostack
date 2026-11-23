@@ -218,7 +218,7 @@ flux = ix.rule.flux(transect, enhancement, wind, grid=plume_grid)
 | --- | --- | --- |
 | Ownership (decision 3: rules are functax's) | kept: the curve rule is data | integrix would choose an interpolation scheme |
 | New integrix API | none | one function, with grid and interpolation options |
-| Reuse by tracerax and radiomax (line-of-sight and pixel-footprint integrals) | the same curve rule | a second entry point |
+| Reuse by tracerax (line-of-sight and pixel-footprint integrals) | the same curve rule | a second entry point |
 | plumax's strip form | `where=` from Decision 11 | still needs `where=` |
 
 **Decided (10 Nov 2026): A**, as recommended. functax adds rules on curves, a `Rule` whose nodes lie on a polyline and whose weights are arc lengths, with the unit normals alongside (functax decides whether the normals are a field of the rule or a separate return). integrix adds nothing line-specific, and its guide shows both forms. Alternative: B, if the same three-step composition turns up in several consumers.
