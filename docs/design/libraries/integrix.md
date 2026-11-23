@@ -17,7 +17,7 @@ integrix is the stack's integration library: one integral, I = ∫ f dμ, comput
 | --- | --- |
 | Layer, tier | Core, tier 1 |
 | Imports | functax, gaussx; extends diffrax; JAX, Equinox, lineax, einx |
-| Imported by | finitevolX, tracerax, radiomax, vardax, sesmax-core, plumax, radtrax |
+| Imported by | finitevolX, tracerax, vardax, sesmax-core, plumax, radtrax |
 | Takes over | finitevolX's 11 generic steppers (0.1.0 added `AB3Solver`) and their pure step functions; pipekit-jax's `truncated_scan` and `to_diffrax_adjoint`; generic step-size control from sesmax-core (copied from somax) |
 | Draws on | quadax's adaptive rules, without a dependency |
 | Status | proposed; no repository yet |
@@ -205,7 +205,7 @@ Seven libraries would import integrix, pipekit-jax would hand code to it, and sp
 | plumax | trapezoid sums for IME and SRFs; finite-volume stepping in `les_fvm`; NumPyro posterior averages | `ix.rule` with functax rules; integrix steppers; `ix.expect` |
 | radtrax | SRF convolution by hand; a single-slab τ | `ix.rule` for bands; `ix.scan` for layered columns; angular rules when multi-stream lands |
 | vardax | 4D-Var forward runs differentiated through pipekit-jax's helpers; its optimiser adjoints go to argminax | `integrix.adjoint` for the backward sweep through its forward model (decision 7) |
-| tracerax, radiomax | planned | particle stepping (`ix.march`, SDE terms through diffrax); geometric integrals over a pixel |
+| tracerax | planned | particle stepping (`ix.march`, SDE terms through diffrax) |
 | pipekit-jax | `truncated_scan`, `to_diffrax_adjoint` | hands them to integrix; keeps `Rollout` and `DiffraxForwardModel` |
 
 The largest change is finitevolX's, and it is an import swap:
