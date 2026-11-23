@@ -209,7 +209,7 @@ Cost: O(N) per band. Pitfalls: the LiSparse overlap term takes an arccos of a qu
 
 ### Lee despeckling
 
-The filters stay in geoops unless Wave 4's design issue moves them.
+The filters stay in geoops (decision 7).
 
 With μ and σ² the local mean and variance over a w × w window, C\_u the speckle's coefficient of variation (about 1 / √L for L looks) and Cᵢ = σ / μ the local one:
 
@@ -280,7 +280,7 @@ Read on 5 Nov 2026 at geotoolz `d2f53f4`, radtrax `ed04971` and plumax `28f257e`
 
 **geoops `geom/_src/array.py` and `operators.py`.** `bowtie_detector_positions` and `scan_pixel_growth` give the MODIS and VIIRS scan geometry; they move. `GeostationaryParallaxCorrect` does its ray intersection inside `_apply`, on NumPy only, on a sphere of 6,378,137 m; its maths moves and the Operator stays.
 
-**geoops `restore/_src/array.py`.** `despeckle_lee` (window 7, C\_u = 0.523), `despeckle_refined_lee` (which calls the Lee filter) and `despeckle_frost` (damping 2); they stay unless Wave 4 decides otherwise.
+**geoops `restore/_src/array.py`.** `despeckle_lee` (window 7, C\_u = 0.523), `despeckle_refined_lee` (which calls the Lee filter) and `despeckle_frost` (damping 2); they stay.
 
 **geoproducts.** `himawari/reader.py` `_brightness_temperature` applies Planck at the central wavelength and then the quadratic c₀ + c₁ T + c₂ T² from the file header; `goes/l1b.py` applies (fk₂ / ln(fk₁ / L + 1) − b₁) / b₂. Both move as `PlanckQuadratic` and `PlanckLinear`; the readers keep reading the coefficients. In `_src/geostationary.py`, `on_earth` is navigation maths and moves; `scan_angle_transform`, `geos_crs` and `FixedGrid` build raster metadata and stay.
 
