@@ -1,7 +1,7 @@
 ---
 title: "radiomax: observation geometry and radiometry on any array library"
 short_title: "radiomax"
-description: "radiomax converts and locates what a sensor saw: solar and viewing angles per pixel, the Earth–Sun distance, the conversions from counts to radiance to reflectance, Planck and brightness temperature, the geometric air-mass factor, parallax and geostationary navigation, swath and bowtie geometry, and the empirical retrievals applied pixel by pixel. It sits at GeoNumerics tier 1 and has no state to retrieve; radiative transfer, which does, is radtrax's. Status: Wave 0 is built."
+description: "radiomax converts and locates what a sensor saw: solar and viewing angles per pixel, the Earth–Sun distance, the conversions from counts to radiance to reflectance, Planck and brightness temperature, the geometric air-mass factor, parallax and geostationary navigation, swath and bowtie geometry, and the empirical retrievals applied pixel by pixel. It sits at GeoNumerics tier 1 and has no state to retrieve; radiative transfer, which does, is radtrax's. Status: built."
 date: 2026-11-05
 keywords:
   - radiomax
@@ -9,7 +9,7 @@ keywords:
   - GeoStack
 ---
 
-radiomax converts and locates what a sensor saw: solar and viewing angles per pixel, the Earth–Sun distance, the conversions from counts to radiance to reflectance, Planck and brightness temperature, the geometric air-mass factor, parallax and geostationary navigation, swath and bowtie geometry, and the empirical retrievals applied pixel by pixel. It sits at GeoNumerics tier 1 and has no state to retrieve; radiative transfer, which does, is radtrax's. Status: Wave 0 is built.
+radiomax converts and locates what a sensor saw: solar and viewing angles per pixel, the Earth–Sun distance, the conversions from counts to radiance to reflectance, Planck and brightness temperature, the geometric air-mass factor, parallax and geostationary navigation, swath and bowtie geometry, and the empirical retrievals applied pixel by pixel. It sits at GeoNumerics tier 1 and has no state to retrieve; radiative transfer, which does, is radtrax's. Status: built.
 
 ## At a glance
 
@@ -17,10 +17,10 @@ radiomax converts and locates what a sensor saw: solar and viewing angles per pi
 | --- | --- |
 | Layer, tier | GeoNumerics, tier 1 |
 | Imports | geophysix, array-api-compat, NumPy; JAX and xarray optional |
-| Imported by | radtrax; geoops, geoproducts, xrops (planned) |
+| Imported by | radtrax; geoops, geoproducts |
 | Takes over | geoops `radiometry` (counts, radiance, reflectance, a scene-centre solar zenith, Earth–Sun distance, brightness temperature); the bowtie and parallax maths in geoops `geom`; the brightness-temperature copies in geoproducts; geostationary navigation from geoproducts; from radtrax, Planck's law and the monochromatic brightness temperature, the air masses, the Earth–Sun distance, the Ross–Li kernels and the spectral response matrices |
 | Does not own | radiative transfer and full air-mass factors (radtrax); spectral indices (geoops); SRF tables (georeader); cell corners and areas of a swath (gridax) |
-| Status | Wave 0 built in [radiomax](https://github.com/jejjohnson/radiomax); the modules are planned |
+| Status | built in [radiomax](https://github.com/jejjohnson/radiomax) (v0.0.8, 23 Nov 2026) |
 | Tracked in | [geostack#300](https://github.com/jejjohnson/geostack/issues/300); the [layer map](../stack_layer_map.md) and its section "radiomax and radtrax: where the line is"; the companion [geophysix](geophysix.md) and [integrix](integrix.md) designs |
 
 ```{figure} ../../images/libraries/radiomax.svg
@@ -108,8 +108,8 @@ Six modules. Each takes arrays of any array-API library, or DataArrays (angles, 
 | `radiomax.radiometry` | counts to radiance and back, radiance to reflectance and back, band averages, response matrices and band solar irradiance, spectral densities | geoops `dn_to_radiance`, `radiance_to_dn`, `dn_to_reflectance`; the lazy `georeader.reflectance` calls; radtrax's response matrices |
 | `radiomax.thermal` | Planck's law, brightness temperature and its inverse, from band coefficients or a spectral response | radtrax `radiometry/planck.py` and the monochromatic half of `brightness.py`; geoops `bt_from_radiance`; geoproducts' Himawari `_brightness_temperature` and GOES L1B formula |
 | `radiomax.retrievals` | split-window SST and LST, ocean-colour ratios, Ross–Li BRDF and NBAR | the Ross–Li kernels from radtrax `surface/ross_li.py`; the rest is new |
-| `radiomax.sar` | SAR calibration to σ⁰; despeckling only if its design issue says so | new |
-| `radiomax.altimetry` | altimetry range corrections (tropospheric, ionospheric, inverse barometer) | new |
+| `radiomax.sar` | SAR calibration to σ⁰, β⁰ and γ⁰, and the conversions between them | new |
+| `radiomax.altimetry` | altimetry range corrections (dry and wet tropospheric, ionospheric, inverse barometer) and the sea surface height | new |
 
 ### What radiomax owns, and what it hands off
 
@@ -189,14 +189,14 @@ radtrax takes `solar_zenith`, `view_zenith` and `air_mass` as inputs to its forw
 
 ## Integration across the stack
 
-Four libraries would import radiomax. geoops, geoproducts and xrops keep their Operators and readers and call radiomax inside them; radtrax drops its copies. plumax computes no angles or radiometry of its own and takes them from radtrax.
+Three libraries import radiomax. geoops and geoproducts keep their Operators and readers and call radiomax inside them; radtrax dropped its copies. plumax computes no angles or radiometry of its own and takes them from radtrax.
 
-| Consumer | Uses today | With radiomax |
+| Consumer | Used before | With radiomax |
 | --- | --- | --- |
 | radtrax | its own Planck, air masses, Ross–Li kernels, response matrices and Earth–Sun distance | radiomax; keeps radiative transfer and the instrument model |
-| geoops | radiometry array functions, bowtie and parallax maths, lazy `georeader.reflectance` calls | the same Operators, calling radiomax; the georeader calls go |
+| geoops | radiometry array functions, bowtie and parallax maths, lazy `georeader.reflectance` calls | the same Operators, calling radiomax; `ApplySRF` keeps georeader's rule ([geotoolz#764](https://github.com/jejjohnson/geotoolz/issues/764)) |
 | geoproducts | Himawari and GOES brightness temperature; geostationary navigation | radiomax inside the readers, still without JAX; the calibration coefficients stay reader metadata |
-| xrops | nothing yet ([geotoolz#719](https://github.com/jejjohnson/geotoolz/issues/719) asks for it) | thin Operators: radiomax takes and returns DataArrays |
+| xrops | nothing | no wrappers: radiomax takes and returns DataArrays ([geotoolz#719](https://github.com/jejjohnson/geotoolz/issues/719)) |
 
 For a geoops user nothing changes; for a library below GeoStack the import moves down:
 
@@ -214,7 +214,7 @@ No deprecated alias is kept; geoops' `BTFromRadiance` Operator keeps its name.
 
 ## Decisions and open questions
 
-Nine decided by the owner on 23 Nov 2026 in [radiomax#15](https://github.com/jejjohnson/radiomax/issues/15), which holds the measurements, and [geostack#300](https://github.com/jejjohnson/geostack/issues/300); one leaning, one open. Each entry gives the position first, then the trade-off.
+All decided on 23 Nov 2026: nine by the owner in [radiomax#15](https://github.com/jejjohnson/radiomax/issues/15), which holds the measurements, and [geostack#300](https://github.com/jejjohnson/geostack/issues/300); decisions 5 and 7 as recommended, in [radiomax#45](https://github.com/jejjohnson/radiomax/issues/45) and [radiomax#69](https://github.com/jejjohnson/radiomax/issues/69). Each entry gives the position first, then the trade-off.
 
 ### 1. Layer and dependencies: GeoNumerics tier 1, on NumPy, geophysix and array-api-compat
 
@@ -234,7 +234,7 @@ Nine decided by the owner on 23 Nov 2026 in [radiomax#15](https://github.com/jej
 
 ### 5. Coefficient tables as data
 
-**Leaning.** Split-window, ocean-colour and BRDF coefficients differ by sensor and by version. They ship as plain data specs, one per sensor, passed to the formula, as geoproducts' presets become plain data; the formula itself has no sensor in it.
+**Decided (23 Nov 2026).** Split-window, ocean-colour and BRDF coefficients differ by sensor and by version, so they are arguments, and a formula has no sensor in it. A table ships only where a published one has been read at its source, as plain data, one record per sensor and version. One does: NASA's ocean-colour coefficients. Split window ships none.
 
 ### 6. Which solar-position algorithm
 
@@ -242,7 +242,7 @@ Nine decided by the owner on 23 Nov 2026 in [radiomax#15](https://github.com/jej
 
 ### 7. SAR and altimetry: now or when needed?
 
-**Open.** The layer map gives radiomax SAR calibration, despeckling and altimetry corrections, but only geoops' despeckling filters exist today and nothing below GeoStack calls them. Despeckling is a window filter and not a per-pixel formula, so the leaning is that it stays in geoops; Wave 4 opens with that question. The altimetry corrections are written when a consumer asks.
+**Decided (23 Nov 2026).** Despeckling is a window filter and not a per-pixel formula, so it stays in geoops; it can move when a JAX consumer needs it. SAR calibration and the altimetry corrections with a closed form are built, although no consumer asks for them yet. The sea state bias is empirical and belongs to a retracker, so the caller supplies it.
 
 ### 8. Arrays, labels and units
 
@@ -270,8 +270,8 @@ Six waves, each an epic in the radiomax repository. Geometry and radiometry come
 | [1. Geometry and radiometry](https://github.com/jejjohnson/radiomax/issues/9) | solar and viewing angles, Earth–Sun distance, air masses, counts, radiance and reflectance, band averages and response matrices | geoops' radiometry arrays; the lazy georeader calls (decision 4) | 0 |
 | [2. Thermal and navigation](https://github.com/jejjohnson/radiomax/issues/10) | Planck and brightness temperature; parallax, geostationary navigation, bowtie geometry | the brightness-temperature copies; the navigation and parallax maths in geoproducts and geoops | 1 |
 | [3. Empirical retrievals](https://github.com/jejjohnson/radiomax/issues/11) | Ross–Li BRDF and NBAR, split-window SST and LST, ocean-colour ratios, with coefficient tables as data (decision 5) | radtrax's kernels | 1 |
-| [4. SAR and altimetry](https://github.com/jejjohnson/radiomax/issues/12) | SAR calibration; despeckling and altimetry corrections when asked for (decision 7) | — | 1 |
-| [5. Consumers switch](https://github.com/jejjohnson/radiomax/issues/13) | radtrax, geoops, geoproducts and xrops onto radiomax | the remaining copies | 1–3 |
+| [4. SAR and altimetry](https://github.com/jejjohnson/radiomax/issues/12) | SAR calibration and altimetry corrections (decision 7) | — | 1 |
+| [5. Consumers switch](https://github.com/jejjohnson/radiomax/issues/13) | radtrax, geoops and geoproducts onto radiomax | the remaining copies | 1–3 |
 
 Waves 2, 3 and 4 can run side by side. Wave 5 is one issue per consumer, filed in that consumer's repository and linked to the radiomax epic.
 
