@@ -98,7 +98,7 @@ Six modules: one per operation, plus adaptivity, adjoints and probability. integ
 | --- | --- | --- |
 | `integrix.rule` | I = wᵀf over any axis or set of axes, with a functax rule or caller's weights; batched over leading dims | new; ends the hand-written trapezoid sums in plumax, radtrax and xrtoolz |
 | `integrix.scan` | cumulative integrals, forward and reverse, parallel by `associative_scan` | new |
-| `integrix.march` | time steppers, eight as diffrax solvers and three (AB2, leapfrog, split-explicit) in a loop of their own: forward Euler, RK2 to RK4, SSP-RK, IMEX, Adams–Bashforth, leapfrog with Robert–Asselin filter, split-explicit; step-size control | finitevolX `timestepping/diffrax_solvers.py` (11 classes) and the pure step functions behind them; sesmax-core's `imex_stepsize_controller` (copied from somax) |
+| `integrix.march` | time steppers, eight as diffrax solvers and three (AB2, leapfrog, split-explicit) in a loop of their own: forward Euler, RK2 to RK4, SSP-RK, IMEX, Adams–Bashforth, leapfrog with Robert–Asselin filter, split-explicit; step-size control; `SampledPath`, a functax fit of samples as a diffrax path, for forcing and CDE controls | finitevolX `timestepping/diffrax_solvers.py` (11 classes) and the pure step functions behind them; sesmax-core's `imex_stepsize_controller` (copied from somax); `SampledPath` is new ([integrix#97](https://github.com/jejjohnson/integrix/issues/97)) |
 | `integrix.adapt` | adaptive quadrature: Gauss–Kronrod, tanh–sinh, Romberg, cumulative; error estimates shared with step control | new, on quadax's design without depending on it |
 | `integrix.adjoint` | adjoints of scans and marches: reverse scans, checkpointing, truncated backpropagation through time | pipekit-jax `truncated_scan`, `to_diffrax_adjoint` |
 | `integrix.expect` | expectations 𝔼\[f\] by Monte Carlo and quasi-Monte Carlo (Sobol, Halton), importance sampling | new |
@@ -201,7 +201,7 @@ Seven libraries would import integrix, pipekit-jax would hand code to it, and sp
 | --- | --- | --- |
 | finitevolX | its own 11 diffrax solver classes | imports 11 of them from `integrix.march`; keeps `SemiLagrangianSolver`, which takes its interpolation from functax |
 | spectraldiffx | nothing in the library; its example QG model (`scripts/qg_model.py`) steps with diffrax's `KenCarp4` | no library change; examples may use integrix's IMEX steppers |
-| sesmax-core | generic stepping and `imex_stepsize_controller` inherited from somax | integrix steppers and step control; model terms stay |
+| sesmax-core | generic stepping and `imex_stepsize_controller` inherited from somax | integrix steppers, step control and `SampledPath` for `InterpolatedForcing`; model terms stay |
 | plumax | trapezoid sums for IME and SRFs; finite-volume stepping in `les_fvm`; NumPyro posterior averages | `ix.rule` with functax rules; integrix steppers; `ix.expect` |
 | radtrax | SRF convolution by hand; a single-slab τ | `ix.rule` for bands; `ix.scan` for layered columns; angular rules when multi-stream lands |
 | vardax | 4D-Var forward runs differentiated through pipekit-jax's helpers; its optimiser adjoints go to argminax | `integrix.adjoint` for the backward sweep through its forward model (decision 7) |
