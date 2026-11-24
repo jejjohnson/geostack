@@ -66,6 +66,7 @@ The five small modules share one skill: each is a few functions, and a task that
 | pyrox-nn | 8 | 1 | 0 | 0 | 7 | 0 | 0 | 0 | 0 |
 | spectraldiffx | 7 | 1 | 0 | 0 | 2 | 2 | 0 | 0 | 2 |
 | gauss-flows | 6 | 1 | 0 | 5 | 0 | 0 | 0 | 0 | 0 |
+| integrix | 6 | 1 | 0 | 5 | 0 | 0 | 0 | 0 | 0 |
 | pyrox-gp | 6 | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 0 |
 | geotoolz-ops | 5 | 3 | 0 | 2 | 0 | 0 | 0 | 0 | 0 |
 | pyrox-lgm | 5 | 3 | 0 | 2 | 0 | 0 | 0 | 0 | 0 |
@@ -85,6 +86,7 @@ The five small modules share one skill: each is a few functions, and a task that
 | pyrox-nn | Basis | Geometry (1) |
 | spectraldiffx | none | Geometry (1); Basis (2); Quad (2); Transform (2) |
 | gauss-flows | Interp | Geometry (1) |
+| integrix | Interp | Geometry (1) |
 | pyrox-gp | Basis |  |
 | geotoolz-ops | Geometry | Interp (2) |
 | pyrox-lgm | Geometry | Interp (2) |

@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.7.0, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6, geophysix 0.0.7, radiomax 0.0.9.
+Listed at gaussx 0.7.0, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.10, geophysix 0.0.7, radiomax 0.0.9.
 
 ## Upstream: `gaussx`
 
@@ -1092,11 +1092,16 @@ Integration: rules, cumulative scans, time marching, expectations.
 | `AB2Solver` | class | Second-order Adams–Bashforth, run by `integrix.march.run`. |
 | `AbstractStepper` | class | A fixed-step scheme whose history lives in the loop carry. |
 | `LeapfrogRAFSolver` | class | Leapfrog with a Robert–Asselin filter, run by `integrix.march.run`. |
+| `SampledPath` | class | û(t), a functax fit of samples (t_k, u_k), read as a diffrax path. |
+| `SemiLagrangianSolver` | class | Semi-Lagrangian advection as a diffrax solver. |
+| `SemiLagrangianTerm` | class | The characteristic equation Ẋ = u(t, X), as a diffrax term. |
 | `SplitExplicitRKSolver` | class | Split-explicit stepping as an `AbstractStepper`, for `integrix.march.run`. |
 | `SplitExplicitTerms` | class | The vector fields of a split-explicit model, passed to `run` as ``rhs``. |
+| `departure_points` | function | The points x_d that the flow carries to the nodes x over one step. |
 | `imex_solver` | function | A ``KenCarp3`` IMEX solver whose implicit stage is matrix-free. |
 | `imex_stepsize_controller` | function | An adaptive PID step-size controller for an IMEX solve. |
 | `run` | function | March y₀ through ``n_steps`` constant steps of h from t₀. |
+| `semi_lagrangian_step` | function | One semi-Lagrangian step: the old field read at the departure points. |
 | `stable_step` | function | The largest stable forward-Euler step for advection and diffusion together. |
 
 ### `integrix.rule`
