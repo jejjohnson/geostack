@@ -475,7 +475,6 @@ _GEOPHYSIX = (
     "moved from finitevolX to geophysix (finitevolX#446); the finitevolX pin"
     " predates it"
 )
-_RADIOMAX = "moved from radtrax to radiomax (radiomax#13); the radtrax pin predates it"
 _NUMERICS = "the same solver or grid in several GeoNumerics libraries"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
 _PLUME_PUFF = "the same name in plumax's plume and puff models"
@@ -596,8 +595,6 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         ),
         "Scaled": _SAME_NAME,
         "Sum": _SAME_NAME,
-        "air_mass_factor": _RADIOMAX,
-        "earth_sun_distance": _RADIOMAX,
         "infer_emission_rate": _PLUME_PUFF,
         "number_density": (
             "radtrax's in atm and cm⁻³, around geophysix.thermo's in Pa and m⁻³"
