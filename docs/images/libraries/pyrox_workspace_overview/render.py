@@ -2,7 +2,8 @@
 
 ``pyrox_workspace_overview.html`` is the editable source;
 ``pyrox_workspace_overview.png`` next to it is what the pyrox root README embeds,
-so the schematic is kept up to date in one place. Re-run after editing the HTML, from the repo root::
+so the schematic is kept up to date in one place. Re-run after editing the HTML,
+from the repo root::
 
     uv run --no-project --with playwright --with loguru --with cyclopts \\
         python docs/images/libraries/pyrox_workspace_overview/render.py
