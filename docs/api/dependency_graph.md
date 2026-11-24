@@ -104,17 +104,19 @@ flowchart TB
   gauss_flows --> functax
   gauss_flows --> gaussx
   geonnax --> functax
+  geophysix --> pipekit
   geotoolz --> functax
   geotoolz --> georeader
-  geotoolz --> pipekit
+  geotoolz --> radiomax
   integrix --> functax
   integrix --> gaussx
   kernellib --> functax
   kernellib --> gaussx
   manipy --> kernellib
+  pipekit -.-> integrix
   plumax --> finitevolX
   plumax --> kernellib
-  plumax --> pipekit
+  plumax -.-> pyrox
   plumax --> radtrax
   plumax -.-> vardax
   pyrox --> argminax
@@ -126,6 +128,7 @@ flowchart TB
   radtrax --> argminax
   radtrax --> geonnax
   radtrax -.-> geotoolz
+  radtrax --> radiomax
   sesmax -.-> filterax
   sesmax --> finitevolX
   sesmax --> geonnax
@@ -140,15 +143,15 @@ flowchart TB
 ```
 :::
 
-21 repositories, 44 packages and 57 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+21 repositories, 44 packages and 66 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
 What it shows:
 
 - **Every edge between layers points down.** GeoModels uses GeoML, GeoNumerics
-  and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoStack may use GeoNumerics
-  (rule 1), and at the pins it uses only Core. Core uses nothing above it.
+  and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoStack uses geophysix and
+  radiomax of GeoNumerics, and Core. Core uses nothing above it.
 - **gaussx is the foundation.** Every repository in GeoNumerics, GeoML and
   GeoModels except geonnax, geophysix and radiomax reaches it. A breaking change in gaussx is a
   change to almost the whole stack.
@@ -226,6 +229,7 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoStack | 0 | georeader | readers |
 | GeoNumerics | 1 | finitevolX, radiomax | finite volume, and observation geometry and radiometry |
 | GeoNumerics | 0 | geophysix, spectraldiffx | physical facts about the Earth, and spectral methods |
+| Core | 2 | pipekit (pipekit, pipekit-jax) | pipelines on JAX, which hand their adjoints to integrix |
 | Core | 1 | argminax, integrix | optimisation and integration |
 | Core | 0 | functax, gaussx, pipekit | pipelines, linear algebra, Gaussians and function approximation |
 <!-- tier-table:end -->
@@ -308,19 +312,23 @@ cannot import, so most of its tests could no longer be collected.
 | plumax | finitevolX | base | `plumax → finitevolx` |
 | plumax | functax | base | `plumax → functax` |
 | plumax | gaussx | base | `plumax → gaussx` |
+| plumax | geophysix | base | `plumax → geophysix` |
 | plumax | georeader | extra | `plumax → georeader-spaceml` |
 | plumax | geotoolz | extra | `plumax → geotoolz-ops` |
 | plumax | integrix | base | `plumax → integrix` |
 | plumax | kernellib | base | `plumax → kernellib` |
 | plumax | pipekit | base | `plumax → pipekit-ops` |
+| plumax | pyrox | extra | `plumax → pyrox-xtreme` |
 | plumax | radtrax | base | `plumax → radtrax` |
 | plumax | vardax | extra | `plumax → vardax` |
 | radtrax | argminax | base | `radtrax → argminax` |
 | radtrax | gaussx | base | `radtrax → gaussx` |
 | radtrax | geonnax | base | `radtrax → geonnax` |
+| radtrax | geophysix | base | `radtrax → geophysix` |
 | radtrax | georeader | extra | `radtrax → georeader-spaceml` |
 | radtrax | geotoolz | extra | `radtrax → geotoolz-ops` |
 | radtrax | pipekit | extra | `radtrax → pipekit-ops` |
+| radtrax | radiomax | base | `radtrax → radiomax` |
 | sesmax | filterax | extra | `sesmax-core → filterax` |
 | sesmax | finitevolX | base | `sesmax-core → finitevolx` |
 | sesmax | geonnax | base | `sesmax-core → geonnax` |
@@ -349,17 +357,22 @@ cannot import, so most of its tests could no longer be collected.
 | vardax | integrix | base | `vardax → integrix` |
 | vardax | pipekit | base | `vardax → pipekit-cycle` |
 | geotoolz | functax | base | `geotoolz-array → functax` |
+| geotoolz | geophysix | base | `geotoolz-ops → geophysix` |
 | geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
 | geotoolz | pipekit | base | `geotoolz-array → pipekit-array` |
+| geotoolz | radiomax | base | `geotoolz-ops → radiomax` |
 | finitevolX | gaussx | base | `finitevolx → gaussx` |
 | finitevolX | integrix | base | `finitevolx → integrix` |
 | finitevolX | pipekit | extra | `finitevolx → pipekit-jax` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
+| geophysix | pipekit | base | `geophysix → pipekit-array` |
 | radiomax | geophysix | base | `radiomax → geophysix` |
+| radiomax | pipekit | base | `radiomax → pipekit-array` |
 | spectraldiffx | functax | base | `spectraldiffx → functax` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
 | argminax | gaussx | base | `argminax → gaussx` |
 | integrix | functax | base | `integrix → functax` |
 | integrix | gaussx | base | `integrix → gaussx` |
+| pipekit | integrix | extra | `pipekit-jax → integrix` |
 <!-- edge-table:end -->
 :::

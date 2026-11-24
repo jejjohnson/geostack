@@ -1446,8 +1446,9 @@ DG_LAYERS = [
         0.0,
         1.0,
         [
+            [("pipekit", 0.84)],  # pipekit-jax imports integrix (extra)
             [("argminax", 0.14), ("integrix", 0.42)],
-            [("gaussx", 0.28), ("functax", 0.56), ("pipekit", 0.84)],
+            [("gaussx", 0.28), ("functax", 0.56)],
         ],
     ),
 ]

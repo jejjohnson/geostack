@@ -48,6 +48,13 @@ geotoolz-products = { path = "references/geostack/geotoolz/packages/geotoolz-pro
 xrtoolz = { path = "references/geostack/geotoolz/packages/xrtoolz", editable = true }
 xrtoolz-ops = { path = "references/geostack/geotoolz/packages/xrtoolz-ops", editable = true }
 xrtoolz-products = { path = "references/geostack/geotoolz/packages/xrtoolz-products", editable = true }
+# The two GeoNumerics libraries that GeoStack imports. They need neither JAX nor
+# the rest of GeoNumerics, so they are here and not in the numerics feature.
+geophysix = { path = "references/numerics/geophysix", editable = true }
+radiomax = { path = "references/numerics/radiomax", editable = true }
+# geophysix and radiomax ask for pipekit-array[numpy,compat]; the override below
+# replaces the requirement, extras included, so the compat one is listed itself.
+array-api-compat = ">=1.11"
 
 [pypi-options.dependency-overrides]
 # The reference repos are uv workspaces whose own [tool.uv.sources] point
@@ -165,8 +172,6 @@ argminax = { path = "references/numerics/argminax", editable = true }
 # optax is listed itself
 optax = "*"
 integrix = { path = "references/numerics/integrix", editable = true }
-geophysix = { path = "references/numerics/geophysix", editable = true }
-radiomax = { path = "references/numerics/radiomax", editable = true }
 # scikit-image (for the GeoModels notebooks) is listed here, not in geomodels:
 # the geo solve group puts it in every geo environment's lock, and
 # `pixi install --locked` rejects lock packages an environment does not require.

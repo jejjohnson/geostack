@@ -54,7 +54,9 @@ def test_the_cycle_check_is_live() -> None:
     # a re-export of geoops from pipekit (a counterfactual) must close a cycle
     # through geotoolz → pipekit
     edges = [(e.source, e.target) for e in GRAPH.edges] + [("pipekit", "geotoolz")]
-    assert ["geotoolz", "pipekit"] in dg.sccs(list(GRAPH.repos), edges)
+    # geophysix and radiomax lie on it too: geotoolz → radiomax → … → pipekit
+    loops = dg.sccs(list(GRAPH.repos), edges)
+    assert any({"geotoolz", "pipekit"} <= set(loop) for loop in loops)
 
 
 def _with_dependency(source: str, target: str) -> dg.Graph:

@@ -445,6 +445,8 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/functax
+      - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/radiomax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -471,6 +473,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b4/36/b962ad52031b5bfdd249923db6151ff2b665b08c017611db96838455f337/obstore-0.11.1-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cc/88/5c8819f232448d52514b76a64cf285bc608cff9179f3eeacf58750612323/statsmodels-0.15.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/b8/211781d3c8de5fa88437412b7a8c0d7a632596033cff51d5004b08e94e1c/ty-0.0.86-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -851,6 +854,8 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/functax
+      - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/radiomax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -877,6 +882,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b2/d6/de0cc74f8d36976aeca0dd2e9cbf711882ff8e177495115fd82459afdc4d/mercantile-1.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/62/dfde84ffab702545f866350675b16f8df6555d3c41123c25e7a509fe857e/ty-0.0.86-py3-none-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d4/dd/3f73d04c95f6acc6a54700011637e49362e337139b518be895edf4786f87/cyclopts-5.2.0-py3-none-any.whl
@@ -1298,6 +1304,8 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/functax
+      - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/radiomax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -1325,6 +1333,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b4/36/b962ad52031b5bfdd249923db6151ff2b665b08c017611db96838455f337/obstore-0.11.1-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cc/88/5c8819f232448d52514b76a64cf285bc608cff9179f3eeacf58750612323/statsmodels-0.15.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d4/dd/3f73d04c95f6acc6a54700011637e49362e337139b518be895edf4786f87/cyclopts-5.2.0-py3-none-any.whl
@@ -1682,6 +1691,8 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/functax
+      - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/radiomax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -1708,6 +1719,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ae/d6/69a76c8ccdef14af687c497040292a46e59fc7a0ab24724b60e50ca61030/equinox-0.13.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b2/d6/de0cc74f8d36976aeca0dd2e9cbf711882ff8e177495115fd82459afdc4d/mercantile-1.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d4/dd/3f73d04c95f6acc6a54700011637e49362e337139b518be895edf4786f87/cyclopts-5.2.0-py3-none-any.whl
@@ -4161,6 +4173,8 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/functax
+      - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/radiomax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -4189,6 +4203,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/c0/8d/efe0146aafaa53c897efd6325137fc17b0ca9abd3bbc744195a00aacc163/jupyterlab_spellchecker-0.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cc/88/5c8819f232448d52514b76a64cf285bc608cff9179f3eeacf58750612323/statsmodels-0.15.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/b8/211781d3c8de5fa88437412b7a8c0d7a632596033cff51d5004b08e94e1c/ty-0.0.86-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -4672,6 +4687,8 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/functax
+      - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/radiomax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -4700,6 +4717,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/bc/62/dfde84ffab702545f866350675b16f8df6555d3c41123c25e7a509fe857e/ty-0.0.86-py3-none-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/c0/8d/efe0146aafaa53c897efd6325137fc17b0ca9abd3bbc744195a00aacc163/jupyterlab_spellchecker-0.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d4/dd/3f73d04c95f6acc6a54700011637e49362e337139b518be895edf4786f87/cyclopts-5.2.0-py3-none-any.whl
@@ -5183,6 +5201,8 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/functax
+      - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/radiomax
       - pypi: https://files.pythonhosted.org/packages/04/d5/81d1403788f072e7d0e2b2fe539a0ae4410f27886ff52df094e5348c99ea/vegafusion-2.0.3-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
@@ -5211,6 +5231,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b4/36/b962ad52031b5bfdd249923db6151ff2b665b08c017611db96838455f337/obstore-0.11.1-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cc/88/5c8819f232448d52514b76a64cf285bc608cff9179f3eeacf58750612323/statsmodels-0.15.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/b8/211781d3c8de5fa88437412b7a8c0d7a632596033cff51d5004b08e94e1c/ty-0.0.86-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -5632,6 +5653,8 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/functax
+      - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/radiomax
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -5660,6 +5683,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/bc/62/dfde84ffab702545f866350675b16f8df6555d3c41123c25e7a509fe857e/ty-0.0.86-py3-none-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/c0/1a/2b8219908173b977419f30ea14e21c4578004906cd3c8e0b450a5b892c6d/vegafusion-2.0.3-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/ca/87/0c0ca8433e1135f6d1acd355cff21f31c3d433d937d6547aa545c8b060b8/jax-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/d0/09/cab56a48b7e83609831c96f36658f9e30421877875071f2413eb591cf756/array_api_compat-1.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/28/6768d342b2b888f9facdddbd430daf015cab936e2598281ab436b1be1b4a/einx-0.4.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/4e/716b42bf066e180c1235783b46f095a5d871d05dca7006d2295aac29c491/rich_rst-2.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d4/dd/3f73d04c95f6acc6a54700011637e49362e337139b518be895edf4786f87/cyclopts-5.2.0-py3-none-any.whl
@@ -19414,8 +19438,8 @@ packages:
   - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4
   - geonnax @ git+https://github.com/jejjohnson/geonnax@v0.0.10
   - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-cycle
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-cycle
   - xarray>=2024.0 ; extra == 'data'
   - numpy>=1.26 ; extra == 'data'
   - matplotlib>=3.9.0 ; extra == 'viz'
@@ -19436,9 +19460,9 @@ packages:
   - matplotlib>=3.9.0 ; extra == 'examples'
   - loguru>=0.7.2 ; extra == 'examples'
   - tqdm>=4.66.0 ; extra == 'examples'
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-jax ; extra == 'persist'
-  - pipekit-experiment @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-experiment ; extra == 'persist'
-  - pipekit-train @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-train ; extra == 'train'
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-jax ; extra == 'persist'
+  - pipekit-experiment @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-experiment ; extra == 'persist'
+  - pipekit-train @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-train ; extra == 'train'
   - vardax[data,viz,exp,jlab,examples,persist,train] ; extra == 'all'
   requires_python: '>=3.12,<3.14'
 - pypi: ./references/geomodels/plumax
@@ -19455,27 +19479,28 @@ packages:
   - finitevolx @ git+https://github.com/jejjohnson/finitevolX@v0.0.45
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   - optimistix>=0.0.10
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
   - radtrax @ git+https://github.com/jejjohnson/radtrax@v0.1.0
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
   - einx>=0.4
   - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.6
   - functax @ git+https://github.com/jejjohnson/functax@v0.0.11
   - kernellib @ git+https://github.com/jejjohnson/kernellib@v0.0.22
   - numpyro>=0.21 ; extra == 'inference'
-  - xrtoolz-ops @ git+https://github.com/jejjohnson/geotoolz@5742376a6b00acffd6761a8b1a70115e8eb4d3f9#subdirectory=packages/xrtoolz-ops ; extra == 'io'
-  - xrtoolz-products @ git+https://github.com/jejjohnson/geotoolz@5742376a6b00acffd6761a8b1a70115e8eb4d3f9#subdirectory=packages/xrtoolz-products ; extra == 'io'
+  - xrtoolz-ops @ git+https://github.com/jejjohnson/geotoolz@a02cebcbf1e57ff205507b8bd0f9687f6fc4184c#subdirectory=packages/xrtoolz-ops ; extra == 'io'
+  - xrtoolz-products @ git+https://github.com/jejjohnson/geotoolz@a02cebcbf1e57ff205507b8bd0f9687f6fc4184c#subdirectory=packages/xrtoolz-products ; extra == 'io'
   - pyproj ; extra == 'io'
   - matplotlib ; extra == 'notebooks'
   - ipython ; extra == 'notebooks'
   - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4 ; extra == 'assim'
   - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.5 ; extra == 'assim'
-  - pipekit-train[equinox,cache] @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-train ; extra == 'emulate'
+  - pipekit-train[equinox,cache] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-train ; extra == 'emulate'
   - numpyro>=0.21 ; extra == 'population'
   - pyyaml>=6 ; extra == 'population'
-  - xtremax @ git+https://github.com/jejjohnson/xtremax@eeec71e732c5aaee63f57934ce9f7e1226b9dc6a ; extra == 'population'
+  - pyrox-xtreme @ git+https://github.com/jejjohnson/pyrox@05e38f84305374a68700c06c834b99546bddc64c#subdirectory=packages/pyrox-xtreme ; extra == 'population'
   - functax @ git+https://github.com/jejjohnson/functax@v0.0.11 ; extra == 'geo'
   - georeader-spaceml>=2.4.1 ; extra == 'geo'
-  - geotoolz-ops[morph] @ git+https://github.com/jejjohnson/geotoolz@5742376a6b00acffd6761a8b1a70115e8eb4d3f9#subdirectory=packages/geotoolz-ops ; extra == 'geo'
+  - geotoolz-ops[morph] @ git+https://github.com/jejjohnson/geotoolz@a02cebcbf1e57ff205507b8bd0f9687f6fc4184c#subdirectory=packages/geotoolz-ops ; extra == 'geo'
   - scikit-learn>=1.4 ; extra == 'geo'
   - tqdm>=4 ; extra == 'geo'
   - typing-extensions>=4 ; extra == 'geo'
@@ -19492,6 +19517,8 @@ packages:
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4
   - geonnax @ git+https://github.com/jejjohnson/geonnax@v0.0.9
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
+  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.9
   - numpy>=2.0
   - xarray
   - netcdf4
@@ -19500,9 +19527,9 @@ packages:
   - einx>=0.4
   - hitran-api ; extra == 'hitran'
   - georeader-spaceml>=2.4.1 ; extra == 'geo'
-  - geotoolz-ops @ git+https://github.com/jejjohnson/geotoolz@df8c228090b675365abd3fe272890f6a055434c6#subdirectory=packages/geotoolz-ops ; extra == 'geo'
+  - geotoolz-ops @ git+https://github.com/jejjohnson/geotoolz@a02cebcbf1e57ff205507b8bd0f9687f6fc4184c#subdirectory=packages/geotoolz-ops ; extra == 'geo'
   - openpyxl>=3.1 ; extra == 'geo'
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops ; extra == 'geo'
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops ; extra == 'geo'
   - tqdm>=4 ; extra == 'geo'
   - typing-extensions>=4 ; extra == 'geo'
   requires_python: '>=3.12'
@@ -19574,8 +19601,8 @@ packages:
   - numpy>=1.26
   - pyproj>=3.6
   - affine>=2.4
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
   - functax @ git+https://github.com/jejjohnson/functax@v0.0.6
   - jax>=0.4.30 ; extra == 'jax'
   - xarray>=2024.10 ; extra == 'xarray'
@@ -19635,13 +19662,15 @@ packages:
   requires_dist:
   - geotoolz-array @ ./references/geostack/geotoolz/packages/geotoolz-array
   - numpy>=1.26
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
+  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.9
   - jaxtyping>=0.2.36
   - scipy>=1.11
   - affine>=2.4
   - pyproj>=3.6
   - pandas>=2.1
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
   - einx>=0.4
   - rasterio>=1.3 ; extra == 'raster'
   - geopandas>=0.14 ; extra == 'vector'
@@ -19670,11 +19699,12 @@ packages:
   - geotoolz-array[georeader] @ ./references/geostack/geotoolz/packages/geotoolz-array
   - georeader-spaceml>=2.1
   - numpy>=1.26
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
   - scipy>=1.11
   - typing-extensions>=4.0
   - rasterio>=1.3
   - pyproj>=3.6
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
   - xarray>=2024.1 ; extra == 'grid'
   - geopandas>=0.14 ; extra == 'vector'
   - shapely>=2.0 ; extra == 'vector'
@@ -19695,8 +19725,8 @@ packages:
   - dask[bag]>=2024.8.3 ; extra == 'patch-full'
   - geotoolz-array[jax] @ ./references/geostack/geotoolz/packages/geotoolz-array ; extra == 'patch-full'
   - geotoolz-cloud[cog] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'patch-full'
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops ; extra == 'pipekit'
-  - pipekit-train[equinox] @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-train ; extra == 'train'
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops ; extra == 'pipekit'
+  - pipekit-train[equinox] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-train ; extra == 'train'
   - xarray>=2024.1 ; extra == 'train'
   - zarr>=3.0 ; extra == 'train'
   requires_python: '>=3.12'
@@ -19706,6 +19736,8 @@ packages:
   - geotoolz-array[georeader] @ ./references/geostack/geotoolz/packages/geotoolz-array
   - georeader-spaceml>=2.1
   - numpy>=1.26
+  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.9
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
   - typing-extensions>=4.0
   - rasterio>=1.3
   - affine>=2.4
@@ -19734,6 +19766,7 @@ packages:
   name: xrtoolz-ops
   requires_dist:
   - numpy>=1.26
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
   - dask[array]>=2024.10
   - jaxtyping>=0.2.34
   - scipy>=1.12
@@ -19745,11 +19778,11 @@ packages:
   - xrft>=1.0
   - xskillscore>=0.0.26
   - numpy-groupies>=0.11
-  - pipekit-array[xarray] @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array
+  - pipekit-array[xarray] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
   - geotoolz-ops @ ./references/geostack/geotoolz/packages/geotoolz-ops
   - geotoolz-array @ ./references/geostack/geotoolz/packages/geotoolz-array
   - matplotlib>=3.8
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
   - xrtoolz-products @ ./references/geostack/geotoolz/packages/xrtoolz-products
   - netcdf4>=1.6
   - pywavelets>=1.4 ; extra == 'wavelets'
@@ -19759,13 +19792,14 @@ packages:
   - geopandas>=1.1.3 ; extra == 'vector'
   - shapely>=2.0 ; extra == 'vector'
   - rasterio>=1.3 ; extra == 'vector'
-  - pipekit-array[sklearn] @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-array ; extra == 'sklearn'
+  - pipekit-array[sklearn] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array ; extra == 'sklearn'
   - scikit-learn>=1.4 ; extra == 'sklearn'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
   name: xrtoolz-products
   requires_dist:
   - numpy>=1.26
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
   - pandas>=2.1
   - xarray>=2024.10
   - copernicusmarine>=2.0 ; extra == 'cmems'
@@ -19808,7 +19842,7 @@ packages:
   - xarray>=2024.6 ; extra == 'xarray'
   - scikit-learn>=1.4 ; extra == 'sklearn'
   - einx>=0.4 ; extra == 'einx'
-  - array-api-compat>=1.4 ; extra == 'compat'
+  - array-api-compat>=1.11 ; extra == 'compat'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/pipekit/packages/pipekit-cycle
   name: pipekit-cycle
@@ -19848,6 +19882,7 @@ packages:
   - jax>=0.4.30
   - jaxtyping>=0.2
   - diffrax>=0.7 ; extra == 'diffrax'
+  - integrix @ git+https://github.com/jejjohnson/integrix.git@v0.0.3 ; extra == 'diffrax'
   - pipekit-array @ ./references/geostack/pipekit/packages/pipekit-array ; extra == 'array'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/pipekit/packages/pipekit-ops
@@ -19964,7 +19999,7 @@ packages:
   name: geophysix
   requires_dist:
   - numpy>=2.0
-  - array-api-compat>=1.11
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
   - jax>=0.4.30 ; extra == 'jax'
   - xarray>=2024.6 ; extra == 'xarray'
   requires_python: '>=3.12'
@@ -19986,8 +20021,8 @@ packages:
   name: radiomax
   requires_dist:
   - numpy>=2.0
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.5
-  - array-api-compat>=1.11
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
   - jax>=0.4.30 ; extra == 'jax'
   - xarray>=2024.6 ; extra == 'xarray'
   requires_python: '>=3.12'

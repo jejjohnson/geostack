@@ -212,7 +212,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `InstrumentPOD` | class | One instrument's detection curve with its published calibration. |
 | `LandfillIntensity` | class | Multi-component intensity for municipal solid waste landfills. |
 | `LivestockFeedlotIntensity` | class | Bimodal diurnal + seasonal intensity for concentrated livestock operations. |
-| `LogIntensity` | class | A registry intensity as an xtremax log-intensity on window time. |
+| `LogIntensity` | class | A registry intensity as a pyrox-xtreme log-intensity on window time. |
 | `LogLogisticPOD` | class | Logistic POD on log-flux: the lognormal CDF approximation. |
 | `LogisticPOD` | class | Single-covariate logistic POD: the classic S-curve. |
 | `LognormalMark` | class | Lognormal f(q) = LN(q; μ, σ²). |
@@ -223,7 +223,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `MixtureLognormalMark` | class | Mixture of K lognormals f(q) = Σₖ wₖ LN(q; μₖ, σₖ²). |
 | `OffshorePlatformIntensity` | class | Combined tidal and operational intensity for offshore oil & gas platforms. |
 | `OperationalScheduleIntensity` | class | Step-function intensity for facilities with fixed shift schedules. |
-| `PODRetention` | class | A probability-of-detection curve as an xtremax retention callable. |
+| `PODRetention` | class | A probability-of-detection curve as a pyrox-xtreme retention callable. |
 | `POD_REGISTRY` | constant | `{'logistic': <class 'plumax.population._src.pod.LogisticP...` |
 | `ParadoxResult` | class | Container for a single Monte Carlo paradox simulation. |
 | `PerEventPosterior` | class | Structural type for a per-event ``Q`` posterior (payload v2). |
@@ -267,10 +267,10 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `lognorm_cdf` | function | Lognormal CDF used as the probability-of-detection curve. |
 | `lognormal_pdf` | function | Evaluate the Lognormal probability density function. |
 | `make_mark` | function | Build a registry mark family by name. |
-| `make_process` | function | An xtremax inhomogeneous Poisson process for a registry intensity. |
+| `make_process` | function | A pyrox-xtreme inhomogeneous Poisson process for a registry intensity. |
 | `mark_iw_model` | function | NumPyro model of the marks given the detections, importance-corrected. |
 | `occurrence_probability` | function | Probability of at least one event, P(N(t, t + h) ≥ 1) = 1 − exp(−Λ(t, t + h)). |
-| `padded_event_buffer` | function | Detection times as xtremax's padded buffer on window time. |
+| `padded_event_buffer` | function | Detection times as pyrox-xtreme's padded buffer on window time. |
 | `pareto_smoothed_log_weights` | function | Deprecated alias of `integrix.expect.pareto_smoothed_log_weights`. |
 | `pod_powerlaw_model` | function | NumPyro model for a POD-modified power law on observed fluxes. |
 | `pod_union` | function | Probability that any covering instrument detects a rate Q, at published values. |
@@ -382,7 +382,6 @@ Differentiable radiative transfer for methane remote sensing.
 | `STANDARD_GRAVITY_M_PER_S2` | constant | `9.80665` |
 | `ViewingGeometry` | class | Sun and sensor directions as seen from the surface. |
 | `afgl_us_standard` | function | The AFGL US Standard atmosphere as layers between its levels. |
-| `air_mass_factor` | function | Plane-parallel two-way air-mass factor, sun → surface → sensor. |
 | `layers_from_levels` | function | An :class:`AtmosphericState` of ``L`` layers from ``L + 1`` levels. |
 | `number_density` | function | Total number density from the ideal-gas law [molecules / cm³]. |
 
@@ -398,7 +397,6 @@ Differentiable radiative transfer for methane remote sensing.
 | `V0_GRID` | constant | `TableGrid(name='v0', nu_min_cm=4000.0, nu_max_cm=6500.0, ...` |
 | `absorption_coefficient` | function | α(ν) = σ(ν) · N_gas [1/cm]. |
 | `beers_law_from_lut` | function | End-to-end: σ-from-LUT → α → τ(ν) for a single homogeneous layer. |
-| `earth_sun_distance` | function | The Earth–Sun distance [AU] on a day of the year. |
 | `fetch_solar_spectrum` | function | Download a solar spectrum into the cache, once, and check its SHA-256. |
 | `interpolate_cross_section` | function | Return σ(ν) at a given (T, p) via bilinear LUT interpolation. |
 | `load_opacity` | function | A :class:`~radtrax.spectroscopy.TableOpacity` from cached tables. |
