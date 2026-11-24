@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.7.0, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6.
+Listed at gaussx 0.7.0, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6, geophysix 0.0.5, radiomax 0.0.8.
 
 ## Upstream: `gaussx`
 
@@ -1113,3 +1113,217 @@ Integration: rules, cumulative scans, time marching, expectations.
 | Name | Kind | What it does |
 |---|---|---|
 | `cumulative` | function | The running trapezoid integral of samples along one axis. |
+
+## Upstream: `geophysix`
+
+Physical constants, the Earth's shape, its air and its sea water.
+
+### `geophysix`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BackendError` | class | Raised for an array of an unknown library, or of several in one call. |
+| `EarthError` | class | Raised for a bad body, such as an unknown ellipsoid or sphere name. |
+| `GeophysixError` | class | Base class for every exception raised by ``geophysix``. |
+| `RangeError` | class | Raised for a latitude out of range. |
+| `UnitError` | class | Raised for an unknown unit. |
+
+### `geophysix.columns`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `COLUMN_UNITS` | constant | `('kg_m2', 'mol_m2', 'molecules_m2', 'ppm_m')` |
+| `column_from_mixing_ratio` | function | The column of a gas from its dry-air mole fraction. |
+| `convert` | function | A gas column converted between ppm·m, mol m⁻², kg m⁻² and molecules m⁻². |
+| `dry_air_column` | function | The column of dry air above a point, from hydrostatic balance. |
+| `mixing_ratio_from_column` | function | The dry-air mole fraction of a gas from its column. |
+
+### `geophysix.constants`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `CH4` | constant | `Gas(name='CH4', molar_mass=0.0160425)` |
+| `CO` | constant | `Gas(name='CO', molar_mass=0.0280101)` |
+| `CO2` | constant | `Gas(name='CO2', molar_mass=0.0440095)` |
+| `Constants` | class | One convention's physical constants, SI throughout. |
+| `Gas` | class | A trace gas: its name and its molar mass M, kg mol⁻¹. |
+| `H2O` | constant | `Gas(name='H2O', molar_mass=0.01801528)` |
+| `N2O` | constant | `Gas(name='N2O', molar_mass=0.0440128)` |
+| `STANDARD` | constant | `Constants(boltzmann=1.380649e-23, avogadro=6.02214076e+23...` |
+
+### `geophysix.earth`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Ellipsoid` | class | An ellipsoid of revolution: semi-major axis a, flattening f, rotation Ω. |
+| `GRS80` | constant | `Ellipsoid(semi_major=6378137.0, flattening=0.003352810681...` |
+| `SPHERE` | constant | `Ellipsoid(semi_major=6371008.771415059, flattening=0.0, r...` |
+| `WGS84` | constant | `Ellipsoid(semi_major=6378137.0, flattening=0.003352810664...` |
+| `cell_area` | function | The area of each cell of a latitude-longitude grid on the ellipsoid. |
+| `ecef_to_geodetic` | function | Geodetic position of an Earth-centred, Earth-fixed point. |
+| `geodetic_to_ecef` | function | Earth-centred, Earth-fixed coordinates of a geodetic position. |
+| `great_circle_distance` | function | The great-circle distance between two points on a sphere of radius R. |
+| `initial_azimuth` | function | The initial bearing of the great circle from the first point to the second. |
+| `meridian_degree_length` | function | The length of one degree of latitude along the meridian at φ. |
+| `meridional_radius` | function | The meridional radius of curvature M(φ). |
+| `parallel_degree_length` | function | The length of one degree of longitude along the parallel at φ. |
+| `parallel_radius` | function | The radius of the parallel (the circle of latitude) at φ. |
+| `prime_vertical_radius` | function | The prime-vertical radius of curvature N(φ). |
+| `sphere` | function | A sphere of radius R: the ellipsoid with f = 0. |
+
+### `geophysix.rotation`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `beta` | function | The meridional gradient of the Coriolis parameter. |
+| `beta_plane` | function | The Coriolis parameter on a β-plane. |
+| `coriolis` | function | The Coriolis parameter at each latitude. |
+
+### `geophysix.seawater`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `LINEAR_EOS` | constant | `LinearEOS(reference_density=1025.0, thermal_expansion=0.0...` |
+| `LinearEOS` | class | The parameters of the linear equation of state of sea water. |
+| `buoyancy` | function | Buoyancy relative to the reference density. |
+| `linear_density` | function | Sea-water density from the linear equation of state. |
+| `linear_density_anomaly` | function | The density anomaly ρ − ρ₀ from the linear equation of state. |
+| `linear_drho_dS` | function | The haline derivative of the linear equation of state. |
+| `linear_drho_dT` | function | The thermal derivative of the linear equation of state. |
+| `reduced_gravity` | function | The reduced gravity across the interface of two layers. |
+
+### `geophysix.thermo`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `dry_air_density` | function | The density of dry air from the ideal gas law. |
+| `exner` | function | The Exner function, the dimensionless pressure of dry air. |
+| `hypsometric_thickness` | function | The thickness of each layer between consecutive pressure levels. |
+| `number_density` | function | The number of molecules per unit volume of an ideal gas. |
+| `potential_temperature` | function | The potential temperature of dry air. |
+| `pressure_velocity` | function | Pressure velocity from vertical velocity, in hydrostatic balance. |
+| `temperature_from_potential_temperature` | function | Temperature from the potential temperature of dry air. |
+| `vertical_velocity` | function | Vertical velocity from pressure velocity, in hydrostatic balance. |
+| `virtual_temperature` | function | The virtual temperature of moist air. |
+
+### `geophysix.wind`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `wind_components` | function | The eastward and northward wind from a speed and a bearing. |
+| `wind_direction` | function | The wind's bearing, clockwise from north. |
+| `wind_speed` | function | The horizontal wind speed. |
+
+## Upstream: `radiomax`
+
+Observation geometry and radiometry, on any array library.
+
+### `radiomax`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BackendError` | class | Raised for an array of an unknown library, or of several in one call. |
+| `RadiomaxError` | class | Base class for every exception raised by ``radiomax``. |
+| `ValidationError` | class | Raised for a bad argument: its shape, a dimension name or its value. |
+
+### `radiomax.altimetry`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `dry_troposphere_correction` | function | Range correction for the dry gases of the troposphere, after Saastamoinen. |
+| `dual_frequency_ionosphere_correction` | function | Range correction for the ionosphere from two ranges at two frequencies. |
+| `inverse_barometer` | function | Height of the sea surface above its mean, under the air's pressure. |
+| `ionosphere_correction` | function | Range correction for the ionosphere from its electron content. |
+| `sea_surface_height` | function | Sea surface height above the ellipsoid from an altimeter's range. |
+| `wet_troposphere_correction` | function | Range correction for the water vapour of the troposphere. |
+
+### `radiomax.geometry`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `air_mass_factor` | function | The plane-parallel two-way air mass, Sun to surface to sensor. |
+| `apparent_position` | function | Where a target at a height above a pixel appears on the ellipsoid. |
+| `bowtie_detector_positions` | function | The detector that sees each row of a scan once its overlap is removed. |
+| `earth_intersection` | function | The point where a ray from outside the Earth first meets the ellipsoid. |
+| `earth_sun_distance` | function | The distance from the Earth to the Sun. |
+| `geostationary_lonlat` | function | Longitude and latitude of a geostationary imager's scan angles. |
+| `geostationary_on_earth` | function | Whether a geostationary imager's line of sight meets the Earth. |
+| `geostationary_scan_angles` | function | Scan angles at which a geostationary imager sees a position. |
+| `phase_angle` | function | The angle at the pixel between the directions to the Sun and the sensor. |
+| `relative_azimuth` | function | The azimuth between the sensor and the Sun, folded to [0°, 180°]. |
+| `scan_angles` | function | The scan angle of every column of a whiskbroom swath. |
+| `scan_pixel_growth` | function | How much a whiskbroom's pixel grows from nadir, over a spherical Earth. |
+| `scattering_angle` | function | The angle by which a photon from the Sun turns to reach the sensor. |
+| `shell_air_mass` | function | The one-way air mass of a spherical shell, for a ray from the surface. |
+| `solar_angles` | function | The Sun's zenith and azimuth angles at each pixel. |
+| `solar_declination` | function | The Sun's declination, its latitude on the celestial sphere. |
+| `solar_zenith` | function | The Sun's zenith angle at each pixel. |
+| `utc_day_seconds` | function | UTC midnights since 2000-01-01, and the second of the UTC day. |
+| `view_angles` | function | The view zenith and azimuth of a satellite at each pixel. |
+
+### `radiomax.radiometry`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `apply_response` | function | Band values of a spectrum, through a response matrix. |
+| `apply_response_adjoint` | function | The adjoint of `apply_response`, from bands back to the grid. |
+| `band_average` | function | The response-weighted average of a spectrum, per band. |
+| `band_centre` | function | The response-weighted mean wavelength of each band. |
+| `band_irradiance` | function | The solar irradiance of each band at 1 AU. |
+| `box_response` | function | Box responses: 1 within half a width of the centre, 0 outside. |
+| `counts_to_radiance` | function | Radiance at the sensor from digital counts. |
+| `counts_to_reflectance` | function | Reflectance from the counts of a product that stores scaled reflectance. |
+| `equivalent_width` | function | The width of a box as high as each band's peak, with the same integral. |
+| `gaussian_response` | function | Gaussian responses with a peak of 1. |
+| `per_cm_to_per_nm` | function | A spectral density per cm⁻¹ as one per nm. |
+| `per_nm_to_per_cm` | function | A spectral density per nm as one per cm⁻¹. |
+| `radiance_from_reflectance` | function | Radiance from top-of-atmosphere reflectance, the inverse of `reflectance`. |
+| `radiance_to_counts` | function | Digital counts from radiance, the inverse of `counts_to_radiance`. |
+| `reflectance` | function | Top-of-atmosphere reflectance from radiance. |
+| `response_coverage` | function | The share of each band's response that a grid covers. |
+| `response_matrix` | function | The matrix of tabulated responses on any grid, as an exact integral. |
+| `sampled_response_matrix` | function | The response matrix on the responses' own grid, by a quadrature rule. |
+| `trapezoid_weights` | function | The weights of the composite trapezoid rule on a grid, uniform or not. |
+| `triangle_response` | function | Triangular responses, 1 at the centre and 0 half a width from it. |
+
+### `radiomax.retrievals`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BandRatioTable` | class | Published coefficients of a band ratio, for one sensor and one version. |
+| `OCX_R2022` | constant | `mappingproxy({'SeaWiFS': BandRatioTable(sensor='SeaWiFS',...` |
+| `band_ratio_chlorophyll` | function | Chlorophyll-a from the largest of several blue reflectances over a green one. |
+| `brdf_reflectance` | function | Reflectance of a surface from its kernel weights. |
+| `li_sparse_reciprocal` | function | The LiSparse-Reciprocal kernel, shadows cast by sparse crowns. |
+| `li_sparse_reciprocal_from_cosines` | function | The LiSparse-Reciprocal kernel of the cosines of the zeniths. |
+| `nadir_adjustment` | function | The factor that takes an observed reflectance to nadir view. |
+| `ross_thick` | function | The RossThick kernel, volume scattering by a dense canopy of small leaves. |
+| `ross_thick_from_cosines` | function | The RossThick kernel of the cosines of the zeniths. |
+| `split_window_features` | function | The features whose weighted sum is a split-window land temperature. |
+| `split_window_lst` | function | Land-surface temperature from two thermal bands and their emissivities. |
+| `split_window_sst` | function | Sea-surface temperature from two thermal bands and the view angle. |
+
+### `radiomax.sar`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `beta0_to_sigma0` | function | Backscatter coefficient σ⁰ from the radar brightness β⁰. |
+| `dn_to_backscatter` | function | Backscatter from a SAR image's digital numbers. |
+| `gamma0_to_sigma0` | function | Backscatter coefficient σ⁰ from γ⁰. |
+| `sigma0_to_beta0` | function | Radar brightness β⁰ from the backscatter coefficient σ⁰. |
+| `sigma0_to_gamma0` | function | Backscatter γ⁰ from the backscatter coefficient σ⁰. |
+
+### `radiomax.thermal`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `PlanckLinear` | class | A band's inverse Planck function, with a linear correction. |
+| `PlanckQuadratic` | class | A band's inverse Planck function, with a quadratic correction. |
+| `brightness_temperature` | function | The temperature of the black body that emits a given radiance. |
+| `brightness_temperature_band` | function | A band's brightness temperature from its published coefficients. |
+| `from_per_ghz` | function | Radiance per cm⁻¹ of wavenumber from radiance per GHz of frequency. |
+| `from_per_um` | function | Radiance per cm⁻¹ of wavenumber from radiance per µm of wavelength. |
+| `log_planck_radiance` | function | The logarithm of Planck's law, where the radiance itself underflows. |
+| `planck_radiance` | function | Planck's law: the radiance of a black body per wavenumber. |
+| `to_per_ghz` | function | Radiance per GHz of frequency from radiance per cm⁻¹ of wavenumber. |
+| `to_per_um` | function | Radiance per µm of wavelength from radiance per cm⁻¹ of wavenumber. |

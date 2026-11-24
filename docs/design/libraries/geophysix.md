@@ -1,7 +1,7 @@
 ---
 title: "geophysix: physical constants, Earth geometry and atmospheric state for JAX"
 short_title: "geophysix"
-description: "geophysix is the stack's library of physical facts about the Earth: its constants, its size and shape, its rotation, the thermodynamics of its air and the equation of state of its sea water, and the units a gas column is reported in. It sits at GeoNumerics tier 0, imports nothing from the stack, and gives every library above it one value for each constant where today there are several. Status: proposed, at design-sketch depth."
+description: "geophysix is the stack's library of physical facts about the Earth: its constants, its size and shape, its rotation, the thermodynamics of its air and the equation of state of its sea water, and the units a gas column is reported in. It sits at GeoNumerics tier 0, imports nothing from the stack, and gives every library above it one value for each constant where today there are several. Status: built, with the geodesics on the ellipsoid and TEOS-10 open."
 date: 2026-11-05
 keywords:
   - geophysix
@@ -20,7 +20,7 @@ geophysix is the stack's library of physical facts about the Earth: its constant
 | Imported by | gridax, diagnostix, radiomax, tracerax, finitevolX, spectraldiffx; geoarray, geoops, xrops; sesmax-core, plumax, radtrax |
 | Takes over | the constants modules of finitevolX, sesmax-core and xrops; WGS84 and the ellipsoid from geonnax; Coriolis and β-planes from finitevolX and xrops; seawater density from finitevolX and xrops; ideal-gas and column-unit conversions from radtrax, plumax, geoops and xrops |
 | Does not own | geometry on the unit sphere (functax); grids and their metrics (gridax); diagnostics such as N² and vorticity (diagnostix); model scales and non-dimensionalisation (the models) |
-| Status | proposed; no repository yet |
+| Status | built: [jejjohnson/geophysix](https://github.com/jejjohnson/geophysix), from the backlog of [geostack#285](https://github.com/jejjohnson/geostack/issues/285) |
 | Tracked in | the [layer map](../stack_layer_map.md) |
 
 ```{figure} ../../images/libraries/geophysix.svg
@@ -135,7 +135,7 @@ The test for every name: is it a closed-form fact about the Earth, its air or it
 
 | From | What | Its users then import |
 | --- | --- | --- |
-| finitevolX | `utils/constants.py` (`R_EARTH`, `GRAVITY`, `OMEGA`, `DEG2M`, `RHO`); `coriolis_param`, `coriolis_fn`; `eos.py` | geophysix; finitevolX keeps its operators |
+| gridax and gridax-jax (finitevolX until Nov 2026) | gridax `_src/constants.py` (`R_EARTH`, `GRAVITY`, `OMEGA`, `DEG2M`, `RHO`) and `_src/operators/diagnostics.py` (`coriolis_param`, `coriolis_fn`); gridax-jax `_src/operators/eos.py` | geophysix; both keep their operators |
 | somax, sesmax-core | `constants.py`, the same file in both | geophysix; sesmax-core keeps `scales.py` |
 | xrops | the `grad` and `atm` constants; the maths of `coriolis_parameter`, `hypsometric_height`, `dry_air_column`, `column_mass_to_delta_vmr` and `density_from_ts` | geophysix underneath; xrops keeps the DataArray wrappers |
 | geonnax | `WGS84_A`, `WGS84_F`, `EARTH_MEAN_RADIUS_M`, and the ellipsoidal half of `_frames.py` | geophysix; the unit-sphere frames go to functax |
@@ -245,11 +245,11 @@ Two decided on the layer map and one by the owner, four leaning, three open. Eac
 
 ### 3. Constants as records passed in
 
-**Leaning: frozen records, passed as arguments with defaults.** `gpx.constants.STANDARD` and `gpx.earth.WGS84` are immutable records, and every function takes the one it needs as a keyword argument. A model that wants another planet, a sphere or a different convention passes its own record; nothing patches a global. Plain module-level floats would be shorter, but they are the reason three libraries hold three radii today.
+**Decided (20 Nov 2026, [geophysix#14](https://github.com/jejjohnson/geophysix/issues/14)): frozen records, passed as arguments with defaults.** `gpx.constants.STANDARD` and `gpx.earth.WGS84` are immutable records, and every function takes the one it needs as a keyword argument. A model that wants another planet, a sphere or a different convention passes its own record; nothing patches a global. The records are frozen dataclasses of floats, registered as JAX pytrees only when JAX is importable. Plain module-level floats would be shorter, but they are the reason three libraries hold three radii today.
 
 ### 4. Which value for each constant
 
-**Leaning: the published conventions, one each.** The IUGG mean radius R₁ = 6,371,008.8 m for the default sphere; standard gravity g₀ = 9.80665 m s⁻²; Ω = 7.292115 × 10⁻⁵ s⁻¹ from WGS84; CODATA 2018 for k\_B, N\_A and R. finitevolX, somax and sesmax-core use 6,371,200 m today, IGRF's geomagnetic reference radius rather than a mean Earth radius, so their results move by about 3 × 10⁻⁵ relative when they switch; each switch carries a test of that size, and a model that must reproduce an old run passes the old radius explicitly.
+**Decided (20 Nov 2026, [geophysix#14](https://github.com/jejjohnson/geophysix/issues/14)): the published conventions, one each.** The IUGG mean radius R₁ = 6,371,008.8 m for the default sphere; standard gravity g₀ = 9.80665 m s⁻²; Ω = 7.292115 × 10⁻⁵ s⁻¹ from WGS84; CODATA 2018 for k\_B, N\_A and R. finitevolX, somax and sesmax-core use 6,371,200 m today, IGRF's geomagnetic reference radius rather than a mean Earth radius, so their results move by about 3 × 10⁻⁵ relative when they switch; each switch carries a test of that size, and a model that must reproduce an old run passes the old radius explicitly.
 
 ### 5. Geodesics: the sphere in Core, the ellipsoid here
 
@@ -282,16 +282,16 @@ The working position: map projections stay with pyproj on the host, through geoa
 
 ## Roadmap
 
-Six waves, each a GitHub issue epic in the geophysix repository once it exists. The constants and the Earth come first: every other module reads them, and they end the most copies.
+Each wave is a GitHub issue epic in the [geophysix repository](https://github.com/jejjohnson/geophysix). The constants and the Earth come first: every other module reads them, and they end the most copies.
 
 | Wave | Delivers | Ends | Needs |
 | --- | --- | --- | --- |
-| 0. Scaffold | the repository from the library template; the constants and Earth records; CI, capability index; reference tests against pyproj's `Geod` and CODATA | — | — |
-| 1. Constants and the Earth | `gpx.constants`, `gpx.earth`: ellipsoids and spheres, geodetic to ECEF, cell areas, geodesics on the ellipsoid | the `constants.py` of finitevolX and sesmax-core; geonnax's WGS84; the private haversines | 0 |
-| 2. Rotation and columns | Coriolis, β and β-planes; column units, mixing ratio to column, the dry-air column, number density | finitevolX's and xrops' Coriolis; the column and gas-law copies in geoops, plumax, radtrax and xrops | 1 |
-| 3. Thermodynamics and sea water | the ideal gas, virtual and potential temperature, hypsometric thickness; the linear equation of state, then the TEOS-10 port (decision 7) | finitevolX `eos.py`; xrops' gsw calls | 1 |
-| 4. Consumers switch | the twelve importers onto geophysix, each with a tolerance test for any value that moves (decision 4) | the remaining local constants | 1–3 |
-| 5. Ports from plumax, radtrax and geotoolz | the ISA sea-level temperature; the radius of a parallel and the length of a degree; temperature from potential temperature; w from ω; `geophysix.wind` (decision 10) | xrops' 111 km literals, `wrf_temperature` and wind maths; plumax's `T_STANDARD`, ERA5 w and wind components; radtrax's rounded c and CH₄ mass | 4 |
+| [0. Scaffold](https://github.com/jejjohnson/geophysix/issues/8) | the repository from the library template; the constants and Earth records; CI, capability index; reference tests against pyproj's `Geod` and CODATA | — | — |
+| [1. Constants and the Earth](https://github.com/jejjohnson/geophysix/issues/9) | `gpx.constants`, `gpx.earth`: ellipsoids and spheres, geodetic to ECEF, cell areas, geodesics on the ellipsoid | the `constants.py` of finitevolX and sesmax-core; geonnax's WGS84; the private haversines | 0 |
+| [2. Rotation and columns](https://github.com/jejjohnson/geophysix/issues/10) | Coriolis, β and β-planes; column units, mixing ratio to column, the dry-air column, number density | finitevolX's and xrops' Coriolis; the column and gas-law copies in geoops, plumax, radtrax and xrops | 1 |
+| [3. Thermodynamics and sea water](https://github.com/jejjohnson/geophysix/issues/11) | the ideal gas, virtual and potential temperature, hypsometric thickness; the linear equation of state, then the TEOS-10 port (decision 7) | finitevolX `eos.py`; xrops' gsw calls | 1 |
+| [4. Consumers switch](https://github.com/jejjohnson/geophysix/issues/12) | the twelve importers onto geophysix, each with a tolerance test for any value that moves (decision 4) | the remaining local constants | 1–3 |
+| [5. Ports from plumax, radtrax and geotoolz](https://github.com/jejjohnson/geophysix/issues/41) | the ISA sea-level temperature; the radius of a parallel and the length of a degree; temperature from potential temperature; w from ω; `geophysix.wind` (decision 10) | xrops' 111 km literals, `wrf_temperature` and wind maths; plumax's `T_STANDARD`, ERA5 w and wind components; radtrax's rounded c and CH₄ mass | 4 |
 
 Waves 2 and 3 can run side by side. Wave 4 is one issue per consumer, filed in that consumer's repository and linked to the geophysix epic; somax needs none, since sesmax-core replaces it.
 

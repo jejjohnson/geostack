@@ -1161,9 +1161,9 @@ LAYERS = {
         ["geotoolz", "xrtoolz", "georeader"],
     ),
     "GeoNumerics": (
-        "PDE operators on grids, spectral methods",
+        "Earth physics, PDE operators on grids, spectral methods, radiometry",
         NUMERICS,
-        ["finitevolX", "spectraldiffx"],
+        ["geophysix", "spectraldiffx", "finitevolX", "radiomax"],
     ),
     "Core": (
         "Maths and plumbing that know no geography",
@@ -1436,8 +1436,8 @@ DG_LAYERS = [
         0.0,
         1.0,
         [
-            [("finitevolX", 0.5)],
-            [("spectraldiffx", 0.2)],
+            [("finitevolX", 0.5), ("radiomax", 0.7)],
+            [("spectraldiffx", 0.2), ("geophysix", 0.62)],
         ],
     ),
     (
