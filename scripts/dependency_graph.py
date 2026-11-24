@@ -40,27 +40,27 @@ PAGES = (ROOT / "docs" / "api" / "dependency_graph.md", ROOT / "README.md")
 BEGIN, END = "<!-- dependency-graph:begin -->", "<!-- dependency-graph:end -->"
 
 #: the directories under ``references/`` that hold the submodules
-DIRS = ("geostack", "numerics", "geoml", "geomodels")
+DIRS = ("numerics", "geostack", "geoml", "geomodels")
 #: layers from the bottom up
 LAYERS = ("core", *DIRS)
-#: an edge between layers points to a lower rank; GeoStack and GeoNumerics share
-#: the rank above Core, so neither may import the other
-LAYER_RANK = {"core": 0, "geostack": 1, "numerics": 1, "geoml": 2, "geomodels": 3}
+#: an edge between layers points to a lower rank; GeoNumerics sits below GeoStack,
+#: so GeoStack may import GeoNumerics and never the other way round
+LAYER_RANK = {"core": 0, "numerics": 1, "geostack": 2, "geoml": 3, "geomodels": 4}
 #: repositories in Core, the maths and plumbing that know no geography (the
 #: stack layer map); their submodules stay in the directory they sit in today
 CORE = {"pipekit", "gaussx", "functax", "argminax", "integrix"}
 TITLES = {
     "core": "Core",
-    "geostack": "GeoStack",
     "numerics": "GeoNumerics",
+    "geostack": "GeoStack",
     "geoml": "GeoML",
     "geomodels": "GeoModels",
 }
 #: within a layer, a repository may import only repositories of a lower tier
 TIERS: dict[str, dict[str, int]] = {
     "core": {"pipekit": 0, "gaussx": 0, "functax": 0, "argminax": 1, "integrix": 1},
-    "geostack": {"georeader": 0, "geotoolz": 1},
     "numerics": {"spectraldiffx": 0, "finitevolX": 1},
+    "geostack": {"georeader": 0, "geotoolz": 1},
     "geoml": {
         "geonnax": 0,
         "gauss_flows": 0,
@@ -86,14 +86,14 @@ TIER_ROLES = {
         "pipelines, linear algebra, Gaussians and function approximation",
         "optimisation and integration",
     ),
+    "numerics": (
+        "spectral methods",
+        "finite volume",
+    ),
     "geostack": (
         "readers",
         "operators on arrays and geoarray carriers",
         "operators on xarray, lifting geoops over cubes",
-    ),
-    "numerics": (
-        "spectral methods",
-        "finite volume",
     ),
     "geoml": (
         "layers and flows",
@@ -624,7 +624,7 @@ def block(g: Graph, page: Path) -> str:
     if page.name == "README.md":
         # the README shows the figure drawn from this page's graph
         diagram = (
-            '<p align="center">\n  <img alt="The repositories in four layer bands,'
+            '<p align="center">\n  <img alt="The repositories in five layer bands,'
             " with edges pointing down from each repository to those it depends on"
             ' or imports" src="docs/images/overview/dependency_graph.svg"'
             ' width="100%">\n</p>'
@@ -635,7 +635,7 @@ def block(g: Graph, page: Path) -> str:
             [
                 ":::{figure} ../images/overview/dependency_graph.svg",
                 ":label: fig-dg-layers",
-                ":alt: The repositories in four layer bands, with edges pointing"
+                ":alt: The repositories in five layer bands, with edges pointing"
                 " down from each repository to those it depends on or imports.",
                 ":width: 100%",
                 ":::",

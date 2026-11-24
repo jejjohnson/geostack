@@ -258,10 +258,12 @@ GEOMODELS: dict[str, list[str]] = {
     ],
 }
 
-# The four layers, bottom to top, as {layer: (title, libraries, index page,
-# layers it may import)}. Edges between layers point down: GeoModels may import
-# GeoML, GeoNumerics and GeoStack; GeoML may import GeoNumerics and GeoStack;
-# GeoNumerics and GeoStack import neither of the others.
+# The four layers as {layer: (title, libraries, index page, layers it is checked
+# with)}, in the order of the environments: GeoStack is in every one, and each
+# later layer adds one. Edges between layers point down: GeoModels may import
+# GeoML, GeoStack and GeoNumerics; GeoML may import GeoStack and GeoNumerics;
+# GeoStack may import GeoNumerics, which imports none of the others. GeoNumerics
+# is not in GeoStack's environment, so GeoStack's names are not checked with it.
 LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
     "geostack": ("GeoStack", UPSTREAM, INDEX, ()),
     "numerics": (
@@ -283,6 +285,9 @@ LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
         ("geoml", "numerics", "geostack"),
     ),
 }
+
+# Layers a layer may import though it is not checked with them.
+ALSO_MAY_IMPORT: dict[str, tuple[str, ...]] = {"geostack": ("numerics",)}
 
 # Names two homes may share on purpose, and why: {name: reason}.
 _GP_LIKELIHOOD = (
@@ -389,7 +394,7 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
     "Divergence2D": (
         "geoops.Divergence2D is a pipekit Operator on a GeoArray's collocated"
         " map axes; finitevolx.Divergence2D is the finite-volume divergence on"
-        " an Arakawa C-grid. GeoStack may not import GeoNumerics."
+        " an Arakawa C-grid."
     ),
     "ValidationError": (
         "functax, argminax and integrix each raise their own ValidationError,"
@@ -780,7 +785,8 @@ def _layer_links(layer: str) -> list[str]:
 
 
 def render(layer: str = "geostack") -> str:
-    title, libraries, _, below = LAYERS[layer]
+    title, libraries, _, checked = LAYERS[layer]
+    below = (*checked, *ALSO_MAY_IMPORT.get(layer, ()))
     package_part, total = _package_part() if layer == "geostack" else ([], 0)
     imports = (
         "It may import " + ", ".join(LAYERS[b][0] for b in below) + "."

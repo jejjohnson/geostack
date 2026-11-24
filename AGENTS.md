@@ -48,9 +48,9 @@ not into a local package.
 | GeoML | `geoml/` | geonnax, kernellib, filterax, vardax, gauss_flows, pyrox (a workspace: pyrox, -gauss, -xtreme, -gp, -lgm, -nn, -ssm), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
 | GeoModels | `geomodels/` | plumax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
 
-Edges between layers point down: GeoModels may import GeoML, GeoNumerics and
-GeoStack; GeoML may import GeoNumerics and GeoStack; GeoNumerics and GeoStack import
-neither of the others. The dependency graph also ranks pipekit, gaussx, functax, argminax and integrix as Core, below GeoStack and GeoNumerics, so both may import them; their submodules stay in the directories above. Each environment installs its layer and the layers it
+Edges between layers point down: GeoModels may import GeoML, GeoStack and
+GeoNumerics; GeoML may import GeoStack and GeoNumerics; GeoStack may import GeoNumerics, and GeoNumerics imports
+none of the others. The dependency graph also ranks pipekit, gaussx, functax, argminax and integrix as Core, below GeoStack and GeoNumerics, so both may import them; their submodules stay in the directories above. Each environment installs its layer and the layers it
 may import, every library from its submodule (`[pypi-options.dependency-overrides]`
 in `pixi.toml`), so the libraries' own git pins of one another are ignored.
 

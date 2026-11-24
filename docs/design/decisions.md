@@ -156,6 +156,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | OP-O6 | The `backends` vocabulary: `"numpy"`, `"jax"`, `"dask"`; a `DataArray` reports its data's backend | decided 29 Oct 2026 |
 | OP-O7 | The diagnostic gradient kernel lives in geoops; model-grade calculus stays in finitevolX | decided 22 Oct 2026 |
 | OP-O8 | Whether an L3 algorithm calls another L3 algorithm inside a differentiated cost | open (decide first) |
+| OP-O9 | GeoStack may import GeoNumerics, and GeoNumerics never imports GeoStack | decided 23 Nov 2026 |
 
 ## Operator coupling (OC)
 
