@@ -76,7 +76,10 @@ TIERS: dict[str, dict[str, int]] = {
 #: inside the repository an edge may point down a package tier or stay level, and
 #: edges to other repositories use the package's tier. pyrox-gauss and
 #: pyrox-xtreme import no other pyrox package, so they sit below the pyrox core.
+#: pipekit-jax hands its adjoints to integrix (pipekit#226), so it sits above it,
+#: and so does the pipekit umbrella, which installs it.
 PACKAGE_TIERS: dict[str, dict[str, int]] = {
+    "pipekit": {"pipekit-jax": 2, "pipekit": 2},
     "geotoolz": {"xrtoolz": 2, "xrtoolz-ops": 2, "xrtoolz-products": 2},
     "pyrox": {"pyrox-gauss": 1, "pyrox-xtreme": 1},
 }
@@ -85,6 +88,7 @@ TIER_ROLES = {
     "core": (
         "pipelines, linear algebra, Gaussians and function approximation",
         "optimisation and integration",
+        "pipelines on JAX, which hand their adjoints to integrix",
     ),
     "numerics": (
         "physical facts about the Earth, and spectral methods",

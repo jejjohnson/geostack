@@ -294,8 +294,9 @@ GEOMODELS: dict[str, list[str]] = {
 # with)}, in the order of the environments: GeoStack is in every one, and each
 # later layer adds one. Edges between layers point down: GeoModels may import
 # GeoML, GeoStack and GeoNumerics; GeoML may import GeoStack and GeoNumerics;
-# GeoStack may import GeoNumerics, which imports none of the others. GeoNumerics
-# is not in GeoStack's environment, so GeoStack's names are not checked with it.
+# GeoStack may import GeoNumerics, which imports none of the others. Of
+# GeoNumerics, GeoStack's environment holds only geophysix and radiomax, so
+# GeoStack's names are not checked with it.
 LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
     "geostack": ("GeoStack", UPSTREAM, INDEX, ()),
     "numerics": (
@@ -462,8 +463,8 @@ _PORTED = "ported from plumax to radtrax; leaves plumax with plumax#133"
 _FX_KERNELS = "functax.interp's RBF kernels beside kernellib's covariance kernels"
 _FX_DIFFOPS = "functax.diffops on fields beside kernellib's operators on kernels"
 _PIPEKIT_JAX = (
-    "moved from pipekit-jax to integrix.adjoint (pipekit#226); the pipekit pin"
-    " predates it"
+    "moved from pipekit-jax to integrix.adjoint (pipekit#226); pipekit-jax keeps"
+    " a deprecated name"
 )
 _TOY_MODELS = "toy models in both sesmax_core.testing and vardax"
 _STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
@@ -491,11 +492,6 @@ _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
 KNOWN_CLASHES: dict[str, dict[str, str]] = {
     "numerics": {
         "AB2Solver": _STEPPERS,
-        "BackendError": (
-            "geophysix, radiomax and pipekit-ops each have one; pipekit's is the only"
-            " one from geophysix v0.0.6 and radiomax v0.0.9, which need a newer"
-            " pipekit pin"
-        ),
         "CapacitanceSolver": _NUMERICS,
         "ChebyshevTransform1D": _TRANSFORMS,
         "ChebyshevTransform2D": _TRANSFORMS,
