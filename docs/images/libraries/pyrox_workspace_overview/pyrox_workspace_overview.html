@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyrox workspace — one joint density, seven packages</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1700px; }
+  #diagram .katex { font-size: 1.1em; }
+  #diagram .joint .katex { font-size: 1.2em; }
+  #diagram .term .eq .katex { font-size: 1.08em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 262px 352px 462px 286px;
+    column-gap: 86px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 12px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .joint { color: var(--ink-accent); margin: 2px 0 0; text-align: center; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  /* a package: its icon, its name and its form of the factor, its names */
+  .factor {
+    font-size: 12px; font-weight: 600; color: var(--ink-accent);
+    margin: 14px 0 6px 2px;
+  }
+  .lane-head + .factor { margin-top: 0; }
+  .lane .pkg-card + .pkg-card { margin-top: 8px; }
+  .pkg-card { display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
+  .pkg-card img { width: 38px; height: 38px; flex: none; }
+  .pkg-card .name { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+  .pkg-card .form { font-size: 12.5px; font-weight: 500; color: var(--ink-accent); }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; }
+  .slab .what { margin-top: 3px; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pyrox — one joint density, seven packages</div>
+  <div class="subtitle">Each package writes one factor of a NumPyro model, and the prior on the function can be written in four ways. NumPyro then runs the same inference on any of them.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you know</span></div>
+      <div class="node">
+        <div class="name">noisy data <span class="m">\mathbf{y}</span></div>
+        <div class="desc">a map, a record in time, counts or annual maxima, at <span class="m">N</span> places</div>
+      </div>
+      <div class="node">
+        <div class="name">what the function does</div>
+        <div class="desc">smooth in space, a recursion in time, close to its neighbours, or a network</div>
+      </div>
+      <div class="node">
+        <div class="name">how it made the data</div>
+        <div class="desc">Gaussian noise, counts, or the tail of a distribution</div>
+      </div>
+      <div class="node">
+        <div class="name">what is left open</div>
+        <div class="desc">a lengthscale, a noise level or the weights, each with a prior</div>
+      </div>
+    </div>
+
+    <!-- column 2: the one joint -->
+    <div class="lane compute" id="lane-joint">
+      <div class="lane-head"><span class="verb">one joint</span><span class="pkg"><span class="m">p(\mathbf{y}, \mathbf{f}, \boldsymbol{\theta})</span></span></div>
+      <div class="joint"><span class="m">{= \; p(\mathbf{y} \mid \mathbf{f}, \boldsymbol{\theta}) \; p(\mathbf{f} \mid \boldsymbol{\theta}) \; p(\boldsymbol{\theta})}</span></div>
+      <div class="term">
+        <div class="lbl">keep the function as a site</div>
+        <div class="eq"><span class="m">{\mathbf{f} \sim p(\mathbf{f} \mid \boldsymbol{\theta})}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">or integrate it out</div>
+        <div class="eq"><span class="m">{p(\mathbf{y} \mid \boldsymbol{\theta}) = \int p(\mathbf{y} \mid \mathbf{f}, \boldsymbol{\theta}) \, p(\mathbf{f} \mid \boldsymbol{\theta}) \, \mathrm{d}\mathbf{f}}</span></div>
+      </div>
+      <div class="note">exact when the noise is Gaussian (<code>gp_factor</code>, <code>markov_gp_factor</code>, <code>lgssm_factor</code>), Laplace when it is not (<code>gp_laplace_factor</code>, <code>markov_laplace_factor</code>)</div>
+    </div>
+
+    <!-- column 3: the packages, by the factor they write -->
+    <div class="lane cut" id="lane-packages">
+      <div class="lane-head"><span class="verb">pyrox</span><span class="pkg">a package for each factor</span></div>
+
+      <div class="factor"><span class="m">p(\boldsymbol{\theta})</span>, the parameters as named sites</div>
+      <div class="node pkg-card"><img src="_icon.svg" alt=""><div>
+        <div class="name">pyrox <span class="form">the core</span></div>
+        <div class="desc"><code>PyroxModule</code> · <code>Parameterized</code> · <code>ensemble_map</code></div>
+      </div></div>
+
+      <div class="factor"><span class="m">p(\mathbf{f} \mid \boldsymbol{\theta})</span>, the prior on the function, in four forms</div>
+      <div class="node pkg-card"><img src="_icon-gp.svg" alt=""><div>
+        <div class="name">pyrox-gp <span class="form">a covariance, <span class="m">\mathcal{N}(\boldsymbol{\mu}, \mathbf{K}_{\boldsymbol{\theta}})</span></span></div>
+        <div class="desc"><code>GPPrior</code> · <code>SparseGPPrior</code> · <code>PathwiseSampler</code></div>
+      </div></div>
+      <div class="node pkg-card"><img src="_icon-lgm.svg" alt=""><div>
+        <div class="name">pyrox-lgm <span class="form">a sparse precision, <span class="m">\mathcal{N}(\mathbf{0}, \mathbf{Q}_{\boldsymbol{\theta}}^{-1})</span></span></div>
+        <div class="desc"><code>LGM</code> · <code>RW1</code> · <code>Besag</code> · <code>SPDE</code> · <code>inla</code></div>
+      </div></div>
+      <div class="node pkg-card"><img src="_icon-ssm.svg" alt=""><div>
+        <div class="name">pyrox-ssm <span class="form">a recursion, <span class="m">\mathbf{z}_n = \mathbf{A}_n \mathbf{z}_{n-1} + \boldsymbol{\eta}_n</span></span></div>
+        <div class="desc"><code>MarkovGPPrior</code> · <code>LinearGaussianSSMPrior</code></div>
+      </div></div>
+      <div class="node pkg-card"><img src="_icon-nn.svg" alt=""><div>
+        <div class="name">pyrox-nn <span class="form">random weights, <span class="m">\mathbf{f} = \boldsymbol{\Phi} \mathbf{w}</span> or a network</span></div>
+        <div class="desc"><code>HSGPFeatures</code> · <code>DenseReparameterization</code></div>
+      </div></div>
+
+      <div class="factor"><span class="m">p(\mathbf{y} \mid \mathbf{f}, \boldsymbol{\theta})</span>, the data in the tails</div>
+      <div class="node pkg-card"><img src="_icon-xtreme.svg" alt=""><div>
+        <div class="name">pyrox-xtreme <span class="form">extremes and point processes</span></div>
+        <div class="desc"><code>GeneralizedExtremeValueDistribution</code> · GPD · events</div>
+      </div></div>
+
+      <div class="factor">any Gaussian factor</div>
+      <div class="node pkg-card"><img src="_icon-gauss.svg" alt=""><div>
+        <div class="name">pyrox-gauss <span class="form">a distribution on an operator</span></div>
+        <div class="desc"><code>MultivariateNormal</code> · <code>LGSSM</code> · <code>GMRFDistribution</code></div>
+      </div></div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">any inference</span></div>
+      <div class="node solid">
+        <div class="name">posterior samples <span class="m">\boldsymbol{\theta}^{(s)}, \mathbf{f}^{(s)}</span></div>
+        <div class="desc">by NUTS, on the sites of the model</div>
+      </div>
+      <div class="node">
+        <div class="name">a variational posterior <span class="m">q</span></div>
+        <div class="desc">by SVI, with an autoguide or a guide of your own</div>
+      </div>
+      <div class="node">
+        <div class="name">marginals without sampling</div>
+        <div class="desc"><code>inla</code>, for a latent Gaussian model</div>
+      </div>
+      <div class="node">
+        <div class="name">an ensemble of fits</div>
+        <div class="desc"><code>ensemble_map</code> and <code>ensemble_vi</code>, under one <code>vmap</code></div>
+      </div>
+      <div class="node">
+        <div class="name">predictions</div>
+        <div class="desc">by <code>Predictive</code>, at new places or later times</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">numpyro · equinox</div>
+      <div class="what">Every piece is a NumPyro site or an Equinox module, and NumPyro owns NUTS and SVI.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">gaussx · lineax</div>
+      <div class="what">Structured linear algebra, the Kalman filters and the sparse precisions, on lineax operators.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">kernellib · geonnax · functax</div>
+      <div class="what">The kernels, the network layers, and the bases and interpolation.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">argminax · optimistix</div>
+      <div class="what">The modes of the Laplace fits, and the gradients through them.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-joint", { label: "choices", color: "#7b6bb5" });
+    wire("lane-joint", "lane-packages", { label: "factors", color: "#cf9418" });
+    wire("lane-packages", "lane-out", { label: "sites", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
