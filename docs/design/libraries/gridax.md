@@ -140,7 +140,7 @@ The test for every name: does it describe where the values of an observation or 
 | spectraldiffx | analysis grids | spectral grids with their wavenumbers, dealiasing, nodes and transforms; spectral derivatives and solvers | a grid that is a transform's nodes is spectraldiffx's |
 | functax | non-affine analysis geometry: curvilinear, swath, levels | affine grids, point sets, the sphere; interpolation plans; quadrature rules | an affine raster is functax's |
 | geophysix | the metrics of a whole grid | radii of curvature, the area of one cell | gridax evaluates geophysix over the cells |
-| diagnostix | differences and metrics | the diagnostics built from them | diagnostix composes gridax's differences |
+| diagnostix | differences and metrics, and the diagnostics it names (curl, divergence, kinetic energy, strain, Okubo–Weiss, geostrophic velocity, shallow-water potential vorticity), on every grid it supports | every other diagnostic of a field | one name per quantity ([geostack#287](https://github.com/jejjohnson/geostack/issues/287), decided 24 Nov 2026); [gridax#565](https://github.com/jejjohnson/gridax/issues/565) registers the collocated grids |
 | geoarray | geometry without a CRS | the CRS, the data, the dims; `SwathGrid`, `CurvilinearGrid`, `Vertical` and `VerticalAxis` as labels | a geoarray label holds a gridax geometry |
 | geoops, xrops | the maths of stencils, differences, metrics and remapping | Operators on GeoArray, functions on DataArray | the carriers call gridax |
 

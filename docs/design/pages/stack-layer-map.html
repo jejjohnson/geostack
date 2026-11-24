@@ -1106,7 +1106,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     ...to("geoops", ["radtrax", "plumax", "sesmax-core"]),
     ...to("tracerax", ["plumax", "sesmax-ocean", "xrops"]),
     ["meshax-ops", "meshax-core"],
-    ["gridax-core", "functax"], ["diagnostix", "functax"],
+    ["gridax-core", "functax"], ["diagnostix", "pipekit-array"],
     ["tracerax", "functax"], ["tracerax", "integrix"]
   );
   // imports that exist today and are planned to go away
@@ -1155,7 +1155,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     geophysix: ["jax", "numpy"],
     "gridax-core": ["numpy"],
     "meshax-core": ["numpy"], "meshax-ops": ["jax"],
-    diagnostix: ["jax", "numpy", "scipy"],
+    diagnostix: ["numpy"],
     radiomax: ["numpy"],
     tracerax: ["jax", "equinox", "diffrax"]
   };
