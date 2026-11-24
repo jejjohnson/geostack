@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: sketches-gp-predict-issue
+expected_outcome: |
+  A sketch in the standard's form: prose that defines every symbol, a shapes header, and above each line its status marker, its equation and its shape, in that order. Names in capabilities.md are marked today, the proposed function is marked proposed (G), the cross Gram (which the excerpt does not list) is not marked today, the solve goes through gaussx, and the maths in the prose renders on GitHub.

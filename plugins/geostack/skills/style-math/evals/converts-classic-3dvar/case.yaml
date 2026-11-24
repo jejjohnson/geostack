@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: converts-classic-3dvar
+expected_outcome: |
+  The page in the standard notation: the prior mean and covariance as mu_x and Sigma_x, the observation noise covariance as Sigma_epsilon, the gain as G, the cost calligraphic, a lowercase h for the nonlinear observation operator, kind-named macros with Latin and Greek not swapped, the transpose and optimum marks of the standard, one equation per block, a shape for every symbol, and a clean run of the checker for MyST.

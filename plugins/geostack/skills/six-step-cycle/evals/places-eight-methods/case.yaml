@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: places-eight-methods
+expected_outcome: |
+  A table placing (a) on step 1, (b) and (f) on step 2, (c) on step 3, (d) on step 4, (e) on step 5, (h) on step 6, and (g) as a learned step of a data-first cycle whose reference is weak, with what each learned method is trained on and its reference.

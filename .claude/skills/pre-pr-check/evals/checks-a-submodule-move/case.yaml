@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: checks-a-submodule-move
+expected_outcome: |
+  The always-run checks, then the checks this change triggers: the capability indexes regenerated for the layers and their test in the right pixi environment, pixi.lock regenerated, the dependency graph regenerated and its test, a tier for the new library, and what is committed together.

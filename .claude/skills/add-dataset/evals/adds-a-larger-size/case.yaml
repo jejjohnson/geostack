@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: adds-a-larger-size
+expected_outcome: |
+  A new size of the same data is a new option in the data config group, mirroring the keys of the existing one and chosen with data=<name>; no loader, generator or script is added or copied, and the stage picks the change up through its dependency on the configs.

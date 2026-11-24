@@ -40,32 +40,31 @@ PAGES = (ROOT / "docs" / "api" / "dependency_graph.md", ROOT / "README.md")
 BEGIN, END = "<!-- dependency-graph:begin -->", "<!-- dependency-graph:end -->"
 
 #: the directories under ``references/`` that hold the submodules
-DIRS = ("geostack", "numerics", "geoml", "geomodels")
+DIRS = ("numerics", "geostack", "geoml", "geomodels")
 #: layers from the bottom up
 LAYERS = ("core", *DIRS)
-#: an edge between layers points to a lower rank; GeoStack and GeoNumerics share
-#: the rank above Core, so neither may import the other
-LAYER_RANK = {"core": 0, "geostack": 1, "numerics": 1, "geoml": 2, "geomodels": 3}
+#: an edge between layers points to a lower rank; GeoNumerics sits below GeoStack,
+#: so GeoStack may import GeoNumerics and never the other way round
+LAYER_RANK = {"core": 0, "numerics": 1, "geostack": 2, "geoml": 3, "geomodels": 4}
 #: repositories in Core, the maths and plumbing that know no geography (the
 #: stack layer map); their submodules stay in the directory they sit in today
 CORE = {"pipekit", "gaussx", "functax", "argminax", "integrix"}
 TITLES = {
     "core": "Core",
-    "geostack": "GeoStack",
     "numerics": "GeoNumerics",
+    "geostack": "GeoStack",
     "geoml": "GeoML",
     "geomodels": "GeoModels",
 }
 #: within a layer, a repository may import only repositories of a lower tier
 TIERS: dict[str, dict[str, int]] = {
     "core": {"pipekit": 0, "gaussx": 0, "functax": 0, "argminax": 1, "integrix": 1},
+    "numerics": {"geophysix": 0, "spectraldiffx": 0, "finitevolX": 1, "radiomax": 1},
     "geostack": {"georeader": 0, "geotoolz": 1},
-    "numerics": {"spectraldiffx": 0, "finitevolX": 1},
     "geoml": {
         "geonnax": 0,
         "gauss_flows": 0,
         "kernellib": 1,
-        "xtremax": 1,
         "filterax": 2,
         "manipy": 2,
         "pyrox": 3,
@@ -73,30 +72,36 @@ TIERS: dict[str, dict[str, int]] = {
     },
     "geomodels": {"radtrax": 0, "sesmax": 0, "plumax": 1},
 }
-#: packages that sit in a higher tier than the rest of their repository; inside
-#: the repository an edge may point down a package tier or stay level, and edges
-#: to other repositories use the package's tier
+#: packages that sit in a different tier from the rest of their repository;
+#: inside the repository an edge may point down a package tier or stay level, and
+#: edges to other repositories use the package's tier. pyrox-gauss and
+#: pyrox-xtreme import no other pyrox package, so they sit below the pyrox core.
+#: pipekit-jax hands its adjoints to integrix (pipekit#226), so it sits above it,
+#: and so does the pipekit umbrella, which installs it.
 PACKAGE_TIERS: dict[str, dict[str, int]] = {
+    "pipekit": {"pipekit-jax": 2, "pipekit": 2},
     "geotoolz": {"xrtoolz": 2, "xrtoolz-ops": 2, "xrtoolz-products": 2},
+    "pyrox": {"pyrox-gauss": 1, "pyrox-xtreme": 1},
 }
 #: what each tier holds, for the page
 TIER_ROLES = {
     "core": (
         "pipelines, linear algebra, Gaussians and function approximation",
         "optimisation and integration",
+        "pipelines on JAX, which hand their adjoints to integrix",
+    ),
+    "numerics": (
+        "physical facts about the Earth, and spectral methods",
+        "finite volume, and observation geometry and radiometry",
     ),
     "geostack": (
         "readers",
         "operators on arrays and geoarray carriers",
         "operators on xarray, lifting geoops over cubes",
     ),
-    "numerics": (
-        "spectral methods",
-        "finite volume",
-    ),
     "geoml": (
         "layers and flows",
-        "kernels and extremes",
+        "kernels, Gaussian distributions and extremes",
         "ensemble filters and manifold learning",
         "probabilistic models and variational assimilation (may build on filterax)",
     ),
@@ -623,7 +628,7 @@ def block(g: Graph, page: Path) -> str:
     if page.name == "README.md":
         # the README shows the figure drawn from this page's graph
         diagram = (
-            '<p align="center">\n  <img alt="The repositories in four layer bands,'
+            '<p align="center">\n  <img alt="The repositories in five layer bands,'
             " with edges pointing down from each repository to those it depends on"
             ' or imports" src="docs/images/overview/dependency_graph.svg"'
             ' width="100%">\n</p>'
@@ -634,7 +639,7 @@ def block(g: Graph, page: Path) -> str:
             [
                 ":::{figure} ../images/overview/dependency_graph.svg",
                 ":label: fig-dg-layers",
-                ":alt: The repositories in four layer bands, with edges pointing"
+                ":alt: The repositories in five layer bands, with edges pointing"
                 " down from each repository to those it depends on or imports.",
                 ":width: 100%",
                 ":::",

@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyrox — one module, its own sites</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .joint .katex { font-size: 1.22em; }
+  #diagram .term .eq .katex { font-size: 1.08em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 270px 370px 350px 250px;
+    column-gap: 72px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .eq code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .term .eq .eg { margin-top: 4px; font-size: 11.5px; }
+  .term .eq .eg code { font-size: 11.5px; color: var(--muted); }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .joint { color: var(--ink-accent); margin: 2px 0 0 2px; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pyrox — one module, its own sites</div>
+  <div class="subtitle">An Equinox module declares its parameters as NumPyro sites, in one of three ways. Every NumPyro inference, and an ensemble of fits, then reads the same joint.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you write</span></div>
+      <div class="node">
+        <div class="name">an Equinox module <span class="m">f(\mathbf{X}; \boldsymbol{\theta})</span></div>
+        <div class="desc">a network, kernel or layer, as an ordinary <code>eqx.Module</code> pytree</div>
+      </div>
+      <div class="node">
+        <div class="name">priors <span class="m">p(\boldsymbol{\theta})</span></div>
+        <div class="desc">a NumPyro distribution for each parameter, at its full shape</div>
+      </div>
+      <div class="node">
+        <div class="name">a NumPyro model</div>
+        <div class="desc">calls the module and observes <span class="m">\mathbf{y}</span> with <code>numpyro.sample(…, obs=y)</code></div>
+      </div>
+      <div class="node">
+        <div class="name">or a log joint</div>
+        <div class="desc">returning <span class="m">\log p(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\theta})</span> and <span class="m">\log p(\boldsymbol{\theta})</span>, with an <code>init_fn(key)</code>, for an ensemble of MAP fits</div>
+      </div>
+    </div>
+
+    <!-- column 2: the one joint -->
+    <div class="lane compute" id="lane-joint">
+      <div class="lane-head"><span class="verb">one joint</span><span class="pkg"><span class="m">p(\mathbf{y}, \boldsymbol{\theta} \mid \mathbf{X})</span></span></div>
+      <div class="joint"><span class="m">{p(\mathbf{y}, \boldsymbol{\theta} \mid \mathbf{X}) = p(\mathbf{y} \mid f(\mathbf{X}; \boldsymbol{\theta})) \, p(\boldsymbol{\theta})}</span></div>
+      <div class="term">
+        <div class="lbl">the sites the module records, one per parameter</div>
+        <div class="eq"><code>&lt;pyrox_name&gt;.&lt;site&gt;</code><div class="eg"><code>mlp.hidden_weight</code> · <code>mlp.hidden_bias</code> · …</div></div>
+      </div>
+      <div class="term">
+        <div class="lbl">or fitted <span class="m">E</span> times, each member from its own start</div>
+        <div class="eq"><span class="m">{\mathcal{L}(\boldsymbol{\theta}) = -\log p(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\theta}) - w \log p(\boldsymbol{\theta})}</span></div>
+      </div>
+      <div class="note">each site is cached for the length of a call and keeps its name after <code>jit</code>, <code>eqx.tree_at</code> or a checkpoint rebuilds the module</div>
+    </div>
+
+    <!-- column 3: what pyrox does -->
+    <div class="lane cut" id="lane-pyrox">
+      <div class="lane-head"><span class="verb">pyrox</span><span class="pkg">declare, then ensemble</span></div>
+      <div class="node">
+        <div class="name">A. Plain sites</div>
+        <div class="desc">no pyrox needed: <code>numpyro.sample</code> in the model, then <code>eqx.tree_at</code> into the module</div>
+      </div>
+      <div class="node">
+        <div class="name">B. A module that owns its sites</div>
+        <div class="desc"><span class="mod">_core</span> — <code>PyroxModule</code> · <code>pyrox_sample</code> · <code>pyrox_param</code> · <code>pyrox_method</code></div>
+      </div>
+      <div class="node">
+        <div class="name">C. Priors and guides, declared once</div>
+        <div class="desc"><span class="mod">_core</span> — <code>Parameterized</code> · <code>register_param</code> · <code>set_prior</code> · <code>autoguide</code> · <code>set_mode</code></div>
+      </div>
+      <div class="node">
+        <div class="name">One draw across several calls</div>
+        <div class="desc"><span class="mod">_core</span> — <code>call_context</code> · <code>call_contexts</code> · <code>freeze</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Fit it <span class="m">E</span> times</div>
+        <div class="desc"><span class="mod">inference</span> — <code>ensemble_map</code> · <code>ensemble_vi</code> · <code>EnsembleMAP</code> · <code>EnsembleVI</code> · <code>ensemble_predict</code></div>
+      </div>
+      <div class="note"><code>pyrox.likelihoods</code> holds the <code>Likelihood</code> and <code>Guide</code> protocols that pyrox-gp, pyrox-lgm and pyrox-ssm subclass</div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">fits of one model</span></div>
+      <div class="node">
+        <div class="name">named sites</div>
+        <div class="desc">what NumPyro's <code>trace</code>, <code>substitute</code> and every other handler see</div>
+      </div>
+      <div class="node solid">
+        <div class="name">posterior samples <span class="m">\boldsymbol{\theta}^{(s)}</span></div>
+        <div class="desc">by NUTS or any NumPyro MCMC on the model</div>
+      </div>
+      <div class="node">
+        <div class="name">variational posterior <span class="m">q(\boldsymbol{\theta}; \boldsymbol{\nu})</span></div>
+        <div class="desc">by SVI, with the module's own guide (C) or an autoguide</div>
+      </div>
+      <div class="node">
+        <div class="name"><span class="m">E</span> members <span class="m">\boldsymbol{\theta}^{(e)}</span> or <span class="m">\boldsymbol{\nu}^{(e)}</span></div>
+        <div class="desc">stacked on a leading axis; <code>ensemble_predict</code> maps a prediction over them</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">equinox</div>
+      <div class="what">A <code>PyroxModule</code> is an <code>eqx.Module</code>, so <code>jit</code>, <code>vmap</code>, <code>grad</code> and <code>eqx.tree_at</code> treat it as any pytree.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">numpyro</div>
+      <div class="what">Each site goes to <code>numpyro.sample</code> or <code>numpyro.param</code> under every handler; <code>ensemble_vi</code> wraps <code>SVI</code>.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">pyrox[optax]</div>
+      <div class="what"><code>ensemble_map</code> and <code>param_group_optimizer</code> step optax optimisers; optax comes with the extra.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-joint", { label: "<span class='m'>f, \\ p(\\boldsymbol{\\theta})</span>", color: "#7b6bb5" });
+    wire("lane-joint", "lane-pyrox", { label: "sites", color: "#cf9418" });
+    wire("lane-pyrox", "lane-out", { label: "fits", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>

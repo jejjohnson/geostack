@@ -96,7 +96,7 @@ The homes come from each library's "Takes over" line on its design page and from
 | morphology and point binning | geoops' copies (see the duplicates) | the operators |
 | CF, CRS handling in `geom`, regionmask masks, `learn`, `inference`, `viz` | stays | all of it |
 
-None of these libraries can take code yet. gridax, geophysix and tracerax have no repository. The `diagnostix` repository was created on 9 Nov 2026 and still holds only the package template (`src/mypackage`). This is why XR-D2 comes before XR-D3: splitting each family's kernels into an array module inside xrops is useful on its own, because it removes the per-module wrappers and makes each kernel testable on NumPy and JAX. It also makes the later move a plain file move with no change to the operators.
+None of these libraries can take code yet. gridax, geophysix and tracerax have no repository. The `diagnostix` repository was created on 9 Nov 2026; on 24 Nov 2026 it has its scaffold, its test harness and a backlog ([geostack#309](https://github.com/jejjohnson/geostack/issues/309)), and no public module yet. This is why XR-D2 comes before XR-D3: splitting each family's kernels into an array module inside xrops is useful on its own, because it removes the per-module wrappers and makes each kernel testable on NumPy and JAX. It also makes the later move a plain file move with no change to the operators.
 
 ## Stages
 

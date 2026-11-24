@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: drafts-a-feature-issue
+expected_outcome: |
+  A body built from the feature template with its frontmatter stripped and every required section filled, a title in the convention, one type label, an area, a wave and a priority label that exist in the label script, the milestone by title, implementation steps that name the upstream library and real paths rather than a local package, the create command with --body-file, and the inputs still to confirm.

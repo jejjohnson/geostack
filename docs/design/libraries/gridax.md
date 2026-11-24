@@ -140,7 +140,7 @@ The test for every name: does it describe where the values of an observation or 
 | spectraldiffx | analysis grids | spectral grids with their wavenumbers, dealiasing, nodes and transforms; spectral derivatives and solvers | a grid that is a transform's nodes is spectraldiffx's |
 | functax | non-affine analysis geometry: curvilinear, swath, levels | affine grids, point sets, the sphere; interpolation plans; quadrature rules | an affine raster is functax's |
 | geophysix | the metrics of a whole grid | radii of curvature, the area of one cell | gridax evaluates geophysix over the cells |
-| diagnostix | differences and metrics | the diagnostics built from them | diagnostix composes gridax's differences |
+| diagnostix | differences and metrics, and the diagnostics it names (curl, divergence, kinetic energy, strain, Okubo–Weiss, geostrophic velocity, shallow-water potential vorticity), on every grid it supports | every other diagnostic of a field | one name per quantity ([geostack#287](https://github.com/jejjohnson/geostack/issues/287), decided 24 Nov 2026); [gridax#565](https://github.com/jejjohnson/gridax/issues/565) registers the collocated grids |
 | geoarray | geometry without a CRS | the CRS, the data, the dims; `SwathGrid`, `CurvilinearGrid`, `Vertical` and `VerticalAxis` as labels | a geoarray label holds a gridax geometry |
 | geoops, xrops | the maths of stencils, differences, metrics and remapping | Operators on GeoArray, functions on DataArray | the carriers call gridax |
 
@@ -283,6 +283,17 @@ gridax names its own types for the geometry (`LonLatGeometry`, `CurvilinearGeome
 ### 10. Do finitevolX and spectraldiffx import gridax at all?
 
 **Open.** The layer map plans finitevolX → gridax and spectraldiffx → gridax. After decisions 3 and 4 neither needs it. Leaning: drop both edges. A constructor that builds a finitevolX grid from an analysis grid, if one is wanted, lives in finitevolX and reads only arrays. Within GeoNumerics, spectraldiffx then imports only geophysix (tier 1, not 2) and finitevolX imports spectraldiffx and geophysix (tier 2, not 3).
+
+### 11. Solvers and time integration: four rules by role
+
+**Decided (21 Nov 2026), in [geostack#291](https://github.com/jejjohnson/geostack/issues/291).** Each piece of numerical machinery that gridax-jax held goes to the library whose role it is:
+
+1. gaussx owns every generic solve: Krylov methods with their convergence report, preconditioners, multigrid over caller-built levels, the capacitance method and known-value elimination.
+2. integrix owns every time-integration scheme, semi-Lagrangian advection included.
+3. sesmax-core owns the model-level recipes: the inversions (streamfunction from vorticity, pressure from divergence, QG PV inversion) in `sesmax_core.gfd`, and the PDE driver.
+4. gridax owns what is built from the grid and the mask: stencils and operators, the multigrid level hierarchy and its transfer stencils, the coast and boundary rings (`SolveDomain`), the capacitance wall placement, the masked Helmholtz stencil, the velocity sampler for semi-Lagrangian trajectories, and the pipekit adapter.
+
+gridax already imports gaussx, integrix and spectraldiffx, and sesmax-core already imports gridax, so the rules add no import edge. The work is the epic [geostack#290](https://github.com/jejjohnson/geostack/issues/290).
 
 ## Roadmap
 

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyrox-gauss — one Gaussian, any structure</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1600px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .joint .katex { font-size: 0.84em; }
+  #diagram .term .eq .katex { font-size: 0.98em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 260px 470px 340px 260px;
+    column-gap: 70px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .eq code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .term .lbl code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .joint { color: var(--ink-accent); margin: 2px 0 0 2px; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pyrox-gauss — one Gaussian, any structure</div>
+  <div class="subtitle">A Gaussian's covariance or precision is often a structured operator: a Kronecker product over a grid, a sparse precision, a Markov chain in time. pyrox-gauss wraps each as a NumPyro distribution, and gaussx computes its log density, its samples and its KL with that structure, never forming the dense matrix.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you write</span></div>
+      <div class="node">
+        <div class="name">a mean <span class="m">\boldsymbol{\mu}</span></div>
+        <div class="desc">a vector, or the prior on the initial state <span class="m">\mathbf{x}_0</span> of a series</div>
+      </div>
+      <div class="node">
+        <div class="name">a covariance or a precision</div>
+        <div class="desc"><span class="m">\boldsymbol{\Sigma}</span> or <span class="m">\boldsymbol{\Lambda}</span> as a lineax operator: <code>gx.Kronecker(K_x, K_y)</code>, low rank plus diagonal, tridiagonal, dense</div>
+      </div>
+      <div class="node">
+        <div class="name">or a state-space model</div>
+        <div class="desc"><span class="m">\mathbf{F}, \ \mathbf{H}, \ \boldsymbol{\Sigma}_\eta, \ \boldsymbol{\Sigma}_\varepsilon</span>, and a mask of the observed entries</div>
+      </div>
+      <div class="node">
+        <div class="name">or a gaussx GMRF field</div>
+        <div class="desc"><code>GaussianMRF</code>, <code>IntrinsicGMRF</code>, <code>ConstrainedGMRF</code> or <code>BYM2GMRF</code></div>
+      </div>
+    </div>
+
+    <!-- column 2: the one density -->
+    <div class="lane compute" id="lane-joint">
+      <div class="lane-head"><span class="verb">one density</span><span class="pkg">its cost set by the structure</span></div>
+      <div class="joint"><span class="m">{\log \mathcal{N}(\mathbf{x} \mid \boldsymbol{\mu}, \boldsymbol{\Sigma}) = -\tfrac{1}{2} \left( D_x \log 2\pi + \log \det \boldsymbol{\Sigma} + (\mathbf{x} - \boldsymbol{\mu})^\top \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)}</span></div>
+      <div class="term">
+        <div class="lbl">a Kronecker covariance factorises its two small factors</div>
+        <div class="eq"><span class="m">{\log \det (\mathbf{K}_x \otimes \mathbf{K}_y) = N_y \log \det \mathbf{K}_x + N_x \log \det \mathbf{K}_y}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">a precision needs a product and no solve</div>
+        <div class="eq"><span class="m">{(\mathbf{x} - \boldsymbol{\mu})^\top \boldsymbol{\Lambda} (\mathbf{x} - \boldsymbol{\mu}) - \log \det \boldsymbol{\Lambda}}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">a series sums one-step prediction errors, by a Kalman filter</div>
+        <div class="eq"><span class="m">{\log p(\mathbf{y}_{1:T}) = \textstyle\sum_t \log \mathcal{N}(\mathbf{y}_t \mid \mathbf{H} \mathbf{m}_{t \mid t-1}, \mathbf{S}_t)}</span></div>
+      </div>
+    </div>
+
+    <!-- column 3: what pyrox-gauss holds -->
+    <div class="lane cut" id="lane-gauss">
+      <div class="lane-head"><span class="verb">pyrox-gauss</span><span class="pkg">NumPyro distributions</span></div>
+      <div class="node">
+        <div class="name">Multivariate normals</div>
+        <div class="desc"><span class="mod">pyrox_gauss</span> — <code>MultivariateNormal</code> · <code>MultivariateNormalPrecision</code> · <code>AbstractMultivariateNormal</code>, each with a gaussx solver strategy</div>
+      </div>
+      <div class="node">
+        <div class="name">State-space densities</div>
+        <div class="desc"><span class="mod">pyrox_gauss</span> — <code>LGSSM</code> · <code>MaskedLGSSM</code> · <code>LGSSMFactory</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Gauss-Markov chains</div>
+        <div class="desc"><span class="mod">pyrox_gauss</span> — <code>MarkovGaussian</code>, a density over a state path, in moment or precision form</div>
+      </div>
+      <div class="node">
+        <div class="name">GMRF fields</div>
+        <div class="desc"><span class="mod">pyrox_gauss</span> — <code>GMRFDistribution</code>, any gaussx field as a NumPyro site</div>
+      </div>
+      <div class="note">KL in closed form is registered with NumPyro's <code>kl_divergence</code>, between these normals and NumPyro's own. pyrox-gauss imports nothing from pyrox.</div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">what you get</span></div>
+      <div class="node solid">
+        <div class="name">a site in any model</div>
+        <div class="desc"><code>numpyro.sample("f", field)</code> as a prior, a likelihood with <code>obs=</code>, or a guide</div>
+      </div>
+      <div class="node">
+        <div class="name">the exact log density</div>
+        <div class="desc"><code>log_prob</code>, equal to the dense Gaussian's, computed on the operator</div>
+      </div>
+      <div class="node">
+        <div class="name">samples and moments</div>
+        <div class="desc"><code>sample</code>, <code>mean</code> and <code>variance</code>; a chain's marginals and pairwise marginals</div>
+      </div>
+      <div class="node">
+        <div class="name">a closed-form KL</div>
+        <div class="desc">that NumPyro's mean-field ELBO uses in place of a Monte Carlo estimate</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">gaussx · lineax</div>
+      <div class="what">Structured log-determinants, solves and samples; the Kalman filter; the GMRF fields.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">NumPyro</div>
+      <div class="what">The <code>Distribution</code> base, sample sites and the <code>kl_divergence</code> registry.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">JAX · Equinox</div>
+      <div class="what">Arrays, transforms and the pytrees the distributions are built from.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">einx · jaxtyping</div>
+      <div class="what">Named-axis reshapes and shape-annotated signatures.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-joint", { label: "an operator", color: "#7b6bb5" });
+    wire("lane-joint", "lane-gauss", { label: "gaussx dispatches", color: "#cf9418" });
+    wire("lane-gauss", "lane-out", { label: "a Distribution", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>

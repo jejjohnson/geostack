@@ -38,7 +38,7 @@ geotoolz is the widest surface in the stack, and one skill of 245 lines covers i
 <!-- shelf:units:begin -->
 | Unit | Rungs | Home band | Subpackages | Names |
 |---|---|---|---|---|
-| Carriers and grids | ⓪ ① | geoscience | `geoarray.types` 18, `geoarray.coords` 12, `geoarray.interop` 10, `geoarray` 8, `geoarray.geometry` 7, `geoarray.errors` 5, `geoarray.adapter` 4, `geoarray.grid` 4, `geoarray.array` 3, `geoarray.carriers` 3, `geoarray.options` 3, `geoarray.attrs` 2, `geoarray.source` 2, `geoarray.sampling` 1 | 82 |
+| Carriers and grids | ⓪ ① | geoscience | `geoarray.types` 18, `geoarray.coords` 13, `geoarray.interop` 10, `geoarray` 8, `geoarray.geometry` 7, `geoarray.errors` 5, `geoarray.adapter` 4, `geoarray.grid` 4, `geoarray.array` 3, `geoarray.carriers` 3, `geoarray.attrs` 2, `geoarray.source` 2, `geoarray.model` 1, `geoarray.sampling` 1 | 81 |
 | Operator framework | ⑤ ⑥ | geoscience | `geoops.carrier` 47, `geoops` 35, `geoops.einx` 7, `geoops.testing` 5, `geoops.patch_ops` 3 | 97 |
 | Geometry and I/O | ⑤ | geoscience | `geoops.geom` 70, `geoops.io` 17 | 87 |
 | Radiometry and spectra | ⑤ | geoscience | `geoops.indices` 42, `geoops.normalize` 29, `geoops.radiometry` 24, `geoops.spectral` 16 | 111 |
@@ -51,7 +51,7 @@ geotoolz is the widest surface in the stack, and one skill of 245 lines covers i
 | Catalogs | ⓪ ① | data | `geocatalog` 11, `geocatalog.states` 11, `geocatalog.matchup` 10, `geocatalog.sources` 10, `geocatalog.storage` 9, `geocatalog.utils` 9, `geocatalog.backends` 7, `geocatalog.grid` 7, `geocatalog.build` 5, `geocatalog.load` 5, `geocatalog.ops` 3, `geocatalog.patch` 2, `geocatalog.base` 1, `geocatalog.factory` 1, `geocatalog.geoslice` 1, `geocatalog.staging` 1 | 93 |
 | Cloud storage | ① | data | `geocloud.hdf` 16, `geocloud.cog` 12, `geocloud.files` 12, `geocloud.store` 9, `geocloud.credentials` 8, `geocloud` 7, `geocloud.cache` 3, `geocloud.fs` 2 | 69 |
 | Product readers | ⓪ | data, geoscience | `geoproducts.carbonmapper` 70, `geoproducts.goes` 51, `geoproducts.himawari` 21, `geoproducts.toy_sensor` 6, `geoproducts` 4, `geoproducts.base` 1, `geoproducts.stack` 1 | 154 |
-| **All** | | | | **1086** |
+| **All** | | | | **1085** |
 <!-- shelf:units:end -->
 :::
 

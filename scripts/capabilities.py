@@ -105,18 +105,21 @@ UPSTREAM_BLURB: dict[str, str] = {
     "functax": "Function approximation: bases, quadrature rules, interpolation.",
     "argminax": "Optimisation with uncertainty at the minimum: solvers, curvature.",
     "integrix": "Integration: rules, cumulative scans, time marching, expectations.",
+    "geophysix": "Physical constants, the Earth's shape, its air and its sea water.",
+    "radiomax": "Observation geometry and radiometry, on any array library.",
     # GeoML
     "geonnax": "Basis functions, neural layers and coordinate transforms in Equinox.",
     "kernellib": "Covariance kernels and scalable kernel methods on gaussx.",
     "filterax": "Differentiable ensemble Kalman filters and smoothers.",
     "vardax": "Variational data assimilation: BLUE/OI, 3D-Var, 4D-Var and kin.",
     "gauss-flows": "Gaussianization (RBIG) and normalizing flows.",
-    "xtremax": "Extreme-value and point-process models in NumPyro.",
     "pyrox": "Equinox modules with NumPyro sample and param sites.",
     "pyrox-gp": "Gaussian processes for pyrox.",
     "pyrox-lgm": "Latent Gaussian models for pyrox.",
     "pyrox-nn": "Bayesian neural networks for pyrox.",
     "pyrox-ssm": "State-space models for pyrox.",
+    "pyrox-gauss": "Gaussian NumPyro distributions on gaussx operators.",
+    "pyrox-xtreme": "Extreme-value and point-process models in NumPyro.",
     "manipy-jax": "Manifold learning and alignment, and hyperspectral workflows.",
     # GeoModels
     "plumax": "Plume transport: Gaussian plume and puff, Lagrangian and LES.",
@@ -157,11 +160,41 @@ NUMERICS: dict[str, list[str]] = {
             for sub in ("adapt", "adjoint", "expect", "march", "rule", "scan")
         ),
     ],
+    # geophysix and radiomax export only their errors at the top level too
+    "geophysix": [
+        "geophysix",
+        *(
+            f"geophysix.{sub}"
+            for sub in (
+                "columns",
+                "constants",
+                "earth",
+                "rotation",
+                "seawater",
+                "thermo",
+                "wind",
+            )
+        ),
+    ],
+    "radiomax": [
+        "radiomax",
+        *(
+            f"radiomax.{sub}"
+            for sub in (
+                "altimetry",
+                "geometry",
+                "radiometry",
+                "retrievals",
+                "sar",
+                "thermal",
+            )
+        ),
+    ],
 }
 GEOML: dict[str, list[str]] = {
     "geonnax": ["geonnax"],
     "kernellib": ["kernellib"],
-    # filterax, xtremax and pyrox export little at the top level, so their
+    # filterax, pyrox and pyrox-xtreme export little at the top level, so their
     # public subpackages are listed (as georeader's modules are above)
     "filterax": [
         "filterax",
@@ -174,19 +207,20 @@ GEOML: dict[str, list[str]] = {
     ],
     "vardax": ["vardax"],
     "gauss-flows": ["gauss_flows"],
-    "xtremax": [
-        "xtremax",
-        "xtremax.distributions",
-        "xtremax.extraction",
-        "xtremax.point_processes",
-        "xtremax.primitives",
-        "xtremax.simulations",
-    ],
     "pyrox": ["pyrox", "pyrox.inference"],
     "pyrox-gp": ["pyrox_gp"],
     "pyrox-lgm": ["pyrox_lgm"],
     "pyrox-nn": ["pyrox_nn"],
     "pyrox-ssm": ["pyrox_ssm"],
+    "pyrox-gauss": ["pyrox_gauss"],
+    "pyrox-xtreme": [
+        "pyrox_xtreme",
+        "pyrox_xtreme.distributions",
+        "pyrox_xtreme.extraction",
+        "pyrox_xtreme.point_processes",
+        "pyrox_xtreme.primitives",
+        "pyrox_xtreme.simulations",
+    ],
     # manipy.sklearn needs scikit-learn (manipy's sklearn extra), which no
     # environment installs
     "manipy-jax": ["manipy", "manipy.datasets", "manipy.hsi", "manipy.metrics"],
@@ -256,10 +290,13 @@ GEOMODELS: dict[str, list[str]] = {
     ],
 }
 
-# The four layers, bottom to top, as {layer: (title, libraries, index page,
-# layers it may import)}. Edges between layers point down: GeoModels may import
-# GeoML, GeoNumerics and GeoStack; GeoML may import GeoNumerics and GeoStack;
-# GeoNumerics and GeoStack import neither of the others.
+# The four layers as {layer: (title, libraries, index page, layers it is checked
+# with)}, in the order of the environments: GeoStack is in every one, and each
+# later layer adds one. Edges between layers point down: GeoModels may import
+# GeoML, GeoStack and GeoNumerics; GeoML may import GeoStack and GeoNumerics;
+# GeoStack may import GeoNumerics, which imports none of the others. Of
+# GeoNumerics, GeoStack's environment holds only geophysix and radiomax, so
+# GeoStack's names are not checked with it.
 LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
     "geostack": ("GeoStack", UPSTREAM, INDEX, ()),
     "numerics": (
@@ -281,6 +318,9 @@ LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
         ("geoml", "numerics", "geostack"),
     ),
 }
+
+# Layers a layer may import though it is not checked with them.
+ALSO_MAY_IMPORT: dict[str, tuple[str, ...]] = {"geostack": ("numerics",)}
 
 # Names two homes may share on purpose, and why: {name: reason}.
 _GP_LIKELIHOOD = (
@@ -387,10 +427,10 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
     "Divergence2D": (
         "geoops.Divergence2D is a pipekit Operator on a GeoArray's collocated"
         " map axes; finitevolx.Divergence2D is the finite-volume divergence on"
-        " an Arakawa C-grid. GeoStack may not import GeoNumerics."
+        " an Arakawa C-grid."
     ),
     "ValidationError": (
-        "functax, argminax and integrix each raise their own ValidationError,"
+        "functax, argminax, integrix and radiomax each raise their own ValidationError,"
         " a subclass of the library's base error, so a caller can catch one"
         " library's failures without the others'."
     ),
@@ -423,14 +463,18 @@ _PORTED = "ported from plumax to radtrax; leaves plumax with plumax#133"
 _FX_KERNELS = "functax.interp's RBF kernels beside kernellib's covariance kernels"
 _FX_DIFFOPS = "functax.diffops on fields beside kernellib's operators on kernels"
 _PIPEKIT_JAX = (
-    "moved from pipekit-jax to integrix.adjoint (pipekit#226); the pipekit pin"
-    " predates it"
+    "moved from pipekit-jax to integrix.adjoint (pipekit#226); pipekit-jax keeps"
+    " a deprecated name"
 )
 _TOY_MODELS = "toy models in both sesmax_core.testing and vardax"
 _STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
 _TRANSFORMS = "moved from spectraldiffx to functax.transform (spectraldiffx#166)"
 _NN_LAYERS = "layers in both geonnax and pyrox-nn"
 _SAME_NAME = "different objects under one name in several GeoML and GeoStack libraries"
+_GEOPHYSIX = (
+    "moved from finitevolX to geophysix (finitevolX#446); the finitevolX pin"
+    " predates it"
+)
 _NUMERICS = "the same solver or grid in several GeoNumerics libraries"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
 _PLUME_PUFF = "the same name in plumax's plume and puff models"
@@ -450,14 +494,27 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "CapacitanceSolver": _NUMERICS,
         "ChebyshevTransform1D": _TRANSFORMS,
         "ChebyshevTransform2D": _TRANSFORMS,
+        "buoyancy": _GEOPHYSIX,
         "LeapfrogRAFSolver": _STEPPERS,
         "SphericalGrid2D": _NUMERICS,
         "SphericalHarmonicTransform": _TRANSFORMS,
         "SplitExplicitRKSolver": _STEPPERS,
         "build_capacitance_solver": _NUMERICS,
+        "cell_area": (
+            "functax.quad's quadrature rule of a grid beside geophysix.earth's areas"
+            " on the ellipsoid"
+        ),
         "laplace_mode": (
             "the loop moved to argminax.solve; gaussx deprecates its own copy"
             " without forwarding and removes it a release later (gaussx#814)"
+        ),
+        "linear_density": _GEOPHYSIX,
+        "linear_density_anomaly": _GEOPHYSIX,
+        "linear_drho_dS": _GEOPHYSIX,
+        "linear_drho_dT": _GEOPHYSIX,
+        "reduced_gravity": _GEOPHYSIX,
+        "vertical_velocity": (
+            "finitevolX's, from a divergence, beside geophysix.thermo's, from ω"
         ),
     },
     "geoml": {
@@ -539,6 +596,9 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "Scaled": _SAME_NAME,
         "Sum": _SAME_NAME,
         "infer_emission_rate": _PLUME_PUFF,
+        "number_density": (
+            "radtrax's in atm and cm⁻³, around geophysix.thermo's in Pa and m⁻³"
+        ),
     },
 }
 
@@ -778,7 +838,8 @@ def _layer_links(layer: str) -> list[str]:
 
 
 def render(layer: str = "geostack") -> str:
-    title, libraries, _, below = LAYERS[layer]
+    title, libraries, _, checked = LAYERS[layer]
+    below = (*checked, *ALSO_MAY_IMPORT.get(layer, ()))
     package_part, total = _package_part() if layer == "geostack" else ([], 0)
     imports = (
         "It may import " + ", ".join(LAYERS[b][0] for b in below) + "."

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: writes-forward-tests
+expected_outcome: |
+  A test file with the four tests the house style asks of a public forward function: a closed-form oracle at a stated tolerance in float64 enabled by the test itself, property-based invariants with hypothesis, a gradient check of jacrev against central differences, and agreement of eager, jit and vmap with a Python loop.

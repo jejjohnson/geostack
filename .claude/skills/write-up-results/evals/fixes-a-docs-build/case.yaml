@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: fixes-a-docs-build
+expected_outcome: |
+  Five fixes: the theme download worked around for the build only with myst.yml restored, the citation key added to references.bib, the figure given a labelled figure directive from docs/images/, the page added to the toc, and the number traced to a pipeline output rather than a terminal session.

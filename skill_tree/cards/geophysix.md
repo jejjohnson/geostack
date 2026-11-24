@@ -1,0 +1,5 @@
+- **Provides.** Physical facts about the Earth as closed forms, on NumPy, JAX and other array libraries: constants and trace gases, the ellipsoid and the sphere, rotation, the gas law, sea-water density, column units and the wind.
+- **Start from.** `geophysix.constants.STANDARD`, `geophysix.earth.WGS84`, `geophysix.earth.SPHERE`, `geophysix.earth.cell_area`, `geophysix.rotation.coriolis`, `geophysix.thermo.number_density`, `geophysix.columns.convert`, `geophysix.seawater.linear_density`, `geophysix.wind.wind_speed`.
+- **Keep.** SI units, degrees for angles, and constants as records: pass another `earth=` or `constants=` record for a sphere or an old value; no function reads a global.
+- **Never.** Write an Earth radius, g₀, Ω, k_B or a molar mass as a literal, or import a constant from a library above this one; take it from the record.
+- **Open the repository when.** You need more than these names, or a formula it does not have: it has no skill yet, so read its `AGENTS.md` and its section of GeoStack's capability index.

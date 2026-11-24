@@ -17,7 +17,7 @@ integrix is the stack's integration library: one integral, I = ∫ f dμ, comput
 | --- | --- |
 | Layer, tier | Core, tier 1 |
 | Imports | functax, gaussx; extends diffrax; JAX, Equinox, lineax, einx |
-| Imported by | finitevolX, tracerax, radiomax, vardax, sesmax-core, plumax, radtrax |
+| Imported by | finitevolX, tracerax, vardax, sesmax-core, plumax, radtrax |
 | Takes over | finitevolX's 11 generic steppers (0.1.0 added `AB3Solver`) and their pure step functions; pipekit-jax's `truncated_scan` and `to_diffrax_adjoint`; generic step-size control from sesmax-core (copied from somax) |
 | Draws on | quadax's adaptive rules, without a dependency |
 | Status | proposed; no repository yet |
@@ -31,6 +31,14 @@ Where integrix sits · core tier 1.
 ```
 
 integrix sits one tier above the rules it sums with, so every model, numerics library and assimilation library that steps or integrates can import it. This page is the design; core types, algorithms and the code survey are in [integrix: design details](integrix_details.md).
+
+```{figure} ../../images/libraries/integrix_ecosystem/integrix_ecosystem-light.svg
+:alt: integrix at the top; below it finitevolX in GeoNumerics uses its march, vardax in GeoML its adjoint, and plumax (rule, expect, march) and sesmax-core (march) in GeoModels; plumax and sesmax-core build on finitevolX, and on vardax through an extra; integrix itself builds on functax, diffrax, lineax, optimistix, JAX, Equinox, einx and jaxtyping
+:width: 100%
+:label: fig-integrix-ecosystem
+
+Who imports integrix today, and what it builds on. The edges are the [dependency graph](../../api/dependency_graph.md) and each card's modules are that package's imports on `main`, so the figure shows today's users, where the table above lists the planned ones. `make_svgs.py` in the same folder writes the light and dark versions; the integrix README embeds both.
+```
 
 ## The problem
 
@@ -74,6 +82,14 @@ Two pieces of machinery are shared by all three:
 
 The weights w of a rule come from functax: they are a property of a basis on a domain. integrix owns what is done with them: summing, scanning, marching, adapting and differentiating.
 
+```{figure} ../../images/libraries/integrix_overview/integrix_overview.png
+:alt: integrix in one picture: one integral of f against a measure, with its rule form; a rule sums it, a scan keeps its running value and a march steps it, one module each; adaptivity, adjoints and expectations cut across them; functax, diffrax, and lineax with optimistix underneath
+:width: 100%
+:label: fig-integrix-overview
+
+integrix in one picture: one integral, three operations. The source is `integrix_overview.html` in the same folder; the integrix README and docs embed this PNG.
+```
+
 ## Modules and boundaries
 
 Six modules: one per operation, plus adaptivity, adjoints and probability. integrix owns the machinery, not the domains: spectral responses stay in radtrax and plumax, mass enhancement in plumax and exceedance events in xtremax; they pass in weights, measures or integrands.
@@ -82,7 +98,7 @@ Six modules: one per operation, plus adaptivity, adjoints and probability. integ
 | --- | --- | --- |
 | `integrix.rule` | I = wᵀf over any axis or set of axes, with a functax rule or caller's weights; batched over leading dims | new; ends the hand-written trapezoid sums in plumax, radtrax and xrtoolz |
 | `integrix.scan` | cumulative integrals, forward and reverse, parallel by `associative_scan` | new |
-| `integrix.march` | time steppers, eight as diffrax solvers and three (AB2, leapfrog, split-explicit) in a loop of their own: forward Euler, RK2 to RK4, SSP-RK, IMEX, Adams–Bashforth, leapfrog with Robert–Asselin filter, split-explicit; step-size control | finitevolX `timestepping/diffrax_solvers.py` (11 classes) and the pure step functions behind them; sesmax-core's `imex_stepsize_controller` (copied from somax) |
+| `integrix.march` | time steppers, eight as diffrax solvers and three (AB2, leapfrog, split-explicit) in a loop of their own: forward Euler, RK2 to RK4, SSP-RK, IMEX, Adams–Bashforth, leapfrog with Robert–Asselin filter, split-explicit; step-size control; `SampledPath`, a functax fit of samples as a diffrax path, for forcing and CDE controls | finitevolX `timestepping/diffrax_solvers.py` (11 classes) and the pure step functions behind them; sesmax-core's `imex_stepsize_controller` (copied from somax); `SampledPath` is new ([integrix#97](https://github.com/jejjohnson/integrix/issues/97)) |
 | `integrix.adapt` | adaptive quadrature: Gauss–Kronrod, tanh–sinh, Romberg, cumulative; error estimates shared with step control | new, on quadax's design without depending on it |
 | `integrix.adjoint` | adjoints of scans and marches: reverse scans, checkpointing, truncated backpropagation through time | pipekit-jax `truncated_scan`, `to_diffrax_adjoint` |
 | `integrix.expect` | expectations 𝔼\[f\] by Monte Carlo and quasi-Monte Carlo (Sobol, Halton), importance sampling | new |
@@ -97,7 +113,7 @@ The test for every name: does it sum, scan, march or adapt over a domain, or dif
 | gaussx | expectations by sampling | Gaussian expectations: Gauss–Hermite, unscented, sigma points; the linear solves an implicit step needs | an integral under a Gaussian with a closed rule is gaussx's |
 | diffrax | the stack's steppers, as diffrax solvers, and its adjoints | `diffeqsolve`, its solver and adjoint protocols | integrix extends diffrax, as gaussx extends lineax |
 | argminax | adjoints of marches and scans | adjoints at an optimum: implicit differentiation, Gauss–Newton curvature | a backward sweep through time is integrix's; a derivative at a fixed point is argminax's |
-| finitevolX, spectraldiffx | generic stepping | spatial discretisation, and semi-Lagrangian advection (field in, field out) | a scheme that steps any right-hand side is integrix's |
+| finitevolX (gridax), spectraldiffx | generic stepping, and semi-Lagrangian advection: the back-trajectory and the step, reading the field with a functax plan | spatial discretisation, and the velocity sampler on the grid's points | a scheme that steps any right-hand side, or traces a trajectory, is integrix's; only the velocity sampling is the grid's ([geostack#291](https://github.com/jejjohnson/geostack/issues/291), rule 2) |
 | pipekit-jax | the adjoint maths | composition: `JaxOperator`, `Rollout`, `DiffraxForwardModel` | pipekit composes steps; integrix computes them |
 | the models | the integrator | integrands and measures: spectral responses, plume fields, turbulence | the model passes f and μ in |
 
@@ -109,6 +125,14 @@ The test for every name: does it sum, scan, march or adapt over a domain, or dif
 | pipekit-jax | `truncated_scan`, `to_diffrax_adjoint` | integrix; pipekit keeps composition |
 | somax / sesmax-core | generic step-size control (`imex_stepsize_controller`); model terms stay | integrix |
 | plumax, radtrax, xrtoolz | hand-written trapezoid sums | `integrix.rule` with functax rules |
+
+```{figure} ../../images/libraries/integrix_roles/integrix_roles-light.svg
+:alt: integrix on the role ladder: run and the checkpointed and truncated scans as algorithms; the split-explicit terms beside diffrax's terms as the model; adaptive rules, diffrax solvers, steppers, IMEX schemes and adjoint options as strategies; sums, running integrals, expectations, weight diagnostics and step functions as primitives; the results beside functax's rules as structures
+:width: 100%
+:label: fig-integrix-roles
+
+integrix's public names on the role ladder, each placed by the role-ladder skill's test (integrix's shelf groups them into entries, whose roles need not be each name's). `make_svgs.py` in the same folder writes the light and dark versions; the integrix README embeds both.
+```
 
 ## In use
 
@@ -177,11 +201,11 @@ Seven libraries would import integrix, pipekit-jax would hand code to it, and sp
 | --- | --- | --- |
 | finitevolX | its own 11 diffrax solver classes | imports 11 of them from `integrix.march`; keeps `SemiLagrangianSolver`, which takes its interpolation from functax |
 | spectraldiffx | nothing in the library; its example QG model (`scripts/qg_model.py`) steps with diffrax's `KenCarp4` | no library change; examples may use integrix's IMEX steppers |
-| sesmax-core | generic stepping and `imex_stepsize_controller` inherited from somax | integrix steppers and step control; model terms stay |
+| sesmax-core | generic stepping and `imex_stepsize_controller` inherited from somax | integrix steppers, step control and `SampledPath` for `InterpolatedForcing`; model terms stay |
 | plumax | trapezoid sums for IME and SRFs; finite-volume stepping in `les_fvm`; NumPyro posterior averages | `ix.rule` with functax rules; integrix steppers; `ix.expect` |
 | radtrax | SRF convolution by hand; a single-slab τ | `ix.rule` for bands; `ix.scan` for layered columns; angular rules when multi-stream lands |
 | vardax | 4D-Var forward runs differentiated through pipekit-jax's helpers; its optimiser adjoints go to argminax | `integrix.adjoint` for the backward sweep through its forward model (decision 7) |
-| tracerax, radiomax | planned | particle stepping (`ix.march`, SDE terms through diffrax); geometric integrals over a pixel |
+| tracerax | planned | particle stepping (`ix.march`, SDE terms through diffrax) |
 | pipekit-jax | `truncated_scan`, `to_diffrax_adjoint` | hands them to integrix; keeps `Rollout` and `DiffraxForwardModel` |
 
 The largest change is finitevolX's, and it is an import swap:
@@ -224,9 +248,9 @@ Decisions 10 to 13, on integrals over space, are in [integrix: integrals over sp
 
 **Decided (5 Nov 2026).** Adaptive Gauss–Kronrod, tanh–sinh, Romberg and cumulative integrals are written in integrix, drawing on quadax's design, with no dependency on quadax. quadax's results serve as references in tests.
 
-### 6. Semi-Lagrangian advection stays in finitevolX
+### 6. Semi-Lagrangian advection: integrix's
 
-**Decided (5 Nov 2026).** It discards its departure points after each step, so it is a field scheme, not a stepper. 11 of finitevolX's 12 stepper classes move (0.1.0 added AB3Solver); `SemiLagrangianSolver` stays and takes its interpolation from functax.
+**Decided (21 Nov 2026), replacing the decision of 5 Nov 2026 that kept it in finitevolX.** A semi-Lagrangian step is a back-trajectory, which is an integration and integrix's, followed by a read-out of the old field at the departure points, which is a functax plan. Only the velocity sampled on the grid's points is the grid's, so the scheme moves to `integrix.march` ([integrix#92](https://github.com/jejjohnson/integrix/issues/92)) and gridax keeps the sampler. This is rule 2 of [geostack#291](https://github.com/jejjohnson/geostack/issues/291): integrix owns every time-integration scheme.
 
 ### 7. vardax's adjoints: argminax's, not integrix's
 

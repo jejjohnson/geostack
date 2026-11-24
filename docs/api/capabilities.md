@@ -13,11 +13,11 @@ extend it where it lives. Regenerate with `make capabilities` after
 changing a public API (`tests/test_capabilities.py` checks it is
 current).
 
-This page is the GeoStack layer. It imports no other layer.
+This page is the GeoStack layer. It may import GeoNumerics.
 
 <!-- upstream -->
 
-Listed at pipekit-ops 0.2.1, pipekit 0.2.0, pipekit-array 0.1.1, pipekit-cycle 0.1.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.1.0, pipekit-train 0.2.0, georeader-spaceml 2.4.2, geotoolz-ops 0.18.1, geotoolz-array 0.4.1, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.14.3, geotoolz-products 0.7.1, xrtoolz-ops 0.5.1, xrtoolz-products 0.5.0.
+Listed at pipekit-ops 0.2.3, pipekit 0.2.0, pipekit-array 0.1.4, pipekit-cycle 0.1.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.1.0, pipekit-train 0.2.0, georeader-spaceml 2.4.2, geotoolz-ops 0.19.0, geotoolz-array 0.5.0, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.15.0, geotoolz-products 0.7.1, xrtoolz-ops 0.6.0, xrtoolz-products 0.5.1.
 
 ## Upstream: `pipekit-ops`
 
@@ -36,6 +36,7 @@ The core: Operator, Graph and the ready-made operators.
 | `Assoc` | class | Add a key whose value is computed from the whole dict (toolz ``assoc``). |
 | `AsyncMap` | class | Apply ``op`` to each item of an iterable inside an async event loop. |
 | `BackendError` | class | Inputs on more than one backend, or a backend the code does not run on. |
+| `BackendWarning` | class | Data moved between NumPy and JAX inside ``guard("warn")``. |
 | `BatchedMap` | class | Split an iterable into batches and call ``op`` on each batch as a list. |
 | `Branch` | class | Binary conditional: run ``if_true`` or ``if_false`` based on a predicate. |
 | `Cache` | class | Memoise an inner operator by hashing its input and the inner pipeline. |
@@ -45,6 +46,7 @@ The core: Operator, Graph and the ready-made operators.
 | `Concat` | class | Flatten exactly one level (toolz ``concat``). |
 | `ConfigMixin` | class | Auto-derive `get_config()` from `__init__` parameter names. |
 | `Const` | class | Return a fixed value, ignoring any input. |
+| `ConvertingAdapter` | class | An adapter that moves a whole carrier between NumPy and JAX (optional). |
 | `Count` | class | The number of items (toolz ``count``). |
 | `CountBy` | class | Count items per key, in first-seen order (toolz ``countby``). |
 | `DirectoryStore` | class | One file per key under ``root``, written atomically. |
@@ -61,6 +63,8 @@ The core: Operator, Graph and the ready-made operators.
 | `Histogram` | class | Controller that captures simple histograms by key. |
 | `Identity` | class | Explicit no-op. |
 | `Input` | class | A named entry point into a `Graph`. |
+| `JitReport` | class | The steps of a pipeline, in the order they run; printed one per line. |
+| `JitStep` | class | One step of a pipeline, and whether it runs under ``jax.jit``. |
 | `LabelledAdapter` | class | An adapter that can set the labels of named dims (optional). |
 | `Lambda` | class | Wrap an arbitrary callable as an `Operator`. |
 | `Log` | class | Pass the carrier through and write one ``logging`` record per call. |
@@ -69,6 +73,7 @@ The core: Operator, Graph and the ready-made operators.
 | `MemoryStore` | class | A dict guarded by a lock: shared by the threads of one process. |
 | `Merge` | class | Union of several mappings; later inputs win (toolz ``merge``). |
 | `MissingAdapterError` | class | A carrier from a known family arrived with no adapter registered. |
+| `MissingValueAdapter` | class | An adapter whose carriers mark missing elements in their data (optional). |
 | `NamedArrayAdapter` | class | What carrier-agnostic code needs from one carrier family. |
 | `Node` | class | A vertex in a `Graph`. |
 | `Not` | class | Negate a predicate; the operator form of `complement`. |
@@ -117,6 +122,9 @@ The core: Operator, Graph and the ready-made operators.
 | `executor_scope` | function | Bind the executor that ``Map(executor="scope")`` borrows inside the block. |
 | `from_state_sandboxed` | function | Build an operator tree from a state record, allowlisted classes only. |
 | `get_adapter` | function | The adapter for ``x``'s type, or ``None`` for an unnamed value. |
+| `guard` | function | Report each move between NumPy and JAX inside the ``with`` block. |
+| `guard_level` | function | The level of the innermost `guard`; ``"off"`` outside any. |
+| `jit_report` | function | Try each step of ``op`` under a JAX trace, and say which ones work. |
 | `juxt` | function | Return a callable that applies each operator to its input and tuples the results. |
 | `loads` | function | Decode an operator from its JSON state record. |
 | `loads_sandboxed` | function | Like `loads`, but reject any class, at any depth, not in the allowlist. |
@@ -126,8 +134,10 @@ The core: Operator, Graph and the ready-made operators.
 | `register` | function | Register ``cls`` as loadable via `loads_sandboxed`. |
 | `register_adapter` | function | Register ``adapter`` for ``carrier_type`` and its subclasses. |
 | `register_lazy_adapter` | function | Register ``loader`` for carrier types defined under ``module_prefix``. |
+| `report_move` | function | Tell the guard that ``what`` moved data; called by the code that does. |
 | `signature_of` | function | ``x``'s `Signature` if it is a registered carrier; ``x`` itself otherwise. |
 | `store_scope` | function | Bind store names to stores inside the block. |
+| `to_backend` | function | ``x`` with its NumPy and JAX arrays on one of the two backends. |
 | `unregister` | function | Remove ``cls`` from the sandboxed loader's allowlist. |
 | `unregister_adapter` | function | Remove the adapter registered for exactly ``carrier_type``, if any. |
 | `upgrade_state` | function | ``state`` with module names saved before pipekit 0.2.0 renamed. |
@@ -733,7 +743,6 @@ The GeoArray carrier: an array with its grid (transform, CRS).
 | `GeoSwathAdapter` | class | The `pipekit_ops.NamedArrayAdapter` for `GeoSwath`: lat/lon must match exactly. |
 | `Grid` | class | A pixel grid with no data: transform, CRS and spatial shape. |
 | `GridMismatchError` | class | Carriers that must share one pixel grid do not. |
-| `HostTransferWarning` | class | A JAX carrier's data was copied to the host for NumPy code. |
 | `LabelError` | class | A selection by label that a carrier cannot do. |
 | `PER_BAND_KEYS` | constant | `('band_names', 'descriptions', 'bands', 'band_description...` |
 | `PixelWindow` | class | A rectangle of pixels: ``col_off``, ``row_off``, ``width``, ``height``. |
@@ -745,14 +754,13 @@ The GeoArray carrier: an array with its grid (transform, CRS).
 | `concatenate` | function | Join carriers on one grid along an existing leading axis, by position. |
 | `crop` | function | The ``size`` pixels starting at ``offset``, with the matching transform. |
 | `footprint` | function | The outline of the carrier's grid as a shapely ``Polygon``. |
-| `get_options` | function | The current options, as a new dict. |
 | `pad` | function | Add fill pixels around the spatial axes; the transform moves with them. |
 | `pad_points` | function | ``points`` padded to ``n`` samples, with ``valid=False`` on the pad. |
 | `pixel_coords` | function | Map coordinates of every pixel, ``(2, H, W)``: x then y. |
 | `read_window` | function | The pixels of ``window``, padding with fill where it leaves the array. |
-| `set_options` | class | Set process-wide options, for good or within a ``with`` block. |
 | `stack` | function | Stack carriers on one grid along a new dim. |
 | `to_dimarray` | function | A carrier's data, dims and labels as a ``pipekit_array.DimArray``; no grid. |
+| `to_geoswath` | function | A cell-centred model field on a latitude-longitude grid as a `GeoSwath`. |
 | `to_pixel` | function | Re-exported from `functax`. |
 | `write_window` | function | A copy of ``g`` with ``values`` written into ``window``. |
 

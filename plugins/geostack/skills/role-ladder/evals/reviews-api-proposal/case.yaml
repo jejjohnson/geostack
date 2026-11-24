@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-api-proposal
+expected_outcome: |
+  A review that finds the strategy holding data, the model with settings and no fitted state, the algorithm written as a Module that builds its own model and has strategies hidden in keyword flags, the step that holds its second input as a field, computes on the carrier and takes a carrier down to a function, the recipe with logic between its steps and a schedule inside it, and the word primitive used for the floor; with a corrected set of names by rung.

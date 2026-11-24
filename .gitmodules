@@ -46,10 +46,6 @@
 	path = references/geoml/gauss_flows
 	url = https://github.com/jejjohnson/gauss_flows.git
 	branch = main
-[submodule "references/geoml/xtremax"]
-	path = references/geoml/xtremax
-	url = https://github.com/jejjohnson/xtremax.git
-	branch = main
 [submodule "references/geoml/geonnax"]
 	path = references/geoml/geonnax
 	url = https://github.com/jejjohnson/geonnax.git
@@ -69,6 +65,14 @@
 [submodule "references/numerics/integrix"]
 	path = references/numerics/integrix
 	url = https://github.com/jejjohnson/integrix.git
+	branch = main
+[submodule "references/numerics/geophysix"]
+	path = references/numerics/geophysix
+	url = https://github.com/jejjohnson/geophysix.git
+	branch = main
+[submodule "references/numerics/radiomax"]
+	path = references/numerics/radiomax
+	url = https://github.com/jejjohnson/radiomax.git
 	branch = main
 [submodule "references/geoml/manipy"]
 	path = references/geoml/manipy

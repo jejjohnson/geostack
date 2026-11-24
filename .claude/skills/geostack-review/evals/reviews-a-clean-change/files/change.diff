@@ -1,0 +1,9 @@
+diff --git a/docs/notes/background.md b/docs/notes/background.md
+--- a/docs/notes/background.md
++++ b/docs/notes/background.md
+@@ -11,3 +11,5 @@
+ ## Problem Statement
+
+ Formally define the problem being addressed.
++
++Edges between layers point down: a higher layer may import a lower one, never the reverse.

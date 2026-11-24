@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: adds-missing-model
+expected_outcome: |
+  The capability indexes are searched and nothing that fits is claimed without evidence; since the model is reusable code it goes upstream into the library that owns the concept, named with its layer, and this repo gets only a config option and a test.

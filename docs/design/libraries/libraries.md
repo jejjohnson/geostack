@@ -32,3 +32,5 @@ pyrox-ssm is not a new library, but its design page sits here with the others.
 | [pyrox-ssm](pyrox_ssm.md) | temporal GPs and linear, nonlinear and ensemble state-space models as NumPyro models, with gaussx's and filterax's numerics | GeoML, tier 3 (in the pyrox workspace) |
 
 functax, integrix and argminax meet at two seams. A quadrature rule is data, and functax's; what sums, adapts or marches with it is integrix's. A backward sweep through time is integrix's; a derivative through an optimiser's iterations, or at its minimum, is argminax's.
+
+Solvers and time integration follow four rules by role ([geostack#291](https://github.com/jejjohnson/geostack/issues/291)). gaussx owns every generic solve: CG with its convergence report, preconditioners, multigrid over caller-built levels, the capacitance method and known-value elimination. integrix owns every time-integration scheme, semi-Lagrangian advection included. sesmax-core owns the model-level recipes, the elliptic inversions and the PDE driver. gridax owns what is built from the grid and the mask, such as the level hierarchy, the boundary rings and the velocity sampler.

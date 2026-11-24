@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: adds-era5-wind-file
+expected_outcome: |
+  The raw file tracked by DVC and never by git, no loader written in a local package (an upstream reader is found in the capability index or the gap is sent upstream), a data config with the split fractions, a preprocess stage that declares its deps and outs, splits made once from the config and a seed and by time rather than by row, statistics fitted on the training split, a test on a tiny fixture, and an honest account of what this repo does not have yet.

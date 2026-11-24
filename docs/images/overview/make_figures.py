@@ -1133,6 +1133,7 @@ def axes_matrix() -> Svg:
 
 
 NUMERICS = ("#475569", "#f1f5f9")  # GeoNumerics: structured numerics
+CORE = ("#334155", "#f8fafc")  # Core: below every layer
 
 # (name, job, hue, packages); a package in READ_ONLY_PKGS is third-party
 LAYERS = {
@@ -1154,15 +1155,20 @@ LAYERS = {
             "xtremax",
         ],
     ),
-    "GeoNumerics": (
-        "Structured linear algebra, PDE operators, spectral methods",
-        NUMERICS,
-        ["gaussx", "finitevolX", "spectraldiffx"],
-    ),
     "GeoStack": (
-        "Data in, data out: read, transform, patch, compose",
+        "Data in, data out: read, transform, patch",
         OBS,
-        ["pipekit", "geotoolz", "xrtoolz", "georeader"],
+        ["geotoolz", "xrtoolz", "georeader"],
+    ),
+    "GeoNumerics": (
+        "Earth physics, PDE operators on grids, spectral methods, radiometry",
+        NUMERICS,
+        ["geophysix", "spectraldiffx", "finitevolX", "radiomax"],
+    ),
+    "Core": (
+        "Maths and plumbing that know no geography",
+        CORE,
+        ["pipekit", "gaussx", "functax", "argminax", "integrix"],
     ),
 }
 READ_ONLY_PKGS = {"georeader"}
@@ -1205,15 +1211,14 @@ def _external(
 def tier_stack() -> Svg:
     f = Svg(
         1100,
-        608,
-        "The stack in four owned layers between external foundations and"
-        " external orchestration: GeoStack (data) and GeoNumerics (numerics)"
-        " side by side at the bottom, GeoML (learning) on both, GeoModels"
-        " (physics) on top. Imports point down; GeoStack and GeoNumerics never"
-        " import each other.",
+        872,
+        "The stack in four owned layers over Core, between external foundations"
+        " and external orchestration: Core (maths and plumbing) at the bottom,"
+        " then GeoNumerics (numerics), GeoStack (data), GeoML (learning) and"
+        " GeoModels (physics) on top. Imports point down; GeoStack may import"
+        " GeoNumerics and never the other way round.",
     )
     x, w = 64, 1012
-    half = (w - 20) / 2
     _external(
         f,
         x,
@@ -1224,33 +1229,25 @@ def tier_stack() -> Svg:
     )
     _layer(f, x, 112, w, 104, "GeoModels")
     _layer(f, x, 248, w, 104, "GeoML")
-    _layer(f, x, 400, half, 104, "GeoNumerics")
-    _layer(f, x + half + 20, 400, half, 104, "GeoStack")
+    _layer(f, x, 384, w, 104, "GeoStack")
+    _layer(f, x, 520, w, 104, "GeoNumerics")
+    _layer(f, x, 656, w, 104, "Core")
     _external(
         f,
         x,
-        530,
+        792,
         w,
         "External · foundations",
         ["JAX", "Equinox", "lineax", "NumPyro", "xarray", "rasterio"],
     )
-    # Imports point down: GeoModels -> GeoML -> both bottom layers.
+    # Imports point down, each layer to any layer below it.
     mid = x + w / 2
-    f.arrow([(mid, 218), (mid, 246)], color=INK)
-    for cx in (x + half / 2, x + half + 20 + half / 2):
-        f.arrow([(cx, 354), (cx, 398)], color=INK)
-    f.text(
-        mid,
-        380,
-        "side by side: neither imports the other",
-        size=11,
-        color=MUTED,
-        italic=True,
-    )
-    f.arrow([(36, 112), (36, 504)], color=MUTED)
-    f.text(28, 308, "imports point down", size=11.5, color=MUTED)
+    for top in (218, 354, 490, 626):
+        f.arrow([(mid, top), (mid, top + 28)], color=INK)
+    f.arrow([(36, 112), (36, 760)], color=MUTED)
+    f.text(28, 436, "imports point down", size=11.5, color=MUTED)
     f.parts[-1] = f.parts[-1].replace(
-        "<text ", '<text transform="rotate(-90 28 308)" ', 1
+        "<text ", '<text transform="rotate(-90 28 436)" ', 1
     )
     return f
 
@@ -1424,25 +1421,34 @@ DG_LAYERS = [
         ],
     ),
     (
-        "GeoNumerics",
-        NUMERICS,
+        "GeoStack",
+        OBS,
         0.0,
-        0.49,
+        1.0,
         [
-            [("finitevolX", 0.38)],
-            [("spectraldiffx", 0.08), ("argminax", 0.2), ("integrix", 0.32)],
-            [("gaussx", 0.12), ("functax", 0.3)],
+            [("xrtoolz", 0.6), ("geotoolz", 0.8)],
+            [("georeader", 0.94)],
         ],
     ),
     (
-        "GeoStack",
-        OBS,
-        0.51,
+        "GeoNumerics",
+        NUMERICS,
+        0.0,
         1.0,
         [
-            [],
-            [("xrtoolz", 0.6), ("geotoolz", 0.86)],
-            [("pipekit", 0.72), ("georeader", 0.94)],
+            [("finitevolX", 0.5), ("radiomax", 0.7)],
+            [("spectraldiffx", 0.2), ("geophysix", 0.62)],
+        ],
+    ),
+    (
+        "Core",
+        CORE,
+        0.0,
+        1.0,
+        [
+            [("pipekit", 0.84)],  # pipekit-jax imports integrix (extra)
+            [("argminax", 0.14), ("integrix", 0.42)],
+            [("gaussx", 0.28), ("functax", 0.56)],
         ],
     ),
 ]
@@ -1465,21 +1471,16 @@ def dependency_graph() -> Svg:
     f = Svg(
         1200,
         760,
-        "How the repositories import each other, by layer: imports point down,"
-        " GeoStack and GeoNumerics sit side by side at the bottom. Solid edges"
-        " are dependencies or imports, dashed edges optional extras; red edges"
-        " form a cycle, a known violation. Drawn from the generated graph on"
-        " the dependency-graph page.",
+        "How the repositories import each other, by layer: imports point down"
+        " from GeoModels through GeoML, GeoStack and GeoNumerics to Core. Solid"
+        " edges are dependencies or imports, dashed edges optional extras; red"
+        " edges form a cycle, a known violation. Drawn from the generated graph"
+        " on the dependency-graph page.",
     )
     W, nw, nh, rg = 1200 - 48, 112, 30, 62
     pos: dict[str, tuple[float, float]] = {}
     y = 20
-    bottom_top = None
     for name, hue, f0, f1, rows in DG_LAYERS:
-        if name == "GeoStack":
-            y = bottom_top  # beside GeoNumerics
-        if name == "GeoNumerics":
-            bottom_top = y
         bh = 40 + len(rows) * rg
         bx, bw = 24 + f0 * W, (f1 - f0) * W
         f.rect(bx, y, bw, bh, stroke=hue[0], fill=hue[1], rx=12)

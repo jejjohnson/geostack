@@ -1,0 +1,57 @@
+diff --git a/notebooks/04_sst_baseline.ipynb b/notebooks/04_sst_baseline.ipynb
+new file mode 100644
+--- /dev/null
++++ b/notebooks/04_sst_baseline.ipynb
+@@ -0,0 +1,3 @@
++{"cells": [{"cell_type": "code", "source": ["import xarray as xr\n", "def read_window(path, bounds):\n", "    ds = xr.open_dataset(path)\n", "    return ds.sel(lon=slice(bounds[0], bounds[2]), lat=slice(bounds[1], bounds[3]))\n"]}]}
+diff --git a/src/geostack/metrics.py b/src/geostack/metrics.py
+new file mode 100644
+--- /dev/null
++++ b/src/geostack/metrics.py
+@@ -0,0 +1,6 @@
++import numpy as np
++
++
++def rmse(prediction, truth):
++    return float(np.sqrt(np.mean((prediction - truth) ** 2)))
+diff --git a/scripts/train_sst.py b/scripts/train_sst.py
+new file mode 100644
+--- /dev/null
++++ b/scripts/train_sst.py
+@@ -0,0 +1,22 @@
++import json
++
++import numpy as np
++
++from geostack.metrics import rmse
++
++LR = 0.003
++EPOCHS = 40
++
++
++def main():
++    data = np.load("data/processed/sst.npy")
++    data = (data - data.mean()) / data.std()
++    index = np.random.permutation(len(data))
++    train, test = data[index[:800]], data[index[800:]]
++    weights = np.zeros(train.shape[1])
++    for _ in range(EPOCHS):
++        weights -= LR * train.T @ (train @ weights - train[:, 0])
++    with open("outputs/sst_rmse.json", "w") as f:
++        json.dump({"rmse": rmse(test @ weights, test[:, 0]), "history": [1.0, 0.5]}, f)
++
++
++main()
+diff --git a/dvc.yaml b/dvc.yaml
+--- a/dvc.yaml
++++ b/dvc.yaml
+@@ -1,2 +1,7 @@
+-# Pipeline stages go here (the add-experiment skill); none yet.
+-stages: {}
++stages:
++  train_sst:
++    cmd: python scripts/train_sst.py
++    deps:
++      - scripts/train_sst.py
++    outs:
++      - data/processed

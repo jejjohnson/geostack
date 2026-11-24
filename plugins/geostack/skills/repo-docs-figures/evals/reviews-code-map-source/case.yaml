@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-code-map-source
+expected_outcome: |
+  A review that finds the edge that is not an import, the missing edge, the module that does not exist, the dependency drawn as an extra and the extra drawn as an import, the false claim on a card, the title and missing subtitle, the single theme, argparse and print, the cairosvg preview, the folder in the library's repo, and the embed with no alt text or caption placed in the middle of a sentence.

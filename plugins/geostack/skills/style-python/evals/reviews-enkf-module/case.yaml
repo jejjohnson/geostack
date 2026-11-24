@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-enkf-module
+expected_outcome: |
+  A review that finds the matrix inverse, the transposes and axis arguments in place of einx, the shapes in comments in place of jaxtyping types, the symbol names, the missing equation comments and the comments beside lines, the nested operations, the positional key, the Python check on a traced array with a bare ValueError, the silent cast to float32, the covariance and precision both stored, argparse and print in place of cyclopts and loguru, the bare function import and the missing docstrings.

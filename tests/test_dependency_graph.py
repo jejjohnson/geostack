@@ -54,7 +54,9 @@ def test_the_cycle_check_is_live() -> None:
     # a re-export of geoops from pipekit (a counterfactual) must close a cycle
     # through geotoolz → pipekit
     edges = [(e.source, e.target) for e in GRAPH.edges] + [("pipekit", "geotoolz")]
-    assert ["geotoolz", "pipekit"] in dg.sccs(list(GRAPH.repos), edges)
+    # geophysix and radiomax lie on it too: geotoolz → radiomax → … → pipekit
+    loops = dg.sccs(list(GRAPH.repos), edges)
+    assert any({"geotoolz", "pipekit"} <= set(loop) for loop in loops)
 
 
 def _with_dependency(source: str, target: str) -> dg.Graph:
@@ -79,18 +81,22 @@ def test_a_reverse_layer_edge_is_caught() -> None:
     assert ("upward", "gaussx", "plumax") in dg.violations(broken)
 
 
-def test_geostack_and_geonumerics_do_not_import_each_other() -> None:
-    assert ("upward", "geotoolz-ops", "finitevolx") in dg.violations(
-        _with_dependency("geotoolz-ops", "finitevolx")
-    )
+def test_geostack_may_import_geonumerics_but_not_the_reverse() -> None:
+    for user in ("geotoolz-ops", "xrtoolz-ops"):
+        found = dg.violations(_with_dependency(user, "finitevolx"))
+        assert not any(key[1:] == (user, "finitevolx") for key in found)
     assert ("upward", "finitevolx", "geotoolz-ops") in dg.violations(
         _with_dependency("finitevolx", "geotoolz-ops")
     )
+    # each guard is rendered from the same ranks
     _, source = dg.guard("finitevolX", GRAPH)
     assert '"geoops": "geotoolz-ops"' in source.split("ALLOWED")[0]  # forbidden
+    _, source = dg.guard("geotoolz", GRAPH)
+    assert '"finitevolx": "finitevolx"' not in source.split("ALLOWED")[0]
+    assert '"finitevolx": "finitevolx"' in source
 
 
-def test_core_sits_below_geostack_and_geonumerics() -> None:
+def test_core_sits_below_geonumerics_and_geostack() -> None:
     # Core repositories keep their submodule directory but rank below both
     assert GRAPH.repos["pipekit"] == GRAPH.repos["functax"] == "core"
     for user in ("geotoolz-ops", "finitevolx"):
@@ -118,11 +124,11 @@ def test_a_second_undeclared_import_is_new() -> None:
 
 
 def test_an_extra_does_not_declare_what_import_runs() -> None:
-    # xtremax is an extra of plumax: enough for an optional module only
+    # vardax is an extra of plumax: enough for an optional module only
     where = "src/plumax/new.py"
-    key = ("undeclared", f"plumax:{where}", "xtremax")
-    assert key not in dg.violations(_with_import("plumax", "xtremax", where))
-    eager = _with_import("plumax", "xtremax", where, eager=True)
+    key = ("undeclared", f"plumax:{where}", "vardax")
+    assert key not in dg.violations(_with_import("plumax", "vardax", where))
+    eager = _with_import("plumax", "vardax", where, eager=True)
     assert key in dg.violations(eager)
 
 

@@ -1,12 +1,13 @@
 # /// script
 # dependencies = ["cyclopts", "loguru", "pyyaml"]
 # ///
-"""Expand the standard's maths macros into plain LaTeX, for GitHub."""
+"""Make a Markdown file ready for GitHub: expand the standard's maths macros into
+plain LaTeX and put every inline expression in the backtick form."""
 
 from pathlib import Path
 
 import cyclopts
-from _macros import MACROS_FILE, expand_markdown, load_macros
+from _macros import MACROS_FILE, backtick_inline, expand_markdown, load_macros
 from loguru import logger
 
 
@@ -14,7 +15,12 @@ app = cyclopts.App(help=__doc__)
 
 
 @app.default
-def main(source: Path, output: Path | None = None, macros: Path = MACROS_FILE) -> None:
+def main(
+    source: Path,
+    output: Path | None = None,
+    macros: Path = MACROS_FILE,
+    backticks: bool = True,
+) -> None:
     """Expand every macro in SOURCE.
 
     Parameters
@@ -25,9 +31,14 @@ def main(source: Path, output: Path | None = None, macros: Path = MACROS_FILE) -
         Where to write the expanded file; defaults to overwriting SOURCE.
     macros
         The macro definitions.
+    backticks
+        Also rewrite each inline ``$…$`` as ``$`…`$``, so that GitHub's Markdown
+        cannot pair its underscores or stars as emphasis.
     """
     text = source.read_text(encoding="utf-8")
     expanded = expand_markdown(text, load_macros(macros))
+    if backticks:
+        expanded = backtick_inline(expanded)
     target = output or source
     target.write_text(expanded, encoding="utf-8")
     logger.info("expanded {} -> {}", source, target)

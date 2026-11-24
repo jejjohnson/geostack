@@ -54,8 +54,8 @@ before you write" in `AGENTS.md`.
      object (`tests/test_capabilities.py` fails on it), including a new entry
      in `KNOWN_CLASHES` (that list only shrinks);
    - code proposed for a library in a layer below what it imports (a
-     GeoNumerics or GeoStack library importing GeoML or GeoModels, a GeoML
-     library importing GeoModels) → the higher layer, or invert the
+     GeoNumerics library importing GeoStack, a GeoNumerics or GeoStack library
+     importing GeoML or GeoModels, a GeoML library importing GeoModels) → the higher layer, or invert the
      dependency.
 
 ## Report

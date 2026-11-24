@@ -596,11 +596,11 @@ Edges are elided here (`roll` wraps); the real kernel handles them.
 
 Two thin wrappers, one kernel.
 The tiering makes this possible: xrops imports the geoops kernel, so pipekit-array keeps no domain kernels.
-GeoStack and GeoNumerics still never import each other, which fixes where model-grade calculus goes:
+GeoStack may import GeoNumerics, and GeoNumerics never imports GeoStack (OP-O9), which fixes where model-grade calculus goes:
 
 - **Diagnostic gradients** (SSH or a plume map, for analysis): the geoops kernel above.
 - **Model-grade calculus** (staggered grids, finite volumes, boundary conditions): finitevolX's kernels, raw arrays only.
-  Carrier wrappers for them live in the GeoML or GeoModels package that needs them (somax, vardax), which may import both GeoNumerics and GeoStack; neither GeoStack nor finitevolX holds them.
+  Carrier wrappers for them may live in GeoStack, or in the GeoML or GeoModels package that needs them (somax, vardax); finitevolX holds none, because GeoNumerics never imports GeoStack.
 
 ### Families
 
@@ -661,5 +661,6 @@ Each step is a 0.X.0 bump. xrops now follows geoops instead of moving in paralle
 | OP-O4 | Lifting geometry over cubes | **Decided 22 Oct 2026:** `xrops.lift(op, dim=...)` in xrops; geoops has no `[xarray]` extra | `geoops.lift` behind `geoops[xarray]` (not taken) |
 | OP-O5 | How operators use `KernelOp` | **Decided 29 Oct 2026:** by composition: an operator keeps its own config and calls a `KernelOp` inside, as built in geotoolz #582–#584 (`geoops._src.kernels`) | every kernel operator subclasses `KernelOp` |
 | OP-O6 | The `backends` vocabulary | **Decided 29 Oct 2026:** `"numpy"`, `"jax"`, `"dask"`; a `DataArray` reports the backend of its data (`pipekit_ops.backend_of`), so there is no `"xarray"` entry, as the geoops contract test enforces (geotoolz #580) | backends and carrier families declared separately |
-| OP-O7 | Where grid calculus lives | **Decided 22 Oct 2026:** the diagnostic gradient kernel in geoops (`geoops/geom/_src/array.py`), wrapped by `geoops.geom.Gradient` and `xrops.Gradient` (today's `xrgrad`); pipekit-array keeps no domain kernels; model-grade calculus in finitevolX, wrapped by the GeoML or GeoModels package that uses it | kernel in pipekit-array (not taken) |
+| OP-O7 | Where grid calculus lives | **Decided 22 Oct 2026:** the diagnostic gradient kernel in geoops (`geoops/geom/_src/array.py`), wrapped by `geoops.geom.Gradient` and `xrops.Gradient` (today's `xrgrad`); pipekit-array keeps no domain kernels; model-grade calculus in finitevolX, wrapped by the GeoStack (OP-O9), GeoML or GeoModels package that uses it | kernel in pipekit-array (not taken) |
 | OP-O8 | Does an L3 algorithm call L3 algorithms inside a differentiated cost (the assimilator calling `simulate`)? | yes, while wrap and unwrap stay cheap under `grad`; measured in the spike | the cost calls the L1 loop directly, and only the outer call returns a `GeoMapSeries` |
+| OP-O9 | May GeoStack import GeoNumerics? | **Decided 23 Nov 2026:** yes, and GeoNumerics never imports GeoStack; geoops, geopatcher, xrops and xrproducts already import geophysix ([geostack#306](https://github.com/jejjohnson/geostack/issues/306)) | neither imports the other, as before (not taken) |

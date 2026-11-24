@@ -22,13 +22,14 @@ Markdown runs before MathJax, and the mobile app renders a subset.
 | Do | Don't |
 | --- | --- |
 | Display maths in a `math` code fence | `$$` mid-line, or `$$` without a blank line before it |
-| Inline `$…$` with no space just inside the dollars | `$ x $` |
-| `` $`…`$ `` when the expression has `*` pairs, `\{ \}` or `\\` | `$a * b * c$`, `$\{x\}$` (Markdown eats the `*` and the backslashes) |
+| Every inline expression in the backtick form, `` $`…`$ `` | plain `$…$` with a subscript: two of them in one paragraph pair their underscores as emphasis and both are lost (`$\boldsymbol{\mu}_x$ … $N_{b}$`) |
+| No space just inside the dollars | `$ x $` |
+| The backtick form also for `*` pairs, `\{ \}` and `\\` | `$a * b * c$`, `$\{x\}$` (Markdown eats the `*` and the backslashes) |
 | `\vert`, `\mid` or `\Vert` inside a table cell | a bare `\|` in a table's maths (splits the cell) |
 | `<span>$</span>100` for a literal dollar | `$100` next to maths on the same line |
 | Unicode in prose and code comments (σ², Σ⁻¹, ⊗) | maths images |
 
-GitHub has no custom macros, so expand them before filing:
+GitHub has no custom macros, so expand them before filing. The same script puts every inline expression in the backtick form, and the checker fails a file in which Markdown would pair a `_` or a `*` of plain inline maths (`inline-emphasis`):
 
 ```bash
 uv run <skill folder>/scripts/expand_macros.py body.md

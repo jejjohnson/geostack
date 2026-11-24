@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: reviews-claimed-result
+expected_outcome: |
+  A review that finds the emulator was scored against observations instead of the simulator, the flow was trained on and scored against the emulator-based inversion instead of simulations and the classical reference, that no learned stage was ever compared with the classical inversion, and that retiring it removes the only reference; and that lists the comparisons needed.

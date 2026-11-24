@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: adds-evaluation-step
+expected_outcome: |
+  A thin Hydra script that calls upstream code and defines no metric or loop of its own, an entry config with every setting, a DVC stage that declares its deps, params, a flat cache-false metrics file and a plots file, outputs written under the project root to the declared paths, a test that the config composes, and an account of what the repo lacks today.

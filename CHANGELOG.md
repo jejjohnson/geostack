@@ -1,5 +1,106 @@
 # Changelog
 
+## [0.2.6](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.5...geostack-v0.2.6) (2026-11-21)
+
+
+### Documentation
+
+* **design:** layer map as nine repos, optax_bayes into argminax ([#241](https://github.com/jejjohnson/geostack/issues/241)) ([d8d8182](https://github.com/jejjohnson/geostack/commit/d8d8182ca1126cc40095849059cb355b0c1c7637))
+* **design:** the geophysix page lists geophysix.wind and Wave 5 ([#293](https://github.com/jejjohnson/geostack/issues/293)) ([30a70ae](https://github.com/jejjohnson/geostack/commit/30a70ae0860724985ca59a612eeef340bcd0ec8c)), closes [#292](https://github.com/jejjohnson/geostack/issues/292)
+* **design:** the gridax, integrix and libraries pages state the four rules for solvers and time integration ([#294](https://github.com/jejjohnson/geostack/issues/294)) ([9cf7b71](https://github.com/jejjohnson/geostack/commit/9cf7b7183a917d1617bfc6fc0bdfeca84fcb0d48)), closes [#291](https://github.com/jejjohnson/geostack/issues/291)
+* **images:** add pyrox-nn's overview, role-ladder and dependency figures ([#279](https://github.com/jejjohnson/geostack/issues/279)) ([357d324](https://github.com/jejjohnson/geostack/commit/357d324f8d672b3635816a7156075f05953c8ffd))
+* **images:** add pyrox-xtreme's overview, role-ladder and dependency figures ([#280](https://github.com/jejjohnson/geostack/issues/280)) ([8b10587](https://github.com/jejjohnson/geostack/commit/8b105873525de4d26589f1c79845adcd2e5ba844))
+* **images:** add the pyrox core's overview, role-ladder and dependency figures ([#277](https://github.com/jejjohnson/geostack/issues/277)) ([1d8949d](https://github.com/jejjohnson/geostack/commit/1d8949d27e8cf04e5551a0ec9d0e56a517fb5b68))
+* **images:** gridax gets its overview, role ladder and dependency figures ([#296](https://github.com/jejjohnson/geostack/issues/296)) ([e7c68e3](https://github.com/jejjohnson/geostack/commit/e7c68e3fe46e27d260e1d9c0f957a0d36008631b))
+* **images:** the core pyrox icon in the pyrox dependency figure, with its arrow clear of the rim ([#289](https://github.com/jejjohnson/geostack/issues/289)) ([4e889b3](https://github.com/jejjohnson/geostack/commit/4e889b39b0e50a77e22c24ef790d96a866e1752e))
+* **images:** the pyrox-gauss overview, role ladder and dependency figures ([#288](https://github.com/jejjohnson/geostack/issues/288)) ([24a3131](https://github.com/jejjohnson/geostack/commit/24a31318123f70d8043d6b25974e5ecdd76f3d0b))
+* **images:** the pyrox-gp overview, role ladder and dependency figures ([#281](https://github.com/jejjohnson/geostack/issues/281)) ([93f21c1](https://github.com/jejjohnson/geostack/commit/93f21c19b7341d8233e27296d9701536525f8504))
+* **images:** the pyrox-gp prior hub figure ([#295](https://github.com/jejjohnson/geostack/issues/295)) ([d27d838](https://github.com/jejjohnson/geostack/commit/d27d838748eddd529df28cf8ec83f0c9c03f7189))
+* **images:** the pyrox-lgm overview, role ladder and dependency figures ([#284](https://github.com/jejjohnson/geostack/issues/284)) ([fe5a56b](https://github.com/jejjohnson/geostack/commit/fe5a56b01c52bd4f96ce284c62fe341dc949cd8b))
+* **images:** the pyrox-ssm overview, role ladder, dependency and prior hub figures ([#283](https://github.com/jejjohnson/geostack/issues/283)) ([0cc2d6a](https://github.com/jejjohnson/geostack/commit/0cc2d6aa959674657db54173b6accce45b4ec31a))
+* **skills:** add-dataset takes its reader from upstream and says what the first dataset creates ([#260](https://github.com/jejjohnson/geostack/issues/260)) ([543af19](https://github.com/jejjohnson/geostack/commit/543af199cc066729ae701836e0021cb0aa8e2ca3))
+* **skills:** add-experiment runs through DVC experiments and names no file the repo lacks ([#261](https://github.com/jejjohnson/geostack/issues/261)) ([e20a085](https://github.com/jejjohnson/geostack/commit/e20a085dcd49e8c10b8cd671ecaf17564aa49ebb))
+
+## [0.2.5](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.4...geostack-v0.2.5) (2026-11-19)
+
+
+### Features
+
+* **plugins:** add a geostack marketplace that installs a skill with the skills it builds on ([#193](https://github.com/jejjohnson/geostack/issues/193)) ([4adee22](https://github.com/jejjohnson/geostack/commit/4adee225149811eedc234eb023f5146fbcff14d7))
+* **plugins:** add data-levels, modeling-cycle and six-step-cycle, the stack's three organising axes ([#229](https://github.com/jejjohnson/geostack/issues/229)) ([2762c85](https://github.com/jejjohnson/geostack/commit/2762c85e50c418148704711a29185f6e95a52b99))
+* **plugins:** add library-docs-figures, the standard for a library's documentation figures ([#201](https://github.com/jejjohnson/geostack/issues/201)) ([504e9ec](https://github.com/jejjohnson/geostack/commit/504e9eca5dc06f53fcf5562c3c0c7ff61ffe8e4b))
+* **plugins:** add library-math-reference, the standard for a library's mathematical reference ([#224](https://github.com/jejjohnson/geostack/issues/224)) ([9a8f96d](https://github.com/jejjohnson/geostack/commit/9a8f96d2541857247d6c4415d90ee6e5b0d96ef0))
+* **plugins:** add repo-design-docs, the standard for a library's design docs ([#230](https://github.com/jejjohnson/geostack/issues/230)) ([718b11d](https://github.com/jejjohnson/geostack/commit/718b11dc9ae72182c1f73f5ade86f2ae2a62fa0f))
+* **plugins:** ship library-readme in the geostack plugin as its only copy ([#213](https://github.com/jejjohnson/geostack/issues/213)) ([0a9b678](https://github.com/jejjohnson/geostack/commit/0a9b678b03e54cf24adbdec0cc3fe42699b89608))
+* **plugins:** ship style-python, style-math and style-code-sketch in the geostack plugin ([#225](https://github.com/jejjohnson/geostack/issues/225)) ([b5c94d8](https://github.com/jejjohnson/geostack/commit/b5c94d8a49e1b3f0e0fe34470f69b6d919b1d7d2))
+* **scripts:** functax's units in the skill tree, with its dependents carded by unit ([#231](https://github.com/jejjohnson/geostack/issues/231)) ([bac12e4](https://github.com/jejjohnson/geostack/commit/bac12e4d00cc13f30d2907b439ff154238663573))
+* **scripts:** generate each skill's builds-on block from the dependency graph ([#192](https://github.com/jejjohnson/geostack/issues/192)) ([f823529](https://github.com/jejjohnson/geostack/commit/f8235291631c57892bcaee191bd269a8399a6672))
+* **scripts:** give a dependent that subclasses a unit's name that unit's card ([#178](https://github.com/jejjohnson/geostack/issues/178)) ([19af029](https://github.com/jejjohnson/geostack/commit/19af029b2d23196788163198b0d2b0669bca1c41))
+* **scripts:** measure a listed skill's block from the packages it names ([#221](https://github.com/jejjohnson/geostack/issues/221)) ([bac7414](https://github.com/jejjohnson/geostack/commit/bac74146b6d5178e4c19d3f5145b04bd1b01f9d0))
+* **scripts:** one shelf check that geostack writes into every library with a shelf ([#223](https://github.com/jejjohnson/geostack/issues/223)) ([d56e8f2](https://github.com/jejjohnson/geostack/commit/d56e8f2550884f5a5df46dd0f80bdb581e08287e))
+* **scripts:** package tiers inside one repository and the package-tier check ([#188](https://github.com/jejjohnson/geostack/issues/188)) ([61626a1](https://github.com/jejjohnson/geostack/commit/61626a15ed6ad44231658cdcaeb91baa8e567fc1))
+* **scripts:** rank pipekit, gaussx, functax, argminax and integrix as Core in the dependency graph ([#183](https://github.com/jejjohnson/geostack/issues/183)) ([8a5b071](https://github.com/jejjohnson/geostack/commit/8a5b0712620e1aad9092e4b99d434323708469f9))
+* **skills:** move the gaussx pin to its shelf and add a contract card for every library that others build on ([#199](https://github.com/jejjohnson/geostack/issues/199)) ([2539224](https://github.com/jejjohnson/geostack/commit/253922450c80625ee8044f6570c273e20a5c7ed6))
+
+
+### Bug Fixes
+
+* **ci:** make the pixi lock satisfiable and allow the shared Estimator name ([#118](https://github.com/jejjohnson/geostack/issues/118)) ([f56cdaa](https://github.com/jejjohnson/geostack/commit/f56cdaa2eaf7497d792dce4b3df6693c6590ccb7))
+* **plugins:** style-math's checker catches inline maths that GitHub's Markdown eats ([#243](https://github.com/jejjohnson/geostack/issues/243)) ([fc004a7](https://github.com/jejjohnson/geostack/commit/fc004a7c0c72fc715f87af97532db0cd142a0b1e))
+
+
+### Documentation
+
+* **design:** add argminax's skill shelf ([#168](https://github.com/jejjohnson/geostack/issues/168)) ([b13e7ea](https://github.com/jejjohnson/geostack/commit/b13e7eab4ae4d590c62b04359589d871cd02dde0))
+* **design:** add argminax's three schematics and make them the library-readme standard ([#198](https://github.com/jejjohnson/geostack/issues/198)) ([dd55f26](https://github.com/jejjohnson/geostack/commit/dd55f269748cb176be8813d3fd9335ed1bd78008))
+* **design:** add design pages for the nine new libraries on the layer map ([#125](https://github.com/jejjohnson/geostack/issues/125)) ([7d2871a](https://github.com/jejjohnson/geostack/commit/7d2871aacde8c6fadeea5dd9244c71e63cb0c1c2))
+* **design:** add gaussx's skill shelf as the worked example of the skill tree ([#161](https://github.com/jejjohnson/geostack/issues/161)) ([7208cb6](https://github.com/jejjohnson/geostack/commit/7208cb6956bbfb19c3dc50fa41e609bc8222da08))
+* **design:** add geotoolz's skill shelf ([#166](https://github.com/jejjohnson/geostack/issues/166)) ([8033580](https://github.com/jejjohnson/geostack/commit/803358028f301e641574ee583bf14854a524d4da))
+* **design:** add integrix's design note for integrals over space ([#141](https://github.com/jejjohnson/geostack/issues/141)) ([3bd1e5c](https://github.com/jejjohnson/geostack/commit/3bd1e5ca9a9d46a5421ebcdd2a64829345d1a48a))
+* **design:** add kernellib's skill shelf ([#165](https://github.com/jejjohnson/geostack/issues/165)) ([153f7b3](https://github.com/jejjohnson/geostack/commit/153f7b315409e9696eb6af30a7138195e0f555ab))
+* **design:** add pipekit's skill shelf ([#167](https://github.com/jejjohnson/geostack/issues/167)) ([2cff655](https://github.com/jejjohnson/geostack/commit/2cff6558d1467b859ff4f53fb907087929aeda59))
+* **design:** add storage formats, level 2 collections, product catalog and recipe registry pages ([#164](https://github.com/jejjohnson/geostack/issues/164)) ([ba791a5](https://github.com/jejjohnson/geostack/commit/ba791a55f33fd53f15419fcfb77827480db05f7f))
+* **design:** add the agent skill tree design page ([#160](https://github.com/jejjohnson/geostack/issues/160)) ([8f45e9a](https://github.com/jejjohnson/geostack/commit/8f45e9a9b14c4620d6e3cf2bdb87c05f280737af))
+* **design:** add the argminax.blr schematic, moved from optax_bayes, and embed it on the argminax page ([#191](https://github.com/jejjohnson/geostack/issues/191)) ([15d9db5](https://github.com/jejjohnson/geostack/commit/15d9db5b0932d2cc24678e39e6a652d125bd0ccf))
+* **design:** add the operator coupling page ([#117](https://github.com/jejjohnson/geostack/issues/117)) ([ea94daa](https://github.com/jejjohnson/geostack/commit/ea94daa5912cb8f8853abb034c50f6ef28c36e1c))
+* **design:** add the pyrox-ssm design page, and make the layer map follow the code for gaussx's filters ([#187](https://github.com/jejjohnson/geostack/issues/187)) ([df90777](https://github.com/jejjohnson/geostack/commit/df90777100403e3de4ff1fb7debe0c02924bb957))
+* **design:** add the stack layer map page ([#123](https://github.com/jejjohnson/geostack/issues/123)) ([ea6d0a3](https://github.com/jejjohnson/geostack/commit/ea6d0a3eb8436691d28bd40e740e00da3cc70344))
+* **design:** amend the stack layer map (diagnostix, pyrox siblings, tracerax) ([#124](https://github.com/jejjohnson/geostack/issues/124)) ([765d57e](https://github.com/jejjohnson/geostack/commit/765d57e0fbf79fd97303d09271850c1559e52182))
+* **design:** decide one workspace for both lanes; add the products and xrops-layer designs ([#175](https://github.com/jejjohnson/geostack/issues/175)) ([c653272](https://github.com/jejjohnson/geostack/commit/c65327252aca86ac3a47581394cc8e418156edec)), closes [#157](https://github.com/jejjohnson/geostack/issues/157)
+* **design:** move H(x) and the named reductions to geoops (GA-B6) ([#121](https://github.com/jejjohnson/geostack/issues/121)) ([788bda7](https://github.com/jejjohnson/geostack/commit/788bda75ad5280dcde51fa76e5cbb189a93bbc44))
+* **design:** record functax decisions 16 and 17 as decided ([#133](https://github.com/jejjohnson/geostack/issues/133)) ([8a365cc](https://github.com/jejjohnson/geostack/commit/8a365ccede5dac1a89d22526a8f36ab3262b9828))
+* **design:** record integrix's spatial decisions 10 to 13 as decided ([#142](https://github.com/jejjohnson/geostack/issues/142)) ([9644d19](https://github.com/jejjohnson/geostack/commit/9644d19d7ed7a4ce4f14210787cc555beb12810d))
+* **design:** record the functax Wave 1 module layout ([#138](https://github.com/jejjohnson/geostack/issues/138)) ([d396cc6](https://github.com/jejjohnson/geostack/commit/d396cc6b19953c2a7b43b1950d42f1eaa100ec67))
+* **design:** seven-rung role ladder with steps, recipes and orchestration ([#126](https://github.com/jejjohnson/geostack/issues/126)) ([19b3262](https://github.com/jejjohnson/geostack/commit/19b32624f51b862a20a7d73979e4ccf16f455067))
+* **design:** split kinds and roles out of the stack layer map ([#127](https://github.com/jejjohnson/geostack/issues/127)) ([8d609dc](https://github.com/jejjohnson/geostack/commit/8d609dc089e402fe7e36127b74eb1ac396053f17))
+* **images:** add argminax's exception hierarchy and list it as a code map ([#203](https://github.com/jejjohnson/geostack/issues/203)) ([25c23f0](https://github.com/jejjohnson/geostack/commit/25c23f0474efe1be3a746b6f14f31257f0a16fb5))
+* **images:** add argminax's import, Hessian, adjoints and BLR families schematics ([#200](https://github.com/jejjohnson/geostack/issues/200)) ([7b85bd2](https://github.com/jejjohnson/geostack/commit/7b85bd279bfc05f6ba2bb7492bbf2463c9f92fd5))
+* **images:** add functax's code map and exception hierarchy ([#216](https://github.com/jejjohnson/geostack/issues/216)) ([1f79ca2](https://github.com/jejjohnson/geostack/commit/1f79ca28f4ae19d876fca4e8fb6c2d7083df9e85))
+* **images:** add functax's role ladder and dependency figure ([#215](https://github.com/jejjohnson/geostack/issues/215)) ([91fcbdd](https://github.com/jejjohnson/geostack/commit/91fcbddac8a85b089094c101cd112d1a01a92a21))
+* **images:** add vardax's code map ([#207](https://github.com/jejjohnson/geostack/issues/207)) ([5f7f67d](https://github.com/jejjohnson/geostack/commit/5f7f67d00f32250c795fe066afb0f9ea6fa9af52))
+* **images:** add vardax's dependency figure ([#206](https://github.com/jejjohnson/geostack/issues/206)) ([9335c29](https://github.com/jejjohnson/geostack/commit/9335c2968cc8e77809919629852a07117e161329))
+* **images:** add vardax's methane pipeline ([#211](https://github.com/jejjohnson/geostack/issues/211)) ([411108f](https://github.com/jejjohnson/geostack/commit/411108f55160c3bbbb4d99b3000faa141abe153a))
+* **images:** add vardax's overview schematic ([#204](https://github.com/jejjohnson/geostack/issues/204)) ([b7ddbe3](https://github.com/jejjohnson/geostack/commit/b7ddbe316cd93a680e6ad896ca3e9756e6ddf166))
+* **images:** add vardax's posterior-covariance gallery ([#210](https://github.com/jejjohnson/geostack/issues/210)) ([2a982c3](https://github.com/jejjohnson/geostack/commit/2a982c3fd91dbfb690cc77b62cd76383f0d43beb))
+* **images:** add vardax's role ladder ([#205](https://github.com/jejjohnson/geostack/issues/205)) ([78a7b36](https://github.com/jejjohnson/geostack/commit/78a7b361fabc3406da448ba3d72e8e45b6785d70))
+* **images:** add vardax's rollout-adjoint comparison ([#209](https://github.com/jejjohnson/geostack/issues/209)) ([5e7601c](https://github.com/jejjohnson/geostack/commit/5e7601cc904eace7a17a3bc18adb87d1ff0a9ac0))
+* **images:** integrix's overview, role ladder and dependency figures ([#242](https://github.com/jejjohnson/geostack/issues/242)) ([601dffa](https://github.com/jejjohnson/geostack/commit/601dffa7cd2027d78ea070f373ddadbe0f60446d))
+* **plugins:** add the pipeline kind and vardax's lessons to library-docs-figures ([#212](https://github.com/jejjohnson/geostack/issues/212)) ([bdf2eb0](https://github.com/jejjohnson/geostack/commit/bdf2eb02077f3025c37eccb03c87802eaea80d45))
+* **plugins:** data-levels places by the stack's definitions and says what a stage ships ([#234](https://github.com/jejjohnson/geostack/issues/234)) ([9b5971e](https://github.com/jejjohnson/geostack/commit/9b5971efb1e33020a68832747fe8223bdf50d080))
+* **plugins:** figures gain an operations kind and specimens, and typeset their maths with KaTeX ([#214](https://github.com/jejjohnson/geostack/issues/214)) ([1d1893e](https://github.com/jejjohnson/geostack/commit/1d1893eb9dfc09fd83078d91983b47fb8204ab94))
+* **plugins:** give each style rule one owner and move shape comments above the line ([#227](https://github.com/jejjohnson/geostack/issues/227)) ([964dbfb](https://github.com/jejjohnson/geostack/commit/964dbfb6f179dbda17cf113996192254c36754b0))
+* **plugins:** modeling-cycle checks the comparison first and confirms an observing fault independently ([#239](https://github.com/jejjohnson/geostack/issues/239)) ([ff045a3](https://github.com/jejjohnson/geostack/commit/ff045a3bfa1636f180ed354c3006432837ff83ff))
+* **plugins:** repo-design-docs reviews against the code first and converts old records without inventing ([#233](https://github.com/jejjohnson/geostack/issues/233)) ([c4a616a](https://github.com/jejjohnson/geostack/commit/c4a616a7e0356f2294eed1852c1ee78e3bc7c193))
+* **plugins:** repo-docs-figures has a specimen typeset its labels and name the call that drew it ([#247](https://github.com/jejjohnson/geostack/issues/247)) ([6f69634](https://github.com/jejjohnson/geostack/commit/6f69634ef885040a7f488924c7b2130beb3a57cf))
+* **plugins:** repo-math-reference leans on style-math, sizes its chapter lists and reviews the maths first ([#232](https://github.com/jejjohnson/geostack/issues/232)) ([d630134](https://github.com/jejjohnson/geostack/commit/d6301341bbefef891648bfc86fba4d385b1bb526))
+* **plugins:** repo-readme leaves out figures that are not drawn yet and checks a highlight against the code path ([#246](https://github.com/jejjohnson/geostack/issues/246)) ([059d234](https://github.com/jejjohnson/geostack/commit/059d2345a53ccacceeba4b395bc3da32e5ea6fcb))
+* **plugins:** role-ladder places a name by what it holds, and gives every name in an explanation a rung ([#245](https://github.com/jejjohnson/geostack/issues/245)) ([7ef3d35](https://github.com/jejjohnson/geostack/commit/7ef3d352cfb2d7060efb6a01a59ea76946b13312))
+* **plugins:** six-step-cycle says what each comparison measures and when the emulator steps are skipped ([#235](https://github.com/jejjohnson/geostack/issues/235)) ([1bb6827](https://github.com/jejjohnson/geostack/commit/1bb682721bb2a30e4f3e07c22b2b8de574ac29bc))
+* **plugins:** specimen scripts switch on float64 as their pages do ([#218](https://github.com/jejjohnson/geostack/issues/218)) ([b187289](https://github.com/jejjohnson/geostack/commit/b187289b00156048b34c41a23db656ec82c914d2))
+* **plugins:** style-code-sketch says a target-state page has no status markers, and how a sketch is reviewed ([#244](https://github.com/jejjohnson/geostack/issues/244)) ([53e0229](https://github.com/jejjohnson/geostack/commit/53e0229d447493838b1186576667a909d4de9be5))
+* **plugins:** style-python covers postponed annotations, test code and faults met in a review ([#240](https://github.com/jejjohnson/geostack/issues/240)) ([0342fda](https://github.com/jejjohnson/geostack/commit/0342fda7ec561184e76a6dab9d7121896fa46fd4))
+* rename the pipekit core to pipekit-ops in docs, notebooks and the capability index ([#140](https://github.com/jejjohnson/geostack/issues/140)) ([dd76078](https://github.com/jejjohnson/geostack/commit/dd76078fa3b143949fe8299f043f3f4473a0e1c9)), closes [#139](https://github.com/jejjohnson/geostack/issues/139)
+
 ## [0.2.4](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.3...geostack-v0.2.4) (2026-10-30)
 
 

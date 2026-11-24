@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyrox-nn — uncertainty, layer by layer</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1600px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .joint .katex { font-size: 1.18em; }
+  #diagram .term .eq .katex { font-size: 1.05em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 270px 390px 380px 260px;
+    column-gap: 70px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .eq code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .term .eq .eg { margin-top: 4px; font-size: 11.5px; }
+  .term .eq .eg code { font-size: 11.5px; color: var(--muted); }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .joint { color: var(--ink-accent); margin: 2px 0 0 2px; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pyrox-nn — uncertainty, layer by layer</div>
+  <div class="subtitle">Each layer declares its weights as NumPyro sites with their own prior, so a stack of layers writes one joint density. The uncertainty sits in the weights, in random features, in the output noise, or comes after a plain fit.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you write</span></div>
+      <div class="node">
+        <div class="name">data <span class="m">\mathbf{X}, \ \mathbf{y}</span></div>
+        <div class="desc">inputs and targets, or coordinates and a field on a grid</div>
+      </div>
+      <div class="node">
+        <div class="name">a stack of layers <span class="m">g_1, \ldots, g_L</span></div>
+        <div class="desc">pyrox-nn layers composed with ordinary JAX, each with its own <code>pyrox_name</code></div>
+      </div>
+      <div class="node">
+        <div class="name">a NumPyro model</div>
+        <div class="desc">calls the network and observes <span class="m">\mathbf{y}</span> with <code>numpyro.sample(…, obs=y)</code></div>
+      </div>
+      <div class="node">
+        <div class="name">or a fitted network</div>
+        <div class="desc">any Equinox pytree and its <code>predict_fn</code>, for a Laplace posterior after the fit</div>
+      </div>
+    </div>
+
+    <!-- column 2: the one joint -->
+    <div class="lane compute" id="lane-joint">
+      <div class="lane-head"><span class="verb">one joint</span><span class="pkg">a prior per layer</span></div>
+      <div class="joint"><span class="m">{p(\mathbf{y}, \boldsymbol{\theta} \mid \mathbf{X}) = p(\mathbf{y} \mid f(\mathbf{X}; \boldsymbol{\theta})) \prod_{l} p(\boldsymbol{\theta}_l)}</span></div>
+      <div class="term">
+        <div class="lbl">the sites each layer records, under its <code>pyrox_name</code></div>
+        <div class="eq"><code>&lt;pyrox_name&gt;.&lt;site&gt;</code><div class="eg"><code>hidden.weight</code> · <code>RBFFourierFeatures.W</code> · …</div></div>
+      </div>
+      <div class="term">
+        <div class="lbl">random features make the readout a Gaussian process</div>
+        <div class="eq"><span class="m">{\boldsymbol{\phi}(\mathbf{x}) = \tfrac{1}{\sqrt{M}} [\cos(\boldsymbol{\Omega}^\top \mathbf{x} / \ell), \ \sin(\boldsymbol{\Omega}^\top \mathbf{x} / \ell)]}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">or a Laplace posterior over some weights, after the fit</div>
+        <div class="eq"><span class="m">{\boldsymbol{\Sigma}_w^{-1} = \mathbf{J}^\top \mathbf{J} / \sigma_\varepsilon^2 + \lambda \mathbf{I}}</span></div>
+      </div>
+    </div>
+
+    <!-- column 3: what pyrox-nn does -->
+    <div class="lane cut" id="lane-nn">
+      <div class="lane-head"><span class="verb">pyrox-nn</span><span class="pkg">where the uncertainty goes</span></div>
+      <div class="node">
+        <div class="name">Weights</div>
+        <div class="desc"><span class="mod">pyrox_nn</span> — <code>DenseReparameterization</code> · <code>DenseFlipout</code> · <code>DenseHierarchical</code> · <code>BayesianSIREN</code> · …</div>
+      </div>
+      <div class="node">
+        <div class="name">Features</div>
+        <div class="desc"><span class="mod">pyrox_nn</span> — <code>RBFFourierFeatures</code> · <code>HSGPFeatures</code> · <code>RandomFeatureGaussianProcess</code> · <code>DeepVSSGP</code> · …</div>
+      </div>
+      <div class="node">
+        <div class="name">Output</div>
+        <div class="desc"><span class="mod">pyrox_nn</span> — <code>GaussianRegressionHead</code> · <code>MCSoftmaxDenseFA</code> · <code>NCPNormalOutput</code></div>
+      </div>
+      <div class="node">
+        <div class="name">After the fit</div>
+        <div class="desc"><span class="mod">pyrox_nn</span> — <code>last_layer_laplace</code> · <code>.optimize_prior_precision()</code> · <code>.predict()</code></div>
+      </div>
+      <div class="node">
+        <div class="name">A field in one call</div>
+        <div class="desc"><span class="mod">pyrox_nn.api</span> — <code>NeuralFieldEstimator</code> · <code>BNFEstimator</code> · <code>.fit()</code> · <code>.fit_xarray()</code></div>
+      </div>
+      <div class="note">many layers hold a deterministic geonnax core and splice the sampled arrays into it with <code>eqx.tree_at</code></div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">the predictive</span></div>
+      <div class="node">
+        <div class="name">a posterior over weights</div>
+        <div class="desc">draws <span class="m">\boldsymbol{\theta}^{(s)}</span> by NUTS, or <span class="m">q(\boldsymbol{\theta})</span> by SVI, from the same model</div>
+      </div>
+      <div class="node">
+        <div class="name">a Laplace posterior <span class="m">\mathcal{N}(\hat{\mathbf{w}}, \boldsymbol{\Sigma}_w)</span></div>
+        <div class="desc">with <span class="m">\lambda</span> set by maximising the evidence</div>
+      </div>
+      <div class="node solid">
+        <div class="name">the spread of <span class="m">f(\mathbf{X}_*)</span></div>
+        <div class="desc">a mean and a standard deviation at new inputs, which should widen away from the data</div>
+      </div>
+      <div class="node">
+        <div class="name">a fitted field</div>
+        <div class="desc"><span class="m">E</span> members, with the mean and quantiles of their mixture</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">pyrox</div>
+      <div class="what">Each layer is a <code>PyroxModule</code>; the estimator fits with <code>ensemble_map</code> and <code>ensemble_vi</code>.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">geonnax</div>
+      <div class="what">The deterministic cores the layers wrap; the encoders, re-exported.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">functax · kernellib</div>
+      <div class="what">The bases of the feature layers; kernel spectral densities.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">argminax · gaussx</div>
+      <div class="what">The Laplace evidence and its <span class="m">\lambda</span> search; the GGN algebra.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-joint", { label: "<span class='m'>g_l, \\ p(\\boldsymbol{\\theta}_l)</span>", color: "#7b6bb5" });
+    wire("lane-joint", "lane-nn", { label: "sites", color: "#cf9418" });
+    wire("lane-nn", "lane-out", { label: "fits", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>

@@ -31,8 +31,8 @@ The units follow the two things a caller asks for instead: an integral that does
 | Unit | Rungs | Home band | Subpackages | Names |
 |---|---|---|---|---|
 | Integrals | ⓪ ① ② | numerics, ML | `integrix.expect` 8, `integrix.adapt` 4, `integrix.rule` 4, `integrix.exceptions` 2, `integrix` 1, `integrix.scan` 1 | 20 |
-| Marches | ① ② ④ | numerics, geoscience | `integrix.march` 26, `integrix.adjoint` 5 | 31 |
-| **All** | | | | **51** |
+| Marches | ① ② ④ | numerics, geoscience | `integrix.march` 31, `integrix.adjoint` 5 | 36 |
+| **All** | | | | **56** |
 <!-- shelf:units:end -->
 :::
 
@@ -56,6 +56,7 @@ Each unit is a listed skill, because a caller asks for one without mentioning th
 | finitevolx | 8 | 0 | 8 |
 | plumax | 4 | 3 | 1 |
 | sesmax-core | 3 | 0 | 3 |
+| pipekit-jax | 1 | 0 | 1 |
 | vardax | 1 | 0 | 1 |
 <!-- shelf:uses:end -->
 :::
@@ -69,6 +70,7 @@ Each unit is a listed skill, because a caller asks for one without mentioning th
 | finitevolx | Marches |  |
 | plumax | Integrals | Marches (1) |
 | sesmax-core | Marches |  |
+| pipekit-jax | none | Marches (1) |
 | vardax | none | Marches (1) |
 <!-- shelf:cards:end -->
 :::
