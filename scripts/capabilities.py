@@ -468,6 +468,10 @@ _PIPEKIT_JAX = (
 )
 _TOY_MODELS = "toy models in both sesmax_core.testing and vardax"
 _STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
+_SEMI_LAGRANGIAN = (
+    "moved from finitevolX to integrix.march (finitevolX#478); the finitevolX pin"
+    " predates it"
+)
 _TRANSFORMS = "moved from spectraldiffx to functax.transform (spectraldiffx#166)"
 _NN_LAYERS = "layers in both geonnax and pyrox-nn"
 _SAME_NAME = "different objects under one name in several GeoML and GeoStack libraries"
@@ -496,6 +500,8 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "ChebyshevTransform2D": _TRANSFORMS,
         "buoyancy": _GEOPHYSIX,
         "LeapfrogRAFSolver": _STEPPERS,
+        "SemiLagrangianSolver": _SEMI_LAGRANGIAN,
+        "SemiLagrangianTerm": _SEMI_LAGRANGIAN,
         "SphericalGrid2D": _NUMERICS,
         "SphericalHarmonicTransform": _TRANSFORMS,
         "SplitExplicitRKSolver": _STEPPERS,
@@ -513,6 +519,7 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "linear_drho_dS": _GEOPHYSIX,
         "linear_drho_dT": _GEOPHYSIX,
         "reduced_gravity": _GEOPHYSIX,
+        "semi_lagrangian_step": _SEMI_LAGRANGIAN,
         "vertical_velocity": (
             "finitevolX's, from a divergence, beside geophysix.thermo's, from ω"
         ),
