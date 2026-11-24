@@ -279,13 +279,13 @@ A cross-library test pins the consumers' values once they switch: finitevolX's a
 | Library | Used for | Required or optional |
 | --- | --- | --- |
 | NumPy | the default array namespace | required |
-| pipekit-array | `array_namespace`, the NumPy and JAX dispatch | required |
+| pipekit-array | `pipekit_array.functions`, the array dispatch | required |
 | JAX | traced use, gradients | optional (`[jax]`) |
 | pyproj | the oracle in tests only | test |
 | gsw | the TEOS-10 oracle in tests only | test |
 | hypothesis | property tests | test |
 
-pipekit-array is Core, so geophysix still imports nothing from GeoNumerics or GeoStack. Whether a dependency on pipekit-array is acceptable at GeoNumerics tier 0, or geophysix carries its own five-line dispatch, is a small decision for wave 0.
+pipekit-array is Core, so geophysix still imports nothing from GeoNumerics or GeoStack. The dispatch was geophysix's own until v0.0.6. [pipekit#244](https://github.com/jejjohnson/pipekit/issues/244) decided on 23 Nov 2026 that every library shares pipekit's, which replaced the third part of [geophysix#14](https://github.com/jejjohnson/geophysix/issues/14).
 
 ## Where it stands
 
@@ -312,7 +312,7 @@ The radii differ by up to 3 × 10⁻⁵ relative between mean radii and by 1.1 �
 
 ### Per library
 
-- **finitevolX** `_src/utils/constants.py`: `R_EARTH`, `GRAVITY`, `OMEGA`, `DEG2M`, `RHO = 1000`. `_src/operators/diagnostics.py`: `coriolis_param(lat, omega=OMEGA)` and the β-plane `coriolis_fn(Y, f0=9.375e-5, beta=1.754e-11)`. `_src/operators/eos.py`: `linear_density`, `linear_density_anomaly` (ρ₀ = 1025, α = 2 × 10⁻⁴, β = 7 × 10⁻⁴, T₀ = 10, S₀ = 35). The constants, both Coriolis functions and the linear EOS move; the C-grid Coriolis operator in `_src/pipekit/stencils.py` stays and calls geophysix.
+- **gridax and gridax-jax** (finitevolX when this was read; since [finitevolX#435](https://github.com/jejjohnson/finitevolX/issues/435) gridax `_src/constants.py` and `_src/operators/diagnostics.py`, and gridax-jax `_src/operators/eos.py`) `_src/utils/constants.py`: `R_EARTH`, `GRAVITY`, `OMEGA`, `DEG2M`, `RHO = 1000`. `_src/operators/diagnostics.py`: `coriolis_param(lat, omega=OMEGA)` and the β-plane `coriolis_fn(Y, f0=9.375e-5, beta=1.754e-11)`. `_src/operators/eos.py`: `linear_density`, `linear_density_anomaly` (ρ₀ = 1025, α = 2 × 10⁻⁴, β = 7 × 10⁻⁴, T₀ = 10, S₀ = 35). The constants, both Coriolis functions and the linear EOS move; the C-grid Coriolis operator in `_src/pipekit/stencils.py` stays and calls geophysix.
 - **somax** `_src/constants/__init__.py` and **sesmax-core** `_src/constants.py`: the same five constants as finitevolX. sesmax-core switches; somax retires.
 - **xrops** `grad/_src/constants.py` (written to replace metpy's), `atm/_src/constants.py` (`R_D`, `C_P`, `KAPPA`, `G`, `M_DRY`, `N_A`, `K_B`, `EPSILON_TV = 0.61`), `atm/gas/ch4/_src/column.py` (`dry_air_column`, `mixing_ratio_to_column`, `column_mass_to_delta_vmr`), `ocn/_src/kinematics.py` (`density_from_ts`, TEOS-10 through a lazy gsw import). The maths moves; the DataArray functions stay and call it.
 - **geonnax** `_frames.py`: `WGS84_A`, `WGS84_F`, `EARTH_MEAN_RADIUS_M`; `lonlat_to_ecef` and `ecef_to_lonlat` with `ellipsoid="wgs84" | "sphere"`, the inverse by a Bowring-type step. The ellipsoid half moves; the unit-sphere frames go to functax.

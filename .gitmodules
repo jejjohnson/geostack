@@ -66,6 +66,14 @@
 	path = references/numerics/integrix
 	url = https://github.com/jejjohnson/integrix.git
 	branch = main
+[submodule "references/numerics/geophysix"]
+	path = references/numerics/geophysix
+	url = https://github.com/jejjohnson/geophysix.git
+	branch = main
+[submodule "references/numerics/radiomax"]
+	path = references/numerics/radiomax
+	url = https://github.com/jejjohnson/radiomax.git
+	branch = main
 [submodule "references/geoml/manipy"]
 	path = references/geoml/manipy
 	url = https://github.com/jejjohnson/manipy.git

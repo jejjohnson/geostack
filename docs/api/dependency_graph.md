@@ -2,7 +2,7 @@
 title: Dependency graph
 subtitle: How the stack's repositories depend on one another, and the rules that keep the graph acyclic
 short_title: Dependency graph
-description: The dependency graph between the eighteen repositories geostack builds on, read from each submodule's pyproject.toml and imports, with the rules every repository follows so the graph stays acyclic, and the places it breaks them today.
+description: The dependency graph between the twenty-one repositories geostack builds on, read from each submodule's pyproject.toml and imports, with the rules every repository follows so the graph stays acyclic, and the places it breaks them today.
 keywords:
   - dependency graph
   - circular dependencies
@@ -17,7 +17,7 @@ numbering:
 
 +++ {"part": "abstract"}
 
-geostack builds on eighteen repositories in four layers. This page draws how
+geostack builds on twenty-one repositories in four layers. This page draws how
 they depend on one another, from what each library declares (base
 dependencies and extras) and what its code actually imports (including
 lazy, `try`-guarded and type-checking-only imports). It then states eight
@@ -84,6 +84,8 @@ flowchart TB
   subgraph numerics["GeoNumerics"]
     direction LR
     finitevolX["finitevolX"]
+    radiomax["radiomax"]
+    geophysix["geophysix"]
     spectraldiffx["spectraldiffx"]
   end
   subgraph core["Core"]
@@ -120,6 +122,7 @@ flowchart TB
   pyrox -.-> gauss_flows
   pyrox --> geonnax
   pyrox --> kernellib
+  radiomax --> geophysix
   radtrax --> argminax
   radtrax --> geonnax
   radtrax -.-> geotoolz
@@ -137,7 +140,7 @@ flowchart TB
 ```
 :::
 
-19 repositories, 42 packages and 56 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+21 repositories, 44 packages and 57 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -145,10 +148,9 @@ What it shows:
 
 - **Every edge between layers points down.** GeoModels uses GeoML, GeoNumerics
   and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoStack may use GeoNumerics
-  (rule 1); at the pins it uses only Core, as GeoNumerics does. Core uses nothing
-  above it.
+  (rule 1), and at the pins it uses only Core. Core uses nothing above it.
 - **gaussx is the foundation.** Every repository in GeoNumerics, GeoML and
-  GeoModels except geonnax reaches it. A breaking change in gaussx is a
+  GeoModels except geonnax, geophysix and radiomax reaches it. A breaking change in gaussx is a
   change to almost the whole stack.
 - **plumax is the one GeoModels repository that imports another.** It builds on radtrax: plume physics uses radiative transfer, never the reverse ([package boundaries](../geomodels/package_boundaries.md#pb-rules), rule 2).
 - **The one cycle is inside GeoStack** (in red): pipekit-train imports
@@ -222,8 +224,8 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoStack | 2 | geotoolz (xrtoolz, xrtoolz-ops, xrtoolz-products) | operators on xarray, lifting geoops over cubes |
 | GeoStack | 1 | geotoolz | operators on arrays and geoarray carriers |
 | GeoStack | 0 | georeader | readers |
-| GeoNumerics | 1 | finitevolX | finite volume |
-| GeoNumerics | 0 | spectraldiffx | spectral methods |
+| GeoNumerics | 1 | finitevolX, radiomax | finite volume, and observation geometry and radiometry |
+| GeoNumerics | 0 | geophysix, spectraldiffx | physical facts about the Earth, and spectral methods |
 | Core | 1 | argminax, integrix | optimisation and integration |
 | Core | 0 | functax, gaussx, pipekit | pipelines, linear algebra, Gaussians and function approximation |
 <!-- tier-table:end -->
@@ -353,6 +355,7 @@ cannot import, so most of its tests could no longer be collected.
 | finitevolX | integrix | base | `finitevolx → integrix` |
 | finitevolX | pipekit | extra | `finitevolx → pipekit-jax` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
+| radiomax | geophysix | base | `radiomax → geophysix` |
 | spectraldiffx | functax | base | `spectraldiffx → functax` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
 | argminax | gaussx | base | `argminax → gaussx` |
