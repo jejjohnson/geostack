@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.7.0, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6, geophysix 0.0.5, radiomax 0.0.8.
+Listed at gaussx 0.7.0, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6, geophysix 0.0.7, radiomax 0.0.9.
 
 ## Upstream: `gaussx`
 
@@ -1122,7 +1122,7 @@ Physical constants, the Earth's shape, its air and its sea water.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `BackendError` | class | Raised for an array of an unknown library, or of several in one call. |
+| `BackendError` | class | Re-exported from `pipekit_ops`. |
 | `EarthError` | class | Raised for a bad body, such as an unknown ellipsoid or sphere name. |
 | `GeophysixError` | class | Base class for every exception raised by ``geophysix``. |
 | `RangeError` | class | Raised for a latitude out of range. |
@@ -1222,7 +1222,6 @@ Observation geometry and radiometry, on any array library.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `BackendError` | class | Raised for an array of an unknown library, or of several in one call. |
 | `RadiomaxError` | class | Base class for every exception raised by ``radiomax``. |
 | `ValidationError` | class | Raised for a bad argument: its shape, a dimension name or its value. |
 
