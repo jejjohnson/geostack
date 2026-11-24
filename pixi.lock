@@ -19438,8 +19438,8 @@ packages:
   - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4
   - geonnax @ git+https://github.com/jejjohnson/geonnax@v0.0.10
   - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-cycle
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-cycle
   - xarray>=2024.0 ; extra == 'data'
   - numpy>=1.26 ; extra == 'data'
   - matplotlib>=3.9.0 ; extra == 'viz'
@@ -19460,9 +19460,9 @@ packages:
   - matplotlib>=3.9.0 ; extra == 'examples'
   - loguru>=0.7.2 ; extra == 'examples'
   - tqdm>=4.66.0 ; extra == 'examples'
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-jax ; extra == 'persist'
-  - pipekit-experiment @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-experiment ; extra == 'persist'
-  - pipekit-train @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-train ; extra == 'train'
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-jax ; extra == 'persist'
+  - pipekit-experiment @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-experiment ; extra == 'persist'
+  - pipekit-train @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-train ; extra == 'train'
   - vardax[data,viz,exp,jlab,examples,persist,train] ; extra == 'all'
   requires_python: '>=3.12,<3.14'
 - pypi: ./references/geomodels/plumax
