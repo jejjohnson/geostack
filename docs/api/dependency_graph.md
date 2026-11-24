@@ -53,7 +53,7 @@ reads "imports or depends on".
 
 :::{figure} ../images/overview/dependency_graph.svg
 :label: fig-dg-layers
-:alt: The repositories in four layer bands, with edges pointing down from each repository to those it depends on or imports.
+:alt: The repositories in five layer bands, with edges pointing down from each repository to those it depends on or imports.
 :width: 100%
 :::
 
@@ -76,15 +76,15 @@ flowchart TB
     gauss_flows["gauss_flows"]
     geonnax["geonnax"]
   end
-  subgraph numerics["GeoNumerics"]
-    direction LR
-    finitevolX["finitevolX"]
-    spectraldiffx["spectraldiffx"]
-  end
   subgraph geostack["GeoStack"]
     direction LR
     geotoolz["geotoolz"]
     georeader["georeader (third party)"]
+  end
+  subgraph numerics["GeoNumerics"]
+    direction LR
+    finitevolX["finitevolX"]
+    spectraldiffx["spectraldiffx"]
   end
   subgraph core["Core"]
     direction LR
@@ -144,8 +144,9 @@ flowchart TB
 What it shows:
 
 - **Every edge between layers points down.** GeoModels uses GeoML, GeoNumerics
-  and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoStack and GeoNumerics use
-  only Core, and Core uses nothing above it.
+  and GeoStack. GeoML uses GeoNumerics and GeoStack. GeoStack may use GeoNumerics
+  (rule 1); at the pins it uses only Core, as GeoNumerics does. Core uses nothing
+  above it.
 - **gaussx is the foundation.** Every repository in GeoNumerics, GeoML and
   GeoModels except geonnax reaches it. A breaking change in gaussx is a
   change to almost the whole stack.
@@ -163,9 +164,9 @@ Each rule is a check in `scripts/dependency_graph.py`. The name in brackets
 is the rule's name in [](#tbl-dg-violations).
 
 1. **Layers point down** (`upward`). A repository may depend on its own layer
-   or a lower one: Core at the bottom, GeoStack and GeoNumerics side by side
-   above it, GeoML above them, GeoModels on top. GeoStack and GeoNumerics never
-   import each other. Core is the stack layer map's layer of maths and plumbing that know no geography (pipekit, gaussx, functax, argminax and integrix); its repositories keep their submodule directories under `references/geostack/` and `references/numerics/`.
+   or a lower one: Core at the bottom, then GeoNumerics, GeoStack, GeoML, and
+   GeoModels on top. GeoStack may import GeoNumerics, and GeoNumerics never
+   imports GeoStack ([OP-O9](../design/operators.md), 23 Nov 2026). Core is the stack layer map's layer of maths and plumbing that know no geography (pipekit, gaussx, functax, argminax and integrix); its repositories keep their submodule directories under `references/geostack/` and `references/numerics/`.
 2. **Within a layer, tiers point down** (`tier`). Each repository has a tier
    in its layer ([](#tbl-dg-tiers)) and imports only repositories of a lower
    tier. Two repositories of the same tier never import each other. In GeoModels, radtrax and sesmax share tier 0 and plumax sits above them in tier 1, because its plume-to-radiance coupling composes a plume model with radtrax's forward model.
@@ -218,11 +219,11 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoML | 2 | filterax, manipy | ensemble filters and manifold learning |
 | GeoML | 1 | kernellib, pyrox (pyrox-gauss, pyrox-xtreme) | kernels, Gaussian distributions and extremes |
 | GeoML | 0 | gauss_flows, geonnax | layers and flows |
-| GeoNumerics | 1 | finitevolX | finite volume |
-| GeoNumerics | 0 | spectraldiffx | spectral methods |
 | GeoStack | 2 | geotoolz (xrtoolz, xrtoolz-ops, xrtoolz-products) | operators on xarray, lifting geoops over cubes |
 | GeoStack | 1 | geotoolz | operators on arrays and geoarray carriers |
 | GeoStack | 0 | georeader | readers |
+| GeoNumerics | 1 | finitevolX | finite volume |
+| GeoNumerics | 0 | spectraldiffx | spectral methods |
 | Core | 1 | argminax, integrix | optimisation and integration |
 | Core | 0 | functax, gaussx, pipekit | pipelines, linear algebra, Gaussians and function approximation |
 <!-- tier-table:end -->
@@ -345,15 +346,15 @@ cannot import, so most of its tests could no longer be collected.
 | vardax | geonnax | base | `vardax → geonnax` |
 | vardax | integrix | base | `vardax → integrix` |
 | vardax | pipekit | base | `vardax → pipekit-cycle` |
+| geotoolz | functax | base | `geotoolz-array → functax` |
+| geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
+| geotoolz | pipekit | base | `geotoolz-array → pipekit-array` |
 | finitevolX | gaussx | base | `finitevolx → gaussx` |
 | finitevolX | integrix | base | `finitevolx → integrix` |
 | finitevolX | pipekit | extra | `finitevolx → pipekit-jax` |
 | finitevolX | spectraldiffx | base | `finitevolx → spectraldiffx` |
 | spectraldiffx | functax | base | `spectraldiffx → functax` |
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
-| geotoolz | functax | base | `geotoolz-array → functax` |
-| geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
-| geotoolz | pipekit | base | `geotoolz-array → pipekit-array` |
 | argminax | gaussx | base | `argminax → gaussx` |
 | integrix | functax | base | `integrix → functax` |
 | integrix | gaussx | base | `integrix → gaussx` |

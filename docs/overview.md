@@ -361,14 +361,15 @@ We show the stack at two zoom levels: the layers first, then the packages inside
 
 ```{figure} images/overview/tier_stack.svg
 :label: fig-tier-stack
-:alt: Four owned layers between external foundations at the bottom and external orchestration and serving at the top. GeoStack (data) and GeoNumerics (numerics) sit side by side at the bottom, GeoML (learning and inference) on both, GeoModels (physics) on top; imports point down. georeader is marked third-party and read-only.
+:alt: Four owned layers over Core, between external foundations at the bottom and external orchestration and serving at the top. Core (maths and plumbing) is at the bottom, then GeoNumerics (numerics), GeoStack (data), GeoML (learning and inference) and GeoModels (physics) on top; imports point down. georeader is marked third-party and read-only.
 :width: 100%
 
 **The stack in four layers.**
 
 Each layer has one job: GeoStack moves data in and out, GeoNumerics does
 structured numerics, GeoML learns and infers, GeoModels simulates physics.
-Imports point down, and GeoStack and GeoNumerics never import each other
+Core, below them, holds the maths and plumbing that know no geography.
+Imports point down: GeoStack may import GeoNumerics, and GeoNumerics never imports GeoStack
 ([](#fig-dependency-graph) and `tests/test_dependency_graph.py` check it).
 Dashed rows are external; `georeader` belongs to GeoStack but is
 spaceml-org's, read here and never written.
@@ -398,7 +399,7 @@ never see which carrier they run on.
 
 ```{figure} images/overview/dependency_graph.svg
 :label: fig-dependency-graph
-:alt: The 18 repositories in four layer bands: GeoModels on top, GeoML below, GeoNumerics and GeoStack side by side at the bottom. Edges point down from each repository to those it depends on or imports; dashed edges are optional extras; the geotoolz and pipekit cycle is drawn in red. georeader is marked third-party.
+:alt: The 18 repositories in five layer bands: GeoModels on top, then GeoML, GeoStack, GeoNumerics, and Core at the bottom. Edges point down from each repository to those it depends on or imports; dashed edges are optional extras; the geotoolz and pipekit cycle is drawn in red. georeader is marked third-party.
 :width: 100%
 
 **How the repositories import each other.**

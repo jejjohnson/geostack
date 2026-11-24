@@ -13,7 +13,7 @@ extend it where it lives. Regenerate with `make capabilities` after
 changing a public API (`tests/test_capabilities.py` checks it is
 current).
 
-This page is the GeoStack layer. It imports no other layer.
+This page is the GeoStack layer. It may import GeoNumerics.
 
 <!-- upstream -->
 
