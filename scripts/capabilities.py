@@ -645,13 +645,14 @@ def _origin(obj: object) -> str:
 
 
 def _repr(obj: object) -> str:
-    """``repr(obj)``, with a set's members sorted.
+    """``repr(obj)``, with a set's members sorted and no memory addresses.
 
-    A set's order follows string hashing, which Python salts per process,
-    so a plain ``repr`` would change the index from one run to the next.
+    A set's order follows string hashing, which Python salts per process, and
+    the functions of a dict carry their addresses, so a plain ``repr`` would
+    change the index from one run to the next.
     """
     if not isinstance(obj, set | frozenset) or not obj:
-        return repr(obj)
+        return re.sub(r" at 0x[0-9a-f]+", "", repr(obj))
     members = "{" + ", ".join(sorted(repr(m) for m in obj)) + "}"
     return members if type(obj) is set else f"{type(obj).__name__}({members})"
 

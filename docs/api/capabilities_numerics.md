@@ -620,8 +620,8 @@ Structured grids, masks and the finite-volume operators on them.
 | `PotentialVorticity` | class | Shallow-water PV q = (ζ + f) / h at X-points.  ``(U, V, T, T) → X``. |
 | `QGPotentialVorticity` | class | Single-layer QG PV q = (∇²ψ + β (y − y₀)) / f₀ at T-points.  ``T → T``. |
 | `RelativeVorticity` | class | ζ = δₓv / Δx − δᵧu / Δy at X-points.  ``(U, V) → X``. |
-| `SCHEMES` | constant | `{'euler': <function euler_step at 0x7460d465aac0>, 'heun'...` |
-| `STRAIN_COMPONENTS` | constant | `{'shear': <function shear_strain at 0x7460d475e160>, 'ten...` |
+| `SCHEMES` | constant | `{'euler': <function euler_step>, 'heun': <function heun_s...` |
+| `STRAIN_COMPONENTS` | constant | `{'shear': <function shear_strain>, 'tensor': <function te...` |
 | `Strain` | class | A strain component: shear σₛ (X), tensor σₙ (T) or σₛ² + σₙ² (T). |
 | `TotalEnergy` | class | E = ∑_interior (KE + APE) ΔA (`area_sum`), one value per leading index. |
 | `graph_halo` | function | The halo of a graph: how many cells around a point its result reads. |
