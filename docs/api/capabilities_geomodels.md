@@ -17,7 +17,7 @@ This page is the GeoModels layer. It may import GeoML, GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at plumax 0.3.1, radtrax 0.2.0, sesmax 0.0.0, sesmax-core 0.3.0.
+Listed at plumax 0.4.1, radtrax 0.2.0, sesmax 0.0.0, sesmax-core 0.3.0.
 
 ## Upstream: `plumax`
 
