@@ -207,7 +207,7 @@ Twelve libraries would import geophysix, across three layers. For most the chang
 | --- | --- | --- |
 | finitevolX | its own `utils/constants.py`, `coriolis_param`, `coriolis_fn` and `eos.py` | `gpx.constants`, `gpx.rotation`, `gpx.seawater`; keeps the C-grid operators |
 | spectraldiffx | no constants: spherical operators infer R from the grid (`grid.Ly / π`) | grids sized from `gpx.earth` radii; no change to the operators |
-| gridax, diagnostix, radiomax, tracerax | planned | cell areas and radii (gridax); the equation of state and the gas law (diagnostix); the gas law and column units (radiomax); g and Ω for particles (tracerax) |
+| gridax, diagnostix, radiomax, tracerax | planned | cell areas and radii (gridax); the equation of state and the gas law (diagnostix); the gas law and column units (radiomax); the sphere's radius, its rotation rate and the great-circle distance (tracerax, on v0.0.7) |
 | geoarray, geoops | radii in four places; `pixel_area` as an affine determinant; `convert_column_units` | ellipsoidal areas through gridax and geophysix; `gpx.columns` |
 | xrops | `grad` and `atm` constants; Coriolis, hypsometry, dry-air columns and seawater density written for xarray | the same DataArray functions, calling geophysix underneath |
 | sesmax-core | `constants.py`, copied from somax | `gpx.constants`; keeps `scales.py` |

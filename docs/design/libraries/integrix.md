@@ -205,7 +205,7 @@ Seven libraries would import integrix, pipekit-jax would hand code to it, and sp
 | plumax | trapezoid sums for IME and SRFs; finite-volume stepping in `les_fvm`; NumPyro posterior averages | `ix.rule` with functax rules; integrix steppers; `ix.expect` |
 | radtrax | SRF convolution by hand; a single-slab τ | `ix.rule` for bands; `ix.scan` for layered columns; angular rules when multi-stream lands |
 | vardax | 4D-Var forward runs differentiated through pipekit-jax's helpers; its optimiser adjoints go to argminax | `integrix.adjoint` for the backward sweep through its forward model (decision 7) |
-| tracerax | planned | particle stepping (`ix.march`, SDE terms through diffrax) |
+| tracerax | today | Runge–Kutta solvers (`integrix.march`) and the checkpointed and truncated scans (`integrix.adjoint`) |
 | pipekit-jax | `truncated_scan`, `to_diffrax_adjoint` | hands them to integrix; keeps `Rollout` and `DiffraxForwardModel` |
 
 The largest change is finitevolX's, and it is an import swap:
