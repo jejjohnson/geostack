@@ -55,7 +55,8 @@
       },
       "description": "Build geospatial pipelines on the geotoolz stack — find and index files (geocatalog), read EO products (geoproducts), tile and stitch (geopatcher), compute (geotoolz), object storage (geocloud) — instead of re-implementing them.",
       "dependencies": [
-        "functax"
+        "functax",
+        "finitevolx"
       ]
     },
     {
