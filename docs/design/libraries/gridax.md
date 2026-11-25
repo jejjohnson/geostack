@@ -17,7 +17,7 @@ gridax is the stack's library for the geometry of the grids data arrive on: rect
 | --- | --- |
 | Layer, tier | GeoNumerics, tier 1 |
 | Imports | geophysix, functax; JAX, NumPy, Equinox |
-| Imported by | diagnostix, tracerax; geoarray, geoops, xrops |
+| Imported by | diagnostix; geoarray, geoops, xrops; tracerax, behind an extra |
 | Takes over | the finite-difference engine of geoops `geom` (`difference`, `difference_offsets`, `difference_coeffs`, `nonuniform_coeffs`) and the calculus built on it; the partials and `grid_metrics_from_coords` of xrops `grad`; xrops' vertical remap kernels; the geometry behind geoarray's `SwathGrid` and `CurvilinearGrid` labels |
 | Does not own | model grids, their masks and vertical modes (finitevolX); spectral grids, transforms and their nodes (spectraldiffx); affine grids, point location and interpolation (functax); the CRS and the data (geoarray) |
 | Status | proposed; no repository yet |
@@ -30,7 +30,7 @@ gridax is the stack's library for the geometry of the grids data arrive on: rect
 Where gridax sits · geonumerics tier 1.
 ```
 
-gridax sits one tier above geophysix, whose radii and cell areas it uses, and imports functax for affine grids and interpolation. The libraries that analyse fields (diagnostix, tracerax's binning) and the carriers (geoarray, geoops, xrops) import it; the libraries that step a model on their own grids do not need it. This page is the design; core types, algorithms and the code survey are in [gridax: design details](gridax_details.md).
+gridax sits one tier above geophysix, whose radii and cell areas it uses, and imports functax for affine grids and interpolation. The library that analyses fields (diagnostix) and the carriers (geoarray, geoops, xrops) import it, and tracerax may, through its `gridax` extra; the libraries that step a model on their own grids do not need it. This page is the design; core types, algorithms and the code survey are in [gridax: design details](gridax_details.md).
 
 ## The problem
 
@@ -206,7 +206,7 @@ Five libraries would import gridax. finitevolX, spectraldiffx and the models bui
 | geoops | the stencil engine and the calculus inside `geom` | `gridax.stencils` and `gridax.diff` inside the same Operators |
 | xrops | `grad` through `geoops.geom.difference`; `grid_metrics_from_coords`; the `remap_axis` kernels | DataArray wrappers over gridax, with no import of geoops for calculus; the vertical presets stay |
 | geoarray | `SwathGrid` and `CurvilinearGrid` as labels, with no corners or areas | the geometry from gridax; `pixel_area` reads the CRS and calls gridax, planar or ellipsoidal |
-| diagnostix, tracerax | planned | differences and metrics (diagnostix); binning onto analysis grids (tracerax) |
+| diagnostix, tracerax | planned | differences and metrics (diagnostix); staggered coordinates and masks of a model's grid, in an adapter behind the `gridax` extra (tracerax, whose cells come from functax) |
 | finitevolX, spectraldiffx, sesmax-core, plumax | their own model and spectral grids | unchanged |
 
 The clearest change is xrops', which today differentiates an xarray field through the GeoArray toolkit:
@@ -305,7 +305,7 @@ Five waves, each a GitHub issue epic in the gridax repository once it exists. Me
 | 1. Geometry and metrics | `gridax.cells` and `gridax.metrics`: lon/lat, curvilinear and swath geometry (decision 8), face lengths, cell areas | xrops `grid_metrics_from_coords`; geoops' projected-only `pixel_area` | 0 |
 | 2. Stencils and differences | `gridax.stencils` and `gridax.diff` from geoops `geom` (decision 7) | geoops' stencil engine; xrops' import of geoops for calculus | 0 |
 | 3. Vertical coordinates | `gridax.vertical`: linear remap first, conservative later (decision 9) | xrops' `remap_axis` kernels | 0 |
-| 4. Consumers switch | geoops, xrops and geoarray onto gridax; diagnostix and tracerax from the start | the remaining copies | 1–3 |
+| 4. Consumers switch | geoops, xrops and geoarray onto gridax; diagnostix from the start | the remaining copies | 1–3 |
 
 Waves 1, 2 and 3 can run side by side.
 

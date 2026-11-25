@@ -674,7 +674,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
           <tr><td class="lib">geoarray, geoops</td><td class="lib">geophysix</td><td>pixel areas and the Earth's radius (defined four ways in geotoolz today)</td></tr>
           <tr><td class="lib">radtrax</td><td class="lib">radiomax</td><td>Planck, air masses, Ross–Li kernels, spectral response matrices, radiometric conversions</td></tr>
           <tr><td class="lib">xrops (<code>ocn</code>, <code>atm</code>, <code>budgets</code>, <code>transforms</code>, <code>anomaly</code>, <code>metrics</code>)</td><td class="lib">diagnostix</td><td>vorticity, strain, Okubo–Weiss, geostrophy, N², column integrals, budgets; spectra, climatologies and anomalies, trends, metrics; the DataArray API stays in xrops</td></tr>
-          <tr><td class="lib">plumax (<code>lagrangian</code>), xrops</td><td class="lib">tracerax</td><td>the particle machinery: <code>ParticleState</code>, <code>langevin_step</code>, <code>integrate_particles</code>, <code>bin_positions</code>, <code>compute_footprint</code>; turbulence closures (<code>HannaTurbulence</code>) and source inversions stay in plumax, and particles take σ<sub>w</sub>(z) as an argument. xrops: the planned <code>xrtoolz.lagrangian</code> epic</td></tr>
+          <tr><td class="lib">plumax (<code>lagrangian</code>), xrops</td><td class="lib">tracerax</td><td>the particle machinery: <code>ParticleState</code>, <code>langevin_step</code>, <code>integrate_particles</code>, <code>GriddedWind</code>, <code>bin_positions</code>, <code>compute_footprint</code>; turbulence closures (<code>HannaTurbulence</code>) and source inversions stay in plumax, and particles take σ<sub>w</sub>(z) as an argument. xrops: the planned <code>xrtoolz.lagrangian</code> epic</td></tr>
           <tr><td class="lib">finitevolX</td><td class="lib">gridax-core</td><td>the staggered grid classes and <code>Mask1D/2D/3D</code>, rewritten as frozen dataclasses on NumPy, without the unused sponge and irregular-boundary fields</td></tr>
           <tr><td class="lib">finitevolX</td><td class="lib">gridax-ops</td><td>everything else, by rename: differences, schemes, boundary conditions, solvers</td></tr>
           <tr><td class="lib">finitevolX</td><td class="lib out">sesmax-core (GeoModels)</td><td>moves out: vertical modes and forcing</td></tr>
@@ -880,7 +880,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
         <li><b>geonnax.</b> The name says geo, but its encoders and sphere grids are maths on the sphere, which passes the Core test.</li>
         <li><b>pyrox-xtreme</b> (today's xtremax). Its "spatiotemporal data extraction" belongs in GeoStack if it reads products or CRS data; the modelling stays in Core.</li>
         <li><b>One diagnostics library, not two.</b> Physical diagnostics need statistics (eddy kinetic energy and eddy fluxes are built on anomalies) and spectral statistics need kinematics (spectral fluxes use velocities), so a split would make each import the other. diagnostix holds both, in submodules: <code>kinematics</code>, <code>column</code>, <code>budgets</code>, <code>stats</code>, <code>spectral</code>, <code>modes</code>, <code>skill</code>. What goes in: a quantity derived from a geophysical field, physical or statistical, that needs area weights, a calendar or a constant; signal processing that needs none of these is functax's.</li>
-        <li><b>Eulerian or Lagrangian.</b> gridax-ops (today's finitevolX) and spectraldiffx hold operators on fields, whose state stays on the grid; tracerax holds positions carried forward in time and the analysis of their trajectories. Semi-Lagrangian advection traces a departure point for one step and discards it, so it stays with the field schemes. FTLE needs the flow map, so it is tracerax's; Okubo–Weiss uses the instantaneous field, so it is diagnostix's. The two sides never import each other: a model couples them through velocity in and concentration out.</li>
+        <li><b>Eulerian or Lagrangian.</b> gridax-ops (today's finitevolX) and spectraldiffx hold operators on fields, whose state stays on the grid; tracerax holds positions carried forward in time and the analysis of their trajectories. Semi-Lagrangian advection traces a departure point for one step and discards it, so it is not tracerax's; its step is integrix's. FTLE needs the flow map, so it is tracerax's; Okubo–Weiss uses the instantaneous field, so it is diagnostix's. The two sides never import each other: a model couples them through velocity in and concentration out.</li>
         <li><b>spectraldiffx.</b> Its package description is stale ("Pre-, Geo-, and ML processing for ocean applications") and should say what it does.</li>
       </ol>
     </div>
@@ -1096,7 +1096,8 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   PLANNED.push(
     ...to("geophysix", ["gridax-core", "diagnostix", "radiomax", "tracerax", "gridax-ops", "spectraldiffx",
                         "sesmax-core", "plumax", "radtrax", "geoarray", "geoops", "xrops"]),
-    ...to("gridax-core", ["diagnostix", "tracerax", "gridax-ops", "plumax",
+    // tracerax reads a gridax grid behind an extra, so it is not drawn
+    ...to("gridax-core", ["diagnostix", "gridax-ops", "plumax",
                      "sesmax-core", "geoarray", "geoops", "xrops"]),
     ...to("diagnostix", ["xrops", "sesmax-ocean"]),
     // C-grid diagnostics and the ported analysis kernels need the differences in gridax-ops
@@ -1157,7 +1158,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     "meshax-core": ["numpy"], "meshax-ops": ["jax"],
     diagnostix: ["numpy"],
     radiomax: ["numpy"],
-    tracerax: ["jax", "equinox", "diffrax"]
+    tracerax: ["jax", "equinox", "diffrax", "einx", "jaxtyping"]
   };
   // main published dependencies between the foundations (not scanned)
   const FOUND_DEPS = [
@@ -1455,7 +1456,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     "radiomax": ["solar and viewing geometry per pixel, Earth–Sun distance, radiometric conversions, Planck and brightness temperature, spectral response matrices, geometric air masses, parallax and geostationary navigation, swath and bowtie geometry, empirical retrievals (split-window SST and LST, ocean-colour ratios, BRDF and NBAR), SAR calibration, altimetry corrections",
                  "radiative transfer and full air-mass factors → <b>radtrax</b>; SRF tables → <b>georeader</b>; indices stay in <b>geoops</b>"],
     "gridax-ops": ["operations on structured grids, on JAX: differences and averages, reconstruction and WENO, limiters, numerical fluxes, flux-form advection and diffusion, semi-Lagrangian advection, boundary conditions, multigrid and elliptic solvers; diagnostic differences and vertical remapping on analysis grids", "grids and masks → <b>gridax-core</b>; vertical modes and forcing → <b>sesmax-core</b>; time steppers → <b>integrix</b>; Coriolis and equations of state → <b>geophysix</b>; interpolation at departure points → <b>functax</b>; particles and trajectories → <b>tracerax</b>"],
-    "tracerax": ["positions carried forward in time and the analysis of trajectories: particle seeding, deterministic and stochastic advection, FTLE, residence time, connectivity, binning to grids, footprints", "operators on fields, including semi-Lagrangian schemes that discard their departure points → <b>gridax-ops</b> and <b>spectraldiffx</b>; turbulence closures and plume physics → <b>plumax</b>; velocity at points → <b>functax</b>; stepping → <b>integrix</b>"],
+    "tracerax": ["positions carried forward in time and the analysis of trajectories: particle seeding, deterministic and stochastic advection on the plane and the sphere, inertial particles, FTLE, residence time, connectivity, dispersion and skill, binning to grids, footprints", "operators on fields → <b>gridax-ops</b> and <b>spectraldiffx</b>; semi-Lagrangian schemes, which discard their departure points → <b>integrix</b>; turbulence closures and plume physics → <b>plumax</b>; velocity at points → <b>functax</b>; stepping → <b>integrix</b>"],
     "pyrox": ["the Equinox-to-NumPyro bridge (PyroxModule, Parameterized, pyrox_method) and ensemble inference; no Gaussian algebra, so no gaussx",
               "last-layer Laplace → <b>pyrox-nn</b>, its curvature and evidence → <b>argminax</b> (<a href=\"https://github.com/jejjohnson/pyrox/issues/332\">pyrox#332</a>); everything model-specific → the four subpackages, which import pyrox and never each other's internals"],
     "pyrox-gp": ["Gaussian-process building blocks: kernels on kernellib, guides, likelihoods, inducing points, sparse GPs, multi-output and latent-factor models, warped GPs, pathwise sampling",

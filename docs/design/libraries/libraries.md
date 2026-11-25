@@ -22,7 +22,7 @@ Design docs for the new libraries that the [GeoStack layer map](../stack_layer_m
 | [gridax](gridax.md) ([details](gridax_details.md)) | analysis grids: lon/lat, curvilinear and swath geometry, metrics, vertical coordinates, differences for analysis (model and spectral grids stay in finitevolX and spectraldiffx) | GeoNumerics, tier 1 |
 | [radiomax](radiomax.md) ([details](radiomax_details.md)) | observation geometry and radiometry: angles, counts to reflectance, Planck, air-mass factors, empirical retrievals | GeoNumerics, tier 1 |
 | [diagnostix](diagnostix.md) ([details](diagnostix_details.md)) | diagnostics of fields: kinematics, columns, budgets, climatologies, spectra, EOFs, skill scores | GeoNumerics, tier 2 |
-| [tracerax](tracerax.md) ([details](tracerax_details.md)) | Lagrangian particles: advection, binning, footprints, FTLE, residence and connectivity | GeoNumerics, tier 2 |
+| [tracerax](tracerax.md) ([details](tracerax_details.md)) | Lagrangian particles: advection on the plane and the sphere, binning, footprints, FTLE, residence, connectivity, dispersion and skill | GeoNumerics, tier 2 |
 | [xrcf](xrcf.md) ([details](xrcf_details.md)) | the xarray side's conventions: the CF variable registry, coordinates, the CRS, validation, requests | GeoStack (xrtoolz), tier 0 |
 
 pyrox-ssm is not a new library, but its design page sits here with the others.
