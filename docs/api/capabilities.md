@@ -17,7 +17,7 @@ This page is the GeoStack layer. It may import GeoNumerics.
 
 <!-- upstream -->
 
-Listed at pipekit-ops 0.2.3, pipekit 0.2.0, pipekit-array 0.1.4, pipekit-cycle 0.1.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.1.0, pipekit-train 0.2.0, georeader-spaceml 2.4.2, geotoolz-ops 0.19.0, geotoolz-array 0.5.0, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.15.0, geotoolz-products 0.7.1, xrtoolz-ops 0.6.0, xrtoolz-products 0.5.1.
+Listed at pipekit-ops 0.2.4, pipekit 0.3.0, pipekit-array 0.1.6, pipekit-cycle 0.2.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.2.0, pipekit-train 0.2.0, georeader-spaceml 2.4.2, geotoolz-ops 0.19.0, geotoolz-array 0.5.0, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.15.0, geotoolz-products 0.7.1, xrtoolz-ops 0.6.0, xrtoolz-products 0.5.1.
 
 ## Upstream: `pipekit-ops`
 
@@ -124,6 +124,9 @@ The core: Operator, Graph and the ready-made operators.
 | `get_adapter` | function | The adapter for ``x``'s type, or ``None`` for an unnamed value. |
 | `guard` | function | Report each move between NumPy and JAX inside the ``with`` block. |
 | `guard_level` | function | The level of the innermost `guard`; ``"off"`` outside any. |
+| `import_optional` | function | Import a module of an optional extra, or say what to install. |
+| `is_concrete` | function | Return whether no leaf of any value is traced, so that they can be compared. |
+| `is_traced` | function | Return whether ``x`` is, or is a pytree containing, a JAX tracer. |
 | `jit_report` | function | Try each step of ``op`` under a JAX trace, and say which ones work. |
 | `juxt` | function | Return a callable that applies each operator to its input and tuples the results. |
 | `loads` | function | Decode an operator from its JSON state record. |
@@ -329,16 +332,13 @@ JAX / Equinox carrier integration for pipekit.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `DiffraxForwardModel` | lazy | Needs `diffrax`. |
 | `EnsembleScanCycle` | class | Run a `ScanCycle` on every ensemble member at once, with ``jax.vmap``. |
 | `JaxKernelOp` | class | A `KernelOp` whose array parameters are pytree leaves. |
 | `JaxModelOp` | class | Wrap an `eqx.Module` as a `pipekit_ops.Operator` with weight round-trip. |
 | `JaxOperator` | class | Base class for pipekit operators whose fields are Equinox fields. |
 | `Rollout` | class | Carrier-only rollout: ``c₀ -> [c₀, c_k, c_2k, …, c_n]``. |
 | `ScanCycle` | class | Apply ``step_op`` for ``n_steps`` inside one ``jax.lax.scan``. |
-| `to_diffrax_adjoint` | function | Map a pipekit adjoint spec onto a ``diffrax.AbstractAdjoint``. |
 | `to_jax` | function | A `JaxKernelOp` with ``op``'s kernel, spec, core and geometry. |
-| `truncated_scan` | function | ``jax.lax.scan`` with gradients truncated to the trailing ``k`` steps. |
 
 ## Upstream: `pipekit-train`
 
