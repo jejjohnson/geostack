@@ -107,6 +107,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "integrix": "Integration: rules, cumulative scans, time marching, expectations.",
     "geophysix": "Physical constants, the Earth's shape, its air and its sea water.",
     "radiomax": "Observation geometry and radiometry, on any array library.",
+    "tracerax": "Lagrangian particles: advection, deposits, footprints, analysis.",
     # GeoML
     "geonnax": "Basis functions, neural layers and coordinate transforms in Equinox.",
     "kernellib": "Covariance kernels and scalable kernel methods on gaussx.",
@@ -201,6 +202,21 @@ NUMERICS: dict[str, list[str]] = {
                 "retrievals",
                 "sar",
                 "thermal",
+            )
+        ),
+    ],
+    # and so does tracerax
+    "tracerax": [
+        "tracerax",
+        *(
+            f"tracerax.{sub}"
+            for sub in (
+                "advect",
+                "analysis",
+                "bin",
+                "footprint",
+                "particles",
+                "velocity",
             )
         ),
     ],
@@ -428,6 +444,10 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         "pipekit_ops.register marks a class as loadable by loads_sandboxed;"
         " xrproducts.register adds a Variable to the CF variable registry."
     ),
+    "integrate": (
+        "integrix.rule.integrate weighs values by a rule;"
+        " tracerax.advect.integrate runs a particle step over a duration."
+    ),
     "Estimator": (
         "pipekit_array.Estimator is the scikit-learn operator on a named"
         " carrier; pipekit_evaluate.Estimator is the benchmark protocol for a"
@@ -439,9 +459,9 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         " may run."
     ),
     "ValidationError": (
-        "functax, argminax, integrix and radiomax each raise their own ValidationError,"
-        " a subclass of the library's base error, so a caller can catch one"
-        " library's failures without the others'."
+        "functax, argminax, integrix, radiomax and tracerax each raise their own"
+        " ValidationError, a subclass of the library's base error, so a caller can"
+        " catch one library's failures without the others'."
     ),
     "MissingExtraError": (
         "functax and argminax each raise their own MissingExtraError, naming"
@@ -493,6 +513,7 @@ _PLUMAX_LOGQUAD = (
     "deprecated plumax.population aliases forwarding to integrix.expect"
     " (plumax#253), until plumax#283 removes them"
 )
+_TRACERAX = "moves from plumax to tracerax when plumax switches (tracerax#12)"
 _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
 
 KNOWN_CLASHES: dict[str, dict[str, str]] = {
@@ -594,6 +615,8 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "Diagnostics": _SAME_NAME,
         "Domain": _SAME_NAME,
         "InstrumentSpec": _PORTED,
+        "ParticleState": _TRACERAX,
+        "langevin_step": _TRACERAX,
         "Lorenz63": _TOY_MODELS,
         "Lorenz96": _TOY_MODELS,
         "ModelOp": "geoops' ModelOp beside sesmax_core.operators' ModelOp",

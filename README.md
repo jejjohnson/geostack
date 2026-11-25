@@ -26,7 +26,7 @@
 
 GeoStack takes Earth observations from raw telemetry to derived products:
 retrieval, gap-filling, data assimilation and extremes, with physics and
-machine learning in the same differentiable pipelines. It is twenty-one
+machine learning in the same differentiable pipelines. It is twenty-two
 libraries in four layers. This repository is their umbrella: the design,
 the experiments and the write-up. It has no package of its own; thin
 scripts and notebooks compose the libraries, Hydra configs hold every
@@ -89,6 +89,7 @@ walks a running example through each row, from detector counts to heatwave retur
 | | [spectraldiffx](https://github.com/jejjohnson/spectraldiffx) | Pseudospectral differentiation, filters and PDE solvers |
 | | [geophysix](https://github.com/jejjohnson/geophysix) | Physical constants, the Earth's shape, its air and its sea water |
 | | [radiomax](https://github.com/jejjohnson/radiomax) | Observation geometry and radiometry |
+| | [tracerax](https://github.com/jejjohnson/tracerax) | Lagrangian particles: advection, deposits, footprints and trajectory analysis |
 | **GeoML** · learning and inference | [geonnax](https://github.com/jejjohnson/geonnax) | Basis functions, neural layers and coordinate transforms in Equinox |
 | | [kernellib](https://github.com/jejjohnson/kernellib) | Covariance kernels and scalable kernel methods |
 | | [filterax](https://github.com/jejjohnson/filterax) | Differentiable ensemble Kalman filters and smoothers |
@@ -125,7 +126,7 @@ run on both:
   <img alt="The repositories in five layer bands, with edges pointing down from each repository to those it depends on or imports" src="docs/images/overview/dependency_graph.svg" width="100%">
 </p>
 
-21 repositories, 44 packages and 71 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+22 repositories, 45 packages and 75 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -217,7 +218,7 @@ make help               # every target
 
 ```
 geostack/
-├── references/   # the twenty-one libraries, one folder per layer (git submodules)
+├── references/   # the twenty-two libraries, one folder per layer (git submodules)
 ├── scripts/      # entry points; no local package
 ├── configs/      # Hydra configs (with the first experiment)
 ├── dvc.yaml      # the pipeline

@@ -82,3 +82,7 @@
 	path = references/numerics/gridax
 	url = https://github.com/jejjohnson/gridax.git
 	branch = main
+[submodule "references/numerics/tracerax"]
+	path = references/numerics/tracerax
+	url = https://github.com/jejjohnson/tracerax.git
+	branch = main

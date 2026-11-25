@@ -13,7 +13,7 @@ specific to Claude Code.
 - **No local package.** Reusable code goes upstream, not into `src/`: to the
   library that owns it, in the lowest layer that may hold it. The layers are
   GeoStack (pipekit, geotoolz with xrtoolz, georeader), GeoNumerics (gaussx,
-  functax, argminax, integrix, geophysix, gridax, spectraldiffx, radiomax), GeoML (geonnax,
+  functax, argminax, integrix, geophysix, gridax, spectraldiffx, radiomax, tracerax), GeoML (geonnax,
   kernellib, filterax, vardax, gauss_flows, pyrox (a workspace: pyrox,
   -gauss, -xtreme, -gp, -lgm, -nn, -ssm),
   manipy) and GeoModels (plumax, radtrax, sesmax), under

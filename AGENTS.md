@@ -19,7 +19,7 @@ Standing instructions for **every** coding agent working in this repository
 The GeoStack umbrella repository: the design, the experiments and the
 write-up for a JAX-native research stack for geophysical modeling,
 inference and data assimilation. **It has no package of its own.** The
-reusable code lives in the libraries it builds on, twenty-one of them in four
+reusable code lives in the libraries it builds on, twenty-two of them in four
 layers (GeoStack, GeoNumerics, GeoML, GeoModels; see "The layers" below); thin
 scripts and notebooks here compose them, Hydra
 configs hold every setting, a DVC pipeline ties data, code, configs and
@@ -44,7 +44,7 @@ not into a local package.
 | Layer | `references/…` | Libraries | pixi environment | Capability index |
 |---|---|---|---|---|
 | GeoStack | `geostack/` | pipekit, geotoolz (uv workspaces; members under `packages/`; geotoolz holds xrtoolz too), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
-| GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, geophysix, spectraldiffx, gridax (a workspace; the package is under `packages/`), radiomax | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
+| GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, geophysix, spectraldiffx, gridax (a workspace; the package is under `packages/`), radiomax, tracerax | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
 | GeoML | `geoml/` | geonnax, kernellib, filterax, vardax, gauss_flows, pyrox (a workspace: pyrox, -gauss, -xtreme, -gp, -lgm, -nn, -ssm), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
 | GeoModels | `geomodels/` | plumax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
 

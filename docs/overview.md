@@ -399,7 +399,7 @@ never see which carrier they run on.
 
 ```{figure} images/overview/dependency_graph.svg
 :label: fig-dependency-graph
-:alt: The 21 repositories in five layer bands: GeoModels on top, then GeoML, GeoStack, GeoNumerics, and Core at the bottom. Edges point down from each repository to those it depends on or imports; dashed edges are optional extras; the geotoolz and pipekit cycle is drawn in red. georeader is marked third-party.
+:alt: The 22 repositories in five layer bands: GeoModels on top, then GeoML, GeoStack, GeoNumerics, and Core at the bottom. Edges point down from each repository to those it depends on or imports; dashed edges are optional extras; the geotoolz and pipekit cycle is drawn in red. georeader is marked third-party.
 :width: 100%
 
 **How the repositories import each other.**
