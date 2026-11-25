@@ -48,10 +48,11 @@ geotoolz-products = { path = "references/geostack/geotoolz/packages/geotoolz-pro
 xrtoolz = { path = "references/geostack/geotoolz/packages/xrtoolz", editable = true }
 xrtoolz-ops = { path = "references/geostack/geotoolz/packages/xrtoolz-ops", editable = true }
 xrtoolz-products = { path = "references/geostack/geotoolz/packages/xrtoolz-products", editable = true }
-# The two GeoNumerics libraries that GeoStack imports. They need neither JAX nor
+# The three GeoNumerics libraries that GeoStack imports. They need neither JAX nor
 # the rest of GeoNumerics, so they are here and not in the numerics feature.
 geophysix = { path = "references/numerics/geophysix", editable = true }
 radiomax = { path = "references/numerics/radiomax", editable = true }
+gridax = { path = "references/numerics/gridax/packages/gridax", editable = true }
 # geophysix and radiomax ask for pipekit-array[numpy,compat]; the override below
 # replaces the requirement, extras included, so the compat one is listed itself.
 array-api-compat = ">=1.11"
@@ -109,8 +110,10 @@ radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
 sesmax-ocean = { path = "references/geomodels/sesmax/packages/sesmax-ocean", editable = true }
-# diagnostix is a dependency of plumax and not a submodule yet (#310): plumax's own pin.
-diagnostix = { git = "https://github.com/jejjohnson/diagnostix", tag = "v0.0.4" }
+sesmax-experiment = { path = "references/geomodels/sesmax/packages/sesmax-experiment", editable = true }
+# diagnostix is a dependency of xrtoolz-ops and plumax and not a submodule yet (#310):
+# the tag on pipekit-array 0.2.0, as geotoolz pins it.
+diagnostix = { git = "https://github.com/jejjohnson/diagnostix", tag = "v0.0.7" }
 
 [feature.dev.dependencies]
 pytest = ">=8"
@@ -165,9 +168,8 @@ plotly = ">=5"
 # numpyro stays listed because argminax still declares a numpyro extra.
 gaussx = { path = "references/numerics/gaussx", editable = true }
 numpyro = ">=0.21"
-# gridax.solvers and gridax.pipekit need gridax's jax and pipekit extras; the
-# override drops extras, and every library in them is in this environment
-gridax = { path = "references/numerics/gridax/packages/gridax", editable = true }
+# gridax itself is in the default environment; gridax.solvers and gridax.pipekit
+# need its jax and pipekit extras, and every library in them is in this one
 spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
 # integrix asks for functax[jax] and functax's quadrature plans want SciPy; the
 # override replaces the requirement, extras included, so they come in through
@@ -205,6 +207,7 @@ radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
 sesmax-ocean = { path = "references/geomodels/sesmax/packages/sesmax-ocean", editable = true }
+sesmax-experiment = { path = "references/geomodels/sesmax/packages/sesmax-experiment", editable = true }
 # what the GeoModels notebooks import beyond the libraries
 optax = "*"
 openpyxl = "*"
