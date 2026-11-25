@@ -84,6 +84,7 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 | pyrox-nn | 6 | 5 | 0 | 0 | 0 | 0 | 0 | 1 |
 | sesmax-core | 4 | 0 | 4 | 0 | 0 | 0 | 0 | 0 |
 | manipy-jax | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
+| sesmax-ocean | 3 | 0 | 3 | 0 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
 
@@ -309,6 +310,7 @@ Below the threshold, with no subclass, the unit is named on an "also uses" line.
 | pyrox-nn | Structures and primitives | Inference and ensembles (1) |
 | sesmax-core | Strategies |  |
 | manipy-jax | Structures and primitives |  |
+| sesmax-ocean | Strategies |  |
 <!-- shelf:cards:end -->
 :::
 

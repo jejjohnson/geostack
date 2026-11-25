@@ -17,7 +17,7 @@ This page is the GeoModels layer. It may import GeoML, GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at plumax 0.4.1, radtrax 0.2.0, sesmax 0.0.0, sesmax-core 0.3.0.
+Listed at plumax 0.4.1, radtrax 0.2.0, sesmax 0.0.0, sesmax-core 0.3.1, sesmax-ocean 0.0.0.
 
 ## Upstream: `plumax`
 
@@ -641,6 +641,14 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `learned_prior` | function | Compose a fixed physical scaling with a learned flow into a prior. |
 | `to_flowjax` | function | Adapt a :class:`StateAffine` to the flowjax bijection interface. |
 
+### `sesmax_core.gfd`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `burger_to_g_prime` | function | Invert the per-interface Burger numbers into reduced gravities. |
+| `resolve_burger` | function | Settle the Burger number from ``burger`` or ``froude``. |
+| `resolve_burger_spherical` | function | Settle the Burger number from ``burger``, ``froude`` or ``lamb``. |
+
 ### `sesmax_core.monitor`
 
 | Name | Kind | What it does |
@@ -758,3 +766,84 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `rollout` | function | Step ``model`` ``n_steps`` times in one ``jax.lax.scan``. |
 | `rollout_loss` | function | Mean per-snapshot loss of a rollout against a reference trajectory. |
 | `state_mse` | function | l(s, sʳᵉᶠ) = ∑_fields mean((s - sʳᵉᶠ)²) over the array leaves. |
+
+## Upstream: `sesmax-ocean`
+
+Simple ocean models: shallow water and quasi-geostrophic.
+
+### `sesmax_ocean.eval`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `compute_eval_metrics` | function | Compute every applicable reference-free metric for ``(model, state)``. |
+| `geostrophic_imbalance` | function | Dimensionless ageostrophic fraction of a shallow-water-type state. |
+| `kinetic_energy` | function | Domain-integrated kinetic energy ``0.5 ∫ (u² + v²) dA``. |
+| `qg_balance_residual` | function | Dimensionless PV-inversion residual for a **barotropic** QG model. |
+| `rms_divergence` | function | Root-mean-square horizontal divergence ``sqrt(<(∇·u)²>)``. |
+| `total_enstrophy` | function | Domain-integrated enstrophy ``0.5 ∫ ζ² dA`` with ``ζ = ∂v/∂x - ∂u/∂y``. |
+
+### `sesmax_ocean.forcing`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `geostrophic_currents` | function | Vector preset: incompressible ``(u, v)`` current-error forcing. |
+| `ssh_geostrophic` | function | SSH geostrophic preset: a radial-Gabor frame with a wavenumber-law prior. |
+| `sss_coastal` | function | Coastal SSS preset: placeable radial atoms with a prescribed prior. |
+| `sst_frontal` | function | SST preset: a smooth Matérn (HSGP) field over the box-Laplacian eigenbasis. |
+
+### `sesmax_ocean.qg`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BaroclinicQG` | class | Multilayer quasi-geostrophic model on an Arakawa C-grid. |
+| `BaroclinicQGDiagnostics` | class | Diagnostics for the multilayer QG model. |
+| `BaroclinicQGParams` | class | Differentiable parameters for the multilayer QG model. |
+| `BaroclinicQGPhysConsts` | class | Frozen physical constants for the multilayer QG model. |
+| `BaroclinicQGState` | class | State for the multilayer quasi-geostrophic model. |
+| `BarotropicQG` | class | Barotropic quasi-geostrophic model on an Arakawa C-grid. |
+| `BarotropicQGDiagnostics` | class | Diagnostics for the barotropic QG model. |
+| `BarotropicQGParams` | class | Differentiable parameters for the barotropic QG model. |
+| `BarotropicQGPhysConsts` | class | Frozen physical constants for the barotropic QG model. |
+| `BarotropicQGState` | class | State for the barotropic quasi-geostrophic model. |
+| `ReparamQGDiagnostics` | class | Diagnostics for the reparameterized QG model. |
+| `ReparameterizedQG` | class | Reparameterized QG model: multilayer SWM + geostrophic projection. |
+
+### `sesmax_ocean.resolution`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AssertionFailedError` | class | Raised when an opt-in preflight or postflight assertion fails. |
+| `check_deformation_radius` | function | Pre-flight: the first baroclinic deformation radius is resolved. |
+| `check_equatorial_deformation_radius` | function | Pre-flight: the equatorial deformation radius is resolved. |
+| `check_munk_width` | function | Pre-flight: the Munk (viscous) western boundary layer is resolved. |
+| `check_stommel_width` | function | Pre-flight: the Stommel (frictional) western boundary layer is resolved. |
+
+### `sesmax_ocean.spherical`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `SphericalQG` | class | Barotropic quasi-geostrophic flow on a sphere. |
+| `SphericalQGDiagnostics` | class | Diagnostics for the spherical QG model. |
+| `SphericalQGParams` | class | Differentiable parameters for the spherical QG model. |
+| `SphericalQGPhysConsts` | class | Frozen physical constants for the spherical QG model. |
+| `SphericalQGState` | class | State for the spherical barotropic QG model. |
+| `SphericalSWM` | class | Shallow water on a sphere, vector-invariant form. |
+| `SphericalSWMDiagnostics` | class | Diagnostics for the spherical shallow water model. |
+| `SphericalSWMParams` | class | Differentiable parameters for the spherical shallow water model. |
+| `SphericalSWMPhysConsts` | class | Frozen physical constants for the spherical shallow water model. |
+| `SphericalSWMState` | class | State for the spherical shallow water model. |
+
+### `sesmax_ocean.swm`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `MultilayerSW2DDiagnostics` | class | Diagnostics for the multilayer 2D shallow water model. |
+| `MultilayerSW2DParams` | class | Differentiable parameters for the multilayer 2D shallow water model. |
+| `MultilayerSW2DPhysConsts` | class | Frozen physical constants for the multilayer 2D shallow water model. |
+| `MultilayerSW2DState` | class | State for the multilayer 2D nonlinear shallow water model. |
+| `MultilayerShallowWater2D` | class | Multilayer 2D nonlinear shallow water model (vector-invariant form). |
+| `NonlinearSW2DDiagnostics` | class | Diagnostics for the 2D nonlinear shallow water model. |
+| `NonlinearSW2DParams` | class | Differentiable parameters for the 2D nonlinear shallow water model. |
+| `NonlinearSW2DPhysConsts` | class | Frozen physical constants for the 2D nonlinear shallow water model. |
+| `NonlinearSW2DState` | class | State for the 2D nonlinear shallow water model. |
+| `NonlinearShallowWater2D` | class | 2D nonlinear shallow water model (vector-invariant form). |

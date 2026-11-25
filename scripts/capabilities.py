@@ -107,6 +107,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "integrix": "Integration: rules, cumulative scans, time marching, expectations.",
     "geophysix": "Physical constants, the Earth's shape, its air and its sea water.",
     "radiomax": "Observation geometry and radiometry, on any array library.",
+    "tracerax": "Lagrangian particles: advection, deposits, footprints, analysis.",
     # GeoML
     "geonnax": "Basis functions, neural layers and coordinate transforms in Equinox.",
     "kernellib": "Covariance kernels and scalable kernel methods on gaussx.",
@@ -126,6 +127,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "radtrax": "Differentiable radiative transfer for methane remote sensing.",
     "sesmax": "The sesmax workspace in one install; an umbrella that holds no code.",
     "sesmax-core": "Simple Earth-system models: state, terms, steppers, forcing.",
+    "sesmax-ocean": "Simple ocean models: shallow water and quasi-geostrophic.",
 }
 
 NUMERICS: dict[str, list[str]] = {
@@ -201,6 +203,21 @@ NUMERICS: dict[str, list[str]] = {
                 "retrievals",
                 "sar",
                 "thermal",
+            )
+        ),
+    ],
+    # and so does tracerax
+    "tracerax": [
+        "tracerax",
+        *(
+            f"tracerax.{sub}"
+            for sub in (
+                "advect",
+                "analysis",
+                "bin",
+                "footprint",
+                "particles",
+                "velocity",
             )
         ),
     ],
@@ -300,6 +317,13 @@ GEOMODELS: dict[str, list[str]] = {
                 "testing",
                 "train",
             )
+        ),
+    ],
+    "sesmax-ocean": [
+        "sesmax_ocean",
+        *(
+            f"sesmax_ocean.{sub}"
+            for sub in ("eval", "forcing", "qg", "resolution", "spherical", "swm")
         ),
     ],
 }
@@ -428,6 +452,10 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         "pipekit_ops.register marks a class as loadable by loads_sandboxed;"
         " xrproducts.register adds a Variable to the CF variable registry."
     ),
+    "integrate": (
+        "integrix.rule.integrate weighs values by a rule;"
+        " tracerax.advect.integrate runs a particle step over a duration."
+    ),
     "Estimator": (
         "pipekit_array.Estimator is the scikit-learn operator on a named"
         " carrier; pipekit_evaluate.Estimator is the benchmark protocol for a"
@@ -439,9 +467,9 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         " may run."
     ),
     "ValidationError": (
-        "functax, argminax, integrix and radiomax each raise their own ValidationError,"
-        " a subclass of the library's base error, so a caller can catch one"
-        " library's failures without the others'."
+        "functax, argminax, integrix, radiomax and tracerax each raise their own"
+        " ValidationError, a subclass of the library's base error, so a caller can"
+        " catch one library's failures without the others'."
     ),
     "MissingExtraError": (
         "functax and argminax each raise their own MissingExtraError, naming"
@@ -471,10 +499,6 @@ _GRIDAX = "gridax's function on a C-grid beside another library's on something e
 _DIFFOPS = (
     "gridax's on a C-grid, functax.diffops' on a function and kernellib's on a kernel"
 )
-_PIPEKIT_JAX = (
-    "moved from pipekit-jax to integrix.adjoint (pipekit#226); pipekit-jax keeps"
-    " a deprecated name"
-)
 _TOY_MODELS = "toy models in both sesmax_core.testing and vardax"
 _TRANSFORMS = (
     "moved from spectraldiffx to functax.transform (spectraldiffx#166);"
@@ -493,6 +517,7 @@ _PLUMAX_LOGQUAD = (
     "deprecated plumax.population aliases forwarding to integrix.expect"
     " (plumax#253), until plumax#283 removes them"
 )
+_TRACERAX = "moves from plumax to tracerax when plumax switches (tracerax#12)"
 _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
 
 KNOWN_CLASHES: dict[str, dict[str, str]] = {
@@ -559,13 +584,11 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         ),
         "gaussian_entropy": _DIVERGENCES,
         "kl_divergence": _DIVERGENCES,
-        "to_diffrax_adjoint": _PIPEKIT_JAX,
         "to_dimarray": "geoarray's and gridax's, each of its own carrier",
         "to_optimistix_adjoint": (
             "moved from vardax to argminax.adjoint (vardax#278); the vardax pin"
             " predates it"
         ),
-        "truncated_scan": _PIPEKIT_JAX,
         "where": "gridax.fields' on fields beside pipekit_array's on named carriers",
     },
     "geomodels": {
@@ -594,6 +617,8 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "Diagnostics": _SAME_NAME,
         "Domain": _SAME_NAME,
         "InstrumentSpec": _PORTED,
+        "ParticleState": _TRACERAX,
+        "langevin_step": _TRACERAX,
         "Lorenz63": _TOY_MODELS,
         "Lorenz96": _TOY_MODELS,
         "ModelOp": "geoops' ModelOp beside sesmax_core.operators' ModelOp",
@@ -603,6 +628,9 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "Scaled": _SAME_NAME,
         "Sum": _SAME_NAME,
         "infer_emission_rate": _PLUME_PUFF,
+        "kinetic_energy": (
+            "gridax's field on a C-grid beside sesmax_ocean.eval's metric of a state"
+        ),
         "number_density": (
             "radtrax's in atm and cm⁻³, around geophysix.thermo's in Pa and m⁻³"
         ),

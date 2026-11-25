@@ -1161,9 +1161,9 @@ LAYERS = {
         ["geotoolz", "xrtoolz", "georeader"],
     ),
     "GeoNumerics": (
-        "Earth physics, PDE operators on grids, spectral methods, radiometry",
+        "Earth physics, grids, spectral methods, radiometry and particles",
         NUMERICS,
-        ["geophysix", "spectraldiffx", "gridax", "radiomax"],
+        ["geophysix", "spectraldiffx", "gridax", "radiomax", "tracerax"],
     ),
     "Core": (
         "Maths and plumbing that know no geography",
@@ -1385,7 +1385,7 @@ def tier4_map() -> Svg:
     for p, what in [
         ("pipekit", "operators and graphs"),
         ("pipekit-array", "Array API operators"),
-        ("pipekit-jax", "JAX model wrapper, diffrax forward model"),
+        ("pipekit-jax", "JAX model wrapper, rollouts and cycles"),
     ]:
         cx += (
             f.chip(
@@ -1436,6 +1436,7 @@ DG_LAYERS = [
         0.0,
         1.0,
         [
+            [("tracerax", 0.36)],
             [("gridax", 0.5), ("radiomax", 0.7)],
             [("spectraldiffx", 0.2), ("geophysix", 0.62)],
         ],
@@ -1446,9 +1447,8 @@ DG_LAYERS = [
         0.0,
         1.0,
         [
-            [("pipekit", 0.84)],  # pipekit-jax imports integrix (extra)
             [("argminax", 0.14), ("integrix", 0.42)],
-            [("gaussx", 0.28), ("functax", 0.56)],
+            [("gaussx", 0.28), ("functax", 0.56), ("pipekit", 0.84)],
         ],
     ),
 ]

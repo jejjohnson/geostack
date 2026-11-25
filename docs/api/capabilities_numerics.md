@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.8.1, gridax 0.3.1, spectraldiffx 0.1.2, functax 0.0.13, argminax 0.0.7, integrix 0.0.10, geophysix 0.0.7, radiomax 0.0.9.
+Listed at gaussx 0.8.1, gridax 0.3.2, spectraldiffx 0.1.2, functax 0.0.13, argminax 0.0.7, integrix 0.0.11, geophysix 0.0.7, radiomax 0.0.9, tracerax 0.0.4.
 
 ## Upstream: `gaussx`
 
@@ -1093,6 +1093,7 @@ Integration: rules, cumulative scans, time marching, expectations.
 | `AB2Solver` | class | Second-order Adams–Bashforth, run by `integrix.march.run`. |
 | `AB3Solver` | class | Third-order Adams–Bashforth as a diffrax solver, with an SSP-RK3 start. |
 | `AbstractStepper` | class | A fixed-step scheme whose history lives in the loop carry. |
+| `DiffraxForwardModel` | class | A forward model M: x(t₀) ↦ x(t₁) that one `diffrax.diffeqsolve` computes. |
 | `ForwardEulerDfx` | class | Forward Euler as a diffrax solver: yₙ₊₁ = yₙ + h F(tₙ, yₙ). |
 | `IMEX_SSP2` | class | IMEX-SSP2(2,2,2) for a `diffrax.MultiTerm` of an explicit and an implicit term. |
 | `LeapfrogRAFSolver` | class | Leapfrog with a Robert–Asselin filter, run by `integrix.march.run`. |
@@ -1349,3 +1350,94 @@ Observation geometry and radiometry, on any array library.
 | `planck_radiance` | function | Planck's law: the radiance of a black body per wavenumber. |
 | `to_per_ghz` | function | Radiance per GHz of frequency from radiance per cm⁻¹ of wavenumber. |
 | `to_per_um` | function | Radiance per µm of wavelength from radiance per cm⁻¹ of wavenumber. |
+
+## Upstream: `tracerax`
+
+Lagrangian particles: advection, deposits, footprints, analysis.
+
+### `tracerax`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `TraceraxError` | class | Base class for every exception raised by ``tracerax``. |
+| `ValidationError` | class | Raised when an argument fails validation. |
+
+### `tracerax.advect`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Accumulator` | class | What a run sums: a run of many steps then stores sums and no trajectory. |
+| `Box` | class | A box [lower, upper), one interval per position column. |
+| `ConstantDiffusivity` | class | A diffusivity that is the same everywhere: K_i(t, x) = K_i. |
+| `Deterministic` | class | A deterministic step: one explicit Runge–Kutta step per particle. |
+| `DeterministicSphere` | class | A deterministic step on the sphere, as a `ParticleStep`. |
+| `Diffusivity` | class | A diagonal diffusivity K(t, x), one value per particle and axis. |
+| `GriddedDiffusivity` | class | A diffusivity read from fields, as `GriddedVelocity` reads a velocity. |
+| `Inertial` | class | An inertial step: a buoyant object at the sea surface, with a memory. |
+| `Langevin` | class | The Langevin step as a `ParticleStep`, with noise of shape (N, 3). |
+| `RandomDisplacement` | class | The random-displacement step as a `ParticleStep`, with noise (N, D). |
+| `Result` | class | What `integrate` returns. |
+| `SlowManifold` | class | The velocity of a small buoyant object at the sea surface, a `Velocity`. |
+| `TurbulenceModel` | class | A turbulence closure: σ(z) and τ_L(z) of the velocity fluctuation. |
+| `Walls` | class | Two reflecting walls in height, or a ground alone. |
+| `deterministic` | function | Carry particles along a velocity, forward or backward in time. |
+| `deterministic_sphere` | function | Carry particles along a velocity on the sphere, forward or backward. |
+| `displacement_step` | function | One random-displacement step over each particle's own duration. |
+| `integrate` | function | Run a particle step over a duration, forward or backward in time. |
+| `langevin_step` | function | One Markov-1 Langevin step over each particle's own duration. |
+
+### `tracerax.analysis`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `RegionTime` | class | The time each particle of a run spends in each region, an `Accumulator`. |
+| `Regions` | class | Regions as a label per cell. |
+| `absolute_dispersion` | function | The mean squared distance of particles from where they started. |
+| `connectivity` | function | The fraction of the particles of each region that end in each region. |
+| `cumulative_separation` | function | The normalised cumulative separation of a trajectory from an observed one. |
+| `ftle` | function | The finite-time Lyapunov exponent at each seed. |
+| `pair_dispersion` | function | The mean squared distance between the partners of each pair. |
+| `separation` | function | The distance between a trajectory and an observed one, time by time. |
+| `skill_score` | function | The skill of a trajectory: 1 for a perfect one, 0 for one beyond tolerance. |
+| `visited_connectivity` | function | The fraction of the particles of each region that ever visit each region. |
+
+### `tracerax.bin`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Cells` | class | Cells between edges, along one, two or three axes. |
+| `Residence` | class | The time the particles of a run spend in each cell, an `Accumulator`. |
+| `column` | function | The vertical column of a concentration. |
+| `concentration` | function | The concentration at one time, from the masses the particles carry. |
+| `deposit` | function | Deposit one weight per particle in the cells, losing none inside the edges. |
+| `steady_concentration` | function | The steady concentration of a continuous source, from one puff's residence. |
+
+### `tracerax.footprint`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Footprint` | class | The sensitivity of one receptor to the surface fluxes of each cell. |
+| `surface` | function | The surface footprint of one receptor, from particles run backward. |
+
+### `tracerax.particles`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ParticleState` | class | N particles in D = 2 or 3 dimensions. |
+| `ParticleStep` | class | A step: it moves every particle over its own duration. |
+| `along_line` | function | N particles at the middles of N equal pieces of a line. |
+| `at_point` | function | N particles at one point. |
+| `in_box` | function | N particles drawn uniformly in a box. |
+| `release_times` | function | N release times at the middles of N equal pieces of an interval. |
+| `with_turbulent_velocity` | function | The state with its velocity drawn from the turbulence at its heights. |
+
+### `tracerax.velocity`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `GriddedVelocity` | class | A velocity on a grid, each component on its own staggered nodes. |
+| `Velocity` | constant | `Velocity` |
+| `WeightedSum` | class | A weighted sum of velocities, each on its own grid. |
+| `cgrid_grids` | function | The grids of the components of a uniform C-grid, for `GriddedVelocity.fit`. |
+| `uniform` | function | A velocity that is the same everywhere and at every time. |
+| `uniform_in_space` | function | A velocity that varies in time and not in space. |
