@@ -1,0 +1,78 @@
+{
+ "q_true": 5.800661221343649,
+ "q": 5.682581393306003,
+ "q_sample": 5.677678537346529,
+ "q_loaded": 5.682581393306003,
+ "noise": 435.3093282465758,
+ "plume_px": 197,
+ "disk_px": 197,
+ "json": {
+  "class": "Graph",
+  "config": {
+   "inputs": [
+    "scene"
+   ],
+   "nodes": [
+    {
+     "operator": 0,
+     "parents": [
+      {
+       "input": "scene"
+      }
+     ]
+    },
+    {
+     "operator": 1,
+     "parents": [
+      {
+       "node": 0
+      }
+     ]
+    },
+    {
+     "operator": 2,
+     "parents": [
+      {
+       "node": 0
+      },
+      {
+       "node": 1
+      }
+     ]
+    }
+   ],
+   "operators": [
+    {
+     "class": "MethaneRetrieval",
+     "config": {
+      "estimator": "ledoit_wolf"
+     },
+     "module": "__main__"
+    },
+    {
+     "class": "PlumeSegmentation",
+     "config": {
+      "k": 3.0,
+      "min_pixels": 20
+     },
+     "module": "__main__"
+    },
+    {
+     "class": "EmissionRate",
+     "config": {
+      "kappa": 6.56e-07,
+      "wind_m_s": 3.5
+     },
+     "module": "__main__"
+    }
+   ],
+   "outputs": {
+    "emission": {
+     "node": 2
+    }
+   }
+  },
+  "module": "pipekit_ops._base.graph"
+ },
+ "lines": 360
+}
