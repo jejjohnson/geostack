@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.7.0, finitevolx 0.1.0, spectraldiffx 0.1.1, functax 0.0.11, argminax 0.0.7, integrix 0.0.6, geophysix 0.0.7, radiomax 0.0.9.
+Listed at gaussx 0.8.1, gridax 0.3.1, spectraldiffx 0.1.2, functax 0.0.13, argminax 0.0.7, integrix 0.0.10, geophysix 0.0.7, radiomax 0.0.9.
 
 ## Upstream: `gaussx`
 
@@ -32,6 +32,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `AbstractLogdetStrategy` | class | Protocol for a log-determinant strategy. |
 | `AbstractPreconditioner` | class | Protocol for preconditioners that produce an approximate inverse. |
 | `AbstractSketch` | class | A random sketching matrix S ∈ ℝ^(d × M), sampled once. |
+| `AbstractSmoother` | class | A smoother u ← S(u, b) for A u = b on one level. |
 | `AbstractSolveStrategy` | class | Protocol for a linear-solve strategy. |
 | `AbstractSolverStrategy` | class | Protocol for a solver strategy that pairs a solve and a log-determinant. |
 | `AnalyticalPsiStatistics` | class | Protocol for kernels with closed-form Ψ statistics. |
@@ -84,7 +85,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `LOOResult` | class | Result of `leave_one_out_cv`: the LOO log-likelihood and predictives. |
 | `LOVECache` | class | Cached rank-k Lanczos approximation Q diag(θ)⁻¹ Qᵀ of Σ_y⁻¹. |
 | `LSMRSolver` | class | LSMR iterative least-squares solver (Fong & Saunders 2011). |
-| `LaplaceModel` | class | The latent Gaussian model of `laplace_mode`, with the maps one Newton step needs. |
+| `LaplaceModel` | class | The latent Gaussian model of a Laplace fit, with the maps one Newton step needs. |
 | `LaplaceResult` | class | The Gaussian approximation 𝒩(x̂, Λ_x\|y⁻¹) at the mode. |
 | `LinearGaussianPosterior` | class | Posterior 𝒩(x_a, P_a) of `linear_gaussian_update`. |
 | `LinearizedSDE` | class | Linear surrogate dx(t) = (F_c,t x(t) + c_t) dt + L_c db(t) of an SDE. |
@@ -96,6 +97,9 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `MaternSDE` | class | State-space form of the Matérn kernel of order p, smoothness p + ½. |
 | `MomentMatchResult` | class | Tilted log-normaliser and its derivatives with respect to the cavity mean. |
 | `MonteCarloIntegrator` | class | Monte Carlo moment matching: sample, propagate, take empirical moments. |
+| `MultigridLevel` | class | One level of a hierarchy: A_ℓ, its transfers and its smoother. |
+| `MultigridPreconditioner` | class | One V-cycle as the preconditioner M⁻¹ ≈ A⁻¹. |
+| `MultigridSolver` | class | CG preconditioned by a V-cycle over the caller's levels. |
 | `NegativeBinomialLikelihood` | class | Negative-binomial likelihood with log link (NB2, a gamma-Poisson mixture). |
 | `NystromLogdet` | class | Nyström-preconditioned SLQ log-determinant of K + σ² I (Wenger et al., 2022). |
 | `NystromPreconditioner` | class | Randomized Nyström preconditioner for K + σ² I. |
@@ -116,9 +120,9 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `SLQLogdet` | class | Stochastic log-determinant by stochastic Lanczos quadrature (SLQ). |
 | `SLRResult` | class | Linear-Gaussian surrogate produced by statistical linear regression. |
 | `SRHTSketch` | class | Subsampled randomized Hadamard transform sketch. |
-| `SVDLowRankUpdate` | class | Deprecated subclass of `LowRankUpdate` with ``orthonormal=True``. |
 | `SketchAndPrecondLSMR` | class | Sketch-and-precondition LSMR for tall least squares (Rokhlin & Tygert, 2008). |
 | `SoftmaxLikelihood` | class | Softmax (categorical) likelihood for multi-class classification. |
+| `SolveInfo` | class | How a solve ended, from `linear_solve_with_info`. |
 | `SparseCholeskyFactor` | class | Sparse Cholesky factor on a static symbolic pattern. |
 | `SparseCholeskySolver` | class | Exact ``solve`` / ``logdet`` / ``diag_inv`` through a sparse Cholesky factor. |
 | `SparseOperator` | class | Sparse matrix A with a static `SparsityPattern` and traced values. |
@@ -126,8 +130,6 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `SparsityPattern` | class | Static, hashable sparsity pattern of an M × N matrix A. |
 | `SpectralFunction` | class | f(A) = W⁻¹ diag(f(γ)) W for a symmetric A with a factored eigenbasis. |
 | `StudentTLikelihood` | class | Student-t likelihood for robust regression. |
-| `SumKronecker` | class | Deprecated alias for `SumOfKroneckers`. |
-| `SumKroneckerSqrt` | class | Deprecated alias for `SumOfKroneckersSqrt` (gh-297). |
 | `SumOfKroneckers` | class | Sum of Kronecker products ∑_j A_j ⊗ B_j, applied term by term. |
 | `SumOfKroneckersSqrt` | class | Lazy Lanczos square root A^½ of a `SumOfKroneckers` covariance. |
 | `SumSDE` | class | Sum of independent SDE kernels, stacked block-diagonally. |
@@ -138,11 +140,11 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `UDLDecomposition` | class | Banded factorisation Λ_x = U D Uᵀ of a block-tridiagonal precision. |
 | `UnscentedIntegrator` | class | Unscented transform: 2 D_x + 1 deterministic sigma points. |
 | `UpperBlockTriDiag` | class | Upper block-bidiagonal operator U, the transpose of a `LowerBlockTriDiag`. |
+| `WeightedJacobi` | class | Weighted Jacobi: u ← u + ω D⁻¹ (b − A u), ``sweeps`` times. |
 | `add_jitter` | function | Diagonal jitter A + β I for numerical stability. |
 | `ar1_precision` | function | Precision of a stationary AR(1) process with marginal precision τ. |
 | `as_diagonalized` | function | Express an operator as one `DiagonalizedOperator`, if possible. |
 | `as_linear_operator` | function | Wrap a raw ``matvec`` callable as a tagged lineax operator. |
-| `base_conditional` | function | Deprecated: use `sparse_conditional` (note ``K_xz = K_mn.T``). |
 | `besag_structure` | function | Validate a graph Laplacian as a Besag (ICAR) structure matrix. |
 | `block_diagonal_tag` | constant | `block_diagonal_tag` |
 | `block_tridiagonal_tag` | constant | `block_tridiagonal_tag` |
@@ -166,7 +168,6 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `cov_transform` | function | Covariance propagation through a linear map, J Σ Jᵀ. |
 | `create_grid` | function | Regular grid axes g_d = linspace(lo_d, hi_d, N_d), one per dimension. |
 | `cubature_points` | function | Spherical-radial cubature points and weights, 2 D_x of them. |
-| `cubic_interpolation_weights` | function | Deprecated: sparse rows of the cubic SKI interpolation matrix W_interp. |
 | `cur` | function | Randomized CUR decomposition (Voronin & Martinsson, 2017, §4). |
 | `cvi_update_sites` | function | Damped natural-gradient update of CVI sites. |
 | `damped_natural_update` | function | Damped update in natural-parameter space. |
@@ -203,6 +204,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `fifth_order_cubature_points` | function | Fifth-order fully symmetric cubature points and weights. |
 | `fisher_info` | function | Fisher information of the mean μ, which is the precision Λ = Σ⁻¹. |
 | `frobenius_norm` | function | Frobenius norm ‖A‖_F of an operator, with structural dispatch. |
+| `galerkin_levels` | function | A hierarchy with Galerkin coarse operators A_ℓ₊₁ = R_ℓ A_ℓ P_ℓ. |
 | `gaspari_cohn` | function | Gaspari-Cohn (1999) fifth-order compactly supported taper. |
 | `gauss_hermite_points` | function | Tensor-product Gauss-Hermite points and weights for a standard Gaussian. |
 | `gauss_kl` | function | KL(first ‖ second): KL[q(f_ℐ) ‖ p(f_ℐ)] with p(f_ℐ) = 𝒩(0, K_ℐℐ). |
@@ -255,14 +257,14 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `kronecker_sum_solve` | function | Solve a shifted Kronecker-sum system in tensor (unvectorised) form. |
 | `kronecker_sum_tag` | constant | `kronecker_sum_tag` |
 | `kronecker_tag` | constant | `kronecker_tag` |
-| `laplace_mode` | function | Mode, Hessian and log-marginal of the Laplace approximation, in precision form. |
-| `laplace_model` | function | Collect and check the pieces of the latent Gaussian model of `laplace_mode`. |
+| `laplace_model` | function | Collect and check the pieces of the latent Gaussian model of a Laplace fit. |
 | `laplace_result` | function | The Gaussian approximation and the Laplace log-marginal at a mode. |
 | `leave_one_out_cv` | function | LOO-CV via the bordered-system identity, without refitting N times. |
 | `ledoit_wolf_shrinkage` | function | Ledoit-Wolf shrinkage of an ensemble covariance, without forming it. |
+| `lift_known_values` | function | Lift prescribed values to the right-hand side of A x = b. |
 | `linear_gaussian_update` | function | Matrix-free posterior of a linear-Gaussian observation. |
-| `linear_interpolation_weights` | function | Deprecated: sparse rows of the multilinear interpolation matrix on a grid. |
 | `linear_solve` | function | Solve A x = b through the unified front door. |
+| `linear_solve_with_info` | function | Solve A x = b as `linear_solve` does, and report how the solve ended. |
 | `linearize_sde` | function | Optimal linear drift of a nonlinear SDE along a Gaussian path. |
 | `localization_matrix` | function | Pairwise Gaspari-Cohn taper ρ(d(aₙ, bₘ); c). |
 | `localized_kalman_gain` | function | Ensemble Kalman gain with Hadamard (Schur-product) localization. |
@@ -326,6 +328,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `root_inv_decomposition` | function | Inverse-root decomposition: a tall factor R⁻ with A⁻¹ ≈ R⁻ (R⁻)ᵀ. |
 | `rp_cholesky` | function | Randomly pivoted partial Cholesky of a PSD matrix A. |
 | `rts_interpolate` | function | Smoothed marginal at an unobserved step t from filtered and smoothed states. |
+| `rts_sample` | function | Joint draws of the state path x_1:T from p(x_1:T \| y_1:T). |
 | `rts_smoother` | function | Rauch-Tung-Striebel backward smoother for `kalman_filter` output. |
 | `rw1_structure` | function | Structure matrix R = D₁ᵀ W D₁ of a first-order random walk. |
 | `rw2_structure` | function | Structure matrix R = D₂ᵀ D₂ of a second-order random walk. |
@@ -349,6 +352,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `solve_columns` | function | Solve A X = B column by column, with structured dispatch per column. |
 | `solve_matrix` | function | Solve A X = B with one factorisation for the whole matrix right-hand side. |
 | `solve_rows` | function | Solve A xᵢ = bᵢ for each row bᵢ of a matrix B, with one solve per row. |
+| `solve_with_known_values` | function | Solve A x = b on the unknowns, with x prescribed on the known set. |
 | `sparse_cholesky` | function | Sparse Cholesky factorisation of a symmetric positive-definite operator. |
 | `sparse_conditional` | function | Sparse-GP conditional q(f_X) = ∫ p(f_X ∣ f_ℐ) q(f_ℐ) df_ℐ, per output r. |
 | `spde_precision` | function | SPDE precision Λ_α = τ² K (C̃⁻¹ K)^(α−1) with K = κ² C̃ + G. |
@@ -366,7 +370,6 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `sufficient_stats` | function | Sufficient statistics (x, x xᵀ) of a Gaussian, over any batch axes. |
 | `sum_of_kroneckers_sample` | function | Sample from 𝒩(0, K) with a matrix-free Lanczos square root. |
 | `sum_operator` | function | Lazy sum A = A_1 + … + A_D, applied one summand at a time. |
-| `sumkronecker_sample` | function | Deprecated alias for `sum_of_kroneckers_sample` (gh-297). |
 | `svd` | function | Singular value decomposition of A, with structural dispatch. |
 | `svd_low_rank_plus_diag` | function | Build A = diag(a) + U diag(s) Vᵀ from a truncated SVD. |
 | `svgp_variance_adjustment` | function | SVGP variance adjustment operator Q = K_ℐℐ⁻¹ Σ_ℐ K_ℐℐ⁻¹ − K_ℐℐ⁻¹. |
@@ -375,9 +378,7 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `symmetrize` | function | Symmetric part of the trailing two axes, removing round-off asymmetry. |
 | `theta_design` | function | Integration points and log-weights over hyperparameters θ. |
 | `tikhonov_augment` | function | Observation augmentation for Tikhonov-regularised EKI (TEKI). |
-| `to_expectation` | function | Deprecated alias of `to_mean_cov`. |
 | `to_mean_cov` | function | Mean μ and covariance Σ of a Gaussian in natural form. |
-| `to_natural` | function | Deprecated alias of `gaussx.mean_cov_to_natural`. |
 | `toeplitz_sample` | function | Draw from 𝒩(0, toeplitz(t)) by circulant embedding and the FFT. |
 | `trace` | function | Trace tr(A) of an operator, with structural dispatch. |
 | `trace_and_diag` | function | Joint stochastic estimate of tr(A) and diag(A) from one probe pass. |
@@ -404,164 +405,264 @@ Structured linear algebra and Gaussian primitives on lineax.
 | `whitened_svgp_predict` | function | Whitened SVGP prediction: per-input means μ_n and variances σ²_n. |
 | `woodbury_solve` | function | Solve (A + U D Uᵀ) x = b by the Woodbury identity, without the operator. |
 
-## Upstream: `finitevolx`
+## Upstream: `gridax`
 
-Arakawa C-grid finite-volume operators.
+Structured grids, masks and the finite-volume operators on them.
 
-### `finitevolx`
+### `gridax`
 
 | Name | Kind | What it does |
 |---|---|---|
-| `AB2Solver` | class | Deprecated: use ``integrix.march.AB2Solver`` with ``integrix.march.run``. |
-| `AB3Solver` | class | Re-exported from `integrix`. |
-| `AbstractForcing` | class | Base class for forcing operators. |
-| `Advection1D` | class | 1-D advection operator. |
-| `Advection2D` | class | 2-D advection operator. |
-| `Advection3D` | class | 3-D advection operator (horizontal plane per z-level). |
 | `ArakawaCGrid1D` | class | 1-D Arakawa C-grid topology (no metric). |
 | `ArakawaCGrid2D` | class | 2-D Arakawa C-grid topology (no metric). |
 | `ArakawaCGrid3D` | class | 3-D Arakawa C-grid topology (no metric). |
-| `ArakawaJacobian2D` | class | Arakawa (1966) Jacobian J(f, g) at T-points, on the full grid. |
-| `BiharmonicDiffusion2D` | class | Biharmonic (∇⁴) diffusion operator on a 2-D Arakawa C-grid. |
-| `BiharmonicDiffusion3D` | class | Biharmonic (nabla^4) diffusion operator on a 3-D Arakawa C-grid. |
-| `BoundaryCondition` | function | Re-exported from `typing`. |
-| `BoundaryConditionSet` | class | Apply a different boundary condition on each domain face. |
-| `CGInfo` | class | Convergence diagnostics returned by :func:`solve_cg`. |
-| `CapacitanceSolver` | class | Re-exported from `spectraldiffx`. |
-| `CartesianGrid1D` | class | 1-D Cartesian Arakawa C-grid (uniform spacing). |
-| `CartesianGrid2D` | class | 2-D Cartesian Arakawa C-grid (uniform spacing). |
-| `CartesianGrid3D` | class | 3-D Cartesian Arakawa C-grid (uniform spacing). |
-| `Coriolis2D` | class | Coriolis force operator for 2-D Arakawa C-grids. |
-| `Coriolis3D` | class | Coriolis force operator for 3-D Arakawa C-grids. |
+| `BC` | class | The boundary condition of each face of a grid. |
+| `CField` | class | An array with named dims, static labels and a stagger per axis. |
+| `CartesianAGrid1D` | class | 1-D Cartesian collocated grid. |
+| `CartesianAGrid2D` | class | 2-D Cartesian collocated grid. |
+| `CartesianAGrid3D` | class | 3-D Cartesian collocated grid. |
+| `CartesianCGrid1D` | class | 1-D Cartesian Arakawa C-grid (uniform spacing). |
+| `CartesianCGrid2D` | class | 2-D Cartesian Arakawa C-grid (uniform spacing). |
+| `CartesianCGrid3D` | class | 3-D Cartesian Arakawa C-grid (uniform spacing). |
+| `CoastGhosts` | class | The dry points one side of a coast, and where the water is from them. |
+| `CollocatedGrid1D` | class | 1-D collocated topology: ``Nx`` points, no ghost ring. |
+| `CollocatedGrid2D` | class | 2-D collocated topology: ``[Ny, Nx]`` points, no ghost ring. |
+| `CollocatedGrid3D` | class | 3-D collocated topology: ``[Nz, Ny, Nx]`` points, no ghost ring. |
 | `CurvilinearGrid1D` | class | 1-D curvilinear C-grid with a uniform metric. |
 | `CurvilinearGrid2D` | class | 2-D curvilinear C-grid with a uniform metric. |
 | `CurvilinearGrid3D` | class | 3-D curvilinear C-grid with a uniform metric. |
-| `Difference1D` | class | Finite-difference operators on a 1-D Arakawa C-grid. |
-| `Difference2D` | class | Finite-difference operators on a 2-D Arakawa C-grid. |
-| `Difference3D` | class | Finite-difference operators on a 3-D Arakawa C-grid. |
-| `Diffusion2D` | class | Horizontal diffusion operator (flux form) on a 2-D Arakawa C-grid. |
-| `Diffusion3D` | class | Horizontal diffusion operator (flux form) on a 3-D Arakawa C-grid. |
-| `Dirichlet1D` | class | Apply a Dirichlet value on one domain face. |
-| `DirichletHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
-| `Divergence2D` | class | Divergence operator on a 2-D Arakawa C-grid. |
-| `Energetics2D` | class | Energy diagnostics at T-points on a 2-D Arakawa C-grid. |
-| `Extrapolation1D` | class | High-order polynomial extrapolation for ghost cells. |
-| `FieldBCSet` | class | Dispatch per-face boundary conditions across multiple fields. |
-| `ForcingProduct` | class | Modulated forcing: ``F = alpha * F_inner``. |
-| `ForcingSum` | class | Additive composition of forcings: ``F = F_1 + F_2 + ... + F_n``. |
-| `ForwardEulerDfx` | class | Re-exported from `integrix`. |
-| `IMEX_SSP2` | class | Re-exported from `integrix`. |
-| `Interpolation1D` | class | 1-D averaging operators on an Arakawa C-grid. |
-| `Interpolation2D` | class | 2-D averaging operators on an Arakawa C-grid. |
-| `Interpolation3D` | class | 3-D averaging operators on an Arakawa C-grid. |
-| `KnownValueLifting` | class | Pre/post-processing wrapper for the lifting trick. |
-| `LeapfrogRAFSolver` | class | Deprecated: use ``integrix.march.LeapfrogRAFSolver`` with ``integrix.march.run``. |
-| `LinearDrag2D` | class | Linear drag on a 2-D Arakawa C-grid. |
-| `LinearDrag3D` | class | Linear bottom drag on a 3-D Arakawa C-grid. |
+| `Dirichlet` | class | A value at the wall. |
+| `Extrapolation` | class | Extrapolate the polynomial through the first interior nodes. |
+| `GridOps` | class | The canonical functions with a grid and a mask filled in. |
+| `LossyConversionWarning` | class | A conversion that averages, so the way back does not give the field again. |
 | `Mask1D` | class | Unified Arakawa C-grid mask for a 1-D Cartesian domain. |
 | `Mask2D` | class | Unified Arakawa C-grid mask for a 2-D Cartesian domain. |
 | `Mask3D` | class | Unified Arakawa C-grid mask for a 3-D Cartesian domain. |
+| `Neumann` | class | A gradient ``∂φ/∂n`` along the outward normal. |
+| `Outflow` | class | Zero gradient by copy: every layer holds the nearest interior node. |
+| `Periodic` | class | Wrap around: ``φ_{-k} = φ_{N+1-k}``, the node one period away. |
+| `Reflective` | class | Even symmetry about the wall: ``φ_{-k} = φ_k``. |
+| `Robin` | class | A mixed condition at the wall, ``a φ + b ∂φ/∂n = c``. |
+| `Slip` | class | The tangential velocity at a solid wall, from no-slip to free-slip. |
+| `SphericalAGrid2D` | class | 2-D collocated grid on a sphere. |
+| `SphericalCGrid2D` | class | 2-D Arakawa C-grid on a sphere. |
+| `SphericalCGrid3D` | class | 3-D Arakawa C-grid on a sphere. |
+| `Sponge` | class | Relax the ghost layers towards a background value. |
+| `StaggerMismatchError` | class | Fields on different points of the grid met in one operation. |
+| `StencilCapability1D` | class | Directional count of contiguous wet neighbours for each 1-D grid cell. |
+| `StencilCapability2D` | class | Directional count of contiguous wet neighbours for each 2-D grid cell. |
+| `StencilCapability3D` | class | Directional count of contiguous wet neighbours for each 3-D grid cell. |
+| `StretchedCGrid1D` | class | 1-D Cartesian C-grid with irregular axes. |
+| `StretchedCGrid2D` | class | 2-D Cartesian C-grid with irregular axes. |
+| `StretchedCGrid3D` | class | 3-D Cartesian C-grid with irregular axes. |
+| `Wall` | class | A solid wall: one condition for the normal component, one for the others. |
+| `advect` | function | The finite-volume tendency of a tracer, ``-∇·(q u)``, at T. |
+| `advect_momentum` | function | The advection of momentum in vector-invariant form, at U and V. |
+| `advect_vertical` | function | The vertical part of the tendency of a tracer, ``-∂(w q)/∂z``, at T. |
+| `agrid_from` | function | The collocated grid of a georeferenced raster. |
+| `apply_mask` | function | A field with ``fill`` on the dry points of its point. |
+| `arakawa_jacobian` | function | The Arakawa (1966) Jacobian ``J(a, b) = ∂ₓa ∂ᵧb - ∂ᵧa ∂ₓb``, at T. |
+| `area_mean` | function | Area-weighted mean over the interior T cells. |
+| `area_sum` | function | Area-weighted sum over the interior T cells. |
+| `area_weights` | function | The T-cell areas of a 2-D grid: ``grid.area()`` in a chosen namespace. |
+| `available_potential_energy` | function | Available potential energy at T-points. |
+| `avg_x_bwd_1d` | function | Backward average in x, 1-D: U (or X) → T (or V) points. |
+| `avg_x_bwd_2d` | function | Backward average in x, 2-D: U (or X) → T (or V) points. |
+| `avg_x_bwd_3d` | function | Backward average in x, 3-D: U (or X) → T (or V) points. |
+| `avg_x_fwd_1d` | function | Forward average in x, 1-D: T (or V) → U (or X) points. |
+| `avg_x_fwd_2d` | function | Forward average in x, 2-D: T (or V) → U (or X) points. |
+| `avg_x_fwd_3d` | function | Forward average in x, 3-D: T (or V) → U (or X) points. |
+| `avg_xbwd_ybwd_2d` | function | Four-point average, bwd in x and bwd in y, 2-D: X → T points. |
+| `avg_xbwd_ybwd_3d` | function | Four-point average, bwd in x and bwd in y, 3-D: X → T points on every z-level. |
+| `avg_xbwd_yfwd_2d` | function | Four-point average, bwd in x and fwd in y, 2-D: U → V points. |
+| `avg_xbwd_yfwd_3d` | function | Four-point average, bwd in x and fwd in y, 3-D: U → V points on every z-level. |
+| `avg_xfwd_ybwd_2d` | function | Four-point average, fwd in x and bwd in y, 2-D: V → U points. |
+| `avg_xfwd_ybwd_3d` | function | Four-point average, fwd in x and bwd in y, 3-D: V → U points on every z-level. |
+| `avg_xfwd_yfwd_2d` | function | Four-point average, fwd in x and fwd in y, 2-D: T → X points. |
+| `avg_xfwd_yfwd_3d` | function | Four-point average, fwd in x and fwd in y, 3-D: T → X points on every z-level. |
+| `avg_y_bwd_2d` | function | Backward average in y, 2-D: V (or X) → T (or U) points. |
+| `avg_y_bwd_3d` | function | Backward average in y, 3-D: V (or X) → T (or U) points. |
+| `avg_y_fwd_2d` | function | Forward average in y, 2-D: T (or U) → V (or X) points. |
+| `avg_y_fwd_3d` | function | Forward average in y, 3-D: T (or U) → V (or X) points. |
+| `avg_z_bwd_3d` | function | Backward average in z, 3-D: W → T points. |
+| `avg_z_fwd_3d` | function | Forward average in z, 3-D: T → W points. |
+| `bernoulli_potential` | function | The Bernoulli potential ``K + g h``, at T. |
+| `biharmonic` | function | The biharmonic diffusion of a tracer, ``-κ₄ ∇²(∇²f)``, at T. |
+| `collocate` | function | A field of a C-grid, on its collocated grid (``grid.collocated()``). |
+| `combine` | function | Apply an element-wise function to fields on the same point. |
+| `coriolis` | function | The Coriolis tendencies ``(+f v, -f u)``, at U and V. |
+| `count_contiguous` | function | Count contiguous wet cells from each point along one axis (n-D). |
+| `curl` | function | The vertical curl of a horizontal vector (the relative vorticity), at X. |
+| `diff_x_bwd_1d` | function | Backward difference in x, 1-D: U (or X) → T (or V) points. |
+| `diff_x_bwd_2d` | function | Backward difference in x, 2-D: U (or X) → T (or V) points. |
+| `diff_x_bwd_3d` | function | Backward difference in x, 3-D: U (or X) → T (or V) points. |
+| `diff_x_fwd_1d` | function | Forward difference in x, 1-D: T (or V) → U (or X) points. |
+| `diff_x_fwd_2d` | function | Forward difference in x, 2-D: T (or V) → U (or X) points. |
+| `diff_x_fwd_3d` | function | Forward difference in x, 3-D: T (or V) → U (or X) points. |
+| `diff_y_bwd_2d` | function | Backward difference in y, 2-D: V (or X) → T (or U) points. |
+| `diff_y_bwd_3d` | function | Backward difference in y, 3-D: V (or X) → T (or U) points. |
+| `diff_y_fwd_2d` | function | Forward difference in y, 2-D: T (or U) → V (or X) points. |
+| `diff_y_fwd_3d` | function | Forward difference in y, 3-D: T (or U) → V (or X) points. |
+| `diff_z_bwd_3d` | function | Backward difference in z, 3-D: W → T points. |
+| `diff_z_fwd_3d` | function | Forward difference in z, 3-D: T → W points. |
+| `difference` | function | The difference of a field along an axis, at ``dst``. |
+| `diffuse` | function | The harmonic diffusion of a tracer, ``∇·(κ∇f)``, at T. |
+| `diffuse_vertical` | function | The vertical diffusion of a tracer, ``∂(κ ∂f/∂z)/∂z``, at T. |
+| `diffusive_fluxes` | function | The fluxes whose divergence is :func:`diffuse`, ``κ δₓf`` and ``κ δᵧf``. |
+| `dilate_mask` | function | Binary dilation by 1 cell with an n-D *cross* structuring element. |
+| `divergence` | function | The horizontal divergence of a vector, at T. |
+| `embed` | function | A field from its interior, with ``fill`` on the ghost ring. |
+| `enstrophy` | function | Enstrophy (pointwise). |
+| `fill_ghosts` | function | Fill the ghost ring of a field, or of every field of a state. |
+| `geostrophic_velocity` | function | The geostrophic velocity of a free surface, at U and V. |
+| `grad_perp` | function | The rotated gradient of a streamfunction, ``(u, v) = (-∂ᵧψ, ∂ₓψ)``. |
+| `gradient` | function | The horizontal gradient of a scalar: ``(∂ₓf, ∂ᵧf)``. |
+| `h_from_pooled` | function | Inverse of :func:`pool_bool` for binary inputs. |
+| `interior` | function | A field without its ghost ring. |
+| `interpolate` | function | The value at each point of ``dst``, from the points of ``src`` around it. |
+| `kinetic_energy` | function | The kinetic energy per unit mass, at T. |
+| `laplacian` | function | The horizontal Laplacian of a scalar, at its own points. |
+| `make_sponge` | function | n-D linear sponge ramp: 0 at every wall, 1 in the interior. |
+| `masked_mean` | function | Mean over ``axis``, excluding dry cells. |
+| `masked_moments` | function | ``(mean, std)`` in one call — see :func:`masked_mean`, :func:`masked_std`. |
+| `masked_std` | function | Standard deviation over ``axis``, excluding dry cells, floored at ``eps``. |
+| `mc` | function | Monotonized Central (MC) flux limiter. |
+| `minmod` | function | Minmod flux limiter. |
+| `okubo_weiss` | function | Okubo-Weiss parameter (pointwise). |
+| `okubo_weiss_parameter` | function | The Okubo–Weiss parameter ``σₙ² + σₛ² - ζ²`` of a flow, at T. |
+| `pool_bool` | function | n-D average-pool of a binary mask with one-sided zero padding. |
+| `potential_enstrophy` | function | Potential enstrophy (pointwise). |
+| `potential_vorticity` | function | Potential vorticity (pointwise). |
+| `pv_flux` | function | The flux of a vorticity by a velocity, ``(q u, q v)``, at U and V. |
+| `qg_potential_vorticity` | function | The quasi-geostrophic potential vorticity, at T. |
+| `reconstruct` | function | The advective flux ``q̂ u`` on the faces along ``axis``. |
+| `rusanov_flux` | function | Local Lax--Friedrichs (Rusanov) numerical flux at faces along ``axis``. |
+| `select` | function | One region of a field, by name, read-only. |
+| `shear_strain` | function | The shear strain ``δₓv + δᵧu``, at X. |
+| `smooth_abs` | function | Smooth approximation of ``\|x\|`` with a nonzero gradient at the origin. |
+| `smooth_clamp` | function | Smooth approximation of ``max(x, x_min)`` (a soft lower clamp). |
+| `smooth_max` | function | Smooth approximation of the elementwise ``max(x, y)``. |
+| `ssh_to_streamfn` | function | Convert sea surface height to streamfunction. |
+| `stagger` | function | A field of a collocated grid, on its C-grid (``grid.staggered()``). |
+| `strain_magnitude_squared` | function | Squared strain magnitude (pointwise). |
+| `strain_rate_squared` | function | The squared strain rate ``σₙ² + σₛ²``, at T. |
+| `streamfn_to_ssh` | function | Convert streamfunction to sea surface height. |
+| `stretching_term` | function | Cross-layer stretching term for multi-layer QG models. |
+| `superbee` | function | Superbee flux limiter. |
+| `sw_potential_vorticity` | function | The shallow-water potential vorticity ``(ζ + f) / h``, at X. |
+| `t_point_coordinates` | function | Coordinates of every T point of a Cartesian grid, one row per point. |
+| `tensor_strain` | function | The normal (tensor) strain ``δₓu - δᵧv``, at T. |
+| `to_dimarray` | function | The data, dims and labels of a field as a ``pipekit_array.DimArray``. |
+| `to_right` | function | A field on left faces (MITgcm's U, on the west one) as one on right faces. |
+| `upwind_flux` | function | Compute upwind flux with automatic stencil fallback near boundaries. |
+| `van_leer` | function | Van Leer flux limiter. |
+| `vertical_velocity` | function | The vertical velocity of a non-divergent flow, at W. |
+| `volume_mean` | function | Volume-weighted mean over the interior T cells, ``(∑ V x) / (∑ V)``. |
+| `volume_sum` | function | Volume-weighted sum over the interior T cells. |
+| `volume_weights` | function | The T-cell volumes of a 3-D grid, area times ``dz`` (``xp`` as in :func:`area_weights`). |
+| `vortex_force` | function | The vortex force, ``(+q v, -q u)``, at U and V. |
+| `vorticity_flux_upwind` | function | Dissipative upwind vortex-force fluxes on a C-grid. |
+
+### `gridax.analysis`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Extrapolate` | function | Re-exported from `typing`. |
+| `difference` | function | Finite-difference derivative along one axis; a NaN propagates. |
+| `remap_axis` | function | Interpolate ``values`` along ``axis`` from ``source_coords`` to ``target_coords``. |
+| `remap_axis_columns` | function | Interpolate every column of ``values`` onto ``target_coords``. |
+
+### `gridax.fields`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `abs` | function | ``abs`` of the array namespace, element by element (`gridax.combine`). |
+| `clip` | function | ``clip`` of the array namespace, element by element (`gridax.combine`). |
+| `cos` | function | ``cos`` of the array namespace, element by element (`gridax.combine`). |
+| `exp` | function | ``exp`` of the array namespace, element by element (`gridax.combine`). |
+| `log` | function | ``log`` of the array namespace, element by element (`gridax.combine`). |
+| `maximum` | function | ``maximum`` of the array namespace, element by element (`gridax.combine`). |
+| `minimum` | function | ``minimum`` of the array namespace, element by element (`gridax.combine`). |
+| `sign` | function | ``sign`` of the array namespace, element by element (`gridax.combine`). |
+| `sin` | function | ``sin`` of the array namespace, element by element (`gridax.combine`). |
+| `sqrt` | function | ``sqrt`` of the array namespace, element by element (`gridax.combine`). |
+| `tanh` | function | ``tanh`` of the array namespace, element by element (`gridax.combine`). |
+| `where` | function | ``where`` of the array namespace, element by element (`gridax.combine`). |
+
+### `gridax.pipekit`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `ApplyMask` | class | Zero a field on the dry points of its stagger (``jnp.where``, NaN-safe). |
+| `AvailablePE` | class | ½ g′ (h − H)² at T-points.  ``T → T``. |
+| `Coriolis` | class | Coriolis tendencies on a β-plane, ``(U, V) → (U, V)``. |
+| `Curl` | class | Relative vorticity ζ = δₓv / Δx − δᵧu / Δy at X-points.  ``(U, V) → X``. |
+| `DIFFERENCES` | constant | `(('x', 'T', 'U'), ('x', 'U', 'T'), ('x', 'V', 'X'), ('x',...` |
+| `Difference` | class | Difference between staggered points, ``δ / Δ``. |
+| `Divergence` | class | ∇·(u, v) at T-points: δₓu / Δx + δᵧv / Δy.  ``(U, V) → T``. |
+| `DomainIntegral` | class | ∑_interior x ΔA over the T-cells (`area_sum`).  ``T → [*batch]``. |
+| `DomainMean` | class | Area-weighted interior mean ⟨x⟩ (`area_mean`).  ``T → [*batch]``. |
+| `Enstrophy` | class | ½ ζ² at X-points.  ``(U, V) → X``. |
+| `ExplicitStep` | class | One explicit step s ↦ s + Δt Φ(s) of ∂ₜs = F(s), for a dict state. |
+| `FVXOperator` | class | Base for finitevolX pipekit operators. |
+| `FillGhosts` | class | Fill the ghost ring with a boundary condition.  ``x → x``. |
+| `GHOST_FILLERS` | constant | `{'periodic': BC(faces={'x': (Periodic(), Periodic()), 'y'...` |
+| `GradPerp` | class | Rotated gradient (u, v) = (−∂ᵧψ, ∂ₓψ) of a streamfunction.  ``T → (U, V)``. |
+| `GridOperator` | class | An `FVXOperator` on a 2-D Cartesian C-grid. |
+| `INTERPOLATIONS` | constant | `(('T', 'U'), ('T', 'V'), ('T', 'X'), ('U', 'T'), ('U', 'V...` |
+| `Interp` | class | Interpolation between staggered points (a two- or four-point mean). |
+| `KineticEnergy` | class | ½ (ū² + v̄²) at T-points (velocities averaged to T).  ``(U, V) → T``. |
+| `Laplacian` | class | Five-point Laplacian ∇²h at T-points.  ``T → T``. |
+| `LinComb` | class | Linear combination y = ∑ᵢ cᵢ xᵢ (coefficients are learnable leaves). |
+| `MASK_KINDS` | constant | `{'T': 'default', 'U': 'default', 'V': 'default', 'X': 'st...` |
+| `OkuboWeiss` | class | W = σₙ² + σₛ² − ζ² at T-points (W < 0: vortex cores).  ``(U, V) → T``. |
+| `Pick` | class | Select one output of a tuple-valued node: ``(a, b, …) → [index]``. |
+| `PotentialVorticity` | class | Shallow-water PV q = (ζ + f) / h at X-points.  ``(U, V, T, T) → X``. |
+| `QGPotentialVorticity` | class | Single-layer QG PV q = (∇²ψ + β (y − y₀)) / f₀ at T-points.  ``T → T``. |
+| `RelativeVorticity` | class | ζ = δₓv / Δx − δᵧu / Δy at X-points.  ``(U, V) → X``. |
+| `SCHEMES` | constant | `{'euler': <function euler_step at 0x77b803b75f80>, 'heun'...` |
+| `STRAIN_COMPONENTS` | constant | `{'shear': <function shear_strain at 0x77b803c679c0>, 'ten...` |
+| `Strain` | class | A strain component: shear σₛ (X), tensor σₙ (T) or σₛ² + σₙ² (T). |
+| `TotalEnergy` | class | E = ∑_interior (KE + APE) ΔA (`area_sum`), one value per leading index. |
+| `graph_halo` | function | The halo of a graph: how many cells around a point its result reads. |
+| `over_leading` | function | Lift ``fn`` on ``[*core]`` arrays to ``[*batch, *core]`` arrays. |
+
+### `gridax.schemes`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Adaptive` | class | A scheme, and what it does at the edges of the array and at a coast. |
+| `Biased` | class | Stencils that lean to one ``side``, whatever the velocity. |
+| `Centred` | class | Symmetric stencils, of any even ``order``. |
+| `Scheme` | class | Which values an operation reads around its output, and how it weighs them. |
+| `TVD` | class | Second-order TVD: first-order upwind plus a limited anti-diffusive correction. |
+| `Tier` | class | One stencil width of a scheme, as a face-value reconstruction. |
+| `Upwind` | class | Linear upwind-biased face values of cell averages, of any odd ``order``. |
+| `WENO` | class | WENO face values of cell averages, of any odd ``order`` from 3 on. |
+
+### `gridax.solvers`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BoundaryCondition` | function | Re-exported from `typing`. |
+| `CapacitanceSolver` | class | Re-exported from `spectraldiffx`. |
+| `DirichletHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
+| `KnownValueLifting` | class | Pre/post-processing wrapper for the lifting trick. |
 | `MixedBCHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
 | `MixedBCHelmholtzSolver3D` | class | Re-exported from `spectraldiffx`. |
-| `MomentumAdvection2D` | class | Energy-conserving momentum advection on a 2-D Arakawa C-grid. |
-| `MomentumAdvection3D` | class | Energy-conserving momentum advection on a 3-D Arakawa C-grid. |
 | `MultigridSolver` | class | Geometric multigrid V-cycle solver for the variable-coefficient Helmholtz equation:: |
-| `Neumann1D` | class | Apply an outward-normal gradient on one domain face. |
 | `NeumannHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
-| `Outflow1D` | class | Apply a one-face outflow boundary condition. |
-| `Periodic1D` | class | Apply periodic wrapping on one domain face. |
-| `QGPotentialVorticity2D` | class | Quasi-geostrophic potential vorticity at T-points. |
-| `QuadraticDrag2D` | class | Quadratic bottom drag on a 2-D Arakawa C-grid. |
-| `QuadraticDrag3D` | class | Quadratic bottom drag on a 3-D Arakawa C-grid. |
-| `RK2Heun` | class | Re-exported from `integrix`. |
-| `RK3SSP` | class | Re-exported from `integrix`. |
-| `RK4Classic` | class | Re-exported from `integrix`. |
-| `RayleighDamping2D` | class | Rayleigh damping of a T-point field on a 2-D Arakawa C-grid. |
-| `RayleighDamping3D` | class | Rayleigh damping of a T-point field on a 3-D Arakawa C-grid. |
-| `Reconstruction1D` | class | 1-D face-value reconstruction. |
-| `Reconstruction2D` | class | 2-D face-value reconstruction for advective fluxes. |
-| `Reconstruction3D` | class | 3-D face-value reconstruction. |
-| `Reflective1D` | class | Apply an even-symmetry reflective boundary on one face. |
 | `RegularNeumannHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
-| `Robin1D` | class | Robin (mixed) boundary condition: α·u + β·∂u/∂n = γ. |
-| `SSP_RK104` | class | Re-exported from `integrix`. |
-| `SSP_RK2` | class | Re-exported from `integrix`. |
-| `SemiLagrangianSolver` | class | Semi-Lagrangian advection solver for diffrax. |
-| `SemiLagrangianTerm` | class | Velocity term for :class:`SemiLagrangianSolver` in ``diffeqsolve``. |
-| `Slip1D` | class | Slip boundary condition for tangential velocity at a solid wall. |
 | `SolveDomain` | class | Derived masks for the lifting trick. |
 | `SpectralHelmholtzSolver1D` | class | Re-exported from `spectraldiffx`. |
 | `SpectralHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
 | `SpectralHelmholtzSolver3D` | class | Re-exported from `spectraldiffx`. |
-| `SphericalAdvection2D` | class | 2-D tracer advection on a spherical Arakawa C-grid. |
-| `SphericalAdvection3D` | class | 3-D tracer advection on a spherical Arakawa C-grid. |
-| `SphericalBiharmonicDiffusion2D` | class | Biharmonic (spherical ∇⁴) diffusion on a 2-D spherical C-grid. |
-| `SphericalBiharmonicDiffusion3D` | class | Biharmonic spherical diffusion on a 3-D Arakawa C-grid. |
-| `SphericalDifference2D` | class | Spherical finite-difference operators on a 2-D Arakawa C-grid. |
-| `SphericalDifference3D` | class | Spherical finite-difference operators on a 3-D Arakawa C-grid. |
-| `SphericalDiffusion2D` | class | Horizontal tracer diffusion (flux form) on a 2-D spherical C-grid. |
-| `SphericalDiffusion3D` | class | Horizontal tracer diffusion on a 3-D spherical Arakawa C-grid. |
-| `SphericalDivergence2D` | class | Horizontal divergence on a 2-D spherical Arakawa C-grid. |
-| `SphericalDivergence3D` | class | 3-D spherical divergence (vmap over z-levels). |
-| `SphericalGrid2D` | class | 2-D Arakawa C-grid on a sphere. |
-| `SphericalGrid3D` | class | 3-D Arakawa C-grid on a sphere. |
-| `SphericalLaplacian2D` | class | Spherical Laplacian on a 2-D Arakawa C-grid. |
-| `SphericalLaplacian3D` | class | 3-D spherical Laplacian (vmap over z-levels). |
-| `SphericalMomentumAdvection2D` | class | Energy-conserving momentum advection on a 2-D spherical C-grid. |
-| `SphericalMomentumAdvection3D` | class | Energy-conserving momentum advection on a 3-D spherical C-grid. |
-| `SphericalVorticity2D` | class | Vorticity and PV-flux operators on a 2-D spherical Arakawa C-grid. |
-| `SphericalVorticity3D` | class | 3-D spherical vorticity (vmap over z-levels). |
-| `SplitExplicitRKSolver` | class | Deprecated: use ``integrix.march.SplitExplicitRKSolver`` with ``integrix.march.run``. |
-| `Sponge1D` | class | Relax one ghost face toward a background value. |
 | `StaggeredDirichletHelmholtzSolver2D` | class | Re-exported from `spectraldiffx`. |
-| `StencilCapability1D` | class | Directional count of contiguous wet neighbours for each 1-D grid cell. |
-| `StencilCapability2D` | class | Directional count of contiguous wet neighbours for each 2-D grid cell. |
-| `StencilCapability3D` | class | Directional count of contiguous wet neighbours for each 3-D grid cell. |
-| `Strain2D` | class | Strain diagnostics on a 2-D Arakawa C-grid. |
-| `TimeVaryingForcing` | class | Bundle a time-agnostic forcing with time-dependent input fields. |
-| `Vorticity2D` | class | 2-D vorticity and PV-flux operators. |
-| `Vorticity3D` | class | 3-D vorticity operators (horizontal plane per z-level). |
-| `WindCurl2D` | class | Wind-stress curl forcing of the vorticity / QG potential vorticity. |
-| `WindStress2D` | class | Surface wind-stress forcing on a 2-D Arakawa C-grid. |
-| `WindStress3D` | class | Surface wind-stress forcing on a 3-D Arakawa C-grid. |
-| `ab2_step` | function | Re-exported from `integrix`. |
-| `ab3_step` | function | Re-exported from `integrix`. |
-| `arakawa_jacobian` | function | Arakawa (1966) discretization of J(f, g). |
-| `area_mean` | function | Area-weighted mean over physical interior T-cells. |
-| `area_sum` | function | Area-weighted sum over physical interior T-cells. |
-| `area_weights` | function | Dispatch to :func:`cartesian_area_weights` or :func:`spherical_area_weights`. |
-| `available_potential_energy` | function | Available potential energy at T-points. |
-| `avg_x_bwd` | function | Backward average in x (east face → centre). |
-| `avg_x_bwd_1d` | function | Backward average in x (east face → centre), 1-D. |
-| `avg_x_bwd_3d` | function | Backward average in x over all z-levels (east face → centre). |
-| `avg_x_fwd` | function | Forward average in x (centre → east face). |
-| `avg_x_fwd_1d` | function | Forward average in x (centre → east face), 1-D. |
-| `avg_x_fwd_3d` | function | Forward average in x over all z-levels (centre → east face). |
-| `avg_xbwd_yfwd` | function | Bilinear average: U-points → V-points (backward-x, forward-y). |
-| `avg_xfwd_ybwd` | function | Bilinear average: V-points → U-points (forward-x, backward-y). |
-| `avg_xy_bwd` | function | Bilinear average from corners to centre (backward in both x and y). |
-| `avg_xy_fwd` | function | Bilinear average to NE corner (forward in both x and y). |
-| `avg_y_bwd` | function | Backward average in y (north face → centre). |
-| `avg_y_bwd_3d` | function | Backward average in y over all z-levels (north face → centre). |
-| `avg_y_fwd` | function | Forward average in y (centre → north face). |
-| `avg_y_fwd_3d` | function | Forward average in y over all z-levels (centre → north face). |
-| `barotropic_filter` | function | Implicit external-gravity-wave (barotropic) mode filter. |
-| `bernoulli_potential` | function | Bernoulli potential at T-points on an Arakawa C-grid. |
-| `beta_param` | function | Meridional gradient of the Coriolis parameter from latitude. |
 | `boundary_ring` | function | Wet cells adjacent to at least one dry cell (the inner ring). |
 | `build_capacitance_solver` | function | Pre-compute the capacitance matrix and return a ready-to-use solver. |
-| `build_coupling_matrix` | function | Build the tridiagonal vertical coupling (stratification) matrix A. |
 | `build_multigrid_solver` | function | Build a multigrid solver with precomputed level hierarchies. |
-| `buoyancy` | function | Compute buoyancy from density. |
-| `cartesian_area_mean` | function | Cartesian area-weighted mean. |
-| `cartesian_area_sum` | function | Cartesian area-weighted sum (:func:`area_sum` with Cartesian grid). |
-| `cartesian_area_weights` | function | T-cell areas on a Cartesian grid. |
-| `cartesian_volume_mean` | function | Cartesian volume-weighted mean. |
-| `cartesian_volume_sum` | function | Cartesian volume-weighted sum. |
-| `cartesian_volume_weights` | function | T-cell volumes on a Cartesian 3-D grid: ``dx · dy · dz``. |
+| `check_dtype` | function | Raise if JAX would silently downcast ``x`` from float64 to float32. |
 | `coast_ring` | function | Dry cells adjacent to at least one wet cell (the coast ring). |
-| `coriolis_fn` | function | Beta-plane Coriolis field. |
-| `coriolis_param` | function | Reference Coriolis parameter from latitude. |
 | `dct` | function | Re-exported from `spectraldiffx`. |
 | `dct1_eigenvalues` | function | Re-exported from `spectraldiffx`. |
 | `dct1_eigenvalues_ps` | function | Re-exported from `spectraldiffx`. |
@@ -572,19 +673,6 @@ Arakawa C-grid finite-volume operators.
 | `dct4_eigenvalues` | function | Re-exported from `spectraldiffx`. |
 | `dct4_eigenvalues_ps` | function | Re-exported from `spectraldiffx`. |
 | `dctn` | function | Re-exported from `spectraldiffx`. |
-| `decompose_vertical_modes` | function | Eigendecompose the coupling matrix A to get Rossby radii and transforms. |
-| `diff_x_bwd` | function | Backward difference in x (east face → centre). |
-| `diff_x_bwd_1d` | function | Backward difference in x (east face → centre), 1-D. |
-| `diff_x_bwd_3d` | function | Backward difference in x over all z-levels (east face → centre). |
-| `diff_x_fwd` | function | Forward difference in x (centre → east face). |
-| `diff_x_fwd_1d` | function | Forward difference in x (centre → east face), 1-D. |
-| `diff_x_fwd_3d` | function | Forward difference in x over all z-levels (centre → east face). |
-| `diff_y_bwd` | function | Backward difference in y (north face → centre). |
-| `diff_y_bwd_3d` | function | Backward difference in y over all z-levels (north face → centre). |
-| `diff_y_fwd` | function | Forward difference in y (centre → north face). |
-| `diff_y_fwd_3d` | function | Forward difference in y over all z-levels (centre → north face). |
-| `diffusion_2d` | function | Horizontal tracer diffusion tendency at T-points (flux form). |
-| `divergence_2d` | function | Compute ∇·(u, v) at T-points on the 2-D Arakawa C-grid. |
 | `dst` | function | Re-exported from `spectraldiffx`. |
 | `dst1_eigenvalues` | function | Re-exported from `spectraldiffx`. |
 | `dst1_eigenvalues_ps` | function | Re-exported from `spectraldiffx`. |
@@ -595,82 +683,23 @@ Arakawa C-grid finite-volume operators.
 | `dst4_eigenvalues` | function | Re-exported from `spectraldiffx`. |
 | `dst4_eigenvalues_ps` | function | Re-exported from `spectraldiffx`. |
 | `dstn` | function | Re-exported from `spectraldiffx`. |
-| `enforce_periodic` | function | Fill the ghost-cell ring with periodic boundary conditions. |
-| `enstrophy` | function | Enstrophy (pointwise). |
-| `euler_step` | function | Re-exported from `integrix`. |
 | `fft_eigenvalues` | function | Re-exported from `spectraldiffx`. |
 | `fft_eigenvalues_ps` | function | Re-exported from `spectraldiffx`. |
-| `fix_boundary_corners` | function | Average corner ghost cells from their two face-adjacent ghost neighbours. |
-| `free_slip_boundaries` | function | Fill ghost ring with symmetric reflection (free-slip wall). |
 | `helmholtz_operator` | function | The rectangular Helmholtz operator ``(∇² − λ)`` as a gaussx operator. |
-| `heun_step` | function | Re-exported from `integrix`. |
 | `idct` | function | Re-exported from `spectraldiffx`. |
 | `idctn` | function | Re-exported from `spectraldiffx`. |
 | `idst` | function | Re-exported from `spectraldiffx`. |
 | `idstn` | function | Re-exported from `spectraldiffx`. |
-| `imex_ssp2_step` | function | Re-exported from `integrix`. |
-| `interior` | function | Create an array shaped like ``like``, zero everywhere except the interior. |
-| `kinetic_energy` | function | Kinetic energy at T-points (cell centers) on an Arakawa C-grid. |
-| `layer_to_mode` | function | Transform a field from layer space to mode space. |
-| `leapfrog_raf_step` | function | Re-exported from `integrix`. |
-| `linear_2pts` | function | 2-point centred reconstruction at face i+1/2. |
-| `linear_3pts_left` | function | 3-point left-biased reconstruction at face i+1/2. |
-| `linear_3pts_right` | function | 3-point right-biased reconstruction at face i+1/2. |
-| `linear_4pts` | function | 4-point centred reconstruction at face i+1/2. |
-| `linear_5pts_left` | function | 5-point left-biased reconstruction at face i+1/2. |
-| `linear_5pts_right` | function | 5-point right-biased reconstruction at face i+1/2. |
-| `linear_6pts` | function | 6-point centred reconstruction at face i+1/2. |
-| `linear_density` | function | Compute density from temperature and salinity using a linear EOS. |
-| `linear_density_anomaly` | function | Compute density anomaly ρ' = ρ − ρ₀ using a linear EOS. |
-| `linear_drag` | function | Rayleigh (linear) bottom-drag tendency :math:`-\text{coef}\cdot u`. |
-| `linear_drag_tendency` | function | Linear (Rayleigh-type) drag tendency on one velocity component. |
-| `linear_drho_dS` | function | Partial derivative ∂ρ/∂S for the linear EOS (constant). |
-| `linear_drho_dT` | function | Partial derivative ∂ρ/∂T for the linear EOS (constant). |
-| `make_gaussx_multigrid_preconditioner` | function | The multigrid V-cycle as a symmetric gaussx preconditioner. |
-| `make_multigrid_preconditioner` | function | Return a preconditioner closure that applies a single multigrid V-cycle. |
-| `make_nystrom_preconditioner` | function | Build a randomized Nyström preconditioner for a symmetric operator. |
-| `make_preconditioner` | function | Convenience factory that builds a preconditioner by name. |
 | `make_spectral_preconditioner` | function | Return a spectral-solve preconditioner for PCG. |
+| `masked_face_dirichlet_laplacian` | function | Masked Helmholtz operator (∇² − λ)·p with p = 0 on every coast *face*. |
 | `masked_helmholtz_operator` | function | The masked Helmholtz operator of :func:`masked_laplacian` as a gaussx operator. |
 | `masked_laplacian` | function | Apply the masked discrete Helmholtz operator (∇² − λ)·ψ. |
-| `masked_mean` | function | Mean over ``axis``, excluding dry cells. |
-| `masked_moments` | function | ``(mean, std)`` in one call — see :func:`masked_mean`, :func:`masked_std`. |
-| `masked_std` | function | Standard deviation over ``axis``, excluding dry cells, floored at ``eps``. |
-| `mc` | function | Monotonized Central (MC) flux limiter. |
-| `minmod` | function | Minmod flux limiter. |
-| `mode_to_layer` | function | Transform a field from mode space to layer space. |
+| `masked_neumann_laplacian` | function | Masked Helmholtz operator (∇² − λ)·p with zero flux through every coast face. |
 | `modify_rhs_1d` | function | Re-exported from `spectraldiffx`. |
 | `modify_rhs_2d` | function | Re-exported from `spectraldiffx`. |
 | `modify_rhs_3d` | function | Re-exported from `spectraldiffx`. |
-| `multilayer` | function | Lift a 2D horizontal operator to multilayer/multimode fields. |
-| `no_flux_boundaries` | function | Fill ghost ring with zeros for normal-flux variables. |
-| `no_slip_boundaries` | function | Fill ghost ring with sign-flipped interior values (no-slip wall). |
-| `okubo_weiss` | function | Okubo-Weiss parameter (pointwise). |
-| `pad_interior` | function | Extract physical interior and re-pad to original size. |
-| `plusminus` | function | Split velocity into positive and negative parts. |
-| `potential_enstrophy` | function | Potential enstrophy (pointwise). |
-| `potential_vorticity` | function | Potential vorticity (pointwise). |
-| `potential_vorticity_multilayer` | function | Multi-layer QG potential vorticity. |
-| `pressure_from_divergence` | function | Solve ∇²p = ∇·u for the pressure correction. |
-| `pv_flux_arakawa_lamb` | function | Deprecated alias of :func:`pv_flux_blend` (not Arakawa-Lamb 1981). |
-| `pv_flux_blend` | function | Blend of the energy- and enstrophy-conserving PV fluxes (grid-free). |
-| `pv_inversion` | function | QG potential-vorticity inversion: solve (∇² − λ)ψ = q. |
-| `qg_potential_vorticity` | function | QG potential vorticity at T-points (single layer). |
-| `quadratic_drag_tendency` | function | Quadratic bottom-drag tendency on one velocity component. |
-| `rayleigh_relaxation` | function | Sponge / relaxation tendency :math:`-\text{coef}\cdot W\cdot(x - x_\text{ref})`. |
-| `rayleigh_tendency` | function | Rayleigh damping tendency toward a reference state. |
-| `reconstruct` | function | Compute upwind face flux along *dim* using the given reconstruction method. |
-| `reduced_gravity` | function | Compute reduced gravity between two layers. |
-| `relative_vorticity_cgrid` | function | Relative vorticity at X-points (corners) on an Arakawa C-grid. |
-| `rk3_ssp_step` | function | Re-exported from `integrix`. |
-| `rk4_step` | function | Re-exported from `integrix`. |
-| `rusanov_flux` | function | Local Lax--Friedrichs (Rusanov) numerical flux at faces along ``axis``. |
-| `semi_lagrangian_step` | function | Advect a 2D scalar field using semi-Lagrangian backtracking. |
-| `shear_strain` | function | Shear strain at X-points (corners) on an Arakawa C-grid. |
-| `smooth_abs` | function | Smooth approximation of ``\|x\|`` with a nonzero gradient at the origin. |
-| `smooth_clamp` | function | Smooth approximation of ``max(x, x_min)`` (a soft lower clamp). |
-| `smooth_max` | function | Smooth approximation of the elementwise ``max(x, y)``. |
-| `solve_cg` | function | Preconditioned Conjugate Gradient solver for symmetric linear operators. |
+| `multigrid_levels` | function | The C-grid multigrid hierarchy of a mask, as ``gaussx.MultigridLevel``\ s. |
+| `project_zero_mean` | function | Remove the wet mean of *u* on each connected wet component. |
 | `solve_helmholtz_2d` | function | Re-exported from `spectraldiffx`. |
 | `solve_helmholtz_3d` | function | Re-exported from `spectraldiffx`. |
 | `solve_helmholtz_dct` | function | Re-exported from `spectraldiffx`. |
@@ -688,7 +717,6 @@ Arakawa C-grid finite-volume operators.
 | `solve_helmholtz_fft` | function | Re-exported from `spectraldiffx`. |
 | `solve_helmholtz_fft_1d` | function | Re-exported from `spectraldiffx`. |
 | `solve_helmholtz_fft_3d` | function | Re-exported from `spectraldiffx`. |
-| `solve_ocean_pde` | function | Integrate an ocean PDE using diffrax. |
 | `solve_poisson_2d` | function | Re-exported from `spectraldiffx`. |
 | `solve_poisson_3d` | function | Re-exported from `spectraldiffx`. |
 | `solve_poisson_dct` | function | Re-exported from `spectraldiffx`. |
@@ -706,52 +734,25 @@ Arakawa C-grid finite-volume operators.
 | `solve_poisson_fft` | function | Re-exported from `spectraldiffx`. |
 | `solve_poisson_fft_1d` | function | Re-exported from `spectraldiffx`. |
 | `solve_poisson_fft_3d` | function | Re-exported from `spectraldiffx`. |
-| `spherical_area_mean` | function | Spherical area-weighted mean. |
-| `spherical_area_sum` | function | Spherical area-weighted sum. |
-| `spherical_area_weights` | function | T-cell areas on a spherical grid. |
-| `spherical_volume_mean` | function | Spherical volume-weighted mean. |
-| `spherical_volume_sum` | function | Spherical volume-weighted sum. |
-| `spherical_volume_weights` | function | T-cell volumes on a spherical 3-D grid. |
-| `split_explicit_step` | function | Re-exported from `integrix`. |
-| `ssh_to_streamfn` | function | Convert sea surface height to streamfunction. |
-| `strain_magnitude_squared` | function | Squared strain magnitude (pointwise). |
-| `streamfn_to_ssh` | function | Convert streamfunction to sea surface height. |
-| `streamfunction_from_vorticity` | function | Invert the vorticity–streamfunction relation ∇²ψ − λψ = ζ. |
-| `stretching_term` | function | Cross-layer stretching term for multi-layer QG models. |
-| `superbee` | function | Superbee flux limiter. |
-| `sw_potential_vorticity` | function | Shallow-water potential vorticity at X-points on an Arakawa C-grid. |
-| `sw_potential_vorticity_multilayer` | function | Multi-layer shallow-water potential vorticity at X-points. |
-| `tensor_strain` | function | Tensor (normal) strain at T-points on an Arakawa C-grid. |
-| `total_energy` | function | Domain-integrated total energy. |
-| `total_enstrophy` | function | Domain-integrated enstrophy. |
-| `upwind_1pt` | function | 1st-order upwind face value at interior faces along the last axis. |
-| `upwind_3pt` | function | 3-point upwind face value at i+1/2 along the last axis. |
-| `upwind_5pt` | function | 5-point upwind face value at i+1/2 along the last axis. |
-| `upwind_flux` | function | Compute upwind flux with automatic stencil fallback near boundaries. |
-| `uv_center_flux` | function | Compute raw face fluxes for a cell-centred scalar on a C-grid. |
-| `uv_node_flux` | function | Compute raw face fluxes for a node-centred tracer on a C-grid. |
-| `van_leer` | function | Van Leer flux limiter. |
-| `vertical_velocity` | function | Vertical velocity from the continuity equation. |
-| `volume_mean` | function | Volume-weighted mean over physical interior T-cells (3-D). |
-| `volume_sum` | function | Volume-weighted sum over physical interior T-cells (3-D). |
-| `volume_weights` | function | Dispatch to Cartesian/spherical volume weights based on grid type. |
-| `vorticity_flux_upwind` | function | Dissipative upwind vortex-force fluxes on a C-grid. |
-| `wall_boundaries` | function | Apply wall boundary conditions appropriate for a C-grid staggering. |
-| `weno_3pts` | function | 3-points non-linear left-biased stencil reconstruction: |
-| `weno_3pts_improved` | function | 3-points non-linear left-biased stencil reconstruction: |
-| `weno_3pts_improved_right` | function | 3-points non-linear right-biased WENO-Z stencil reconstruction at face q0+1/2: |
-| `weno_3pts_right` | function | 3-points non-linear right-biased stencil reconstruction at face q0+1/2: |
-| `weno_5pts` | function | 5-points non-linear left-biased stencil reconstruction |
-| `weno_5pts_improved` | function | 5-points non-linear left-biased stencil reconstruction |
-| `weno_5pts_improved_right` | function | 5-points non-linear right-biased WENO-Z stencil reconstruction at face q0+1/2: |
-| `weno_5pts_right` | function | 5-points non-linear right-biased stencil reconstruction at face q0+1/2: |
-| `weno_7pts` | function | 7-points non-linear left-biased stencil reconstruction |
-| `weno_7pts_right` | function | 7-points non-linear right-biased stencil reconstruction at face q0+1/2: |
-| `weno_9pts` | function | 9-points non-linear left-biased stencil reconstruction |
-| `weno_9pts_right` | function | 9-points non-linear right-biased stencil reconstruction at face q0+1/2: |
-| `wind_stress_tendency` | function | Momentum tendency from a surface wind stress. |
-| `zero_boundaries` | function | Fill ghost ring with zeros (homogeneous Dirichlet). |
-| `zero_gradient_boundaries` | function | Fill ghost ring by copying nearest interior value (zero gradient / Neumann). |
+| `wet_components` | function | Label the 4-connected wet components of a concrete mask (construction time). |
+
+### `gridax.stencils`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Bias` | function | Re-exported from `typing`. |
+| `Data` | function | Re-exported from `typing`. |
+| `METHODS` | constant | `('central', 'forward', 'backward')` |
+| `Method` | function | Re-exported from `typing`. |
+| `difference_coeffs` | function | The coefficients of a stencil on ``offsets``, exact, from the Taylor conditions. |
+| `difference_offsets` | function | The offsets of one stencil, in units of the grid step. |
+| `interior` | function | Create an array shaped like ``like``, zero everywhere except the interior. |
+| `nonuniform_coeffs` | function | Stencil coefficients for points at arbitrary distances, on any backend. |
+| `optimal_weights` | function | The linear (optimal) weights that blend sub-stencils into the full one. |
+| `smoothness_matrix` | function | The Jiang–Shu smoothness indicator of one sub-stencil, as a matrix. |
+| `staggered_average` | function | The staggered average (point-value interpolation) of ``h`` along ``axis``. |
+| `staggered_difference` | function | The staggered first difference of ``h`` along ``axis``, no metric applied. |
+| `weno_stencils` | function | The full stencil of WENO of ``order`` and its sub-stencils, as offsets. |
 
 ## Upstream: `spectraldiffx`
 
@@ -1090,13 +1091,35 @@ Integration: rules, cumulative scans, time marching, expectations.
 | Name | Kind | What it does |
 |---|---|---|
 | `AB2Solver` | class | Second-order Adams–Bashforth, run by `integrix.march.run`. |
+| `AB3Solver` | class | Third-order Adams–Bashforth as a diffrax solver, with an SSP-RK3 start. |
 | `AbstractStepper` | class | A fixed-step scheme whose history lives in the loop carry. |
+| `ForwardEulerDfx` | class | Forward Euler as a diffrax solver: yₙ₊₁ = yₙ + h F(tₙ, yₙ). |
+| `IMEX_SSP2` | class | IMEX-SSP2(2,2,2) for a `diffrax.MultiTerm` of an explicit and an implicit term. |
 | `LeapfrogRAFSolver` | class | Leapfrog with a Robert–Asselin filter, run by `integrix.march.run`. |
+| `RK2Heun` | class | Heun's method (RK2), with an embedded forward-Euler error estimate. |
+| `RK3SSP` | class | Third-order strong-stability-preserving Runge–Kutta (Shu–Osher). |
+| `RK4Classic` | class | The classical fourth-order Runge–Kutta method, fixed steps only. |
+| `SSP_RK104` | class | Ketcheson's ten-stage, fourth-order SSP Runge–Kutta, fixed steps only. |
+| `SSP_RK2` | class | Second-order SSP Runge–Kutta, the same scheme as `RK2Heun`. |
+| `SampledPath` | class | û(t), a functax fit of samples (t_k, u_k), read as a diffrax path. |
+| `SemiLagrangianSolver` | class | Semi-Lagrangian advection as a diffrax solver. |
+| `SemiLagrangianTerm` | class | The characteristic equation Ẋ = u(t, X), as a diffrax term. |
 | `SplitExplicitRKSolver` | class | Split-explicit stepping as an `AbstractStepper`, for `integrix.march.run`. |
 | `SplitExplicitTerms` | class | The vector fields of a split-explicit model, passed to `run` as ``rhs``. |
+| `ab2_step` | function | One second-order Adams–Bashforth step. |
+| `ab3_step` | function | One third-order Adams–Bashforth step. |
+| `departure_points` | function | The points x_d that the flow carries to the nodes x over one step. |
+| `euler_step` | function | One forward-Euler step: yₙ₊₁ = yₙ + h f(yₙ). |
+| `heun_step` | function | One Heun (RK2) step, order 2, SSP with C = 1. |
 | `imex_solver` | function | A ``KenCarp3`` IMEX solver whose implicit stage is matrix-free. |
+| `imex_ssp2_step` | function | One IMEX-SSP2(2,2,2) step, with the caller's implicit solve. |
 | `imex_stepsize_controller` | function | An adaptive PID step-size controller for an IMEX solve. |
+| `leapfrog_raf_step` | function | One leapfrog step with a Robert–Asselin filter on the middle level. |
+| `rk3_ssp_step` | function | One third-order SSP Runge–Kutta step in Shu–Osher form, C = 1. |
+| `rk4_step` | function | One classical fourth-order Runge–Kutta step. |
 | `run` | function | March y₀ through ``n_steps`` constant steps of h from t₀. |
+| `semi_lagrangian_step` | function | One semi-Lagrangian step: the old field read at the departure points. |
+| `split_explicit_step` | function | One split-explicit barotropic/baroclinic step. |
 | `stable_step` | function | The largest stable forward-Euler step for advection and diffusion together. |
 
 ### `integrix.rule`

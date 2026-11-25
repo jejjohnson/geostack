@@ -88,6 +88,7 @@ SHELVES: dict[str, Shelf] = {
                     "gaussx._strategies",
                     "gaussx._preconditioners",
                     "gaussx._solve_frontend",
+                    "gaussx._known_values",
                     "gaussx._randomized",
                     "gaussx._sketching",
                 ),

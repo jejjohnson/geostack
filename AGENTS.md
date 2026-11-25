@@ -44,7 +44,7 @@ not into a local package.
 | Layer | `references/…` | Libraries | pixi environment | Capability index |
 |---|---|---|---|---|
 | GeoStack | `geostack/` | pipekit, geotoolz (uv workspaces; members under `packages/`; geotoolz holds xrtoolz too), georeader | every environment (`default`) | [`docs/api/capabilities.md`](docs/api/capabilities.md) |
-| GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, geophysix, spectraldiffx, finitevolX, radiomax | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
+| GeoNumerics | `numerics/` | gaussx, functax, argminax, integrix, geophysix, spectraldiffx, gridax (a workspace; the package is under `packages/`), radiomax | `numerics` | [`capabilities_numerics.md`](docs/api/capabilities_numerics.md) |
 | GeoML | `geoml/` | geonnax, kernellib, filterax, vardax, gauss_flows, pyrox (a workspace: pyrox, -gauss, -xtreme, -gp, -lgm, -nn, -ssm), manipy | `geoml` | [`capabilities_geoml.md`](docs/api/capabilities_geoml.md) |
 | GeoModels | `geomodels/` | plumax, radtrax, sesmax (a workspace: sesmax, sesmax-core) | `geomodels` | [`capabilities_geomodels.md`](docs/api/capabilities_geomodels.md) |
 

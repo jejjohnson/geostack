@@ -85,7 +85,7 @@ walks a running example through each row, from detector counts to heatwave retur
 | | [xrtoolz](https://github.com/jejjohnson/geotoolz/tree/main/packages/xrtoolz-ops) | Operators for xarray data cubes, plus `-ops` and `-products`, in the geotoolz workspace |
 | | [georeader](https://github.com/spaceml-org/georeader) | Raster reading and the GeoTensor carrier (third-party, read-only here) |
 | **GeoNumerics** · structured numerics | [gaussx](https://github.com/jejjohnson/gaussx) | Structured linear algebra and Gaussian primitives on lineax |
-| | [finitevolX](https://github.com/jejjohnson/finitevolX) | Arakawa C-grid finite-volume operators |
+| | [gridax](https://github.com/jejjohnson/gridax) | Structured grids, land and ocean masks, and the finite-volume operators on them |
 | | [spectraldiffx](https://github.com/jejjohnson/spectraldiffx) | Pseudospectral differentiation, filters and PDE solvers |
 | | [geophysix](https://github.com/jejjohnson/geophysix) | Physical constants, the Earth's shape, its air and its sea water |
 | | [radiomax](https://github.com/jejjohnson/radiomax) | Observation geometry and radiometry |
@@ -125,7 +125,7 @@ run on both:
   <img alt="The repositories in five layer bands, with edges pointing down from each repository to those it depends on or imports" src="docs/images/overview/dependency_graph.svg" width="100%">
 </p>
 
-21 repositories, 44 packages and 66 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+21 repositories, 44 packages and 70 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 

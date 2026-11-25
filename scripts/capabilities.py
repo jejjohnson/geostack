@@ -100,7 +100,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "xrtoolz-products": "Archive readers (CMEMS, CDS, AEMET) and the CF registry.",
     # GeoNumerics
     "gaussx": "Structured linear algebra and Gaussian primitives on lineax.",
-    "finitevolx": "Arakawa C-grid finite-volume operators.",
+    "gridax": "Structured grids, masks and the finite-volume operators on them.",
     "spectraldiffx": "Pseudospectral differentiation, filters and PDE solvers.",
     "functax": "Function approximation: bases, quadrature rules, interpolation.",
     "argminax": "Optimisation with uncertainty at the minimum: solvers, curvature.",
@@ -130,7 +130,21 @@ UPSTREAM_BLURB: dict[str, str] = {
 
 NUMERICS: dict[str, list[str]] = {
     "gaussx": ["gaussx"],
-    "finitevolx": ["finitevolx"],
+    "gridax": [
+        "gridax",
+        *(
+            f"gridax.{sub}"
+            for sub in (
+                "advection",
+                "analysis",
+                "fields",
+                "pipekit",
+                "schemes",
+                "solvers",
+                "stencils",
+            )
+        ),
+    ],
     "spectraldiffx": ["spectraldiffx"],
     # functax, argminax and integrix export only their errors at the top
     # level, so their public submodules are listed
@@ -424,11 +438,6 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
         " pipekit_evaluate.Stage is the enum of where in a model's life a score"
         " may run."
     ),
-    "Divergence2D": (
-        "geoops.Divergence2D is a pipekit Operator on a GeoArray's collocated"
-        " map axes; finitevolx.Divergence2D is the finite-volume divergence on"
-        " an Arakawa C-grid."
-    ),
     "ValidationError": (
         "functax, argminax, integrix and radiomax each raise their own ValidationError,"
         " a subclass of the library's base error, so a caller can catch one"
@@ -457,25 +466,23 @@ ALLOWED_SHARED_NAMES: dict[str, str] = {
 # implementations. The check fails on a clash missing from this list and on an
 # entry that no longer clashes, so the list can only shrink.
 _PORTED = "ported from plumax to radtrax; leaves plumax with plumax#133"
-# the pins of finitevolX and spectraldiffx predate the moves; their main already
-# re-exports integrix's steppers and functax's transforms, so these go when the
-# pins move
 _FX_KERNELS = "functax.interp's RBF kernels beside kernellib's covariance kernels"
-_FX_DIFFOPS = "functax.diffops on fields beside kernellib's operators on kernels"
+_GRIDAX = "gridax's function on a C-grid beside another library's on something else"
+_DIFFOPS = (
+    "gridax's on a C-grid, functax.diffops' on a function and kernellib's on a kernel"
+)
 _PIPEKIT_JAX = (
     "moved from pipekit-jax to integrix.adjoint (pipekit#226); pipekit-jax keeps"
     " a deprecated name"
 )
 _TOY_MODELS = "toy models in both sesmax_core.testing and vardax"
-_STEPPERS = "moved from finitevolX to integrix.march (finitevolX#407)"
-_TRANSFORMS = "moved from spectraldiffx to functax.transform (spectraldiffx#166)"
+_TRANSFORMS = (
+    "moved from spectraldiffx to functax.transform (spectraldiffx#166);"
+    " spectraldiffx keeps its own copy"
+)
 _NN_LAYERS = "layers in both geonnax and pyrox-nn"
 _SAME_NAME = "different objects under one name in several GeoML and GeoStack libraries"
-_GEOPHYSIX = (
-    "moved from finitevolX to geophysix (finitevolX#446); the finitevolX pin"
-    " predates it"
-)
-_NUMERICS = "the same solver or grid in several GeoNumerics libraries"
+_NUMERICS = "the same solver in several GeoNumerics libraries"
 _VARDAX = "vardax's own copy of a pipekit-cycle name"
 _PLUME_PUFF = "the same name in plumax's plume and puff models"
 _RADTRAX_MF = (
@@ -490,38 +497,39 @@ _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
 
 KNOWN_CLASHES: dict[str, dict[str, str]] = {
     "numerics": {
-        "AB2Solver": _STEPPERS,
         "CapacitanceSolver": _NUMERICS,
+        "MultigridSolver": _NUMERICS,
+        "Scheme": "functax.interp's interpolation scheme, gridax.schemes' stencil one",
         "ChebyshevTransform1D": _TRANSFORMS,
         "ChebyshevTransform2D": _TRANSFORMS,
-        "buoyancy": _GEOPHYSIX,
-        "LeapfrogRAFSolver": _STEPPERS,
-        "SphericalGrid2D": _NUMERICS,
         "SphericalHarmonicTransform": _TRANSFORMS,
-        "SplitExplicitRKSolver": _STEPPERS,
         "build_capacitance_solver": _NUMERICS,
         "cell_area": (
             "functax.quad's quadrature rule of a grid beside geophysix.earth's areas"
             " on the ellipsoid"
         ),
-        "laplace_mode": (
-            "the loop moved to argminax.solve; gaussx deprecates its own copy"
-            " without forwarding and removes it a release later (gaussx#814)"
+        "coriolis": (
+            "gridax's tendencies (f v, -f u) beside geophysix's Coriolis parameter f"
         ),
-        "linear_density": _GEOPHYSIX,
-        "linear_density_anomaly": _GEOPHYSIX,
-        "linear_drho_dS": _GEOPHYSIX,
-        "linear_drho_dT": _GEOPHYSIX,
-        "reduced_gravity": _GEOPHYSIX,
+        "difference": "gridax's on a C-grid beside gridax.analysis' on bare arrays",
+        "divergence": _DIFFOPS,
+        "gradient": _DIFFOPS,
+        "interior": (
+            "gridax's field without its ghost ring beside gridax.stencils' padding"
+        ),
+        "laplacian": _DIFFOPS,
+        "sqrt": "gaussx's matrix square root beside gridax.fields' element-wise one",
         "vertical_velocity": (
-            "finitevolX's, from a divergence, beside geophysix.thermo's, from ω"
+            "gridax's, from a divergence, beside geophysix.thermo's, from ω"
         ),
     },
     "geoml": {
+        "ApplyMask": _GRIDAX,
         "Augment": "different objects in gauss_flows and xrtoolz",
         "Axis": "functax.geometry.Axis beside pipekit-evaluate's evaluation Axis",
         "Cubic": _FX_KERNELS,
         "DenseRank1": _NN_LAYERS,
+        "Difference": _GRIDAX,
         "Graph": "kernellib's Graph beside pipekit's operator Graph",
         "Identity": "functax.interp.Identity beside geoops' Identity operator",
         "ImplicitAdjoint": _VARDAX,
@@ -535,6 +543,7 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "MCSoftmaxDenseFA": _NN_LAYERS,
         "MultiHeadAttentionBE": _NN_LAYERS,
         "OrthogonalRandomFeatures": "random features in geonnax, kernellib, pyrox-nn",
+        "Pick": "pipekit_ops' on a dict of outputs beside gridax.pipekit's on a tuple",
         "Prior": "different objects in pipekit-evaluate and vardax",
         "RBF": _FX_KERNELS,
         "RandomFeatureGaussianProcess": _NN_LAYERS,
@@ -542,21 +551,22 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "ReducedBasis": _VARDAX,
         "SphericalHarmonicTransform": "spherical harmonics, geonnax and spectraldiffx",
         "Wendland": _FX_KERNELS,
-        "divergence": _FX_DIFFOPS,
+        "combine": "gridax's on fields beside pipekit_array's on named carriers",
+        "curl": "gridax's on a C-grid beside kernellib's on a kernel",
         "funk_hecke_coefficients": (
             "pyrox-gp's deprecated copy forwards to kernellib's; it goes when pyrox"
             " removes it"
         ),
         "gaussian_entropy": _DIVERGENCES,
-        "gradient": _FX_DIFFOPS,
         "kl_divergence": _DIVERGENCES,
-        "laplacian": _FX_DIFFOPS,
         "to_diffrax_adjoint": _PIPEKIT_JAX,
+        "to_dimarray": "geoarray's and gridax's, each of its own carrier",
         "to_optimistix_adjoint": (
             "moved from vardax to argminax.adjoint (vardax#278); the vardax pin"
             " predates it"
         ),
         "truncated_scan": _PIPEKIT_JAX,
+        "where": "gridax.fields' on fields beside pipekit_array's on named carriers",
     },
     "geomodels": {
         "AdaptiveWindowBackground": _RADTRAX_MF,
@@ -582,9 +592,6 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "log_simpson": _PLUMAX_LOGQUAD,
         "pareto_smoothed_log_weights": _PLUMAX_LOGQUAD,
         "Diagnostics": _SAME_NAME,
-        "Diffusion2D": (
-            "sesmax_core.testing's toy model beside finitevolX's diffusion operator"
-        ),
         "Domain": _SAME_NAME,
         "InstrumentSpec": _PORTED,
         "Lorenz63": _TOY_MODELS,

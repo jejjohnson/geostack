@@ -63,13 +63,13 @@ pipekit is seven packages with seven different jobs, and nine packages in the st
 |---|---|---|---|---|---|---|---|---|---|---|
 | geotoolz-ops | 28 | 14 | 5 | 2 | 7 | 0 | 0 | 0 | 0 | 0 |
 | geotoolz-array | 17 | 6 | 0 | 0 | 11 | 0 | 0 | 0 | 0 | 0 |
+| gridax | 13 | 7 | 0 | 0 | 5 | 0 | 1 | 0 | 0 | 0 |
 | xrtoolz-ops | 11 | 6 | 0 | 0 | 4 | 0 | 0 | 0 | 1 | 0 |
 | vardax | 8 | 1 | 0 | 0 | 0 | 7 | 0 | 0 | 0 | 0 |
 | geophysix | 5 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 0 | 0 |
 | radiomax | 5 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 0 | 0 |
 | sesmax-core | 5 | 2 | 0 | 0 | 0 | 0 | 3 | 0 | 0 | 0 |
 | geotoolz-patcher | 4 | 2 | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 0 |
-| finitevolx | 2 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
 | geotoolz-products | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | plumax | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | radtrax | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -128,13 +128,13 @@ That is two structures, one primitive, two strategies, one model, four steps, te
 |---|---|---|
 | geotoolz-ops | Operators and composition (subclasses `Operator`, `Sequential`); Control and execution; Named arrays | Recipes as data (2) |
 | geotoolz-array | Operators and composition; Named arrays |  |
+| gridax | Operators and composition; Named arrays; JAX bridge (subclasses `JaxOperator`) |  |
 | xrtoolz-ops | Operators and composition (subclasses `Operator`); Named arrays | Evaluation (1) |
 | vardax | Operators and composition (subclasses `Operator`); Cycles (subclasses `CallableObs`, `LinearObs`) |  |
 | geophysix | Named arrays |  |
 | radiomax | Named arrays |  |
 | sesmax-core | Operators and composition (subclasses `Operator`); JAX bridge (subclasses `JaxOperator`) |  |
 | geotoolz-patcher | Operators and composition (subclasses `Operator`); Training (subclasses `TrainingDataset`) | Named arrays (1) |
-| finitevolx | JAX bridge (subclasses `JaxOperator`) | Operators and composition (1) |
 | geotoolz-products | none | Operators and composition (1) |
 | plumax | Operators and composition (subclasses `Operator`) |  |
 | radtrax | Operators and composition (subclasses `Operator`) |  |

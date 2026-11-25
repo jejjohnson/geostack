@@ -83,23 +83,23 @@ def test_a_reverse_layer_edge_is_caught() -> None:
 
 def test_geostack_may_import_geonumerics_but_not_the_reverse() -> None:
     for user in ("geotoolz-ops", "xrtoolz-ops"):
-        found = dg.violations(_with_dependency(user, "finitevolx"))
-        assert not any(key[1:] == (user, "finitevolx") for key in found)
-    assert ("upward", "finitevolx", "geotoolz-ops") in dg.violations(
-        _with_dependency("finitevolx", "geotoolz-ops")
+        found = dg.violations(_with_dependency(user, "gridax"))
+        assert not any(key[1:] == (user, "gridax") for key in found)
+    assert ("upward", "gridax", "geotoolz-ops") in dg.violations(
+        _with_dependency("gridax", "geotoolz-ops")
     )
     # each guard is rendered from the same ranks
-    _, source = dg.guard("finitevolX", GRAPH)
+    _, source = dg.guard("gridax", GRAPH)
     assert '"geoops": "geotoolz-ops"' in source.split("ALLOWED")[0]  # forbidden
     _, source = dg.guard("geotoolz", GRAPH)
-    assert '"finitevolx": "finitevolx"' not in source.split("ALLOWED")[0]
-    assert '"finitevolx": "finitevolx"' in source
+    assert '"gridax": "gridax"' not in source.split("ALLOWED")[0]
+    assert '"gridax": "gridax"' in source
 
 
 def test_core_sits_below_geonumerics_and_geostack() -> None:
     # Core repositories keep their submodule directory but rank below both
     assert GRAPH.repos["pipekit"] == GRAPH.repos["functax"] == "core"
-    for user in ("geotoolz-ops", "finitevolx"):
+    for user in ("geotoolz-ops", "gridax"):
         found = dg.violations(_with_dependency(user, "functax"))
         assert ("upward", user, "functax") not in found
     assert ("upward", "functax", "geotoolz-ops") in dg.violations(

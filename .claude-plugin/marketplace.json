@@ -11,19 +11,6 @@
       "description": "The root of the GeoStack skill tree: the role ladder (structure, primitive, strategy, model, algorithm, step, recipe) that every library's skills are written in, the three organising axes (the L0–L5 data levels, the modeling cycle and the six-step cycle), the house styles for Python, maths notation and code sketches, and the standards for a library's README, its documentation figures, drawn in geostack, its mathematical reference and its design docs."
     },
     {
-      "name": "finitevolx",
-      "source": {
-        "source": "git-subdir",
-        "url": "jejjohnson/finitevolX",
-        "path": "plugins/finitevolx"
-      },
-      "description": "Write finite-volume ocean and atmosphere models in JAX on finitevolX — Arakawa C-grids with ghost rings, raw stencils and difference / interpolation operators, WENO / TVD advection, land-sea masks with coastal stencil fallback, boundary conditions, diagnostics, forcing, spectral / CG / multigrid elliptic solvers and SSP time steppers — instead of hand-writing shifted slices, ghost-cell fills, Poisson solvers and Runge–Kutta loops.",
-      "dependencies": [
-        "gaussx",
-        "spectraldiffx"
-      ]
-    },
-    {
       "name": "functax",
       "source": {
         "source": "git-subdir",
@@ -69,6 +56,34 @@
       "description": "Build geospatial pipelines on the geotoolz stack — find and index files (geocatalog), read EO products (geoproducts), tile and stitch (geopatcher), compute (geotoolz), object storage (geocloud) — instead of re-implementing them.",
       "dependencies": [
         "functax"
+      ]
+    },
+    {
+      "name": "finitevolx",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/gridax",
+        "path": "plugins/finitevolx"
+      },
+      "description": "Write finite-volume ocean and atmosphere models in JAX on finitevolX — Arakawa C-grids with ghost rings, raw stencils and difference / interpolation operators, WENO / TVD advection, land-sea masks with coastal stencil fallback, boundary conditions, diagnostics, forcing, spectral / CG / multigrid elliptic solvers and SSP time steppers — instead of hand-writing shifted slices, ghost-cell fills, Poisson solvers and Runge–Kutta loops.",
+      "dependencies": [
+        "gaussx",
+        "integrix",
+        "spectraldiffx"
+      ]
+    },
+    {
+      "name": "integrix",
+      "source": {
+        "source": "git-subdir",
+        "url": "jejjohnson/integrix",
+        "path": "plugins/integrix"
+      },
+      "description": "Write integration in JAX on integrix — sums against a quadrature rule over one axis or several, band-weighted means, log-integrals, running integrals, adaptive Gauss–Kronrod, tanh–sinh and Romberg quadrature, Monte Carlo, quasi-Monte Carlo and importance-sampling expectations, fixed-step and IMEX time steppers that extend diffrax, and checkpointed or truncated adjoints — instead of re-implementing them with trapz, scipy.integrate and hand-written loops.",
+      "dependencies": [
+        "geostack",
+        "functax",
+        "gaussx"
       ]
     },
     {

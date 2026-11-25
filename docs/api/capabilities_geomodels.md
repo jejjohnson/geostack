@@ -17,7 +17,7 @@ This page is the GeoModels layer. It may import GeoML, GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at plumax 0.3.0, radtrax 0.1.0, sesmax 0.0.0, sesmax-core 0.1.0.
+Listed at plumax 0.3.1, radtrax 0.2.0, sesmax 0.0.0, sesmax-core 0.3.0.
 
 ## Upstream: `plumax`
 
@@ -525,23 +525,32 @@ Simple Earth-system models: state, terms, steppers, forcing.
 
 | Name | Kind | What it does |
 |---|---|---|
+| `AbstractForcing` | class | Base class for forcing operators. |
 | `BasisForcing` | class | Reduced-order forcing: a fixed space-time frame driven by a coefficient vector. |
 | `Compose` | class | Operator composition: ``Compose(outer, inner)(state) = outer(inner(state))``. |
 | `ConstantForcing` | class | Time-independent forcing field. |
 | `ConstantInTime` | class | Time-independent gate: ``b(t) = ones(m)`` (the ``Phi_t = I`` case). |
 | `Diagnostics` | class | Base class for on-demand diagnostic quantities. |
+| `ForcingProduct` | class | Modulated forcing: ``F = alpha * F_inner``. |
 | `ForcingProtocol` | class | Base class for forcing terms. |
+| `ForcingSum` | class | Additive composition of forcings: ``F = F_1 + F_2 + ... + F_n``. |
 | `ForcingTerm` | class | Lift a :class:`ForcingProtocol` field into the term algebra as a tendency. |
 | `FourierInTime` | class | Cosine temporal gate ``b_a(t) = cos(omega_a t + phase_a)``. |
 | `GaussianWindowsInTime` | class | Localized temporal gate ``b_a(t) = exp(-(t - tau_a)^2 / (2 T_a^2))``. |
 | `HatInTime` | class | Piecewise-linear gate on knots, so the coefficients are values at the knots. |
-| `InterpolatedForcing` | class | Data-driven forcing via diffrax path interpolation. |
+| `InterpolatedForcing` | class | Forcing from samples (t_k, u_k), read between them as a diffrax path. |
+| `LinearDrag2D` | class | Linear drag on a 2-D Arakawa C-grid. |
+| `LinearDrag3D` | class | Linear bottom drag on a 3-D Arakawa C-grid. |
 | `ModalTransform` | class | Precomputed layer-to-mode and mode-to-layer transforms. |
 | `Model` | class | Abstract base class defining the sesmax model contract. |
 | `NoForcing` | class | Zero forcing (free evolution). |
 | `OperatorTerm` | class | Lift a pipekit operator into the :class:`Term` algebra. |
 | `Params` | class | Base class for differentiable model parameters. |
 | `PhysConsts` | class | Base class for frozen physical constants. |
+| `QuadraticDrag2D` | class | Quadratic bottom drag on a 2-D Arakawa C-grid. |
+| `QuadraticDrag3D` | class | Quadratic bottom drag on a 3-D Arakawa C-grid. |
+| `RayleighDamping2D` | class | Rayleigh damping of a T-point field on a 2-D Arakawa C-grid. |
+| `RayleighDamping3D` | class | Rayleigh damping of a T-point field on a 3-D Arakawa C-grid. |
 | `Scaled` | class | A term multiplied by a scalar coefficient. |
 | `ScaledModel` | class | Integrate ``inner`` in transformed coordinates. |
 | `Scales` | class | Characteristic scales of a run. |
@@ -556,9 +565,13 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `Term` | class | A single additive contribution to a model right-hand side. |
 | `TermFn` | class | Adapt a plain callable into a :class:`Term`. |
 | `TermModel` | class | A :class:`Model` whose RHS is an assembled :class:`Term` tree. |
+| `TimeVaryingForcing` | class | Bundle a time-agnostic forcing with time-dependent input fields. |
 | `TransformedForcing` | class | Apply a pointwise transform to a base forcing (e.g. log-space synthesis). |
 | `VectorBasisForcing` | class | Reduced-order *vector* forcing: a fixed vector frame driven by coeffs. |
 | `VectorSpatialBasis` | class | A precomputed vector dictionary plus the per-mode prior std. |
+| `WindCurl2D` | class | Wind-stress curl forcing of the vorticity / QG potential vorticity. |
+| `WindStress2D` | class | Surface wind-stress forcing on a 2-D Arakawa C-grid. |
+| `WindStress3D` | class | Surface wind-stress forcing on a 3-D Arakawa C-grid. |
 | `add_to` | function | Build a placement that adds a field onto one named state component. |
 | `add_vector_to` | function | Build a placement that adds a component-major field onto named components. |
 | `append_to_dataset` | function | Append a Dataset to an existing zarr store along a dimension. |
@@ -571,13 +584,21 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `frozen` | function | Hide a parameter from gradients while keeping it a runtime value. |
 | `implicit` | function | Tag ``term`` for the implicit stage of an IMEX integrator. |
 | `interval` | function | Constrain a parameter to the open interval ``(lower, upper)``. |
+| `linear_drag` | function | Rayleigh (linear) bottom-drag tendency :math:`-\text{coef}\cdot u`. |
+| `linear_drag_tendency` | function | Linear (Rayleigh-type) drag tendency on one velocity component. |
 | `load_dataset` | function | Open a zarr store as an xarray Dataset. |
 | `matern_spectral_density` | function | Matérn power spectral density ``S(omega)`` at ``omega = sqrt_lambda``. |
 | `partition` | function | Split ``term`` into ``(explicit, implicit)`` sub-terms by kind. |
 | `positive` | function | Constrain a parameter to be strictly positive. |
+| `pressure_from_divergence` | function | Solve for the pressure p at T points of a pressure projection. |
+| `pv_inversion` | function | QG potential-vorticity inversion for ψ_k at X points, layer by layer. |
+| `quadratic_drag_tendency` | function | Quadratic bottom-drag tendency on one velocity component. |
+| `rayleigh_relaxation` | function | Sponge / relaxation tendency :math:`-\text{coef}\cdot W\cdot(x - x_\text{ref})`. |
+| `rayleigh_tendency` | function | Rayleigh damping tendency toward a reference state. |
 | `save_dataset` | function | Persist a Dataset to a zarr store. |
 | `scales_attrs` | function | Flat Dataset attrs describing the scale set a run used. |
 | `snapshots_to_dataset` | function | Convert a time-stacked PyTree of states to an xarray Dataset. |
+| `solve_pde` | function | Integrate dy/dt = P(f(t, B(y))) with `diffrax.diffeqsolve`. |
 | `spatial_from_divfree` | function | Build a :class:`VectorSpatialBasis` of divergence-free velocity atoms. |
 | `spatial_from_eof` | function | Build a :class:`SpatialBasis` from empirical orthogonal functions (PCA). |
 | `spatial_from_fourier` | function | Build a :class:`SpatialBasis` from the box-Laplacian (HSGP) eigenbasis. |
@@ -588,9 +609,11 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `spatial_from_wavelet` | function | Build a :class:`SpatialBasis` from the orthonormal 2D wavelet basis. |
 | `stable_step` | function | Re-exported from `integrix`. |
 | `state_to_dataset` | function | Convert a single model State to an xarray Dataset. |
+| `streamfunction_from_vorticity` | function | Invert the vorticity-streamfunction relation for ψ at X points. |
 | `tile_in_time` | function | Lift a spatial dictionary into a separable space-time frame. |
 | `trainable_mask` | function | Boolean pytree marking which leaves an optimiser may update. |
 | `transform_attrs` | function | Per-variable ``loc`` / ``scale`` attrs for an affine transform. |
+| `wind_stress_tendency` | function | Momentum tendency from a surface wind stress. |
 
 ### `sesmax_core.da`
 
