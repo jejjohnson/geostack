@@ -3133,6 +3133,7 @@ environments:
       - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.4#363927dedc4df58062a38c94f750d6349deb74fb
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -3581,6 +3582,7 @@ environments:
       - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.4#363927dedc4df58062a38c94f750d6349deb74fb
       - pypi: https://files.pythonhosted.org/packages/01/b9/41642877fe741db56d240833c8822188b663c4c5d52beb087964774035d4/wrapt-2.5.1-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
@@ -19477,6 +19479,7 @@ packages:
   - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
   - radtrax @ git+https://github.com/jejjohnson/radtrax@v0.1.0
   - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
+  - diagnostix @ git+https://github.com/jejjohnson/diagnostix@v0.0.4
   - einx>=0.4
   - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.6
   - functax @ git+https://github.com/jejjohnson/functax@v0.0.11
@@ -20061,6 +20064,19 @@ packages:
   - jupytext>=1.16.0 ; extra == 'docs'
   - matplotlib>=3.9.0 ; extra == 'docs'
   - spectraldiffx[test,dev,exp,jlab,docs,examples] ; extra == 'all'
+  requires_python: '>=3.12,<3.14'
+- pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.4#363927dedc4df58062a38c94f750d6349deb74fb
+  name: diagnostix
+  version: 0.0.4
+  requires_dist:
+  - numpy>=2.0
+  - jaxtyping>=0.3
+  - gridax @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.1#subdirectory=packages/gridax
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
+  - jax>=0.4.38 ; extra == 'jax'
+  - xarray>=2024.10 ; extra == 'xarray'
   requires_python: '>=3.12,<3.14'
 - pypi: https://files.pythonhosted.org/packages/01/b9/41642877fe741db56d240833c8822188b663c4c5d52beb087964774035d4/wrapt-2.5.1-cp313-cp313-macosx_11_0_arm64.whl
   name: wrapt
