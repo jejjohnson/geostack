@@ -49,14 +49,14 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 <!-- shelf:units:begin -->
 | Unit | Rungs | Home band | Subpackages | Names |
 |---|---|---|---|---|
-| Structures and primitives | ⓪ ① | numerics | `gaussx._operators` 41, `gaussx._primitives` 29, `gaussx._tags` 24, `gaussx._linalg` 20, `gaussx._gmrf` 12, `gaussx._sparse` 4 | 130 |
-| Strategies | ②, setup | numerics, ML | `gaussx._strategies` 20, `gaussx._randomized` 10, `gaussx._sketching` 7, `gaussx._preconditioners` 5, `gaussx._solve_frontend` 2 | 44 |
-| Gaussians | ③ | ML | `gaussx._distributions` 19, `gaussx._expfam` 16 | 35 |
-| Gaussian processes | ④ | ML | `gaussx._gp` 29 | 29 |
-| State space | ④ | ML | `gaussx._ssm` 54 | 54 |
+| Structures and primitives | ⓪ ① | numerics | `gaussx._operators` 36, `gaussx._primitives` 28, `gaussx._tags` 24, `gaussx._linalg` 20, `gaussx._gmrf` 12, `gaussx._sparse` 4 | 124 |
+| Strategies | ②, setup | numerics, ML | `gaussx._strategies` 26, `gaussx._randomized` 10, `gaussx._sketching` 7, `gaussx._preconditioners` 5, `gaussx._solve_frontend` 4, `gaussx._known_values` 2 | 54 |
+| Gaussians | ③ | ML | `gaussx._distributions` 19, `gaussx._expfam` 14 | 33 |
+| Gaussian processes | ④ | ML | `gaussx._gp` 28 | 28 |
+| State space | ④ | ML | `gaussx._ssm` 55 | 55 |
 | Quadrature | ② to ④ | ML | `gaussx._quadrature` 45 | 45 |
-| Inference and ensembles | ④ | ML | `gaussx._inference` 40 | 40 |
-| **All** | | | | **377** |
+| Inference and ensembles | ④ | ML | `gaussx._inference` 39 | 39 |
+| **All** | | | | **378** |
 <!-- shelf:units:end -->
 :::
 
@@ -75,13 +75,14 @@ Every count on this page comes from `scripts/skill_shelf.py`, which reads the su
 | pyrox-gauss | 26 | 9 | 3 | 8 | 0 | 6 | 0 | 0 |
 | kernellib | 25 | 16 | 9 | 0 | 0 | 0 | 0 | 0 |
 | argminax | 22 | 10 | 6 | 0 | 0 | 0 | 0 | 6 |
-| vardax | 21 | 15 | 1 | 3 | 0 | 0 | 0 | 2 |
-| finitevolx | 10 | 6 | 4 | 0 | 0 | 0 | 0 | 0 |
+| vardax | 20 | 14 | 1 | 3 | 0 | 0 | 0 | 2 |
+| gridax | 11 | 6 | 5 | 0 | 0 | 0 | 0 | 0 |
 | radtrax | 10 | 5 | 2 | 3 | 0 | 0 | 0 | 0 |
 | gauss-flows | 7 | 0 | 0 | 0 | 0 | 4 | 2 | 1 |
+| spectraldiffx | 7 | 7 | 0 | 0 | 0 | 0 | 0 | 0 |
 | plumax | 6 | 4 | 0 | 1 | 0 | 0 | 0 | 1 |
 | pyrox-nn | 6 | 5 | 0 | 0 | 0 | 0 | 0 | 1 |
-| spectraldiffx | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 |
+| sesmax-core | 4 | 0 | 4 | 0 | 0 | 0 | 0 | 0 |
 | manipy-jax | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
@@ -300,12 +301,13 @@ Below the threshold, with no subclass, the unit is named on an "also uses" line.
 | kernellib | Structures and primitives; Strategies |  |
 | argminax | Structures and primitives; Strategies; Inference and ensembles |  |
 | vardax | Structures and primitives; Gaussians | Strategies (1); Inference and ensembles (2) |
-| finitevolx | Structures and primitives; Strategies |  |
+| gridax | Structures and primitives; Strategies |  |
 | radtrax | Structures and primitives; Gaussians | Strategies (2) |
 | gauss-flows | State space | Quadrature (2); Inference and ensembles (1) |
+| spectraldiffx | Structures and primitives |  |
 | plumax | Structures and primitives | Gaussians (1); Inference and ensembles (1) |
 | pyrox-nn | Structures and primitives | Inference and ensembles (1) |
-| spectraldiffx | Structures and primitives |  |
+| sesmax-core | Strategies |  |
 | manipy-jax | Structures and primitives |  |
 <!-- shelf:cards:end -->
 :::

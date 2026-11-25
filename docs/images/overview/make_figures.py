@@ -1163,7 +1163,7 @@ LAYERS = {
     "GeoNumerics": (
         "Earth physics, PDE operators on grids, spectral methods, radiometry",
         NUMERICS,
-        ["geophysix", "spectraldiffx", "finitevolX", "radiomax"],
+        ["geophysix", "spectraldiffx", "gridax", "radiomax"],
     ),
     "Core": (
         "Maths and plumbing that know no geography",
@@ -1436,7 +1436,7 @@ DG_LAYERS = [
         0.0,
         1.0,
         [
-            [("finitevolX", 0.5), ("radiomax", 0.7)],
+            [("gridax", 0.5), ("radiomax", 0.7)],
             [("spectraldiffx", 0.2), ("geophysix", 0.62)],
         ],
     ),
@@ -1804,7 +1804,7 @@ STATUS = {
     "planned": (LINE, CARD, True),
 }
 ALONGSIDE = [  # phases 1-3, one per lower layer
-    ("1", "GeoNumerics", NUMERICS, "gaussx · spectraldiffx · finitevolX"),
+    ("1", "GeoNumerics", NUMERICS, "gaussx · spectraldiffx · gridax"),
     ("2", "GeoML", ML, "geonnax · kernellib · pyrox · vardax · filterax · …"),
     ("3", "GeoModels", STATE, "somax · plumax · radtrax"),
 ]

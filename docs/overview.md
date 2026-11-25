@@ -420,7 +420,7 @@ A package only imports from the layers below it, so there are no circular depend
 2. **geonnax** owns basis functions, neural layers and coordinate transforms. somax and the other models compose them and never reimplement them.
 3. **kernellib** owns covariance kernels and tapers. It imports no inference library.
 4. **argminax** owns optimisation with uncertainty at the minimum: solvers, curvature, retrieval diagnostics, and the Bayesian learning rule as optax transforms (`argminax.blr`). It imports no model library.
-5. **spectraldiffx** and **finitevolx** own discretisations (spectral and finite-volume operators, no physics).
+5. **spectraldiffx** and **gridax** own discretisations (spectral and finite-volume operators, no physics).
 6. **pyrox** owns GP and Bayesian NN building blocks for NumPyro. Its pipekit surface (`KrigingOperator`) only lives in `pyrox.adapters.pipekit`.
 7. **filterax** owns ensemble Kalman methods and **vardax** owns 3D/4D-Var. Each one only exposes an `AnalysisStep` through `adapters/pipekit.py`.
 8. **gauss_flows** owns Gaussianization and normalizing flows, and **xtremax** owns extreme-value and point-process models. Neither imports pipekit outside an adapter.
@@ -578,7 +578,7 @@ geotoolz and xrtoolz share the same pipekit operator algebra, and only the carri
 |---|---|
 | `gaussx` | Structured linear algebra, Gaussian primitives, exponential family; wraps lineax and matfree |
 | `spectraldiffx` | Pseudospectral differentiation, filters, PDE solvers |
-| `finitevolx` | Arakawa C-grid finite-volume operators |
+| `gridax` | Structured grids, land and ocean masks, and the finite-volume operators on them |
 
 This layer is pure math with no domain knowledge, and all of it is `eqx.Module`-based, jittable and JAX-traceable. See the [gaussx example](#ex-gaussx).
 :::
@@ -676,7 +676,7 @@ None of these block the work, but all of them deserve some thought before we com
 - **A per-step observation error.** An `obs_err_source` is proposed in [Report 10, workstream B](reports/10_pipekit_cycle.md#r10-ws-b).
 - **Two evaluation APIs.** [Report 15, workstream D](reports/15_benchmarking.md#r15-ws-d) builds the contract and the tracks on the shipped `Benchmark` cube (`from_contract`, several references per run), with no separate `MultiTrackEvaluation`.
 - **Where `xrreader` stops and `georeader` starts.** A mission reader lives with its output carrier ([Report 16, workstream E](reports/16_geo_data_stack.md#r16-ws-e)).
-- **Which stack somax and spectraldiffx belong to.** Rule 5 of the [package boundaries](geomodels/package_boundaries.md#pb-rules) puts somax in GeoModels, and spectraldiffx and finitevolx in GeoNumerics. methanex is still unplaced.
+- **Which stack somax and spectraldiffx belong to.** Rule 5 of the [package boundaries](geomodels/package_boundaries.md#pb-rules) puts somax in GeoModels, and spectraldiffx and finitevolx (gridax today) in GeoNumerics. methanex is still unplaced.
 :::
 
 :::{dropdown} Sequencing
@@ -718,7 +718,7 @@ Each phase produces packages which are useful on their own ([](#tbl-phases)).
 
 | Phase | Scope | Status | Time |
 |---|---|---|---|
-| 1 | GeoNumerics: gaussx (v0.0.6), spectraldiffx, finitevolx | gaussx done; the rest drafts | ongoing |
+| 1 | GeoNumerics: gaussx (v0.0.6), spectraldiffx, gridax | gaussx done; the rest drafts | ongoing |
 | 2 | GeoML: geonnax, kernellib, pyrox, filterax, vardax, gauss_flows, xtremax | in progress | each at its own pace |
 | 3 | GeoModels: somax, plumax, radtrax | some done | project-driven |
 | 4 | Pipeline framework | **current focus** | ~3–4 months |

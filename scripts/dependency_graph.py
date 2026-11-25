@@ -59,7 +59,7 @@ TITLES = {
 #: within a layer, a repository may import only repositories of a lower tier
 TIERS: dict[str, dict[str, int]] = {
     "core": {"pipekit": 0, "gaussx": 0, "functax": 0, "argminax": 1, "integrix": 1},
-    "numerics": {"geophysix": 0, "spectraldiffx": 0, "finitevolX": 1, "radiomax": 1},
+    "numerics": {"geophysix": 0, "spectraldiffx": 0, "gridax": 1, "radiomax": 1},
     "geostack": {"georeader": 0, "geotoolz": 1},
     "geoml": {
         "geonnax": 0,
@@ -92,7 +92,7 @@ TIER_ROLES = {
     ),
     "numerics": (
         "physical facts about the Earth, and spectral methods",
-        "finite volume, and observation geometry and radiometry",
+        "grids and finite volume, and observation geometry and radiometry",
     ),
     "geostack": (
         "readers",

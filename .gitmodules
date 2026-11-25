@@ -18,10 +18,6 @@
 	path = references/numerics/gaussx
 	url = https://github.com/jejjohnson/gaussx.git
 	branch = main
-[submodule "references/finitevolX"]
-	path = references/numerics/finitevolX
-	url = https://github.com/jejjohnson/finitevolX.git
-	branch = main
 [submodule "references/spectraldiffx"]
 	path = references/numerics/spectraldiffx
 	url = https://github.com/jejjohnson/spectraldiffx.git
@@ -81,4 +77,8 @@
 [submodule "references/geomodels/sesmax"]
 	path = references/geomodels/sesmax
 	url = https://github.com/jejjohnson/sesmax.git
+	branch = main
+[submodule "references/numerics/gridax"]
+	path = references/numerics/gridax
+	url = https://github.com/jejjohnson/gridax.git
 	branch = main

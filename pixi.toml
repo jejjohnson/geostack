@@ -83,7 +83,7 @@ xrtoolz-products = { path = "references/geostack/geotoolz/packages/xrtoolz-produ
 # each sibling pinned to its submodule (their own [tool.uv.sources] pin older
 # commits of one another; see .plans/submodules_by_stack.md).
 gaussx = { path = "references/numerics/gaussx", editable = true }
-finitevolx = { path = "references/numerics/finitevolX", editable = true }
+gridax = { path = "references/numerics/gridax/packages/gridax", editable = true }
 spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
 functax = { path = "references/numerics/functax", editable = true }
 argminax = { path = "references/numerics/argminax", editable = true }
@@ -107,6 +107,9 @@ plumax = { path = "references/geomodels/plumax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
+# finitevolx is gridax before its rename. plumax.les_fvm still imports it, so it is
+# installed from the last commit geostack tracked it at until plumax moves to gridax.
+finitevolx = { git = "https://github.com/jejjohnson/gridax", rev = "5205566919a13093ef3da96c50b73b8ca5c5c6d1" }
 
 [feature.dev.dependencies]
 pytest = ">=8"
@@ -161,7 +164,9 @@ plotly = ">=5"
 # numpyro stays listed because argminax still declares a numpyro extra.
 gaussx = { path = "references/numerics/gaussx", editable = true }
 numpyro = ">=0.21"
-finitevolx = { path = "references/numerics/finitevolX", editable = true }
+# gridax.solvers and gridax.pipekit need gridax's jax and pipekit extras; the
+# override drops extras, and every library in them is in this environment
+gridax = { path = "references/numerics/gridax/packages/gridax", editable = true }
 spectraldiffx = { path = "references/numerics/spectraldiffx", editable = true }
 # integrix asks for functax[jax] and functax's quadrature plans want SciPy; the
 # override replaces the requirement, extras included, so they come in through
