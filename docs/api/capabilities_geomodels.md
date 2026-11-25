@@ -148,7 +148,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `FourDVarProblem` | class | A strong-constraint 4D-Var problem over a flat source control. |
 | `FourDVarResult` | class | Outcome of a 4D-Var minimisation. |
 | `GaussianSource` | class | Gaussian point source with constant or time-varying emission rate. |
-| `HorizontalBC` | class | Apply a :class:`BoundaryConditionSet` to every z-slice of a 3-D field. |
+| `HorizontalBC` | class | Fill the lateral ghosts of every z-slice of a 3-D field. |
 | `PlumeGrid3D` | class | Arakawa C-grid + cached interior coordinate arrays. |
 | `PosteriorCovariance` | class | Laplace (Gauss-Newton) posterior covariance of a 4D-Var solution. |
 | `PrescribedWindField` | class | Wind velocity evaluator on the full ``[Nz, Ny, Nx]`` field layout. |
