@@ -17,7 +17,7 @@ This page is the GeoStack layer. It may import GeoNumerics.
 
 <!-- upstream -->
 
-Listed at pipekit-ops 0.2.4, pipekit 0.3.0, pipekit-array 0.1.6, pipekit-cycle 0.2.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.2.0, pipekit-train 0.2.0, georeader-spaceml 2.4.2, geotoolz-ops 0.19.0, geotoolz-array 0.5.0, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.15.0, geotoolz-products 0.7.1, xrtoolz-ops 0.6.0, xrtoolz-products 0.5.1.
+Listed at pipekit-ops 0.3.0, pipekit 0.3.0, pipekit-array 0.2.0, pipekit-cycle 0.2.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.3.0, pipekit-train 0.2.0, georeader-spaceml 2.4.2, geotoolz-ops 0.20.0, geotoolz-array 0.6.1, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.16.0, geotoolz-products 0.7.1, xrtoolz-ops 0.7.1, xrtoolz-products 0.5.1.
 
 ## Upstream: `pipekit-ops`
 

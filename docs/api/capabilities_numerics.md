@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.8.1, gridax 0.3.2, spectraldiffx 0.1.2, functax 0.0.13, argminax 0.0.7, integrix 0.0.11, geophysix 0.0.7, radiomax 0.0.9, tracerax 0.0.4.
+Listed at gaussx 0.8.1, gridax 0.3.3, spectraldiffx 0.1.2, functax 0.0.13, argminax 0.0.7, integrix 0.0.11, geophysix 0.0.9, radiomax 0.0.12, tracerax 0.0.4.
 
 ## Upstream: `gaussx`
 

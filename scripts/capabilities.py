@@ -128,6 +128,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "sesmax": "The sesmax workspace in one install; an umbrella that holds no code.",
     "sesmax-core": "Simple Earth-system models: state, terms, steppers, forcing.",
     "sesmax-ocean": "Simple ocean models: shallow water and quasi-geostrophic.",
+    "sesmax-experiment": "What is done with a model: runs, monitors, checkpoints.",
 }
 
 NUMERICS: dict[str, list[str]] = {
@@ -302,14 +303,13 @@ GEOMODELS: dict[str, list[str]] = {
         *(
             f"sesmax_core.{sub}"
             for sub in (
-                "checkpoint",
+                "component",
                 "da",
                 "domain",
                 "flows",
                 "forcing",
                 "gfd",
                 "io",
-                "monitor",
                 "operators",
                 "scales",
                 "solvers",
@@ -326,6 +326,10 @@ GEOMODELS: dict[str, list[str]] = {
             for sub in ("eval", "forcing", "qg", "resolution", "spherical", "swm")
         ),
     ],
+    "sesmax-experiment": [
+        "sesmax_experiment",
+        *(f"sesmax_experiment.{sub}" for sub in ("checkpoint", "monitor", "run")),
+    ],
 }
 
 # The four layers as {layer: (title, libraries, index page, layers it is checked
@@ -333,7 +337,7 @@ GEOMODELS: dict[str, list[str]] = {
 # later layer adds one. Edges between layers point down: GeoModels may import
 # GeoML, GeoStack and GeoNumerics; GeoML may import GeoStack and GeoNumerics;
 # GeoStack may import GeoNumerics, which imports none of the others. Of
-# GeoNumerics, GeoStack's environment holds only geophysix and radiomax, so
+# GeoNumerics, GeoStack's environment holds only geophysix, radiomax and gridax, so
 # GeoStack's names are not checked with it.
 LAYERS: dict[str, tuple[str, dict[str, list[str]], Path, tuple[str, ...]]] = {
     "geostack": ("GeoStack", UPSTREAM, INDEX, ()),

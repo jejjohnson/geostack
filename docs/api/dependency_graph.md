@@ -105,6 +105,7 @@ flowchart TB
   geophysix --> pipekit
   geotoolz --> functax
   geotoolz --> georeader
+  geotoolz --> gridax
   geotoolz --> radiomax
   gridax --> geophysix
   gridax -.-> integrix
@@ -148,7 +149,7 @@ flowchart TB
 ```
 :::
 
-22 repositories, 46 packages and 74 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+22 repositories, 47 packages and 75 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -368,6 +369,7 @@ cannot import, so most of its tests could no longer be collected.
 | geotoolz | functax | base | `geotoolz-array → functax` |
 | geotoolz | geophysix | base | `geotoolz-ops → geophysix` |
 | geotoolz | georeader | base | `geotoolz-cloud → georeader-spaceml` |
+| geotoolz | gridax | base | `xrtoolz-ops → gridax` |
 | geotoolz | pipekit | base | `geotoolz-array → pipekit-array` |
 | geotoolz | radiomax | base | `geotoolz-ops → radiomax` |
 | geophysix | pipekit | base | `geophysix → pipekit-array` |
