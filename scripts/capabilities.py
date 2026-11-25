@@ -628,6 +628,9 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "Scaled": _SAME_NAME,
         "Sum": _SAME_NAME,
         "infer_emission_rate": _PLUME_PUFF,
+        "kinetic_energy": (
+            "gridax's field on a C-grid beside sesmax_ocean.eval's metric of a state"
+        ),
         "number_density": (
             "radtrax's in atm and cm⁻³, around geophysix.thermo's in Pa and m⁻³"
         ),
