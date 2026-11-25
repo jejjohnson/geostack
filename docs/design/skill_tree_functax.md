@@ -63,6 +63,7 @@ The five small modules share one skill: each is a few functions, and a task that
 |---|---|---|---|---|---|---|---|---|---|
 | geonnax | 68 | 14 | 0 | 0 | 41 | 1 | 8 | 0 | 4 |
 | kernellib | 15 | 2 | 0 | 0 | 12 | 1 | 0 | 0 | 0 |
+| tracerax | 14 | 7 | 0 | 6 | 0 | 1 | 0 | 0 | 0 |
 | pyrox-nn | 8 | 1 | 0 | 0 | 7 | 0 | 0 | 0 | 0 |
 | spectraldiffx | 7 | 1 | 0 | 0 | 2 | 2 | 0 | 0 | 2 |
 | gauss-flows | 6 | 1 | 0 | 5 | 0 | 0 | 0 | 0 | 0 |
@@ -85,6 +86,7 @@ The five small modules share one skill: each is a few functions, and a task that
 |---|---|---|
 | geonnax | Geometry; Basis; Diffops; Transform | Quad (1) |
 | kernellib | Basis | Geometry (2); Quad (1) |
+| tracerax | Geometry; Interp | Quad (1) |
 | pyrox-nn | Basis | Geometry (1) |
 | spectraldiffx | none | Geometry (1); Basis (2); Quad (2); Transform (2) |
 | gauss-flows | Interp | Geometry (1) |

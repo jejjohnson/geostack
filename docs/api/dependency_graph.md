@@ -107,13 +107,13 @@ flowchart TB
   geotoolz --> georeader
   geotoolz --> radiomax
   gridax --> geophysix
+  gridax -.-> integrix
   gridax -.-> spectraldiffx
   integrix --> functax
   integrix --> gaussx
   kernellib --> functax
   kernellib --> gaussx
   manipy --> kernellib
-  pipekit -.-> integrix
   plumax --> gridax
   plumax --> integrix
   plumax --> kernellib
@@ -148,7 +148,7 @@ flowchart TB
 ```
 :::
 
-22 repositories, 45 packages and 75 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+22 repositories, 46 packages and 74 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -235,7 +235,6 @@ is the rule's name in [](#tbl-dg-violations).
 | GeoNumerics | 2 | tracerax | Lagrangian particles |
 | GeoNumerics | 1 | gridax, radiomax | grids and finite volume, and observation geometry and radiometry |
 | GeoNumerics | 0 | geophysix, spectraldiffx | physical facts about the Earth, and spectral methods |
-| Core | 2 | pipekit (pipekit, pipekit-jax) | pipelines on JAX, which hand their adjoints to integrix |
 | Core | 1 | argminax, integrix | optimisation and integration |
 | Core | 0 | functax, gaussx, pipekit | pipelines, linear algebra, Gaussians and function approximation |
 <!-- tier-table:end -->
@@ -388,6 +387,5 @@ cannot import, so most of its tests could no longer be collected.
 | argminax | gaussx | base | `argminax → gaussx` |
 | integrix | functax | base | `integrix → functax` |
 | integrix | gaussx | base | `integrix → gaussx` |
-| pipekit | integrix | extra | `pipekit-jax → integrix` |
 <!-- edge-table:end -->
 :::

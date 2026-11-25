@@ -127,6 +127,7 @@ UPSTREAM_BLURB: dict[str, str] = {
     "radtrax": "Differentiable radiative transfer for methane remote sensing.",
     "sesmax": "The sesmax workspace in one install; an umbrella that holds no code.",
     "sesmax-core": "Simple Earth-system models: state, terms, steppers, forcing.",
+    "sesmax-ocean": "Simple ocean models: shallow water and quasi-geostrophic.",
 }
 
 NUMERICS: dict[str, list[str]] = {
@@ -318,6 +319,13 @@ GEOMODELS: dict[str, list[str]] = {
             )
         ),
     ],
+    "sesmax-ocean": [
+        "sesmax_ocean",
+        *(
+            f"sesmax_ocean.{sub}"
+            for sub in ("eval", "forcing", "qg", "resolution", "spherical", "swm")
+        ),
+    ],
 }
 
 # The four layers as {layer: (title, libraries, index page, layers it is checked
@@ -491,10 +499,6 @@ _GRIDAX = "gridax's function on a C-grid beside another library's on something e
 _DIFFOPS = (
     "gridax's on a C-grid, functax.diffops' on a function and kernellib's on a kernel"
 )
-_PIPEKIT_JAX = (
-    "moved from pipekit-jax to integrix.adjoint (pipekit#226); pipekit-jax keeps"
-    " a deprecated name"
-)
 _TOY_MODELS = "toy models in both sesmax_core.testing and vardax"
 _TRANSFORMS = (
     "moved from spectraldiffx to functax.transform (spectraldiffx#166);"
@@ -580,13 +584,11 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         ),
         "gaussian_entropy": _DIVERGENCES,
         "kl_divergence": _DIVERGENCES,
-        "to_diffrax_adjoint": _PIPEKIT_JAX,
         "to_dimarray": "geoarray's and gridax's, each of its own carrier",
         "to_optimistix_adjoint": (
             "moved from vardax to argminax.adjoint (vardax#278); the vardax pin"
             " predates it"
         ),
-        "truncated_scan": _PIPEKIT_JAX,
         "where": "gridax.fields' on fields beside pipekit_array's on named carriers",
     },
     "geomodels": {
