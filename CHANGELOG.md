@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.7](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.6...geostack-v0.2.7) (2026-11-25)
+
+
+### Features
+
+* **graph:** let GeoStack import GeoNumerics ([#313](https://github.com/jejjohnson/geostack/issues/313)) ([e3b9cfd](https://github.com/jejjohnson/geostack/commit/e3b9cfd1a4aec1ba0767e23e517893e508f21043)), closes [#306](https://github.com/jejjohnson/geostack/issues/306)
+
+
+### Documentation
+
+* **design:** diagnostix on any array library, with its decisions of 24 Nov 2026 ([#311](https://github.com/jejjohnson/geostack/issues/311)) ([8f4f0b4](https://github.com/jejjohnson/geostack/commit/8f4f0b45840a6e32f79fe6479d73d6f8d39471c6))
+* **design:** record radiomax as built, with decisions 5 and 7 ([#308](https://github.com/jejjohnson/geostack/issues/308)) ([619f10f](https://github.com/jejjohnson/geostack/commit/619f10f90d0ca0b1bbf55b79ca02073009818973))
+* **design:** the integrix page lists SampledPath and sesmax-core's use of it ([#307](https://github.com/jejjohnson/geostack/issues/307)) ([a17f4ec](https://github.com/jejjohnson/geostack/commit/a17f4ecd998125006c7da18e8ab4f44e6ed582ff))
+* **design:** the radiomax pages record the decisions of 23 November and the code as it is ([#302](https://github.com/jejjohnson/geostack/issues/302)) ([4c3a811](https://github.com/jejjohnson/geostack/commit/4c3a811c72a7d10c80cd2dadf3a27dd22b44bf5d)), closes [#301](https://github.com/jejjohnson/geostack/issues/301)
+* **images:** the pyrox workspace gets its overview and dependency figures ([#312](https://github.com/jejjohnson/geostack/issues/312)) ([a432eb5](https://github.com/jejjohnson/geostack/commit/a432eb53998b22d42ade20032092506a34f06274))
+* **images:** the pyrox-lgm prior gets its hub figure ([#316](https://github.com/jejjohnson/geostack/issues/316)) ([c940b87](https://github.com/jejjohnson/geostack/commit/c940b87c0f069dd5531bbabb296e7d9b5412abdb))
+
 ## [0.2.6](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.5...geostack-v0.2.6) (2026-11-21)
 
 
