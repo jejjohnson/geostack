@@ -107,6 +107,8 @@ plumax = { path = "references/geomodels/plumax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
+# diagnostix is a dependency of plumax and not a submodule yet (#310): plumax's own pin.
+diagnostix = { git = "https://github.com/jejjohnson/diagnostix", tag = "v0.0.4" }
 
 [feature.dev.dependencies]
 pytest = ">=8"
