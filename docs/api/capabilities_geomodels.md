@@ -17,7 +17,7 @@ This page is the GeoModels layer. It may import GeoML, GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at plumax 0.4.1, radtrax 0.2.0, sesmax 0.0.0, sesmax-core 0.3.1, sesmax-ocean 0.0.0.
+Listed at plumax 0.4.1, radtrax 0.2.0, sesmax 0.0.0, sesmax-core 0.3.1, sesmax-ocean 0.0.0, sesmax-experiment 0.0.0.
 
 ## Upstream: `plumax`
 
@@ -555,7 +555,6 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `ScaledModel` | class | Integrate ``inner`` in transformed coordinates. |
 | `Scales` | class | Characteristic scales of a run. |
 | `SeasonalWindForcing` | class | Sinusoidal wind forcing with learnable amplitude. |
-| `SimulationCheckpointer` | class | Manages periodic checkpointing during long simulations. |
 | `SpatialBasis` | class | A precomputed spatial dictionary plus the per-mode prior std. |
 | `State` | class | Base class for model state vectors. |
 | `StateAffine` | class | Per-leaf affine map on a ``State`` pytree: ``y = (x - loc) / scale``. |
@@ -615,6 +614,15 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `transform_attrs` | function | Per-variable ``loc`` / ``scale`` attrs for an affine transform. |
 | `wind_stress_tendency` | function | Momentum tendency from a surface wind stress. |
 
+### `sesmax_core.component`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `Builder` | function | Re-exported from `collections`. |
+| `BuiltRun` | class | A model and the state it starts from. |
+| `Check` | function | Re-exported from `collections`. |
+| `Component` | class | What a component registers: its models, and what it knows about them. |
+
 ### `sesmax_core.da`
 
 | Name | Kind | What it does |
@@ -648,22 +656,6 @@ Simple Earth-system models: state, terms, steppers, forcing.
 | `burger_to_g_prime` | function | Invert the per-interface Burger numbers into reduced gravities. |
 | `resolve_burger` | function | Settle the Burger number from ``burger`` or ``froude``. |
 | `resolve_burger_spherical` | function | Settle the Burger number from ``burger``, ``froude`` or ``lamb``. |
-
-### `sesmax_core.monitor`
-
-| Name | Kind | What it does |
-|---|---|---|
-| `BaseMonitor` | class | Inert base monitor — override only the hooks you care about. |
-| `ChunkInfo` | class | Context handed to a monitor at a diagnostic-chunk boundary. |
-| `ConservationDriftMonitor` | class | MONITOR (optionally FAIL-HARD): track drift of conserved invariants. |
-| `EnergyGrowthMonitor` | class | MONITOR (optionally FAIL-HARD): flag large energy jumps between chunks. |
-| `Monitor` | class | Structural protocol for a simulation monitor. |
-| `MonitorVerdict` | class | A monitor's response to a chunk. |
-| `NonFiniteMonitor` | class | FAIL-HARD: terminate the run if any state field holds NaN/Inf. |
-| `SolverHealthMonitor` | class | MONITOR: surface diffrax per-chunk solver statistics. |
-| `ThroughputMonitor` | class | MONITOR: report simulated seconds per wallclock second per chunk. |
-| `WatchdogMonitor` | class | FAIL-HARD: terminate if cumulative wallclock exceeds a ceiling. |
-| `default_monitors` | function | The runner's default monitor set — preserves legacy behavior. |
 
 ### `sesmax_core.operators`
 
@@ -847,3 +839,46 @@ Simple ocean models: shallow water and quasi-geostrophic.
 | `NonlinearSW2DPhysConsts` | class | Frozen physical constants for the 2D nonlinear shallow water model. |
 | `NonlinearSW2DState` | class | State for the 2D nonlinear shallow water model. |
 | `NonlinearShallowWater2D` | class | 2D nonlinear shallow water model (vector-invariant form). |
+
+## Upstream: `sesmax-experiment`
+
+What is done with a model: runs, monitors, checkpoints.
+
+### `sesmax_experiment.checkpoint`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `SimulationCheckpointer` | class | Manages periodic checkpointing during long simulations. |
+
+### `sesmax_experiment.monitor`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `BaseMonitor` | class | Inert base monitor — override only the hooks you care about. |
+| `ChunkInfo` | class | Context handed to a monitor at a diagnostic-chunk boundary. |
+| `ConservationDriftMonitor` | class | MONITOR (optionally FAIL-HARD): track drift of conserved invariants. |
+| `EnergyGrowthMonitor` | class | MONITOR (optionally FAIL-HARD): flag large energy jumps between chunks. |
+| `Monitor` | class | Structural protocol for a simulation monitor. |
+| `MonitorVerdict` | class | A monitor's response to a chunk. |
+| `NonFiniteMonitor` | class | FAIL-HARD: terminate the run if any state field holds NaN/Inf. |
+| `SolverHealthMonitor` | class | MONITOR: surface diffrax per-chunk solver statistics. |
+| `ThroughputMonitor` | class | MONITOR: report simulated seconds per wallclock second per chunk. |
+| `WatchdogMonitor` | class | FAIL-HARD: terminate if cumulative wallclock exceeds a ceiling. |
+| `default_monitors` | function | The runner's default monitor set — preserves legacy behavior. |
+
+### `sesmax_experiment.run`
+
+| Name | Kind | What it does |
+|---|---|---|
+| `AdvanceChunk` | class | Integrate a model from one edge of a timeline to the next. |
+| `ChunkFrame` | class | The state after a chunk, with what is known about the chunk. |
+| `ChunkedRun` | class | What a run returns. |
+| `Due` | class | A predicate on a :class:`ChunkFrame` that combines with ``\|`` and ``&``. |
+| `RunMonitors` | class | Ask every monitor about a frame, and stop the run if one wants to. |
+| `RunStopped` | class | A monitor stopped the run. |
+| `Timeline` | class | When the chunks of a run end, and which ends are snapshots. |
+| `at_snapshots` | function | Due at the snapshots of the run's timeline. |
+| `every_chunks` | function | Due after every ``n``-th chunk. |
+| `every_sim_seconds` | function | Due after the chunk in which a multiple of ``interval`` is reached. |
+| `every_wall_seconds` | function | Due after the first chunk that ends ``interval`` seconds of wall time later. |
+| `run_chunks` | function | Run a model in chunks, looking at the state between them. |
