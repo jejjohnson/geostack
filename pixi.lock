@@ -2175,10 +2175,10 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/argminax
-      - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
       - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
@@ -2186,7 +2186,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/1c/cb/2f6aa982e2860c1156830db3da7f823b71784ed7d533ca289ea9b6c6347a/beartype-0.23.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/70/cd3cf5cff538323076a879edef02cce6f13f7d75e03d12f211b0a0dbd178/patsy-1.0.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
@@ -2618,10 +2617,10 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/argminax
-      - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
       - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
@@ -2630,7 +2629,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/1c/cb/2f6aa982e2860c1156830db3da7f823b71784ed7d533ca289ea9b6c6347a/beartype-0.23.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/70/cd3cf5cff538323076a879edef02cce6f13f7d75e03d12f211b0a0dbd178/patsy-1.0.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
@@ -3128,13 +3126,14 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/argminax
-      - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
       - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
+      - pypi: git+https://github.com/jejjohnson/gridax?rev=5205566919a13093ef3da96c50b73b8ca5c5c6d1#5205566919a13093ef3da96c50b73b8ca5c5c6d1
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
@@ -3577,13 +3576,14 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/argminax
-      - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
       - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
+      - pypi: git+https://github.com/jejjohnson/gridax?rev=5205566919a13093ef3da96c50b73b8ca5c5c6d1#5205566919a13093ef3da96c50b73b8ca5c5c6d1
       - pypi: https://files.pythonhosted.org/packages/01/b9/41642877fe741db56d240833c8822188b663c4c5d52beb087964774035d4/wrapt-2.5.1-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
@@ -6127,10 +6127,10 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/argminax
-      - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
       - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
@@ -6138,7 +6138,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/1c/cb/2f6aa982e2860c1156830db3da7f823b71784ed7d533ca289ea9b6c6347a/beartype-0.23.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/70/cd3cf5cff538323076a879edef02cce6f13f7d75e03d12f211b0a0dbd178/patsy-1.0.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
@@ -6554,10 +6553,10 @@ environments:
       - pypi: ./references/geostack/pipekit/packages/pipekit-ops
       - pypi: ./references/geostack/pipekit/packages/pipekit-train
       - pypi: ./references/numerics/argminax
-      - pypi: ./references/numerics/finitevolX
       - pypi: ./references/numerics/functax
       - pypi: ./references/numerics/gaussx
       - pypi: ./references/numerics/geophysix
+      - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/integrix
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
@@ -6566,7 +6565,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/1c/cb/2f6aa982e2860c1156830db3da7f823b71784ed7d533ca289ea9b6c6347a/beartype-0.23.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/70/cd3cf5cff538323076a879edef02cce6f13f7d75e03d12f211b0a0dbd178/patsy-1.0.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
@@ -19436,8 +19434,9 @@ packages:
   - lineax>=0.1
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4
+  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.11
   - geonnax @ git+https://github.com/jejjohnson/geonnax@v0.0.10
-  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.6
   - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
   - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-cycle
   - xarray>=2024.0 ; extra == 'data'
@@ -19493,7 +19492,7 @@ packages:
   - matplotlib ; extra == 'notebooks'
   - ipython ; extra == 'notebooks'
   - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4 ; extra == 'assim'
-  - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.5 ; extra == 'assim'
+  - vardax @ git+https://github.com/jejjohnson/vardax@3bc3457bd285d8a68311eca5ba0926559546f490 ; extra == 'assim'
   - pipekit-train[equinox,cache] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-train ; extra == 'emulate'
   - numpyro>=0.21 ; extra == 'population'
   - pyyaml>=6 ; extra == 'population'
@@ -19550,13 +19549,17 @@ packages:
   - optimistix>=0.1
   - einops>=0.8.2
   - paramax>=0.0.5
-  - finitevolx[pipekit] @ git+https://github.com/jejjohnson/finitevolX.git@a28525dfc0f36d26ded9ffea285e9832aed5aaae
-  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.1
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit.git@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-cycle
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit.git@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-jax
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.8.1
+  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.2
+  - gridax[jax,pipekit] @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.1#subdirectory=packages/gridax
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.1.4#subdirectory=packages/pipekit-cycle
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.1.4#subdirectory=packages/pipekit-jax
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
   - geonnax @ git+https://github.com/jejjohnson/geonnax.git@v0.0.11
-  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.10
+  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.13
   - filterax @ git+https://github.com/jejjohnson/filterax@v0.0.6 ; extra == 'da'
   - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.5 ; extra == 'da'
   - flowjax ; extra == 'flows'
@@ -19929,49 +19932,6 @@ packages:
   - numpyro>=0.21 ; extra == 'numpyro'
   - optax>=0.2.4 ; extra == 'optax'
   requires_python: '>=3.12'
-- pypi: ./references/numerics/finitevolX
-  name: finitevolx
-  requires_dist:
-  - jax>=0.4.38
-  - jaxlib>=0.4.38
-  - jaxtyping>=0.3.0
-  - beartype>=0.20.0
-  - equinox>=0.11.0
-  - scipy>=1.14.0
-  - lineax>=0.1.0
-  - diffrax>=0.6.0
-  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.1
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.5
-  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
-  - pytest>=8.3.0 ; extra == 'test'
-  - pytest-cov>=5.0.0 ; extra == 'test'
-  - pytest-pretty>=1.2.0 ; extra == 'test'
-  - pytest-xdist>=3.5.0 ; extra == 'test'
-  - networkx>=3.3 ; extra == 'test'
-  - coverage>=7.6.0 ; extra == 'test'
-  - matplotlib>=3.9.0 ; extra == 'test'
-  - pillow>=11.0.0 ; extra == 'test'
-  - xarray>=2025.1.0 ; extra == 'test'
-  - zarr>=3.1.5 ; extra == 'test'
-  - ruff>=0.15.0 ; extra == 'dev'
-  - pre-commit>=4.0.0 ; extra == 'dev'
-  - nbstripout>=0.7.1 ; extra == 'dev'
-  - ty>=0.0.23 ; extra == 'dev'
-  - cyclopts>=2.0.0 ; extra == 'examples'
-  - loguru>=0.7.2 ; extra == 'examples'
-  - matplotlib>=3.9.0 ; extra == 'examples'
-  - pillow>=11.0.0 ; extra == 'examples'
-  - numpy>=2.0.0 ; extra == 'examples'
-  - tqdm>=4.66.0 ; extra == 'examples'
-  - xarray>=2025.1.0 ; extra == 'examples'
-  - zarr>=3.1.5 ; extra == 'examples'
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops ; extra == 'pipekit'
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-jax ; extra == 'pipekit'
-  - mkdocs>=1.6.0 ; extra == 'docs'
-  - mkdocs-material>=9.5.0 ; extra == 'docs'
-  - mkdocstrings[python]>=0.25.0 ; extra == 'docs'
-  - mkdocs-jupyter>=0.24.0 ; extra == 'docs'
-  requires_python: '>=3.12,<3.14'
 - pypi: ./references/numerics/functax
   name: functax
   requires_dist:
@@ -20003,6 +19963,25 @@ packages:
   - jax>=0.4.30 ; extra == 'jax'
   - xarray>=2024.6 ; extra == 'xarray'
   requires_python: '>=3.12'
+- pypi: ./references/numerics/gridax/packages/gridax
+  name: gridax
+  requires_dist:
+  - numpy>=2.0.0
+  - scipy>=1.14.0
+  - jaxtyping>=0.3.0
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-array
+  - jax>=0.4.38 ; extra == 'jax'
+  - jaxlib>=0.4.38 ; extra == 'jax'
+  - equinox>=0.11.0 ; extra == 'jax'
+  - lineax>=0.1.0 ; extra == 'jax'
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.8.1 ; extra == 'jax'
+  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.2 ; extra == 'jax'
+  - gridax[jax] @ ./references/numerics/gridax/packages/gridax ; extra == 'pipekit'
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-jax ; extra == 'pipekit'
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.9 ; extra == 'pipekit'
+  requires_python: '>=3.12,<3.14'
 - pypi: ./references/numerics/integrix
   name: integrix
   requires_dist:
@@ -20014,7 +19993,7 @@ packages:
   - lineax>=0.1.1
   - optimistix>=0.1.0
   - diffrax>=0.7.2,<0.8
-  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.11
+  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.13
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   requires_python: '>=3.12'
 - pypi: ./references/numerics/radiomax
@@ -20033,7 +20012,7 @@ packages:
   - jax>=0.4.30
   - jaxlib>=0.4.30
   - equinox
-  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.1.0
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.8.0
   - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.6
   - numpy>=1.26.0
   - pytest>=8.0.0 ; extra == 'test'
@@ -20086,6 +20065,50 @@ packages:
   - jupytext>=1.16.0 ; extra == 'docs'
   - matplotlib>=3.9.0 ; extra == 'docs'
   - spectraldiffx[test,dev,exp,jlab,docs,examples] ; extra == 'all'
+  requires_python: '>=3.12,<3.14'
+- pypi: git+https://github.com/jejjohnson/gridax?rev=5205566919a13093ef3da96c50b73b8ca5c5c6d1#5205566919a13093ef3da96c50b73b8ca5c5c6d1
+  name: finitevolx
+  version: 0.1.0
+  requires_dist:
+  - jax>=0.4.38
+  - jaxlib>=0.4.38
+  - jaxtyping>=0.3.0
+  - beartype>=0.20.0
+  - equinox>=0.11.0
+  - scipy>=1.14.0
+  - lineax>=0.1.0
+  - diffrax>=0.6.0
+  - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.1
+  - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.5
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.3
+  - pytest>=8.3.0 ; extra == 'test'
+  - pytest-cov>=5.0.0 ; extra == 'test'
+  - pytest-pretty>=1.2.0 ; extra == 'test'
+  - pytest-xdist>=3.5.0 ; extra == 'test'
+  - networkx>=3.3 ; extra == 'test'
+  - coverage>=7.6.0 ; extra == 'test'
+  - matplotlib>=3.9.0 ; extra == 'test'
+  - pillow>=11.0.0 ; extra == 'test'
+  - xarray>=2025.1.0 ; extra == 'test'
+  - zarr>=3.1.5 ; extra == 'test'
+  - ruff>=0.15.0 ; extra == 'dev'
+  - pre-commit>=4.0.0 ; extra == 'dev'
+  - nbstripout>=0.7.1 ; extra == 'dev'
+  - ty>=0.0.23 ; extra == 'dev'
+  - cyclopts>=2.0.0 ; extra == 'examples'
+  - loguru>=0.7.2 ; extra == 'examples'
+  - matplotlib>=3.9.0 ; extra == 'examples'
+  - pillow>=11.0.0 ; extra == 'examples'
+  - numpy>=2.0.0 ; extra == 'examples'
+  - tqdm>=4.66.0 ; extra == 'examples'
+  - xarray>=2025.1.0 ; extra == 'examples'
+  - zarr>=3.1.5 ; extra == 'examples'
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-ops ; extra == 'pipekit'
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-ops-v0.2.1#subdirectory=packages/pipekit-jax ; extra == 'pipekit'
+  - mkdocs>=1.6.0 ; extra == 'docs'
+  - mkdocs-material>=9.5.0 ; extra == 'docs'
+  - mkdocstrings[python]>=0.25.0 ; extra == 'docs'
+  - mkdocs-jupyter>=0.24.0 ; extra == 'docs'
   requires_python: '>=3.12,<3.14'
 - pypi: https://files.pythonhosted.org/packages/01/b9/41642877fe741db56d240833c8822188b663c4c5d52beb087964774035d4/wrapt-2.5.1-cp313-cp313-macosx_11_0_arm64.whl
   name: wrapt
