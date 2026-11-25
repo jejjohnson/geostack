@@ -2,11 +2,11 @@
 
 The layout follows functax's ecosystem figure (``functax_ecosystem/``):
 gridax at the top, the packages that import it below in their stack layers,
-and what gridax builds on underneath. geostack's dependency graph
-(``docs/api/dependency_graph.md``) still knows the repository as finitevolX,
-so the cards and the names each package uses are read from its imports on
-``main``: sesmax-core imports ``gridax``, and plumax only the deprecated
-``finitevolx`` shim, drawn dashed until it switches (gridax#416).
+and what gridax builds on underneath, its two extras on a line of their own.
+The cards and the names on them are read from each package's imports on
+``main`` (25 November 2026): diagnostix, and xrtoolz-ops in geotoolz,
+sesmax-core and sesmax-ocean in sesmax, and plumax. The grey arrows are the
+dependencies between those packages in their ``pyproject.toml``.
 ``_icon.svg`` is the tile of gridax's logo (``docs/assets/logo-light.svg``).
 Re-run after editing the data below, from the repo root::
 
@@ -31,34 +31,43 @@ SANS = "ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
 MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
 
 # (layer, caption, [(package, what it is, [gridax names it uses, one line
-#  each], through the finitevolx shim)]). A layer's box is as wide as its cards.
+#  each])]). A layer's box is as wide as its cards.
 LAYERS = [
     (
         "GeoNumerics",
         "",
-        [("gridax-jax", "solvers, pipekit", ["re-exports all", "of gridax"], False)],
+        [("diagnostix", "diagnostics", ["A-grids", "difference", "gradient"])],
+    ),
+    (
+        "GeoStack",
+        "",
+        [("xrtoolz-ops", "xarray operators", ["A-grids", "divergence", "strain"])],
     ),
     (
         "GeoModels",
         "the models",
         [
+            ("sesmax-core", "model core", ["CField", "GridOps · Mask", "solvers"]),
             (
-                "sesmax-core",
-                "model core",
-                ["grids · masks", "Interpolation2D", "stencils"],
-                False,
+                "sesmax-ocean",
+                "ocean models",
+                ["GridOps · CField", "fill_ghosts", "area_sum"],
             ),
-            ("plumax", "plume models", ["CartesianGrid3D", "Advection3D", "BCs"], True),
+            ("plumax", "plume models", ["BC", "advect · diffuse", "vertical terms"]),
         ],
     ),
 ]
-# edges between dependents, drawn grey and routed under the layers:
-# (from, to, dashed); both reach gridax-jax's names through finitevolx today
+# edges between dependents, drawn grey and routed under the layers
 BUILDS_ON = [
-    ("sesmax-core", "gridax-jax", True),
-    ("plumax", "gridax-jax", True),
+    ("xrtoolz-ops", "diagnostix"),
+    ("plumax", "diagnostix"),
+    ("sesmax-ocean", "sesmax-core"),
 ]
-BASE = ["NumPy · SciPy", "jaxtyping", "geophysix", "JAX, when installed"]
+BASE = ["NumPy · SciPy", "jaxtyping", "geophysix", "pipekit-array"]
+EXTRAS = [
+    ("[jax]", "JAX · equinox · lineax · gaussx · spectraldiffx"),
+    ("[pipekit]", "pipekit-jax · integrix"),
+]
 
 THEMES = {
     "light": {
@@ -126,10 +135,7 @@ def build(theme: str) -> str:
     widths = [2 * PAD + len(p) * CARD_W + (len(p) - 1) * CARD_GAP for *_, p in LAYERS]
     total = sum(widths) + LAYER_GAP * (len(LAYERS) - 1)
     box_x = 20 + (920 - total) / 2
-    targets = [FX_X + FX_W * (i + 1) / (len(LAYERS) + 1) for i in range(len(LAYERS))]
-    for (layer, caption, packages), box_w, target in zip(
-        LAYERS, widths, targets, strict=True
-    ):
+    for (layer, caption, packages), box_w in zip(LAYERS, widths, strict=True):
         fill, stroke = t["box"]
         out.append(
             f'<rect x="{box_x}" y="{BOX_Y}" width="{box_w}" height="{box_h}" rx="14" '
@@ -140,22 +146,22 @@ def build(theme: str) -> str:
             f'font-family="{SANS}" font-size="12.5" fill="{t["muted"]}">'
             f"{escape(caption)}</text>"
         )
-        # the layer's arrow up to gridax
+        # the layer's arrow up to gridax, straight up where gridax is above it
         mid = box_x + box_w / 2
+        target = min(max(mid, FX_X + 30), FX_X + FX_W - 30)
         out.append(
             f'<path d="M{mid} {BOX_Y} L{mid} 116 L{target} 116 L{target} 95" '
             f'fill="none" stroke="{t["accent"]}" stroke-width="2.2" '
             f'marker-end="url(#ea-{theme})"/>'
         )
         x = box_x + PAD
-        for name, what, uses, extra in packages:
+        for name, what, uses in packages:
             y = BOX_Y + 40
-            dash = ' stroke-dasharray="6 4"' if extra else ""
-            stroke = t["grey"] if extra else t["accent"]
+            stroke = t["accent"]
             cx = x + CARD_W / 2
             out.append(
                 f'<rect x="{x}" y="{y}" width="{CARD_W}" height="{CARD_H}" rx="10" '
-                f'fill="{t["card"]}" stroke="{stroke}" stroke-width="1.6"{dash}/>'
+                f'fill="{t["card"]}" stroke="{stroke}" stroke-width="1.6"/>'
                 f'<text x="{cx}" y="{y + 22}" text-anchor="middle" '
                 f'font-family="{MONO}" font-size="12.5" font-weight="700" '
                 f'fill="{t["ink"]}">{name}</text>'
@@ -175,16 +181,15 @@ def build(theme: str) -> str:
     # each edge leaves the bottom of its card, runs under the layer boxes at
     # its own depth, and comes up into the bottom of the card it builds on
     box_bottom = BOX_Y + box_h
-    for depth, (src, dst, extra) in enumerate(BUILDS_ON, start=1):
+    for depth, (src, dst) in enumerate(BUILDS_ON, start=1):
         (sx, sy), (dx, _) = centres[src], centres[dst]
         lane = box_bottom + 12 * depth
         start = sx + CARD_W / 2 + 14 * (depth % 2 * 2 - 1)
         end = dx + CARD_W / 2 + 10 * (depth - 2.5)
-        dash = ' stroke-dasharray="5 4"' if extra else ""
         out.append(
             f'<path d="M{start} {sy + CARD_H} L{start} {lane} L{end} {lane} '
             f'L{end} {sy + CARD_H + 2}" fill="none" stroke="{t["grey"]}" '
-            f'stroke-width="1.5"{dash} marker-end="url(#eh-{theme})"/>'
+            f'stroke-width="1.5" marker-end="url(#eh-{theme})"/>'
         )
     # what gridax builds on
     by = box_bottom + 12 * len(BUILDS_ON) + 22
@@ -192,42 +197,49 @@ def build(theme: str) -> str:
     names = " · ".join(
         f'<tspan font-weight="700" fill="{t["ink"]}">{escape(n)}</tspan>' for n in BASE
     )
+    extras = " &#160; ".join(
+        f'<tspan font-family="{MONO}" font-weight="700" fill="{t["ink"]}">'
+        f"{escape(extra)}</tspan> adds {escape(libraries)}"
+        for extra, libraries in EXTRAS
+    )
     out.append(
-        f'<rect x="20" y="{by}" width="920" height="40" rx="10" fill="{fill}" '
+        f'<rect x="20" y="{by}" width="920" height="64" rx="10" fill="{fill}" '
         f'stroke="{stroke}"/>'
         f'<text x="480" y="{by + 25.5}" text-anchor="middle" font-family="{SANS}" '
         f'font-size="13.5" fill="{t["muted"]}">gridax builds on: {names}</text>'
+        f'<text x="480" y="{by + 49}" text-anchor="middle" font-family="{SANS}" '
+        f'font-size="12.5" fill="{t["muted"]}">{extras}</text>'
     )
     # legend
-    ly = by + 66
+    ly = by + 90
     out.append(
         f'<rect x="40" y="{ly - 12}" width="26" height="16" rx="4" fill="none" '
         f'stroke="{t["accent"]}" stroke-width="1.6"/>'
         f'<text x="74" y="{ly + 1}" font-family="{SANS}" font-size="12.5" '
         f'fill="{t["muted"]}">imports gridax (the names it uses below)</text>'
         f'<path d="M372 {ly - 4} L406 {ly - 4}" stroke="{t["grey"]}" '
-        f'stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#eh-{theme})"/>'
-        f'<text x="414" y="{ly + 1}" font-family="{SANS}" font-size="12.5" '
-        f'fill="{t["muted"]}">through the finitevolx shim (#416)</text>'
-        f'<path d="M640 {ly - 4} L674 {ly - 4}" stroke="{t["grey"]}" '
         f'stroke-width="1.6" marker-end="url(#eh-{theme})"/>'
-        f'<text x="682" y="{ly + 1}" font-family="{SANS}" font-size="12.5" '
-        f'fill="{t["muted"]}">builds on</text>'
+        f'<text x="414" y="{ly + 1}" font-family="{SANS}" font-size="12.5" '
+        f'fill="{t["muted"]}">also builds on</text>'
     )
     height = ly + 22
     label = (
-        "Packages that import gridax: gridax-jax in GeoNumerics, in the same "
-        "repository, which re-exports all of it; and sesmax-core in GeoModels, "
-        "which imports the grids, masks, Interpolation2D and the raw stencils. "
-        "plumax in GeoModels still imports the deprecated finitevolx shim, drawn "
-        "dashed, and both models reach gridax-jax's names through it. gridax "
-        "builds on NumPy, SciPy, jaxtyping and geophysix, and on JAX when it is "
-        "installed."
+        "Packages that import gridax: diagnostix in GeoNumerics, which uses the "
+        "collocated grids, difference and gradient; xrtoolz-ops in GeoStack, "
+        "which uses the collocated grids, divergence and the strains; and in "
+        "GeoModels sesmax-core, which uses CField, GridOps, the masks and the "
+        "solvers, sesmax-ocean, which uses GridOps, CField, fill_ghosts and "
+        "area_sum, and plumax, which uses BC, advect, diffuse and the vertical "
+        "terms. xrtoolz-ops and plumax also build on diagnostix, and "
+        "sesmax-ocean on sesmax-core. gridax builds on NumPy, SciPy, jaxtyping, "
+        "geophysix and pipekit-array; its jax extra adds JAX, equinox, lineax, "
+        "gaussx and spectraldiffx, and its pipekit extra pipekit-jax and "
+        "integrix."
     )
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="960" height="{height}" '
         f'viewBox="0 0 960 {height}" role="img" aria-label="{escape(label)}">\n'
-        "<title>gridax in the GeoNumerics and GeoModels layers</title>\n"
+        "<title>gridax and the packages that import it</title>\n"
         + "\n".join(out)
         + "\n</svg>\n"
     )
