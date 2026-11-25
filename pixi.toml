@@ -107,9 +107,6 @@ plumax = { path = "references/geomodels/plumax", editable = true }
 radtrax = { path = "references/geomodels/radtrax", editable = true }
 sesmax = { path = "references/geomodels/sesmax/packages/sesmax", editable = true }
 sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", editable = true }
-# finitevolx is gridax before its rename. plumax.les_fvm still imports it, so it is
-# installed from the last commit geostack tracked it at until plumax moves to gridax.
-finitevolx = { git = "https://github.com/jejjohnson/gridax", rev = "5205566919a13093ef3da96c50b73b8ca5c5c6d1" }
 
 [feature.dev.dependencies]
 pytest = ">=8"
