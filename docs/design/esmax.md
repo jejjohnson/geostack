@@ -246,7 +246,9 @@ P0 and P1 change no science, whereas P2 onwards adds it. Every component's gate 
 | ES-N1 | Umbrella name | `esmax` | `fluidx` (free, but land is not a fluid) |
 | ES-N2 | One distribution per component, or one distribution with subpackages | one per component, like pyrox | one `esmax` distribution with `esmax.ocean` etc.: simpler releases, but every user installs every component |
 | ES-N3 | When land and ice start | when there is real code (P4) | stubs now, which xrtoolz's empty `ice` module shows go stale |
-| ES-N4 | plumax's atmospheric transport (`les_fvm`) | stays in plumax; it may later run on `esmax-atmos` winds | moves into `esmax-atmos` as its tracer component |
+| ES-N4 | plumax's atmospheric transport (`les_fvm`) | decided on 26 Nov 2026: stays in plumax; it may later run on `esmax-atmos` winds | moves into `esmax-atmos` as its tracer component |
 | ES-N5 | Synthetic climates (`xtremax.simulations`) | not in esmax: a statistical weather generator is not a fluid model (see [stack levels](./stack_levels.md), SL-O6) | a stochastic component in esmax |
+
+ES-N4 was decided with geostack #255 on 26 Nov 2026: the workspace (built as sesmax), radtrax and plumax stay separate repositories, and `les_fvm` stays in plumax, built on the workspace core's model contract (plumax #232). What the three share is three contracts, tracked by geostack #328: the model, a known field in time, and the estimation problem with its observation operator.
 
 Evidence: somax's modules come from the GeoModels capability index (somax 0.0.15), and the name checks are PyPI lookups on 22 Oct 2026.
