@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pipekit-experiment — one address, five questions</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+
+  /* the one object */
+  .pk-obj { width: 900px; margin: 0 auto; }
+  .pk-expansion { text-align: center; margin: 2px 0 12px; color: var(--ink-accent); }
+  #diagram .pk-expansion .katex { font-size: 1.65em; }
+  .pk-terms { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pk-term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .pk-term .eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 12px; min-height: 42px; text-align: center;
+  }
+  #diagram .pk-term .eq .katex { font-size: 1.25em; }
+
+  /* one card per operation */
+  .pk-ops {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    column-gap: 20px; margin-top: 104px;
+  }
+  .pk-op .lane-head { margin-bottom: 8px; }
+  .pk-op .lane-head .verb { font-size: 13px; }
+  .pk-mod { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink-accent); }
+  .pk-eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 10px; min-height: 70px; line-height: 1.9;
+  }
+  #diagram .pk-eq .katex { font-size: 1.18em; white-space: nowrap; }
+  #diagram .pk-eq .pk-long .katex { font-size: 1.02em; }
+  .pk-eq .k { font-size: 12px; color: var(--muted); margin-right: 4px; }
+  .nowrap { white-space: nowrap; }
+  .pk-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 10px 2px 0; min-height: 90px; }
+  .pk-names { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .pk-names code {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink);
+    background: var(--card); border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 6px;
+  }
+
+  /* the floor: the layout every operation reads, then what it builds on */
+  .pk-floor { margin-top: 30px; display: grid; gap: 12px; }
+  .pk-slab {
+    display: grid; grid-template-columns: 190px 330px 1fr; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .pk-slab .lib { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--cut-ink); }
+  .pk-slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .pk-slab .list { font-size: 12.5px; color: var(--ink); line-height: 1.6; }
+  .pk-slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .pk-deps { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .pk-dep {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px; background: #fff; border: 1.5px dashed #cbd5e1;
+  }
+  .pk-dep .lib { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .pk-dep .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .pk-dep code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+  /* connector labels hold maths, so they use the sans face, not the chip's mono */
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pipekit-experiment — one address, five questions</div>
+  <div class="subtitle">A stored model is named by the hash of its operator's state and its weights, so storing, checking, promoting, recording and handing it over all read the same address. Pure Python on pipekit-ops, with every outside tool behind an extra.</div>
+
+  <div class="lane compute pk-obj" id="obj">
+    <div class="lane-head"><span class="verb">one address</span><span class="pkg">a stored model, named by what it is</span></div>
+    <div class="pk-expansion"><span class="m">\displaystyle h = \mathrm{sha256}\left(\mathrm{json}(s) \Vert \mathtt{0x00} \Vert w\right)</span></div>
+    <div class="pk-terms">
+      <div class="pk-term">
+        <div class="lbl">the operator's state record and its weight bytes</div>
+        <div class="eq"><span class="m">s = \texttt{op.state}, \quad w \in \{0, \dots, 255\}^{N_w}</span></div>
+      </div>
+      <div class="pk-term">
+        <div class="lbl">a 64-character hex digest, as pipekit-ops computes it</div>
+        <div class="eq"><span class="m">h = \texttt{pipeline\_hash}(\texttt{op}, w)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pk-ops">
+    <div class="lane cut pk-op" id="op-store">
+      <div class="lane-head"><span class="verb">store</span><span class="pk-mod">registry</span></div>
+      <div class="pk-eq"><span class="m">(s, w) \mapsto h</span><br><span class="k">one folder per address</span></div>
+      <div class="pk-desc">Writes <code>operator.json</code>, <code>weights.bin</code> and the metadata under <span class="m">h</span>. The same <span class="m">s</span> and <span class="m">w</span> land on the same address and merge their metadata; <code>b""</code> and <code>None</code> weights hash alike.</div>
+      <div class="pk-names"><code>store</code><code>LocalModelRegistry</code><code>S3ModelRegistry</code></div>
+    </div>
+
+    <div class="lane cut pk-op" id="op-verify">
+      <div class="lane-head"><span class="verb">verify</span><span class="pk-mod">registry</span></div>
+      <div class="pk-eq"><span class="m pk-long">\mathrm{sha256}(\mathrm{json}(s') \Vert \mathtt{0x00} \Vert w') = h</span><br><span class="k">and the rebuilt operator hashes to <span class="m">h</span></span></div>
+      <div class="pk-desc">Every load re-hashes the stored files and refuses an entry edited after <code>store</code>. An operator that holds a closure is not rebuilt by <code>load</code>, but its weights are still checked and read by <code>load_weights</code>.</div>
+      <div class="pk-names"><code>load</code><code>load_weights</code><code>HashMismatchError</code></div>
+    </div>
+
+    <div class="lane cut pk-op" id="op-tag">
+      <div class="lane-head"><span class="verb">promote</span><span class="pk-mod">registry</span></div>
+      <div class="pk-eq"><span class="m">\text{tag} \mapsto h</span><br><span class="k">a name such as <code>production</code></span></div>
+      <div class="pk-desc">A tag is a one-line file holding <span class="m">h</span>, so promoting a model moves the tag and never touches the model. <code>tag</code> refuses to move a tag unless you pass <code>force=True</code>.</div>
+      <div class="pk-names"><code>tag</code><code>resolve_tag</code><code>list</code></div>
+    </div>
+
+    <div class="lane cut pk-op" id="op-record">
+      <div class="lane-head"><span class="verb">record</span><span class="pk-mod">artifacts, run</span></div>
+      <div class="pk-eq"><span class="m">\{\,\text{path} \mapsto h\,\}</span><br><span class="k">every model a run used, by address</span></div>
+      <div class="pk-desc">JSON records of a training or an inference run that pin each model by <span class="m">h</span> and load it back through any registry; beside them, plain records of a run, its metric series and its files.</div>
+      <div class="pk-names"><code>TrainingArtifact</code><code>InferenceArtifact</code><code>Run</code><code>RunMetrics</code><code>RunArtifacts</code></div>
+    </div>
+
+    <div class="lane cut pk-op" id="op-hand">
+      <div class="lane-head"><span class="verb">hand over</span><span class="pk-mod">protocols, bridges</span></div>
+      <div class="pk-eq"><span class="m">s \mapsto \texttt{\_target\_} \mapsto s</span><br><span class="k">any registry or tracker, by shape</span></div>
+      <div class="pk-desc">Runtime-checkable protocols for a registry or a tracker of any tool, and one bridge per tool: Hydra configs (with a sandboxed loader), DVC dataset hashes, an operator as a Metaflow step.</div>
+      <div class="pk-names"><code>ModelRegistry</code><code>ExperimentTracker</code><code>HydraConfigLoader</code><code>DVCDatasetVersioning</code><code>MetaflowStepAdapter</code></div>
+    </div>
+  </div>
+
+  <div class="pk-floor">
+    <div class="pk-slab">
+      <div class="lib">the layout</div>
+      <div class="what">what every operation reads and writes, on a local disk (through a temp file and <code>os.replace</code>) or on any fsspec URI</div>
+      <div class="list"><code>&lt;h&gt;/operator.json</code> · <code>&lt;h&gt;/weights.bin</code> · <code>&lt;h&gt;/metadata.json</code> · <code>_tags/&lt;name&gt;</code></div>
+    </div>
+    <div class="pk-deps">
+      <div class="pk-dep">
+        <div class="lib">pipekit-ops</div>
+        <div class="what">The one dependency: <code>Operator.state</code>, <code>from_state</code> and <code>pipeline_hash</code>, and the sandboxed loader the Hydra bridge builds with.</div>
+      </div>
+      <div class="pk-dep">
+        <div class="lib">fsspec, s3fs</div>
+        <div class="what">The object stores behind <code>S3ModelRegistry</code>, through the <code>s3</code> extra; the same store, load and tag code as on a local disk.</div>
+      </div>
+      <div class="pk-dep">
+        <div class="lib">DVC, Hydra, Metaflow</div>
+        <div class="what">Each bridge's tool, behind its own extra and imported on first use. The <code>mlflow</code> and <code>wandb</code> extras only pin those libraries.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  const AMBER = "#cf9418";
+  const down = (id, shift, label) =>
+    wire("obj", id, { from: "bottom", to: "top", fromShift: shift, label, color: AMBER, at: 0.55, bend: 60 });
+
+  typeset(document);
+  document.fonts.ready.then(() => {
+    down("op-store", -340, "<span class='m'>s</span> and <span class='m'>w</span>");
+    down("op-verify", -170, "<span class='m'>h</span> against <span class='m'>s', w'</span>");
+    down("op-tag", 0, "<span class='m'>h</span>");
+    down("op-record", 170, "every <span class='m'>h</span> a run used");
+    down("op-hand", 340, "the state <span class='m'>s</span>");
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
