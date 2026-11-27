@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pipekit-evaluate — every score tagged, in one report</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .pe-report .katex { font-size: 1.2em; }
+  #diagram .term .eq .katex { font-size: 1.1em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 262px 372px 318px 250px;
+    column-gap: 92px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .pe-report { color: var(--ink-accent); margin: 2px 0 0 2px; text-align: center; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab.extra { border-style: dashed; }
+  .nowrap { white-space: nowrap; }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .lib small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pipekit-evaluate — every score tagged, in one report</div>
+  <div class="subtitle">Wrap any metric as a tagged scorer, score one prediction or a whole benchmark ladder, and read one content-hashed report: cut it by any tag, diff it against a baseline, identify it by its hash.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you bring</span></div>
+      <div class="node">
+        <div class="name">a prediction, a reference</div>
+        <div class="desc"><span class="m">\hat{\mathbf{y}}</span> and <span class="m">\mathbf{y}_\text{ref}</span> in any carrier the scorers take: an array, an xarray Dataset, or an <code>Estimate</code> with a posterior</div>
+      </div>
+      <div class="node">
+        <div class="name">your metrics</div>
+        <div class="desc">any callable from <code class="nowrap">(prediction, reference)</code> to a result, such as an <code>xrops.metrics</code> operator</div>
+      </div>
+      <div class="node">
+        <div class="name">or a benchmark task</div>
+        <div class="desc">a <code>Task</code> (prior, simulator, observation operator, datasets) and one <code>Estimator</code> per rung and complexity step</div>
+      </div>
+      <div class="node">
+        <div class="name">what was run</div>
+        <div class="desc"><code>model_ref</code>, <code>dataset_ref</code> and a <code>config</code>, recorded on the report and in its hash</div>
+      </div>
+    </div>
+
+    <!-- column 2: the one report -->
+    <div class="lane compute" id="lane-report">
+      <div class="lane-head"><span class="verb">one report</span><span class="pkg">every value, tagged</span></div>
+      <div class="pe-report"><span class="m">{\mathcal{R} = \left\{ \left( k, m, s_{k,m}, \tau_k \right) : k \in \mathcal{K},\ m \in \mathcal{M}_k \right\}}</span></div>
+      <div class="term">
+        <div class="lbl">value <span class="m">m</span> of scorer <span class="m">k</span>, the prediction against the reference</div>
+        <div class="eq"><span class="m">s_{k,m}(\hat{\mathbf{y}}, \mathbf{y}_\text{ref}) \in \mathbb{R}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">the scorer's tags: the unit it scores, its lens, the stages it may run at</div>
+        <div class="eq"><span class="m">\tau_k = (u_k, \ell_k, \mathcal{S}_k)</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">in a benchmark: cell <span class="m">c = (L, r, j)</span>, scored against reference <span class="m">\rho</span></div>
+        <div class="eq"><span class="m">v_{c,\rho,k,m} = s_{k,m}(q_c, \mathbf{y}_\rho)</span></div>
+      </div>
+      <div class="note">Each entry is keyed <code>cell:reference:scorer.metric</code>. The hash covers the entries, <code>model_ref</code>, <code>dataset_ref</code> and the config, but not the entries' order or the timestamp.</div>
+    </div>
+
+    <!-- column 3: the areas -->
+    <div class="lane cut" id="lane-areas">
+      <div class="lane-head"><span class="verb">areas</span><span class="pkg">one job each</span></div>
+      <div class="node">
+        <div class="name">tag any metric</div>
+        <div class="desc"><span class="mod">scoring</span> — <code>MetricScorer</code> · <code>tags_of</code> · <code>ScorerTags</code> · <code>Unit</code> · <code>Lens</code> · <code>Stage</code></div>
+      </div>
+      <div class="node">
+        <div class="name">score one prediction</div>
+        <div class="desc"><span class="mod">reports</span> — <code>evaluate</code> · <code>EvaluationReport</code> · <code>ReportEntry</code></div>
+      </div>
+      <div class="node">
+        <div class="name">score the ladder</div>
+        <div class="desc"><span class="mod">benchmark</span> — <code>Benchmark</code> · <code>Cell</code> · <code>ReferenceRule</code> · <code>Axis</code> · <code>BenchmarkReport</code> · <code>CellResult</code></div>
+      </div>
+      <div class="node">
+        <div class="name">where the truth comes from</div>
+        <div class="desc"><span class="mod">scoring</span> · <span class="mod">benchmark</span> — <code>ReferenceSource</code> · <code>DEFAULT_STAGED</code> · <code>DEFAULT_COMPLEXITY</code> · <code>DEFAULT_ALSO</code> · <code>scores_against</code></div>
+      </div>
+      <div class="node">
+        <div class="name">the contracts a domain meets</div>
+        <div class="desc">runtime-checkable — <code>Estimate</code> · <code>CovarianceEstimate</code> · <code>Scorer</code> · <code>Task</code> · <code>Estimator</code> · <code>Prior</code> · <code>Oracle</code></div>
+      </div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">the same report</span></div>
+      <div class="node">
+        <div class="name">cut by any tag</div>
+        <div class="desc"><code>filter</code> by unit, lens, stage, scorer, cell or reference gives a report again</div>
+      </div>
+      <div class="node">
+        <div class="name">against a baseline</div>
+        <div class="desc"><code>diff</code> gives <code>{key: (before, after)}</code> for every value that changed; two NaNs count as equal</div>
+      </div>
+      <div class="node">
+        <div class="name">under one hash</div>
+        <div class="desc"><code>content_hash</code>: the same scores of the same run hash equal, whenever they were made</div>
+      </div>
+      <div class="node solid">
+        <div class="name">an EvaluationReport</div>
+        <div class="desc">from <code>evaluate</code> or a ladder run's <code>to_report</code>; <code>to_dict</code> as strict JSON, <code>to_records</code>, <code>to_pandas</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">pipekit-ops</div>
+      <div class="what">The content hash: <code>sha256_hex</code> and <code>stable_json</code> from <code>pipekit_ops.saving</code>, the ones a pipeline's hash is made with.</div>
+    </div>
+    <div class="slab extra">
+      <div class="lib">pipekit-cycle<small>the cycle extra</small></div>
+      <div class="what">The <code>ForwardModel</code> and <code>ObservationOperator</code> a <code>Task</code> returns, named for type checking only.</div>
+    </div>
+    <div class="slab extra">
+      <div class="lib">the metrics' libraries</div>
+      <div class="what">Wrapped, never imported: <code>xrops.metrics</code>, geotoolz, and xskillscore and properscoring behind the xskill and proper extras.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-report", { label: "<span class='m'>\\hat{\\mathbf{y}}, \\mathbf{y}_\\text{ref}</span>", color: "#7b6bb5" });
+    wire("lane-report", "lane-areas", { label: "<span class='m'>s_{k,m}, \\tau_k</span>", color: "#cf9418" });
+    wire("lane-areas", "lane-out", { label: "<span class='m'>\\mathcal{R}</span>", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
