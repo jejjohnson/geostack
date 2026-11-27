@@ -17,7 +17,7 @@ This page is the GeoML layer. It may import GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at geonnax 0.0.11, kernellib 0.0.22, filterax 0.0.8, vardax 0.3.9, gauss-flows 0.1.9, pyrox 0.3.1, pyrox-gp 0.3.1, pyrox-lgm 0.1.4, pyrox-nn 0.2.1, pyrox-ssm 0.2.1, pyrox-gauss 0.1.0, pyrox-xtreme 0.0.4, manipy-jax 0.1.0.
+Listed at geonnax 0.0.11, kernellib 0.0.22, filterax 0.0.8, vardax 0.3.10, gauss-flows 0.1.9, pyrox 0.3.1, pyrox-gp 0.3.1, pyrox-lgm 0.1.4, pyrox-nn 0.2.1, pyrox-ssm 0.2.1, pyrox-gauss 0.1.0, pyrox-xtreme 0.0.4, manipy-jax 0.1.0.
 
 ## Upstream: `geonnax`
 

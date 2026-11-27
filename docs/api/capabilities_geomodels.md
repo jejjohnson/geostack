@@ -17,7 +17,7 @@ This page is the GeoModels layer. It may import GeoML, GeoNumerics, GeoStack.
 
 <!-- upstream -->
 
-Listed at plumax 0.4.1, radtrax 0.2.0, sesmax 0.0.0, sesmax-core 0.3.1, sesmax-ocean 0.0.0, sesmax-experiment 0.0.0.
+Listed at plumax 0.5.0, radtrax 0.2.1, sesmax 0.0.0, sesmax-core 0.3.1, sesmax-ocean 0.0.0, sesmax-experiment 0.0.0.
 
 ## Upstream: `plumax`
 
@@ -76,7 +76,7 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `WindSchedule` | class | Piecewise-linear time-varying wind field. |
 | `calculate_briggs_dispersion_xyz` | function | Evaluate σ_x(s), σ_y(s), σ_z(s) from Briggs parameters. |
 | `calculate_pg_dispersion` | function | Evaluate σ_x(s), σ_y(s), σ_z(s) from Pasquill-Gifford parameters. |
-| `cumulative_wind_integrals` | function | Compute cumulative wind integrals via a single diffrax ODE solve. |
+| `cumulative_wind_integrals` | function | Running integrals of the wind and of its speed from the first knot. |
 | `evolve_puffs` | function | Advance a puff ensemble to ``current_time`` under a time-varying wind. |
 | `frequency_to_release_interval` | function | Convert a release frequency f [Hz] into a release interval Δt [s]. |
 | `gaussian_puff_model` | function | NumPyro model for the Gaussian puff forward with a constant Q prior. |
@@ -102,14 +102,11 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `FootprintEmulator` | class | Per-receptor network from met context and receptor to a footprint row. |
 | `FootprintSimulator` | class | The particle model as a forward model from met context to footprint. |
 | `GaussianPosterior` | class | Closed-form Gaussian posterior over the source vector. |
-| `GriddedWind` | class | Mean wind on the ``les_fvm`` C-grid, trilinear in space, linear in time. |
 | `HannaTurbulence` | class | Height-dependent Hanna (1982) turbulence as a ``TurbulenceModel``. |
 | `HomogeneousTurbulence` | class | Spatially uniform, well-mixed-exact turbulence statistics. |
 | `LognormalPosterior` | class | Linearised lognormal posterior over a non-negative source vector. |
 | `MetContextPrior` | class | The operational met distribution p(u) as pipekit-train's prior operator. |
-| `ParticleState` | class | State of an ensemble of Lagrangian particles. |
 | `assert_emulator_calibrated` | function | Check the emulated source–receptor maps against the particle model's. |
-| `bin_positions` | function | Histogram particle ``positions`` ``(n, 3)`` onto a 3-D grid (counts). |
 | `compute_footprint` | function | Compute a single receptor's surface footprint by backward integration. |
 | `emulated_footprint` | function | The emulated footprint matrix F_emu of one met context. |
 | `emulator_relative_error` | function | Relative Frobenius error ‖F_emu − F‖_F / ‖F‖_F over every case. |
@@ -121,18 +118,13 @@ Plume transport: Gaussian plume and puff, Lagrangian and LES.
 | `gridded_wind_from_prescribed` | function | Sample a ``les_fvm`` :class:`~plumax.les_fvm.wind.PrescribedWindField`. |
 | `hanna_profiles` | function | Hanna (1982) Monin–Obukhov-similarity turbulence profiles. |
 | `init_footprint_emulator` | function | An untrained emulator, standardised to the training set. |
-| `integrate_particles` | function | Integrate the ensemble from ``t0`` to ``t1`` with fixed step ``dt``. |
-| `langevin_step` | function | Advance the ensemble one step ``dt`` with the Markov-1 update. |
 | `linear_gaussian_inversion` | function | Closed-form Gaussian–Gaussian (BLUE) inversion of the source vector. |
 | `lognormal_inversion` | function | Sign-constrained inversion via a lognormal prior linearised in log-space. |
 | `matern32_covariance` | function | Build a Matérn-3/2 prior covariance over grid-cell coordinates. |
-| `n_steps_for_horizon` | function | Number of fixed-``dt`` steps covering ``horizon`` (ceil, float-robust). |
 | `observation_covariance` | function | Assemble the diagonal observation-error covariance ``R``. |
 | `simulate_lagrangian` | function | Simulate a steady Lagrangian concentration field on a 3-D grid. |
-| `step_durations` | function | Per-step durations summing to ``horizon``; the final step takes the rest. |
 | `train_footprint_emulator` | function | Fit the network weights θ with pipekit-train's Equinox backend. |
 | `transport_covariance` | function | Mean footprint F̄ and linearised transport-error covariance at q_a. |
-| `uniform_wind` | function | Return a constant mean-wind field ``t -> (u, v, w)``. |
 | `wind_from_speed_direction` | function | Constant wind from speed + meteorological direction (degrees *from* North). |
 
 ### `plumax.les_fvm`
@@ -618,6 +610,7 @@ Simple Earth-system models: state, terms, steppers, forcing.
 
 | Name | Kind | What it does |
 |---|---|---|
+| `AssertionFailedError` | class | A run fails a check its spec asks for. |
 | `Builder` | function | Re-exported from `collections`. |
 | `BuiltRun` | class | A model and the state it starts from. |
 | `Check` | function | Re-exported from `collections`. |
@@ -804,7 +797,6 @@ Simple ocean models: shallow water and quasi-geostrophic.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `AssertionFailedError` | class | Raised when an opt-in preflight or postflight assertion fails. |
 | `check_deformation_radius` | function | Pre-flight: the first baroclinic deformation radius is resolved. |
 | `check_equatorial_deformation_radius` | function | Pre-flight: the equatorial deformation radius is resolved. |
 | `check_munk_width` | function | Pre-flight: the Munk (viscous) western boundary layer is resolved. |
@@ -863,7 +855,7 @@ What is done with a model: runs, monitors, checkpoints.
 | `NonFiniteMonitor` | class | FAIL-HARD: terminate the run if any state field holds NaN/Inf. |
 | `SolverHealthMonitor` | class | MONITOR: surface diffrax per-chunk solver statistics. |
 | `ThroughputMonitor` | class | MONITOR: report simulated seconds per wallclock second per chunk. |
-| `WatchdogMonitor` | class | FAIL-HARD: terminate if cumulative wallclock exceeds a ceiling. |
+| `WatchdogMonitor` | class | Stop the run, resumably, if cumulative wallclock exceeds a ceiling. |
 | `default_monitors` | function | The runner's default monitor set — preserves legacy behavior. |
 
 ### `sesmax_experiment.run`
