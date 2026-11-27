@@ -17,7 +17,7 @@ This page is the GeoNumerics layer. It imports no other layer.
 
 <!-- upstream -->
 
-Listed at gaussx 0.8.1, gridax 0.3.3, spectraldiffx 0.1.2, functax 0.0.13, argminax 0.0.7, integrix 0.0.11, geophysix 0.0.9, radiomax 0.0.12, tracerax 0.0.4.
+Listed at gaussx 0.8.1, gridax 0.3.5, spectraldiffx 0.1.2, functax 0.0.15, argminax 0.0.7, integrix 0.0.13, geophysix 0.0.10, radiomax 0.0.13, tracerax 0.2.0.
 
 ## Upstream: `gaussx`
 
@@ -1070,6 +1070,7 @@ Integration: rules, cumulative scans, time marching, expectations.
 | `Checkpointed` | class | The checkpointed adjoint: store every k-th state, recompute between them. |
 | `Truncated` | class | The truncated adjoint: gradients flow through the carry of the last k steps. |
 | `checkpointed_scan` | function | `jax.lax.scan` that stores the carry only every k steps for reverse mode. |
+| `scan_for` | function | The scan that runs a loop under an adjoint. |
 | `to_diffrax_adjoint` | function | Map an adjoint spec onto a `diffrax.AbstractAdjoint`. |
 | `truncated_scan` | function | `jax.lax.scan` with gradients truncated to the trailing k steps. |
 
@@ -1109,7 +1110,9 @@ Integration: rules, cumulative scans, time marching, expectations.
 | `SplitExplicitTerms` | class | The vector fields of a split-explicit model, passed to `run` as ``rhs``. |
 | `ab2_step` | function | One second-order Adams–Bashforth step. |
 | `ab3_step` | function | One third-order Adams–Bashforth step. |
+| `count_steps` | function | K = ⌈T/Δt⌉, with a quotient within 10⁻⁹ K of a whole number taken as it. |
 | `departure_points` | function | The points x_d that the flow carries to the nodes x over one step. |
+| `erk_step` | function | One step of an explicit Runge–Kutta solver, unrolled from its tableau. |
 | `euler_step` | function | One forward-Euler step: yₙ₊₁ = yₙ + h f(yₙ). |
 | `heun_step` | function | One Heun (RK2) step, order 2, SSP with C = 1. |
 | `imex_solver` | function | A ``KenCarp3`` IMEX solver whose implicit stage is matrix-free. |
@@ -1122,6 +1125,7 @@ Integration: rules, cumulative scans, time marching, expectations.
 | `semi_lagrangian_step` | function | One semi-Lagrangian step: the old field read at the departure points. |
 | `split_explicit_step` | function | One split-explicit barotropic/baroclinic step. |
 | `stable_step` | function | The largest stable forward-Euler step for advection and diffusion together. |
+| `step_lengths` | function | The K step lengths: Δt, and T − (K − 1) Δt for the last, on the host. |
 
 ### `integrix.rule`
 
@@ -1380,8 +1384,6 @@ Lagrangian particles: advection, deposits, footprints, analysis.
 | `SlowManifold` | class | The velocity of a small buoyant object at the sea surface, a `Velocity`. |
 | `TurbulenceModel` | class | A turbulence closure: σ(z) and τ_L(z) of the velocity fluctuation. |
 | `Walls` | class | Two reflecting walls in height, or a ground alone. |
-| `deterministic` | function | Carry particles along a velocity, forward or backward in time. |
-| `deterministic_sphere` | function | Carry particles along a velocity on the sphere, forward or backward. |
 | `displacement_step` | function | One random-displacement step over each particle's own duration. |
 | `integrate` | function | Run a particle step over a duration, forward or backward in time. |
 | `langevin_step` | function | One Markov-1 Langevin step over each particle's own duration. |
@@ -1392,13 +1394,8 @@ Lagrangian particles: advection, deposits, footprints, analysis.
 |---|---|---|
 | `RegionTime` | class | The time each particle of a run spends in each region, an `Accumulator`. |
 | `Regions` | class | Regions as a label per cell. |
-| `absolute_dispersion` | function | The mean squared distance of particles from where they started. |
 | `connectivity` | function | The fraction of the particles of each region that end in each region. |
-| `cumulative_separation` | function | The normalised cumulative separation of a trajectory from an observed one. |
 | `ftle` | function | The finite-time Lyapunov exponent at each seed. |
-| `pair_dispersion` | function | The mean squared distance between the partners of each pair. |
-| `separation` | function | The distance between a trajectory and an observed one, time by time. |
-| `skill_score` | function | The skill of a trajectory: 1 for a perfect one, 0 for one beyond tolerance. |
 | `visited_connectivity` | function | The fraction of the particles of each region that ever visit each region. |
 
 ### `tracerax.bin`
@@ -1411,13 +1408,6 @@ Lagrangian particles: advection, deposits, footprints, analysis.
 | `concentration` | function | The concentration at one time, from the masses the particles carry. |
 | `deposit` | function | Deposit one weight per particle in the cells, losing none inside the edges. |
 | `steady_concentration` | function | The steady concentration of a continuous source, from one puff's residence. |
-
-### `tracerax.footprint`
-
-| Name | Kind | What it does |
-|---|---|---|
-| `Footprint` | class | The sensitivity of one receptor to the surface fluxes of each cell. |
-| `surface` | function | The surface footprint of one receptor, from particles run backward. |
 
 ### `tracerax.particles`
 
@@ -1438,6 +1428,6 @@ Lagrangian particles: advection, deposits, footprints, analysis.
 | `GriddedVelocity` | class | A velocity on a grid, each component on its own staggered nodes. |
 | `Velocity` | constant | `Velocity` |
 | `WeightedSum` | class | A weighted sum of velocities, each on its own grid. |
-| `cgrid_grids` | function | The grids of the components of a uniform C-grid, for `GriddedVelocity.fit`. |
+| `cgrid_grids` | function | The grids of the components of a C-grid, each on its own points. |
 | `uniform` | function | A velocity that is the same everywhere and at every time. |
 | `uniform_in_space` | function | A velocity that varies in time and not in space. |

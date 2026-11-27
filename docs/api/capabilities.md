@@ -17,7 +17,7 @@ This page is the GeoStack layer. It may import GeoNumerics.
 
 <!-- upstream -->
 
-Listed at pipekit-ops 0.3.0, pipekit 0.3.0, pipekit-array 0.2.0, pipekit-cycle 0.2.0, pipekit-evaluate 0.2.0, pipekit-experiment 0.1.0, pipekit-jax 0.3.0, pipekit-train 0.2.0, georeader-spaceml 2.4.2, geotoolz-ops 0.20.0, geotoolz-array 0.6.1, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.16.0, geotoolz-products 0.7.1, xrtoolz-ops 0.7.1, xrtoolz-products 0.5.1.
+Listed at pipekit-ops 0.4.0, pipekit 0.3.1, pipekit-array 0.3.1, pipekit-cycle 0.3.1, pipekit-evaluate 0.3.1, pipekit-experiment 0.2.1, pipekit-jax 0.4.1, pipekit-train 0.3.1, georeader-spaceml 2.4.2, geotoolz-ops 0.20.1, geotoolz-array 0.6.1, geotoolz-catalog 0.9.0, geotoolz-cloud 0.7.1, geotoolz-patcher 0.16.1, geotoolz-products 0.7.1, xrtoolz-ops 0.7.2, xrtoolz-products 0.5.1.
 
 ## Upstream: `pipekit-ops`
 
@@ -143,7 +143,7 @@ The core: Operator, Graph and the ready-made operators.
 | `to_backend` | function | ``x`` with its NumPy and JAX arrays on one of the two backends. |
 | `unregister` | function | Remove ``cls`` from the sandboxed loader's allowlist. |
 | `unregister_adapter` | function | Remove the adapter registered for exactly ``carrier_type``, if any. |
-| `upgrade_state` | function | ``state`` with module names saved before pipekit 0.2.0 renamed. |
+| `upgrade_state` | function | ``state`` with the module names of older releases renamed. |
 
 ## Upstream: `pipekit`
 
@@ -233,7 +233,7 @@ Time-stepping, data assimilation and observation operators.
 
 | Name | Kind | What it does |
 |---|---|---|
-| `AdjointSpec` | constant | `pipekit_cycle.adjoints.DirectAdjoint \| pipekit_cycle.adjo...` |
+| `AdjointSpec` | constant | `pipekit_cycle.cycles._adjoints.DirectAdjoint \| pipekit_cy...` |
 | `AnalysisStep` | class | Combine forecast state with observations to produce analysis state. |
 | `BFNCycle` | class | Back-and-Forth Nudging over an assimilation window. |
 | `BacksolveAdjoint` | class | Continuous adjoint: solve the adjoint ODE backwards (O(1) memory). |

@@ -112,8 +112,8 @@ sesmax-core = { path = "references/geomodels/sesmax/packages/sesmax-core", edita
 sesmax-ocean = { path = "references/geomodels/sesmax/packages/sesmax-ocean", editable = true }
 sesmax-experiment = { path = "references/geomodels/sesmax/packages/sesmax-experiment", editable = true }
 # diagnostix is a dependency of xrtoolz-ops and plumax and not a submodule yet (#310):
-# the tag on pipekit-array 0.2.0, as geotoolz pins it.
-diagnostix = { git = "https://github.com/jejjohnson/diagnostix", tag = "v0.0.7" }
+# the tag on pipekit-array 0.3.0, as geotoolz pins it.
+diagnostix = { git = "https://github.com/jejjohnson/diagnostix", tag = "v0.0.8" }
 
 [feature.dev.dependencies]
 pytest = ">=8"

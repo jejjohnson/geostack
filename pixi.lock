@@ -447,7 +447,7 @@ environments:
       - pypi: ./references/numerics/geophysix
       - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/radiomax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/24/ec/014b428c3a05837643768d08aeb8fb1289d119d3f9f6fba479dffae05dbc/jaxlib-0.11.2-cp313-cp313-manylinux_2_27_x86_64.whl
@@ -849,7 +849,7 @@ environments:
       - pypi: ./references/numerics/geophysix
       - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/radiomax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2a/2d/d4bf65e47cea8ff2c794a600c4fd1273a7902f268757c531e0ee9f18aa58/pooch-1.9.0-py3-none-any.whl
@@ -1292,7 +1292,7 @@ environments:
       - pypi: ./references/numerics/geophysix
       - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/radiomax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/24/ec/014b428c3a05837643768d08aeb8fb1289d119d3f9f6fba479dffae05dbc/jaxlib-0.11.2-cp313-cp313-manylinux_2_27_x86_64.whl
@@ -1672,7 +1672,7 @@ environments:
       - pypi: ./references/numerics/geophysix
       - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/radiomax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2a/2d/d4bf65e47cea8ff2c794a600c4fd1273a7902f268757c531e0ee9f18aa58/pooch-1.9.0-py3-none-any.whl
@@ -2155,7 +2155,7 @@ environments:
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
       - pypi: ./references/numerics/tracerax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
@@ -2590,7 +2590,7 @@ environments:
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
       - pypi: ./references/numerics/tracerax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
@@ -3094,7 +3094,7 @@ environments:
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
       - pypi: ./references/numerics/tracerax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
@@ -3537,7 +3537,7 @@ environments:
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
       - pypi: ./references/numerics/tracerax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
@@ -4119,7 +4119,7 @@ environments:
       - pypi: ./references/numerics/geophysix
       - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/radiomax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/24/ec/014b428c3a05837643768d08aeb8fb1289d119d3f9f6fba479dffae05dbc/jaxlib-0.11.2-cp313-cp313-manylinux_2_27_x86_64.whl
@@ -4626,7 +4626,7 @@ environments:
       - pypi: ./references/numerics/geophysix
       - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/radiomax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2a/2d/d4bf65e47cea8ff2c794a600c4fd1273a7902f268757c531e0ee9f18aa58/pooch-1.9.0-py3-none-any.whl
@@ -5134,7 +5134,7 @@ environments:
       - pypi: ./references/numerics/geophysix
       - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/radiomax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/04/d5/81d1403788f072e7d0e2b2fe539a0ae4410f27886ff52df094e5348c99ea/vegafusion-2.0.3-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
@@ -5580,7 +5580,7 @@ environments:
       - pypi: ./references/numerics/geophysix
       - pypi: ./references/numerics/gridax/packages/gridax
       - pypi: ./references/numerics/radiomax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/cd/066e86230ae37ed0be70aae89aabf03ca8d9f39c8aea0dec8029455b5540/opt_einsum-3.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2a/2d/d4bf65e47cea8ff2c794a600c4fd1273a7902f268757c531e0ee9f18aa58/pooch-1.9.0-py3-none-any.whl
@@ -6053,7 +6053,7 @@ environments:
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
       - pypi: ./references/numerics/tracerax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
@@ -6472,7 +6472,7 @@ environments:
       - pypi: ./references/numerics/radiomax
       - pypi: ./references/numerics/spectraldiffx
       - pypi: ./references/numerics/tracerax
-      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+      - pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
       - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/10/3544e312442c78a9467e4bc9ea1757727dcc535504588d31d99c6591cf27/matfree-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
@@ -19341,8 +19341,8 @@ packages:
   - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.13
   - geonnax @ git+https://github.com/jejjohnson/geonnax@v0.0.10
   - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.11
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-cycle
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-cycle
   - xarray>=2024.0 ; extra == 'data'
   - numpy>=1.26 ; extra == 'data'
   - matplotlib>=3.9.0 ; extra == 'viz'
@@ -19363,9 +19363,9 @@ packages:
   - matplotlib>=3.9.0 ; extra == 'examples'
   - loguru>=0.7.2 ; extra == 'examples'
   - tqdm>=4.66.0 ; extra == 'examples'
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-jax ; extra == 'persist'
-  - pipekit-experiment @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-experiment ; extra == 'persist'
-  - pipekit-train @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-train ; extra == 'train'
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-jax ; extra == 'persist'
+  - pipekit-experiment @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-experiment ; extra == 'persist'
+  - pipekit-train @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-train ; extra == 'train'
   - vardax[data,viz,exp,jlab,examples,persist,train] ; extra == 'all'
   requires_python: '>=3.12,<3.14'
 - pypi: ./references/geomodels/plumax
@@ -19379,32 +19379,34 @@ packages:
   - scipy>=1.11
   - diffrax>=0.6
   - equinox>=0.11
-  - gridax @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.1#subdirectory=packages/gridax
+  - gridax @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.4#subdirectory=packages/gridax
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   - optimistix>=0.0.10
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops
-  - radtrax @ git+https://github.com/jejjohnson/radtrax@v0.1.0
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
-  - diagnostix @ git+https://github.com/jejjohnson/diagnostix@v0.0.4
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
+  - radtrax @ git+https://github.com/jejjohnson/radtrax@v0.2.1
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - diagnostix @ git+https://github.com/jejjohnson/diagnostix@v0.0.8
   - einx>=0.4
-  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.6
-  - functax @ git+https://github.com/jejjohnson/functax@v0.0.11
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.13
+  - functax @ git+https://github.com/jejjohnson/functax@v0.0.15
+  - tracerax @ git+https://github.com/jejjohnson/tracerax@v0.2.0
   - kernellib @ git+https://github.com/jejjohnson/kernellib@v0.0.22
   - numpyro>=0.21 ; extra == 'inference'
-  - xrtoolz-ops @ git+https://github.com/jejjohnson/geotoolz@a02cebcbf1e57ff205507b8bd0f9687f6fc4184c#subdirectory=packages/xrtoolz-ops ; extra == 'io'
-  - xrtoolz-products @ git+https://github.com/jejjohnson/geotoolz@a02cebcbf1e57ff205507b8bd0f9687f6fc4184c#subdirectory=packages/xrtoolz-products ; extra == 'io'
+  - xrtoolz-ops @ git+https://github.com/jejjohnson/geotoolz@543ad577824dc28e2997c450e413cc7018c7f7cc#subdirectory=packages/xrtoolz-ops ; extra == 'io'
+  - xrtoolz-products @ git+https://github.com/jejjohnson/geotoolz@543ad577824dc28e2997c450e413cc7018c7f7cc#subdirectory=packages/xrtoolz-products ; extra == 'io'
   - pyproj ; extra == 'io'
   - matplotlib ; extra == 'notebooks'
   - ipython ; extra == 'notebooks'
   - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4 ; extra == 'assim'
-  - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.7 ; extra == 'assim'
-  - pipekit-train[equinox,cache] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-train ; extra == 'emulate'
+  - vardax @ git+https://github.com/jejjohnson/vardax@v0.3.10 ; extra == 'assim'
+  - pipekit-train[equinox,cache] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-train ; extra == 'emulate'
   - numpyro>=0.21 ; extra == 'population'
   - pyyaml>=6 ; extra == 'population'
   - pyrox-xtreme @ git+https://github.com/jejjohnson/pyrox@05e38f84305374a68700c06c834b99546bddc64c#subdirectory=packages/pyrox-xtreme ; extra == 'population'
-  - functax @ git+https://github.com/jejjohnson/functax@v0.0.11 ; extra == 'geo'
+  - functax @ git+https://github.com/jejjohnson/functax@v0.0.15 ; extra == 'geo'
   - georeader-spaceml>=2.4.1 ; extra == 'geo'
-  - geotoolz-ops[morph] @ git+https://github.com/jejjohnson/geotoolz@a02cebcbf1e57ff205507b8bd0f9687f6fc4184c#subdirectory=packages/geotoolz-ops ; extra == 'geo'
+  - geotoolz-ops[morph] @ git+https://github.com/jejjohnson/geotoolz@543ad577824dc28e2997c450e413cc7018c7f7cc#subdirectory=packages/geotoolz-ops ; extra == 'geo'
   - scikit-learn>=1.4 ; extra == 'geo'
   - tqdm>=4 ; extra == 'geo'
   - typing-extensions>=4 ; extra == 'geo'
@@ -19421,8 +19423,8 @@ packages:
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   - argminax @ git+https://github.com/jejjohnson/argminax@v0.0.4
   - geonnax @ git+https://github.com/jejjohnson/geonnax@v0.0.9
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
-  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.9
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.13
   - numpy>=2.0
   - xarray
   - netcdf4
@@ -19431,9 +19433,9 @@ packages:
   - einx>=0.4
   - hitran-api ; extra == 'hitran'
   - georeader-spaceml>=2.4.1 ; extra == 'geo'
-  - geotoolz-ops @ git+https://github.com/jejjohnson/geotoolz@a02cebcbf1e57ff205507b8bd0f9687f6fc4184c#subdirectory=packages/geotoolz-ops ; extra == 'geo'
+  - geotoolz-ops @ git+https://github.com/jejjohnson/geotoolz@543ad577824dc28e2997c450e413cc7018c7f7cc#subdirectory=packages/geotoolz-ops ; extra == 'geo'
   - openpyxl>=3.1 ; extra == 'geo'
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.1.4#subdirectory=packages/pipekit-ops ; extra == 'geo'
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops ; extra == 'geo'
   - tqdm>=4 ; extra == 'geo'
   - typing-extensions>=4 ; extra == 'geo'
   requires_python: '>=3.12'
@@ -19458,12 +19460,12 @@ packages:
   - paramax>=0.0.5
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.8.1
   - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.2
-  - gridax[jax,pipekit] @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.3#subdirectory=packages/gridax
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.2.0#subdirectory=packages/pipekit-cycle
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.2.0#subdirectory=packages/pipekit-jax
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
+  - gridax[jax,pipekit] @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.4#subdirectory=packages/gridax
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.3.0#subdirectory=packages/pipekit-cycle
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.3.0#subdirectory=packages/pipekit-jax
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
   - geonnax @ git+https://github.com/jejjohnson/geonnax.git@v0.0.11
   - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.11
   - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.13
@@ -19483,9 +19485,14 @@ packages:
   - numpy>=2.0
   - paramax>=0.0.5
   - diffrax>=0.7.2
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops
-  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.2.0#subdirectory=packages/pipekit-cycle
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
+  - pipekit-cycle @ git+https://github.com/jejjohnson/pipekit.git@pipekit-array-v0.3.0#subdirectory=packages/pipekit-cycle
   - orbax-checkpoint>=0.11.37 ; extra == 'checkpoint'
+  - cyclopts>=4.0 ; extra == 'sim'
+  - loguru>=0.7.3 ; extra == 'sim'
+  - pyyaml>=6.0.2 ; extra == 'sim'
+  - xarray>=2026.4.0 ; extra == 'sim'
+  - zarr>=3.1.6 ; extra == 'sim'
   requires_python: '>=3.12'
 - pypi: ./references/geomodels/sesmax/packages/sesmax-ocean
   name: sesmax-ocean
@@ -19495,9 +19502,13 @@ packages:
   - jaxtyping>=0.3.9
   - equinox>=0.13.8
   - paramax>=0.0.5
-  - gridax[jax,pipekit] @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.3#subdirectory=packages/gridax
+  - gridax[jax,pipekit] @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.4#subdirectory=packages/gridax
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.8.1
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - cyclopts>=4.0 ; extra == 'data'
+  - loguru>=0.7.3 ; extra == 'data'
+  - xarray>=2026.4.0 ; extra == 'data'
+  - zarr>=3.1.6 ; extra == 'data'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/georeader
   name: georeader-spaceml
@@ -19536,8 +19547,8 @@ packages:
   - numpy>=1.26
   - pyproj>=3.6
   - affine>=2.4
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
   - functax @ git+https://github.com/jejjohnson/functax@v0.0.6
   - jax>=0.4.30 ; extra == 'jax'
   - xarray>=2024.10 ; extra == 'xarray'
@@ -19597,15 +19608,15 @@ packages:
   requires_dist:
   - geotoolz-array @ ./references/geostack/geotoolz/packages/geotoolz-array
   - numpy>=1.26
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
-  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.12
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.13
   - jaxtyping>=0.2.36
   - scipy>=1.11
   - affine>=2.4
   - pyproj>=3.6
   - pandas>=2.1
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
   - einx>=0.4
   - rasterio>=1.3 ; extra == 'raster'
   - geopandas>=0.14 ; extra == 'vector'
@@ -19634,12 +19645,12 @@ packages:
   - geotoolz-array[georeader] @ ./references/geostack/geotoolz/packages/geotoolz-array
   - georeader-spaceml>=2.1
   - numpy>=1.26
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
   - scipy>=1.11
   - typing-extensions>=4.0
   - rasterio>=1.3
   - pyproj>=3.6
-  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
+  - pipekit-array @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
   - xarray>=2024.1 ; extra == 'grid'
   - geopandas>=0.14 ; extra == 'vector'
   - shapely>=2.0 ; extra == 'vector'
@@ -19660,8 +19671,8 @@ packages:
   - dask[bag]>=2024.8.3 ; extra == 'patch-full'
   - geotoolz-array[jax] @ ./references/geostack/geotoolz/packages/geotoolz-array ; extra == 'patch-full'
   - geotoolz-cloud[cog] @ ./references/geostack/geotoolz/packages/geotoolz-cloud ; extra == 'patch-full'
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops ; extra == 'pipekit'
-  - pipekit-train[equinox] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-train ; extra == 'train'
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops ; extra == 'pipekit'
+  - pipekit-train[equinox] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-train ; extra == 'train'
   - xarray>=2024.1 ; extra == 'train'
   - zarr>=3.0 ; extra == 'train'
   requires_python: '>=3.12'
@@ -19671,8 +19682,8 @@ packages:
   - geotoolz-array[georeader] @ ./references/geostack/geotoolz/packages/geotoolz-array
   - georeader-spaceml>=2.1
   - numpy>=1.26
-  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.12
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
+  - radiomax @ git+https://github.com/jejjohnson/radiomax@v0.0.13
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
   - typing-extensions>=4.0
   - rasterio>=1.3
   - affine>=2.4
@@ -19701,9 +19712,9 @@ packages:
   name: xrtoolz-ops
   requires_dist:
   - numpy>=1.26
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
-  - gridax @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.3#subdirectory=packages/gridax
-  - diagnostix @ git+https://github.com/jejjohnson/diagnostix@v0.0.7
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - gridax @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.4#subdirectory=packages/gridax
+  - diagnostix @ git+https://github.com/jejjohnson/diagnostix@v0.0.8
   - dask[array]>=2024.10
   - jaxtyping>=0.2.34
   - scipy>=1.12
@@ -19713,11 +19724,11 @@ packages:
   - pyproj>=3.6
   - regionmask>=0.12
   - numpy-groupies>=0.11
-  - pipekit-array[xarray] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
+  - pipekit-array[xarray] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
   - geotoolz-ops @ ./references/geostack/geotoolz/packages/geotoolz-ops
   - geotoolz-array @ ./references/geostack/geotoolz/packages/geotoolz-array
   - matplotlib>=3.8
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
   - xrtoolz-products @ ./references/geostack/geotoolz/packages/xrtoolz-products
   - netcdf4>=1.6
   - pywavelets>=1.4 ; extra == 'wavelets'
@@ -19727,14 +19738,14 @@ packages:
   - geopandas>=1.1.3 ; extra == 'vector'
   - shapely>=2.0 ; extra == 'vector'
   - rasterio>=1.3 ; extra == 'vector'
-  - pipekit-array[sklearn] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array ; extra == 'sklearn'
+  - pipekit-array[sklearn] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array ; extra == 'sklearn'
   - scikit-learn>=1.4 ; extra == 'sklearn'
   requires_python: '>=3.12'
 - pypi: ./references/geostack/geotoolz/packages/xrtoolz-products
   name: xrtoolz-products
   requires_dist:
   - numpy>=1.26
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
   - pandas>=2.1
   - xarray>=2024.10
   - copernicusmarine>=2.0 ; extra == 'cmems'
@@ -19831,7 +19842,11 @@ packages:
   - grain>=0.2 ; extra == 'equinox'
   - orbax-checkpoint>=0.6 ; extra == 'equinox'
   - jaxtyping>=0.2 ; extra == 'equinox'
-  - keras>=3.0 ; extra == 'keras'
+  - keras>=3.11 ; extra == 'keras'
+  - jax>=0.4.30 ; extra == 'keras'
+  - grain>=0.2 ; extra == 'keras'
+  - orbax-checkpoint>=0.6 ; extra == 'keras'
+  - numpy ; extra == 'keras'
   - numpyro>=0.15 ; extra == 'numpyro'
   - optax>=0.2 ; extra == 'numpyro'
   - blackjax>=1.2 ; extra == 'blackjax'
@@ -19889,7 +19904,7 @@ packages:
   name: geophysix
   requires_dist:
   - numpy>=2.0
-  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
   - jax>=0.4.30 ; extra == 'jax'
   - xarray>=2024.6 ; extra == 'xarray'
   requires_python: '>=3.12'
@@ -19899,9 +19914,9 @@ packages:
   - numpy>=2.0.0
   - scipy>=1.14.0
   - jaxtyping>=0.3.0
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops
-  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
   - jax>=0.4.38 ; extra == 'jax'
   - jaxlib>=0.4.38 ; extra == 'jax'
   - equinox>=0.11.0 ; extra == 'jax'
@@ -19909,7 +19924,7 @@ packages:
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.8.1 ; extra == 'jax'
   - spectraldiffx @ git+https://github.com/jejjohnson/spectraldiffx.git@0.1.2 ; extra == 'jax'
   - gridax[jax] @ ./references/numerics/gridax/packages/gridax ; extra == 'pipekit'
-  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-jax ; extra == 'pipekit'
+  - pipekit-jax @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-jax ; extra == 'pipekit'
   - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.9 ; extra == 'pipekit'
   requires_python: '>=3.12,<3.14'
 - pypi: ./references/numerics/integrix
@@ -19923,15 +19938,15 @@ packages:
   - lineax>=0.1.1
   - optimistix>=0.1.0
   - diffrax>=0.7.2,<0.8
-  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.13
+  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.15
   - gaussx @ git+https://github.com/jejjohnson/gaussx@v0.6.12
   requires_python: '>=3.12'
 - pypi: ./references/numerics/radiomax
   name: radiomax
   requires_dist:
   - numpy>=2.0
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
-  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
   - jax>=0.4.30 ; extra == 'jax'
   - xarray>=2024.6 ; extra == 'xarray'
   requires_python: '>=3.12'
@@ -20004,21 +20019,21 @@ packages:
   - jaxtyping>=0.3
   - einx>=0.4.3
   - diffrax>=0.7.2,<0.8
-  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.13
-  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.10
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.7
-  - gridax @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.1#subdirectory=packages/gridax ; python_full_version < '3.14' and extra == 'gridax'
+  - functax[jax] @ git+https://github.com/jejjohnson/functax@v0.0.15
+  - integrix @ git+https://github.com/jejjohnson/integrix@v0.0.13
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
   requires_python: '>=3.12'
-- pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.7#d3b9ebd8b23de9cee1322654a274df089b6f60e5
+- pypi: git+https://github.com/jejjohnson/diagnostix?tag=v0.0.8#479c4791e6809c80be8b58e98f8237394be677bb
   name: diagnostix
-  version: 0.0.7
+  version: 0.0.8
   requires_dist:
   - numpy>=2.0
   - jaxtyping>=0.3
-  - gridax @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.3#subdirectory=packages/gridax
-  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.9
-  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-array
-  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.2.0#subdirectory=packages/pipekit-ops
+  - gridax @ git+https://github.com/jejjohnson/gridax@gridax-v0.3.4#subdirectory=packages/gridax
+  - geophysix @ git+https://github.com/jejjohnson/geophysix@v0.0.10
+  - pipekit-array[numpy,compat] @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-array
+  - pipekit-ops @ git+https://github.com/jejjohnson/pipekit@pipekit-array-v0.3.0#subdirectory=packages/pipekit-ops
   - jax>=0.4.38 ; extra == 'jax'
   - xarray>=2024.10 ; extra == 'xarray'
   requires_python: '>=3.12,<3.14'

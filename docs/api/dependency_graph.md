@@ -116,10 +116,10 @@ flowchart TB
   kernellib --> gaussx
   manipy --> kernellib
   plumax --> gridax
-  plumax --> integrix
   plumax --> kernellib
   plumax -.-> pyrox
   plumax --> radtrax
+  plumax --> tracerax
   plumax -.-> vardax
   pyrox --> argminax
   pyrox -.-> filterax
@@ -140,7 +140,6 @@ flowchart TB
   spectraldiffx --> functax
   spectraldiffx --> gaussx
   tracerax --> geophysix
-  tracerax -.-> gridax
   tracerax --> integrix
   vardax --> argminax
   vardax --> geonnax
@@ -149,7 +148,7 @@ flowchart TB
 ```
 :::
 
-22 repositories, 47 packages and 75 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
+22 repositories, 47 packages and 76 dependencies between repositories, from each submodule's `pyproject.toml` and imports. Solid arrows are base dependencies or imports, dashed ones extras; an arrow a longer path implies is not drawn. Dev, docs and tutorial dependency groups are not library dependencies and are left out.
 
 <!-- dependency-graph:end -->
 
@@ -162,11 +161,7 @@ What it shows:
   GeoModels except geonnax, geophysix and radiomax reaches it. A breaking change in gaussx is a
   change to almost the whole stack.
 - **plumax is the one GeoModels repository that imports another.** It builds on radtrax: plume physics uses radiative transfer, never the reverse ([package boundaries](../geomodels/package_boundaries.md#pb-rules), rule 2).
-- **The one cycle is inside GeoStack** (in red): pipekit-train imports
-  `geopatcher.time` from geotoolz-patcher, and geotoolz depends on pipekit.
-  The import is lazy and behind a `try`, so nothing fails at install time,
-  but the two repositories can no longer be released, tested or reasoned
-  about separately.
+- **The graph has no cycle.** The last one was inside GeoStack: pipekit-train imported `geopatcher.time` from geotoolz-patcher while geotoolz depends on pipekit. It ended when `XarrayWindowDataset` moved to `geopatcher.integrations.train`, so pipekit imports nothing from geotoolz.
 
 (dg-rules)=
 ## The rules
@@ -185,7 +180,7 @@ is the rule's name in [](#tbl-dg-violations).
 3. **Every library edge counts.** Base dependencies, extras, and imports,
    whether at module level, inside a function, behind a `try` or under
    `TYPE_CHECKING`, all go into the graph. An optional edge is still an edge,
-   and optional edges are where cycles hide: the one cycle today is a lazy,
+   and optional edges are where cycles hide: the last cycle the graph had was a lazy,
    guarded import. Dependency groups (`dev`, `docs`, `tutorials`) are not:
    they install tools for working on the repository, not the library, so a
    tutorial may use a library above it.
@@ -323,9 +318,10 @@ cannot import, so most of its tests could no longer be collected.
 | plumax | gridax | base | `plumax → gridax` |
 | plumax | integrix | base | `plumax → integrix` |
 | plumax | kernellib | base | `plumax → kernellib` |
-| plumax | pipekit | base | `plumax → pipekit-ops` |
+| plumax | pipekit | base | `plumax → pipekit-array` |
 | plumax | pyrox | extra | `plumax → pyrox-xtreme` |
 | plumax | radtrax | base | `plumax → radtrax` |
+| plumax | tracerax | base | `plumax → tracerax` |
 | plumax | vardax | extra | `plumax → vardax` |
 | radtrax | argminax | base | `radtrax → argminax` |
 | radtrax | gaussx | base | `radtrax → gaussx` |
@@ -384,8 +380,8 @@ cannot import, so most of its tests could no longer be collected.
 | spectraldiffx | gaussx | base | `spectraldiffx → gaussx` |
 | tracerax | functax | base | `tracerax → functax` |
 | tracerax | geophysix | base | `tracerax → geophysix` |
-| tracerax | gridax | extra | `tracerax → gridax` |
 | tracerax | integrix | base | `tracerax → integrix` |
+| tracerax | pipekit | base | `tracerax → pipekit-array` |
 | argminax | gaussx | base | `argminax → gaussx` |
 | integrix | functax | base | `integrix → functax` |
 | integrix | gaussx | base | `integrix → gaussx` |
