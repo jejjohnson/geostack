@@ -33,7 +33,9 @@ MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monosp
 # pipeline_hash in its "recipes as data" skill, at ⑥; each is one call with no
 # state of its own, so the figure follows the §2 test and the README, at ①.
 # pipekit-ops has no strategies or models of its own, so those rungs are drawn
-# dashed with what fills them. Each row is (badge, role, grammar, caption,
+# dashed: ② with the arguments that choose how a Map runs, ③ empty, since the
+# ladders of pipekit-train and pipekit-jax put their trained state at ③ and
+# their model operators at ⑤. Each row is (badge, role, grammar, caption,
 # groups, palette key, borrowed), and each group is (label, chips): the label
 # starts a new line and the chips wrap after it.
 ROWS = [
@@ -162,8 +164,8 @@ ROWS = [
         "3",
         "model",
         "the noun phrase",
-        "none of its own: fitted models are pipekit-jax's and pipekit-train's",
-        [(None, ["JaxModelOp", "EquinoxModelOp"])],
+        "none of its own: trained state is pipekit-train's",
+        [(None, [])],
         "violet",
         True,
     ),
@@ -369,6 +371,8 @@ def lay_out(groups: list) -> tuple[list, list, list, float]:
     """
     labels, placed, dividers, dy = [], [], [], 0.0
     for i, (label, chips) in enumerate(groups):
+        if not label and not chips:
+            continue
         if i:
             dividers.append(dy + GROUP_GAP / 2 - 4)
             dy += GROUP_GAP
