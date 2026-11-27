@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pipekit-cycle — forecast, observe, analyse, on a clock</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .pc-cycle .katex { font-size: 1.22em; }
+  #diagram .term .eq .katex { font-size: 1.1em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 270px 340px 320px 260px;
+    column-gap: 78px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .pc-cycle { color: var(--ink-accent); margin: 2px 0 0 2px; text-align: center; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab.dashed { background: #fff; border-style: dashed; }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pipekit-cycle — forecast, observe, analyse, on a clock</div>
+  <div class="subtitle">You bring the model, the observation operator and the analysis; pipekit-cycle owns the loop around them: the clock, which observations belong to which step, and resuming where a run stopped.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">seams and data</span></div>
+      <div class="node">
+        <div class="name">forward model <span class="m">f</span></div>
+        <div class="desc">any object with <code>step(state, dt)</code>, <code>dt</code> and <code>state_signature</code>: a <code>ForwardModel</code></div>
+      </div>
+      <div class="node">
+        <div class="name">observation operator <span class="m">h</span></div>
+        <div class="desc"><code>__call__(state)</code> and <code>linearize(state)</code>, or a ready-made one from <code>components</code></div>
+      </div>
+      <div class="node">
+        <div class="name">analysis <span class="m">a</span></div>
+        <div class="desc">one call, an <code>AnalysisStep</code>: an EnKF, a 3D-Var, a particle filter, from filterax, vardax or your own</div>
+      </div>
+      <div class="node">
+        <div class="name">observations <span class="m">\mathbf{y}_t</span> and <span class="m">\boldsymbol{\Sigma}_\varepsilon</span></div>
+        <div class="desc">an operator called with the step index, and the error covariance on <code>DAState</code></div>
+      </div>
+    </div>
+
+    <!-- column 2: one cycle -->
+    <div class="lane compute" id="lane-cycle">
+      <div class="lane-head"><span class="verb">one cycle</span><span class="pkg">repeated <span class="m">T</span> times</span></div>
+      <div class="pc-cycle"><span class="m">\mathbf{x}_{t \mid t} = a\left(f(\mathbf{x}_{t-1 \mid t-1}), \mathbf{y}_t; h, \boldsymbol{\Sigma}_\varepsilon\right)</span></div>
+      <div class="term">
+        <div class="lbl">the state-space model behind the three seams</div>
+        <div class="eq"><span class="m">\mathbf{x}_t = f(\mathbf{x}_{t-1}) + \boldsymbol{\eta}_t, \quad \mathbf{y}_t = h(\mathbf{x}_t) + \boldsymbol{\varepsilon}_t</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">every cycle is a stateful operator</div>
+        <div class="eq"><span class="m">(\mathbf{x}_T, s_T) = \text{cycle}(\mathbf{x}_0, s_0)</span></div>
+      </div>
+      <div class="note">The carry state <span class="m">s</span> holds the clock, the cycle count and <span class="m">\boldsymbol{\Sigma}_\varepsilon</span>, so with <code>obs_clock="state"</code> two calls of five cycles give the same analysis as one call of ten.</div>
+    </div>
+
+    <!-- column 3: the areas -->
+    <div class="lane cut" id="lane-areas">
+      <div class="lane-head"><span class="verb">areas</span><span class="pkg">one job each</span></div>
+      <div class="node">
+        <div class="name">the seams</div>
+        <div class="desc"><span class="mod">protocols</span> — <code>ForwardModel</code> · <code>ObservationOperator</code> · <code>AnalysisStep</code>, and eleven more for reduced-order, ensemble and iterative methods</div>
+      </div>
+      <div class="node">
+        <div class="name">stepping a model</div>
+        <div class="desc"><span class="mod">cycles</span> — <code>Cycle</code> · <code>EnsembleCycle</code> · <code>WindowedCycle</code> · <code>Recurrence</code>, the carry states and the adjoint specs</div>
+      </div>
+      <div class="node">
+        <div class="name">ready-made <span class="m">f</span> and <span class="m">h</span></div>
+        <div class="desc"><span class="mod">components</span> — <code>LinearObs</code> · <code>CompositeObs</code> · <code>CallableForward</code> · <code>NeuralForward</code></div>
+      </div>
+      <div class="node">
+        <div class="name">forecast, observe, analyse</div>
+        <div class="desc"><span class="mod">assimilation</span> — <code>DACycle</code> · <code>EnsembleDACycle</code> · <code>SmootherCycle</code> · <code>BFNCycle</code></div>
+      </div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">a state and its clock</span></div>
+      <div class="node">
+        <div class="name">the analysis <span class="m">\mathbf{x}_{T \mid T}</span></div>
+        <div class="desc">one state, or the ensemble's members</div>
+      </div>
+      <div class="node">
+        <div class="name">the carry state</div>
+        <div class="desc"><code>DAState</code>: the time, the cycle count, the error covariance; pass it back to resume</div>
+      </div>
+      <div class="node">
+        <div class="name">the history</div>
+        <div class="desc">with <code>save_history=True</code>, every stride-th <code>(carrier, state)</code> pair</div>
+      </div>
+      <div class="node solid">
+        <div class="name">a step of a pipeline</div>
+        <div class="desc">a cycle chains with <code>|</code> and sits in a <code>Graph</code> like any operator</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">pipekit-ops</div>
+      <div class="what">The <code>StatefulOperator</code> and <code>CarryState</code> every cycle is built on; its only dependency.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">pipekit-cycle[array]</div>
+      <div class="what">Installs pipekit-array beside it, for an <span class="m">f</span> or an <span class="m">h</span> built from its operators.</div>
+    </div>
+    <div class="slab dashed">
+      <div class="lib">filterax · vardax</div>
+      <div class="what">The analyses: they satisfy <code>AnalysisStep</code>, and pipekit-cycle never imports them.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-cycle", { label: "<span class='m'>f, h, a</span> · <span class='m'>\\mathbf{y}_t</span>", color: "#7b6bb5" });
+    wire("lane-cycle", "lane-areas", { label: "<span class='m'>T</span> cycles", color: "#cf9418" });
+    wire("lane-areas", "lane-out", { label: "<span class='m'>(\\mathbf{x}, s)</span>", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
