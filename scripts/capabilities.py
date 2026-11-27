@@ -521,7 +521,6 @@ _PLUMAX_LOGQUAD = (
     "deprecated plumax.population aliases forwarding to integrix.expect"
     " (plumax#253), until plumax#283 removes them"
 )
-_TRACERAX = "moves from plumax to tracerax when plumax switches (tracerax#12)"
 _DIVERGENCES = "Gaussian divergences in both gauss_flows and gaussx"
 
 KNOWN_CLASHES: dict[str, dict[str, str]] = {
@@ -621,8 +620,6 @@ KNOWN_CLASHES: dict[str, dict[str, str]] = {
         "Diagnostics": _SAME_NAME,
         "Domain": _SAME_NAME,
         "InstrumentSpec": _PORTED,
-        "ParticleState": _TRACERAX,
-        "langevin_step": _TRACERAX,
         "Lorenz63": _TOY_MODELS,
         "Lorenz96": _TOY_MODELS,
         "ModelOp": "geoops' ModelOp beside sesmax_core.operators' ModelOp",
