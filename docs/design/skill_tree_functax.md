@@ -63,18 +63,18 @@ The five small modules share one skill: each is a few functions, and a task that
 |---|---|---|---|---|---|---|---|---|---|
 | geonnax | 68 | 14 | 0 | 0 | 41 | 1 | 8 | 0 | 4 |
 | kernellib | 15 | 2 | 0 | 0 | 12 | 1 | 0 | 0 | 0 |
-| tracerax | 14 | 7 | 0 | 6 | 0 | 1 | 0 | 0 | 0 |
+| tracerax | 13 | 7 | 0 | 5 | 0 | 1 | 0 | 0 | 0 |
 | pyrox-nn | 8 | 1 | 0 | 0 | 7 | 0 | 0 | 0 | 0 |
 | spectraldiffx | 7 | 1 | 0 | 0 | 2 | 2 | 0 | 0 | 2 |
 | gauss-flows | 6 | 1 | 0 | 5 | 0 | 0 | 0 | 0 | 0 |
 | integrix | 6 | 1 | 0 | 5 | 0 | 0 | 0 | 0 | 0 |
 | pyrox-gp | 6 | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 0 |
 | geotoolz-ops | 5 | 3 | 0 | 2 | 0 | 0 | 0 | 0 | 0 |
+| plumax | 5 | 2 | 0 | 3 | 0 | 0 | 0 | 0 | 0 |
 | pyrox-lgm | 5 | 3 | 0 | 2 | 0 | 0 | 0 | 0 | 0 |
 | vardax | 5 | 3 | 0 | 2 | 0 | 0 | 0 | 0 | 0 |
 | geotoolz-array | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | sesmax-core | 3 | 0 | 0 | 3 | 0 | 0 | 0 | 0 | 0 |
-| plumax | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 <!-- shelf:uses:end -->
 :::
 
@@ -93,11 +93,11 @@ The five small modules share one skill: each is a few functions, and a task that
 | integrix | Interp | Geometry (1) |
 | pyrox-gp | Basis |  |
 | geotoolz-ops | Geometry | Interp (2) |
+| plumax | Interp | Geometry (2) |
 | pyrox-lgm | Geometry | Interp (2) |
 | vardax | Geometry | Interp (2) |
 | geotoolz-array | Geometry |  |
 | sesmax-core | Interp |  |
-| plumax | none | Geometry (1) |
 <!-- shelf:cards:end -->
 :::
 
