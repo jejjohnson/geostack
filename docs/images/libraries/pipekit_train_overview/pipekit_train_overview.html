@@ -28,8 +28,6 @@
   .pt-loop { color: var(--ink-accent); margin: 2px 0 0 2px; text-align: center; }
   .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
   .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
-  .node.pt-slot { border-style: dashed; box-shadow: none; }
-  .node.pt-slot .name { color: var(--muted); }
   .pt-keys { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 2px; }
   .pt-nowrap { white-space: nowrap; }
   .base-row {
@@ -64,11 +62,11 @@
       </div>
       <div class="node">
         <div class="name">a model <span class="m">g(\cdot\,; \boldsymbol{\theta})</span></div>
-        <div class="desc">an Equinox module in an <code>EquinoxModelOp</code> (or pipekit-jax's <code>JaxModelOp</code>); for a Bayesian fit, a NumPyro model</div>
+        <div class="desc">an Equinox module in an <code>EquinoxModelOp</code> (or pipekit-jax's <code>JaxModelOp</code>), a Keras model in a <code>KerasModelOp</code>; for a Bayesian fit, a NumPyro model</div>
       </div>
       <div class="node">
         <div class="name">a loss <span class="m">\ell</span> or a task</div>
-        <div class="desc"><code>MSE</code> · <code>NLL</code> · <code>KL</code> · <code>Composite</code>, or a <code>TrainTask</code>; a <code>NumpyroTask</code> for the Bayesian backends</div>
+        <div class="desc"><code>MSE</code> · <code>NLL</code> · <code>KL</code> · <code>Composite</code>, or a <code>TrainTask</code>, a <code>KerasTask</code>; a <code>NumpyroTask</code> for the Bayesian backends</div>
       </div>
       <div class="node">
         <div class="name">the settings</div>
@@ -109,10 +107,10 @@
         <div class="pt-keys">"blackjax"</div>
         <div class="desc"><span class="mod">backends.blackjax</span> — <code>run</code>: NUTS with window adaptation, on the model of a <code>NumpyroTask</code> or on a bare log-density</div>
       </div>
-      <div class="node pt-slot">
+      <div class="node">
         <div class="name">Keras 3</div>
         <div class="pt-keys">"keras"</div>
-        <div class="desc"><span class="mod">backends.keras</span> — a slot: its <code>run</code> raises <code>NotImplementedError</code> today</div>
+        <div class="desc"><span class="mod">backends.keras</span> — <code>run</code>: Keras's own <code>compile</code> and <code>fit</code> on JAX, for a <code>KerasModelOp</code> or an Equinox model, which comes back in its own wrapper</div>
       </div>
     </div>
 

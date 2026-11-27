@@ -56,7 +56,12 @@ ROWS = [
         [
             (
                 "trained",
-                ["EquinoxModelOp", "NumpyroPredictiveOp", "BlackjaxPredictiveOp"],
+                [
+                    "EquinoxModelOp",
+                    "KerasModelOp",
+                    "NumpyroPredictiveOp",
+                    "BlackjaxPredictiveOp",
+                ],
             ),
             ("evaluate", ["ValidationStep"]),
         ],
@@ -76,7 +81,7 @@ ROWS = [
                     "run_svi",
                     "run_mcmc",
                     "blackjax.run",
-                    "keras.run (stub)",
+                    "keras.run",
                 ],
             ),
             ("one update", ["train_step"]),
@@ -90,7 +95,7 @@ ROWS = [
         "the noun phrase",
         "the state held between calls",
         [
-            ("weights", ["TrainState"]),
+            ("weights", ["TrainState", "EquinoxLayer"]),
             ("carry", ["TrainerCarryState", "SweepCarryState", "SweepResult"]),
         ],
         "violet",
@@ -103,7 +108,7 @@ ROWS = [
         "how the run goes: settings, no data",
         [
             ("losses", ["Loss", "MSE", "NLL", "KL", "Composite"]),
-            ("tasks", ["TrainTask", "NumpyroTask", "BlackjaxTask"]),
+            ("tasks", ["TrainTask", "KerasTask", "NumpyroTask", "BlackjaxTask"]),
             ("search, mesh", ["ParameterGrid", "ShardingSpec"]),
             (
                 "callbacks",
@@ -123,6 +128,7 @@ ROWS = [
             ("losses", ["call_loss"]),
             ("hashes", ["hash_config"]),
             ("checkpoints", ["save_state", "restore_state"]),
+            ("Keras", ["build_keras_optimizer", "import_keras"]),
         ],
         "teal",
         False,
@@ -153,7 +159,13 @@ SIDES = [
     (
         "engines",
         "the optimisers and samplers the backends run",
-        ["optax.adamw", "numpyro.infer.SVI", "numpyro.infer.NUTS", "blackjax.nuts"],
+        [
+            "optax.adamw",
+            "keras.Model.fit",
+            "numpyro.infer.SVI",
+            "numpyro.infer.NUTS",
+            "blackjax.nuts",
+        ],
         "strategy",
     ),
     (
