@@ -470,7 +470,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     <h1>GeoStack layer map</h1>
     <p class="lead">The same number of layers as today, cut by a different test. Core holds the maths and plumbing that knows no geography, so GeoML dissolves into it. GeoNumerics holds geophysical maths on plain arrays; the data toolkits sit above it and wrap its kernels in carriers; the physics models sit on top.</p>
     <p class="lead">Beneath Core sit the third-party foundations the whole stack is built on: JAX, Equinox, lineax, optimistix, diffrax, optax, NumPyro and the array libraries. The function-approximation core, <span class="mono">functax</span>, goes in tier 0 of geocore, the one placement where geotoolz and gridax can both import it; integrix (integration over time, space and spectrum) and argminax (optimisation with uncertainty at the optimum) sit just above it.</p>
-    <p class="lead">The libraries are released from <b>nine repos</b>, drawn as dotted outlines in the figures: geocore, pipekit, geo-inference and pyrox in Core, geogrids and geofields in GeoNumerics, then geotoolz, geomodels and geobench. A repo imports only from repos below it, and none is so large that one task needs more than a small part of it.</p>
+    <p class="lead">The libraries are released from <b>eight repos</b>, drawn as dotted outlines in the figures: geocore, pipekit, geo-inference and pyrox in Core, one repo for GeoNumerics, then geotoolz, geomodels and geobench. A repo imports only from repos below it, and none is so large that one task needs more than a small part of it.</p>
   </header>
 
   <section class="figure" aria-labelledby="clean-title">
@@ -495,7 +495,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     </div>
     <div class="canvas">
       <svg class="graph" id="graph" viewBox="0 0 1567 1450" role="img" aria-labelledby="graph-desc">
-        <desc id="graph-desc">Dependency graph of the GeoStack libraries in the proposed layers. Third-party foundations at the bottom: JAX, Equinox, jaxtyping, lineax, optimistix, diffrax, einx, optax, NumPyro, FlowJAX, interpax, NumPy, SciPy, xarray, pyproj, Shapely, rasterio and georeader. Core above them holds four repos: the proposed geocore (gaussx, functax, integrix, kernellib, geonnax), pipekit above it (pipekit-ops, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate), the proposed geo-inference (argminax, gauss_flows, filterax, vardax, manipy) and pyrox on top (pyrox, pyrox-gauss, pyrox-xtreme, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm). GeoNumerics above Core is two proposed repos: geogrids (geophysix, spectraldiffx, gridax, and the placeholder meshax) and geofields above it (diagnostix, tracerax, radiomax). GeoStack sits above GeoNumerics: the geotoolz repo (geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrproducts, xrops), with georeader among the third-party foundations. GeoModels (radtrax, sesmax-core, sesmax-ocean, plumax, and the planned sesmax-atmos) sit above both, and applications on top.</desc>
+        <desc id="graph-desc">Dependency graph of the GeoStack libraries in the proposed layers. Third-party foundations at the bottom: JAX, Equinox, jaxtyping, lineax, optimistix, diffrax, einx, optax, NumPyro, FlowJAX, interpax, NumPy, SciPy, xarray, pyproj, Shapely, rasterio and georeader. Core above them holds four repos: the proposed geocore (gaussx, functax, integrix, kernellib, geonnax), pipekit above it (pipekit-ops, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate), the proposed geo-inference (argminax, gauss_flows, filterax, vardax, manipy) and pyrox on top (pyrox, pyrox-gauss, pyrox-xtreme, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm). GeoNumerics above Core is one proposed repo, in four tiers: geophysix; spectraldiffx, radiomax and the placeholder meshax; gridax; then diagnostix and tracerax. GeoStack sits above GeoNumerics: the geotoolz repo (geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrproducts, xrops), with georeader among the third-party foundations. GeoModels (radtrax, sesmax-core, sesmax-ocean, plumax, and the planned sesmax-atmos) sit above both, and applications on top.</desc>
         <defs>
           <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-default"/></marker>
           <marker id="arrow-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-hot"/></marker>
@@ -513,18 +513,18 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   </section>
 
   <section class="section" aria-labelledby="repos-title">
-    <h2 id="repos-title">Nine repos</h2>
+    <h2 id="repos-title">Eight repos</h2>
     <p class="sub">The layers say what a library may import; the repos say where it is released from. Each repo is a uv workspace whose packages install on their own, with one lockfile, one CI and per-package versions. <b>A repo imports only from repos below it</b>, and inside a repo the tiers hold, checked by an import linter. Moving code between two libraries of the same repo is one pull request, and a new library needs no new repo. Today the same libraries are spread over about 25 repos.</p>
-    <p class="sub"><b>A repo is split when it holds two clusters that one task rarely touches together</b> and the cut leaves the imports running one way. That is what separates pyrox from geo-inference and geogrids from geofields, and it keeps every repo small enough for one person or one agent to hold.</p>
+    <p class="sub"><b>A repo is split when it holds two clusters that one task rarely touches together</b> and the cut leaves the imports running one way. That is what separates pyrox from geo-inference, and it keeps every repo small enough for one person or one agent to hold.</p>
+    <p class="sub"><b>GeoNumerics is one repo, not two.</b> It was planned as geogrids (constants, grids and the operations on them) and, above it, geofields (diagnostix, tracerax, radiomax: what is computed from fields and observations). As the code landed, geofields turned out to hold no cluster: none of its three libraries imports another. diagnostix leans on gridax and geophysix below it, and was designed with gridax's analysis kernels; radiomax needs only geophysix; tracerax, since its first decision (23 November 2026), imports functax, integrix and geophysix, with gridax only behind an extra. A repo whose libraries never change together gets none of what a repo is for (one lockfile, one CI run, a move between libraries in one pull request), so the two are one repo, about 54,000 lines of source, a third of geotoolz. tracerax stays out of Core because it knows the ground, the boundary layer and the sphere.</p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Repo</th><th>Layer</th><th>Packages</th><th>Status</th><th>Imports only from</th></tr></thead>
         <tbody>
           <tr><td class="lib">geobench</td><td>GeoBench</td><td>geobench-core (tasks, splits, leaderboards, runner), geobench-experiment (today's pipekit-experiment), geobench-data (frozen, versioned datasets), geobench-suites (one submodule per domain)</td><td>planned</td><td>everything below; nothing imports it</td></tr>
           <tr><td class="lib">geomodels</td><td>GeoModels</td><td>sesmax-core, sesmax-ocean, sesmax-atmos, radtrax, plumax</td><td>proposed: the sesmax repo plus two repos today. Open: sesmax and the methane pair as two repos</td><td>geotoolz and below</td></tr>
-          <tr><td class="lib">geotoolz</td><td>GeoStack</td><td>geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrops, xrproducts; xrcf proposed</td><td>today: the xrtoolz repo was folded in, November 2026; the <code>geotoolz</code> and <code>xrtoolz</code> umbrellas hold no code</td><td>geofields and below</td></tr>
-          <tr><td class="lib">geofields (name open)</td><td>GeoNumerics</td><td>diagnostix, tracerax, radiomax</td><td>proposed: three repos today, all with code. What you compute from fields and observations; radiomax needs only geophysix and could sit in either repo</td><td>geogrids and below</td></tr>
-          <tr><td class="lib">geogrids (name open)</td><td>GeoNumerics</td><td>geophysix, spectraldiffx, gridax (finitevolX until November 2026). Placeholder: meshax</td><td>proposed: three repos today, one library not started. Constants, structured grids and the operations on them; geophysix sits here because gridax needs it and geofields needs gridax</td><td>the Core repos</td></tr>
+          <tr><td class="lib">geotoolz</td><td>GeoStack</td><td>geoarray, geocloud, geopatcher, geoops, geocatalog, geoproducts, xrops, xrproducts; xrcf proposed</td><td>today: the xrtoolz repo was folded in, November 2026; the <code>geotoolz</code> and <code>xrtoolz</code> umbrellas hold no code</td><td>GeoNumerics and below</td></tr>
+          <tr><td class="lib">GeoNumerics (name open)</td><td>GeoNumerics</td><td>geophysix, spectraldiffx, radiomax, gridax (finitevolX until November 2026), diagnostix, tracerax. Placeholder: meshax</td><td>proposed: six repos today, one library not started. Constants, spheres and structured grids, the operations on them, and what is computed with them: Eulerian diagnostics and Lagrangian particles on top</td><td>the Core repos</td></tr>
           <tr><td class="lib">pyrox</td><td>Core</td><td>pyrox, pyrox-gauss, pyrox-xtreme, pyrox-gp, pyrox-lgm, pyrox-nn, pyrox-ssm</td><td>today, as a workspace of seven: the two packages of NumPyro distributions have joined, pyrox-gauss (the Gaussian classes that were in gaussx) and pyrox-xtreme (xtremax until November 2026)</td><td>geo-inference and below</td></tr>
           <tr><td class="lib">geo-inference</td><td>Core</td><td>argminax, gauss_flows, filterax, vardax, manipy</td><td>proposed: five repos today</td><td>geocore and pipekit</td></tr>
           <tr><td class="lib">pipekit</td><td>Core</td><td>pipekit-ops, pipekit-array, pipekit-train, pipekit-cycle, pipekit-jax, pipekit-evaluate; pipekit-experiment until it moves to geobench</td><td>today</td><td>geocore: pipekit-jax takes its scans and adjoints from integrix</td></tr>
@@ -532,11 +532,11 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
         </tbody>
       </table>
     </div>
-    <p class="sub"><b>Tiers are numbered per repo.</b> A library imports lower tiers of its own repo and anything in the repos below it. Layer-wide numbers used to forbid diagnostix (geofields) from importing gridax (geogrids) although the repo order allows it; the tier labels in the figures now restart at T0 in each repo, and the check under the import graph judges an import between two repos of one layer by the repo order.</p>
+    <p class="sub"><b>Tiers are numbered per repo.</b> A library imports lower tiers of its own repo and anything in the repos below it. Layer-wide numbers would rank every library of one repo against every library of another in the same layer; the tier labels in the figures restart at T0 in each repo, and the check under the import graph judges an import between two repos of one layer by the repo order.</p>
     <p class="sub"><b>gridax, in one package.</b> gridax was planned as a code-free umbrella over two packages split at the backend: gridax-core, structured grids as data on NumPy, and gridax-ops, finitevolX renamed, on JAX. It shipped as one package instead (gridax #477), because its operators are written against the array API: they run on NumPy, so xrops and diagnostix import gridax without bringing in JAX, and the same code runs on JAX, CuPy or any array that array-api-compat knows. JAX stays behind an extra, for the elliptic and multigrid solvers and the pipekit layer. finitevolX is retired. The library was renamed because nearly all of it assumes a rectangular <code>[j, i]</code> array with a ghost ring: it is Arakawa C-grid operations, not finite volumes in general. spectraldiffx keeps its grids, which are the nodes of its transforms, and does not import gridax. Vertical modes, forcing and the PDE driver moved to sesmax-core, and the time steppers, the semi-Lagrangian scheme included, to <code>integrix.march</code>.</p>
     <p class="sub"><b>The test between geocore and geo-inference.</b> geocore is maths with no data in it: operators, bases, quadrature, kernels, network layers. geo-inference takes a cost or a likelihood and returns an estimate with its uncertainty. So argminax (curvature at the minimum, Laplace, the Bayesian learning rule) and manipy (manifold alignment fitted to data) sit in geo-inference, and nothing in geocore imports either. pipekit sits between the two: it needs integrix from geocore, and vardax in geo-inference needs pipekit. pyrox sits on top: its packages import argminax, filterax and gauss_flows, and nothing in geo-inference imports pyrox, which also keeps filterax and vardax out of the NumPyro packages.</p>
     <p class="sub"><b>pyrox-gauss, proposed.</b> gaussx holds eight NumPyro distribution classes behind an optional extra: three multivariate normals, <code>LGSSM</code>, <code>MarkovGaussian</code> and the GMRFs. They move to pyrox-gauss, so gaussx imports no NumPyro and every NumPyro distribution class of the stack is released from the pyrox repo. <b>pyrox-gauss imports gaussx and NumPyro, not pyrox</b>: the bridge takes any distribution as an argument (<code>pyrox_sample(name, dist)</code>), a NumPyro <code>Distribution</code> cannot also be an Equinox module (the two metaclasses conflict), and the model packages already build the distribution from the hyperparameters they sample. So pyrox and pyrox-gauss sit side by side, and pyrox-gp, pyrox-lgm and pyrox-ssm import both. The multivariate normals, <code>LGSSM</code>, <code>MarkovGaussian</code> and the KL registration move as they are; the GMRFs are split, a plain core staying in gaussx for its Laplace and VB code and for argminax, and the <code>Distribution</code> wrapper going to pyrox-gauss.</p>
-    <p class="sub"><b>Still open.</b> The names geogrids and geofields. meshax is on the map as a placeholder for unstructured meshes in geogrids, one package on the array API in the same shape as gridax; it has no code, and does not start until a second consumer exists. The model registry now in pipekit-experiment, which should stay in pipekit when the tracking adapters move to geobench, because the applications will need it and must not import a benchmark repo; pipekit-train and vardax reach pipekit-experiment through extras today, which the move has to keep inside pipekit. <b>optax_bayes is retired:</b> the Bayesian learning rule lives in <code>argminax.blr</code> from argminax 0.0.7.</p>
+    <p class="sub"><b>Still open.</b> The name of the GeoNumerics repo. meshax is on the map as a placeholder for unstructured meshes in it, one package on the array API in the same shape as gridax; it has no code, and does not start until a second consumer exists. The model registry now in pipekit-experiment, which should stay in pipekit when the tracking adapters move to geobench, because the applications will need it and must not import a benchmark repo; pipekit-train and vardax reach pipekit-experiment through extras today, which the move has to keep inside pipekit. <b>optax_bayes is retired:</b> the Bayesian learning rule lives in <code>argminax.blr</code> from argminax 0.0.7.</p>
   </section>
 
   <section class="section" aria-labelledby="map-title">
@@ -618,7 +618,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
 
   <section class="section" aria-labelledby="core2-title">
     <h2 id="core2-title">Core, reorganised</h2>
-    <p class="sub">Every foundation gets at most one home in Core, and a new library is created only once a second consumer exists. Three new libraries meet that bar today: functax, integrix and argminax. Each card says what the library is, which foundation it extends (◇) or replaces outright (↺, no longer a dependency), what it builds on in the stack (↓) and who builds on it (↑). Core's packages are released from four repos, geocore, pipekit, geo-inference and pyrox (see Nine repos above), drawn as dotted outlines in the figures and one card per package here.</p>
+    <p class="sub">Every foundation gets at most one home in Core, and a new library is created only once a second consumer exists. Three new libraries meet that bar today: functax, integrix and argminax. Each card says what the library is, which foundation it extends (◇) or replaces outright (↺, no longer a dependency), what it builds on in the stack (↓) and who builds on it (↑). Core's packages are released from four repos, geocore, pipekit, geo-inference and pyrox (see Eight repos above), drawn as dotted outlines in the figures and one card per package here.</p>
     <div class="legend-kinds"><span class="chip">imports today</span><span class="chip planned">planned</span><span class="chip ext">foundation it extends</span><span class="chip gone">replaced: design borrowed, no dependency</span><span class="lk-arrow">◇ extends</span><span class="lk-arrow">↺ replaces</span><span class="lk-arrow">↓ builds on</span><span class="lk-arrow">↑ used by</span></div>
     <div class="tiers band-core" id="tiers-core"></div>
     <h3 class="minor">What moves</h3>
@@ -661,7 +661,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     <div class="legend-kinds"><span class="chip">imports today</span><span class="chip planned">planned</span><span class="lk-arrow">↓ builds on</span><span class="lk-arrow">↑ used by</span></div>
 
     <h3 class="minor layer-h" style="--lc:var(--numerics)">GeoNumerics</h3>
-    <p class="sub">Numerical methods on geophysical domains, on plain arrays: the grids, spheres and physics geophysics uses, but no CRS and no data files. Six libraries, all with code today, and a placeholder for unstructured meshes (meshax). They are to be released from two repos: geogrids (geophysix, spectraldiffx, gridax) and, above it, geofields (diagnostix, tracerax, radiomax). gridax was finitevolX until November 2026, and is one package on the array API.</p>
+    <p class="sub">Numerical methods on geophysical domains, on plain arrays: the grids, spheres and physics geophysics uses, but no CRS and no data files. Six libraries, all with code today, and a placeholder for unstructured meshes (meshax). They are to be released from one repo, its name open, in four tiers: geophysix; spectraldiffx, radiomax and the placeholder meshax; gridax; then diagnostix and tracerax, which read fields on grids and carry particles through them. gridax was finitevolX until November 2026, and is one package on the array API.</p>
     <div class="tiers band-numerics" id="tiers-numerics"></div>
     <h3 class="minor small">What moves in</h3>
     <div class="table-wrap">
@@ -888,7 +888,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
         <li>The layer table and tiers in <code>scripts/dependency_graph.py</code>, and the diagram it generates.</li>
         <li>One capability index per layer: Core replaces GeoML.</li>
         <li>The pixi environments: <code>geoml</code> becomes <code>core</code>, or merges into the default.</li>
-        <li>Five imports were planned to go away, and four have: kernellib and pyrox-gp take their bases from functax instead of geonnax (the geonnax split), pyrox-nn no longer imports pyrox-gp, and the pyrox core no longer imports gaussx. The fifth, geoproducts importing geoops behind an extra, stays until its presets become data. Every other import found today fits as it is, with vardax in geo-inference, above pipekit, and gridax at the top of geogrids, above geophysix and spectraldiffx.</li>
+        <li>Five imports were planned to go away, and four have: kernellib and pyrox-gp take their bases from functax instead of geonnax (the geonnax split), pyrox-nn no longer imports pyrox-gp, and the pyrox core no longer imports gaussx. The fifth, geoproducts importing geoops behind an extra, stays until its presets become data. Every other import found today fits as it is, with vardax in geo-inference, above pipekit, and gridax in the middle of the GeoNumerics repo, above geophysix and spectraldiffx and below diagnostix and tracerax.</li>
       </ul>
     </div>
   </section>
@@ -960,12 +960,12 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     { id: "pyrox-gauss",   layer: "core",     tier: 0, today: "geoml",     ws: "pyrox", x: 0, y: 0, why: "pyrox-gauss: gaussx's Gaussians as NumPyro distributions (multivariate normals, LGSSM, Markov Gaussian, GMRFs) and their KL, moved out of gaussx; imports gaussx, not pyrox" },
     { id: "manipy",        layer: "core",     tier: 0, today: "geoml",  x: 520, y: 560, why: "manifold alignment, dimensionality reduction and hyperspectral workflows on kernellib" },
     { id: "geophysix", layer: "numerics", tier: 0, today: "numerics", x: 330, y: 668, why: "constants, ellipsoid and sphere metrics, Coriolis, geodesics, thermodynamics, equations of state, column units" },
-    { id: "meshax", layer: "numerics", tier: 1, today: "none", x: 530, y: 616, why: "meshax (placeholder, not started): unstructured meshes and the operations on them, in one package on the array API as gridax is", proposed: true },
-    { id: "spectraldiffx", layer: "numerics", tier: 1, today: "numerics", x: 395, y: 616, why: "spectral and spherical-harmonic discretisations" },
-    { id: "diagnostix", layer: "numerics", tier: 1, today: "outside", x: 695, y: 616, why: "diagnostics of geophysical fields on any array library: kinematics, columns, budgets, climatologies and anomalies, spectra, EOFs, skill scores; its own repo, not yet a geostack submodule" },
-    { id: "radiomax", layer: "numerics", tier: 0, today: "numerics", x: 762, y: 668, why: "observation geometry, radiometry, empirical retrievals, SAR and altimetry corrections" },
+    { id: "meshax", layer: "numerics", tier: 1, today: "none", x: 640, y: 616, why: "meshax (placeholder, not started): unstructured meshes and the operations on them, in one package on the array API as gridax is", proposed: true },
+    { id: "spectraldiffx", layer: "numerics", tier: 1, today: "numerics", x: 300, y: 616, why: "spectral and spherical-harmonic discretisations" },
+    { id: "diagnostix", layer: "numerics", tier: 3, today: "outside", x: 300, y: 512, why: "diagnostics of geophysical fields on any array library: kinematics, columns, budgets, climatologies and anomalies, spectra, EOFs, skill scores; its own repo, not yet a geostack submodule" },
+    { id: "radiomax", layer: "numerics", tier: 1, today: "numerics", x: 470, y: 616, why: "observation geometry, radiometry, empirical retrievals, SAR and altimetry corrections" },
     { id: "gridax", layer: "numerics", tier: 2, today: "numerics", x: 330, y: 564, why: "gridax (finitevolX until November 2026): Arakawa C-grids and their masks, located fields, stencils and schemes, advection and diffusion, boundary conditions, analysis differences and vertical remapping; one package on the array API, with JAX behind an extra for the elliptic solvers and the pipekit layer" },
-    { id: "tracerax", layer: "numerics", tier: 1, today: "numerics", x: 825, y: 616, why: "Lagrangian particles, FTLE, residence time, connectivity, footprints" },
+    { id: "tracerax", layer: "numerics", tier: 3, today: "numerics", x: 470, y: 512, why: "Lagrangian particles, FTLE, residence time, connectivity, footprints" },
     { id: "geoarray",      layer: "toolkits", tier: 0, today: "geostack", ws: "geotoolz", x: 250, y: 593, why: "geotoolz-array: the carriers (GeoArray, GeoSwath, GeoPoints), grids with a CRS, windows, RasterSource; 7.5k lines" },
     { id: "geocloud",      layer: "toolkits", tier: 1, today: "geostack", ws: "geotoolz", x: 530, y: 541, why: "geotoolz-cloud: the obstore client pool, file verbs, credentials, async COG and HDF reads; 6.5k lines" },
     { id: "geopatcher",    layer: "toolkits", tier: 2, today: "geostack", ws: "geotoolz", x: 530, y: 489, why: "geotoolz-patcher: split, process, stitch along geometry × sampler × window × aggregation; 18.6k lines" },
@@ -1011,8 +1011,8 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
     gaussx: "geocore", functax: "geocore", integrix: "geocore", kernellib: "geocore", geonnax: "geocore",
     argminax: "geo-inference", gauss_flows: "geo-inference", filterax: "geo-inference", vardax: "geo-inference", manipy: "geo-inference",
     pyrox: "pyrox", "pyrox-gauss": "pyrox", "pyrox-gp": "pyrox", "pyrox-lgm": "pyrox", "pyrox-nn": "pyrox", "pyrox-ssm": "pyrox", "pyrox-xtreme": "pyrox",
-    geophysix: "geogrids", spectraldiffx: "geogrids", gridax: "geogrids", meshax: "geogrids",
-    diagnostix: "geofields", tracerax: "geofields", radiomax: "geofields",
+    geophysix: "geonumerics", spectraldiffx: "geonumerics", gridax: "geonumerics", meshax: "geonumerics",
+    diagnostix: "geonumerics", tracerax: "geonumerics", radiomax: "geonumerics",
   };
   const repoOf = (n) => REPO[n.id] || (n.layer === "toolkits" ? "geotoolz" : n.layer === "models" ? "geomodels" : n.ws);
   const tagOf = (n) => (n.proposed ? "proposed" : n.today === "none" ? "new" : `today ${TODAY[n.today].name}`) + (repoOf(n) ? ` · ${repoOf(n)} repo` : "");
@@ -1169,7 +1169,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   ];
   const TIER_ROWS = [
     { band: "core", y: 1210, t: "T0" }, { band: "core", y: 1149, t: "T1" }, { band: "core", y: 1088, t: "T2" }, { band: "core", y: 1027, t: "T3" }, { band: "core", y: 966, t: "T4" },
-    { band: "numerics", y: 868, t: "T0" }, { band: "numerics", y: 816, t: "T1" }, { band: "numerics", y: 764, t: "T2" },
+    { band: "numerics", y: 868, t: "T0" }, { band: "numerics", y: 816, t: "T1" }, { band: "numerics", y: 764, t: "T2" }, { band: "numerics", y: 712, t: "T3" },
     { band: "toolkits", y: 593, t: "T0" }, { band: "toolkits", y: 541, t: "T1" }, { band: "toolkits", y: 489, t: "T2" },
     { band: "toolkits", y: 437, t: "T3" }, { band: "toolkits", y: 385, t: "T4" },
     { band: "models", y: 228, t: "T0" }, { band: "models", y: 164, t: "T1" }
@@ -1208,8 +1208,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   [{ name: "observations · GeoArray", x: 388, y: 352, w: 270, h: 272 },
    { name: "shared · either carrier", x: 668, y: 352, w: 270, h: 272 },
    { name: "states · xarray (third-party)", x: 948, y: 352, w: 270, h: 272 },
-   { name: "geogrids repo · proposed, name open", x: 463, y: 725, w: 425, h: 164 },
-   { name: "geofields repo · proposed, name open", x: 903, y: 777, w: 265, h: 112 },
+   { name: "GeoNumerics repo · proposed, name open", x: 463, y: 690, w: 705, h: 199 },
    { name: "geocore repo · proposed", x: 20, y: 1110, w: 329, h: 123 },
    { name: "geo-inference repo · proposed", x: 361, y: 1110, w: 406, h: 123 },
    { name: "pyrox repo · 7 today", x: 779, y: 1110, w: 420, h: 123 },
@@ -1357,7 +1356,7 @@ header, .lead, .sub, .caption, footer, .rule, .obj, ol.decide, .notes { max-widt
   }
 
   // ---------- rule check ----------
-  const REPO_RANK = { geocore: 0, pipekit: 1, "geo-inference": 2, pyrox: 3, geogrids: 0, geofields: 1 };
+  const REPO_RANK = { geocore: 0, pipekit: 1, "geo-inference": 2, pyrox: 3, geonumerics: 0 };
   const allowedProposed = (s, t) => {
     const a = byId[s], b = byId[t];
     if (a.layer !== b.layer) return LAYERS[a.layer].rank > LAYERS[b.layer].rank;
