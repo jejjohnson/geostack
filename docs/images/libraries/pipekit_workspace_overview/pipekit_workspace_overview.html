@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pipekit workspace — one pipeline, seven packages</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1700px; }
+  #diagram .katex { font-size: 1.1em; }
+  #diagram .joint .katex { font-size: 1.25em; }
+  #diagram .term .eq .katex { font-size: 1.08em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 262px 352px 500px 286px;
+    column-gap: 73px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 12px; }
+  .node .desc code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .joint { color: var(--ink-accent); margin: 2px 0 4px; text-align: center; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+  /* a group of packages: what their operators have in common */
+  .factor {
+    font-size: 12px; font-weight: 600; color: var(--ink-accent);
+    margin: 14px 0 6px 2px;
+  }
+  .lane-head + .factor { margin-top: 0; }
+  .lane .pkg-card + .pkg-card { margin-top: 8px; }
+  .pkg-card { display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
+  .pkg-card img { width: 38px; height: 38px; flex: none; }
+  .pkg-card .name { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+  .pkg-card .form { font-size: 12.5px; font-weight: 500; color: var(--ink-accent); }
+  .pkg-card .desc code { font-size: 12px; color: var(--muted); }
+  /* the two foundations */
+  .pkg-card.found { border-width: 2px; }
+  .pill {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: #fff; background: var(--accent);
+    border-radius: 999px; padding: 2px 8px;
+    position: absolute; top: -9px; right: 14px;
+  }
+  .node.solid .desc code { color: #fff; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; }
+  .slab .what { margin-top: 3px; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pipekit — one pipeline, seven packages</div>
+  <div class="subtitle">Every step is an <code>Operator</code>, and every way of combining steps returns one, so a whole workflow is one composition. Each package supplies operators of one kind, and all of them chain with <code>|</code>.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you bring</span></div>
+      <div class="node">
+        <div class="name">a carrier <span class="m">x_0</span></div>
+        <div class="desc">a list of scene records, a NumPy array, an <code>xr.DataArray</code>, a model state or your own class</div>
+      </div>
+      <div class="node">
+        <div class="name">your steps <span class="m">o_k</span></div>
+        <div class="desc">each an <code>Operator</code> with one method, <code>_apply</code>, that never looks inside a carrier it does not need</div>
+      </div>
+      <div class="node">
+        <div class="name">the seams</div>
+        <div class="desc">a forward model, an observation operator, an analysis or a registry, each a runtime-checkable protocol, so a library plugs in without importing pipekit</div>
+      </div>
+      <div class="node">
+        <div class="name">a model to fit, a reference to score</div>
+        <div class="desc">a dataset, a model and a loss for a training loop; a prediction and its reference for a scorer</div>
+      </div>
+    </div>
+
+    <!-- column 2: the one pipeline -->
+    <div class="lane compute" id="lane-pipeline">
+      <div class="lane-head"><span class="verb">one pipeline</span><span class="pkg"><span class="m">p</span>, an operator itself</span></div>
+      <div class="joint"><span class="m">p = o_K \circ \cdots \circ o_2 \circ o_1</span></div>
+      <div class="term">
+        <div class="lbl">each step, from one set of carriers to the next</div>
+        <div class="eq"><span class="m">o_k : \mathcal{X}_{k-1} \to \mathcal{X}_k</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">a step that carries state, such as a cycle</div>
+        <div class="eq"><span class="m">(x_t, s_t) = o(x_{t-1}, s_{t-1})</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">a name for its configuration, the content hash</div>
+        <div class="eq"><span class="m">h(p) = \mathrm{SHA256}(\mathrm{json}(s_p))</span></div>
+      </div>
+      <div class="note">Because <span class="m">p</span> is an operator, it can be called, inspected before it runs, mapped over many inputs, hashed and written to JSON like any one of its steps. Two pipelines share <span class="m">h</span> exactly when they are configured the same.</div>
+    </div>
+
+    <!-- column 3: the packages, by the kind of operator they supply -->
+    <div class="lane cut" id="lane-packages">
+      <div class="lane-head"><span class="verb">pipekit</span><span class="pkg">operators of one kind per package</span></div>
+
+      <div class="factor">the two foundations, each usable on its own</div>
+      <div class="node pkg-card found"><span class="pill">foundation</span><img src="_icon-ops.svg" alt=""><div>
+        <div class="name">pipekit-ops <span class="form">any step, and every way of combining steps</span></div>
+        <div class="desc"><code>Operator</code> · <code>Sequential</code> · <code>Graph</code> · <code>Map</code> · <code>dumps</code></div>
+      </div></div>
+      <div class="node pkg-card found"><span class="pill">foundation</span><img src="_icon-array.svg" alt=""><div>
+        <div class="name">pipekit-array <span class="form">array operations by dim name</span></div>
+        <div class="desc"><code>DimArray</code> · <code>Reduce</code> · <code>Coarsen</code> · <code>KernelOp</code></div>
+      </div></div>
+
+      <div class="factor">steps that carry state, <span class="m">(x_t, s_t) = o(x_{t-1}, s_{t-1})</span></div>
+      <div class="node pkg-card"><img src="_icon-cycle.svg" alt=""><div>
+        <div class="name">pipekit-cycle <span class="form">a forecast and an analysis, on a clock</span></div>
+        <div class="desc"><code>Cycle</code> · <code>DACycle</code> · <code>EnsembleDACycle</code></div>
+      </div></div>
+      <div class="node pkg-card"><img src="_icon-train.svg" alt=""><div>
+        <div class="name">pipekit-train <span class="form">a fit that returns a trained model</span></div>
+        <div class="desc"><code>TrainingLoop</code> · <code>HyperSweep</code></div>
+      </div></div>
+
+      <div class="factor">a score and a stored model, each under a hash</div>
+      <div class="node pkg-card"><img src="_icon-evaluate.svg" alt=""><div>
+        <div class="name">pipekit-evaluate <span class="form">a score against a reference</span></div>
+        <div class="desc"><code>MetricScorer</code> · <code>evaluate</code> · <code>Benchmark</code></div>
+      </div></div>
+      <div class="node pkg-card"><img src="_icon-experiment.svg" alt=""><div>
+        <div class="name">pipekit-experiment <span class="form">a model stored under its hash</span></div>
+        <div class="desc"><code>LocalModelRegistry</code> · <code>S3ModelRegistry</code></div>
+      </div></div>
+
+      <div class="factor">steps that JAX can see into</div>
+      <div class="node pkg-card"><img src="_icon-jax.svg" alt=""><div>
+        <div class="name">pipekit-jax <span class="form">operators that are JAX pytrees</span></div>
+        <div class="desc"><code>JaxOperator</code> · <code>JaxModelOp</code> · <code>ScanCycle</code></div>
+      </div></div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">one object, many uses</span></div>
+      <div class="node solid">
+        <div class="name">the result <span class="m">x_K = p(x_0)</span></div>
+        <div class="desc">in the carrier the last step returns, on one input or, through <code>Map</code>, on many</div>
+      </div>
+      <div class="node">
+        <div class="name">its shape before it runs</div>
+        <div class="desc"><code>summary</code> lists each step's output signature, from the input's <code>signature_of</code></div>
+      </div>
+      <div class="node">
+        <div class="name">its configuration as JSON</div>
+        <div class="desc"><code>dumps</code> and <code>loads</code> rebuild <span class="m">p</span> with the same <code>pipeline_hash</code></div>
+      </div>
+      <div class="node">
+        <div class="name">a trained model in a registry</div>
+        <div class="desc">stored under the hash of its state and its weights, and checked again on every load</div>
+      </div>
+      <div class="node">
+        <div class="name">a report and a run that resumes</div>
+        <div class="desc">an <code>EvaluationReport</code> with its content hash, and a carry state to pass back where a run stopped</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">the Python standard library</div>
+      <div class="what">All pipekit-ops needs: <code>concurrent.futures</code> and <code>asyncio</code> for <code>Map</code>, <code>json</code> and <code>hashlib</code> for the state and its hash.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">Array API · NumPy · JAX · xarray</div>
+      <div class="what">The arrays pipekit-array runs on, and dask, each behind an extra; PyTorch for its plain-array functions.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">Equinox · optax · NumPyro · BlackJAX</div>
+      <div class="what">The training backends of pipekit-train, behind extras; pipekit-jax needs JAX and Equinox.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">DVC · Hydra · Metaflow · fsspec</div>
+      <div class="what">Run tracking and object stores for pipekit-experiment, each behind its own extra.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-pipeline", { label: "steps", color: "#7b6bb5" });
+    wire("lane-pipeline", "lane-packages", { label: "operators", color: "#cf9418" });
+    wire("lane-packages", "lane-out", { label: "<span class='m'>p</span>", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
