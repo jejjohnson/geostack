@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pipekit-ops — one operator, five ways to use it</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+
+  /* the one object */
+  .pk-obj { width: 900px; margin: 0 auto; }
+  .pk-expansion { text-align: center; margin: 2px 0 12px; color: var(--ink-accent); }
+  #diagram .pk-expansion .katex { font-size: 1.65em; }
+  .pk-terms { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pk-term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .pk-term .eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 12px; min-height: 42px; text-align: center;
+  }
+  #diagram .pk-term .eq .katex { font-size: 1.25em; }
+
+  /* one card per operation */
+  .pk-ops {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    column-gap: 20px; margin-top: 104px;
+  }
+  .pk-op .lane-head { margin-bottom: 8px; }
+  .pk-op .lane-head .verb { font-size: 13px; }
+  .pk-mod { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink-accent); }
+  .pk-eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 10px; min-height: 70px; line-height: 1.9;
+  }
+  #diagram .pk-eq .katex { font-size: 1.18em; white-space: nowrap; }
+  .pk-eq .k { font-size: 12px; color: var(--muted); margin-right: 4px; }
+  .nowrap { white-space: nowrap; }
+  .pk-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 10px 2px 0; min-height: 72px; }
+  .pk-names { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .pk-names code {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink);
+    background: var(--card); border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 6px;
+  }
+
+  /* the floor: the package's own lower areas, then what it builds on */
+  .pk-floor { margin-top: 30px; display: grid; gap: 12px; }
+  .pk-slab {
+    display: grid; grid-template-columns: 190px 250px 1fr; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .pk-slab .lib { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--cut-ink); }
+  .pk-slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .pk-slab .list { font-size: 12.5px; color: var(--ink); line-height: 1.6; }
+  .pk-slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .pk-deps { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .pk-dep {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px; background: #fff; border: 1.5px dashed #cbd5e1;
+  }
+  .pk-dep .lib { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .pk-dep .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .pk-dep code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+  /* connector labels hold maths, so they use the sans face, not the chip's mono */
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pipekit-ops — one operator, five ways to use it</div>
+  <div class="subtitle">Every step is an <code>Operator</code>, and every way of combining steps returns one, so a whole pipeline is composed, wrapped, run over many items, observed and saved like a single step. Pure Python, with no dependencies.</div>
+
+  <div class="lane compute pk-obj" id="obj">
+    <div class="lane-head"><span class="verb">one operator</span><span class="pkg">a pipeline <span class="m">p</span> of <span class="m">K</span> steps, on any carrier</span></div>
+    <div class="pk-expansion"><span class="m">\displaystyle p = o_K \circ \cdots \circ o_2 \circ o_1</span></div>
+    <div class="pk-terms">
+      <div class="pk-term">
+        <div class="lbl">each step, one method <code>_apply</code>, never looking inside the carrier</div>
+        <div class="eq"><span class="m">o_k : \mathcal{X}_{k-1} \to \mathcal{X}_k</span></div>
+      </div>
+      <div class="pk-term">
+        <div class="lbl">its state: each step's class, module and arguments, and the hash of it</div>
+        <div class="eq"><span class="m">s_p, \quad h(p) = \mathrm{SHA256}(\mathrm{json}(s_p))</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pk-ops">
+    <div class="lane cut pk-op" id="op-compose">
+      <div class="lane-head"><span class="verb">compose</span><span class="pk-mod">pipekit_ops.core</span></div>
+      <div class="pk-eq"><span class="k">chain</span> <span class="m">o_2 \circ o_1</span><br><span class="k">graph: named inputs to outputs</span></div>
+      <div class="pk-desc"><code>a | b | c</code> is one flat <code>Sequential</code>; a <code>Graph</code> wires operators called on <code>Input</code>s, refuses cycles, and gives each node's signature before it runs.</div>
+      <div class="pk-names"><code>Operator</code><code>Sequential</code><code>Graph</code><code>Input</code><code>StatefulOperator</code><code>CarryState</code><code>pipe</code></div>
+    </div>
+
+    <div class="lane cut pk-op" id="op-wrap">
+      <div class="lane-head"><span class="verb">wrap</span><span class="pk-mod">pipekit_ops.operators</span></div>
+      <div class="pk-eq"><span class="m">o \mapsto w(o)</span><br><span class="k">same signature, one more rule</span></div>
+      <div class="pk-desc">Retries on named exceptions, time and rate limits, branches, a cache keyed by <span class="m">h</span>, and the checks; also the ready-made steps on dicts and lists.</div>
+      <div class="pk-names"><code>Retry</code><code>Try</code><code>Timeout</code><code>Branch</code><code>Cache</code><code>AssertSignature</code><code>Filter</code><code>Get</code></div>
+    </div>
+
+    <div class="lane cut pk-op" id="op-map">
+      <div class="lane-head"><span class="verb">map</span><span class="pk-mod">pipekit_ops.execution</span></div>
+      <div class="pk-eq"><span class="m">[o(x_1), \ldots, o(x_N)]</span><br><span class="k">one operator over <span class="m">N</span> items</span></div>
+      <div class="pk-desc">Serially, on threads, on spawned processes, on asyncio or on an executor bound at run time, with a bound on the items in flight and a policy for failures.</div>
+      <div class="pk-names"><code>Map</code><code>ThreadMap</code><code>ProcessMap</code><code>AsyncMap</code><code>BatchedMap</code><code>Prefetch</code><code>Fold</code></div>
+    </div>
+
+    <div class="lane cut pk-op" id="op-observe">
+      <div class="lane-head"><span class="verb">observe</span><span class="pk-mod">pipekit_ops.observe</span></div>
+      <div class="pk-eq"><span class="m">x \mapsto x</span><br><span class="k">and a log, a trace or a snapshot</span></div>
+      <div class="pk-desc">Steps that pass the carrier through unchanged, and <code>jit_report</code>, which says which steps of a pipeline trace under <code>jax.jit</code> and why the others do not.</div>
+      <div class="pk-names"><code>Tap</code><code>Log</code><code>ShapeTrace</code><code>Snapshot</code><code>Profile</code><code>Histogram</code><code>jit_report</code></div>
+    </div>
+
+    <div class="lane cut pk-op" id="op-save">
+      <div class="lane-head"><span class="verb">save</span><span class="pk-mod">pipekit_ops.saving</span></div>
+      <div class="pk-eq"><span class="m">p \mapsto \mathrm{json}(s_p) \mapsto p</span><br><span class="k">key</span> <span class="m">h(p)</span></div>
+      <div class="pk-desc">A pipeline written and rebuilt as JSON, with an allowlist for untrusted files; a step that holds a function is written but not rebuilt. Stores hold the cache.</div>
+      <div class="pk-names"><code>dumps</code><code>loads</code><code>loads_sandboxed</code><code>pipeline_hash</code><code>MemoryStore</code><code>DirectoryStore</code></div>
+    </div>
+  </div>
+
+  <div class="pk-floor">
+    <div class="pk-slab">
+      <div class="lib">pipekit_ops.carriers</div>
+      <div class="what">how a carrier's named dims and array backend are read, without importing its library</div>
+      <div class="list"><code>Signature</code> · <code>signature_of</code> · <code>NamedArrayAdapter</code> and <code>register_adapter</code> · <code>backend_of</code> · <code>to_backend</code> · <code>guard</code> · <code>is_traced</code> · <code>on_import</code> · <code>import_optional</code></div>
+    </div>
+    <div class="pk-slab">
+      <div class="lib">pipekit_ops.testing</div>
+      <div class="what">the contract checks other test suites run on their operators</div>
+      <div class="list"><code>assert_round_trip</code> · <code>public_operators</code></div>
+    </div>
+    <div class="pk-deps">
+      <div class="pk-dep">
+        <div class="lib">concurrent.futures, asyncio</div>
+        <div class="what">The pools behind <code>Map</code>; a dask, Ray or loky executor plugs in through the same <code>Executor</code> protocol.</div>
+      </div>
+      <div class="pk-dep">
+        <div class="lib">json, hashlib, contextvars</div>
+        <div class="what">The saved state and its hash, and the executors and stores bound at run time, never part of <span class="m">s_p</span>.</div>
+      </div>
+      <div class="pk-dep">
+        <div class="lib">toolz, as ideas</div>
+        <div class="what"><code>Filter</code>, <code>CountBy</code>, <code>GetIn</code> keep their toolz names, as classes configured at construction. Not imported.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  const AMBER = "#cf9418", BLUE = "#3f6fb5";
+  const down = (id, shift, label) =>
+    wire("obj", id, { from: "bottom", to: "top", fromShift: shift, label, color: AMBER, at: 0.55, bend: 60 });
+
+  typeset(document);
+  document.fonts.ready.then(() => {
+    down("op-compose", -340, "steps <span class='m'>o_1, o_2</span>");
+    down("op-wrap", -170, "a step <span class='m'>o</span>");
+    down("op-map", 0, "<span class='m'>o</span> and the items");
+    down("op-observe", 170, "the carrier <span class='m'>x</span>");
+    down("op-save", 340, "the state <span class='m'>s_p</span>");
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
