@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pipekit-array — one rule, by dim name, on any backend</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .pa-rule .katex { font-size: 1.3em; }
+  #diagram .term .eq .katex { font-size: 1.1em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 270px 330px 320px 260px;
+    column-gap: 84px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .pa-rule { color: var(--ink-accent); margin: 2px 0 0 2px; text-align: center; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pipekit-array — one rule, by dim name, on any backend</div>
+  <div class="subtitle">Write a step once against the Array API, by dim name: it runs on the library that holds the data, on whatever carrier holds the names, and as an operator in a pipekit pipeline.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you bring</span></div>
+      <div class="node">
+        <div class="name">data on any backend</div>
+        <div class="desc">NumPy, JAX or dask arrays through the Array API, and PyTorch for the plain-array functions</div>
+      </div>
+      <div class="node">
+        <div class="name">a carrier with dim names</div>
+        <div class="desc"><code>DimArray</code>, an <code>xr.DataArray</code>, or any carrier whose library registers an adapter</div>
+      </div>
+      <div class="node">
+        <div class="name">the dims to consume</div>
+        <div class="desc">by name: <code>"time"</code>, <code>("y", "x")</code>, never <code>axis=1</code></div>
+      </div>
+      <div class="node">
+        <div class="name">or your own function</div>
+        <div class="desc">a function <span class="m">f</span> of plain arrays, with a signature such as <code>"(c)->()"</code></div>
+      </div>
+    </div>
+
+    <!-- column 2: the one rule -->
+    <div class="lane compute" id="lane-rule">
+      <div class="lane-head"><span class="verb">one rule</span><span class="pkg">by dim name</span></div>
+      <div class="pa-rule"><span class="m">\mathbf{y}_\ell = f\left(\mathbf{x}^{(1)}_\ell, \ldots, \mathbf{x}^{(N_\text{in})}_\ell\right)</span></div>
+      <div class="term">
+        <div class="lbl">the loop dims: every index the operation does not consume, matched by name</div>
+        <div class="eq"><span class="m">\ell \in \text{loop dims}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">at each <span class="m">\ell</span>, input <span class="m">k</span> over its core dims <span class="m">\mathcal{C}_k</span></div>
+        <div class="eq"><span class="m">\mathbf{x}^{(k)}_\ell \in \mathbb{R}^{N_{\mathcal{C}_k}}</span></div>
+      </div>
+      <div class="note">No index is a position, so transposing an input changes nothing; <span class="m">f</span> takes its functions from its inputs' namespace.</div>
+    </div>
+
+    <!-- column 3: the areas -->
+    <div class="lane cut" id="lane-areas">
+      <div class="lane-head"><span class="verb">areas</span><span class="pkg">one job each</span></div>
+      <div class="node">
+        <div class="name">the rule, with <span class="m">f</span> fixed</div>
+        <div class="desc"><span class="mod">named</span> — <code>reduce</code> · <code>window</code> · <code>coarsen</code> · <code>diff</code> · <code>dot</code> · <code>map_over</code></div>
+      </div>
+      <div class="node">
+        <div class="name">the rule, with your <span class="m">f</span></div>
+        <div class="desc"><span class="mod">kernels</span> — <code>KernelOp</code> · <code>elementwise</code></div>
+      </div>
+      <div class="node">
+        <div class="name">the same, as operators</div>
+        <div class="desc"><span class="mod">operators</span> — <code>Reduce</code> · <code>Window</code> · <code>Coarsen</code> · <code>Diff</code> · <code>ApplyAlong</code> · <code>BatchAlong</code></div>
+      </div>
+      <div class="node">
+        <div class="name">other libraries' tools</div>
+        <div class="desc"><span class="mod">bridges</span> — the DataArray adapter · einx by dim name · <code>Estimator</code></div>
+      </div>
+      <div class="node">
+        <div class="name">plain arrays, and checks</div>
+        <div class="desc"><span class="mod">arrays</span> · <span class="mod">testing</span> — <code>floating_inputs</code> · <code>set_at</code> · <code>scan</code> · <code>assert_backends_agree</code></div>
+      </div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">the same carrier</span></div>
+      <div class="node">
+        <div class="name">on the same backend</div>
+        <div class="desc">NumPy stays NumPy and JAX stays JAX; a NumPy constant joins JAX data, and any other mix raises <code>BackendError</code></div>
+      </div>
+      <div class="node">
+        <div class="name">with its names</div>
+        <div class="desc">a <code>DimArray</code> back as a <code>DimArray</code>, a DataArray with its coordinates, lazily through dask</div>
+      </div>
+      <div class="node">
+        <div class="name">its shape before it runs</div>
+        <div class="desc">every operator reports its output <code>Signature</code></div>
+      </div>
+      <div class="node solid">
+        <div class="name">a pipekit pipeline</div>
+        <div class="desc">operators chain with <code>|</code>, save as JSON and run under <code>jax.jit</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">pipekit-ops</div>
+      <div class="what">The <code>Operator</code> every twin is, and the adapter registry and <code>Signature</code> a carrier is read through.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">Array API · array-api-compat</div>
+      <div class="what">The namespace each call reads from its inputs; compat adds one for PyTorch and backs <code>arrays</code>.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">xarray · einx · scikit-learn</div>
+      <div class="what">Each behind its extra: <code>apply_ufunc</code> and dask laziness, patterns by dim name, estimators.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-rule", { label: "<span class='m'>\\mathbf{x}^{(k)}</span> · dims · <span class='m'>f</span>", color: "#7b6bb5" });
+    wire("lane-rule", "lane-areas", { label: "<span class='m'>\\mathbf{y}_\\ell</span> at every <span class='m'>\\ell</span>", color: "#cf9418" });
+    wire("lane-areas", "lane-out", { label: "<span class='m'>\\mathbf{y}</span>", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
