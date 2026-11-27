@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pipekit-jax — one step that JAX can see into</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+
+  /* the one object */
+  .pj-obj { width: 900px; margin: 0 auto; }
+  .pj-expansion { text-align: center; margin: 2px 0 12px; color: var(--ink-accent); }
+  #diagram .pj-expansion .katex { font-size: 1.65em; }
+  .pj-terms { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pj-term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .pj-term .eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 12px; min-height: 42px; text-align: center;
+  }
+  #diagram .pj-term .eq .katex { font-size: 1.25em; }
+
+  /* one card per operation */
+  .pj-ops {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    column-gap: 20px; margin-top: 104px;
+  }
+  .pj-op .lane-head { margin-bottom: 8px; }
+  .pj-op .lane-head .verb { font-size: 13px; }
+  .pj-mod { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink-accent); }
+  .pj-eq {
+    color: var(--ink-accent); background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 10px; min-height: 70px; line-height: 1.9;
+  }
+  #diagram .pj-eq .katex { font-size: 1.18em; white-space: nowrap; }
+  .pj-eq .k { font-size: 12px; color: var(--muted); margin-right: 4px; }
+  .pj-eq code { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+  .pj-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 10px 2px 0; min-height: 108px; }
+  .pj-names { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .pj-names code {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink);
+    background: var(--card); border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 6px;
+  }
+
+  /* the floor: the package's own test module, then what it builds on */
+  .pj-floor { margin-top: 30px; display: grid; gap: 12px; }
+  .pj-slab {
+    display: grid; grid-template-columns: 190px 250px 1fr; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .pj-slab .lib { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--cut-ink); }
+  .pj-slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .pj-slab .list { font-size: 12.5px; color: var(--ink); line-height: 1.6; }
+  .pj-slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .pj-deps { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .pj-dep {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px; background: #fff; border: 1.5px dashed #cbd5e1;
+  }
+  .pj-dep .lib { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .pj-dep .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .pj-dep code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+  /* connector labels hold maths, so they use the sans face, not the chip's mono */
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pipekit-jax — one step that JAX can see into</div>
+  <div class="subtitle">A <code>JaxOperator</code> is a pipekit <code>Operator</code> and an <code>eqx.Module</code> at once, so the same step chains with <code>|</code> and saves its config as JSON, while its array fields are leaves that a scan steps, a gradient reaches and a weight blob stores.</div>
+
+  <div class="lane compute pj-obj" id="obj">
+    <div class="lane-head"><span class="verb">one step</span><span class="pkg">an operator <span class="m">f</span> that is also a pytree</span></div>
+    <div class="pj-expansion"><span class="m">\displaystyle \mathbf{x}_{t+1} = f(\mathbf{x}_t; \boldsymbol{\theta})</span></div>
+    <div class="pj-terms">
+      <div class="pj-term">
+        <div class="lbl">its inexact-array fields, the leaves JAX traces, differentiates and saves</div>
+        <div class="eq"><span class="m">\boldsymbol{\theta} \in \mathbb{R}^{D_\theta}, \quad \mathbf{x}_t \in \mathbb{R}^{D_x}</span></div>
+      </div>
+      <div class="pj-term">
+        <div class="lbl">its config, read off the <code>__init__</code> Equinox generates, as JSON builtins</div>
+        <div class="eq"><span class="m">s_f = \mathrm{json}(\mathrm{config}(f))</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pj-ops">
+    <div class="lane cut pj-op" id="op-scan">
+      <div class="lane-head"><span class="verb">scan</span><span class="pj-mod">pipekit_jax.cycle</span></div>
+      <div class="pj-eq"><span class="m">(\mathbf{x}_n, s_n) = \mathrm{cycle}(\mathbf{x}_0, s_0)</span><br><span class="k">all <span class="m">n</span> steps in one <code>jax.lax.scan</code></span></div>
+      <div class="pj-desc">Steps a <code>ForwardModel</code> or a <code>StatefulOperator</code>; a plain operator is refused with a <code>TypeError</code> and goes through <code>Rollout</code>. <code>run</code> also returns the history, and <code>EnsembleScanCycle</code> <code>vmap</code>s the cycle over members.</div>
+      <div class="pj-names"><code>ScanCycle</code><code>EnsembleScanCycle</code></div>
+    </div>
+
+    <div class="lane cut pj-op" id="op-roll">
+      <div class="lane-head"><span class="verb">roll out</span><span class="pj-mod">pipekit_jax.cycle</span></div>
+      <div class="pj-eq"><span class="m">[\mathbf{x}_0, \mathbf{x}_k, \mathbf{x}_{2k}, \ldots, \mathbf{x}_n]</span><br><span class="k">carrier to carrier, every <span class="m">k</span>-th kept</span></div>
+      <div class="pj-desc">Steps a carrier-only operator (a <code>JaxModelOp</code>, a <code>Graph</code> of <code>JaxOperator</code>s) or a <code>ForwardModel</code>, and refuses a stateful step, which goes through <code>ScanCycle</code>. The trajectory is stacked on a new leading axis.</div>
+      <div class="pj-names"><code>Rollout</code></div>
+    </div>
+
+    <div class="lane cut pj-op" id="op-grad">
+      <div class="lane-head"><span class="verb">gradient</span><span class="pj-mod">pipekit_jax.pytree</span></div>
+      <div class="pj-eq"><span class="m">\nabla_{\mathbf{x}_0} \mathcal{J} = \mathbf{J}_1^\top \cdots \mathbf{J}_n^\top \nabla_{\mathbf{x}_n} \mathcal{J}</span><br><span class="k">and</span> <span class="m">\nabla_{\boldsymbol{\theta}} \mathcal{J}</span><span class="k">, one term per step</span></div>
+      <div class="pj-desc">Importing <code>pipekit_jax</code> registers <code>Sequential</code>, <code>Graph</code> and <code>JaxModelOp</code> as pytrees, so <code>eqx.filter_grad</code> reaches every step of a pipeline. In a <code>ScanCycle</code> call, <code>checkpoint=True</code> keeps a carry every <span class="m">\lfloor \sqrt{n} \rfloor</span> steps, and <code>truncate=m</code> lets the gradient through the last <span class="m">m</span> only.</div>
+    </div>
+
+    <div class="lane cut pj-op" id="op-store">
+      <div class="lane-head"><span class="verb">store</span><span class="pj-mod">pipekit_jax.model_op</span></div>
+      <div class="pj-eq"><span class="m">\boldsymbol{\theta} \mapsto \text{bytes} \mapsto \boldsymbol{\theta}</span><br><span class="k">read back into a skeleton</span></div>
+      <div class="pj-desc">The blob opens with the node types and each array leaf's key path, shape and dtype, and <code>with_weights</code> refuses a skeleton that differs. <code>from_registry</code> reads it from any <code>ModelRegistry</code>; every <code>JaxOperator</code> has the same methods.</div>
+      <div class="pj-names"><code>JaxModelOp</code><code>serialize_weights</code><code>with_weights</code><code>from_registry</code></div>
+    </div>
+
+    <div class="lane cut pj-op" id="op-convert">
+      <div class="lane-head"><span class="verb">convert</span><span class="pj-mod">pipekit_jax.kernel</span></div>
+      <div class="pj-eq"><code>KernelOp</code> <span class="m">\mapsto</span> <code>JaxKernelOp</code><br><span class="k">its array parameters become leaves</span></div>
+      <div class="pj-desc">The same dispatch and output signature as the pipekit-array <code>KernelOp</code>; every non-array parameter stays static. Behind the <code>array</code> extra, imported lazily, so <code>import pipekit_jax</code> works without it.</div>
+      <div class="pj-names"><code>to_jax</code><code>JaxKernelOp</code></div>
+    </div>
+  </div>
+
+  <div class="pj-floor">
+    <div class="pj-slab">
+      <div class="lib">pipekit_jax.testing</div>
+      <div class="what">the contract check a library runs on every operator it ships</div>
+      <div class="list"><code>check_jax_operator</code>: eager equals <code>eqx.filter_jit</code>, <code>vmap</code> batches, every learnable field is a leaf with a gradient, and the config round-trips with its leaves still learnable</div>
+    </div>
+    <div class="pj-deps">
+      <div class="pj-dep">
+        <div class="lib">pipekit-ops, pipekit-cycle</div>
+        <div class="what"><code>Operator</code>, <code>StatefulOperator</code>, <code>Sequential</code>, <code>Graph</code> and the JSON state; the <code>ForwardModel</code> protocol the cycles step.</div>
+      </div>
+      <div class="pj-dep">
+        <div class="lib">JAX, Equinox</div>
+        <div class="what"><code>lax.scan</code>, <code>checkpoint</code>, <code>vmap</code> and <code>grad</code>; modules as pytrees, filtered transformations and <code>tree_serialise_leaves</code>.</div>
+      </div>
+      <div class="pj-dep">
+        <div class="lib">pipekit-jax[array]</div>
+        <div class="what">Installs pipekit-array, whose <code>KernelOp</code> and dispatch <code>to_jax</code> needs; pipekit-array never imports pipekit-jax.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  const AMBER = "#cf9418";
+  const down = (id, shift, label) =>
+    wire("obj", id, { from: "bottom", to: "top", fromShift: shift, label, color: AMBER, at: 0.55, bend: 60 });
+
+  typeset(document);
+  document.fonts.ready.then(() => {
+    down("op-scan", -340, "<span class='m'>f</span> and <span class='m'>(\\mathbf{x}_0, s_0)</span>");
+    down("op-roll", -170, "<span class='m'>f</span> and <span class='m'>\\mathbf{x}_0</span>");
+    down("op-grad", 0, "the leaves <span class='m'>\\boldsymbol{\\theta}</span>");
+    down("op-store", 170, "<span class='m'>\\boldsymbol{\\theta}</span> and its layout");
+    down("op-convert", 340, "a <code>KernelOp</code> made into <span class='m'>f</span>");
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
