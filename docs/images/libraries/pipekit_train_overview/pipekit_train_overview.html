@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pipekit-train — training as an operator</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .pt-loop .katex { font-size: 1.2em; }
+  #diagram .term .eq .katex { font-size: 1.08em; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 290px 345px 335px 270px;
+    column-gap: 78px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 12px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .pt-loop { color: var(--ink-accent); margin: 2px 0 0 2px; text-align: center; }
+  .note { font-size: 12px; color: var(--muted); margin: 12px 0 0 2px; line-height: 1.45; }
+  .mod { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .node.pt-slot { border-style: dashed; box-shadow: none; }
+  .node.pt-slot .name { color: var(--muted); }
+  .pt-keys { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+  .pt-nowrap { white-space: nowrap; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab.dashed { background: #fff; border-style: dashed; }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">pipekit-train — training as an operator</div>
+  <div class="subtitle">You bring a dataset, a model and a loss; one loop runs them on the backend you name and hands back the trained model as an operator, with a record of how it was made.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what to train</span></div>
+      <div class="node">
+        <div class="name">a dataset <span class="m">\mathcal{D}</span></div>
+        <div class="desc">a <code>TrainingDataset</code> of <code>(input, target)</code> pairs with a <code>content_hash()</code>: <code>IterableDataset</code>, <code>SimulationDataset</code> from a prior and a simulator <span class="m">h</span>, or <code>CachedDataset</code></div>
+      </div>
+      <div class="node">
+        <div class="name">a model <span class="m">g(\cdot\,; \boldsymbol{\theta})</span></div>
+        <div class="desc">an Equinox module in an <code>EquinoxModelOp</code> (or pipekit-jax's <code>JaxModelOp</code>); for a Bayesian fit, a NumPyro model</div>
+      </div>
+      <div class="node">
+        <div class="name">a loss <span class="m">\ell</span> or a task</div>
+        <div class="desc"><code>MSE</code> · <code>NLL</code> · <code>KL</code> · <code>Composite</code>, or a <code>TrainTask</code>; a <code>NumpyroTask</code> for the Bayesian backends</div>
+      </div>
+      <div class="node">
+        <div class="name">the settings</div>
+        <div class="desc"><code>optimizer_config</code>, <code>max_steps</code>, <code>batch_size</code>, and callbacks such as <code>EarlyStopping</code> and <code>Checkpoint</code></div>
+      </div>
+    </div>
+
+    <!-- column 2: one loop -->
+    <div class="lane compute" id="lane-loop">
+      <div class="lane-head"><span class="verb">one loop</span><span class="pkg"><code>TrainingLoop</code></span></div>
+      <div class="pt-loop"><span class="m">{\hat{\boldsymbol{\theta}} = \mathrm{argmin}_{\boldsymbol{\theta}} \ \frac{1}{N} \sum_{n=1}^{N} \ell\left(g(\mathbf{x}_n; \boldsymbol{\theta}), \mathbf{y}_n\right)}</span></div>
+      <div class="term">
+        <div class="lbl">the Bayesian backends give the posterior instead</div>
+        <div class="eq"><span class="m">{p(\boldsymbol{\theta} \mid \mathcal{D}) \propto p(\boldsymbol{\theta}) \prod_{n=1}^{N} p(\mathbf{y}_n \mid \mathbf{x}_n, \boldsymbol{\theta})}</span></div>
+      </div>
+      <div class="term">
+        <div class="lbl">every loop is a stateful operator</div>
+        <div class="eq"><span class="m">{\left(g(\cdot\,; \hat{\boldsymbol{\theta}}),\ \text{artifact}\right) = \text{loop.run}()}</span></div>
+      </div>
+      <div class="note">The Equinox backend takes <code>max_steps</code> optimiser steps, each on a batch <span class="m">\mathcal{D}^{(i)}</span>; SVI steps on the whole dataset, and NUTS samples it in one call. <code>HyperSweep</code> runs one loop per point of a <code>ParameterGrid</code> and ranks the trials, on the validation metric when they have one.</div>
+    </div>
+
+    <!-- column 3: the backends -->
+    <div class="lane cut" id="lane-backends">
+      <div class="lane-head"><span class="verb">backends</span><span class="pkg">one extra each</span></div>
+      <div class="node">
+        <div class="name">Equinox with optax</div>
+        <div class="pt-keys">"equinox"</div>
+        <div class="desc"><span class="mod">backends.equinox</span> — <code>run</code> · <code>train_step</code> · <code>TrainState</code>: adam, adamw, sgd or rmsprop, Grain batches, Orbax checkpoints, a <code>ShardingSpec</code> for a device mesh</div>
+      </div>
+      <div class="node">
+        <div class="name">NumPyro</div>
+        <div class="pt-keys">"numpyro-svi" · "numpyro-mcmc"</div>
+        <div class="desc"><span class="mod">backends.numpyro</span> — <code>run_svi</code>, an <code>AutoNormal</code> guide and the ELBO by default; <code>run_mcmc</code>, NUTS</div>
+      </div>
+      <div class="node">
+        <div class="name">BlackJAX</div>
+        <div class="pt-keys">"blackjax"</div>
+        <div class="desc"><span class="mod">backends.blackjax</span> — <code>run</code>: NUTS with window adaptation, on the model of a <code>NumpyroTask</code> or on a bare log-density</div>
+      </div>
+      <div class="node pt-slot">
+        <div class="name">Keras 3</div>
+        <div class="pt-keys">"keras"</div>
+        <div class="desc"><span class="mod">backends.keras</span> — a slot: its <code>run</code> raises <code>NotImplementedError</code> today</div>
+      </div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">model and record</span></div>
+      <div class="node solid">
+        <div class="name">the trained model</div>
+        <div class="desc">an operator: the wrapper you passed in, or a <code>NumpyroPredictiveOp</code> that returns the posterior-predictive mean; it chains with <code>|</code> and sits in a <code>Graph</code></div>
+      </div>
+      <div class="node">
+        <div class="name">the artifact</div>
+        <div class="desc">the loop's config, <code>dataset_hash</code>, <code>trained_model_hash</code>, the backend's final metrics, and <code class="pt-nowrap">uv pip freeze</code> where uv is installed</div>
+      </div>
+      <div class="node">
+        <div class="name">checkpoints and logs</div>
+        <div class="desc">Orbax checkpoints on the Equinox backend, a JSONL line per logged step, and the model in a registry by its hash</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">pipekit-ops</div>
+      <div class="what">The <code>StatefulOperator</code> every loop and sweep is, and the content hashes; its only required dependency.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">[cycle] · [experiment]</div>
+      <div class="what">pipekit-cycle's forward models and cycles; pipekit-experiment's <code>TrainingArtifact</code> as the record.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">[cache] · [s3] · [gcs]</div>
+      <div class="what">zarr, and fsspec with s3fs or gcsfs, for <code>CachedDataset</code> on disk, S3 or GCS.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-loop", { label: "<span class='m'>\\mathcal{D}, g, \\ell</span>", color: "#7b6bb5" });
+    wire("lane-loop", "lane-backends", { label: "<code>backend=</code>", color: "#cf9418" });
+    wire("lane-backends", "lane-out", { label: "<span class='m'>g(\\cdot\\,; \\hat{\\boldsymbol{\\theta}})</span>", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
