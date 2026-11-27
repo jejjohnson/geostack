@@ -498,7 +498,9 @@ def build(theme: str) -> str:
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="960" height="{height:.0f}" '
         f'viewBox="0 0 960 {height:.0f}" role="img" aria-label="{escape(label)}">\n'
-        "<title>pipekit-ops on the role ladder</title>\n" + "\n".join(out) + "\n</svg>\n"
+        "<title>pipekit-ops on the role ladder</title>\n"
+        + "\n".join(out)
+        + "\n</svg>\n"
     )
 
 

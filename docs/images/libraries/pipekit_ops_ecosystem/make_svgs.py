@@ -204,7 +204,9 @@ def build(theme: str) -> str:
         for r, row in enumerate(rows):
             cy = y + 44 + r * (CARD_H + ROW_GAP)
             for i, pkg in enumerate(row):
-                out.append(card(BOX_X + 18 + i * (card_w + CARD_GAP), cy, card_w, pkg, t))
+                out.append(
+                    card(BOX_X + 18 + i * (card_w + CARD_GAP), cy, card_w, pkg, t)
+                )
         y += box_h + LAYER_GAP
     # what pipekit-ops builds on
     by = y + 6
