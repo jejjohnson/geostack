@@ -232,7 +232,7 @@ Findings from running thirteen workflows through the vision; each proposes an ed
 | ES-N1 | The umbrella name: `esmax` | open |
 | ES-N2 | One distribution per component, like pyrox | open |
 | ES-N3 | Land and ice start only with real code (phase P4) | open |
-| ES-N4 | `les_fvm` stays in plumax | open |
+| ES-N4 | `les_fvm` stays in plumax; the workspace, radtrax and plumax stay separate repositories | decided 26 Nov 2026 (geostack #255) |
 | ES-N5 | Synthetic climates are not in esmax | open |
 
 ## Neural fields (NF)
