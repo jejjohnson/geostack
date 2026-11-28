@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>sesmax-core — one right-hand side, five uses</title>
+<link rel="stylesheet" href="_base.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  #diagram { width: 1560px; }
+  #diagram .katex { font-size: 1.12em; }
+  #diagram .rhs .katex { font-size: 1.35em; }
+  #diagram .term .eq .katex { font-size: 1.15em; }
+  #diagram .use-eq .katex { font-size: 1.1em; white-space: nowrap; }
+  .wire-label .chip { font-family: var(--sans); font-size: 12.5px; padding: 4px 9px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 270px 320px 360px 260px;
+    column-gap: 90px;
+    align-items: center;
+  }
+  .lane .node + .node { margin-top: 14px; }
+  .term { margin-top: 14px; }
+  .term .eq {
+    color: var(--ink-accent); text-align: center;
+    background: var(--card); border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .term .lbl { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .rhs { color: var(--ink-accent); margin: 4px 0 2px; text-align: center; }
+  .note { font-size: 12px; color: var(--muted); margin: 14px 0 0 2px; line-height: 1.5; }
+  .note code, .desc code { white-space: nowrap; }
+  .use-eq { color: var(--ink); margin-top: 5px; font-size: 13px; }
+  .base-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px 16px;
+    margin-top: 34px;
+  }
+  .slab {
+    display: flex; align-items: center; gap: 14px;
+    border-radius: 14px; padding: 12px 16px;
+    background: var(--base-bg); border: 1.5px solid #cbd5e1;
+  }
+  .slab.extra { border-style: dashed; }
+  .slab .lib { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slab .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .slab code { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="diagram">
+  <div class="title">sesmax-core — one right-hand side, five uses</div>
+  <div class="subtitle">Write the physics as terms that add up. The same model is then integrated, forced, rescaled, fitted and assimilated with, and gradients go through all of it.</div>
+
+  <div class="grid">
+    <!-- column 1: what you supply -->
+    <div class="lane find" id="lane-supply">
+      <div class="lane-head"><span class="verb">supply</span><span class="pkg">what you write</span></div>
+      <div class="node">
+        <div class="name">state <span class="m">\mathbf{x}</span></div>
+        <div class="desc">a <code>State</code> of fields, and the boundary conditions it must satisfy</div>
+      </div>
+      <div class="node">
+        <div class="name">terms <span class="m">f_j</span></div>
+        <div class="desc">a <code>Term</code> per process; <code>TermFn</code> wraps a function, <code>OperatorTerm</code> a pipekit operator</div>
+      </div>
+      <div class="node">
+        <div class="name">parameters <span class="m">\boldsymbol{\theta}, c_j</span></div>
+        <div class="desc">JAX leaves, kept in bounds by <code>positive</code> · <code>interval</code>, or <code>frozen</code></div>
+      </div>
+      <div class="node">
+        <div class="name">data <span class="m">\mathbf{y}_t, \mathbf{x}_t^{\text{ref}}</span></div>
+        <div class="desc">observations, or a reference trajectory to fit</div>
+      </div>
+    </div>
+
+    <!-- column 2: the one right-hand side -->
+    <div class="lane compute" id="lane-rhs">
+      <div class="lane-head"><span class="verb">one right-hand side</span><span class="pkg"><span class="m">f(\mathbf{x}, t; \boldsymbol{\theta})</span></span></div>
+      <div class="rhs"><span class="m">\displaystyle \frac{\mathrm{d}\mathbf{x}}{\mathrm{d}t} = \sum_{j=1}^{J} c_j f_j(\mathbf{x}, t; \boldsymbol{\theta})</span></div>
+      <div class="term">
+        <div class="lbl">the algebra: <code>Sum</code> · <code>Scaled</code> · <code>Compose</code></div>
+        <div class="eq"><code class="op">adv + nu * implicit(diff) - drag</code></div>
+      </div>
+      <div class="term">
+        <div class="lbl">the IMEX split, read off the labels</div>
+        <div class="eq"><span class="m">f = f_{\text{explicit}} + f_{\text{implicit}}</span></div>
+      </div>
+      <div class="note">a <code>TermModel</code> holds the sum; a <code>Model</code> writes its own <code>vector_field</code> instead. Both are Equinox modules, so <code>jit</code>, <code>grad</code> and <code>vmap</code> apply.</div>
+    </div>
+
+    <!-- column 3: the five uses -->
+    <div class="lane cut" id="lane-uses">
+      <div class="lane-head"><span class="verb">uses</span><span class="pkg">of the same <span class="m">f</span></span></div>
+      <div class="node">
+        <div class="name">Integrate it</div>
+        <div class="use-eq"><span class="m">\mathbf{x}(t_1) = \mathbf{x}(t_0) + \int_{t_0}^{t_1} f \, \mathrm{d}t</span></div>
+        <div class="desc"><code>Model.integrate</code> · <code>Model.step</code> · <code>solve_pde</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Force it</div>
+        <div class="use-eq"><span class="m">u(\mathbf{s}, t) = \sum_m w_m \, b_m(t) \, \phi_m(\mathbf{s})</span></div>
+        <div class="desc"><code>BasisForcing</code> · <code>ForcingTerm</code> · <code>spatial_from_*</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Rescale it</div>
+        <div class="use-eq"><span class="m">\mathbf{x} = \boldsymbol{\mu} + \boldsymbol{\sigma} \odot \tilde{\mathbf{x}}, \quad t = \tau \tilde{t}</span></div>
+        <div class="desc"><code>Scales</code> · <code>StateAffine</code> · <code>ScaledModel</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Fit it</div>
+        <div class="use-eq"><span class="m">\mathcal{L}(\boldsymbol{\theta}) = \tfrac{1}{T} \sum_t \ell(\mathbf{x}_t(\boldsymbol{\theta}), \mathbf{x}_t^{\text{ref}})</span></div>
+        <div class="desc"><code>rollout</code> · <code>rollout_loss</code> · <code>state_mse</code></div>
+      </div>
+      <div class="node">
+        <div class="name">Assimilate with it</div>
+        <div class="use-eq"><span class="m">\tfrac{1}{2} \Vert \mathbf{v} \Vert^2 + \tfrac{1}{2} \sum_t \Vert \mathbf{y}_t - \mathbf{H} \mathbf{x}_t(\mathbf{v}) \Vert^2_{\boldsymbol{\Sigma}_\varepsilon^{-1}}</span></div>
+        <div class="desc"><code>FilteraxDynamics</code> · <code>VardaxForwardModel</code> · <code>WindowOperator</code></div>
+      </div>
+    </div>
+
+    <!-- column 4: what comes out -->
+    <div class="lane out" id="lane-out">
+      <div class="lane-head"><span class="verb">out</span><span class="pkg">what comes back</span></div>
+      <div class="node">
+        <div class="name">trajectory <span class="m">\mathbf{x}_{1:T}</span></div>
+        <div class="desc">a diffrax <code>Solution</code>, or the stacked states of one scan</div>
+      </div>
+      <div class="node">
+        <div class="name">gradients</div>
+        <div class="desc"><span class="m">\nabla_{\boldsymbol{\theta}} \mathcal{L}</span> through the whole window, for any coefficient or parameter</div>
+      </div>
+      <div class="node">
+        <div class="name">diagnostics</div>
+        <div class="desc"><code>model.diagnostics(state)</code>, in the model's own units</div>
+      </div>
+      <div class="node solid">
+        <div class="name">a prior for assimilation</div>
+        <div class="desc">one model for filterax's ensemble filters and vardax's variational methods</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="base-row">
+    <div class="slab">
+      <div class="lib">equinox · diffrax</div>
+      <div class="what">Models are modules; <code>integrate</code> takes a diffrax solver, an IMEX one for split terms.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">gridax</div>
+      <div class="what">Grids, masks and C-grid operators; gaussx and spectraldiffx solve the inversions built on them.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">geonnax</div>
+      <div class="what">The functions a forcing's spatial dictionary is built from.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">integrix · paramax</div>
+      <div class="what">The IMEX solver, its step control and the step bound; constrained parameters.</div>
+    </div>
+    <div class="slab">
+      <div class="lib">pipekit</div>
+      <div class="what">The scan behind <code>rollout</code>, and the operators in and out of a model.</div>
+    </div>
+    <div class="slab extra">
+      <div class="lib">filterax · vardax</div>
+      <div class="what">The assimilation methods themselves, behind the <code>da</code> extra.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="_connect.js"></script>
+<script>
+  // Typeset every .m span with KaTeX; wires are measured after the fonts load.
+  const typeset = (root) =>
+    root.querySelectorAll(".m:not(.katex-done)").forEach((el) => {
+      katex.render(el.textContent, el, { throwOnError: true });
+      el.classList.add("katex-done");
+    });
+  typeset(document);
+  document.fonts.ready.then(() => {
+    wire("lane-supply", "lane-rhs", { label: "<span class='m'>f_j, c_j</span>", color: "#7b6bb5" });
+    wire("lane-rhs", "lane-uses", { label: "<span class='m'>f</span>", color: "#cf9418" });
+    wire("lane-uses", "lane-out", { label: "results", color: "#3f6fb5" });
+    typeset(document);
+    return document.fonts.ready;
+  }).then(ready);
+</script>
+</body>
+</html>
