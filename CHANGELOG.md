@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.8](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.7...geostack-v0.2.8) (2026-11-28)
+
+
+### Documentation
+
+* **design:** tracerax as built, with its decisions and its neighbours' lines ([#323](https://github.com/jejjohnson/geostack/issues/323)) ([81f99ba](https://github.com/jejjohnson/geostack/commit/81f99bae13ae708bb2059b9a90e939a6296cb0ef))
+* **images:** gridax's dependency figure shows the packages that import it today ([#320](https://github.com/jejjohnson/geostack/issues/320)) ([586f7a3](https://github.com/jejjohnson/geostack/commit/586f7a347787630385c1f81cfbd9de405caab0f5))
+* **images:** the pipekit workspace overview and dependency figures ([#338](https://github.com/jejjohnson/geostack/issues/338)) ([aaab8d7](https://github.com/jejjohnson/geostack/commit/aaab8d7bbaddb8b76f092dc8832f88a9aa601b82))
+* **images:** the pipekit-array overview, role ladder and dependency figures ([#332](https://github.com/jejjohnson/geostack/issues/332)) ([64626d6](https://github.com/jejjohnson/geostack/commit/64626d6cd66f2e954ab7b376477b9ec4d28ab781))
+* **images:** the pipekit-cycle overview, role ladder and dependency figures ([#333](https://github.com/jejjohnson/geostack/issues/333)) ([d104f39](https://github.com/jejjohnson/geostack/commit/d104f393f0270b841aed44d09f4d1d263435b6d4))
+* **images:** the pipekit-evaluate overview, role ladder and dependency figures ([#335](https://github.com/jejjohnson/geostack/issues/335)) ([a41cbcc](https://github.com/jejjohnson/geostack/commit/a41cbccde0166ac52c843e4696d85e4f48eff38b))
+* **images:** the pipekit-experiment overview, role ladder and dependency figures ([#336](https://github.com/jejjohnson/geostack/issues/336)) ([fe7eb0c](https://github.com/jejjohnson/geostack/commit/fe7eb0cad0c639bdf5b56fd985ffedd3a74d97cd))
+* **images:** the pipekit-jax overview, role ladder and dependency figures ([#337](https://github.com/jejjohnson/geostack/issues/337)) ([56e3346](https://github.com/jejjohnson/geostack/commit/56e33464a3234fb938ed9bab0f26b4c4d421557f))
+* **images:** the pipekit-ops overview, role ladder and dependency figures ([#330](https://github.com/jejjohnson/geostack/issues/330)) ([56f7b6c](https://github.com/jejjohnson/geostack/commit/56f7b6cb4cf9cea54ba83edc20e1d78eb9ec0f38))
+* **images:** the pipekit-train figures show the Keras backend that trains ([#339](https://github.com/jejjohnson/geostack/issues/339)) ([8a3dfde](https://github.com/jejjohnson/geostack/commit/8a3dfdebf6a9fcd1b02e32cfff6561d3fe401710))
+* **images:** the pipekit-train overview, role ladder and dependency figures ([#334](https://github.com/jejjohnson/geostack/issues/334)) ([9c7a85d](https://github.com/jejjohnson/geostack/commit/9c7a85d573ac318c478b24b2f43a4c46a6cae1b8))
+* **pipekit:** a code map of pipekit-array's six areas ([#341](https://github.com/jejjohnson/geostack/issues/341)) ([d42019e](https://github.com/jejjohnson/geostack/commit/d42019e0f9ca1aa4b9116b2365cedbcdd1937f5c))
+
 ## [0.2.7](https://github.com/jejjohnson/geostack/compare/geostack-v0.2.6...geostack-v0.2.7) (2026-11-25)
 
 
